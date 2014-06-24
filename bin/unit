@@ -1,0 +1,30 @@
+#! /usr/bin/env bash
+set +e
+
+DIR=$(dirname $0)
+
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+NONE="\033[0m"
+
+function run() {
+  go test -v -cover $@
+  EXIT_CODE=$?
+}
+
+if [[ -z "$1" ]]; then
+    run ./...
+else
+    run $@
+fi
+
+if [[ $EXIT_CODE = 0 ]]; then
+    STATE="${GREEN}UNIT SUITE PASS${NONE}"
+else
+    STATE="${RED}UNIT SUITE FAIL${NONE}"
+fi
+
+echo
+echo -e $STATE
+
+exit $EXIT_CODE
