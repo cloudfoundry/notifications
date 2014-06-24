@@ -7,17 +7,17 @@ import (
 
     "github.com/gorilla/mux"
     "github.com/pivotal-cf/cf-notifications/web/handlers"
-    "github.com/pivotal-cf/cf-notifications/web/middleware"
+    "github.com/ryanmoran/stack"
 )
 
 type Router struct {
-    stacks map[string]Stack
+    stacks map[string]stack.Stack
 }
 
 func NewRouter() Router {
     return Router{
-        stacks: map[string]Stack{
-            "GET /info": buildUnauthenticatedStack(handlers.NewGetInfo()),
+        stacks: map[string]stack.Stack{
+            "GET /info": buildStack(handlers.NewGetInfo()),
         },
     }
 }
@@ -32,7 +32,7 @@ func (router Router) Routes() *mux.Router {
     return r
 }
 
-func buildUnauthenticatedStack(handler http.Handler) Stack {
-    logging := middleware.NewLogging(&log.Logger{})
-    return NewStack(handler).Use(logging)
+func buildStack(handler http.Handler) stack.Stack {
+    logging := stack.NewLogging(&log.Logger{})
+    return stack.NewStack(handler).Use(logging)
 }
