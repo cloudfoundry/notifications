@@ -6,5 +6,5 @@ go:
 
 script: bin/unit
 before_script:
-  - go get github.com/tools/godep
+  - go install github.com/tools/godep
   - godep restore
