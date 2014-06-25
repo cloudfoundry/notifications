@@ -14,4 +14,6 @@ if [[ -z "$UAA_CLIENT_SECRET" ]]; then
     export UAA_CLIENT_SECRET=secret
 fi
 
+export HTTP_LOGGING_ENABLED=true
+
 go run main.go

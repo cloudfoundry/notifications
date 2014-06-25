@@ -2,7 +2,7 @@ package web
 
 import (
     "log"
-    "net/http"
+    "os"
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -15,9 +15,11 @@ type Router struct {
 }
 
 func NewRouter() Router {
+    logging := stack.NewLogging(log.New(os.Stdout, "[WEB] ", log.LstdFlags))
+
     return Router{
         stacks: map[string]stack.Stack{
-            "GET /info": buildStack(handlers.NewGetInfo()),
+            "GET /info": stack.NewStack(handlers.NewGetInfo()).Use(logging),
         },
     }
 }
@@ -30,9 +32,4 @@ func (router Router) Routes() *mux.Router {
         r.Handle(parts[1], stack).Methods(parts[0]).Name(name)
     }
     return r
-}
-
-func buildStack(handler http.Handler) stack.Stack {
-    logging := stack.NewLogging(&log.Logger{})
-    return stack.NewStack(handler).Use(logging)
 }
