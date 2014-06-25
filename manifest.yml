@@ -1,0 +1,4 @@
+---
+applications:
+  - name: notifications
+    command: bin/notifications
