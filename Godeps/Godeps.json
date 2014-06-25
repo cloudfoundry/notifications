@@ -1,0 +1,29 @@
+{
+	"ImportPath": "github.com/cloudfoundry-incubator/notifications",
+	"GoVersion": "go1.2.1",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "1be7a086a5fd6440ef16fe96baeda0c78282b980"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "9ede152210fa25c1377d33e867cb828c19316445"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo",
+			"Rev": "7083fb7612a8bc8ef9a48c35b8364fd06fadf9ad"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega",
+			"Rev": "ff48b6baeb8028ce0ad570efbe36b1534b7efd0c"
+		},
+		{
+			"ImportPath": "github.com/ryanmoran/stack",
+			"Rev": "da61b980ec5d1d630c7574efc1ba94b288013c1a"
+		}
+	]
+}
