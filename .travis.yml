@@ -6,5 +6,12 @@ go:
 
 script: bin/unit
 before_script:
+  - go get github.com/tools/godep
   - go install github.com/tools/godep
   - godep restore
+
+notifications:
+  webhooks:
+    - http://pulse.pivotallabs.com/projects/6e302af3-2054-4db5-a0e3-302791afb321/status
+  email:
+    - cf-autoscale-eng@pivotallabs.com
