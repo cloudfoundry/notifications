@@ -1,0 +1,17 @@
+#! /usr/bin/env bash
+
+set -e
+
+if [[ -z "$UAA_HOST" ]]; then
+    export UAA_HOST=http://uaa.example.com
+fi
+
+if [[ -z "$UAA_CLIENT_ID" ]]; then
+    export UAA_CLIENT_ID=notifications
+fi
+
+if [[ -z "$UAA_CLIENT_SECRET" ]]; then
+    export UAA_CLIENT_SECRET=secret
+fi
+
+go run main.go
