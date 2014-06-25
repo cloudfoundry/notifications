@@ -6,7 +6,8 @@ go:
 
 script: bin/unit
 before_script:
-  - echo $GOPATH
+  - export PATH=$HOME/gopath/bin:$PATH
+  - echo $PATH
   - go get github.com/tools/godep
   - which godep
   - godep restore
