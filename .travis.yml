@@ -5,6 +5,11 @@ go:
   - 1.3
 
 script: bin/unit
+before_script:
+  - echo $GOPATH
+  - go get github.com/tools/godep
+  - which godep
+  - godep restore
 
 notifications:
   webhooks:
