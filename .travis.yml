@@ -12,6 +12,6 @@ before_script:
 
 notifications:
   webhooks:
-    - http://pulse.pivotallabs.com/projects/6e302af3-2054-4db5-a0e3-302791afb321/status
+    - http://pulse.pivotallabs.com/projects/351885a3-fe2e-44df-9b25-76bd4a19f297/status
   email:
     - cf-autoscale-eng@pivotallabs.com
