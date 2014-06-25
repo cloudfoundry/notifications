@@ -1,6 +1,6 @@
 package main
 
-import "github.com/pivotal-cf/cf-notifications/web"
+import "github.com/cloudfoundry-incubator/notifications/web"
 
 func main() {
     server := web.NewServer()

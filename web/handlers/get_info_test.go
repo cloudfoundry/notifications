@@ -4,7 +4,7 @@ import (
     "net/http"
     "net/http/httptest"
 
-    "github.com/pivotal-cf/cf-notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web/handlers"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"

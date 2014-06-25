@@ -5,8 +5,8 @@ import (
     "net/http"
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/gorilla/mux"
-    "github.com/pivotal-cf/cf-notifications/web/handlers"
     "github.com/ryanmoran/stack"
 )
 

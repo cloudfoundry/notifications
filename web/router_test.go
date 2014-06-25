@@ -1,8 +1,8 @@
 package web_test
 
 import (
-    "github.com/pivotal-cf/cf-notifications/web"
-    "github.com/pivotal-cf/cf-notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web"
+    "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
