@@ -7,9 +7,8 @@ go:
 script: bin/unit
 before_script:
   - export PATH=$HOME/gopath/bin:$PATH
-  - echo $PATH
+  - go get code.google.com/p/go.tools/cmd/cover
   - go get github.com/tools/godep
-  - which godep
   - godep restore
 
 notifications:
