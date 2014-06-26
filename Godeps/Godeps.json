@@ -6,6 +6,10 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "github.com/dgrijalva/jwt-go",
+			"Rev": "71c6a65cfe7e0714f999c0269b20dd522df3b99c"
+		},
+		{
 			"ImportPath": "github.com/gorilla/context",
 			"Rev": "1be7a086a5fd6440ef16fe96baeda0c78282b980"
 		},
@@ -20,6 +24,10 @@
 		{
 			"ImportPath": "github.com/onsi/gomega",
 			"Rev": "ff48b6baeb8028ce0ad570efbe36b1534b7efd0c"
+		},
+		{
+			"ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",
+			"Rev": "69615f8a6841dfb2ee1650bc18d20e2152718848"
 		},
 		{
 			"ImportPath": "github.com/ryanmoran/stack",

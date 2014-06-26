@@ -3,7 +3,7 @@
 set -e
 
 if [[ -z "$UAA_HOST" ]]; then
-    export UAA_HOST=http://uaa.example.com
+    export UAA_HOST=http://uaa.10.244.0.34.xip.io
 fi
 
 if [[ -z "$UAA_CLIENT_ID" ]]; then

@@ -15,11 +15,13 @@ type Router struct {
 }
 
 func NewRouter() Router {
-    logging := stack.NewLogging(log.New(os.Stdout, "[WEB] ", log.LstdFlags))
+    logger := log.New(os.Stdout, "[WEB] ", log.LstdFlags)
+    logging := stack.NewLogging(logger)
 
     return Router{
         stacks: map[string]stack.Stack{
-            "GET /info": stack.NewStack(handlers.NewGetInfo()).Use(logging),
+            "GET /info":          stack.NewStack(handlers.NewGetInfo()).Use(logging),
+            "POST /users/{uuid}": stack.NewStack(handlers.NewNotifyUser(logger)).Use(logging),
         },
     }
 }
