@@ -21,8 +21,8 @@ func NewNotifyUser(logger *log.Logger) NotifyUser {
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     env := config.NewEnvironment()
-    uaaConfig := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, req.Header.Get("Authorization"))
-    user, err := uaa.UserByID(uaaConfig, strings.Trim(req.URL.Path, "/users/"))
+    uaaConfig := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer "))
+    user, err := uaa.UserByID(uaaConfig, strings.TrimPrefix(req.URL.Path, "/users/"))
     if err != nil {
         panic(err)
     }

@@ -6,7 +6,6 @@ import (
     "net/http"
     "net/http/httptest"
     "os"
-    "strings"
 
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
 
@@ -19,12 +18,12 @@ var _ = Describe("NotifyUser", func() {
 
     BeforeEach(func() {
         fakeUAA = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-            if req.URL.Path == "/Users/abc-123" &&
+            if req.URL.Path == "/Users/user-123" &&
                 req.Method == "GET" &&
-                strings.Contains(req.Header.Get("Authorization"), "Bearer my-special-token") {
+                req.Header.Get("Authorization") == "Bearer a-special-token" {
 
                 response := `{
-                      "id": "abc-123",
+                      "id": "user-123",
                       "meta": {
                         "version": 6,
                         "created": "2014-05-22T22:36:36.941Z",
@@ -77,11 +76,11 @@ var _ = Describe("NotifyUser", func() {
         logger := log.New(buffer, "", 0)
 
         writer := httptest.NewRecorder()
-        request, err := http.NewRequest("POST", "/users/abc-123", nil)
+        request, err := http.NewRequest("POST", "/users/user-123", nil)
         if err != nil {
             panic(err)
         }
-        request.Header.Set("Authorization", "Bearer my-special-token")
+        request.Header.Set("Authorization", "Bearer a-special-token")
 
         handler := handlers.NewNotifyUser(logger)
 
