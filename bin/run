@@ -1,19 +1,12 @@
 #! /usr/bin/env bash
-
 set -e
 
-if [[ -z "$UAA_HOST" ]]; then
-    export UAA_HOST=http://uaa.10.244.0.34.xip.io
+DIR=$(dirname $0)
+
+if [[ -z "$ENVIRONMENT" ]]; then
+    ENVIRONMENT=development
 fi
 
-if [[ -z "$UAA_CLIENT_ID" ]]; then
-    export UAA_CLIENT_ID=notifications
-fi
-
-if [[ -z "$UAA_CLIENT_SECRET" ]]; then
-    export UAA_CLIENT_SECRET=secret
-fi
-
-export HTTP_LOGGING_ENABLED=true
+source $DIR/env/$ENVIRONMENT
 
 go run main.go

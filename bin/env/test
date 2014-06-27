@@ -1,0 +1,11 @@
+#! /usr/bin/env bash
+set -e
+
+export HTTP_LOGGING_ENABLED=true
+export SMTP_HOST=smtp.example.com
+export SMTP_PASS=password
+export SMTP_PORT=587
+export SMTP_USER=user
+export UAA_CLIENT_ID=notifications
+export UAA_CLIENT_SECRET=secret
+export UAA_HOST=http://uaa.example.com

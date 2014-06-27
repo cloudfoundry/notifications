@@ -10,6 +10,22 @@ import (
 )
 
 var _ = Describe("Environment", func() {
+    variables := map[string]string{
+        "UAA_HOST":          os.Getenv("UAA_HOST"),
+        "UAA_CLIENT_ID":     os.Getenv("UAA_CLIENT_ID"),
+        "UAA_CLIENT_SECRET": os.Getenv("UAA_CLIENT_SECRET"),
+        "SMTP_USER":         os.Getenv("SMTP_USER"),
+        "SMTP_PASS":         os.Getenv("SMTP_PASS"),
+        "SMTP_HOST":         os.Getenv("SMTP_HOST"),
+        "SMTP_PORT":         os.Getenv("SMTP_PORT"),
+    }
+
+    AfterEach(func() {
+        for key, value := range variables {
+            os.Setenv(key, value)
+        }
+    })
+
     Describe("UAA configuration", func() {
         It("loads the values when they are set", func() {
             os.Setenv("UAA_HOST", "https://uaa.example.com")
@@ -43,6 +59,60 @@ var _ = Describe("Environment", func() {
             os.Setenv("UAA_HOST", "https://uaa.example.com")
             os.Setenv("UAA_CLIENT_ID", "uaa-client-id")
             os.Setenv("UAA_CLIENT_SECRET", "")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).To(Panic())
+        })
+    })
+
+    Describe("SMTP configuration", func() {
+        It("loads the values when they are present", func() {
+            os.Setenv("SMTP_USER", "my-smtp-user")
+            os.Setenv("SMTP_PASS", "my-smtp-password")
+            os.Setenv("SMTP_HOST", "smtp.example.com")
+            os.Setenv("SMTP_PORT", "567")
+
+            env := config.NewEnvironment()
+
+            Expect(env.SMTPUser).To(Equal("my-smtp-user"))
+            Expect(env.SMTPPass).To(Equal("my-smtp-password"))
+            Expect(env.SMTPHost).To(Equal("smtp.example.com"))
+            Expect(env.SMTPPort).To(Equal("567"))
+        })
+
+        It("panics when the values are missing", func() {
+            os.Setenv("SMTP_USER", "")
+            os.Setenv("SMTP_PASS", "my-smtp-password")
+            os.Setenv("SMTP_HOST", "smtp.example.com")
+            os.Setenv("SMTP_PORT", "567")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).To(Panic())
+
+            os.Setenv("SMTP_USER", "my-smtp-user")
+            os.Setenv("SMTP_PASS", "")
+            os.Setenv("SMTP_HOST", "smtp.example.com")
+            os.Setenv("SMTP_PORT", "567")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).To(Panic())
+
+            os.Setenv("SMTP_USER", "my-smtp-user")
+            os.Setenv("SMTP_PASS", "my-smtp-password")
+            os.Setenv("SMTP_HOST", "")
+            os.Setenv("SMTP_PORT", "567")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).To(Panic())
+
+            os.Setenv("SMTP_USER", "my-smtp-user")
+            os.Setenv("SMTP_PASS", "my-smtp-password")
+            os.Setenv("SMTP_HOST", "smtp.example.com")
+            os.Setenv("SMTP_PORT", "")
 
             Expect(func() {
                 config.NewEnvironment()
