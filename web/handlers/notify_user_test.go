@@ -15,6 +15,11 @@ import (
 
 var _ = Describe("NotifyUser", func() {
     var fakeUAA *httptest.Server
+    var buffer *bytes.Buffer
+    var logger *log.Logger
+    var writer *httptest.ResponseRecorder
+    var request *http.Request
+    var handler handlers.NotifyUser
 
     BeforeEach(func() {
         fakeUAA = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -65,6 +70,20 @@ var _ = Describe("NotifyUser", func() {
         os.Setenv("UAA_HOST", fakeUAA.URL)
         os.Setenv("UAA_CLIENT_ID", "notifications")
         os.Setenv("UAA_CLIENT_SECRET", "secret")
+
+        buffer = bytes.NewBuffer([]byte{})
+        logger = log.New(buffer, "", 0)
+
+        writer = httptest.NewRecorder()
+
+        var err error
+        request, err = http.NewRequest("POST", "/users/user-123", nil)
+        if err != nil {
+            panic(err)
+        }
+        request.Header.Set("Authorization", "Bearer a-special-token")
+
+        handler = handlers.NewNotifyUser(logger)
     })
 
     AfterEach(func() {
@@ -72,20 +91,15 @@ var _ = Describe("NotifyUser", func() {
     })
 
     It("logs the email address of the recipient", func() {
-        buffer := bytes.NewBuffer([]byte{})
-        logger := log.New(buffer, "", 0)
-
-        writer := httptest.NewRecorder()
-        request, err := http.NewRequest("POST", "/users/user-123", nil)
-        if err != nil {
-            panic(err)
-        }
-        request.Header.Set("Authorization", "Bearer a-special-token")
-
-        handler := handlers.NewNotifyUser(logger)
-
         handler.ServeHTTP(writer, request)
 
         Expect(buffer.String()).To(ContainSubstring("Sending email to fake-user@example.com"))
+    })
+
+    It("logs the message envelope", func() {
+        handler.ServeHTTP(writer, request)
+
+        envelope := `From: notifications@cf-app.com\nTo: fake-user@example.com\n`
+        Expect(buffer.String()).To(ContainSubstring(envelope))
     })
 })
