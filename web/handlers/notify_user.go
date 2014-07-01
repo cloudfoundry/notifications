@@ -2,6 +2,7 @@ package handlers
 
 import (
     "bytes"
+    "encoding/json"
     "fmt"
     "log"
     "net/http"
@@ -37,6 +38,15 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
         handler.sendEmailTo(address)
     }
+
+    results := []map[string]string{
+        map[string]string{
+            "status": "delivered",
+        },
+    }
+    response, err := json.Marshal(results)
+    w.WriteHeader(http.StatusOK)
+    w.Write(response)
 }
 
 func (handler NotifyUser) sendEmailTo(recipient string) {

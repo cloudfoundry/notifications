@@ -4,6 +4,7 @@ import (
     "bufio"
     "bytes"
     "encoding/base64"
+    "encoding/json"
     "fmt"
     "log"
     "net"
@@ -202,6 +203,23 @@ var _ = Describe("NotifyUser", func() {
             From:     "<no-reply@notifications.example.com>",
             To:       "<fake-user@example.com>",
             Data:     `From: no-reply@notifications.example.com\nTo: fake-user@example.com\n`,
+        }))
+    })
+
+    It("returns a status response for the sent mail", func() {
+        handler.ServeHTTP(writer, request)
+
+        Expect(writer.Code).To(Equal(http.StatusOK))
+        parsed := []map[string]string{}
+        err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+        if err != nil {
+            panic(err)
+        }
+
+        Expect(parsed).To(Equal([]map[string]string{
+            map[string]string{
+                "status": "delivered",
+            },
         }))
     })
 })
