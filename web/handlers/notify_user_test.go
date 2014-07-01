@@ -5,6 +5,7 @@ import (
     "bytes"
     "encoding/json"
     "fmt"
+    "io/ioutil"
     "log"
     "net"
     "net/http"
@@ -259,7 +260,7 @@ var _ = Describe("NotifyUser", func() {
 
         Context("when the request body is missing", func() {
             BeforeEach(func() {
-                request.Body = nil
+                request.Body = ioutil.NopCloser(bytes.NewReader([]byte{}))
             })
 
             It("returns an error message", func() {

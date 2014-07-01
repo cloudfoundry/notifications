@@ -123,9 +123,9 @@ func (handler NotifyUser) parseParams(req *http.Request) NotifyUserParams {
         }
     }
 
-    if req.Body != nil {
-        buffer := bytes.NewBuffer([]byte{})
-        buffer.ReadFrom(req.Body)
+    buffer := bytes.NewBuffer([]byte{})
+    buffer.ReadFrom(req.Body)
+    if buffer.Len() > 0 {
         err = json.Unmarshal(buffer.Bytes(), &params)
         if err != nil {
             panic(err)
