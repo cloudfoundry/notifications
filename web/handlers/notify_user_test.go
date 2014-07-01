@@ -3,7 +3,6 @@ package handlers_test
 import (
     "bufio"
     "bytes"
-    "encoding/base64"
     "encoding/json"
     "fmt"
     "log"
@@ -19,45 +18,6 @@ import (
     . "github.com/onsi/gomega"
 )
 
-type Envelope struct {
-    AuthUser string
-    AuthPass string
-    From     string
-    To       string
-    Data     []string
-}
-
-func (envelope *Envelope) Respond(request string) (string, bool) {
-    switch {
-    case strings.Contains(request, "EHLO"):
-        return "250-localhost Hello\n250-SIZE 52428800\n250-PIPELINING\n250-AUTH PLAIN LOGIN\n250 HELP", false
-    case strings.Contains(request, "AUTH"):
-        auth := strings.TrimPrefix(request, "AUTH PLAIN ")
-        decoded, _ := base64.StdEncoding.DecodeString(strings.TrimSpace(auth))
-        parts := strings.SplitN(string(decoded), "\x00", 3)
-        envelope.AuthUser = parts[1]
-        envelope.AuthPass = parts[2]
-        return "235 OK, Go ahead", false
-    case strings.Contains(request, "MAIL FROM"):
-        from := strings.TrimPrefix(request, "MAIL FROM:")
-        envelope.From = strings.TrimSpace(from)
-        return "250 OK", false
-    case strings.Contains(request, "RCPT TO"):
-        to := strings.TrimPrefix(request, "RCPT TO:")
-        envelope.To = strings.TrimSpace(to)
-        return "250 OK", false
-    case strings.Contains(request, "DATA"):
-        return "354 Go ahead", false
-    case strings.TrimSpace(request) == ".":
-        return "250 Written safely to disk.", false
-    case strings.Contains(request, "QUIT"):
-        return "221 localhost saying goodbye", true
-    default:
-        envelope.Data = append(envelope.Data, strings.TrimSpace(request))
-        return "", false
-    }
-}
-
 var _ = Describe("NotifyUser", func() {
     var fakeUAA *httptest.Server
     var buffer *bytes.Buffer
@@ -66,6 +26,7 @@ var _ = Describe("NotifyUser", func() {
     var request *http.Request
     var handler handlers.NotifyUser
     var envelope Envelope
+    var smtpServer *net.TCPListener
 
     BeforeEach(func() {
         fakeUAA = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
@@ -121,7 +82,7 @@ var _ = Describe("NotifyUser", func() {
             panic(err)
         }
 
-        smtpServer, err := net.ListenTCP("tcp", addr)
+        smtpServer, err = net.ListenTCP("tcp", addr)
         if err != nil {
             panic(err)
         }
@@ -133,7 +94,8 @@ var _ = Describe("NotifyUser", func() {
         go func() {
             conn, err := smtpServer.AcceptTCP()
             if err != nil {
-                panic(err)
+                smtpServer.Close()
+                return
             }
             input := bufio.NewReader(conn)
             output := bufio.NewWriter(conn)
@@ -162,93 +124,128 @@ var _ = Describe("NotifyUser", func() {
         os.Setenv("SMTP_PORT", port)
 
         envelope = Envelope{}
-
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
-
         writer = httptest.NewRecorder()
-
-        requestBody, err := json.Marshal(map[string]string{
-            "kind_description":   "Password reminder",
-            "source_description": "Login system",
-            "subject":            "Reset your password",
-            "text":               "Please reset your password by clicking on this link...",
-        })
-        if err != nil {
-            panic(err)
-        }
-
-        request, err = http.NewRequest("POST", "/users/user-123", bytes.NewReader(requestBody))
-        if err != nil {
-            panic(err)
-        }
-        request.Header.Set("Authorization", "Bearer a-special-token")
-
         handler = handlers.NewNotifyUser(logger)
     })
 
     AfterEach(func() {
         fakeUAA.Close()
+        smtpServer.Close()
     })
 
-    It("logs the email address of the recipient", func() {
-        handler.ServeHTTP(writer, request)
+    Context("when the request is valid", func() {
+        BeforeEach(func() {
+            requestBody, err := json.Marshal(map[string]string{
+                "kind":               "forgot_password",
+                "kind_description":   "Password reminder",
+                "source_description": "Login system",
+                "subject":            "Reset your password",
+                "text":               "Please reset your password by clicking on this link...",
+            })
+            if err != nil {
+                panic(err)
+            }
 
-        Expect(buffer.String()).To(ContainSubstring("Sending email to fake-user@example.com"))
-    })
+            request, err = http.NewRequest("POST", "/users/user-123", bytes.NewReader(requestBody))
+            if err != nil {
+                panic(err)
+            }
+            request.Header.Set("Authorization", "Bearer a-special-token")
+        })
 
-    It("logs the message envelope", func() {
-        handler.ServeHTTP(writer, request)
+        It("logs the email address of the recipient", func() {
+            handler.ServeHTTP(writer, request)
 
-        data := []string{
-            "From: no-reply@notifications.example.com",
-            "To: fake-user@example.com",
-            "Subject: CF Notification: Reset your password",
-            "Body:",
-            `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:`,
-            "Please reset your password by clicking on this link...",
-        }
-        results := strings.Split(buffer.String(), "\n")
-        for _, item := range data {
-            Expect(results).To(ContainElement(item))
-        }
-    })
+            Expect(buffer.String()).To(ContainSubstring("Sending email to fake-user@example.com"))
+        })
 
-    It("talks to the SMTP server, sending the email", func() {
-        handler.ServeHTTP(writer, request)
+        It("logs the message envelope", func() {
+            handler.ServeHTTP(writer, request)
 
-        Expect(envelope).To(Equal(Envelope{
-            AuthUser: "smtp-user",
-            AuthPass: "smtp-pass",
-            From:     "<no-reply@notifications.example.com>",
-            To:       "<fake-user@example.com>",
-            Data: []string{
+            data := []string{
                 "From: no-reply@notifications.example.com",
                 "To: fake-user@example.com",
                 "Subject: CF Notification: Reset your password",
                 "Body:",
-                "",
                 `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:`,
-                "",
                 "Please reset your password by clicking on this link...",
-            },
-        }))
+            }
+            results := strings.Split(buffer.String(), "\n")
+            for _, item := range data {
+                Expect(results).To(ContainElement(item))
+            }
+        })
+
+        It("talks to the SMTP server, sending the email", func() {
+            handler.ServeHTTP(writer, request)
+
+            Expect(envelope).To(Equal(Envelope{
+                AuthUser: "smtp-user",
+                AuthPass: "smtp-pass",
+                From:     "<no-reply@notifications.example.com>",
+                To:       "<fake-user@example.com>",
+                Data: []string{
+                    "From: no-reply@notifications.example.com",
+                    "To: fake-user@example.com",
+                    "Subject: CF Notification: Reset your password",
+                    "Body:",
+                    "",
+                    `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:`,
+                    "",
+                    "Please reset your password by clicking on this link...",
+                },
+            }))
+        })
+
+        It("returns a status response for the sent mail", func() {
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(http.StatusOK))
+            parsed := []map[string]string{}
+            err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(parsed).To(Equal([]map[string]string{
+                map[string]string{
+                    "status": "delivered",
+                },
+            }))
+        })
     })
 
-    It("returns a status response for the sent mail", func() {
-        handler.ServeHTTP(writer, request)
+    Context("when the request is invalid", func() {
+        BeforeEach(func() {
+            requestBody, err := json.Marshal(map[string]string{
+                "kind_description":   "Password reminder",
+                "source_description": "Login system",
+                "subject":            "Reset your password",
+            })
+            if err != nil {
+                panic(err)
+            }
 
-        Expect(writer.Code).To(Equal(http.StatusOK))
-        parsed := []map[string]string{}
-        err := json.Unmarshal(writer.Body.Bytes(), &parsed)
-        if err != nil {
-            panic(err)
-        }
+            request, err = http.NewRequest("POST", "/users/user-123", bytes.NewReader(requestBody))
+            if err != nil {
+                panic(err)
+            }
+            request.Header.Set("Authorization", "Bearer a-special-token")
+        })
 
-        Expect(parsed).To(Equal([]map[string]string{
-            map[string]string{
-                "status": "delivered",
-            },
-        }))
+        It("returns an error message", func() {
+            handler.ServeHTTP(writer, request)
+
+            parsed := map[string][]string{}
+            err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(parsed["errors"]).To(ContainElement(`"kind" is a required field`))
+            Expect(parsed["errors"]).To(ContainElement(`"text" is a required field`))
+        })
     })
 })

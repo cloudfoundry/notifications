@@ -31,6 +31,18 @@ type NotifyUserParams struct {
     KindDescription   string `json:"kind_description"`
     SourceDescription string `json:"source_description"`
     Text              string `json:"text"`
+    Kind              string
+    Errors            []string
+}
+
+func (params *NotifyUserParams) Invalid() bool {
+    if params.Kind == "" {
+        params.Errors = append(params.Errors, `"kind" is a required field`)
+    }
+    if params.Text == "" {
+        params.Errors = append(params.Errors, `"text" is a required field`)
+    }
+    return len(params.Errors) > 0
 }
 
 type NotifyUser struct {
@@ -45,6 +57,19 @@ func NewNotifyUser(logger *log.Logger) NotifyUser {
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     params := handler.parseParams(req)
+
+    if params.Invalid() {
+        w.WriteHeader(422)
+        response, err := json.Marshal(map[string][]string{
+            "errors": params.Errors,
+        })
+        if err != nil {
+            panic(err)
+        }
+        w.Write(response)
+        return
+    }
+
     token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
     user := handler.retrieveUser(params.UserID, token)
 
