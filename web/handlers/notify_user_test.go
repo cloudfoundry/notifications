@@ -13,6 +13,7 @@ import (
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/dgrijalva/jwt-go"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -27,12 +28,17 @@ var _ = Describe("NotifyUser", func() {
     var handler handlers.NotifyUser
     var envelope Envelope
     var smtpServer *net.TCPListener
+    var token string
 
     BeforeEach(func() {
+        tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
+        tokenBody := jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"mister-client","cid":"mister-client","exp":1404281214}`))
+        token = tokenHeader + "." + tokenBody
+
         fakeUAA = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
             if req.URL.Path == "/Users/user-123" &&
                 req.Method == "GET" &&
-                req.Header.Get("Authorization") == "Bearer a-special-token" {
+                req.Header.Get("Authorization") == "Bearer "+token {
 
                 response := `{
                       "id": "user-123",
@@ -154,7 +160,7 @@ var _ = Describe("NotifyUser", func() {
             if err != nil {
                 panic(err)
             }
-            request.Header.Set("Authorization", "Bearer a-special-token")
+            request.Header.Set("Authorization", "Bearer "+token)
         })
 
         It("logs the email address of the recipient", func() {
@@ -192,6 +198,7 @@ var _ = Describe("NotifyUser", func() {
                     "From: test-user@example.com",
                     "To: fake-user@example.com",
                     "Subject: CF Notification: Reset your password",
+                    "X-CF-Client-ID: mister-client",
                     "Body:",
                     "",
                     `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:`,
@@ -234,7 +241,7 @@ var _ = Describe("NotifyUser", func() {
             if err != nil {
                 panic(err)
             }
-            request.Header.Set("Authorization", "Bearer a-special-token")
+            request.Header.Set("Authorization", "Bearer "+token)
         })
 
         It("returns an error message", func() {

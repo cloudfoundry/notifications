@@ -11,12 +11,14 @@ import (
     "text/template"
 
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/dgrijalva/jwt-go"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
 const emailTemplate = `From: {{.From}}
 To: {{.To}}
 Subject: CF Notification: {{.Subject}}
+X-CF-Client-ID: {{.ClientID}}
 Body:
 
 The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:
@@ -25,6 +27,7 @@ The following "{{.KindDescription}}" notification was sent to you directly by th
 
 type NotifyUserParams struct {
     UserID            string
+    ClientID          string
     From              string
     To                string
     Subject           string `json:"subject"`
@@ -101,6 +104,23 @@ func (handler NotifyUser) parseParams(req *http.Request) NotifyUserParams {
     params := NotifyUserParams{
         UserID: strings.TrimPrefix(req.URL.Path, "/users/"),
         From:   env.Sender,
+    }
+
+    if authHeader := req.Header.Get("Authorization"); authHeader != "" {
+        parts := strings.SplitN(authHeader, " ", 2)
+        parts = strings.Split(parts[1], ".")
+        decoded, err := jwt.DecodeSegment(parts[1])
+        if err != nil {
+            panic(err)
+        }
+        token := map[string]interface{}{}
+        err = json.Unmarshal(decoded, &token)
+        if err != nil {
+            panic(err)
+        }
+        if clientID, ok := token["client_id"]; ok {
+            params.ClientID = clientID.(string)
+        }
     }
 
     buffer := bytes.NewBuffer([]byte{})
