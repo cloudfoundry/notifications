@@ -256,5 +256,24 @@ var _ = Describe("NotifyUser", func() {
             Expect(parsed["errors"]).To(ContainElement(`"kind" is a required field`))
             Expect(parsed["errors"]).To(ContainElement(`"text" is a required field`))
         })
+
+        Context("when the request body is missing", func() {
+            BeforeEach(func() {
+                request.Body = nil
+            })
+
+            It("returns an error message", func() {
+                handler.ServeHTTP(writer, request)
+
+                parsed := map[string][]string{}
+                err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parsed["errors"]).To(ContainElement(`"kind" is a required field`))
+                Expect(parsed["errors"]).To(ContainElement(`"text" is a required field`))
+            })
+        })
     })
 })
