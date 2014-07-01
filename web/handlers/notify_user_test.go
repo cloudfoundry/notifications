@@ -24,7 +24,7 @@ type Envelope struct {
     AuthPass string
     From     string
     To       string
-    Data     string
+    Data     []string
 }
 
 func (envelope *Envelope) Respond(request string) (string, bool) {
@@ -53,7 +53,7 @@ func (envelope *Envelope) Respond(request string) (string, bool) {
     case strings.Contains(request, "QUIT"):
         return "221 localhost saying goodbye", true
     default:
-        envelope.Data += strings.TrimSpace(request)
+        envelope.Data = append(envelope.Data, strings.TrimSpace(request))
         return "", false
     }
 }
@@ -190,8 +190,14 @@ var _ = Describe("NotifyUser", func() {
     It("logs the message envelope", func() {
         handler.ServeHTTP(writer, request)
 
-        data := `From: no-reply@notifications.example.com\nTo: fake-user@example.com\n`
-        Expect(buffer.String()).To(ContainSubstring(data))
+        data := []string{
+            "From: no-reply@notifications.example.com",
+            "To: fake-user@example.com",
+        }
+        results := strings.Split(buffer.String(), "\n")
+        for _, item := range data {
+            Expect(results).To(ContainElement(item))
+        }
     })
 
     It("talks to the SMTP server, sending the email", func() {
@@ -202,7 +208,10 @@ var _ = Describe("NotifyUser", func() {
             AuthPass: "smtp-pass",
             From:     "<no-reply@notifications.example.com>",
             To:       "<fake-user@example.com>",
-            Data:     `From: no-reply@notifications.example.com\nTo: fake-user@example.com\n`,
+            Data: []string{
+                "From: no-reply@notifications.example.com",
+                "To: fake-user@example.com",
+            },
         }))
     })
 

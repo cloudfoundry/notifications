@@ -14,6 +14,9 @@ import (
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
+const emailTemplate = `From: {{.From}}
+To: {{.To}}`
+
 type NotifyUser struct {
     logger *log.Logger
 }
@@ -50,7 +53,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (handler NotifyUser) sendEmailTo(recipient string) {
-    source, err := template.New("emailTemplate").Parse(`From: {{.From}}\nTo: {{.To}}\n`)
+    source, err := template.New("emailTemplate").Parse(emailTemplate)
     if err != nil {
         panic(err)
     }
