@@ -2,8 +2,10 @@ package handlers
 
 import (
     "bytes"
+    "fmt"
     "log"
     "net/http"
+    "net/smtp"
     "strings"
     "text/template"
 
@@ -42,14 +44,23 @@ func (handler NotifyUser) sendEmailTo(recipient string) {
     if err != nil {
         panic(err)
     }
+    sender := "no-reply@notifications.example.com"
 
     context := map[string]string{
-        "From": "notifications@cf-app.com",
+        "From": sender,
         "To":   recipient,
     }
 
     buffer := bytes.NewBuffer([]byte{})
     source.Execute(buffer, context)
+    message := buffer.Bytes()
 
-    handler.logger.Print(buffer.String())
+    handler.logger.Print(string(message))
+
+    env := config.NewEnvironment()
+    auth := smtp.PlainAuth("", env.SMTPUser, env.SMTPPass, env.SMTPHost)
+    err = smtp.SendMail(fmt.Sprintf("%s:%s", env.SMTPHost, env.SMTPPort), auth, sender, []string{recipient}, message)
+    if err != nil {
+        panic(err)
+    }
 }
