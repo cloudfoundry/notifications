@@ -24,5 +24,5 @@ func configure() {
     log.Printf("\tSMTPPass        -> %s", env.SMTPPass)
     log.Printf("\tSMTPHost        -> %s", env.SMTPHost)
     log.Printf("\tSMTPPort        -> %s", env.SMTPPort)
-
+    log.Printf("\tSender          -> %s", env.Sender)
 }
