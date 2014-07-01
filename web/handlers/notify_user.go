@@ -15,7 +15,23 @@ import (
 )
 
 const emailTemplate = `From: {{.From}}
-To: {{.To}}`
+To: {{.To}}
+Subject: CF Notification: {{.Subject}}
+Body:
+
+The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:
+
+{{.Text}}`
+
+type NotifyUserParams struct {
+    UserID            string
+    From              string
+    To                string
+    Subject           string `json:"subject"`
+    KindDescription   string `json:"kind_description"`
+    SourceDescription string `json:"source_description"`
+    Text              string `json:"text"`
+}
 
 type NotifyUser struct {
     logger *log.Logger
@@ -28,18 +44,15 @@ func NewNotifyUser(logger *log.Logger) NotifyUser {
 }
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-    env := config.NewEnvironment()
-    uaaConfig := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer "))
-    user, err := uaa.UserByID(uaaConfig, strings.TrimPrefix(req.URL.Path, "/users/"))
-    if err != nil {
-        panic(err)
-    }
+    params := handler.parseParams(req)
+    token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
+    user := handler.retrieveUser(params.UserID, token)
 
     if len(user.Emails) > 0 {
-        address := user.Emails[0]
-        handler.logger.Printf("Sending email to %s", address)
+        params.To = user.Emails[0]
+        handler.logger.Printf("Sending email to %s", params.To)
 
-        handler.sendEmailTo(address)
+        handler.sendEmailTo(params)
     }
 
     results := []map[string]string{
@@ -48,20 +61,44 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
         },
     }
     response, err := json.Marshal(results)
+    if err != nil {
+        panic(err)
+    }
+
     w.WriteHeader(http.StatusOK)
     w.Write(response)
 }
 
-func (handler NotifyUser) sendEmailTo(recipient string) {
-    source, err := template.New("emailTemplate").Parse(emailTemplate)
+func (handler NotifyUser) parseParams(req *http.Request) NotifyUserParams {
+    params := NotifyUserParams{
+        UserID: strings.TrimPrefix(req.URL.Path, "/users/"),
+        From:   "no-reply@notifications.example.com",
+    }
+
+    buffer := bytes.NewBuffer([]byte{})
+    buffer.ReadFrom(req.Body)
+    err := json.Unmarshal(buffer.Bytes(), &params)
     if err != nil {
         panic(err)
     }
-    sender := "no-reply@notifications.example.com"
 
-    context := map[string]string{
-        "From": sender,
-        "To":   recipient,
+    return params
+}
+
+func (handler NotifyUser) retrieveUser(userID, token string) uaa.User {
+    env := config.NewEnvironment()
+    uaaConfig := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, token)
+    user, err := uaa.UserByID(uaaConfig, userID)
+    if err != nil {
+        panic(err)
+    }
+    return user
+}
+
+func (handler NotifyUser) sendEmailTo(context NotifyUserParams) {
+    source, err := template.New("emailTemplate").Parse(emailTemplate)
+    if err != nil {
+        panic(err)
     }
 
     buffer := bytes.NewBuffer([]byte{})
@@ -72,7 +109,7 @@ func (handler NotifyUser) sendEmailTo(recipient string) {
 
     env := config.NewEnvironment()
     auth := smtp.PlainAuth("", env.SMTPUser, env.SMTPPass, env.SMTPHost)
-    err = smtp.SendMail(fmt.Sprintf("%s:%s", env.SMTPHost, env.SMTPPort), auth, sender, []string{recipient}, message)
+    err = smtp.SendMail(fmt.Sprintf("%s:%s", env.SMTPHost, env.SMTPPort), auth, context.From, []string{context.To}, message)
     if err != nil {
         panic(err)
     }

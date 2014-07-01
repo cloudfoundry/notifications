@@ -168,7 +168,17 @@ var _ = Describe("NotifyUser", func() {
 
         writer = httptest.NewRecorder()
 
-        request, err = http.NewRequest("POST", "/users/user-123", nil)
+        requestBody, err := json.Marshal(map[string]string{
+            "kind_description":   "Password reminder",
+            "source_description": "Login system",
+            "subject":            "Reset your password",
+            "text":               "Please reset your password by clicking on this link...",
+        })
+        if err != nil {
+            panic(err)
+        }
+
+        request, err = http.NewRequest("POST", "/users/user-123", bytes.NewReader(requestBody))
         if err != nil {
             panic(err)
         }
@@ -193,6 +203,10 @@ var _ = Describe("NotifyUser", func() {
         data := []string{
             "From: no-reply@notifications.example.com",
             "To: fake-user@example.com",
+            "Subject: CF Notification: Reset your password",
+            "Body:",
+            `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:`,
+            "Please reset your password by clicking on this link...",
         }
         results := strings.Split(buffer.String(), "\n")
         for _, item := range data {
@@ -211,6 +225,12 @@ var _ = Describe("NotifyUser", func() {
             Data: []string{
                 "From: no-reply@notifications.example.com",
                 "To: fake-user@example.com",
+                "Subject: CF Notification: Reset your password",
+                "Body:",
+                "",
+                `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:`,
+                "",
+                "Please reset your password by clicking on this link...",
             },
         }))
     })
