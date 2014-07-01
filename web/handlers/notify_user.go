@@ -95,14 +95,17 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (handler NotifyUser) parseParams(req *http.Request) NotifyUserParams {
+    var err error
+
+    env := config.NewEnvironment()
     params := NotifyUserParams{
         UserID: strings.TrimPrefix(req.URL.Path, "/users/"),
-        From:   "no-reply@notifications.example.com",
+        From:   env.Sender,
     }
 
     buffer := bytes.NewBuffer([]byte{})
     buffer.ReadFrom(req.Body)
-    err := json.Unmarshal(buffer.Bytes(), &params)
+    err = json.Unmarshal(buffer.Bytes(), &params)
     if err != nil {
         panic(err)
     }

@@ -14,6 +14,7 @@ type Environment struct {
     SMTPPass        string
     SMTPHost        string
     SMTPPort        string
+    Sender          string
 }
 
 func NewEnvironment() Environment {
@@ -25,6 +26,7 @@ func NewEnvironment() Environment {
         SMTPPass:        loadOrPanic("SMTP_PASS"),
         SMTPHost:        loadOrPanic("SMTP_HOST"),
         SMTPPort:        loadOrPanic("SMTP_PORT"),
+        Sender:          loadOrPanic("SENDER"),
     }
 }
 

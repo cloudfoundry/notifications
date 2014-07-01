@@ -123,6 +123,8 @@ var _ = Describe("NotifyUser", func() {
         os.Setenv("SMTP_HOST", host)
         os.Setenv("SMTP_PORT", port)
 
+        os.Setenv("SENDER", "test-user@example.com")
+
         envelope = Envelope{}
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
@@ -165,7 +167,7 @@ var _ = Describe("NotifyUser", func() {
             handler.ServeHTTP(writer, request)
 
             data := []string{
-                "From: no-reply@notifications.example.com",
+                "From: test-user@example.com",
                 "To: fake-user@example.com",
                 "Subject: CF Notification: Reset your password",
                 "Body:",
@@ -184,10 +186,10 @@ var _ = Describe("NotifyUser", func() {
             Expect(envelope).To(Equal(Envelope{
                 AuthUser: "smtp-user",
                 AuthPass: "smtp-pass",
-                From:     "<no-reply@notifications.example.com>",
+                From:     "<test-user@example.com>",
                 To:       "<fake-user@example.com>",
                 Data: []string{
-                    "From: no-reply@notifications.example.com",
+                    "From: test-user@example.com",
                     "To: fake-user@example.com",
                     "Subject: CF Notification: Reset your password",
                     "Body:",

@@ -119,4 +119,22 @@ var _ = Describe("Environment", func() {
             }).To(Panic())
         })
     })
+
+    Describe("Sender configuration", func() {
+        It("loads the SENDER environment variable when it is present", func() {
+            os.Setenv("SENDER", "my-email@example.com")
+
+            env := config.NewEnvironment()
+
+            Expect(env.Sender).To(Equal("my-email@example.com"))
+        })
+
+        It("panics if the SENDER variable is missing", func() {
+            os.Setenv("SENDER", "")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).To(Panic())
+        })
+    })
 })
