@@ -44,7 +44,10 @@ func (envelope *Envelope) Respond(request string) (string, bool) {
     case strings.Contains(request, "DATA"):
         return "354 Go ahead", false
     case strings.TrimSpace(request) == ".":
-        return "250 Written safely to disk.", false
+        if strings.Contains(envelope.To, "bounce") {
+            return "450 Mailbox unavailable", false
+        }
+        return "250 Written safely to disk", false
     case strings.Contains(request, "QUIT"):
         return "221 localhost saying goodbye", true
     default:

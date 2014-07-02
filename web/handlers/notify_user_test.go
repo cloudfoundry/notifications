@@ -20,6 +20,70 @@ import (
     . "github.com/onsi/gomega"
 )
 
+const responseFor123 = `{
+    "id": "user-123",
+    "meta": {
+        "version": 6,
+        "created": "2014-05-22T22:36:36.941Z",
+        "lastModified": "2014-06-25T23:10:03.845Z"
+    },
+    "userName": "admin",
+    "name": {
+        "familyName": "Admin",
+        "givenName": "Mister"
+    },
+    "emails": [
+        {
+            "value": "fake-user@example.com"
+        }
+    ],
+    "groups": [
+        {
+            "value": "e7f74565-4c7e-44ba-b068-b16072cbf08f",
+            "display": "clients.read",
+            "type": "DIRECT"
+        }
+    ],
+    "approvals": [],
+    "active": true,
+    "verified": false,
+    "schemas": [
+        "urn:scim:schemas:core:1.0"
+    ]
+}`
+
+const responseFor456 = `{
+    "id": "user-456",
+    "meta": {
+        "version": 6,
+        "created": "2014-05-22T22:36:36.941Z",
+        "lastModified": "2014-06-25T23:10:03.845Z"
+    },
+    "userName": "bounce",
+    "name": {
+        "familyName": "Bounce",
+        "givenName": "Mister"
+    },
+    "emails": [
+        {
+            "value": "bounce@example.com"
+        }
+    ],
+    "groups": [
+        {
+            "value": "e7f74565-4c7e-44ba-b068-b16072cbf08f",
+            "display": "clients.read",
+            "type": "DIRECT"
+        }
+    ],
+    "approvals": [],
+    "active": true,
+    "verified": false,
+    "schemas": [
+        "urn:scim:schemas:core:1.0"
+    ]
+}`
+
 var _ = Describe("NotifyUser", func() {
     var fakeUAA *httptest.Server
     var buffer *bytes.Buffer
@@ -37,44 +101,17 @@ var _ = Describe("NotifyUser", func() {
         token = tokenHeader + "." + tokenBody
 
         fakeUAA = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-            if req.URL.Path == "/Users/user-123" &&
-                req.Method == "GET" &&
-                req.Header.Get("Authorization") == "Bearer "+token {
-
-                response := `{
-                      "id": "user-123",
-                      "meta": {
-                        "version": 6,
-                        "created": "2014-05-22T22:36:36.941Z",
-                        "lastModified": "2014-06-25T23:10:03.845Z"
-                      },
-                      "userName": "admin",
-                      "name": {
-                        "familyName": "Admin",
-                        "givenName": "Mister"
-                      },
-                      "emails": [
-                        {
-                          "value": "fake-user@example.com"
-                        }
-                      ],
-                      "groups": [
-                        {
-                          "value": "e7f74565-4c7e-44ba-b068-b16072cbf08f",
-                          "display": "clients.read",
-                          "type": "DIRECT"
-                        }
-                      ],
-                      "approvals": [],
-                      "active": true,
-                      "verified": false,
-                      "schemas": [
-                        "urn:scim:schemas:core:1.0"
-                      ]
-                    }`
-
-                w.WriteHeader(http.StatusOK)
-                w.Write([]byte(response))
+            if req.Method == "GET" && req.Header.Get("Authorization") == "Bearer "+token {
+                switch req.URL.Path {
+                case "/Users/user-123":
+                    w.WriteHeader(http.StatusOK)
+                    w.Write([]byte(responseFor123))
+                case "/Users/user-456":
+                    w.WriteHeader(http.StatusOK)
+                    w.Write([]byte(responseFor456))
+                default:
+                    w.WriteHeader(http.StatusNotFound)
+                }
             } else {
                 w.WriteHeader(http.StatusNotFound)
             }
@@ -224,6 +261,29 @@ var _ = Describe("NotifyUser", func() {
                     "status": "delivered",
                 },
             }))
+        })
+
+        Context("when the SMTP server fails to deliver the mail", func() {
+            BeforeEach(func() {
+                request.URL.Path = "/users/user-456"
+            })
+
+            It("returns a status indicating that delivery failed", func() {
+                handler.ServeHTTP(writer, request)
+
+                Expect(writer.Code).To(Equal(http.StatusOK))
+                parsed := []map[string]string{}
+                err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parsed).To(Equal([]map[string]string{
+                    map[string]string{
+                        "status": "failed",
+                    },
+                }))
+            })
         })
     })
 

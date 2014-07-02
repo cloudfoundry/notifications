@@ -76,16 +76,19 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
     user := handler.retrieveUser(params.UserID, token)
 
+    status := "delivered"
     if len(user.Emails) > 0 {
         params.To = user.Emails[0]
         handler.logger.Printf("Sending email to %s", params.To)
-
-        handler.sendEmailTo(params)
+        err := handler.sendEmailTo(params)
+        if err != nil {
+            status = "failed"
+        }
     }
 
     results := []map[string]string{
         map[string]string{
-            "status": "delivered",
+            "status": status,
         },
     }
     response, err := json.Marshal(results)
@@ -145,7 +148,7 @@ func (handler NotifyUser) retrieveUser(userID, token string) uaa.User {
     return user
 }
 
-func (handler NotifyUser) sendEmailTo(context NotifyUserParams) {
+func (handler NotifyUser) sendEmailTo(context NotifyUserParams) error {
     source, err := template.New("emailTemplate").Parse(emailTemplate)
     if err != nil {
         panic(err)
@@ -160,7 +163,5 @@ func (handler NotifyUser) sendEmailTo(context NotifyUserParams) {
     env := config.NewEnvironment()
     auth := smtp.PlainAuth("", env.SMTPUser, env.SMTPPass, env.SMTPHost)
     err = smtp.SendMail(fmt.Sprintf("%s:%s", env.SMTPHost, env.SMTPPort), auth, context.From, []string{context.To}, message)
-    if err != nil {
-        panic(err)
-    }
+    return err
 }
