@@ -17,15 +17,24 @@ func TestWebHandlersSuite(t *testing.T) {
 }
 
 type FakeMailClient struct {
-    messages    []mail.Message
-    errorOnSend bool
+    messages       []mail.Message
+    errorOnSend    bool
+    errorOnConnect bool
 }
 
 func (fake *FakeMailClient) Connect() error {
+    if fake.errorOnConnect {
+        return errors.New("BOOM!")
+    }
     return nil
 }
 
 func (fake *FakeMailClient) Send(msg mail.Message) error {
+    err := fake.Connect()
+    if err != nil {
+        return err
+    }
+
     if fake.errorOnSend {
         return errors.New("BOOM!")
     }

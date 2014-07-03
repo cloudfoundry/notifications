@@ -174,8 +174,9 @@ Please reset your password by clicking on this link...`,
             })
         })
 
-        PContext("when the SMTP server cannot be reached", func() {
+        Context("when the SMTP server cannot be reached", func() {
             It("returns a status indicating that the server is unavailable", func() {
+                mailClient.errorOnConnect = true
                 handler.ServeHTTP(writer, request)
 
                 Expect(writer.Code).To(Equal(http.StatusOK))

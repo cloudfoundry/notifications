@@ -34,6 +34,10 @@ func NewClient(user, pass, url string) (Client, error) {
 }
 
 func (c *Client) Connect() error {
+    if c.client != nil {
+        return nil
+    }
+
     client, err := smtp.Dial(fmt.Sprintf("%s:%s", c.Host, c.Port))
     if err != nil {
         return err

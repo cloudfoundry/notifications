@@ -159,6 +159,11 @@ func (handler NotifyUser) sendEmailTo(context NotifyUserParams) string {
 
     handler.logger.Print(msg.Data())
 
+    err = handler.mailClient.Connect()
+    if err != nil {
+        return "unavailable"
+    }
+
     err = handler.mailClient.Send(msg)
     if err != nil {
         return "failed"
