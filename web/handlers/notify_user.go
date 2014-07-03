@@ -6,6 +6,7 @@ import (
     "fmt"
     "log"
     "net/http"
+    "net/url"
     "strings"
     "text/template"
 
@@ -77,7 +78,19 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     }
 
     token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
-    user := handler.retrieveUser(params.UserID, token)
+    handler.uaaClient.SetToken(token)
+    user, err := handler.uaaClient.UserByID(params.UserID)
+    if err != nil {
+        switch err.(type) {
+        case *url.Error:
+            w.WriteHeader(http.StatusBadGateway)
+        case uaa.Failure:
+            w.WriteHeader(http.StatusGone)
+        default:
+            w.WriteHeader(http.StatusInternalServerError)
+        }
+        return
+    }
 
     var status string
     if len(user.Emails) > 0 {
@@ -136,15 +149,6 @@ func (handler NotifyUser) parseParams(req *http.Request) NotifyUserParams {
     }
 
     return params
-}
-
-func (handler NotifyUser) retrieveUser(userID, token string) uaa.User {
-    handler.uaaClient.SetToken(token)
-    user, err := handler.uaaClient.UserByID(userID)
-    if err != nil {
-        panic(err)
-    }
-    return user
 }
 
 func (handler NotifyUser) sendEmailTo(context NotifyUserParams) string {

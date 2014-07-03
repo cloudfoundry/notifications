@@ -3,10 +3,12 @@ package handlers_test
 import (
     "bytes"
     "encoding/json"
+    "errors"
     "io/ioutil"
     "log"
     "net/http"
     "net/http/httptest"
+    "net/url"
     "os"
     "strings"
 
@@ -198,6 +200,33 @@ Please reset your password by clicking on this link...`,
                         "status": "unavailable",
                     },
                 }))
+            })
+        })
+
+        Context("when UAA cannot be reached", func() {
+            It("returns a 502 status code", func() {
+                uaaClient.ErrorForUserByID = &url.Error{}
+                handler.ServeHTTP(writer, request)
+
+                Expect(writer.Code).To(Equal(http.StatusBadGateway))
+            })
+        })
+
+        Context("when UAA cannot find the user", func() {
+            It("returns a 410 status code", func() {
+                uaaClient.ErrorForUserByID = uaa.Failure{}
+                handler.ServeHTTP(writer, request)
+
+                Expect(writer.Code).To(Equal(http.StatusGone))
+            })
+        })
+
+        Context("when UAA causes some unknown error", func() {
+            It("returns a 500 status code", func() {
+                uaaClient.ErrorForUserByID = errors.New("Boom!")
+                handler.ServeHTTP(writer, request)
+
+                Expect(writer.Code).To(Equal(http.StatusInternalServerError))
             })
         })
     })

@@ -44,7 +44,8 @@ func (fake *FakeMailClient) Send(msg mail.Message) error {
 }
 
 type FakeUAAClient struct {
-    UsersByID map[string]uaa.User
+    UsersByID        map[string]uaa.User
+    ErrorForUserByID error
 }
 
 func (fake FakeUAAClient) AuthorizeURL() string {
@@ -70,5 +71,5 @@ func (fake FakeUAAClient) GetClientToken() (uaa.Token, error) {
 }
 
 func (fake FakeUAAClient) UserByID(id string) (uaa.User, error) {
-    return fake.UsersByID[id], nil
+    return fake.UsersByID[id], fake.ErrorForUserByID
 }
