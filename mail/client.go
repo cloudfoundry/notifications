@@ -95,5 +95,7 @@ func (c *Client) Send(msg Message) error {
         return err
     }
 
+    c.client = nil
+
     return nil
 }
