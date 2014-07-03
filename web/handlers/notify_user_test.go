@@ -233,10 +233,10 @@ var _ = Describe("NotifyUser", func() {
                 From:     "<test-user@example.com>",
                 To:       "<fake-user@example.com>",
                 Data: []string{
+                    "X-CF-Client-ID: mister-client",
                     "From: test-user@example.com",
                     "To: fake-user@example.com",
                     "Subject: CF Notification: Reset your password",
-                    "X-CF-Client-ID: mister-client",
                     "Body:",
                     "",
                     `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:`,
@@ -281,6 +281,26 @@ var _ = Describe("NotifyUser", func() {
                 Expect(parsed).To(Equal([]map[string]string{
                     map[string]string{
                         "status": "failed",
+                    },
+                }))
+            })
+        })
+
+        PContext("when the SMTP server cannot be reached", func() {
+            It("returns a status indicating that the server is unavailable", func() {
+                smtpServer.Close()
+                handler.ServeHTTP(writer, request)
+
+                Expect(writer.Code).To(Equal(http.StatusOK))
+                parsed := []map[string]string{}
+                err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parsed).To(Equal([]map[string]string{
+                    map[string]string{
+                        "status": "unavailable",
                     },
                 }))
             })

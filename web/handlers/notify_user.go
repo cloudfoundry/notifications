@@ -11,17 +11,12 @@ import (
     "text/template"
 
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/dgrijalva/jwt-go"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
-const emailTemplate = `From: {{.From}}
-To: {{.To}}
-Subject: CF Notification: {{.Subject}}
-X-CF-Client-ID: {{.ClientID}}
-Body:
-
-The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:
+const emailBody = `The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:
 
 {{.Text}}`
 
@@ -149,19 +144,24 @@ func (handler NotifyUser) retrieveUser(userID, token string) uaa.User {
 }
 
 func (handler NotifyUser) sendEmailTo(context NotifyUserParams) error {
-    source, err := template.New("emailTemplate").Parse(emailTemplate)
-    if err != nil {
-        panic(err)
-    }
-
+    source, err := template.New("emailBody").Parse(emailBody)
     buffer := bytes.NewBuffer([]byte{})
     source.Execute(buffer, context)
-    message := buffer.Bytes()
 
-    handler.logger.Print(string(message))
+    msg := mail.Message{
+        From:    context.From,
+        To:      context.To,
+        Subject: fmt.Sprintf("CF Notification: %s", context.Subject),
+        Body:    buffer.String(),
+        Headers: []string{
+            fmt.Sprintf("X-CF-Client-ID: %s", context.ClientID),
+        },
+    }
+
+    handler.logger.Print(msg.Data())
 
     env := config.NewEnvironment()
     auth := smtp.PlainAuth("", env.SMTPUser, env.SMTPPass, env.SMTPHost)
-    err = smtp.SendMail(fmt.Sprintf("%s:%s", env.SMTPHost, env.SMTPPort), auth, context.From, []string{context.To}, message)
+    err = smtp.SendMail(fmt.Sprintf("%s:%s", env.SMTPHost, env.SMTPPort), auth, msg.From, []string{msg.To}, []byte(msg.Data()))
     return err
 }
