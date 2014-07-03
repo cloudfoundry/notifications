@@ -6,7 +6,6 @@ import (
     "fmt"
     "log"
     "net/http"
-    "net/smtp"
     "strings"
     "text/template"
 
@@ -45,11 +44,13 @@ func (params *NotifyUserParams) Invalid() bool {
 
 type NotifyUser struct {
     logger *log.Logger
+    client mail.ClientInterface
 }
 
-func NewNotifyUser(logger *log.Logger) NotifyUser {
+func NewNotifyUser(logger *log.Logger, client mail.ClientInterface) NotifyUser {
     return NotifyUser{
         logger: logger,
+        client: client,
     }
 }
 
@@ -71,14 +72,11 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
     user := handler.retrieveUser(params.UserID, token)
 
-    status := "delivered"
+    var status string
     if len(user.Emails) > 0 {
         params.To = user.Emails[0]
         handler.logger.Printf("Sending email to %s", params.To)
-        err := handler.sendEmailTo(params)
-        if err != nil {
-            status = "failed"
-        }
+        status = handler.sendEmailTo(params)
     }
 
     results := []map[string]string{
@@ -143,7 +141,7 @@ func (handler NotifyUser) retrieveUser(userID, token string) uaa.User {
     return user
 }
 
-func (handler NotifyUser) sendEmailTo(context NotifyUserParams) error {
+func (handler NotifyUser) sendEmailTo(context NotifyUserParams) string {
     source, err := template.New("emailBody").Parse(emailBody)
     buffer := bytes.NewBuffer([]byte{})
     source.Execute(buffer, context)
@@ -160,8 +158,10 @@ func (handler NotifyUser) sendEmailTo(context NotifyUserParams) error {
 
     handler.logger.Print(msg.Data())
 
-    env := config.NewEnvironment()
-    auth := smtp.PlainAuth("", env.SMTPUser, env.SMTPPass, env.SMTPHost)
-    err = smtp.SendMail(fmt.Sprintf("%s:%s", env.SMTPHost, env.SMTPPort), auth, msg.From, []string{msg.To}, []byte(msg.Data()))
-    return err
+    err = handler.client.Send(msg)
+    if err != nil {
+        return "failed"
+    }
+
+    return "delivered"
 }

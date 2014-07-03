@@ -14,6 +14,11 @@ type Client struct {
     client *smtp.Client
 }
 
+type ClientInterface interface {
+    Connect() error
+    Send(Message) error
+}
+
 func NewClient(user, pass, url string) (Client, error) {
     client := Client{
         user: user,

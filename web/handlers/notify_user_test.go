@@ -1,18 +1,17 @@
 package handlers_test
 
 import (
-    "bufio"
     "bytes"
     "encoding/json"
-    "fmt"
+    "errors"
     "io/ioutil"
     "log"
-    "net"
     "net/http"
     "net/http/httptest"
     "os"
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/dgrijalva/jwt-go"
 
@@ -84,6 +83,24 @@ const responseFor456 = `{
     ]
 }`
 
+type FakeMailClient struct {
+    messages    []mail.Message
+    errorOnSend bool
+}
+
+func (fake *FakeMailClient) Connect() error {
+    return nil
+}
+
+func (fake *FakeMailClient) Send(msg mail.Message) error {
+    if fake.errorOnSend {
+        return errors.New("BOOM!")
+    }
+
+    fake.messages = append(fake.messages, msg)
+    return nil
+}
+
 var _ = Describe("NotifyUser", func() {
     var fakeUAA *httptest.Server
     var buffer *bytes.Buffer
@@ -91,9 +108,8 @@ var _ = Describe("NotifyUser", func() {
     var writer *httptest.ResponseRecorder
     var request *http.Request
     var handler handlers.NotifyUser
-    var envelope Envelope
-    var smtpServer *net.TCPListener
     var token string
+    var client FakeMailClient
 
     BeforeEach(func() {
         tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
@@ -120,65 +136,18 @@ var _ = Describe("NotifyUser", func() {
         os.Setenv("UAA_HOST", fakeUAA.URL)
         os.Setenv("UAA_CLIENT_ID", "notifications")
         os.Setenv("UAA_CLIENT_SECRET", "secret")
-
-        addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-        if err != nil {
-            panic(err)
-        }
-
-        smtpServer, err = net.ListenTCP("tcp", addr)
-        if err != nil {
-            panic(err)
-        }
-
-        parts := strings.SplitN(smtpServer.Addr().String(), ":", 2)
-        host := parts[0]
-        port := parts[1]
-
-        go func() {
-            conn, err := smtpServer.AcceptTCP()
-            if err != nil {
-                smtpServer.Close()
-                return
-            }
-            input := bufio.NewReader(conn)
-            output := bufio.NewWriter(conn)
-
-            output.WriteString(fmt.Sprintf("220 %s\r\n", host))
-            output.Flush()
-
-            for {
-                request, _ := input.ReadString('\n')
-                response, exit := envelope.Respond(request)
-                if response != "" {
-                    output.WriteString(response + "\r\n")
-                    output.Flush()
-                }
-                if exit {
-                    break
-                }
-            }
-
-            conn.Close()
-        }()
-
-        os.Setenv("SMTP_USER", "smtp-user")
-        os.Setenv("SMTP_PASS", "smtp-pass")
-        os.Setenv("SMTP_HOST", host)
-        os.Setenv("SMTP_PORT", port)
-
         os.Setenv("SENDER", "test-user@example.com")
 
-        envelope = Envelope{}
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
         writer = httptest.NewRecorder()
-        handler = handlers.NewNotifyUser(logger)
+
+        client = FakeMailClient{}
+        handler = handlers.NewNotifyUser(logger, &client)
     })
 
     AfterEach(func() {
         fakeUAA.Close()
-        smtpServer.Close()
     })
 
     Context("when the request is valid", func() {
@@ -227,21 +196,18 @@ var _ = Describe("NotifyUser", func() {
         It("talks to the SMTP server, sending the email", func() {
             handler.ServeHTTP(writer, request)
 
-            Expect(envelope).To(Equal(Envelope{
-                AuthUser: "smtp-user",
-                AuthPass: "smtp-pass",
-                From:     "<test-user@example.com>",
-                To:       "<fake-user@example.com>",
-                Data: []string{
+            Expect(len(client.messages)).To(Equal(1))
+
+            msg := client.messages[0]
+            Expect(msg).To(Equal(mail.Message{
+                From:    "test-user@example.com",
+                To:      "fake-user@example.com",
+                Subject: "CF Notification: Reset your password",
+                Body: `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:
+
+Please reset your password by clicking on this link...`,
+                Headers: []string{
                     "X-CF-Client-ID: mister-client",
-                    "From: test-user@example.com",
-                    "To: fake-user@example.com",
-                    "Subject: CF Notification: Reset your password",
-                    "Body:",
-                    "",
-                    `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:`,
-                    "",
-                    "Please reset your password by clicking on this link...",
                 },
             }))
         })
@@ -269,6 +235,7 @@ var _ = Describe("NotifyUser", func() {
             })
 
             It("returns a status indicating that delivery failed", func() {
+                client.errorOnSend = true
                 handler.ServeHTTP(writer, request)
 
                 Expect(writer.Code).To(Equal(http.StatusOK))
@@ -288,7 +255,6 @@ var _ = Describe("NotifyUser", func() {
 
         PContext("when the SMTP server cannot be reached", func() {
             It("returns a status indicating that the server is unavailable", func() {
-                smtpServer.Close()
                 handler.ServeHTTP(writer, request)
 
                 Expect(writer.Code).To(Equal(http.StatusOK))

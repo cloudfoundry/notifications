@@ -2,9 +2,12 @@ package web
 
 import (
     "log"
+    "net"
     "os"
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/gorilla/mux"
     "github.com/ryanmoran/stack"
@@ -18,10 +21,16 @@ func NewRouter() Router {
     logger := log.New(os.Stdout, "[WEB] ", log.LstdFlags)
     logging := stack.NewLogging(logger)
 
+    env := config.NewEnvironment()
+    mailClient, err := mail.NewClient(env.SMTPUser, env.SMTPPass, net.JoinHostPort(env.SMTPHost, env.SMTPPort))
+    if err != nil {
+        panic(err)
+    }
+
     return Router{
         stacks: map[string]stack.Stack{
             "GET /info":          stack.NewStack(handlers.NewGetInfo()).Use(logging),
-            "POST /users/{uuid}": stack.NewStack(handlers.NewNotifyUser(logger)).Use(logging),
+            "POST /users/{uuid}": stack.NewStack(handlers.NewNotifyUser(logger, &mailClient)).Use(logging),
         },
     }
 }
