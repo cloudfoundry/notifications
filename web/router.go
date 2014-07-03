@@ -10,6 +10,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/gorilla/mux"
+    "github.com/pivotal-cf/uaa-sso-golang/uaa"
     "github.com/ryanmoran/stack"
 )
 
@@ -27,10 +28,12 @@ func NewRouter() Router {
         panic(err)
     }
 
+    uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
+
     return Router{
         stacks: map[string]stack.Stack{
             "GET /info":          stack.NewStack(handlers.NewGetInfo()).Use(logging),
-            "POST /users/{uuid}": stack.NewStack(handlers.NewNotifyUser(logger, &mailClient)).Use(logging),
+            "POST /users/{uuid}": stack.NewStack(handlers.NewNotifyUser(logger, &mailClient, &uaaClient)).Use(logging),
         },
     }
 }

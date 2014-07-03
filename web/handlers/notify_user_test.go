@@ -3,7 +3,6 @@ package handlers_test
 import (
     "bytes"
     "encoding/json"
-    "errors"
     "io/ioutil"
     "log"
     "net/http"
@@ -14,140 +13,62 @@ import (
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/dgrijalva/jwt-go"
+    "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 )
 
-const responseFor123 = `{
-    "id": "user-123",
-    "meta": {
-        "version": 6,
-        "created": "2014-05-22T22:36:36.941Z",
-        "lastModified": "2014-06-25T23:10:03.845Z"
-    },
-    "userName": "admin",
-    "name": {
-        "familyName": "Admin",
-        "givenName": "Mister"
-    },
-    "emails": [
-        {
-            "value": "fake-user@example.com"
-        }
-    ],
-    "groups": [
-        {
-            "value": "e7f74565-4c7e-44ba-b068-b16072cbf08f",
-            "display": "clients.read",
-            "type": "DIRECT"
-        }
-    ],
-    "approvals": [],
-    "active": true,
-    "verified": false,
-    "schemas": [
-        "urn:scim:schemas:core:1.0"
-    ]
-}`
-
-const responseFor456 = `{
-    "id": "user-456",
-    "meta": {
-        "version": 6,
-        "created": "2014-05-22T22:36:36.941Z",
-        "lastModified": "2014-06-25T23:10:03.845Z"
-    },
-    "userName": "bounce",
-    "name": {
-        "familyName": "Bounce",
-        "givenName": "Mister"
-    },
-    "emails": [
-        {
-            "value": "bounce@example.com"
-        }
-    ],
-    "groups": [
-        {
-            "value": "e7f74565-4c7e-44ba-b068-b16072cbf08f",
-            "display": "clients.read",
-            "type": "DIRECT"
-        }
-    ],
-    "approvals": [],
-    "active": true,
-    "verified": false,
-    "schemas": [
-        "urn:scim:schemas:core:1.0"
-    ]
-}`
-
-type FakeMailClient struct {
-    messages    []mail.Message
-    errorOnSend bool
-}
-
-func (fake *FakeMailClient) Connect() error {
-    return nil
-}
-
-func (fake *FakeMailClient) Send(msg mail.Message) error {
-    if fake.errorOnSend {
-        return errors.New("BOOM!")
-    }
-
-    fake.messages = append(fake.messages, msg)
-    return nil
-}
-
 var _ = Describe("NotifyUser", func() {
-    var fakeUAA *httptest.Server
+    var handler handlers.NotifyUser
     var buffer *bytes.Buffer
     var logger *log.Logger
     var writer *httptest.ResponseRecorder
     var request *http.Request
-    var handler handlers.NotifyUser
     var token string
-    var client FakeMailClient
+    var mailClient FakeMailClient
+    var uaaClient FakeUAAClient
 
     BeforeEach(func() {
         tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
         tokenBody := jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"mister-client","cid":"mister-client","exp":1404281214}`))
         token = tokenHeader + "." + tokenBody
 
-        fakeUAA = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-            if req.Method == "GET" && req.Header.Get("Authorization") == "Bearer "+token {
-                switch req.URL.Path {
-                case "/Users/user-123":
-                    w.WriteHeader(http.StatusOK)
-                    w.Write([]byte(responseFor123))
-                case "/Users/user-456":
-                    w.WriteHeader(http.StatusOK)
-                    w.Write([]byte(responseFor456))
-                default:
-                    w.WriteHeader(http.StatusNotFound)
-                }
-            } else {
-                w.WriteHeader(http.StatusNotFound)
-            }
-        }))
-
-        os.Setenv("UAA_HOST", fakeUAA.URL)
-        os.Setenv("UAA_CLIENT_ID", "notifications")
-        os.Setenv("UAA_CLIENT_SECRET", "secret")
         os.Setenv("SENDER", "test-user@example.com")
 
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
         writer = httptest.NewRecorder()
 
-        client = FakeMailClient{}
-        handler = handlers.NewNotifyUser(logger, &client)
-    })
+        mailClient = FakeMailClient{}
+        uaaClient = FakeUAAClient{
+            UsersByID: map[string]uaa.User{
+                "user-123": uaa.User{
+                    ID:       "user-123",
+                    Username: "admin",
+                    Name: uaa.Name{
+                        FamilyName: "Admin",
+                        GivenName:  "Mister",
+                    },
+                    Emails:   []string{"fake-user@example.com"},
+                    Active:   true,
+                    Verified: false,
+                },
+                "user-456": uaa.User{
+                    ID:       "user-456",
+                    Username: "bounce",
+                    Name: uaa.Name{
+                        FamilyName: "Bounce",
+                        GivenName:  "Mister",
+                    },
+                    Emails:   []string{"bounce@example.com"},
+                    Active:   true,
+                    Verified: false,
+                },
+            },
+        }
 
-    AfterEach(func() {
-        fakeUAA.Close()
+        handler = handlers.NewNotifyUser(logger, &mailClient, &uaaClient)
     })
 
     Context("when the request is valid", func() {
@@ -196,9 +117,9 @@ var _ = Describe("NotifyUser", func() {
         It("talks to the SMTP server, sending the email", func() {
             handler.ServeHTTP(writer, request)
 
-            Expect(len(client.messages)).To(Equal(1))
+            Expect(len(mailClient.messages)).To(Equal(1))
 
-            msg := client.messages[0]
+            msg := mailClient.messages[0]
             Expect(msg).To(Equal(mail.Message{
                 From:    "test-user@example.com",
                 To:      "fake-user@example.com",
@@ -235,7 +156,7 @@ Please reset your password by clicking on this link...`,
             })
 
             It("returns a status indicating that delivery failed", func() {
-                client.errorOnSend = true
+                mailClient.errorOnSend = true
                 handler.ServeHTTP(writer, request)
 
                 Expect(writer.Code).To(Equal(http.StatusOK))

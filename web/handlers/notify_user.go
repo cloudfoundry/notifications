@@ -43,14 +43,16 @@ func (params *NotifyUserParams) Invalid() bool {
 }
 
 type NotifyUser struct {
-    logger *log.Logger
-    client mail.ClientInterface
+    logger     *log.Logger
+    mailClient mail.ClientInterface
+    uaaClient  uaa.UAAInterface
 }
 
-func NewNotifyUser(logger *log.Logger, client mail.ClientInterface) NotifyUser {
+func NewNotifyUser(logger *log.Logger, mailClient mail.ClientInterface, uaaClient uaa.UAAInterface) NotifyUser {
     return NotifyUser{
-        logger: logger,
-        client: client,
+        logger:     logger,
+        mailClient: mailClient,
+        uaaClient:  uaaClient,
     }
 }
 
@@ -132,9 +134,8 @@ func (handler NotifyUser) parseParams(req *http.Request) NotifyUserParams {
 }
 
 func (handler NotifyUser) retrieveUser(userID, token string) uaa.User {
-    env := config.NewEnvironment()
-    uaaConfig := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, token)
-    user, err := uaa.UserByID(uaaConfig, userID)
+    handler.uaaClient.SetToken(token)
+    user, err := handler.uaaClient.UserByID(userID)
     if err != nil {
         panic(err)
     }
@@ -158,7 +159,7 @@ func (handler NotifyUser) sendEmailTo(context NotifyUserParams) string {
 
     handler.logger.Print(msg.Data())
 
-    err = handler.client.Send(msg)
+    err = handler.mailClient.Send(msg)
     if err != nil {
         return "failed"
     }
