@@ -35,9 +35,13 @@ func (failure Failure) Error() string {
 
 // Defines methods needed for clients to use UAA
 type UAAInterface interface {
+    AuthorizeURL() string
+    LoginURL() string
+    SetToken(string)
     Exchange(string) (Token, error)
     Refresh(string) (Token, error)
-    LoginURL() string
+    GetClientToken() (Token, error)
+    UserByID(string) (User, error)
 }
 
 // Contains necessary info to communicate with Cloudfoundry UAA server, use
@@ -92,6 +96,10 @@ func (u UAA) LoginURL() string {
     return u.AuthorizeURL() + "?" + v.Encode()
 }
 
+func (u *UAA) SetToken(token string) {
+    u.AccessToken = token
+}
+
 func (u UAA) tokenURL() string {
     return fmt.Sprintf("%s/oauth/token", u.uaaURL)
 }
@@ -111,6 +119,7 @@ func (u UAA) GetClientToken() (Token, error) {
     return u.GetClientTokenCommand(u)
 }
 
+// Retrieves User from UAA server using the user id
 func (u UAA) UserByID(id string) (User, error) {
     return u.UserByIDCommand(u, id)
 }

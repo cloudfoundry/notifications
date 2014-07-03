@@ -35,6 +35,16 @@ var _ = Describe("UAA", func() {
         })
     })
 
+    Describe("SetToken", func() {
+        It("assigns the given token value to the AccessToken field", func() {
+            Expect(auth.AccessToken).To(Equal(""))
+
+            auth.SetToken("the-new-access-token")
+
+            Expect(auth.AccessToken).To(Equal("the-new-access-token"))
+        })
+    })
+
     Describe("Exchange", func() {
         var exchangeWasCalledWith string
 
