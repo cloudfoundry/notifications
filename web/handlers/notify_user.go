@@ -12,6 +12,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/dgrijalva/jwt-go"
+    uuid "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
@@ -42,17 +43,21 @@ func (params *NotifyUserParams) Invalid() bool {
     return len(params.Errors) > 0
 }
 
+type GUIDGenerationFunc func() (*uuid.UUID, error)
+
 type NotifyUser struct {
-    logger     *log.Logger
-    mailClient mail.ClientInterface
-    uaaClient  uaa.UAAInterface
+    logger        *log.Logger
+    mailClient    mail.ClientInterface
+    uaaClient     uaa.UAAInterface
+    guidGenerator GUIDGenerationFunc
 }
 
-func NewNotifyUser(logger *log.Logger, mailClient mail.ClientInterface, uaaClient uaa.UAAInterface) NotifyUser {
+func NewNotifyUser(logger *log.Logger, mailClient mail.ClientInterface, uaaClient uaa.UAAInterface, guidGenerator GUIDGenerationFunc) NotifyUser {
     return NotifyUser{
-        logger:     logger,
-        mailClient: mailClient,
-        uaaClient:  uaaClient,
+        logger:        logger,
+        mailClient:    mailClient,
+        uaaClient:     uaaClient,
+        guidGenerator: guidGenerator,
     }
 }
 
@@ -147,6 +152,11 @@ func (handler NotifyUser) sendEmailTo(context NotifyUserParams) string {
     buffer := bytes.NewBuffer([]byte{})
     source.Execute(buffer, context)
 
+    guid, err := handler.guidGenerator()
+    if err != nil {
+        panic(err)
+    }
+
     msg := mail.Message{
         From:    context.From,
         To:      context.To,
@@ -154,6 +164,7 @@ func (handler NotifyUser) sendEmailTo(context NotifyUserParams) string {
         Body:    buffer.String(),
         Headers: []string{
             fmt.Sprintf("X-CF-Client-ID: %s", context.ClientID),
+            fmt.Sprintf("X-CF-Notification-ID: %s", guid.String()),
         },
     }
 

@@ -10,6 +10,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/gorilla/mux"
+    uuid "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
     "github.com/ryanmoran/stack"
 )
@@ -33,7 +34,7 @@ func NewRouter() Router {
     return Router{
         stacks: map[string]stack.Stack{
             "GET /info":          stack.NewStack(handlers.NewGetInfo()).Use(logging),
-            "POST /users/{uuid}": stack.NewStack(handlers.NewNotifyUser(logger, &mailClient, &uaaClient)).Use(logging),
+            "POST /users/{uuid}": stack.NewStack(handlers.NewNotifyUser(logger, &mailClient, &uaaClient, uuid.NewV4)).Use(logging),
         },
     }
 }
