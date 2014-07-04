@@ -7,7 +7,8 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/dgrijalva/jwt-go",
-			"Rev": "71c6a65cfe7e0714f999c0269b20dd522df3b99c"
+			"Comment": "v1.0.0-2-gf7a9d2e",
+			"Rev": "f7a9d2e66ed71a4e3bfaa24380e84bf465d665a8"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",

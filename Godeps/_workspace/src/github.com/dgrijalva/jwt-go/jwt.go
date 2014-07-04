@@ -20,18 +20,18 @@ var TimeFunc = time.Now
 // Header of the token (such as `kid`) to identify which key to use.
 type Keyfunc func(*Token) ([]byte, error)
 
-// A JWT Token
+// A JWT Token.  Different fields will be used depending on whether you're
+// creating or parsing/verifying a token.
 type Token struct {
-	Raw    string
-	Header map[string]interface{}
-	Claims map[string]interface{}
-	Method SigningMethod
-	// This is only populated when you Parse a token
-	Signature string
-	// This is only populated when you Parse/Verify a token
-	Valid bool
+	Raw       string                 // The raw token.  Populated when you Parse a token
+	Method    SigningMethod          // The signing method used or to be used
+	Header    map[string]interface{} // The first segment of the token
+	Claims    map[string]interface{} // The second segment of the token
+	Signature string                 // The third segment of the token.  Populated when you Parse a token
+	Valid     bool                   // Is the token valid?  Populated when you Parse/Verify a token
 }
 
+// Create a new Token.  Takes a signing method
 func New(method SigningMethod) *Token {
 	return &Token{
 		Header: map[string]interface{}{
@@ -86,74 +86,73 @@ func (t *Token) SigningString() (string, error) {
 // If everything is kosher, err will be nil
 func Parse(tokenString string, keyFunc Keyfunc) (*Token, error) {
 	parts := strings.Split(tokenString, ".")
-	if len(parts) == 3 {
-		var err error
-		token := &Token{Raw: tokenString}
-		// parse Header
-		var headerBytes []byte
-		if headerBytes, err = DecodeSegment(parts[0]); err != nil {
-			return token, &ValidationError{err: err.Error(), Errors: ValidationErrorMalformed}
-		}
-		if err = json.Unmarshal(headerBytes, &token.Header); err != nil {
-			return token, &ValidationError{err: err.Error(), Errors: ValidationErrorMalformed}
-		}
-
-		// parse Claims
-		var claimBytes []byte
-		if claimBytes, err = DecodeSegment(parts[1]); err != nil {
-			return token, &ValidationError{err: err.Error(), Errors: ValidationErrorMalformed}
-		}
-		if err = json.Unmarshal(claimBytes, &token.Claims); err != nil {
-			return token, &ValidationError{err: err.Error(), Errors: ValidationErrorMalformed}
-		}
-
-		// Lookup signature method
-		if method, ok := token.Header["alg"].(string); ok {
-			if token.Method = GetSigningMethod(method); token.Method == nil {
-				return token, &ValidationError{err: "Signing method (alg) is unavailable.", Errors: ValidationErrorUnverifiable}
-			}
-		} else {
-			return token, &ValidationError{err: "Signing method (alg) is unspecified.", Errors: ValidationErrorUnverifiable}
-		}
-
-		// Lookup key
-		var key []byte
-		if key, err = keyFunc(token); err != nil {
-			return token, &ValidationError{err: err.Error(), Errors: ValidationErrorUnverifiable}
-		}
-
-		// Check expiration times
-		vErr := &ValidationError{}
-		now := TimeFunc().Unix()
-		if exp, ok := token.Claims["exp"].(float64); ok {
-			if now > int64(exp) {
-				vErr.err = "Token is expired"
-				vErr.Errors |= ValidationErrorExpired
-			}
-		}
-		if nbf, ok := token.Claims["nbf"].(float64); ok {
-			if now < int64(nbf) {
-				vErr.err = "Token is not valid yet"
-				vErr.Errors |= ValidationErrorNotValidYet
-			}
-		}
-
-		// Perform validation
-		if err = token.Method.Verify(strings.Join(parts[0:2], "."), parts[2], key); err != nil {
-			vErr.err = err.Error()
-			vErr.Errors |= ValidationErrorSignatureInvalid
-		}
-
-		if vErr.valid() {
-			token.Valid = true
-			return token, nil
-		}
-
-		return token, vErr
-
-	} else {
+	if len(parts) != 3 {
 		return nil, &ValidationError{err: "Token contains an invalid number of segments", Errors: ValidationErrorMalformed}
 	}
+
+	var err error
+	token := &Token{Raw: tokenString}
+	// parse Header
+	var headerBytes []byte
+	if headerBytes, err = DecodeSegment(parts[0]); err != nil {
+		return token, &ValidationError{err: err.Error(), Errors: ValidationErrorMalformed}
+	}
+	if err = json.Unmarshal(headerBytes, &token.Header); err != nil {
+		return token, &ValidationError{err: err.Error(), Errors: ValidationErrorMalformed}
+	}
+
+	// parse Claims
+	var claimBytes []byte
+	if claimBytes, err = DecodeSegment(parts[1]); err != nil {
+		return token, &ValidationError{err: err.Error(), Errors: ValidationErrorMalformed}
+	}
+	if err = json.Unmarshal(claimBytes, &token.Claims); err != nil {
+		return token, &ValidationError{err: err.Error(), Errors: ValidationErrorMalformed}
+	}
+
+	// Lookup signature method
+	if method, ok := token.Header["alg"].(string); ok {
+		if token.Method = GetSigningMethod(method); token.Method == nil {
+			return token, &ValidationError{err: "Signing method (alg) is unavailable.", Errors: ValidationErrorUnverifiable}
+		}
+	} else {
+		return token, &ValidationError{err: "Signing method (alg) is unspecified.", Errors: ValidationErrorUnverifiable}
+	}
+
+	// Lookup key
+	var key []byte
+	if key, err = keyFunc(token); err != nil {
+		return token, &ValidationError{err: err.Error(), Errors: ValidationErrorUnverifiable}
+	}
+
+	// Check expiration times
+	vErr := &ValidationError{}
+	now := TimeFunc().Unix()
+	if exp, ok := token.Claims["exp"].(float64); ok {
+		if now > int64(exp) {
+			vErr.err = "Token is expired"
+			vErr.Errors |= ValidationErrorExpired
+		}
+	}
+	if nbf, ok := token.Claims["nbf"].(float64); ok {
+		if now < int64(nbf) {
+			vErr.err = "Token is not valid yet"
+			vErr.Errors |= ValidationErrorNotValidYet
+		}
+	}
+
+	// Perform validation
+	if err = token.Method.Verify(strings.Join(parts[0:2], "."), parts[2], key); err != nil {
+		vErr.err = err.Error()
+		vErr.Errors |= ValidationErrorSignatureInvalid
+	}
+
+	if vErr.valid() {
+		token.Valid = true
+		return token, nil
+	}
+
+	return token, vErr
 }
 
 // The errors that might occur when parsing and validating a token
@@ -172,7 +171,7 @@ type ValidationError struct {
 }
 
 // Validation error is an error type
-func (e *ValidationError) Error() string {
+func (e ValidationError) Error() string {
 	if e.err == "" {
 		return "Token is invalid"
 	}
@@ -218,12 +217,8 @@ func EncodeSegment(seg []byte) string {
 
 // Decode JWT specific base64url encoding with padding stripped
 func DecodeSegment(seg string) ([]byte, error) {
-	// len % 4
-	switch len(seg) % 4 {
-	case 2:
-		seg = seg + "=="
-	case 3:
-		seg = seg + "==="
+	if l := len(seg) % 4; l > 0 {
+		seg += strings.Repeat("=", 4-l)
 	}
 
 	return base64.URLEncoding.DecodeString(seg)
