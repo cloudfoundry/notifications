@@ -11,10 +11,6 @@ before_script:
   - go get github.com/tools/godep
   - godep restore
 
-matrix:
-  allow_failures:
-    - go: 1.3
-
 notifications:
   webhooks:
     - http://pulse.pivotallabs.com/projects/351885a3-fe2e-44df-9b25-76bd4a19f297/status
