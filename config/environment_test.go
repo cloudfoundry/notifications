@@ -72,6 +72,7 @@ var _ = Describe("Environment", func() {
             os.Setenv("SMTP_PASS", "my-smtp-password")
             os.Setenv("SMTP_HOST", "smtp.example.com")
             os.Setenv("SMTP_PORT", "567")
+            os.Setenv("SMTP_TLS", "true")
 
             env := config.NewEnvironment()
 
@@ -79,9 +80,28 @@ var _ = Describe("Environment", func() {
             Expect(env.SMTPPass).To(Equal("my-smtp-password"))
             Expect(env.SMTPHost).To(Equal("smtp.example.com"))
             Expect(env.SMTPPort).To(Equal("567"))
+            Expect(env.SMTPTLS).To(BeTrue())
+        })
+
+        It("panics when SMTP_TLS is not a boolean", func() {
+            os.Setenv("SMTP_TLS", "banana")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).To(Panic())
         })
 
         It("panics when the values are missing", func() {
+            os.Setenv("SMTP_USER", "my-smtp-user")
+            os.Setenv("SMTP_PASS", "my-smtp-password")
+            os.Setenv("SMTP_HOST", "smtp.example.com")
+            os.Setenv("SMTP_PORT", "567")
+            os.Setenv("SMTP_TLS", "")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).NotTo(Panic())
+
             os.Setenv("SMTP_USER", "")
             os.Setenv("SMTP_PASS", "my-smtp-password")
             os.Setenv("SMTP_HOST", "smtp.example.com")

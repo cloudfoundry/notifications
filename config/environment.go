@@ -4,6 +4,7 @@ import (
     "errors"
     "fmt"
     "os"
+    "strconv"
 )
 
 type Environment struct {
@@ -14,6 +15,7 @@ type Environment struct {
     SMTPPass        string
     SMTPHost        string
     SMTPPort        string
+    SMTPTLS         bool
     Sender          string
 }
 
@@ -26,6 +28,7 @@ func NewEnvironment() Environment {
         SMTPPass:        loadOrPanic("SMTP_PASS"),
         SMTPHost:        loadOrPanic("SMTP_HOST"),
         SMTPPort:        loadOrPanic("SMTP_PORT"),
+        SMTPTLS:         loadBool("SMTP_TLS"),
         Sender:          loadOrPanic("SENDER"),
     }
 }
@@ -34,6 +37,17 @@ func loadOrPanic(name string) string {
     value := os.Getenv(name)
     if value == "" {
         panic(errors.New(fmt.Sprintf("Could not find required %s environment variable", name)))
+    }
+    return value
+}
+
+func loadBool(name string) bool {
+    if os.Getenv(name) == "" {
+        return false
+    }
+    value, err := strconv.ParseBool(os.Getenv(name))
+    if err != nil {
+        panic(errors.New(fmt.Sprintf("Could not parse %s environment variable into boolean", name)))
     }
     return value
 }
