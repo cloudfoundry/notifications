@@ -4,6 +4,7 @@ import (
     "errors"
     "log"
     "net"
+    "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
@@ -11,6 +12,8 @@ import (
 )
 
 func main() {
+    defer crash()
+
     env := config.NewEnvironment()
     configure(env)
     confirmSMTPConfiguration(env)
@@ -57,5 +60,13 @@ func confirmSMTPConfiguration(env config.Environment) {
 
     if startTLSSupported && !env.SMTPTLS {
         panic(errors.New(`SMTP TLS configuration mismatch: Not configured to use TLS over SMTP, but the mail server does support the "STARTTLS" extension.`))
+    }
+}
+
+func crash() {
+    err := recover()
+    if err != nil {
+        time.Sleep(5 * time.Second)
+        panic(err)
     }
 }
