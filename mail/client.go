@@ -57,7 +57,7 @@ func (c *Client) Send(msg Message) error {
         return err
     }
 
-    err = c.client.Hello("localhost")
+    err = c.Hello()
     if err != nil {
         return err
     }
@@ -87,20 +87,31 @@ func (c *Client) Send(msg Message) error {
         return err
     }
 
-    err = c.client.Quit()
+    err = c.Quit()
     if err != nil {
         return err
     }
 
-    c.client = nil
+    return nil
+}
+
+func (c *Client) Hello() error {
+    err := c.client.Hello("localhost")
+    if err != nil {
+        return err
+    }
 
     return nil
+}
+
+func (c *Client) Extension(name string) (bool, string) {
+    return c.client.Extension(name)
 }
 
 func (c *Client) StartTLS() error {
     env := config.NewEnvironment()
     if env.SMTPTLS {
-        if ok, _ := c.client.Extension("STARTTLS"); ok {
+        if ok, _ := c.Extension("STARTTLS"); ok {
             err := c.client.StartTLS(&tls.Config{
                 ServerName:         c.Host,
                 InsecureSkipVerify: c.Insecure,
@@ -115,7 +126,7 @@ func (c *Client) StartTLS() error {
 }
 
 func (c *Client) Auth() error {
-    if ok, _ := c.client.Extension("AUTH"); ok {
+    if ok, _ := c.Extension("AUTH"); ok {
         err := c.client.Auth(smtp.PlainAuth("", c.user, c.pass, c.Host))
         if err != nil {
             return err
@@ -140,6 +151,17 @@ func (c *Client) Data(msg Message) error {
     if err != nil {
         return err
     }
+
+    return nil
+}
+
+func (c *Client) Quit() error {
+    err := c.client.Quit()
+    if err != nil {
+        return err
+    }
+
+    c.client = nil
 
     return nil
 }

@@ -135,4 +135,37 @@ var _ = Describe("Mail", func() {
             })
         })
     })
+
+    Context("Extension", func() {
+        BeforeEach(func() {
+            var err error
+
+            mailServer = NewSMTPServer("user", "pass")
+            serverURL := mailServer.URL.String()
+            client, err = mail.NewClient("user", "pass", serverURL)
+            if err != nil {
+                panic(err)
+            }
+        })
+
+        It("returns a bool, representing presence of, and parameters for a given SMTP extension", func() {
+            err := client.Connect()
+            if err != nil {
+                panic(err)
+            }
+
+            err = client.Hello()
+            if err != nil {
+                panic(err)
+            }
+
+            ok, params := client.Extension("AUTH")
+            Expect(ok).To(BeTrue())
+            Expect(params).To(Equal("PLAIN LOGIN"))
+
+            ok, params = client.Extension("STARTTLS")
+            Expect(ok).To(BeFalse())
+            Expect(params).To(Equal(""))
+        })
+    })
 })
