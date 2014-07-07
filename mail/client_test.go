@@ -19,6 +19,7 @@ var _ = Describe("Mail", func() {
             var err error
 
             mailServer = NewSMTPServer("user", "pass")
+            mailServer.SupportsTLS = true
             serverURL := mailServer.URL.String()
             client, err = mail.NewClient("user", "pass", serverURL)
             if err != nil {
@@ -47,6 +48,7 @@ var _ = Describe("Mail", func() {
             Expect(delivery.Sender).To(Equal("me@example.com"))
             Expect(delivery.Recipient).To(Equal("you@example.com"))
             Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
+            Expect(delivery.UsedTLS).To(BeFalse())
         })
 
         It("can make multiple requests", func() {
@@ -98,7 +100,6 @@ var _ = Describe("Mail", func() {
             var smtpTLS string
 
             BeforeEach(func() {
-                mailServer.SupportsTLS = true
                 smtpTLS = os.Getenv("SMTP_TLS")
                 os.Setenv("SMTP_TLS", "true")
                 client.Insecure = true

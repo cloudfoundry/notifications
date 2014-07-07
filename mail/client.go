@@ -5,6 +5,8 @@ import (
     "fmt"
     "net"
     "net/smtp"
+
+    "github.com/cloudfoundry-incubator/notifications/config"
 )
 
 type Client struct {
@@ -60,22 +62,14 @@ func (c *Client) Send(msg Message) error {
         return err
     }
 
-    if ok, _ := c.client.Extension("STARTTLS"); ok {
-        err = c.client.StartTLS(&tls.Config{
-            ServerName:         c.Host,
-            InsecureSkipVerify: c.Insecure,
-        })
-        if err != nil {
-            fmt.Println("BOOM!")
-            return err
-        }
+    err = c.StartTLS()
+    if err != nil {
+        return err
     }
 
-    if ok, _ := c.client.Extension("AUTH"); ok {
-        err = c.client.Auth(smtp.PlainAuth("", c.user, c.pass, c.Host))
-        if err != nil {
-            return err
-        }
+    err = c.Auth()
+    if err != nil {
+        return err
     }
 
     err = c.client.Mail(msg.From)
@@ -88,6 +82,50 @@ func (c *Client) Send(msg Message) error {
         return err
     }
 
+    err = c.Data(msg)
+    if err != nil {
+        return err
+    }
+
+    err = c.client.Quit()
+    if err != nil {
+        return err
+    }
+
+    c.client = nil
+
+    return nil
+}
+
+func (c *Client) StartTLS() error {
+    env := config.NewEnvironment()
+    if env.SMTPTLS {
+        if ok, _ := c.client.Extension("STARTTLS"); ok {
+            err := c.client.StartTLS(&tls.Config{
+                ServerName:         c.Host,
+                InsecureSkipVerify: c.Insecure,
+            })
+            if err != nil {
+                return err
+            }
+        }
+    }
+
+    return nil
+}
+
+func (c *Client) Auth() error {
+    if ok, _ := c.client.Extension("AUTH"); ok {
+        err := c.client.Auth(smtp.PlainAuth("", c.user, c.pass, c.Host))
+        if err != nil {
+            return err
+        }
+    }
+
+    return nil
+}
+
+func (c *Client) Data(msg Message) error {
     wc, err := c.client.Data()
     if err != nil {
         return err
@@ -102,13 +140,6 @@ func (c *Client) Send(msg Message) error {
     if err != nil {
         return err
     }
-
-    err = c.client.Quit()
-    if err != nil {
-        return err
-    }
-
-    c.client = nil
 
     return nil
 }
