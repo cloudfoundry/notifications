@@ -22,15 +22,15 @@ const emailBody = `The following "{{.KindDescription}}" notification was sent to
 {{.Text}}`
 
 type NotifyUserParams struct {
-    UserID            string
-    ClientID          string
-    From              string
-    To                string
     Subject           string `json:"subject"`
     KindDescription   string `json:"kind_description"`
     SourceDescription string `json:"source_description"`
     Text              string `json:"text"`
     Kind              string
+    UserID            string
+    ClientID          string
+    From              string
+    To                string
     Errors            []string
 }
 
@@ -42,6 +42,40 @@ func (params *NotifyUserParams) Invalid() bool {
         params.Errors = append(params.Errors, `"text" is a required field`)
     }
     return len(params.Errors) > 0
+}
+
+func (params *NotifyUserParams) Parse(req *http.Request) {
+    var err error
+
+    env := config.NewEnvironment()
+    params.UserID = strings.TrimPrefix(req.URL.Path, "/users/")
+    params.From = env.Sender
+
+    if authHeader := req.Header.Get("Authorization"); authHeader != "" {
+        parts := strings.SplitN(authHeader, " ", 2)
+        parts = strings.Split(parts[1], ".")
+        decoded, err := jwt.DecodeSegment(parts[1])
+        if err != nil {
+            panic(err)
+        }
+        token := map[string]interface{}{}
+        err = json.Unmarshal(decoded, &token)
+        if err != nil {
+            panic(err)
+        }
+        if clientID, ok := token["client_id"]; ok {
+            params.ClientID = clientID.(string)
+        }
+    }
+
+    buffer := bytes.NewBuffer([]byte{})
+    buffer.ReadFrom(req.Body)
+    if buffer.Len() > 0 {
+        err = json.Unmarshal(buffer.Bytes(), &params)
+        if err != nil {
+            panic(err)
+        }
+    }
 }
 
 type GUIDGenerationFunc func() (*uuid.UUID, error)
@@ -63,7 +97,8 @@ func NewNotifyUser(logger *log.Logger, mailClient mail.ClientInterface, uaaClien
 }
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-    params := handler.parseParams(req)
+    params := NotifyUserParams{}
+    params.Parse(req)
 
     if params.Invalid() {
         w.WriteHeader(422)
@@ -111,44 +146,6 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     w.WriteHeader(http.StatusOK)
     w.Write(response)
-}
-
-func (handler NotifyUser) parseParams(req *http.Request) NotifyUserParams {
-    var err error
-
-    env := config.NewEnvironment()
-    params := NotifyUserParams{
-        UserID: strings.TrimPrefix(req.URL.Path, "/users/"),
-        From:   env.Sender,
-    }
-
-    if authHeader := req.Header.Get("Authorization"); authHeader != "" {
-        parts := strings.SplitN(authHeader, " ", 2)
-        parts = strings.Split(parts[1], ".")
-        decoded, err := jwt.DecodeSegment(parts[1])
-        if err != nil {
-            panic(err)
-        }
-        token := map[string]interface{}{}
-        err = json.Unmarshal(decoded, &token)
-        if err != nil {
-            panic(err)
-        }
-        if clientID, ok := token["client_id"]; ok {
-            params.ClientID = clientID.(string)
-        }
-    }
-
-    buffer := bytes.NewBuffer([]byte{})
-    buffer.ReadFrom(req.Body)
-    if buffer.Len() > 0 {
-        err = json.Unmarshal(buffer.Bytes(), &params)
-        if err != nil {
-            panic(err)
-        }
-    }
-
-    return params
 }
 
 func (handler NotifyUser) sendEmailTo(context NotifyUserParams) string {
