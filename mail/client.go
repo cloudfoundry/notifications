@@ -1,17 +1,19 @@
 package mail
 
 import (
+    "crypto/tls"
     "fmt"
     "net"
     "net/smtp"
 )
 
 type Client struct {
-    Host   string
-    Port   string
-    user   string
-    pass   string
-    client *smtp.Client
+    Host     string
+    Port     string
+    user     string
+    pass     string
+    client   *smtp.Client
+    Insecure bool
 }
 
 type ClientInterface interface {
@@ -38,7 +40,7 @@ func (c *Client) Connect() error {
         return nil
     }
 
-    client, err := smtp.Dial(fmt.Sprintf("%s:%s", c.Host, c.Port))
+    client, err := smtp.Dial(net.JoinHostPort(c.Host, c.Port))
     if err != nil {
         return err
     }
@@ -56,6 +58,17 @@ func (c *Client) Send(msg Message) error {
     err = c.client.Hello("localhost")
     if err != nil {
         return err
+    }
+
+    if ok, _ := c.client.Extension("STARTTLS"); ok {
+        err = c.client.StartTLS(&tls.Config{
+            ServerName:         c.Host,
+            InsecureSkipVerify: c.Insecure,
+        })
+        if err != nil {
+            fmt.Println("BOOM!")
+            return err
+        }
     }
 
     if ok, _ := c.client.Extension("AUTH"); ok {

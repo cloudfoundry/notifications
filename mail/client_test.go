@@ -1,6 +1,7 @@
 package mail_test
 
 import (
+    "os"
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/mail"
@@ -91,6 +92,46 @@ var _ = Describe("Mail", func() {
             Expect(delivery.Recipient).To(Equal("second@example.com"))
             Expect(delivery.Data).To(Equal(strings.Split(secondMsg.Data(), "\n")))
 
+        })
+
+        Context("when configured to use TLS", func() {
+            var smtpTLS string
+
+            BeforeEach(func() {
+                mailServer.SupportsTLS = true
+                smtpTLS = os.Getenv("SMTP_TLS")
+                os.Setenv("SMTP_TLS", "true")
+                client.Insecure = true
+            })
+
+            AfterEach(func() {
+                os.Setenv("SMTP_TLS", smtpTLS)
+            })
+
+            It("communicates over TLS", func() {
+
+                msg := mail.Message{
+                    From:    "me@example.com",
+                    To:      "you@example.com",
+                    Subject: "Urgent! Read now!",
+                    Body:    "This email is the most important thing you will read all day!",
+                }
+
+                err := client.Send(msg)
+                if err != nil {
+                    panic(err)
+                }
+
+                Eventually(func() int {
+                    return len(mailServer.Deliveries)
+                }).Should(Equal(1))
+                delivery := mailServer.Deliveries[0]
+
+                Expect(delivery.Sender).To(Equal("me@example.com"))
+                Expect(delivery.Recipient).To(Equal("you@example.com"))
+                Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
+                Expect(delivery.UsedTLS).To(BeTrue())
+            })
         })
     })
 })

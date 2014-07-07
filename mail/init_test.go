@@ -2,6 +2,9 @@ package mail_test
 
 import (
     "bufio"
+    "crypto/rand"
+    "crypto/tls"
+    "log"
     "net"
     "net/url"
     "strings"
@@ -16,17 +19,72 @@ func TestMailSuite(t *testing.T) {
     RunSpecs(t, "Mail Suite")
 }
 
+const (
+    certPEM = `-----BEGIN CERTIFICATE-----
+MIID4DCCAsigAwIBAgIJANRk1GTj0oKXMA0GCSqGSIb3DQEBBQUAMH4xCzAJBgNV
+BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRUwEwYDVQQHDAxTYW50YSBNb25p
+Y2ExFTATBgNVBAoMDFBpdm90YWwgTGFiczEWMBQGA1UECwwNQ2xvdWQgRm91bmRy
+eTEUMBIGA1UEAwwLZGV2ZWxvcG1lbnQwHhcNMTQwNzA3MTgxODE1WhcNMjQwNzA0
+MTgxODE1WjB+MQswCQYDVQQGEwJVUzETMBEGA1UECAwKQ2FsaWZvcm5pYTEVMBMG
+A1UEBwwMU2FudGEgTW9uaWNhMRUwEwYDVQQKDAxQaXZvdGFsIExhYnMxFjAUBgNV
+BAsMDUNsb3VkIEZvdW5kcnkxFDASBgNVBAMMC2RldmVsb3BtZW50MIIBIjANBgkq
+hkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyT+YaveHuISiyHBQhStt4HqXBpAK2arS
+F15roOXSI2L6O8LlMaotI4j1OQNf19/6Q/OiBWGGBsVuf0ywde+Ikb9RMuq9FU15
+hRXecfFyK1PU7MXMUzzY5tnh9Tcgau6t+O7OgMNGSulU3tt3xV4kQ7oKulv/aHW7
+3tTGs6Iib4MlXzp8BM7llA5XmggTL2evwGgO/tKEyoWVOCAaIFfYkf4AGf47xfu6
+B6qLpd3o6mdTL2xyZIrRvsCJk+/ToaCRs6ibaM9BiRXktIFRYGlg6fY2KWvxLOL6
+YD9PacHvgCCF4ONPEIL69gWks01RpOU60c5MhndNRiRW9+JuRlLMdQIDAQABo2Ew
+XzAPBgNVHREECDAGhwR/AAABMB0GA1UdDgQWBBRuNXjTwoXq++HZLTjF4nLhOg9w
+2DAfBgNVHSMEGDAWgBRuNXjTwoXq++HZLTjF4nLhOg9w2DAMBgNVHRMEBTADAQH/
+MA0GCSqGSIb3DQEBBQUAA4IBAQCv1sk2oJ55l9LfP6bQkR/nADHVZT5SSitAXpVF
+PDhk7yMtrokP2SkgOgVLlgs3H/qxaowaqg6zeSPdnAhWM/n0r25zx2HYO1KLcHvF
+vRYAb2skOoiYrHo6OOGHfhYj+c0ikgag/0CDy9EZ05/b5xPCMRoRzyp9t2gJpaqz
+5TYIwMbDqs0E9pJT/ZjAQauwYUggxmUdhLUBnaKzzjGy7AOAldJVi/N1MMoNQInI
+FyGrPuv4+T355ntQ274RGdytyYjMmvBANWX5+xzCJfoKlsfMxQNRgiwhNHjpqgZK
+e+/BhTCOY1sHLFwd0eZ/4psN9/ytZRtcH3Y8waIwuQi3MlH5
+-----END CERTIFICATE-----`
+    keyPEM = `-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAyT+YaveHuISiyHBQhStt4HqXBpAK2arSF15roOXSI2L6O8Ll
+MaotI4j1OQNf19/6Q/OiBWGGBsVuf0ywde+Ikb9RMuq9FU15hRXecfFyK1PU7MXM
+UzzY5tnh9Tcgau6t+O7OgMNGSulU3tt3xV4kQ7oKulv/aHW73tTGs6Iib4MlXzp8
+BM7llA5XmggTL2evwGgO/tKEyoWVOCAaIFfYkf4AGf47xfu6B6qLpd3o6mdTL2xy
+ZIrRvsCJk+/ToaCRs6ibaM9BiRXktIFRYGlg6fY2KWvxLOL6YD9PacHvgCCF4ONP
+EIL69gWks01RpOU60c5MhndNRiRW9+JuRlLMdQIDAQABAoIBAQDHU3zUXY0Inh5Y
+5p1p+OTgVKtnLZ4Bj2Z9DOEPQPHMaMkuDdBSS5pfutQffw8b0tSfHx0XtUs5Q604
+2q1gcjpTGSoEg2l6Qv0catejBaCt919KkHLa8sZmh+F8rfgm0XZwu56+/CqQIeEU
+xk0vqBnFFuxvPpWPUiUdBKQ14V24EWvpkzIk1PcFXzLAimmfLvrKLnfPqZbXug0L
+7kVSqLjNPWdltwWcVQ+uEgVv9TLRbEcxNIt2/DbSxplxjTlmX3O5hzzJMYcjrPpZ
+2haoNdFyNb4y3G4F1nNrNzsTkQYfyOZBPmvMAJrx66vtEE0En9nYlq4xfjgjDr0j
+zJMhMa31AoGBAO7SV+ORuEAQ53wQU7ccvn4F8FQBaeNbSpTiHmARW0iEIvHkvp0N
+0aEdbo8aunFXNneEULP0I8tn0pBqeXjJIuh1epk3sqQg6xGodOsDK3ivIj6oaYtk
+ifIVTcCL+dsCLXLMrdjAvbUWGtgS1SfZU4aRxehlH8UISaftnOE1NzdHAoGBANe5
+YR2eLb0JPwRluFeiOhiEwlkrdai8vlk8EBHSUmku/sG7a8UuttqL1dGaUuedGfUk
+0igc3WWGU0M7JNrrk2c6BuhqwQd57A3FlvEXon4kzQAWXGWfsU2KVq51HG+/8Cfp
+7pIybTr6ysulVtNSh1NxPwO0wgWYnmarC1kKUjRjAoGAXB5Ydlgb6OJcV9d4YxY8
+SCIETHLrJB5vizQZIVcwja0iSYnBGJVe+bV/ksVtixBn2vv3oSIXuHrIlpnrVvLG
+e0HtUzJPvs1PvtTqnEfxubBcFi0h4Pmb1/vtrMqRSq/xVemrWQMnabUoD5ZcD+3d
+MPgDjZuMAJUszBB0Rc4gCTsCgYBtCRkKJFpP8u10JonfWXLt06R795h32jaH2fDx
+YRIgcg14FGgreSoZGpbPY6ZFxUVKf/rtJXHOD+/jynAdavbNNSoqrVK1ma1zZIyf
+fWe3RJiNU8AN6YJvg92+PhlKboRPWFEqeex15C8+cWqKU2ttBI9qKyHqPDLMB+Yr
+cikMqwKBgDLBKiVLqSeli1BrlURWGMyl7j+NgYNdih+M2Ra8dAuWt6BTQfjYW53u
+EK8URF8KvO4+PR5pRJDCNx6+uOLoTsBE7KBYEiLzK9rTpEBQIv35h4hmF75SNiF/
+gMirbaXT377nSX0oPon0P1iUgl5tUJNqYnYdA+qcpoeCvXuObAzm
+-----END RSA PRIVATE KEY-----`
+)
+
 type SMTPServer struct {
     URL             url.URL
     CurrentDelivery Delivery
     Deliveries      []Delivery
     Listener        *net.TCPListener
+    SupportsTLS     bool
 }
 
 type Delivery struct {
     Recipient string
     Sender    string
     Data      []string
+    UsedTLS   bool
 }
 
 func NewSMTPServer(user, pass string) *SMTPServer {
@@ -64,7 +122,7 @@ func (server *SMTPServer) Run() {
     }()
 }
 
-func (server *SMTPServer) Respond(conn *net.TCPConn) {
+func (server *SMTPServer) Respond(conn net.Conn) {
     input := bufio.NewReader(conn)
     output := bufio.NewWriter(conn)
     server.Broadcast(output)
@@ -75,6 +133,8 @@ Loop:
         switch {
         case strings.Contains(msg, "EHLO"):
             server.RespondToEHLO(output)
+        case strings.Contains(msg, "STARTTLS"):
+            conn, input, output = server.RespondToStartTLS(conn, input, output)
         case strings.Contains(msg, "AUTH PLAIN"):
             server.RespondToAuthPlain(output)
         case strings.Contains(msg, "MAIL FROM"):
@@ -100,8 +160,27 @@ func (server *SMTPServer) Broadcast(output *bufio.Writer) {
 
 func (server *SMTPServer) RespondToEHLO(output *bufio.Writer) {
     output.WriteString("250-localhost Hello\n")
+    if server.SupportsTLS {
+        output.WriteString("250-STARTTLS\n")
+    }
     output.WriteString("250 AUTH PLAIN LOGIN\r\n")
     output.Flush()
+}
+
+func (server *SMTPServer) RespondToStartTLS(conn net.Conn, input *bufio.Reader, output *bufio.Writer) (*tls.Conn, *bufio.Reader, *bufio.Writer) {
+    output.WriteString("220 Go ahead\r\n")
+    output.Flush()
+
+    server.CurrentDelivery.UsedTLS = true
+
+    cert, err := tls.X509KeyPair([]byte(certPEM), []byte(keyPEM))
+    if err != nil {
+        log.Fatalf("server: loadkeys: %s", err)
+    }
+    config := tls.Config{Certificates: []tls.Certificate{cert}}
+    config.Rand = rand.Reader
+    tlsConn := tls.Server(conn, &config)
+    return tlsConn, bufio.NewReader(tlsConn), bufio.NewWriter(tlsConn)
 }
 
 func (server *SMTPServer) RespondToAuthPlain(output *bufio.Writer) {

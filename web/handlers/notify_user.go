@@ -131,7 +131,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     if len(user.Emails) > 0 {
         params.To = user.Emails[0]
         handler.logger.Printf("Sending email to %s", params.To)
-        status = handler.sendEmailTo(params)
+        status = handler.sendEmail(params)
     }
 
     results := []map[string]string{
@@ -148,7 +148,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     w.Write(response)
 }
 
-func (handler NotifyUser) sendEmailTo(context NotifyUserParams) string {
+func (handler NotifyUser) sendEmail(context NotifyUserParams) string {
     source, err := template.New("emailBody").Parse(emailBody)
     buffer := bytes.NewBuffer([]byte{})
     source.Execute(buffer, context)
