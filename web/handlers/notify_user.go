@@ -10,9 +10,7 @@ import (
     "strings"
     "text/template"
 
-    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
-    "github.com/dgrijalva/jwt-go"
     uuid "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
@@ -20,63 +18,6 @@ import (
 const emailBody = `The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:
 
 {{.Text}}`
-
-type NotifyUserParams struct {
-    Subject           string `json:"subject"`
-    KindDescription   string `json:"kind_description"`
-    SourceDescription string `json:"source_description"`
-    Text              string `json:"text"`
-    Kind              string
-    UserID            string
-    ClientID          string
-    From              string
-    To                string
-    Errors            []string
-}
-
-func (params *NotifyUserParams) Invalid() bool {
-    if params.Kind == "" {
-        params.Errors = append(params.Errors, `"kind" is a required field`)
-    }
-    if params.Text == "" {
-        params.Errors = append(params.Errors, `"text" is a required field`)
-    }
-    return len(params.Errors) > 0
-}
-
-func (params *NotifyUserParams) Parse(req *http.Request) {
-    var err error
-
-    env := config.NewEnvironment()
-    params.UserID = strings.TrimPrefix(req.URL.Path, "/users/")
-    params.From = env.Sender
-
-    if authHeader := req.Header.Get("Authorization"); authHeader != "" {
-        parts := strings.SplitN(authHeader, " ", 2)
-        parts = strings.Split(parts[1], ".")
-        decoded, err := jwt.DecodeSegment(parts[1])
-        if err != nil {
-            panic(err)
-        }
-        token := map[string]interface{}{}
-        err = json.Unmarshal(decoded, &token)
-        if err != nil {
-            panic(err)
-        }
-        if clientID, ok := token["client_id"]; ok {
-            params.ClientID = clientID.(string)
-        }
-    }
-
-    buffer := bytes.NewBuffer([]byte{})
-    buffer.ReadFrom(req.Body)
-    if buffer.Len() > 0 {
-        err = json.Unmarshal(buffer.Bytes(), &params)
-        if err != nil {
-            panic(err)
-        }
-    }
-}
 
 type GUIDGenerationFunc func() (*uuid.UUID, error)
 
@@ -97,18 +38,19 @@ func NewNotifyUser(logger *log.Logger, mailClient mail.ClientInterface, uaaClien
 }
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-    params := NotifyUserParams{}
-    params.Parse(req)
+    params := NewNotifyUserParams(req)
+    params.ParseRequestPath()
+    params.ParseEnvironmentVariables()
 
-    if params.Invalid() {
-        w.WriteHeader(422)
-        response, err := json.Marshal(map[string][]string{
-            "errors": params.Errors,
-        })
-        if err != nil {
-            panic(err)
-        }
-        w.Write(response)
+    params.ParseRequestBody()
+    if valid := params.ValidateRequestBody(); !valid {
+        handler.Error(w, 422, params.Errors)
+        return
+    }
+
+    params.ParseAuthorizationToken()
+    if valid := params.ValidateAuthorizationToken(); !valid {
+        handler.Error(w, http.StatusForbidden, params.Errors)
         return
     }
 
@@ -131,7 +73,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     if len(user.Emails) > 0 {
         params.To = user.Emails[0]
         handler.logger.Printf("Sending email to %s", params.To)
-        status = handler.sendEmail(params)
+        status = handler.SendEmail(params)
     }
 
     results := []map[string]string{
@@ -148,7 +90,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     w.Write(response)
 }
 
-func (handler NotifyUser) sendEmail(context NotifyUserParams) string {
+func (handler NotifyUser) SendEmail(context NotifyUserParams) string {
     source, err := template.New("emailBody").Parse(emailBody)
     buffer := bytes.NewBuffer([]byte{})
     source.Execute(buffer, context)
@@ -182,4 +124,16 @@ func (handler NotifyUser) sendEmail(context NotifyUserParams) string {
     }
 
     return "delivered"
+}
+
+func (handler NotifyUser) Error(w http.ResponseWriter, code int, errors []string) {
+    response, err := json.Marshal(map[string][]string{
+        "errors": errors,
+    })
+    if err != nil {
+        panic(err)
+    }
+
+    w.WriteHeader(code)
+    w.Write(response)
 }

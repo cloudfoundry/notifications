@@ -34,7 +34,7 @@ var _ = Describe("NotifyUser", func() {
 
     BeforeEach(func() {
         tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
-        tokenBody := jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"mister-client","cid":"mister-client","exp":1404281214}`))
+        tokenBody := jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"mister-client","cid":"mister-client","exp":3404281214}`))
         token = tokenHeader + "." + tokenBody
 
         os.Setenv("SENDER", "test-user@example.com")
@@ -279,6 +279,42 @@ Please reset your password by clicking on this link...`,
                 Expect(parsed["errors"]).To(ContainElement(`"kind" is a required field`))
                 Expect(parsed["errors"]).To(ContainElement(`"text" is a required field`))
             })
+        })
+    })
+
+    Context("when the request uses an expired auth token", func() {
+        BeforeEach(func() {
+            tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
+            tokenBody := jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"mister-client","cid":"mister-client","exp":1404281214}`))
+            token = tokenHeader + "." + tokenBody
+
+            requestBody, err := json.Marshal(map[string]string{
+                "kind": "forgot_password",
+                "text": "Try to remember your password next time",
+            })
+            if err != nil {
+                panic(err)
+            }
+
+            request, err = http.NewRequest("POST", "/users/user-123", bytes.NewReader(requestBody))
+            if err != nil {
+                panic(err)
+            }
+            request.Header.Set("Authorization", "Bearer "+token)
+        })
+
+        It("returns a 403 status code and error message", func() {
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(http.StatusForbidden))
+
+            parsed := map[string][]string{}
+            err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(parsed["errors"]).To(ContainElement("Authorization header is invalid: expired"))
         })
     })
 })
