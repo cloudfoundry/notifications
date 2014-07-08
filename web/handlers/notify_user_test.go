@@ -303,7 +303,7 @@ Please reset your password by clicking on this link...`,
             request.Header.Set("Authorization", "Bearer "+token)
         })
 
-        It("returns a 403 status code and error message", func() {
+        It("returns a 401 status code and error message", func() {
             handler.ServeHTTP(writer, request)
 
             Expect(writer.Code).To(Equal(http.StatusUnauthorized))
@@ -315,6 +315,37 @@ Please reset your password by clicking on this link...`,
             }
 
             Expect(parsed["errors"]).To(ContainElement("Authorization header is invalid: expired"))
+        })
+    })
+
+    Context("when the request does not contain an auth token", func() {
+        BeforeEach(func() {
+            requestBody, err := json.Marshal(map[string]string{
+                "kind": "forgot_password",
+                "text": "Try to remember your password next time",
+            })
+            if err != nil {
+                panic(err)
+            }
+
+            request, err = http.NewRequest("POST", "/users/user-123", bytes.NewReader(requestBody))
+            if err != nil {
+                panic(err)
+            }
+        })
+
+        It("returns a 401 status code and error message", func() {
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(http.StatusUnauthorized))
+
+            parsed := map[string][]string{}
+            err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(parsed["errors"]).To(ContainElement("Authorization header is invalid: missing"))
         })
     })
 })

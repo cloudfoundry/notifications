@@ -112,15 +112,29 @@ var _ = Describe("NotifyUserParams", func() {
     })
 
     Describe("ValidateAuthorizationToken", func() {
-        It("parses the Authorization header, storing the client_id value", func() {
+        var request *http.Request
+        var err error
+
+        BeforeEach(func() {
+            request, err = http.NewRequest("GET", "/users", nil)
+            if err != nil {
+                panic(err)
+            }
+        })
+
+        It("validates the presence of an auth token", func() {
+            params := handlers.NewNotifyUserParams(request)
+            params.ParseAuthorizationToken()
+
+            Expect(params.ValidateAuthorizationToken()).To(BeFalse())
+            Expect(params.Errors).To(ContainElement("Authorization header is invalid: missing"))
+        })
+
+        It("validates the fields of the auth token", func() {
             tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
             tokenBody := jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"my-client","cid":"my-client","exp":3404281214}`))
             token := tokenHeader + "." + tokenBody
 
-            request, err := http.NewRequest("GET", "/users", nil)
-            if err != nil {
-                panic(err)
-            }
             request.Header.Set("Authorization", "Bearer "+token)
 
             params := handlers.NewNotifyUserParams(request)

@@ -82,17 +82,21 @@ func (params *NotifyUserParams) parseAuthorizationHeader() map[string]interface{
 
 func (params *NotifyUserParams) ValidateAuthorizationToken() bool {
     token := params.parseAuthorizationHeader()
-    if _, ok := token["client_id"]; !ok {
-        params.Errors = append(params.Errors, `Authorization header is invalid: missing "client_id" field`)
-    }
+    if len(token) > 0 {
+        if _, ok := token["client_id"]; !ok {
+            params.Errors = append(params.Errors, `Authorization header is invalid: missing "client_id" field`)
+        }
 
-    if exp, ok := token["exp"]; ok {
-        expirationTime := time.Unix(int64(exp.(float64)), 0)
-        if expirationTime.Before(time.Now()) {
-            params.Errors = append(params.Errors, "Authorization header is invalid: expired")
+        if exp, ok := token["exp"]; ok {
+            expirationTime := time.Unix(int64(exp.(float64)), 0)
+            if expirationTime.Before(time.Now()) {
+                params.Errors = append(params.Errors, "Authorization header is invalid: expired")
+            }
+        } else {
+            params.Errors = append(params.Errors, `Authorization header is invalid: missing "exp" field`)
         }
     } else {
-        params.Errors = append(params.Errors, `Authorization header is invalid: missing "exp" field`)
+        params.Errors = append(params.Errors, "Authorization header is invalid: missing")
     }
 
     return len(params.Errors) == 0
