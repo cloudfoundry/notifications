@@ -306,7 +306,7 @@ Please reset your password by clicking on this link...`,
         It("returns a 403 status code and error message", func() {
             handler.ServeHTTP(writer, request)
 
-            Expect(writer.Code).To(Equal(http.StatusForbidden))
+            Expect(writer.Code).To(Equal(http.StatusUnauthorized))
 
             parsed := map[string][]string{}
             err := json.Unmarshal(writer.Body.Bytes(), &parsed)

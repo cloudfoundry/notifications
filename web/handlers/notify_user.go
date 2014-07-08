@@ -50,7 +50,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     params.ParseAuthorizationToken()
     if valid := params.ValidateAuthorizationToken(); !valid {
-        handler.Error(w, http.StatusForbidden, params.Errors)
+        handler.Error(w, http.StatusUnauthorized, params.Errors)
         return
     }
 
