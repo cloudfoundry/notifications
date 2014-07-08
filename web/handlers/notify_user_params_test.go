@@ -182,6 +182,32 @@ var _ = Describe("NotifyUserParams", func() {
         })
     })
 
+    Describe("ConfirmPermissions", func() {
+        It("validates the scopes in the auth token", func() {
+            request, err := http.NewRequest("GET", "/users", nil)
+            if err != nil {
+                panic(err)
+            }
+
+            tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
+            tokenBody := jwt.EncodeSegment([]byte(`{"client_id":"my-client","cid":"my-client","scope":[]}`))
+            token := tokenHeader + "." + tokenBody
+            request.Header.Set("Authorization", "Bearer "+token)
+
+            params := handlers.NewNotifyUserParams(request)
+            Expect(params.ConfirmPermissions()).To(BeFalse())
+            Expect(params.Errors).To(ContainElement("You are not authorized to perform the requested action"))
+
+            tokenBody = jwt.EncodeSegment([]byte(`{"client_id":"my-client","cid":"my-client","scope":["notifications.write"]}`))
+            token = tokenHeader + "." + tokenBody
+            request.Header.Set("Authorization", "Bearer "+token)
+
+            params = handlers.NewNotifyUserParams(request)
+            Expect(params.ConfirmPermissions()).To(BeTrue())
+            Expect(len(params.Errors)).To(Equal(0))
+        })
+    })
+
     Describe("ParseRequestPath", func() {
         It("reads the user_id out of the request path", func() {
             request, err := http.NewRequest("GET", "/users/my-user-id", nil)

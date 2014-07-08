@@ -63,24 +63,8 @@ func (params *NotifyUserParams) ParseAuthorizationToken() {
     }
 }
 
-func (params *NotifyUserParams) parseAuthorizationHeader() map[string]interface{} {
-    token := make(map[string]interface{})
-    if authHeader := params.req.Header.Get("Authorization"); authHeader != "" {
-        parts := strings.SplitN(authHeader, " ", 2)
-        parts = strings.Split(parts[1], ".")
-        decoded, err := jwt.DecodeSegment(parts[1])
-        if err != nil {
-            panic(err)
-        }
-        err = json.Unmarshal(decoded, &token)
-        if err != nil {
-            panic(err)
-        }
-    }
-    return token
-}
-
 func (params *NotifyUserParams) ValidateAuthorizationToken() bool {
+    params.Errors = []string{}
     token := params.parseAuthorizationHeader()
     if len(token) > 0 {
         if _, ok := token["client_id"]; !ok {
@@ -100,6 +84,44 @@ func (params *NotifyUserParams) ValidateAuthorizationToken() bool {
     }
 
     return len(params.Errors) == 0
+}
+
+func (params *NotifyUserParams) ConfirmPermissions() bool {
+    params.Errors = []string{}
+    token := params.parseAuthorizationHeader()
+    if scopes, ok := token["scope"]; ok {
+        hasNotificationsWrite := false
+        for _, scope := range scopes.([]interface{}) {
+            if scope.(string) == "notifications.write" {
+                hasNotificationsWrite = true
+                break
+            }
+        }
+        if !hasNotificationsWrite {
+            params.Errors = append(params.Errors, "You are not authorized to perform the requested action")
+        }
+    } else {
+        params.Errors = append(params.Errors, "You are not authorized to perform the requested action")
+    }
+
+    return len(params.Errors) == 0
+}
+
+func (params *NotifyUserParams) parseAuthorizationHeader() map[string]interface{} {
+    token := make(map[string]interface{})
+    if authHeader := params.req.Header.Get("Authorization"); authHeader != "" {
+        parts := strings.SplitN(authHeader, " ", 2)
+        parts = strings.Split(parts[1], ".")
+        decoded, err := jwt.DecodeSegment(parts[1])
+        if err != nil {
+            panic(err)
+        }
+        err = json.Unmarshal(decoded, &token)
+        if err != nil {
+            panic(err)
+        }
+    }
+    return token
 }
 
 func (params *NotifyUserParams) ParseRequestPath() {
