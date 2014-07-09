@@ -6,7 +6,6 @@ import (
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
-    "github.com/dgrijalva/jwt-go"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -92,9 +91,16 @@ var _ = Describe("NotifyUserParams", func() {
         var token string
 
         BeforeEach(func() {
-            tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
-            tokenBody := jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"my-client","cid":"my-client","exp":1404281214}`))
-            token = tokenHeader + "." + tokenBody
+            tokenHeader := map[string]interface{}{
+                "alg": "RS256",
+            }
+            tokenClaims := map[string]interface{}{
+                "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
+                "client_id": "my-client",
+                "cid":       "my-client",
+                "exp":       3404281214,
+            }
+            token = BuildToken(tokenHeader, tokenClaims)
         })
 
         It("parses the Authorization header, storing the client_id value", func() {
@@ -124,16 +130,22 @@ var _ = Describe("NotifyUserParams", func() {
 
         It("validates the presence of an auth token", func() {
             params := handlers.NewNotifyUserParams(request)
-            params.ParseAuthorizationToken()
 
             Expect(params.ValidateAuthorizationToken()).To(BeFalse())
             Expect(params.Errors).To(ContainElement("Authorization header is invalid: missing"))
         })
 
         It("validates the fields of the auth token", func() {
-            tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
-            tokenBody := jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"my-client","cid":"my-client","exp":3404281214}`))
-            token := tokenHeader + "." + tokenBody
+            tokenHeader := map[string]interface{}{
+                "alg": "RS256",
+            }
+            tokenClaims := map[string]interface{}{
+                "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
+                "client_id": "my-client",
+                "cid":       "my-client",
+                "exp":       3404281214,
+            }
+            token := BuildToken(tokenHeader, tokenClaims)
 
             request.Header.Set("Authorization", "Bearer "+token)
 
@@ -143,8 +155,12 @@ var _ = Describe("NotifyUserParams", func() {
             Expect(params.ValidateAuthorizationToken()).To(BeTrue())
             Expect(len(params.Errors)).To(Equal(0))
 
-            tokenBody = jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","cid":"my-client","exp":3404281214}`))
-            token = tokenHeader + "." + tokenBody
+            tokenClaims = map[string]interface{}{
+                "jti": "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
+                "cid": "my-client",
+                "exp": 3404281214,
+            }
+            token = BuildToken(tokenHeader, tokenClaims)
 
             request.Header.Set("Authorization", "Bearer "+token)
             params = handlers.NewNotifyUserParams(request)
@@ -154,19 +170,13 @@ var _ = Describe("NotifyUserParams", func() {
             Expect(len(params.Errors)).To(Equal(1))
             Expect(params.Errors).To(ContainElement(`Authorization header is invalid: missing "client_id" field`))
 
-            tokenBody = jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"my-client","cid":"my-client"}`))
-            token = tokenHeader + "." + tokenBody
-
-            request.Header.Set("Authorization", "Bearer "+token)
-            params = handlers.NewNotifyUserParams(request)
-            params.ParseAuthorizationToken()
-
-            Expect(params.ValidateAuthorizationToken()).To(BeFalse())
-            Expect(len(params.Errors)).To(Equal(1))
-            Expect(params.Errors).To(ContainElement(`Authorization header is invalid: missing "exp" field`))
-
-            tokenBody = jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"my-client","cid":"my-client","exp":1404281214}`))
-            token = tokenHeader + "." + tokenBody
+            tokenClaims = map[string]interface{}{
+                "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
+                "client_id": "my-client",
+                "cid":       "my-client",
+                "exp":       1404281214,
+            }
+            token = BuildToken(tokenHeader, tokenClaims)
 
             request, err = http.NewRequest("GET", "/users", nil)
             if err != nil {
@@ -179,6 +189,7 @@ var _ = Describe("NotifyUserParams", func() {
 
             Expect(params.ValidateAuthorizationToken()).To(BeFalse())
             Expect(len(params.Errors)).To(Equal(1))
+            Expect(params.Errors).To(ContainElement(`Authorization header is invalid: expired`))
         })
     })
 
@@ -189,17 +200,28 @@ var _ = Describe("NotifyUserParams", func() {
                 panic(err)
             }
 
-            tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
-            tokenBody := jwt.EncodeSegment([]byte(`{"client_id":"my-client","cid":"my-client","scope":[]}`))
-            token := tokenHeader + "." + tokenBody
+            tokenHeader := map[string]interface{}{
+                "alg": "RS256",
+            }
+            tokenClaims := map[string]interface{}{
+                "client_id": "my-client",
+                "cid":       "my-client",
+                "scope":     []string{},
+            }
+            token := BuildToken(tokenHeader, tokenClaims)
+
             request.Header.Set("Authorization", "Bearer "+token)
 
             params := handlers.NewNotifyUserParams(request)
             Expect(params.ConfirmPermissions()).To(BeFalse())
             Expect(params.Errors).To(ContainElement("You are not authorized to perform the requested action"))
 
-            tokenBody = jwt.EncodeSegment([]byte(`{"client_id":"my-client","cid":"my-client","scope":["notifications.write"]}`))
-            token = tokenHeader + "." + tokenBody
+            tokenClaims = map[string]interface{}{
+                "client_id": "my-client",
+                "cid":       "my-client",
+                "scope":     []string{"notifications.write"},
+            }
+            token = BuildToken(tokenHeader, tokenClaims)
             request.Header.Set("Authorization", "Bearer "+token)
 
             params = handlers.NewNotifyUserParams(request)

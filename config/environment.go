@@ -7,6 +7,8 @@ import (
     "strconv"
 )
 
+var UAAPublicKey string
+
 type Environment struct {
     UAAHost         string
     UAAClientID     string

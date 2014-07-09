@@ -14,7 +14,6 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
-    "github.com/dgrijalva/jwt-go"
     "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -33,9 +32,17 @@ var _ = Describe("NotifyUser", func() {
     var uaaClient FakeUAAClient
 
     BeforeEach(func() {
-        tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
-        tokenBody := jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"mister-client","cid":"mister-client","exp":3404281214,"scope":["notifications.write"]}`))
-        token = tokenHeader + "." + tokenBody
+        tokenHeader := map[string]interface{}{
+            "alg": "RS256",
+        }
+        tokenClaims := map[string]interface{}{
+            "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
+            "client_id": "mister-client",
+            "cid":       "mister-client",
+            "exp":       3404281214,
+            "scope":     []string{"notifications.write"},
+        }
+        token = BuildToken(tokenHeader, tokenClaims)
 
         os.Setenv("SENDER", "test-user@example.com")
 
@@ -284,9 +291,16 @@ Please reset your password by clicking on this link...`,
 
     Context("when the request uses an expired auth token", func() {
         BeforeEach(func() {
-            tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
-            tokenBody := jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"mister-client","cid":"mister-client","exp":1404281214}`))
-            token = tokenHeader + "." + tokenBody
+            tokenHeader := map[string]interface{}{
+                "alg": "RS256",
+            }
+            tokenClaims := map[string]interface{}{
+                "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
+                "client_id": "mister-client",
+                "cid":       "mister-client",
+                "exp":       1404281214,
+            }
+            token = BuildToken(tokenHeader, tokenClaims)
 
             requestBody, err := json.Marshal(map[string]string{
                 "kind": "forgot_password",
@@ -351,9 +365,17 @@ Please reset your password by clicking on this link...`,
 
     Context("when the auth token does not contain the correct scope", func() {
         BeforeEach(func() {
-            tokenHeader := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
-            tokenBody := jwt.EncodeSegment([]byte(`{"jti":"c5f6a266-5cf0-4ae2-9647-2615e7d28fa1","client_id":"mister-client","cid":"mister-client","exp":3404281214, "scope":["cloud_controller.admin"]}`))
-            token = tokenHeader + "." + tokenBody
+            tokenHeader := map[string]interface{}{
+                "alg": "RS256",
+            }
+            tokenClaims := map[string]interface{}{
+                "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
+                "client_id": "mister-client",
+                "cid":       "mister-client",
+                "exp":       3404281214,
+                "scope":     []string{"cloud_controller.admin"},
+            }
+            token = BuildToken(tokenHeader, tokenClaims)
 
             requestBody, err := json.Marshal(map[string]string{
                 "kind": "forgot_password",

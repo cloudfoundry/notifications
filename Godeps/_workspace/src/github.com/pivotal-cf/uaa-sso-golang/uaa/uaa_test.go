@@ -112,4 +112,21 @@ var _ = Describe("UAA", func() {
             Expect(userByIDWasCalledWith).To(Equal("my-special-id"))
         })
     })
+
+    Describe("GetTokenKey", func() {
+        var getTokenKeyWasCalled bool
+
+        It("delegates to the GetTokenKey Command", func() {
+            Expect(reflect.ValueOf(auth.GetTokenKeyCommand).Pointer()).To(Equal(reflect.ValueOf(uaa.GetTokenKey).Pointer()))
+
+            auth.GetTokenKeyCommand = func(u uaa.UAA) (string, error) {
+                getTokenKeyWasCalled = true
+                return "", nil
+            }
+
+            auth.GetTokenKey()
+
+            Expect(getTokenKeyWasCalled).To(BeTrue())
+        })
+    })
 })

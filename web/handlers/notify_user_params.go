@@ -5,7 +5,6 @@ import (
     "encoding/json"
     "net/http"
     "strings"
-    "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/dgrijalva/jwt-go"
@@ -57,30 +56,26 @@ func (params *NotifyUserParams) ParseRequestBody() {
 }
 
 func (params *NotifyUserParams) ParseAuthorizationToken() {
-    token := params.parseAuthorizationHeader()
-    if clientID, ok := token["client_id"]; ok {
+    token, _ := params.parseAuthorizationHeader()
+
+    if clientID, ok := token.Claims["client_id"]; ok {
         params.ClientID = clientID.(string)
     }
 }
 
 func (params *NotifyUserParams) ValidateAuthorizationToken() bool {
     params.Errors = []string{}
-    token := params.parseAuthorizationHeader()
-    if len(token) > 0 {
-        if _, ok := token["client_id"]; !ok {
+    token, err := params.parseAuthorizationHeader()
+    if err == nil {
+        if _, ok := token.Claims["client_id"]; !ok {
             params.Errors = append(params.Errors, `Authorization header is invalid: missing "client_id" field`)
         }
-
-        if exp, ok := token["exp"]; ok {
-            expirationTime := time.Unix(int64(exp.(float64)), 0)
-            if expirationTime.Before(time.Now()) {
-                params.Errors = append(params.Errors, "Authorization header is invalid: expired")
-            }
-        } else {
-            params.Errors = append(params.Errors, `Authorization header is invalid: missing "exp" field`)
-        }
     } else {
-        params.Errors = append(params.Errors, "Authorization header is invalid: missing")
+        if strings.Contains(err.Error(), "Token is expired") {
+            params.Errors = append(params.Errors, "Authorization header is invalid: expired")
+        } else {
+            params.Errors = append(params.Errors, "Authorization header is invalid: missing")
+        }
     }
 
     return len(params.Errors) == 0
@@ -88,8 +83,13 @@ func (params *NotifyUserParams) ValidateAuthorizationToken() bool {
 
 func (params *NotifyUserParams) ConfirmPermissions() bool {
     params.Errors = []string{}
-    token := params.parseAuthorizationHeader()
-    if scopes, ok := token["scope"]; ok {
+    token, err := params.parseAuthorizationHeader()
+    if err != nil {
+        params.Errors = append(params.Errors, err.Error())
+        return false
+    }
+
+    if scopes, ok := token.Claims["scope"]; ok {
         hasNotificationsWrite := false
         for _, scope := range scopes.([]interface{}) {
             if scope.(string) == "notifications.write" {
@@ -107,21 +107,18 @@ func (params *NotifyUserParams) ConfirmPermissions() bool {
     return len(params.Errors) == 0
 }
 
-func (params *NotifyUserParams) parseAuthorizationHeader() map[string]interface{} {
-    token := make(map[string]interface{})
-    if authHeader := params.req.Header.Get("Authorization"); authHeader != "" {
-        parts := strings.SplitN(authHeader, " ", 2)
-        parts = strings.Split(parts[1], ".")
-        decoded, err := jwt.DecodeSegment(parts[1])
-        if err != nil {
-            panic(err)
-        }
-        err = json.Unmarshal(decoded, &token)
-        if err != nil {
-            panic(err)
-        }
+func (params *NotifyUserParams) parseAuthorizationHeader() (*jwt.Token, error) {
+    authHeader := params.req.Header.Get("Authorization")
+    rawToken := strings.TrimPrefix(authHeader, "Bearer ")
+
+    token, err := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
+        return []byte(config.UAAPublicKey), nil
+    })
+    if err != nil {
+        return &jwt.Token{}, err
     }
-    return token
+
+    return token, nil
 }
 
 func (params *NotifyUserParams) ParseRequestPath() {

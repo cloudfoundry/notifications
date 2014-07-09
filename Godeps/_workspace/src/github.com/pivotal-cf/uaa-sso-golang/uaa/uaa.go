@@ -42,6 +42,7 @@ type UAAInterface interface {
     Refresh(string) (Token, error)
     GetClientToken() (Token, error)
     UserByID(string) (User, error)
+    GetTokenKey() (string, error)
 }
 
 // Contains necessary info to communicate with Cloudfoundry UAA server, use
@@ -62,6 +63,7 @@ type UAA struct {
     RefreshCommand        func(UAA, string) (Token, error)
     GetClientTokenCommand func(UAA) (Token, error)
     UserByIDCommand       func(UAA, string) (User, error)
+    GetTokenKeyCommand    func(UAA) (string, error)
 }
 
 func NewUAA(loginURL, uaaURL, clientID, clientSecret, token string) UAA {
@@ -75,6 +77,7 @@ func NewUAA(loginURL, uaaURL, clientID, clientSecret, token string) UAA {
         RefreshCommand:        Refresh,
         GetClientTokenCommand: GetClientToken,
         UserByIDCommand:       UserByID,
+        GetTokenKeyCommand:    GetTokenKey,
     }
 }
 
@@ -122,4 +125,8 @@ func (u UAA) GetClientToken() (Token, error) {
 // Retrieves User from UAA server using the user id
 func (u UAA) UserByID(id string) (User, error) {
     return u.UserByIDCommand(u, id)
+}
+
+func (u UAA) GetTokenKey() (string, error) {
+    return u.GetTokenKeyCommand(u)
 }

@@ -9,6 +9,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web"
+    "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
 func main() {
@@ -17,6 +18,8 @@ func main() {
     env := config.NewEnvironment()
     configure(env)
     confirmSMTPConfiguration(env)
+    retrieveUAAPublicKey()
+
     server := web.NewServer()
     server.Run()
 }
@@ -63,6 +66,19 @@ func confirmSMTPConfiguration(env config.Environment) {
     }
 }
 
+func retrieveUAAPublicKey() {
+    env := config.NewEnvironment()
+    auth := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
+    key, err := uaa.GetTokenKey(auth)
+    if err != nil {
+        panic(err)
+    }
+
+    config.UAAPublicKey = key
+    log.Printf("UAA Public Key: %s", config.UAAPublicKey)
+}
+
+// This is a hack to get the logs to output to the loggregator before the process exits
 func crash() {
     err := recover()
     if err != nil {
