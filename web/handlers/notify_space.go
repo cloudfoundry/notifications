@@ -1,11 +1,34 @@
 package handlers
 
-import "net/http"
+import (
+    "log"
+    "net/http"
+    "strings"
 
-type NotifySpace struct{}
+    "github.com/cloudfoundry-incubator/notifications/cf"
+)
 
-func NewNotifySpace() NotifySpace {
-    return NotifySpace{}
+type NotifySpace struct {
+    logger          *log.Logger
+    cloudController cf.CloudControllerInterface
 }
 
-func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {}
+func NewNotifySpace(logger *log.Logger, cloudController cf.CloudControllerInterface) NotifySpace {
+    return NotifySpace{
+        logger:          logger,
+        cloudController: cloudController,
+    }
+}
+
+func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+    spaceGuid := strings.TrimPrefix(req.URL.Path, "/spaces/")
+
+    users, err := handler.cloudController.GetUsersBySpaceGuid(spaceGuid)
+    if err != nil {
+        panic(err)
+    }
+
+    for _, user := range users {
+        handler.logger.Println(user.Guid)
+    }
+}

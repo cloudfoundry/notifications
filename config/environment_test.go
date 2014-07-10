@@ -18,6 +18,8 @@ var _ = Describe("Environment", func() {
         "SMTP_PASS":         os.Getenv("SMTP_PASS"),
         "SMTP_HOST":         os.Getenv("SMTP_HOST"),
         "SMTP_PORT":         os.Getenv("SMTP_PORT"),
+        "SENDER":            os.Getenv("SENDER"),
+        "CC_HOST":           os.Getenv("CC_HOST"),
     }
 
     AfterEach(func() {
@@ -151,6 +153,24 @@ var _ = Describe("Environment", func() {
 
         It("panics if the SENDER variable is missing", func() {
             os.Setenv("SENDER", "")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).To(Panic())
+        })
+    })
+
+    Describe("CloudController configuration", func() {
+        It("loads the values when they are present", func() {
+            os.Setenv("CC_HOST", "https://api.example.com")
+
+            env := config.NewEnvironment()
+
+            Expect(env.CCHost).To(Equal("https://api.example.com"))
+        })
+
+        It("panics when any of the values are missing", func() {
+            os.Setenv("CC_HOST", "")
 
             Expect(func() {
                 config.NewEnvironment()

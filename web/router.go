@@ -6,6 +6,7 @@ import (
     "os"
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -34,11 +35,13 @@ func NewRouter() Router {
 
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 
+    cloudController := cf.NewCloudController(env.CCHost)
+
     return Router{
         stacks: map[string]stack.Stack{
             "GET /info":           stack.NewStack(handlers.NewGetInfo()).Use(logging),
             "POST /users/{guid}":  stack.NewStack(handlers.NewNotifyUser(logger, &mailClient, &uaaClient, uuid.NewV4)).Use(logging, authenticator),
-            "POST /spaces/{guid}": stack.NewStack(handlers.NewNotifySpace()).Use(logging, authenticator),
+            "POST /spaces/{guid}": stack.NewStack(handlers.NewNotifySpace(logger, cloudController)).Use(logging, authenticator),
         },
     }
 }

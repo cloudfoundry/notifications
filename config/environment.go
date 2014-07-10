@@ -19,6 +19,7 @@ type Environment struct {
     SMTPPort        string
     SMTPTLS         bool
     Sender          string
+    CCHost          string
 }
 
 func NewEnvironment() Environment {
@@ -32,6 +33,7 @@ func NewEnvironment() Environment {
         SMTPPort:        loadOrPanic("SMTP_PORT"),
         SMTPTLS:         loadBool("SMTP_TLS"),
         Sender:          loadOrPanic("SENDER"),
+        CCHost:          loadOrPanic("CC_HOST"),
     }
 }
 

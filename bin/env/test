@@ -10,3 +10,4 @@ export UAA_CLIENT_ID=notifications
 export UAA_CLIENT_SECRET=secret
 export UAA_HOST=http://uaa.example.com
 export SENDER=no-reply@notifications.example.com
+export CC_HOST=https://api.example.com
