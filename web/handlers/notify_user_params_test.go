@@ -92,7 +92,7 @@ var _ = Describe("NotifyUserParams", func() {
 
         BeforeEach(func() {
             tokenHeader := map[string]interface{}{
-                "alg": "RS256",
+                "alg": "FAST",
             }
             tokenClaims := map[string]interface{}{
                 "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
@@ -137,7 +137,7 @@ var _ = Describe("NotifyUserParams", func() {
 
         It("validates the fields of the auth token", func() {
             tokenHeader := map[string]interface{}{
-                "alg": "RS256",
+                "alg": "FAST",
             }
             tokenClaims := map[string]interface{}{
                 "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
@@ -201,7 +201,7 @@ var _ = Describe("NotifyUserParams", func() {
             }
 
             tokenHeader := map[string]interface{}{
-                "alg": "RS256",
+                "alg": "FAST",
             }
             tokenClaims := map[string]interface{}{
                 "client_id": "my-client",

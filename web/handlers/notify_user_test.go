@@ -33,7 +33,7 @@ var _ = Describe("NotifyUser", func() {
 
     BeforeEach(func() {
         tokenHeader := map[string]interface{}{
-            "alg": "RS256",
+            "alg": "FAST",
         }
         tokenClaims := map[string]interface{}{
             "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
@@ -292,7 +292,7 @@ Please reset your password by clicking on this link...`,
     Context("when the request uses an expired auth token", func() {
         BeforeEach(func() {
             tokenHeader := map[string]interface{}{
-                "alg": "RS256",
+                "alg": "FAST",
             }
             tokenClaims := map[string]interface{}{
                 "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
@@ -366,7 +366,7 @@ Please reset your password by clicking on this link...`,
     Context("when the auth token does not contain the correct scope", func() {
         BeforeEach(func() {
             tokenHeader := map[string]interface{}{
-                "alg": "RS256",
+                "alg": "FAST",
             }
             tokenClaims := map[string]interface{}{
                 "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
