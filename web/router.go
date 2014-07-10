@@ -9,6 +9,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web/middleware"
     "github.com/gorilla/mux"
     uuid "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -23,6 +24,8 @@ func NewRouter() Router {
     logger := log.New(os.Stdout, "[WEB] ", log.LstdFlags)
     logging := stack.NewLogging(logger)
 
+    authenticator := middleware.NewAuthenticator()
+
     env := config.NewEnvironment()
     mailClient, err := mail.NewClient(env.SMTPUser, env.SMTPPass, net.JoinHostPort(env.SMTPHost, env.SMTPPort))
     if err != nil {
@@ -33,8 +36,9 @@ func NewRouter() Router {
 
     return Router{
         stacks: map[string]stack.Stack{
-            "GET /info":          stack.NewStack(handlers.NewGetInfo()).Use(logging),
-            "POST /users/{uuid}": stack.NewStack(handlers.NewNotifyUser(logger, &mailClient, &uaaClient, uuid.NewV4)).Use(logging),
+            "GET /info":           stack.NewStack(handlers.NewGetInfo()).Use(logging),
+            "POST /users/{guid}":  stack.NewStack(handlers.NewNotifyUser(logger, &mailClient, &uaaClient, uuid.NewV4)).Use(logging, authenticator),
+            "POST /spaces/{guid}": stack.NewStack(handlers.NewNotifySpace()).Use(logging, authenticator),
         },
     }
 }

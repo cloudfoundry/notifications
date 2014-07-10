@@ -3,6 +3,7 @@ package web_test
 import (
     "github.com/cloudfoundry-incubator/notifications/web"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web/middleware"
     "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
@@ -22,9 +23,17 @@ var _ = Describe("Router", func() {
         Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
     })
 
-    It("routes POST /users/{uuid}", func() {
-        s := router.Routes().Get("POST /users/{uuid}").GetHandler().(stack.Stack)
+    It("routes POST /users/{guid}", func() {
+        s := router.Routes().Get("POST /users/{guid}").GetHandler().(stack.Stack)
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.NotifyUser{}))
         Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+        Expect(s.Middleware[1]).To(BeAssignableToTypeOf(middleware.Authenticator{}))
+    })
+
+    It("routes POST /spaces/{guid}", func() {
+        s := router.Routes().Get("POST /spaces/{guid}").GetHandler().(stack.Stack)
+        Expect(s.Handler).To(BeAssignableToTypeOf(handlers.NotifySpace{}))
+        Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+        Expect(s.Middleware[1]).To(BeAssignableToTypeOf(middleware.Authenticator{}))
     })
 })

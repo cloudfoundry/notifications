@@ -13,6 +13,13 @@ import (
     . "github.com/onsi/gomega"
 )
 
+func TestWebHandlersSuite(t *testing.T) {
+    RegisterFastTokenSigningMethod()
+
+    RegisterFailHandler(Fail)
+    RunSpecs(t, "Web Handlers Suite")
+}
+
 const (
     UAAPrivateKey = "PRIVATE-KEY"
     UAAPublicKey  = "PUBLIC-KEY"
@@ -58,13 +65,6 @@ func BuildToken(header map[string]interface{}, claims map[string]interface{}) st
     }
 
     return signed
-}
-
-func TestWebHandlersSuite(t *testing.T) {
-    RegisterFastTokenSigningMethod()
-
-    RegisterFailHandler(Fail)
-    RunSpecs(t, "Web Handlers Suite")
 }
 
 type FakeMailClient struct {

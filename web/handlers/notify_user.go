@@ -49,16 +49,6 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     }
 
     params.ParseAuthorizationToken()
-    if valid := params.ValidateAuthorizationToken(); !valid {
-        handler.Error(w, http.StatusUnauthorized, params.Errors)
-        return
-    }
-
-    if valid := params.ConfirmPermissions(); !valid {
-        handler.Error(w, http.StatusForbidden, params.Errors)
-        return
-    }
-
     token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
     handler.uaaClient.SetToken(token)
     user, err := handler.uaaClient.UserByID(params.UserID)

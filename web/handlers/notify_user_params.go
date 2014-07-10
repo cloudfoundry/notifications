@@ -56,69 +56,16 @@ func (params *NotifyUserParams) ParseRequestBody() {
 }
 
 func (params *NotifyUserParams) ParseAuthorizationToken() {
-    token, _ := params.parseAuthorizationHeader()
+    authHeader := params.req.Header.Get("Authorization")
+    rawToken := strings.TrimPrefix(authHeader, "Bearer ")
+
+    token, _ := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
+        return []byte(config.UAAPublicKey), nil
+    })
 
     if clientID, ok := token.Claims["client_id"]; ok {
         params.ClientID = clientID.(string)
     }
-}
-
-func (params *NotifyUserParams) ValidateAuthorizationToken() bool {
-    params.Errors = []string{}
-    token, err := params.parseAuthorizationHeader()
-    if err == nil {
-        if _, ok := token.Claims["client_id"]; !ok {
-            params.Errors = append(params.Errors, `Authorization header is invalid: missing "client_id" field`)
-        }
-    } else {
-        if strings.Contains(err.Error(), "Token is expired") {
-            params.Errors = append(params.Errors, "Authorization header is invalid: expired")
-        } else {
-            params.Errors = append(params.Errors, "Authorization header is invalid: missing")
-        }
-    }
-
-    return len(params.Errors) == 0
-}
-
-func (params *NotifyUserParams) ConfirmPermissions() bool {
-    params.Errors = []string{}
-    token, err := params.parseAuthorizationHeader()
-    if err != nil {
-        params.Errors = append(params.Errors, err.Error())
-        return false
-    }
-
-    if scopes, ok := token.Claims["scope"]; ok {
-        hasNotificationsWrite := false
-        for _, scope := range scopes.([]interface{}) {
-            if scope.(string) == "notifications.write" {
-                hasNotificationsWrite = true
-                break
-            }
-        }
-        if !hasNotificationsWrite {
-            params.Errors = append(params.Errors, "You are not authorized to perform the requested action")
-        }
-    } else {
-        params.Errors = append(params.Errors, "You are not authorized to perform the requested action")
-    }
-
-    return len(params.Errors) == 0
-}
-
-func (params *NotifyUserParams) parseAuthorizationHeader() (*jwt.Token, error) {
-    authHeader := params.req.Header.Get("Authorization")
-    rawToken := strings.TrimPrefix(authHeader, "Bearer ")
-
-    token, err := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
-        return []byte(config.UAAPublicKey), nil
-    })
-    if err != nil {
-        return &jwt.Token{}, err
-    }
-
-    return token, nil
 }
 
 func (params *NotifyUserParams) ParseRequestPath() {
