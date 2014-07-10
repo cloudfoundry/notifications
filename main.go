@@ -35,6 +35,7 @@ func configure(env config.Environment) {
     log.Printf("\tSMTPPort        -> %+v", env.SMTPPort)
     log.Printf("\tSMTPTLS         -> %+v", env.SMTPTLS)
     log.Printf("\tSender          -> %+v", env.Sender)
+    log.Printf("\tCCHost          -> %+v", env.CCHost)
 }
 
 func confirmSMTPConfiguration(env config.Environment) {
