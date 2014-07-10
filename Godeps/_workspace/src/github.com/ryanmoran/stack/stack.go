@@ -7,8 +7,9 @@ import (
 )
 
 type Stack struct {
-    Handler    http.Handler
-    Middleware []Middleware
+    Handler         http.Handler
+    Middleware      []Middleware
+    RecoverCallback *RecoverCallback
 }
 
 type Response struct {
@@ -29,7 +30,7 @@ func (s Stack) Use(wares ...Middleware) Stack {
 }
 
 func (s Stack) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-    defer Recover(w, req)
+    defer Recover(w, req, s.RecoverCallback)
     response := Response{
         buffer: bytes.NewBufferString(""),
         code:   http.StatusOK,
