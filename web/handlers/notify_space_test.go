@@ -9,12 +9,14 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 )
 
 type FakeCloudController struct {
     UsersBySpaceGuid map[string][]cf.CloudControllerUser
+    CurrentToken     string
 }
 
 func NewFakeCloudController() *FakeCloudController {
@@ -23,7 +25,8 @@ func NewFakeCloudController() *FakeCloudController {
     }
 }
 
-func (fake *FakeCloudController) GetUsersBySpaceGuid(guid string) ([]cf.CloudControllerUser, error) {
+func (fake *FakeCloudController) GetUsersBySpaceGuid(guid, token string) ([]cf.CloudControllerUser, error) {
+    fake.CurrentToken = token
     if users, ok := fake.UsersBySpaceGuid[guid]; ok {
         return users, nil
     } else {
@@ -47,6 +50,7 @@ var _ = Describe("NotifySpace", func() {
             if err != nil {
                 panic(err)
             }
+            request.Header.Set("Authorization", "Bearer special-token-value")
 
             buffer = bytes.NewBuffer([]byte{})
             logger := log.New(buffer, "", 0)
@@ -63,6 +67,8 @@ var _ = Describe("NotifySpace", func() {
             }
 
             handler.ServeHTTP(writer, request)
+
+            Expect(fakeCC.CurrentToken).To(Equal("special-token-value"))
 
             lines := strings.Split(buffer.String(), "\n")
 

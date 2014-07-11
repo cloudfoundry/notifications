@@ -12,7 +12,16 @@ import (
 )
 
 var testSpaceGuid = "test-space-guid"
+var testUAAToken = "good-token"
+
 var UsersEndpoint = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+    token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
+    if token != testUAAToken {
+        w.WriteHeader(http.StatusUnauthorized)
+        w.Write([]byte(`{"code":10002,"description":"Authentication error","error_code":"CF-NotAuthenticated"}`))
+        return
+    }
+
     err := req.ParseForm()
     if err != nil {
         panic(err)
@@ -23,6 +32,7 @@ var UsersEndpoint = http.HandlerFunc(func(w http.ResponseWriter, req *http.Reque
         if spaceGuid != testSpaceGuid {
             w.WriteHeader(http.StatusNotFound)
             w.Write([]byte(`{"total_results":0,"total_pages":1,"prev_url":null,"next_url":null,"resources":[]}`))
+            return
         }
     }
 
@@ -91,7 +101,7 @@ var _ = Describe("CloudController", func() {
 
         It("returns a list of users for the given space guid", func() {
             cloudController := cf.NewCloudController(CCServer.URL)
-            users, err := cloudController.GetUsersBySpaceGuid(testSpaceGuid)
+            users, err := cloudController.GetUsersBySpaceGuid(testSpaceGuid, testUAAToken)
             if err != nil {
                 panic(err)
             }
@@ -105,6 +115,14 @@ var _ = Describe("CloudController", func() {
             Expect(users).To(ContainElement(cf.CloudControllerUser{
                 Guid: "user-456",
             }))
+        })
+
+        It("returns an error when the Cloud Controller returns a 400, or 500 status code", func() {
+            cloudController := cf.NewCloudController(CCServer.URL)
+            _, err := cloudController.GetUsersBySpaceGuid(testSpaceGuid, "bad-token")
+
+            Expect(err).ToNot(BeNil())
+            Expect(err.Error()).To(Equal(`CloudController Failure (401): {"code":10002,"description":"Authentication error","error_code":"CF-NotAuthenticated"}`))
         })
     })
 })

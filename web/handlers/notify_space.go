@@ -22,8 +22,9 @@ func NewNotifySpace(logger *log.Logger, cloudController cf.CloudControllerInterf
 
 func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     spaceGuid := strings.TrimPrefix(req.URL.Path, "/spaces/")
+    token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
 
-    users, err := handler.cloudController.GetUsersBySpaceGuid(spaceGuid)
+    users, err := handler.cloudController.GetUsersBySpaceGuid(spaceGuid, token)
     if err != nil {
         panic(err)
     }
