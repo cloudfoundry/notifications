@@ -95,6 +95,7 @@ func (fake *FakeMailClient) Send(msg mail.Message) error {
 }
 
 type FakeUAAClient struct {
+    ClientToken      uaa.Token
     UsersByID        map[string]uaa.User
     ErrorForUserByID error
 }
@@ -118,7 +119,7 @@ func (fake FakeUAAClient) Refresh(token string) (uaa.Token, error) {
 }
 
 func (fake FakeUAAClient) GetClientToken() (uaa.Token, error) {
-    return uaa.Token{}, nil
+    return fake.ClientToken, nil
 }
 
 func (fake FakeUAAClient) GetTokenKey() (string, error) {

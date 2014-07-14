@@ -9,6 +9,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -50,13 +51,18 @@ var _ = Describe("NotifySpace", func() {
             if err != nil {
                 panic(err)
             }
-            request.Header.Set("Authorization", "Bearer special-token-value")
 
             buffer = bytes.NewBuffer([]byte{})
             logger := log.New(buffer, "", 0)
             fakeCC = NewFakeCloudController()
 
-            handler = handlers.NewNotifySpace(logger, fakeCC)
+            fakeUAA := FakeUAAClient{
+                ClientToken: uaa.Token{
+                    Access: "the-app-token",
+                },
+            }
+
+            handler = handlers.NewNotifySpace(logger, fakeCC, fakeUAA)
         })
 
         It("logs the UUIDs of all users in the space", func() {
@@ -68,7 +74,7 @@ var _ = Describe("NotifySpace", func() {
 
             handler.ServeHTTP(writer, request)
 
-            Expect(fakeCC.CurrentToken).To(Equal("special-token-value"))
+            Expect(fakeCC.CurrentToken).To(Equal("the-app-token"))
 
             lines := strings.Split(buffer.String(), "\n")
 
