@@ -40,7 +40,8 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     users, err := handler.cloudController.GetUsersBySpaceGuid(spaceGuid, token.Access)
     if err != nil {
-        panic(err)
+        handler.Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+        return
     }
 
     for _, user := range users {

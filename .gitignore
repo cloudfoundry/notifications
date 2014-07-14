@@ -1,2 +1,3 @@
 /bin/a1deploy
+/bin/bosh-lite_deploy
 /bin/env/development

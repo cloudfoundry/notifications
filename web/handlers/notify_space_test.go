@@ -3,6 +3,7 @@ package handlers_test
 import (
     "bytes"
     "encoding/json"
+    "errors"
     "log"
     "net/http"
     "net/http/httptest"
@@ -17,8 +18,9 @@ import (
 )
 
 type FakeCloudController struct {
-    UsersBySpaceGuid map[string][]cf.CloudControllerUser
-    CurrentToken     string
+    UsersBySpaceGuid         map[string][]cf.CloudControllerUser
+    CurrentToken             string
+    GetUsersBySpaceGuidError error
 }
 
 func NewFakeCloudController() *FakeCloudController {
@@ -29,10 +31,11 @@ func NewFakeCloudController() *FakeCloudController {
 
 func (fake *FakeCloudController) GetUsersBySpaceGuid(guid, token string) ([]cf.CloudControllerUser, error) {
     fake.CurrentToken = token
+
     if users, ok := fake.UsersBySpaceGuid[guid]; ok {
-        return users, nil
+        return users, fake.GetUsersBySpaceGuidError
     } else {
-        return make([]cf.CloudControllerUser, 0), nil
+        return make([]cf.CloudControllerUser, 0), fake.GetUsersBySpaceGuidError
     }
 }
 
@@ -109,6 +112,21 @@ var _ = Describe("NotifySpace", func() {
 
             Expect(body["errors"]).To(ContainElement(`"kind" is a required field`))
             Expect(body["errors"]).To(ContainElement(`"text" is a required field`))
+        })
+
+        It("returns a 502 when CloudController fails to respond", func() {
+            fakeCC.GetUsersBySpaceGuidError = errors.New("BOOM!")
+
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(http.StatusBadGateway))
+            body := make(map[string]interface{})
+            err := json.Unmarshal(writer.Body.Bytes(), &body)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(body["errors"]).To(ContainElement("Cloud Controller is unavailable"))
         })
     })
 })
