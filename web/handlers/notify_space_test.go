@@ -2,6 +2,7 @@ package handlers_test
 
 import (
     "bytes"
+    "encoding/json"
     "log"
     "net/http"
     "net/http/httptest"
@@ -47,7 +48,15 @@ var _ = Describe("NotifySpace", func() {
             var err error
 
             writer = httptest.NewRecorder()
-            request, err = http.NewRequest("POST", "/spaces/space-001", nil)
+            body, err := json.Marshal(map[string]string{
+                "kind": "test_email",
+                "text": "This is the body of the email",
+            })
+            if err != nil {
+                panic(err)
+            }
+
+            request, err = http.NewRequest("POST", "/spaces/space-001", bytes.NewBuffer(body))
             if err != nil {
                 panic(err)
             }
@@ -81,6 +90,25 @@ var _ = Describe("NotifySpace", func() {
             Expect(lines).To(ContainElement("user-123"))
             Expect(lines).To(ContainElement("user-456"))
             Expect(lines).To(ContainElement("user-789"))
+        })
+
+        It("validates the presence of required fields", func() {
+            request, err := http.NewRequest("POST", "/spaces/space-001", strings.NewReader(""))
+            if err != nil {
+                panic(err)
+            }
+
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(422))
+            body := make(map[string]interface{})
+            err = json.Unmarshal(writer.Body.Bytes(), &body)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(body["errors"]).To(ContainElement(`"kind" is a required field`))
+            Expect(body["errors"]).To(ContainElement(`"text" is a required field`))
         })
     })
 })

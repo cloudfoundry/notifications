@@ -1,6 +1,7 @@
 package handlers
 
 import (
+    "encoding/json"
     "log"
     "net/http"
     "strings"
@@ -26,6 +27,12 @@ func NewNotifySpace(logger *log.Logger, cloudController cf.CloudControllerInterf
 func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     spaceGuid := strings.TrimPrefix(req.URL.Path, "/spaces/")
 
+    params := NewNotifySpaceParams(req.Body)
+    if !params.Validate() {
+        handler.Error(w, 422, params.Errors)
+        return
+    }
+
     token, err := handler.uaaClient.GetClientToken()
     if err != nil {
         panic(err)
@@ -39,4 +46,16 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     for _, user := range users {
         handler.logger.Println(user.Guid)
     }
+}
+
+func (handler NotifySpace) Error(w http.ResponseWriter, code int, errors []string) {
+    response, err := json.Marshal(map[string][]string{
+        "errors": errors,
+    })
+    if err != nil {
+        panic(err)
+    }
+
+    w.WriteHeader(code)
+    w.Write(response)
 }
