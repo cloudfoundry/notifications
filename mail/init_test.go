@@ -9,6 +9,7 @@ import (
     "net/url"
     "strings"
     "testing"
+    "time"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -78,6 +79,7 @@ type SMTPServer struct {
     Deliveries      []Delivery
     Listener        *net.TCPListener
     SupportsTLS     bool
+    ConnectWait     time.Duration
 }
 
 type Delivery struct {
@@ -116,6 +118,8 @@ func (server *SMTPServer) Run() {
             if err != nil {
                 panic(err)
             }
+
+            <-time.After(server.ConnectWait)
 
             server.Respond(connection)
         }

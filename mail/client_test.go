@@ -3,6 +3,7 @@ package mail_test
 import (
     "os"
     "strings"
+    "time"
 
     "github.com/cloudfoundry-incubator/notifications/mail"
 
@@ -13,6 +14,17 @@ import (
 var _ = Describe("Mail", func() {
     var mailServer *SMTPServer
     var client mail.Client
+
+    Context("NewClient", func() {
+        It("defaults the ConnectTimeout to 15 seconds", func() {
+            client, err := mail.NewClient("user", "pass", "0.0.0.0:3000")
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(client.ConnectTimeout).To(Equal(15 * time.Second))
+        })
+    })
 
     Context("when the SMTP server is properly configured", func() {
         BeforeEach(func() {
@@ -133,6 +145,25 @@ var _ = Describe("Mail", func() {
                 Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
                 Expect(delivery.UsedTLS).To(BeTrue())
             })
+        })
+    })
+
+    Context("Connect", func() {
+        It("returns an error if it cannot connect within the given timeout duration", func() {
+            mailServer = NewSMTPServer("user", "pass")
+            mailServer.ConnectWait = 5 * time.Second
+
+            serverURL := mailServer.URL.String()
+            client, err := mail.NewClient("user", "pass", serverURL)
+            if err != nil {
+                panic(err)
+            }
+
+            client.ConnectTimeout = 100 * time.Millisecond
+            err = client.Connect()
+
+            Expect(err).ToNot(BeNil())
+            Expect(err.Error()).To(ContainSubstring("timeout"))
         })
     })
 

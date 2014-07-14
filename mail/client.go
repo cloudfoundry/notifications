@@ -2,25 +2,33 @@ package mail
 
 import (
     "crypto/tls"
+    "errors"
     "fmt"
     "net"
     "net/smtp"
+    "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
 )
 
 type Client struct {
-    Host     string
-    Port     string
-    user     string
-    pass     string
-    client   *smtp.Client
-    Insecure bool
+    Host           string
+    Port           string
+    user           string
+    pass           string
+    client         *smtp.Client
+    Insecure       bool
+    ConnectTimeout time.Duration
 }
 
 type ClientInterface interface {
     Connect() error
     Send(Message) error
+}
+
+type connection struct {
+    client *smtp.Client
+    err    error
 }
 
 func NewClient(user, pass, url string) (Client, error) {
@@ -34,6 +42,7 @@ func NewClient(user, pass, url string) (Client, error) {
     }
     client.Host = host
     client.Port = port
+    client.ConnectTimeout = 15 * time.Second
     return client, nil
 }
 
@@ -42,13 +51,32 @@ func (c *Client) Connect() error {
         return nil
     }
 
-    client, err := smtp.Dial(net.JoinHostPort(c.Host, c.Port))
-    if err != nil {
-        return err
+    select {
+    case connection := <-c.connect():
+        if connection.err != nil {
+            return connection.err
+        }
+
+        c.client = connection.client
+    case <-time.After(c.ConnectTimeout):
+        return errors.New("dial tcp: i/o timeout")
     }
 
-    c.client = client
     return nil
+}
+
+func (c *Client) connect() chan connection {
+    channel := make(chan connection)
+
+    go func() {
+        client, err := smtp.Dial(net.JoinHostPort(c.Host, c.Port))
+        channel <- connection{
+            client: client,
+            err:    err,
+        }
+    }()
+
+    return channel
 }
 
 func (c *Client) Send(msg Message) error {
