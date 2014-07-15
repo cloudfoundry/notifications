@@ -9,7 +9,6 @@ import (
     "net/http"
     "net/http/httptest"
     "net/url"
-    "os"
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/mail"
@@ -43,8 +42,6 @@ var _ = Describe("NotifyUser", func() {
             "scope":     []string{"notifications.write"},
         }
         token = BuildToken(tokenHeader, tokenClaims)
-
-        os.Setenv("SENDER", "test-user@example.com")
 
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
@@ -116,7 +113,7 @@ var _ = Describe("NotifyUser", func() {
             handler.ServeHTTP(writer, request)
 
             data := []string{
-                "From: test-user@example.com",
+                "From: no-reply@notifications.example.com",
                 "To: fake-user@example.com",
                 "Subject: CF Notification: Reset your password",
                 "Body:",
@@ -136,7 +133,7 @@ var _ = Describe("NotifyUser", func() {
 
             msg := mailClient.messages[0]
             Expect(msg).To(Equal(mail.Message{
-                From:    "test-user@example.com",
+                From:    "no-reply@notifications.example.com",
                 To:      "fake-user@example.com",
                 Subject: "CF Notification: Reset your password",
                 Body: `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:

@@ -4,6 +4,7 @@ import (
     "errors"
     "testing"
 
+    "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/dgrijalva/jwt-go"
@@ -128,4 +129,26 @@ func (fake FakeUAAClient) GetTokenKey() (string, error) {
 
 func (fake FakeUAAClient) UserByID(id string) (uaa.User, error) {
     return fake.UsersByID[id], fake.ErrorForUserByID
+}
+
+type FakeCloudController struct {
+    UsersBySpaceGuid         map[string][]cf.CloudControllerUser
+    CurrentToken             string
+    GetUsersBySpaceGuidError error
+}
+
+func NewFakeCloudController() *FakeCloudController {
+    return &FakeCloudController{
+        UsersBySpaceGuid: make(map[string][]cf.CloudControllerUser),
+    }
+}
+
+func (fake *FakeCloudController) GetUsersBySpaceGuid(guid, token string) ([]cf.CloudControllerUser, error) {
+    fake.CurrentToken = token
+
+    if users, ok := fake.UsersBySpaceGuid[guid]; ok {
+        return users, fake.GetUsersBySpaceGuidError
+    } else {
+        return make([]cf.CloudControllerUser, 0), fake.GetUsersBySpaceGuidError
+    }
 }

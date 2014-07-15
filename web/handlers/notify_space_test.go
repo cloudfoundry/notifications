@@ -10,34 +10,13 @@ import (
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
+    "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 )
-
-type FakeCloudController struct {
-    UsersBySpaceGuid         map[string][]cf.CloudControllerUser
-    CurrentToken             string
-    GetUsersBySpaceGuidError error
-}
-
-func NewFakeCloudController() *FakeCloudController {
-    return &FakeCloudController{
-        UsersBySpaceGuid: make(map[string][]cf.CloudControllerUser),
-    }
-}
-
-func (fake *FakeCloudController) GetUsersBySpaceGuid(guid, token string) ([]cf.CloudControllerUser, error) {
-    fake.CurrentToken = token
-
-    if users, ok := fake.UsersBySpaceGuid[guid]; ok {
-        return users, fake.GetUsersBySpaceGuidError
-    } else {
-        return make([]cf.CloudControllerUser, 0), fake.GetUsersBySpaceGuidError
-    }
-}
 
 var _ = Describe("NotifySpace", func() {
     Describe("ServeHTTP", func() {
@@ -46,6 +25,7 @@ var _ = Describe("NotifySpace", func() {
         var request *http.Request
         var buffer *bytes.Buffer
         var fakeCC *FakeCloudController
+        var mailClient FakeMailClient
 
         BeforeEach(func() {
             var err error
@@ -72,18 +52,42 @@ var _ = Describe("NotifySpace", func() {
                 ClientToken: uaa.Token{
                     Access: "the-app-token",
                 },
+                UsersByID: map[string]uaa.User{
+                    "user-123": uaa.User{
+                        ID:       "user-123",
+                        Username: "miss-123",
+                        Name: uaa.Name{
+                            FamilyName: "123",
+                            GivenName:  "Miss",
+                        },
+                        Emails:   []string{"user-123@example.com"},
+                        Active:   true,
+                        Verified: false,
+                    },
+                    "user-456": uaa.User{
+                        ID:       "user-456",
+                        Username: "mister-456",
+                        Name: uaa.Name{
+                            FamilyName: "456",
+                            GivenName:  "Mister",
+                        },
+                        Emails:   []string{"user-456@example.com"},
+                        Active:   true,
+                        Verified: false,
+                    },
+                },
             }
+            mailClient = FakeMailClient{}
 
-            handler = handlers.NewNotifySpace(logger, fakeCC, fakeUAA)
-        })
-
-        It("logs the UUIDs of all users in the space", func() {
             fakeCC.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
                 cf.CloudControllerUser{Guid: "user-123"},
                 cf.CloudControllerUser{Guid: "user-456"},
-                cf.CloudControllerUser{Guid: "user-789"},
             }
 
+            handler = handlers.NewNotifySpace(logger, fakeCC, fakeUAA, &mailClient)
+        })
+
+        It("logs the UUIDs of all users in the space", func() {
             handler.ServeHTTP(writer, request)
 
             Expect(fakeCC.CurrentToken).To(Equal("the-app-token"))
@@ -92,7 +96,6 @@ var _ = Describe("NotifySpace", func() {
 
             Expect(lines).To(ContainElement("user-123"))
             Expect(lines).To(ContainElement("user-456"))
-            Expect(lines).To(ContainElement("user-789"))
         })
 
         It("validates the presence of required fields", func() {
@@ -127,6 +130,28 @@ var _ = Describe("NotifySpace", func() {
             }
 
             Expect(body["errors"]).To(ContainElement("Cloud Controller is unavailable"))
+        })
+
+        It("sends mail to the users in the space", func() {
+            handler.ServeHTTP(writer, request)
+
+            Expect(len(mailClient.messages)).To(Equal(2))
+
+            Expect(mailClient.messages).To(ContainElement(mail.Message{
+                From:    "no-reply@notifications.example.com",
+                To:      "user-123@example.com",
+                Subject: "CF Notification: ",
+                Body:    "This is the body of the email",
+                Headers: []string{"X-CF-Client-ID: ", "X-CF-Notification-ID: "},
+            }))
+
+            Expect(mailClient.messages).To(ContainElement(mail.Message{
+                From:    "no-reply@notifications.example.com",
+                To:      "user-456@example.com",
+                Subject: "CF Notification: ",
+                Body:    "This is the body of the email",
+                Headers: []string{"X-CF-Client-ID: ", "X-CF-Notification-ID: "},
+            }))
         })
     })
 })
