@@ -22,7 +22,7 @@ func Exchange(u UAA, authCode string) (Token, error) {
     }
 
     host := uri.Scheme + "://" + uri.Host
-    client := NewClient(host).WithBasicAuthCredentials(u.ClientID, u.ClientSecret)
+    client := NewClient(host, u.VerifySSL).WithBasicAuthCredentials(u.ClientID, u.ClientSecret)
     code, body, err := client.MakeRequest("POST", uri.RequestURI(), strings.NewReader(params.Encode()))
     if err != nil {
         return token, err

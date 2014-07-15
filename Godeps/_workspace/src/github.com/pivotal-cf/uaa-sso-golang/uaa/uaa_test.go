@@ -16,6 +16,12 @@ var _ = Describe("UAA", func() {
         auth = uaa.NewUAA("http://login.example.com", "http://uaa.example.com", "the-client-id", "the-client-secret", "")
     })
 
+    Describe("NewUAA", func() {
+        It("defaults VerifySSL to true", func() {
+            Expect(auth.VerifySSL).To(BeTrue())
+        })
+    })
+
     Describe("AuthorizeURL", func() {
         It("returns the URL for the /oauth/authorize endpoint", func() {
             Expect(auth.AuthorizeURL()).To(Equal("http://login.example.com/oauth/authorize"))

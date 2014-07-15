@@ -32,8 +32,10 @@ func NewRouter() Router {
     if err != nil {
         panic(err)
     }
+    mailClient.Insecure = !env.VerifySSL
 
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
+    uaaClient.VerifySSL = env.VerifySSL
 
     cloudController := cf.NewCloudController(env.CCHost)
 

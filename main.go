@@ -36,6 +36,7 @@ func configure(env config.Environment) {
     log.Printf("\tSMTPTLS         -> %+v", env.SMTPTLS)
     log.Printf("\tSender          -> %+v", env.Sender)
     log.Printf("\tCCHost          -> %+v", env.CCHost)
+    log.Printf("\tVerifySSL       -> %+v", env.VerifySSL)
 }
 
 func confirmSMTPConfiguration(env config.Environment) {
@@ -70,6 +71,8 @@ func confirmSMTPConfiguration(env config.Environment) {
 func retrieveUAAPublicKey() {
     env := config.NewEnvironment()
     auth := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
+    auth.VerifySSL = env.VerifySSL
+
     key, err := uaa.GetTokenKey(auth)
     if err != nil {
         panic(err)

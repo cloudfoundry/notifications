@@ -19,7 +19,7 @@ func GetTokenKey(u UAA) (string, error) {
 
     host := uri.Scheme + "://" + uri.Host
 
-    client := NewClient(host).WithAuthorizationToken(token.Access)
+    client := NewClient(host, u.VerifySSL).WithAuthorizationToken(token.Access)
     code, body, err := client.MakeRequest("GET", uri.RequestURI(), nil)
     if err != nil {
         return "", err

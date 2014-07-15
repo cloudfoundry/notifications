@@ -16,9 +16,10 @@ type Client struct {
     VerifySSL         bool
 }
 
-func NewClient(host string) Client {
+func NewClient(host string, verifySSL bool) Client {
     return Client{
-        Host: host,
+        Host:      host,
+        VerifySSL: verifySSL,
     }
 }
 

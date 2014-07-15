@@ -58,6 +58,7 @@ type UAA struct {
     AccessType     string
     ApprovalPrompt string
     AccessToken    string
+    VerifySSL      bool
 
     ExchangeCommand       func(UAA, string) (Token, error)
     RefreshCommand        func(UAA, string) (Token, error)
@@ -73,6 +74,7 @@ func NewUAA(loginURL, uaaURL, clientID, clientSecret, token string) UAA {
         ClientID:              clientID,
         ClientSecret:          clientSecret,
         AccessToken:           token,
+        VerifySSL:             true,
         ExchangeCommand:       Exchange,
         RefreshCommand:        Refresh,
         GetClientTokenCommand: GetClientToken,

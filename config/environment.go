@@ -20,6 +20,7 @@ type Environment struct {
     SMTPTLS         bool
     Sender          string
     CCHost          string
+    VerifySSL       bool
 }
 
 func NewEnvironment() Environment {
@@ -31,9 +32,10 @@ func NewEnvironment() Environment {
         SMTPPass:        loadOrPanic("SMTP_PASS"),
         SMTPHost:        loadOrPanic("SMTP_HOST"),
         SMTPPort:        loadOrPanic("SMTP_PORT"),
-        SMTPTLS:         loadBool("SMTP_TLS"),
+        SMTPTLS:         loadBool("SMTP_TLS", true),
         Sender:          loadOrPanic("SENDER"),
         CCHost:          loadOrPanic("CC_HOST"),
+        VerifySSL:       loadBool("VERIFY_SSL", true),
     }
 }
 
@@ -45,13 +47,11 @@ func loadOrPanic(name string) string {
     return value
 }
 
-func loadBool(name string) bool {
-    if os.Getenv(name) == "" {
-        return false
-    }
+func loadBool(name string, defaultValue bool) bool {
     value, err := strconv.ParseBool(os.Getenv(name))
     if err != nil {
-        panic(errors.New(fmt.Sprintf("Could not parse %s environment variable into boolean", name)))
+        return defaultValue
     }
+
     return value
 }

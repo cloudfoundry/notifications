@@ -2,11 +2,14 @@ package cf
 
 import (
     "bytes"
+    "crypto/tls"
     "encoding/json"
     "errors"
     "fmt"
     "io"
     "net/http"
+
+    "github.com/cloudfoundry-incubator/notifications/config"
 )
 
 type CloudController struct {
@@ -79,7 +82,12 @@ func NewCloudControllerClient(host string) CloudControllerClient {
 }
 
 func (client CloudControllerClient) MakeRequest(method, path, token string, body io.Reader) (int, []byte, error) {
-    httpClient := &http.Client{}
+    env := config.NewEnvironment()
+
+    tr := &http.Transport{
+        TLSClientConfig: &tls.Config{InsecureSkipVerify: !env.VerifySSL},
+    }
+    httpClient := &http.Client{Transport: tr}
     request, err := http.NewRequest(method, client.Host+path, body)
     if err != nil {
         return 0, []byte{}, err

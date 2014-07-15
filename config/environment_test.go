@@ -20,6 +20,7 @@ var _ = Describe("Environment", func() {
         "SMTP_PORT":         os.Getenv("SMTP_PORT"),
         "SENDER":            os.Getenv("SENDER"),
         "CC_HOST":           os.Getenv("CC_HOST"),
+        "VERIFY_SSL":        os.Getenv("VERIFY_SSL"),
     }
 
     AfterEach(func() {
@@ -85,12 +86,12 @@ var _ = Describe("Environment", func() {
             Expect(env.SMTPTLS).To(BeTrue())
         })
 
-        It("panics when SMTP_TLS is not a boolean", func() {
+        It("defaults to true when SMTP_TLS is not a boolean", func() {
             os.Setenv("SMTP_TLS", "banana")
 
-            Expect(func() {
-                config.NewEnvironment()
-            }).To(Panic())
+            env := config.NewEnvironment()
+
+            Expect(env.SMTPTLS).To(BeTrue())
         })
 
         It("panics when the values are missing", func() {
@@ -175,6 +176,40 @@ var _ = Describe("Environment", func() {
             Expect(func() {
                 config.NewEnvironment()
             }).To(Panic())
+        })
+    })
+
+    Describe("SSL verification configuration", func() {
+        It("set the value to true by default", func() {
+            os.Setenv("VERIFY_SSL", "")
+
+            env := config.NewEnvironment()
+
+            Expect(env.VerifySSL).To(BeTrue())
+        })
+
+        It("can be set to false", func() {
+            os.Setenv("VERIFY_SSL", "false")
+
+            env := config.NewEnvironment()
+
+            Expect(env.VerifySSL).To(BeFalse())
+        })
+
+        It("can be set to true", func() {
+            os.Setenv("VERIFY_SSL", "TRUE")
+
+            env := config.NewEnvironment()
+
+            Expect(env.VerifySSL).To(BeTrue())
+        })
+
+        It("sets the value to true if the value is non-boolean", func() {
+            os.Setenv("VERIFY_SSL", "banana")
+
+            env := config.NewEnvironment()
+
+            Expect(env.VerifySSL).To(BeTrue())
         })
     })
 })

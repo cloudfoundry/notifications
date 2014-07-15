@@ -31,7 +31,7 @@ func UserByID(u UAA, id string) (User, error) {
     }
 
     host := uri.Scheme + "://" + uri.Host
-    client := NewClient(host).WithAuthorizationToken(u.AccessToken)
+    client := NewClient(host, u.VerifySSL).WithAuthorizationToken(u.AccessToken)
     code, body, err := client.MakeRequest("GET", uri.RequestURI(), nil)
     if err != nil {
         return user, err

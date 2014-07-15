@@ -62,7 +62,7 @@ var _ = Describe("GetTokenKey", func() {
         })
     })
 
-    FContext("when UAA is not responding normally", func() {
+    Context("when UAA is not responding normally", func() {
         BeforeEach(func() {
             fakeUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
                 if req.URL.Path == "/token_key" && req.Method == "GET" && strings.Contains(req.Header.Get("Authorization"), "Bearer") {
