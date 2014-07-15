@@ -11,5 +11,5 @@ properties:
       notifications:
         secret: my-secret
         authorities: cloud_controller.admin,scim.read
-        authorized-grant-types: client_crednetials
+        authorized-grant-types: client_credentials
 ```
