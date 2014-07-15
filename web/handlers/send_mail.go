@@ -14,16 +14,16 @@ const (
     MailDeliverySuccessful = "delivered"
 )
 
-func SendMail(client mail.ClientInterface, context MessageContext) (string, error) {
+func SendMail(client mail.ClientInterface, context MessageContext) (string, mail.Message, error) {
     sender := NewMailSender(client, context)
 
     compiledTemplate, err := sender.CompileTemplate()
     if err != nil {
-        return "", err
+        return "", mail.Message{}, err
     }
 
     message := sender.CompileMessage(compiledTemplate)
-    return sender.Deliver(message), nil
+    return sender.Deliver(message), message, nil
 }
 
 type MessageContext struct {

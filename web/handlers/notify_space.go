@@ -42,6 +42,7 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     if err != nil {
         panic(err)
     }
+    handler.uaaClient.SetToken(token.Access)
 
     ccUsers, err := handler.cloudController.GetUsersBySpaceGuid(spaceGuid, token.Access)
     if err != nil {
@@ -50,44 +51,57 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     }
 
     env := config.NewEnvironment()
-
     for _, ccUser := range ccUsers {
         handler.logger.Println(ccUser.Guid)
-        handler.uaaClient.SetToken(token.Access)
-        user, err := handler.uaaClient.UserByID(ccUser.Guid)
-        if err != nil {
-            switch err.(type) {
-            case *url.Error:
-                w.WriteHeader(http.StatusBadGateway)
-            case uaa.Failure:
-                w.WriteHeader(http.StatusGone)
-            default:
-                w.WriteHeader(http.StatusInternalServerError)
-            }
+        user, ok := handler.loadUser(w, ccUser.Guid)
+        if !ok {
             return
         }
 
-        if len(user.Emails) > 0 {
-            context := MessageContext{
-                From:              env.Sender,
-                To:                user.Emails[0],
-                Subject:           "",
-                Text:              params.Text,
-                Template:          "{{.Text}}",
-                KindDescription:   "",
-                SourceDescription: "",
-                ClientID:          "",
-                MessageID:         "",
-            }
-
-            status, err := SendMail(handler.mailClient, context)
-            if err != nil {
-                panic(err)
-            }
-
-            handler.logger.Println(status)
-        }
+        status := handler.sendMailToUser(user, params, env)
+        handler.logger.Println(status)
     }
+}
+
+func (handler NotifySpace) loadUser(w http.ResponseWriter, guid string) (uaa.User, bool) {
+    user, err := handler.uaaClient.UserByID(guid)
+    if err != nil {
+        switch err.(type) {
+        case *url.Error:
+            w.WriteHeader(http.StatusBadGateway)
+        case uaa.Failure:
+            w.WriteHeader(http.StatusGone)
+        default:
+            w.WriteHeader(http.StatusInternalServerError)
+        }
+        return uaa.User{}, false
+    }
+    return user, true
+}
+
+func (handler NotifySpace) sendMailToUser(user uaa.User, params NotifySpaceParams, env config.Environment) string {
+    var status string
+    if len(user.Emails) > 0 {
+        context := MessageContext{
+            From:              env.Sender,
+            To:                user.Emails[0],
+            Subject:           "",
+            Text:              params.Text,
+            Template:          "{{.Text}}",
+            KindDescription:   "",
+            SourceDescription: "",
+            ClientID:          "",
+            MessageID:         "",
+        }
+
+        var err error
+        status, _, err = SendMail(handler.mailClient, context)
+        if err != nil {
+            panic(err)
+        }
+
+    }
+    return status
 }
 
 func (handler NotifySpace) Error(w http.ResponseWriter, code int, errors []string) {

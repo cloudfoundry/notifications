@@ -1,21 +1,20 @@
 package handlers
 
 import (
-    "bytes"
     "encoding/json"
-    "fmt"
     "log"
     "net/http"
     "net/url"
     "strings"
-    "text/template"
 
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
+    "github.com/dgrijalva/jwt-go"
     uuid "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
-const emailBody = `The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:
+const emailTemplate = `The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:
 
 {{.Text}}`
 
@@ -38,39 +37,32 @@ func NewNotifyUser(logger *log.Logger, mailClient mail.ClientInterface, uaaClien
 }
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-    params := NewNotifyUserParams(req)
-    params.ParseRequestPath()
-    params.ParseEnvironmentVariables()
+    params := NewNotifyUserParams(req.Body)
 
-    params.ParseRequestBody()
-    if valid := params.ValidateRequestBody(); !valid {
+    if valid := params.Validate(); !valid {
         handler.Error(w, 422, params.Errors)
         return
     }
 
-    params.ParseAuthorizationToken()
-    token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
-    handler.uaaClient.SetToken(token)
-    user, err := handler.uaaClient.UserByID(params.UserID)
+    token, err := handler.uaaClient.GetClientToken()
     if err != nil {
-        switch err.(type) {
-        case *url.Error:
-            w.WriteHeader(http.StatusBadGateway)
-        case uaa.Failure:
-            w.WriteHeader(http.StatusGone)
-        default:
-            w.WriteHeader(http.StatusInternalServerError)
-        }
+        panic(err)
+    }
+    handler.uaaClient.SetToken(token.Access)
+
+    user, ok := handler.loadUser(w, req)
+    if !ok {
         return
     }
 
-    var status string
-    if len(user.Emails) > 0 {
-        params.To = user.Emails[0]
-        handler.logger.Printf("Sending email to %s", params.To)
-        status = handler.SendEmail(params)
-    }
+    status := handler.sendMailToUser(user, params, req)
+    response := handler.generateResponse(status)
 
+    w.WriteHeader(http.StatusOK)
+    w.Write(response)
+}
+
+func (handler NotifyUser) generateResponse(status string) []byte {
     results := []map[string]string{
         map[string]string{
             "status": status,
@@ -80,45 +72,61 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     if err != nil {
         panic(err)
     }
-
-    w.WriteHeader(http.StatusOK)
-    w.Write(response)
+    return response
 }
 
-func (handler NotifyUser) SendEmail(context NotifyUserParams) string {
-    source, err := template.New("emailBody").Parse(emailBody)
-    buffer := bytes.NewBuffer([]byte{})
-    source.Execute(buffer, context)
-
-    guid, err := handler.guidGenerator()
+func (handler NotifyUser) loadUser(w http.ResponseWriter, req *http.Request) (uaa.User, bool) {
+    userID := strings.TrimPrefix(req.URL.Path, "/users/")
+    user, err := handler.uaaClient.UserByID(userID)
     if err != nil {
-        panic(err)
+        switch err.(type) {
+        case *url.Error:
+            w.WriteHeader(http.StatusBadGateway)
+        case uaa.Failure:
+            w.WriteHeader(http.StatusGone)
+        default:
+            w.WriteHeader(http.StatusInternalServerError)
+        }
+        return uaa.User{}, false
     }
+    return user, true
+}
 
-    msg := mail.Message{
-        From:    context.From,
-        To:      context.To,
-        Subject: fmt.Sprintf("CF Notification: %s", context.Subject),
-        Body:    buffer.String(),
-        Headers: []string{
-            fmt.Sprintf("X-CF-Client-ID: %s", context.ClientID),
-            fmt.Sprintf("X-CF-Notification-ID: %s", guid.String()),
-        },
+func (handler NotifyUser) sendMailToUser(user uaa.User, params NotifyUserParams, req *http.Request) string {
+    env := config.NewEnvironment()
+    var status string
+    var message mail.Message
+    if len(user.Emails) > 0 {
+        guid, err := handler.guidGenerator()
+        if err != nil {
+            panic(err)
+        }
+
+        rawToken := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
+        token, _ := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
+            return []byte(config.UAAPublicKey), nil
+        })
+
+        context := MessageContext{
+            From:              env.Sender,
+            To:                user.Emails[0],
+            Subject:           params.Subject,
+            Text:              params.Text,
+            Template:          emailTemplate,
+            KindDescription:   params.KindDescription,
+            SourceDescription: params.SourceDescription,
+            ClientID:          token.Claims["client_id"].(string),
+            MessageID:         guid.String(),
+        }
+        handler.logger.Printf("Sending email to %s", context.To)
+        status, message, err = SendMail(handler.mailClient, context)
+        if err != nil {
+            panic(err)
+        }
+
+        handler.logger.Print(message.Data())
     }
-
-    handler.logger.Print(msg.Data())
-
-    err = handler.mailClient.Connect()
-    if err != nil {
-        return "unavailable"
-    }
-
-    err = handler.mailClient.Send(msg)
-    if err != nil {
-        return "failed"
-    }
-
-    return "delivered"
+    return status
 }
 
 func (handler NotifyUser) Error(w http.ResponseWriter, code int, errors []string) {
