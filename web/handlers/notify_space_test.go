@@ -10,7 +10,6 @@ import (
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
-    "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -32,8 +31,11 @@ var _ = Describe("NotifySpace", func() {
 
             writer = httptest.NewRecorder()
             body, err := json.Marshal(map[string]string{
-                "kind": "test_email",
-                "text": "This is the body of the email",
+                "kind":               "test_email",
+                "text":               "This is the body of the email",
+                "subject":            "Your instance is down",
+                "source_description": "MySQL Service",
+                "kind_description":   "Instance Alert",
             })
             if err != nil {
                 panic(err)
@@ -82,6 +84,18 @@ var _ = Describe("NotifySpace", func() {
             fakeCC.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
                 cf.CloudControllerUser{Guid: "user-123"},
                 cf.CloudControllerUser{Guid: "user-456"},
+            }
+            fakeCC.Spaces = map[string]cf.CloudControllerSpace{
+                "space-001": cf.CloudControllerSpace{
+                    Name:             "production",
+                    Guid:             "space-001",
+                    OrganizationGuid: "org-001",
+                },
+            }
+            fakeCC.Orgs = map[string]cf.CloudControllerOrganization{
+                "org-001": cf.CloudControllerOrganization{
+                    Name: "pivotaltracker",
+                },
             }
 
             handler = handlers.NewNotifySpace(logger, fakeCC, fakeUAA, &mailClient)
@@ -137,21 +151,23 @@ var _ = Describe("NotifySpace", func() {
 
             Expect(len(mailClient.messages)).To(Equal(2))
 
-            Expect(mailClient.messages).To(ContainElement(mail.Message{
-                From:    "no-reply@notifications.example.com",
-                To:      "user-123@example.com",
-                Subject: "CF Notification: ",
-                Body:    "This is the body of the email",
-                Headers: []string{"X-CF-Client-ID: ", "X-CF-Notification-ID: "},
-            }))
+            body := `The following "Instance Alert" notification was sent to you by the "MySQL Service" component of Cloud Foundry because you are a member of the "production" space in the "pivotaltracker" organization:
 
-            Expect(mailClient.messages).To(ContainElement(mail.Message{
-                From:    "no-reply@notifications.example.com",
-                To:      "user-456@example.com",
-                Subject: "CF Notification: ",
-                Body:    "This is the body of the email",
-                Headers: []string{"X-CF-Client-ID: ", "X-CF-Notification-ID: "},
-            }))
+This is the body of the email`
+
+            firstMessage := mailClient.messages[0]
+            Expect(firstMessage.From).To(Equal("no-reply@notifications.example.com"))
+            Expect(firstMessage.To).To(Equal("user-123@example.com"))
+            Expect(firstMessage.Subject).To(Equal("CF Notification: Your instance is down"))
+            Expect(firstMessage.Body).To(Equal(body))
+            Expect(firstMessage.Headers).To(Equal([]string{"X-CF-Client-ID: ", "X-CF-Notification-ID: "}))
+
+            secondMessage := mailClient.messages[1]
+            Expect(secondMessage.From).To(Equal("no-reply@notifications.example.com"))
+            Expect(secondMessage.To).To(Equal("user-456@example.com"))
+            Expect(secondMessage.Subject).To(Equal("CF Notification: Your instance is down"))
+            Expect(secondMessage.Body).To(Equal(body))
+            Expect(secondMessage.Headers).To(Equal([]string{"X-CF-Client-ID: ", "X-CF-Notification-ID: "}))
         })
     })
 })

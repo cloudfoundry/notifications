@@ -12,11 +12,22 @@ import (
 var _ = Describe("NotifySpaceParams", func() {
     Describe("NewNotifySpaceParams", func() {
         It("parses the request body into the struct", func() {
-            body := strings.NewReader(`{"kind": "the kind", "text": "the text"}`)
+            requestBody := `{
+                "kind": "the kind",
+                "text": "the text",
+                "kind_description": "kind description text",
+                "source_description": "source descriptor",
+                "subject": "RE: ..."
+            }`
+
+            body := strings.NewReader(requestBody)
             params := handlers.NewNotifySpaceParams(body)
 
             Expect(params.Kind).To(Equal("the kind"))
             Expect(params.Text).To(Equal("the text"))
+            Expect(params.KindDescription).To(Equal("kind description text"))
+            Expect(params.SourceDescription).To(Equal("source descriptor"))
+            Expect(params.Subject).To(Equal("RE: ..."))
         })
     })
 

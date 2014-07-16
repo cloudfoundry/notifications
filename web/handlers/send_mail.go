@@ -36,6 +36,8 @@ type MessageContext struct {
     SourceDescription string
     ClientID          string
     MessageID         string
+    Space             string
+    Organization      string
 }
 
 type MailSender struct {

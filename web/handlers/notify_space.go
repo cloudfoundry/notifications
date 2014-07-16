@@ -20,6 +20,10 @@ type NotifySpace struct {
     mailClient      mail.ClientInterface
 }
 
+const spaceEmailTemplate = `The following "{{.KindDescription}}" notification was sent to you by the "{{.SourceDescription}}" component of Cloud Foundry because you are a member of the "{{.Space}}" space in the "{{.Organization}}" organization:
+
+{{.Text}}`
+
 func NewNotifySpace(logger *log.Logger, cloudController cf.CloudControllerInterface, uaaClient uaa.UAAInterface, mailClient mail.ClientInterface) NotifySpace {
     return NotifySpace{
         logger:          logger,
@@ -51,6 +55,12 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     }
 
     env := config.NewEnvironment()
+    space, organization, err := handler.loadSpaceAndOrganization(spaceGuid, token.Access)
+    if err != nil {
+        handler.Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+        return
+    }
+
     for _, ccUser := range ccUsers {
         handler.logger.Println(ccUser.Guid)
         user, ok := handler.loadUser(w, ccUser.Guid)
@@ -58,9 +68,25 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
             return
         }
 
-        status := handler.sendMailToUser(user, params, env)
-        handler.logger.Println(status)
+        if len(user.Emails) > 0 {
+            status := handler.sendMailToUser(user, params, env, space, organization)
+            handler.logger.Println(status)
+        }
     }
+}
+
+func (handler NotifySpace) loadSpaceAndOrganization(spaceGuid, token string) (string, string, error) {
+    space, err := handler.cloudController.LoadSpace(spaceGuid, token)
+    if err != nil {
+        return "", "", err
+    }
+
+    org, err := handler.cloudController.LoadOrganization(space.OrganizationGuid, token)
+    if err != nil {
+        return "", "", err
+    }
+
+    return space.Name, org.Name, nil
 }
 
 func (handler NotifySpace) loadUser(w http.ResponseWriter, guid string) (uaa.User, bool) {
@@ -79,28 +105,26 @@ func (handler NotifySpace) loadUser(w http.ResponseWriter, guid string) (uaa.Use
     return user, true
 }
 
-func (handler NotifySpace) sendMailToUser(user uaa.User, params NotifySpaceParams, env config.Environment) string {
-    var status string
-    if len(user.Emails) > 0 {
-        context := MessageContext{
-            From:              env.Sender,
-            To:                user.Emails[0],
-            Subject:           "",
-            Text:              params.Text,
-            Template:          "{{.Text}}",
-            KindDescription:   "",
-            SourceDescription: "",
-            ClientID:          "",
-            MessageID:         "",
-        }
-
-        var err error
-        status, _, err = SendMail(handler.mailClient, context)
-        if err != nil {
-            panic(err)
-        }
-
+func (handler NotifySpace) sendMailToUser(user uaa.User, params NotifySpaceParams, env config.Environment, space, organization string) string {
+    context := MessageContext{
+        From:              env.Sender,
+        To:                user.Emails[0],
+        Subject:           params.Subject,
+        Text:              params.Text,
+        Template:          spaceEmailTemplate,
+        KindDescription:   params.KindDescription,
+        SourceDescription: params.SourceDescription,
+        ClientID:          "",
+        MessageID:         "",
+        Space:             space,
+        Organization:      organization,
     }
+
+    status, _, err := SendMail(handler.mailClient, context)
+    if err != nil {
+        panic(err)
+    }
+
     return status
 }
 

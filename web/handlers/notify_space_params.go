@@ -7,9 +7,12 @@ import (
 )
 
 type NotifySpaceParams struct {
-    Kind   string
-    Text   string
-    Errors []string
+    Kind              string `json:"kind"`
+    Text              string `json:"text"`
+    KindDescription   string `json:"kind_description"`
+    SourceDescription string `json:"source_description"`
+    Subject           string `json:"subject"`
+    Errors            []string
 }
 
 func NewNotifySpaceParams(requestBody io.Reader) NotifySpaceParams {
