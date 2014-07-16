@@ -1,10 +1,8 @@
 package handlers
 
 import (
-    "encoding/json"
     "log"
     "net/http"
-    "net/url"
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
@@ -42,7 +40,7 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     params := NewNotifySpaceParams(req.Body)
     if !params.Validate() {
-        handler.Error(w, 422, params.Errors)
+        Error(w, 422, params.Errors)
         return
     }
 
@@ -54,14 +52,14 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     ccUsers, err := handler.cloudController.GetUsersBySpaceGuid(spaceGuid, token.Access)
     if err != nil {
-        handler.Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+        Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
         return
     }
 
     env := config.NewEnvironment()
     space, organization, err := handler.loadSpaceAndOrganization(spaceGuid, token.Access)
     if err != nil {
-        handler.Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+        Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
         return
     }
 
@@ -72,15 +70,37 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     for _, ccUser := range ccUsers {
         handler.logger.Println(ccUser.Guid)
-        user, ok := handler.loadUser(w, ccUser.Guid)
+        user, ok := loadUser(w, ccUser.Guid, handler.uaaClient)
         if !ok {
             return
         }
 
         if len(user.Emails) > 0 {
-            status := handler.sendMailToUser(user, params, env, space, organization, clientToken.Claims["client_id"].(string))
+            context := handler.buildContext(user, params, env, space, organization, clientToken.Claims["client_id"].(string))
+            status := sendMailToUser(context, handler.logger, handler.mailClient)
             handler.logger.Println(status)
         }
+    }
+}
+
+func (handler NotifySpace) buildContext(user uaa.User, params NotifySpaceParams, env config.Environment, space, organization, clientID string) MessageContext {
+    guid, err := handler.guidGenerator()
+    if err != nil {
+        panic(err)
+    }
+
+    return MessageContext{
+        From:              env.Sender,
+        To:                user.Emails[0],
+        Subject:           params.Subject,
+        Text:              params.Text,
+        Template:          spaceEmailTemplate,
+        KindDescription:   params.KindDescription,
+        SourceDescription: params.SourceDescription,
+        ClientID:          clientID,
+        MessageID:         guid.String(),
+        Space:             space,
+        Organization:      organization,
     }
 }
 
@@ -96,60 +116,4 @@ func (handler NotifySpace) loadSpaceAndOrganization(spaceGuid, token string) (st
     }
 
     return space.Name, org.Name, nil
-}
-
-func (handler NotifySpace) loadUser(w http.ResponseWriter, guid string) (uaa.User, bool) {
-    user, err := handler.uaaClient.UserByID(guid)
-    if err != nil {
-        switch err.(type) {
-        case *url.Error:
-            w.WriteHeader(http.StatusBadGateway)
-        case uaa.Failure:
-            w.WriteHeader(http.StatusGone)
-        default:
-            w.WriteHeader(http.StatusInternalServerError)
-        }
-        return uaa.User{}, false
-    }
-    return user, true
-}
-
-func (handler NotifySpace) sendMailToUser(user uaa.User, params NotifySpaceParams, env config.Environment, space, organization, clientID string) string {
-    guid, err := handler.guidGenerator()
-    if err != nil {
-        panic(err)
-    }
-
-    context := MessageContext{
-        From:              env.Sender,
-        To:                user.Emails[0],
-        Subject:           params.Subject,
-        Text:              params.Text,
-        Template:          spaceEmailTemplate,
-        KindDescription:   params.KindDescription,
-        SourceDescription: params.SourceDescription,
-        ClientID:          clientID,
-        MessageID:         guid.String(),
-        Space:             space,
-        Organization:      organization,
-    }
-
-    status, _, err := SendMail(handler.mailClient, context)
-    if err != nil {
-        panic(err)
-    }
-
-    return status
-}
-
-func (handler NotifySpace) Error(w http.ResponseWriter, code int, errors []string) {
-    response, err := json.Marshal(map[string][]string{
-        "errors": errors,
-    })
-    if err != nil {
-        panic(err)
-    }
-
-    w.WriteHeader(code)
-    w.Write(response)
 }

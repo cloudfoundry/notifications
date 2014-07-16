@@ -4,7 +4,6 @@ import (
     "encoding/json"
     "log"
     "net/http"
-    "net/url"
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -40,7 +39,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     params := NewNotifyUserParams(req.Body)
 
     if valid := params.Validate(); !valid {
-        handler.Error(w, 422, params.Errors)
+        Error(w, 422, params.Errors)
         return
     }
 
@@ -50,14 +49,27 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     }
     handler.uaaClient.SetToken(token.Access)
 
-    user, ok := handler.loadUser(w, req)
+    userGUID := strings.TrimPrefix(req.URL.Path, "/users/")
+    user, ok := loadUser(w, userGUID, handler.uaaClient)
     if !ok {
         return
     }
 
-    status := handler.sendMailToUser(user, params, req)
-    response := handler.generateResponse(status)
+    rawToken := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
+    clientToken, _ := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
+        return []byte(config.UAAPublicKey), nil
+    })
 
+    var status string
+    if len(user.Emails) > 0 {
+        env := config.NewEnvironment()
+        context := handler.buildContext(user, params, env, clientToken.Claims["client_id"].(string))
+        status = sendMailToUser(context, handler.logger, handler.mailClient)
+    } else {
+        status = "User had no email address"
+    }
+
+    response := handler.generateResponse(status)
     w.WriteHeader(http.StatusOK)
     w.Write(response)
 }
@@ -75,68 +87,21 @@ func (handler NotifyUser) generateResponse(status string) []byte {
     return response
 }
 
-func (handler NotifyUser) loadUser(w http.ResponseWriter, req *http.Request) (uaa.User, bool) {
-    userID := strings.TrimPrefix(req.URL.Path, "/users/")
-    user, err := handler.uaaClient.UserByID(userID)
-    if err != nil {
-        switch err.(type) {
-        case *url.Error:
-            w.WriteHeader(http.StatusBadGateway)
-        case uaa.Failure:
-            w.WriteHeader(http.StatusGone)
-        default:
-            w.WriteHeader(http.StatusInternalServerError)
-        }
-        return uaa.User{}, false
-    }
-    return user, true
-}
-
-func (handler NotifyUser) sendMailToUser(user uaa.User, params NotifyUserParams, req *http.Request) string {
-    env := config.NewEnvironment()
-    var status string
-    var message mail.Message
-    if len(user.Emails) > 0 {
-        guid, err := handler.guidGenerator()
-        if err != nil {
-            panic(err)
-        }
-
-        rawToken := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
-        token, _ := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
-            return []byte(config.UAAPublicKey), nil
-        })
-
-        context := MessageContext{
-            From:              env.Sender,
-            To:                user.Emails[0],
-            Subject:           params.Subject,
-            Text:              params.Text,
-            Template:          emailTemplate,
-            KindDescription:   params.KindDescription,
-            SourceDescription: params.SourceDescription,
-            ClientID:          token.Claims["client_id"].(string),
-            MessageID:         guid.String(),
-        }
-        handler.logger.Printf("Sending email to %s", context.To)
-        status, message, err = SendMail(handler.mailClient, context)
-        if err != nil {
-            panic(err)
-        }
-
-        handler.logger.Print(message.Data())
-    }
-    return status
-}
-
-func (handler NotifyUser) Error(w http.ResponseWriter, code int, errors []string) {
-    response, err := json.Marshal(map[string][]string{
-        "errors": errors,
-    })
+func (handler NotifyUser) buildContext(user uaa.User, params NotifyUserParams, env config.Environment, clientID string) MessageContext {
+    guid, err := handler.guidGenerator()
     if err != nil {
         panic(err)
     }
 
-    w.WriteHeader(code)
-    w.Write(response)
+    return MessageContext{
+        From:              env.Sender,
+        To:                user.Emails[0],
+        Subject:           params.Subject,
+        Text:              params.Text,
+        Template:          emailTemplate,
+        KindDescription:   params.KindDescription,
+        SourceDescription: params.SourceDescription,
+        ClientID:          clientID,
+        MessageID:         guid.String(),
+    }
 }
