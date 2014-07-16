@@ -25,6 +25,7 @@ var _ = Describe("NotifySpace", func() {
         var buffer *bytes.Buffer
         var fakeCC *FakeCloudController
         var mailClient FakeMailClient
+        var token string
 
         BeforeEach(func() {
             var err error
@@ -41,46 +42,43 @@ var _ = Describe("NotifySpace", func() {
                 panic(err)
             }
 
+            tokenHeader := map[string]interface{}{
+                "alg": "FAST",
+            }
+            tokenClaims := map[string]interface{}{
+                "client_id": "mister-client",
+                "exp":       3404281214,
+                "scope":     []string{"notifications.write"},
+            }
+            token = BuildToken(tokenHeader, tokenClaims)
+
             request, err = http.NewRequest("POST", "/spaces/space-001", bytes.NewBuffer(body))
             if err != nil {
                 panic(err)
             }
+            request.Header.Set("Authorization", "Bearer "+token)
 
             buffer = bytes.NewBuffer([]byte{})
             logger := log.New(buffer, "", 0)
-            fakeCC = NewFakeCloudController()
 
             fakeUAA := FakeUAAClient{
                 ClientToken: uaa.Token{
-                    Access: "the-app-token",
+                    Access: token,
                 },
                 UsersByID: map[string]uaa.User{
                     "user-123": uaa.User{
-                        ID:       "user-123",
-                        Username: "miss-123",
-                        Name: uaa.Name{
-                            FamilyName: "123",
-                            GivenName:  "Miss",
-                        },
-                        Emails:   []string{"user-123@example.com"},
-                        Active:   true,
-                        Verified: false,
+                        ID:     "user-123",
+                        Emails: []string{"user-123@example.com"},
                     },
                     "user-456": uaa.User{
-                        ID:       "user-456",
-                        Username: "mister-456",
-                        Name: uaa.Name{
-                            FamilyName: "456",
-                            GivenName:  "Mister",
-                        },
-                        Emails:   []string{"user-456@example.com"},
-                        Active:   true,
-                        Verified: false,
+                        ID:     "user-456",
+                        Emails: []string{"user-456@example.com"},
                     },
                 },
             }
             mailClient = FakeMailClient{}
 
+            fakeCC = NewFakeCloudController()
             fakeCC.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
                 cf.CloudControllerUser{Guid: "user-123"},
                 cf.CloudControllerUser{Guid: "user-456"},
@@ -98,13 +96,13 @@ var _ = Describe("NotifySpace", func() {
                 },
             }
 
-            handler = handlers.NewNotifySpace(logger, fakeCC, fakeUAA, &mailClient)
+            handler = handlers.NewNotifySpace(logger, fakeCC, fakeUAA, &mailClient, FakeGuidGenerator)
         })
 
         It("logs the UUIDs of all users in the space", func() {
             handler.ServeHTTP(writer, request)
 
-            Expect(fakeCC.CurrentToken).To(Equal("the-app-token"))
+            Expect(fakeCC.CurrentToken).To(Equal(token))
 
             lines := strings.Split(buffer.String(), "\n")
 
@@ -117,6 +115,7 @@ var _ = Describe("NotifySpace", func() {
             if err != nil {
                 panic(err)
             }
+            request.Header.Set("Authorization", "Bearer "+token)
 
             handler.ServeHTTP(writer, request)
 
@@ -160,14 +159,20 @@ This is the body of the email`
             Expect(firstMessage.To).To(Equal("user-123@example.com"))
             Expect(firstMessage.Subject).To(Equal("CF Notification: Your instance is down"))
             Expect(firstMessage.Body).To(Equal(body))
-            Expect(firstMessage.Headers).To(Equal([]string{"X-CF-Client-ID: ", "X-CF-Notification-ID: "}))
+            Expect(firstMessage.Headers).To(Equal([]string{
+                "X-CF-Client-ID: mister-client",
+                "X-CF-Notification-ID: deadbeef-aabb-ccdd-eeff-001122334455",
+            }))
 
             secondMessage := mailClient.messages[1]
             Expect(secondMessage.From).To(Equal("no-reply@notifications.example.com"))
             Expect(secondMessage.To).To(Equal("user-456@example.com"))
             Expect(secondMessage.Subject).To(Equal("CF Notification: Your instance is down"))
             Expect(secondMessage.Body).To(Equal(body))
-            Expect(secondMessage.Headers).To(Equal([]string{"X-CF-Client-ID: ", "X-CF-Notification-ID: "}))
+            Expect(secondMessage.Headers).To(Equal([]string{
+                "X-CF-Client-ID: mister-client",
+                "X-CF-Notification-ID: deadbeef-aabb-ccdd-eeff-001122334455",
+            }))
         })
     })
 })

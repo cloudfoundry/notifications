@@ -43,7 +43,7 @@ func NewRouter() Router {
         stacks: map[string]stack.Stack{
             "GET /info":           stack.NewStack(handlers.NewGetInfo()).Use(logging),
             "POST /users/{guid}":  stack.NewStack(handlers.NewNotifyUser(logger, &mailClient, &uaaClient, uuid.NewV4)).Use(logging, authenticator),
-            "POST /spaces/{guid}": stack.NewStack(handlers.NewNotifySpace(logger, cloudController, &uaaClient, &mailClient)).Use(logging, authenticator),
+            "POST /spaces/{guid}": stack.NewStack(handlers.NewNotifySpace(logger, cloudController, &uaaClient, &mailClient, uuid.NewV4)).Use(logging, authenticator),
         },
     }
 }

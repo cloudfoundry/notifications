@@ -10,6 +10,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
+    "github.com/dgrijalva/jwt-go"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
@@ -18,18 +19,21 @@ type NotifySpace struct {
     cloudController cf.CloudControllerInterface
     uaaClient       uaa.UAAInterface
     mailClient      mail.ClientInterface
+    guidGenerator   GUIDGenerationFunc
 }
 
 const spaceEmailTemplate = `The following "{{.KindDescription}}" notification was sent to you by the "{{.SourceDescription}}" component of Cloud Foundry because you are a member of the "{{.Space}}" space in the "{{.Organization}}" organization:
 
 {{.Text}}`
 
-func NewNotifySpace(logger *log.Logger, cloudController cf.CloudControllerInterface, uaaClient uaa.UAAInterface, mailClient mail.ClientInterface) NotifySpace {
+func NewNotifySpace(logger *log.Logger, cloudController cf.CloudControllerInterface,
+    uaaClient uaa.UAAInterface, mailClient mail.ClientInterface, guidGenerator GUIDGenerationFunc) NotifySpace {
     return NotifySpace{
         logger:          logger,
         cloudController: cloudController,
         uaaClient:       uaaClient,
         mailClient:      mailClient,
+        guidGenerator:   guidGenerator,
     }
 }
 
@@ -61,6 +65,11 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
         return
     }
 
+    rawToken := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
+    clientToken, _ := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
+        return []byte(config.UAAPublicKey), nil
+    })
+
     for _, ccUser := range ccUsers {
         handler.logger.Println(ccUser.Guid)
         user, ok := handler.loadUser(w, ccUser.Guid)
@@ -69,7 +78,7 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
         }
 
         if len(user.Emails) > 0 {
-            status := handler.sendMailToUser(user, params, env, space, organization)
+            status := handler.sendMailToUser(user, params, env, space, organization, clientToken.Claims["client_id"].(string))
             handler.logger.Println(status)
         }
     }
@@ -105,7 +114,12 @@ func (handler NotifySpace) loadUser(w http.ResponseWriter, guid string) (uaa.Use
     return user, true
 }
 
-func (handler NotifySpace) sendMailToUser(user uaa.User, params NotifySpaceParams, env config.Environment, space, organization string) string {
+func (handler NotifySpace) sendMailToUser(user uaa.User, params NotifySpaceParams, env config.Environment, space, organization, clientID string) string {
+    guid, err := handler.guidGenerator()
+    if err != nil {
+        panic(err)
+    }
+
     context := MessageContext{
         From:              env.Sender,
         To:                user.Emails[0],
@@ -114,8 +128,8 @@ func (handler NotifySpace) sendMailToUser(user uaa.User, params NotifySpaceParam
         Template:          spaceEmailTemplate,
         KindDescription:   params.KindDescription,
         SourceDescription: params.SourceDescription,
-        ClientID:          "",
-        MessageID:         "",
+        ClientID:          clientID,
+        MessageID:         guid.String(),
         Space:             space,
         Organization:      organization,
     }

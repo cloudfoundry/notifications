@@ -13,7 +13,6 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
-    "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -35,9 +34,7 @@ var _ = Describe("NotifyUser", func() {
             "alg": "FAST",
         }
         tokenClaims := map[string]interface{}{
-            "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
             "client_id": "mister-client",
-            "cid":       "mister-client",
             "exp":       3404281214,
             "scope":     []string{"notifications.write"},
         }
@@ -51,36 +48,17 @@ var _ = Describe("NotifyUser", func() {
         uaaClient = FakeUAAClient{
             UsersByID: map[string]uaa.User{
                 "user-123": uaa.User{
-                    ID:       "user-123",
-                    Username: "admin",
-                    Name: uaa.Name{
-                        FamilyName: "Admin",
-                        GivenName:  "Mister",
-                    },
-                    Emails:   []string{"fake-user@example.com"},
-                    Active:   true,
-                    Verified: false,
+                    ID:     "user-123",
+                    Emails: []string{"fake-user@example.com"},
                 },
                 "user-456": uaa.User{
-                    ID:       "user-456",
-                    Username: "bounce",
-                    Name: uaa.Name{
-                        FamilyName: "Bounce",
-                        GivenName:  "Mister",
-                    },
-                    Emails:   []string{"bounce@example.com"},
-                    Active:   true,
-                    Verified: false,
+                    ID:     "user-456",
+                    Emails: []string{"bounce@example.com"},
                 },
             },
         }
 
-        guidGenerator := handlers.GUIDGenerationFunc(func() (*uuid.UUID, error) {
-            guid := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55})
-            return &guid, nil
-        })
-
-        handler = handlers.NewNotifyUser(logger, &mailClient, &uaaClient, guidGenerator)
+        handler = handlers.NewNotifyUser(logger, &mailClient, &uaaClient, FakeGuidGenerator)
     })
 
     Context("when the request is valid", func() {
