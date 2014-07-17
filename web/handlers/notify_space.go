@@ -1,6 +1,7 @@
 package handlers
 
 import (
+    "encoding/json"
     "log"
     "net/http"
     "strings"
@@ -68,7 +69,8 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
         return []byte(config.UAAPublicKey), nil
     })
 
-    for _, ccUser := range ccUsers {
+    responseInformation := make([]map[string]string, len(ccUsers))
+    for index, ccUser := range ccUsers {
         handler.logger.Println(ccUser.Guid)
         user, ok := loadUser(w, ccUser.Guid, handler.uaaClient)
         if !ok {
@@ -79,8 +81,28 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
             context := handler.buildContext(user, params, env, space, organization, clientToken.Claims["client_id"].(string))
             status := sendMailToUser(context, handler.logger, handler.mailClient)
             handler.logger.Println(status)
+
+            userInfo := make(map[string]string)
+            userInfo["status"] = status
+            userInfo["recipient"] = ccUser.Guid
+            userInfo["notification_id"] = context.MessageID
+
+            responseInformation[index] = userInfo
         }
     }
+
+    response := handler.generateResponse(responseInformation)
+    w.WriteHeader(http.StatusOK)
+    w.Write(response)
+}
+
+func (handler NotifySpace) generateResponse(userInformation []map[string]string) []byte {
+    response, err := json.Marshal(userInformation)
+    if err != nil {
+        panic(err)
+    }
+
+    return response
 }
 
 func (handler NotifySpace) buildContext(user uaa.User, params NotifySpaceParams, env config.Environment, space, organization, clientID string) MessageContext {

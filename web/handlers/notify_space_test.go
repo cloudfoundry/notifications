@@ -11,6 +11,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -26,6 +27,8 @@ var _ = Describe("NotifySpace", func() {
         var fakeCC *FakeCloudController
         var mailClient FakeMailClient
         var token string
+        var logger *log.Logger
+        var fakeUAA uaa.UAAInterface
 
         BeforeEach(func() {
             var err error
@@ -59,9 +62,9 @@ var _ = Describe("NotifySpace", func() {
             request.Header.Set("Authorization", "Bearer "+token)
 
             buffer = bytes.NewBuffer([]byte{})
-            logger := log.New(buffer, "", 0)
+            logger = log.New(buffer, "", 0)
 
-            fakeUAA := FakeUAAClient{
+            fakeUAA = FakeUAAClient{
                 ClientToken: uaa.Token{
                     Access: token,
                 },
@@ -173,6 +176,68 @@ This is the body of the email`
                 "X-CF-Client-ID: mister-client",
                 "X-CF-Notification-ID: deadbeef-aabb-ccdd-eeff-001122334455",
             }))
+        })
+
+        It("returns necessary info in the response for the sent mail", func() {
+
+            handler = handlers.NewNotifySpace(logger, fakeCC, fakeUAA, &mailClient, func() (*uuid.UUID, error) {
+                guid, err := uuid.NewV4()
+                if err != nil {
+                    panic(err)
+                }
+                return guid, nil
+            })
+
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(http.StatusOK))
+            parsed := []map[string]string{}
+            err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(parsed[0]["status"]).To(Equal("delivered"))
+            Expect(parsed[0]["recipient"]).To(Equal("user-123"))
+            Expect(parsed[0]["notification_id"]).NotTo(Equal(""))
+
+            Expect(parsed[1]["status"]).To(Equal("delivered"))
+            Expect(parsed[1]["recipient"]).To(Equal("user-456"))
+            Expect(parsed[1]["notification_id"]).NotTo(Equal(parsed[0]["notification_id"]))
+        })
+
+        Context("when the SMTP server fails to deliver the mail", func() {
+            It("returns a status indicating that delivery failed", func() {
+                mailClient.errorOnSend = true
+                handler.ServeHTTP(writer, request)
+
+                Expect(writer.Code).To(Equal(http.StatusOK))
+                parsed := []map[string]string{}
+                err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parsed[0]["status"]).To(Equal("failed"))
+                Expect(parsed[1]["status"]).To(Equal("failed"))
+            })
+        })
+
+        Context("when the SMTP server cannot be reached", func() {
+            It("returns a status indicating that the server is unavailable", func() {
+                mailClient.errorOnConnect = true
+                handler.ServeHTTP(writer, request)
+
+                Expect(writer.Code).To(Equal(http.StatusOK))
+                parsed := []map[string]string{}
+                err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parsed[0]["status"]).To(Equal("unavailable"))
+                Expect(parsed[1]["status"]).To(Equal("unavailable"))
+            })
         })
     })
 })
