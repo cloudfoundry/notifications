@@ -24,6 +24,7 @@ type NotifyUser struct {
     mailClient    mail.ClientInterface
     uaaClient     uaa.UAAInterface
     guidGenerator GUIDGenerationFunc
+    helper        NotifyHelper
 }
 
 func NewNotifyUser(logger *log.Logger, mailClient mail.ClientInterface, uaaClient uaa.UAAInterface, guidGenerator GUIDGenerationFunc) NotifyUser {
@@ -32,6 +33,7 @@ func NewNotifyUser(logger *log.Logger, mailClient mail.ClientInterface, uaaClien
         mailClient:    mailClient,
         uaaClient:     uaaClient,
         guidGenerator: guidGenerator,
+        helper:        NotifyHelper{},
     }
 }
 
@@ -39,7 +41,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     params := NewNotifyUserParams(req.Body)
 
     if valid := params.Validate(); !valid {
-        Error(w, 422, params.Errors)
+        handler.helper.Error(w, 422, params.Errors)
         return
     }
 
@@ -50,7 +52,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     handler.uaaClient.SetToken(token.Access)
 
     userGUID := strings.TrimPrefix(req.URL.Path, "/users/")
-    user, ok := loadUser(w, userGUID, handler.uaaClient)
+    user, ok := handler.helper.LoadUser(w, userGUID, handler.uaaClient)
     if !ok {
         return
     }
@@ -65,7 +67,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     if len(user.Emails) > 0 {
         env := config.NewEnvironment()
         context = handler.buildContext(user, params, env, clientToken.Claims["client_id"].(string))
-        status = sendMailToUser(context, handler.logger, handler.mailClient)
+        status = handler.helper.SendMailToUser(context, handler.logger, handler.mailClient)
     } else {
         status = "User had no email address"
     }

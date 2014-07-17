@@ -10,7 +10,9 @@ import (
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
-func Error(w http.ResponseWriter, code int, errors []string) {
+type NotifyHelper struct{}
+
+func (helper NotifyHelper) Error(w http.ResponseWriter, code int, errors []string) {
     response, err := json.Marshal(map[string][]string{
         "errors": errors,
     })
@@ -22,7 +24,7 @@ func Error(w http.ResponseWriter, code int, errors []string) {
     w.Write(response)
 }
 
-func loadUser(w http.ResponseWriter, guid string, uaaClient uaa.UAAInterface) (uaa.User, bool) {
+func (helper NotifyHelper) LoadUser(w http.ResponseWriter, guid string, uaaClient uaa.UAAInterface) (uaa.User, bool) {
     user, err := uaaClient.UserByID(guid)
     if err != nil {
         switch err.(type) {
@@ -38,7 +40,7 @@ func loadUser(w http.ResponseWriter, guid string, uaaClient uaa.UAAInterface) (u
     return user, true
 }
 
-func sendMailToUser(context MessageContext, logger *log.Logger, mailClient mail.ClientInterface) string {
+func (helper NotifyHelper) SendMailToUser(context MessageContext, logger *log.Logger, mailClient mail.ClientInterface) string {
     logger.Printf("Sending email to %s", context.To)
     status, message, err := SendMail(mailClient, context)
     if err != nil {

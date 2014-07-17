@@ -19,6 +19,7 @@ type NotifySpace struct {
     uaaClient       uaa.UAAInterface
     mailClient      mail.ClientInterface
     guidGenerator   GUIDGenerationFunc
+    helper          NotifyHelper
 }
 
 const spaceEmailTemplate = `The following "{{.KindDescription}}" notification was sent to you by the "{{.SourceDescription}}" component of Cloud Foundry because you are a member of the "{{.Space}}" space in the "{{.Organization}}" organization:
@@ -33,6 +34,7 @@ func NewNotifySpace(logger *log.Logger, cloudController cf.CloudControllerInterf
         uaaClient:       uaaClient,
         mailClient:      mailClient,
         guidGenerator:   guidGenerator,
+        helper:          NotifyHelper{},
     }
 }
 
@@ -41,7 +43,7 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     params := NewNotifySpaceParams(req.Body)
     if !params.Validate() {
-        Error(w, 422, params.Errors)
+        handler.helper.Error(w, 422, params.Errors)
         return
     }
 
@@ -53,14 +55,14 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     ccUsers, err := handler.cloudController.GetUsersBySpaceGuid(spaceGuid, token.Access)
     if err != nil {
-        Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+        handler.helper.Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
         return
     }
 
     env := config.NewEnvironment()
     space, organization, err := handler.loadSpaceAndOrganization(spaceGuid, token.Access)
     if err != nil {
-        Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+        handler.helper.Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
         return
     }
 
@@ -72,14 +74,14 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     responseInformation := make([]map[string]string, len(ccUsers))
     for index, ccUser := range ccUsers {
         handler.logger.Println(ccUser.Guid)
-        user, ok := loadUser(w, ccUser.Guid, handler.uaaClient)
+        user, ok := handler.helper.LoadUser(w, ccUser.Guid, handler.uaaClient)
         if !ok {
             return
         }
 
         if len(user.Emails) > 0 {
             context := handler.buildContext(user, params, env, space, organization, clientToken.Claims["client_id"].(string))
-            status := sendMailToUser(context, handler.logger, handler.mailClient)
+            status := handler.helper.SendMailToUser(context, handler.logger, handler.mailClient)
             handler.logger.Println(status)
 
             userInfo := make(map[string]string)
