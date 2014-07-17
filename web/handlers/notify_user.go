@@ -38,7 +38,7 @@ func NewNotifyUser(logger *log.Logger, mailClient mail.ClientInterface, uaaClien
 }
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-    params := NewNotifyUserParams(req.Body)
+    params := NewNotifyParams(req.Body)
 
     if valid := params.Validate(); !valid {
         handler.helper.Error(w, 422, params.Errors)
@@ -66,7 +66,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     var context MessageContext
     if len(user.Emails) > 0 {
         env := config.NewEnvironment()
-        context = handler.buildContext(user, params, env, clientToken.Claims["client_id"].(string))
+        context = handler.helper.BuildUserContext(user, params, env, clientToken.Claims["client_id"].(string), handler.guidGenerator, emailTemplate)
         status = handler.helper.SendMailToUser(context, handler.logger, handler.mailClient)
     } else {
         status = "User had no email address"
@@ -90,23 +90,4 @@ func (handler NotifyUser) generateResponse(status, userGUID, notificationID stri
         panic(err)
     }
     return response
-}
-
-func (handler NotifyUser) buildContext(user uaa.User, params NotifyUserParams, env config.Environment, clientID string) MessageContext {
-    guid, err := handler.guidGenerator()
-    if err != nil {
-        panic(err)
-    }
-
-    return MessageContext{
-        From:              env.Sender,
-        To:                user.Emails[0],
-        Subject:           params.Subject,
-        Text:              params.Text,
-        Template:          emailTemplate,
-        KindDescription:   params.KindDescription,
-        SourceDescription: params.SourceDescription,
-        ClientID:          clientID,
-        MessageID:         guid.String(),
-    }
 }

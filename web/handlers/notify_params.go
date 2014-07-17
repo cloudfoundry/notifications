@@ -6,7 +6,7 @@ import (
     "io"
 )
 
-type NotifyUserParams struct {
+type NotifyParams struct {
     Subject           string `json:"subject"`
     KindDescription   string `json:"kind_description"`
     SourceDescription string `json:"source_description"`
@@ -15,13 +15,13 @@ type NotifyUserParams struct {
     Errors            []string
 }
 
-func NewNotifyUserParams(body io.Reader) NotifyUserParams {
-    params := NotifyUserParams{}
+func NewNotifyParams(body io.Reader) NotifyParams {
+    params := NotifyParams{}
     params.parseRequestBody(body)
     return params
 }
 
-func (params *NotifyUserParams) Validate() bool {
+func (params *NotifyParams) Validate() bool {
     params.Errors = []string{}
 
     if params.Kind == "" {
@@ -35,7 +35,7 @@ func (params *NotifyUserParams) Validate() bool {
     return len(params.Errors) == 0
 }
 
-func (params *NotifyUserParams) parseRequestBody(body io.Reader) {
+func (params *NotifyParams) parseRequestBody(body io.Reader) {
     buffer := bytes.NewBuffer([]byte{})
     buffer.ReadFrom(body)
     if buffer.Len() > 0 {

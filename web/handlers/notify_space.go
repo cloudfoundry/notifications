@@ -41,7 +41,7 @@ func NewNotifySpace(logger *log.Logger, cloudController cf.CloudControllerInterf
 func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     spaceGuid := strings.TrimPrefix(req.URL.Path, "/spaces/")
 
-    params := NewNotifySpaceParams(req.Body)
+    params := NewNotifyParams(req.Body)
     if !params.Validate() {
         handler.helper.Error(w, 422, params.Errors)
         return
@@ -80,7 +80,7 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
         }
 
         if len(user.Emails) > 0 {
-            context := handler.buildContext(user, params, env, space, organization, clientToken.Claims["client_id"].(string))
+            context := handler.helper.BuildSpaceContext(user, params, env, space, organization, clientToken.Claims["client_id"].(string), handler.guidGenerator, spaceEmailTemplate)
             status := handler.helper.SendMailToUser(context, handler.logger, handler.mailClient)
             handler.logger.Println(status)
 
@@ -105,27 +105,6 @@ func (handler NotifySpace) generateResponse(userInformation []map[string]string)
     }
 
     return response
-}
-
-func (handler NotifySpace) buildContext(user uaa.User, params NotifySpaceParams, env config.Environment, space, organization, clientID string) MessageContext {
-    guid, err := handler.guidGenerator()
-    if err != nil {
-        panic(err)
-    }
-
-    return MessageContext{
-        From:              env.Sender,
-        To:                user.Emails[0],
-        Subject:           params.Subject,
-        Text:              params.Text,
-        Template:          spaceEmailTemplate,
-        KindDescription:   params.KindDescription,
-        SourceDescription: params.SourceDescription,
-        ClientID:          clientID,
-        MessageID:         guid.String(),
-        Space:             space,
-        Organization:      organization,
-    }
 }
 
 func (handler NotifySpace) loadSpaceAndOrganization(spaceGuid, token string) (string, string, error) {

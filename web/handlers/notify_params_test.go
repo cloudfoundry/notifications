@@ -9,8 +9,8 @@ import (
     . "github.com/onsi/gomega"
 )
 
-var _ = Describe("NotifyUserParams", func() {
-    Describe("NewNotifyUserParams", func() {
+var _ = Describe("NotifyParams", func() {
+    Describe("NewNotifyParams", func() {
         It("parses the body of the given request", func() {
             body := strings.NewReader(`{
                 "kind": "test_email",
@@ -20,7 +20,7 @@ var _ = Describe("NotifyUserParams", func() {
                 "text": "Contents of the email message"
             }`)
 
-            params := handlers.NewNotifyUserParams(body)
+            params := handlers.NewNotifyParams(body)
 
             Expect(params.Kind).To(Equal("test_email"))
             Expect(params.KindDescription).To(Equal("Descriptive Email Name"))
@@ -33,7 +33,7 @@ var _ = Describe("NotifyUserParams", func() {
             body := strings.NewReader("")
 
             Expect(func() {
-                handlers.NewNotifyUserParams(body)
+                handlers.NewNotifyParams(body)
             }).NotTo(Panic())
         })
     })
@@ -47,7 +47,7 @@ var _ = Describe("NotifyUserParams", func() {
                 "subject": "Summary of contents",
                 "text": "Contents of the email message"
             }`)
-            params := handlers.NewNotifyUserParams(body)
+            params := handlers.NewNotifyParams(body)
 
             Expect(params.Validate()).To(BeTrue())
             Expect(len(params.Errors)).To(Equal(0))
