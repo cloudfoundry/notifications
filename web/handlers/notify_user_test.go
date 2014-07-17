@@ -124,7 +124,7 @@ Please reset your password by clicking on this link...`,
             }))
         })
 
-        It("returns a status response for the sent mail", func() {
+        It("returns necessary info in the response for the sent mail", func() {
             handler.ServeHTTP(writer, request)
 
             Expect(writer.Code).To(Equal(http.StatusOK))
@@ -134,11 +134,9 @@ Please reset your password by clicking on this link...`,
                 panic(err)
             }
 
-            Expect(parsed).To(Equal([]map[string]string{
-                map[string]string{
-                    "status": "delivered",
-                },
-            }))
+            Expect(parsed[0]["status"]).To(Equal("delivered"))
+            Expect(parsed[0]["recipient"]).To(Equal("user-123"))
+            Expect(parsed[0]["notification_id"]).NotTo(Equal(""))
         })
 
         Context("when the SMTP server fails to deliver the mail", func() {
@@ -157,11 +155,7 @@ Please reset your password by clicking on this link...`,
                     panic(err)
                 }
 
-                Expect(parsed).To(Equal([]map[string]string{
-                    map[string]string{
-                        "status": "failed",
-                    },
-                }))
+                Expect(parsed[0]["status"]).To(Equal("failed"))
             })
         })
 
@@ -177,11 +171,7 @@ Please reset your password by clicking on this link...`,
                     panic(err)
                 }
 
-                Expect(parsed).To(Equal([]map[string]string{
-                    map[string]string{
-                        "status": "unavailable",
-                    },
-                }))
+                Expect(parsed[0]["status"]).To(Equal("unavailable"))
             })
         })
 

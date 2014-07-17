@@ -61,23 +61,26 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     })
 
     var status string
+    var context MessageContext
     if len(user.Emails) > 0 {
         env := config.NewEnvironment()
-        context := handler.buildContext(user, params, env, clientToken.Claims["client_id"].(string))
+        context = handler.buildContext(user, params, env, clientToken.Claims["client_id"].(string))
         status = sendMailToUser(context, handler.logger, handler.mailClient)
     } else {
         status = "User had no email address"
     }
 
-    response := handler.generateResponse(status)
+    response := handler.generateResponse(status, userGUID, context.MessageID)
     w.WriteHeader(http.StatusOK)
     w.Write(response)
 }
 
-func (handler NotifyUser) generateResponse(status string) []byte {
+func (handler NotifyUser) generateResponse(status, userGUID, notificationID string) []byte {
     results := []map[string]string{
         map[string]string{
-            "status": status,
+            "status":          status,
+            "recipient":       userGUID,
+            "notification_id": notificationID,
         },
     }
     response, err := json.Marshal(results)
