@@ -28,7 +28,8 @@ var _ = Describe("Message", func() {
                 "From: me@example.com",
                 "To: you@example.com",
                 "Subject: Super Urgent! Read Now!",
-                "Body:",
+                "MIME-Version: 1.0",
+                "Content-Type: multipart/alternative; boundary=\"our-content-boundary\"",
                 "",
                 "Banana",
             }))
@@ -43,7 +44,8 @@ var _ = Describe("Message", func() {
                 "From: me@example.com",
                 "To: you@example.com",
                 "Subject: Super Urgent! Read Now!",
-                "Body:",
+                "MIME-Version: 1.0",
+                "Content-Type: multipart/alternative; boundary=\"our-content-boundary\"",
                 "",
                 "Banana",
             }))
