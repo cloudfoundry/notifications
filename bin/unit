@@ -1,5 +1,5 @@
 #! /usr/bin/env bash
-set +e
+set -e
 
 DIR=$(dirname $0)
 
@@ -14,8 +14,10 @@ NONE="\033[0m"
 source $DIR/env/$ENVIRONMENT
 
 function run() {
+  set +e
   go test -v $@
   EXIT_CODE=$?
+  set -e
 }
 
 if [[ -z "$1" ]]; then
