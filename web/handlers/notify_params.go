@@ -11,6 +11,7 @@ type NotifyParams struct {
     KindDescription   string `json:"kind_description"`
     SourceDescription string `json:"source_description"`
     Text              string `json:"text"`
+    HTML              string `json:"html"`
     Kind              string `json:"kind"`
     Errors            []string
 }
@@ -28,8 +29,8 @@ func (params *NotifyParams) Validate() bool {
         params.Errors = append(params.Errors, `"kind" is a required field`)
     }
 
-    if params.Text == "" {
-        params.Errors = append(params.Errors, `"text" is a required field`)
+    if params.Text == "" && params.HTML == "" {
+        params.Errors = append(params.Errors, `"text" or "html" fields must be supplied`)
     }
 
     return len(params.Errors) == 0

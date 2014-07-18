@@ -22,9 +22,13 @@ type NotifySpace struct {
     helper          NotifyHelper
 }
 
-const spaceEmailTemplate = `The following "{{.KindDescription}}" notification was sent to you by the "{{.SourceDescription}}" component of Cloud Foundry because you are a member of the "{{.Space}}" space in the "{{.Organization}}" organization:
+const spacePlainTextEmailTemplate = `The following "{{.KindDescription}}" notification was sent to you by the "{{.SourceDescription}}" component of Cloud Foundry because you are a member of the "{{.Space}}" space in the "{{.Organization}}" organization:
 
 {{.Text}}`
+
+const spaceHTMLEmailTemplate = `<p>The following "{{.KindDescription}}" notification was sent to you by the "{{.SourceDescription}}" component of Cloud Foundry because you are a member of the "{{.Space}}" space in the "{{.Organization}}" organization:</p>
+
+{{.HTML}}`
 
 func NewNotifySpace(logger *log.Logger, cloudController cf.CloudControllerInterface,
     uaaClient uaa.UAAInterface, mailClient mail.ClientInterface, guidGenerator GUIDGenerationFunc) NotifySpace {
@@ -80,7 +84,7 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
         }
 
         if len(user.Emails) > 0 {
-            context := handler.helper.BuildSpaceContext(user, params, env, space, organization, clientToken.Claims["client_id"].(string), handler.guidGenerator, spaceEmailTemplate)
+            context := handler.helper.BuildSpaceContext(user, params, env, space, organization, clientToken.Claims["client_id"].(string), handler.guidGenerator, spacePlainTextEmailTemplate, spaceHTMLEmailTemplate)
             status := handler.helper.SendMailToUser(context, handler.logger, handler.mailClient)
             handler.logger.Println(status)
 

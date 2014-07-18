@@ -9,7 +9,8 @@ const emailTemplate = `{{range .Headers}}{{.}}
 {{end}}From: {{.From}}
 To: {{.To}}
 Subject: {{.Subject}}
-Body:
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="our-content-boundary"
 
 {{.Body}}`
 

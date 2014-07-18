@@ -13,7 +13,8 @@ import (
 
 var _ = Describe("NotifyHelper", func() {
     var helper handlers.NotifyHelper
-    var emailTemplate string
+    var plainTextEmailTemplate string
+    var htmlEmailTemplate string
     var user uaa.User
     var env config.Environment
     var params handlers.NotifyParams
@@ -26,13 +27,15 @@ var _ = Describe("NotifyHelper", func() {
 
         env = config.NewEnvironment()
 
-        emailTemplate = "the email template"
+        plainTextEmailTemplate = "the plainText email template"
+        htmlEmailTemplate = "the html email template"
 
         params = handlers.NotifyParams{
             Subject:           "the subject",
             KindDescription:   "the kind description",
             SourceDescription: "the source description",
-            Text:              "the email text",
+            Text:              "user supplied email text",
+            HTML:              "user supplied html",
             Kind:              "the-kind",
         }
     })
@@ -40,7 +43,7 @@ var _ = Describe("NotifyHelper", func() {
     Describe("BuildContext", func() {
 
         It("returns the appropriate MessageContext when all params are specified", func() {
-            messageContext := helper.BuildSpaceContext(user, params, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, emailTemplate)
+            messageContext := helper.BuildSpaceContext(user, params, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
 
             guid, err := FakeGuidGenerator()
             if err != nil {
@@ -51,7 +54,9 @@ var _ = Describe("NotifyHelper", func() {
             Expect(messageContext.To).To(Equal(user.Emails[0]))
             Expect(messageContext.Subject).To(Equal(params.Subject))
             Expect(messageContext.Text).To(Equal(params.Text))
-            Expect(messageContext.Template).To(Equal(emailTemplate))
+            Expect(messageContext.HTML).To(Equal(params.HTML))
+            Expect(messageContext.PlainTextEmailTemplate).To(Equal(plainTextEmailTemplate))
+            Expect(messageContext.HTMLEmailTemplate).To(Equal(htmlEmailTemplate))
             Expect(messageContext.KindDescription).To(Equal(params.KindDescription))
             Expect(messageContext.SourceDescription).To(Equal(params.SourceDescription))
             Expect(messageContext.ClientID).To(Equal("the-client-ID"))
@@ -63,7 +68,7 @@ var _ = Describe("NotifyHelper", func() {
         It("falls back to Kind if KindDescription is missing", func() {
             params.KindDescription = ""
 
-            messageContext := helper.BuildUserContext(user, params, env, "the-client-ID", FakeGuidGenerator, emailTemplate)
+            messageContext := helper.BuildUserContext(user, params, env, "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
 
             Expect(messageContext.KindDescription).To(Equal("the-kind"))
         })
@@ -71,7 +76,7 @@ var _ = Describe("NotifyHelper", func() {
         It("falls back to clientID when SourceDescription is missing", func() {
             params.SourceDescription = ""
 
-            messageContext := helper.BuildSpaceContext(user, params, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, emailTemplate)
+            messageContext := helper.BuildSpaceContext(user, params, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
 
             Expect(messageContext.SourceDescription).To(Equal("the-client-ID"))
         })

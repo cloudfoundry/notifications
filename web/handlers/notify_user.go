@@ -13,9 +13,13 @@ import (
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
-const emailTemplate = `The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:
+const plainTextEmailTemplate = `The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:
 
 {{.Text}}`
+
+const htmlEmailTemplate = `<p>The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:</p>
+
+{{.HTML}}`
 
 type GUIDGenerationFunc func() (*uuid.UUID, error)
 
@@ -66,7 +70,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     var context MessageContext
     if len(user.Emails) > 0 {
         env := config.NewEnvironment()
-        context = handler.helper.BuildUserContext(user, params, env, clientToken.Claims["client_id"].(string), handler.guidGenerator, emailTemplate)
+        context = handler.helper.BuildUserContext(user, params, env, clientToken.Claims["client_id"].(string), handler.guidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
         status = handler.helper.SendMailToUser(context, handler.logger, handler.mailClient)
     } else {
         status = "User had no email address"

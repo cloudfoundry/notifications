@@ -63,11 +63,49 @@ var _ = Describe("NotifyParams", func() {
             Expect(params.Validate()).To(BeFalse())
             Expect(len(params.Errors)).To(Equal(2))
             Expect(params.Errors).To(ContainElement(`"kind" is a required field`))
-            Expect(params.Errors).To(ContainElement(`"text" is a required field`))
+            Expect(params.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
 
             params.Kind = "something"
             params.Text = "banana"
 
+            Expect(params.Validate()).To(BeTrue())
+            Expect(len(params.Errors)).To(Equal(0))
+        })
+
+        It("either text or html must be set", func() {
+            body := strings.NewReader(`{
+                "kind": "test_email"
+            }`)
+
+            params := handlers.NewNotifyParams(body)
+            Expect(params.Validate()).To(BeFalse())
+            Expect(params.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
+
+            body = strings.NewReader(`{
+                "kind": "test_email",
+                "text": "Contents of the email message"
+            }`)
+
+            params = handlers.NewNotifyParams(body)
+            Expect(params.Validate()).To(BeTrue())
+            Expect(len(params.Errors)).To(Equal(0))
+
+            body = strings.NewReader(`{
+                "kind": "test_email",
+                "html": "<html><body><p>the html</p></body></html>"
+            }`)
+
+            params = handlers.NewNotifyParams(body)
+            Expect(params.Validate()).To(BeTrue())
+            Expect(len(params.Errors)).To(Equal(0))
+
+            body = strings.NewReader(`{
+                "kind": "test_email",
+                "text": "Contents of the email message",
+                "html": "<html><body><p>the html</p></body></html>"
+            }`)
+
+            params = handlers.NewNotifyParams(body)
             Expect(params.Validate()).To(BeTrue())
             Expect(len(params.Errors)).To(Equal(0))
         })

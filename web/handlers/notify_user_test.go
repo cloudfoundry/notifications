@@ -69,6 +69,7 @@ var _ = Describe("NotifyUser", func() {
                 "source_description": "Login system",
                 "subject":            "Reset your password",
                 "text":               "Please reset your password by clicking on this link...",
+                "html":               "<p>Please reset your password by clicking on this link...</p>",
             })
             if err != nil {
                 panic(err)
@@ -94,7 +95,6 @@ var _ = Describe("NotifyUser", func() {
                 "From: no-reply@notifications.example.com",
                 "To: fake-user@example.com",
                 "Subject: CF Notification: Reset your password",
-                "Body:",
                 `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:`,
                 "Please reset your password by clicking on this link...",
             }
@@ -114,9 +114,28 @@ var _ = Describe("NotifyUser", func() {
                 From:    "no-reply@notifications.example.com",
                 To:      "fake-user@example.com",
                 Subject: "CF Notification: Reset your password",
-                Body: `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:
+                Body: `
+This is a multi-part message in MIME format...
 
-Please reset your password by clicking on this link...`,
+--our-content-boundary
+Content-type: text/plain
+
+The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:
+
+Please reset your password by clicking on this link...
+--our-content-boundary
+Content-Type: text/html
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+    <body>
+        <p>The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:</p>
+
+<p>Please reset your password by clicking on this link...</p>
+    </body>
+</html>
+--our-content-boundary--`,
                 Headers: []string{
                     "X-CF-Client-ID: mister-client",
                     "X-CF-Notification-ID: deadbeef-aabb-ccdd-eeff-001122334455",
@@ -231,7 +250,7 @@ Please reset your password by clicking on this link...`,
             }
 
             Expect(parsed["errors"]).To(ContainElement(`"kind" is a required field`))
-            Expect(parsed["errors"]).To(ContainElement(`"text" is a required field`))
+            Expect(parsed["errors"]).To(ContainElement(`"text" or "html" fields must be supplied`))
         })
 
         Context("when the request body is missing", func() {
@@ -249,7 +268,7 @@ Please reset your password by clicking on this link...`,
                 }
 
                 Expect(parsed["errors"]).To(ContainElement(`"kind" is a required field`))
-                Expect(parsed["errors"]).To(ContainElement(`"text" is a required field`))
+                Expect(parsed["errors"]).To(ContainElement(`"text" or "html" fields must be supplied`))
             })
         })
     })

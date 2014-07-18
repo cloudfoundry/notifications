@@ -36,7 +36,8 @@ var _ = Describe("NotifySpace", func() {
             writer = httptest.NewRecorder()
             body, err := json.Marshal(map[string]string{
                 "kind":               "test_email",
-                "text":               "This is the body of the email",
+                "text":               "This is the plain text body of the email",
+                "html":               "<p>This is the HTML Body of the email</p>",
                 "subject":            "Your instance is down",
                 "source_description": "MySQL Service",
                 "kind_description":   "Instance Alert",
@@ -130,7 +131,7 @@ var _ = Describe("NotifySpace", func() {
             }
 
             Expect(body["errors"]).To(ContainElement(`"kind" is a required field`))
-            Expect(body["errors"]).To(ContainElement(`"text" is a required field`))
+            Expect(body["errors"]).To(ContainElement(`"text" or "html" fields must be supplied`))
         })
 
         It("returns a 502 when CloudController fails to respond", func() {
@@ -153,9 +154,28 @@ var _ = Describe("NotifySpace", func() {
 
             Expect(len(mailClient.messages)).To(Equal(2))
 
-            body := `The following "Instance Alert" notification was sent to you by the "MySQL Service" component of Cloud Foundry because you are a member of the "production" space in the "pivotaltracker" organization:
+            body := `
+This is a multi-part message in MIME format...
 
-This is the body of the email`
+--our-content-boundary
+Content-type: text/plain
+
+The following "Instance Alert" notification was sent to you by the "MySQL Service" component of Cloud Foundry because you are a member of the "production" space in the "pivotaltracker" organization:
+
+This is the plain text body of the email
+--our-content-boundary
+Content-Type: text/html
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+    <body>
+        <p>The following "Instance Alert" notification was sent to you by the "MySQL Service" component of Cloud Foundry because you are a member of the "production" space in the "pivotaltracker" organization:</p>
+
+<p>This is the HTML Body of the email</p>
+    </body>
+</html>
+--our-content-boundary--`
 
             firstMessage := mailClient.messages[0]
             Expect(firstMessage.From).To(Equal("no-reply@notifications.example.com"))
