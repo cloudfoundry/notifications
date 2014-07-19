@@ -5,13 +5,34 @@ import (
     "log"
     "net/http"
     "net/url"
+    "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
+    "github.com/dgrijalva/jwt-go"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
-type NotifyHelper struct{}
+type NotifyHelper struct {
+    cloudController cf.CloudControllerInterface
+    logger          *log.Logger
+    uaaClient       uaa.UAAInterface
+    guidGenerator   GUIDGenerationFunc
+    mailClient      mail.ClientInterface
+}
+
+func NewNotifyHelper(cloudController cf.CloudControllerInterface, logger *log.Logger,
+    uaaClient uaa.UAAInterface, guidGenerator GUIDGenerationFunc,
+    mailClient mail.ClientInterface) NotifyHelper {
+    return NotifyHelper{
+        cloudController: cloudController,
+        logger:          logger,
+        uaaClient:       uaaClient,
+        guidGenerator:   guidGenerator,
+        mailClient:      mailClient,
+    }
+}
 
 func (helper NotifyHelper) Error(w http.ResponseWriter, code int, errors []string) {
     response, err := json.Marshal(map[string][]string{
@@ -39,6 +60,99 @@ func (helper NotifyHelper) LoadUser(w http.ResponseWriter, guid string, uaaClien
         return uaa.User{}, false
     }
     return user, true
+}
+
+func (helper NotifyHelper) SendMail(w http.ResponseWriter, req *http.Request,
+    loadGuid func(path string) string,
+    loadUsers func(spaceGuid, accessToken string) ([]cf.CloudControllerUser, error),
+    loadSpace bool, plainTextTemplate, htmlTemplate string) {
+
+    guid := loadGuid(req.URL.Path)
+
+    params := NewNotifyParams(req.Body)
+    if !params.Validate() {
+        helper.Error(w, 422, params.Errors)
+        return
+    }
+
+    token, err := helper.uaaClient.GetClientToken()
+    if err != nil {
+        panic(err) // this probably shouldn't be panic'ing
+    }
+    helper.uaaClient.SetToken(token.Access)
+
+    ccUsers, err := loadUsers(guid, token.Access)
+    if err != nil {
+        helper.Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+        return
+    }
+
+    env := config.NewEnvironment()
+
+    var space, organization string
+    if loadSpace {
+        space, organization, err = helper.loadSpaceAndOrganization(guid, token.Access)
+        if err != nil {
+            helper.Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+            return
+        }
+    }
+
+    rawToken := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
+    clientToken, _ := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
+        return []byte(config.UAAPublicKey), nil
+    })
+
+    responseInformation := make([]map[string]string, len(ccUsers))
+    for index, ccUser := range ccUsers {
+        helper.logger.Println(ccUser.Guid)
+        user, ok := helper.LoadUser(w, ccUser.Guid, helper.uaaClient)
+        if !ok {
+            return
+        }
+
+        if len(user.Emails) > 0 {
+            context := helper.BuildSpaceContext(user, params, env, space, organization,
+                clientToken.Claims["client_id"].(string), helper.guidGenerator,
+                plainTextTemplate, htmlTemplate)
+            status := helper.SendMailToUser(context, helper.logger, helper.mailClient)
+            helper.logger.Println(status)
+
+            userInfo := make(map[string]string)
+            userInfo["status"] = status
+            userInfo["recipient"] = ccUser.Guid
+            userInfo["notification_id"] = context.MessageID
+
+            responseInformation[index] = userInfo
+        }
+    }
+
+    response := helper.generateResponse(responseInformation)
+    w.WriteHeader(http.StatusOK)
+    w.Write(response)
+}
+
+func (helper NotifyHelper) generateResponse(userInformation []map[string]string) []byte {
+    response, err := json.Marshal(userInformation)
+    if err != nil {
+        panic(err)
+    }
+
+    return response
+}
+
+func (helper NotifyHelper) loadSpaceAndOrganization(spaceGuid, token string) (string, string, error) {
+    space, err := helper.cloudController.LoadSpace(spaceGuid, token)
+    if err != nil {
+        return "", "", err
+    }
+
+    org, err := helper.cloudController.LoadOrganization(space.OrganizationGuid, token)
+    if err != nil {
+        return "", "", err
+    }
+
+    return space.Name, org.Name, nil
 }
 
 func (helper NotifyHelper) SendMailToUser(context MessageContext, logger *log.Logger, mailClient mail.ClientInterface) string {

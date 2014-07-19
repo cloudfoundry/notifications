@@ -1,14 +1,12 @@
 package handlers
 
 import (
-    "encoding/json"
     "log"
     "net/http"
     "strings"
 
-    "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/mail"
-    "github.com/dgrijalva/jwt-go"
     uuid "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
@@ -37,61 +35,27 @@ func NewNotifyUser(logger *log.Logger, mailClient mail.ClientInterface, uaaClien
         mailClient:    mailClient,
         uaaClient:     uaaClient,
         guidGenerator: guidGenerator,
-        helper:        NotifyHelper{},
+        helper:        NewNotifyHelper(cf.CloudController{}, logger, uaaClient, guidGenerator, mailClient),
     }
 }
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-    params := NewNotifyParams(req.Body)
-
-    if valid := params.Validate(); !valid {
-        handler.helper.Error(w, 422, params.Errors)
-        return
+    determineGUID := func(path string) string {
+        return strings.TrimPrefix(path, "/users/")
     }
 
-    token, err := handler.uaaClient.GetClientToken()
-    if err != nil {
-        panic(err)
-    }
-    handler.uaaClient.SetToken(token.Access)
+    loadUsers := func(userGuid, accessToken string) ([]cf.CloudControllerUser, error) {
+        ccUsers := []cf.CloudControllerUser{}
 
-    userGUID := strings.TrimPrefix(req.URL.Path, "/users/")
-    user, ok := handler.helper.LoadUser(w, userGUID, handler.uaaClient)
-    if !ok {
-        return
-    }
+        user := cf.CloudControllerUser{
+            Guid: userGuid,
+        }
 
-    rawToken := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
-    clientToken, _ := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
-        return []byte(config.UAAPublicKey), nil
-    })
-
-    var status string
-    var context MessageContext
-    if len(user.Emails) > 0 {
-        env := config.NewEnvironment()
-        context = handler.helper.BuildUserContext(user, params, env, clientToken.Claims["client_id"].(string), handler.guidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
-        status = handler.helper.SendMailToUser(context, handler.logger, handler.mailClient)
-    } else {
-        status = "User had no email address"
+        ccUsers = append(ccUsers, user)
+        return ccUsers, nil
     }
 
-    response := handler.generateResponse(status, userGUID, context.MessageID)
-    w.WriteHeader(http.StatusOK)
-    w.Write(response)
-}
-
-func (handler NotifyUser) generateResponse(status, userGUID, notificationID string) []byte {
-    results := []map[string]string{
-        map[string]string{
-            "status":          status,
-            "recipient":       userGUID,
-            "notification_id": notificationID,
-        },
-    }
-    response, err := json.Marshal(results)
-    if err != nil {
-        panic(err)
-    }
-    return response
+    loadSpaceAndOrganization := false
+    handler.helper.SendMail(w, req, determineGUID, loadUsers, loadSpaceAndOrganization,
+        plainTextEmailTemplate, htmlEmailTemplate)
 }
