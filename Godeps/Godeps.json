@@ -6,6 +6,21 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "code.google.com/p/cascadia",
+			"Comment": "null-30",
+			"Rev": "4f03c71bc42ba0015a68bea86422f0ecbb71bf70"
+		},
+		{
+			"ImportPath": "code.google.com/p/go.net/html",
+			"Comment": "null-126",
+			"Rev": "53130366067a9f0b47893ae8a81677391fdd0f42"
+		},
+		{
+			"ImportPath": "github.com/PuerkitoBio/goquery",
+			"Comment": "v0.3.2-22-ga3fdc62",
+			"Rev": "a3fdc62e311a44c5199b0ef323ee5e056c527ef1"
+		},
+		{
 			"ImportPath": "github.com/dgrijalva/jwt-go",
 			"Comment": "v1.0.0-2-gf7a9d2e",
 			"Rev": "f7a9d2e66ed71a4e3bfaa24380e84bf465d665a8"
