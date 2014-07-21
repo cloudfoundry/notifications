@@ -69,7 +69,13 @@ func (helper NotifyHelper) SendMail(w http.ResponseWriter, req *http.Request,
 
     guid := loadGuid(req.URL.Path)
 
-    params := NewNotifyParams(req.Body)
+    params, err := NewNotifyParams(req.Body)
+
+    if err != nil {
+        helper.Error(w, 422, []string{"Request body could not be parsed"})
+        return
+    }
+
     if !params.Validate() {
         helper.Error(w, 422, params.Errors)
         return

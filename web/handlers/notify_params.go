@@ -4,6 +4,9 @@ import (
     "bytes"
     "encoding/json"
     "io"
+    "strings"
+
+    "github.com/PuerkitoBio/goquery"
 )
 
 type NotifyParams struct {
@@ -16,10 +19,15 @@ type NotifyParams struct {
     Errors            []string
 }
 
-func NewNotifyParams(body io.Reader) NotifyParams {
+func NewNotifyParams(body io.Reader) (NotifyParams, error) {
     params := NotifyParams{}
     params.parseRequestBody(body)
-    return params
+    err := params.extractHTML()
+    if err != nil {
+        return params, err
+    }
+
+    return params, nil
 }
 
 func (params *NotifyParams) Validate() bool {
@@ -45,4 +53,20 @@ func (params *NotifyParams) parseRequestBody(body io.Reader) {
             panic(err)
         }
     }
+}
+
+func (params *NotifyParams) extractHTML() error {
+
+    reader := strings.NewReader(params.HTML)
+    document, err := goquery.NewDocumentFromReader(reader)
+    if err != nil {
+        return err
+    }
+
+    params.HTML, err = document.Find("body").Html()
+    if err != nil {
+        return err
+    }
+
+    return nil
 }

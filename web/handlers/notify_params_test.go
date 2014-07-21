@@ -20,7 +20,7 @@ var _ = Describe("NotifyParams", func() {
                 "text": "Contents of the email message"
             }`)
 
-            params := handlers.NewNotifyParams(body)
+            params, _ := handlers.NewNotifyParams(body)
 
             Expect(params.Kind).To(Equal("test_email"))
             Expect(params.KindDescription).To(Equal("Descriptive Email Name"))
@@ -36,6 +36,91 @@ var _ = Describe("NotifyParams", func() {
                 handlers.NewNotifyParams(body)
             }).NotTo(Panic())
         })
+
+        Describe("html parsing", func() {
+            Context("when html is passed with a surrounding html and body tag", func() {
+                It("pulls out the html in the body", func() {
+                    body := strings.NewReader(`{
+                        "kind": "test_email",
+                        "html": "<html><head><title>BananaDamage</title></head><body><p>The TEXT</p><h1>the TITLE</h1></body></html>"
+                    }`)
+
+                    params, _ := handlers.NewNotifyParams(body)
+
+                    Expect(params.HTML).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+                })
+            })
+
+            Context("when html is passed with a surrounding body tag", func() {
+                It("pulls out the html in the body", func() {
+                    body := strings.NewReader(`{
+                        "kind": "test_email",
+                        "html": "<body><p>The TEXT</p><h1>the TITLE</h1></body>"
+                    }`)
+
+                    params, _ := handlers.NewNotifyParams(body)
+
+                    Expect(params.HTML).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+                })
+            })
+
+            Context("when html is passed with a surrounding html tag", func() {
+                It("pulls out the html in the html tag", func() {
+                    body := strings.NewReader(`{
+                        "kind": "test_email",
+                        "html": "<html><p>The TEXT</p><h1>the TITLE</h1></html>"
+                    }`)
+
+                    params, _ := handlers.NewNotifyParams(body)
+
+                    Expect(params.HTML).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+                })
+            })
+
+            Context("when just bare html is passed without surrounding html/body tags", func() {
+                It("is a no op", func() {
+                    body := strings.NewReader(`{
+                        "kind": "test_email",
+                        "html": "<p>The TEXT</p><h1>the TITLE</h1>"
+                    }`)
+
+                    params, _ := handlers.NewNotifyParams(body)
+
+                    Expect(params.HTML).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+                })
+            })
+
+            Context("when invalid html is passed", func() {
+                It("pulls out the html anyway", func() {
+                    body := strings.NewReader(`{
+                        "kind": "test_email",
+                        "html": "<html><p>The TEXT<h1>the TITLE</h1></html>"
+                    }`)
+                    params, _ := handlers.NewNotifyParams(body)
+
+                    Expect(params.HTML).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+
+                    body = strings.NewReader(`{
+                        "kind": "test_email",
+                        "html": "<html><p>The TEXT<h1>the TITLE</h1></body>"
+                    }`)
+                    params, _ = handlers.NewNotifyParams(body)
+                    Expect(params.HTML).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+                })
+            })
+
+            Context("when no html is passed", func() {
+                It("does not error", func() {
+                    body := strings.NewReader(`{
+                        "kind": "test_email",
+                        "text": "not html yo"
+                    }`)
+                    params, _ := handlers.NewNotifyParams(body)
+
+                    Expect(params.HTML).To(Equal(""))
+                })
+            })
+        })
     })
 
     Describe("Validate", func() {
@@ -47,7 +132,7 @@ var _ = Describe("NotifyParams", func() {
                 "subject": "Summary of contents",
                 "text": "Contents of the email message"
             }`)
-            params := handlers.NewNotifyParams(body)
+            params, _ := handlers.NewNotifyParams(body)
 
             Expect(params.Validate()).To(BeTrue())
             Expect(len(params.Errors)).To(Equal(0))
@@ -77,7 +162,7 @@ var _ = Describe("NotifyParams", func() {
                 "kind": "test_email"
             }`)
 
-            params := handlers.NewNotifyParams(body)
+            params, _ := handlers.NewNotifyParams(body)
             Expect(params.Validate()).To(BeFalse())
             Expect(params.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
 
@@ -86,7 +171,7 @@ var _ = Describe("NotifyParams", func() {
                 "text": "Contents of the email message"
             }`)
 
-            params = handlers.NewNotifyParams(body)
+            params, _ = handlers.NewNotifyParams(body)
             Expect(params.Validate()).To(BeTrue())
             Expect(len(params.Errors)).To(Equal(0))
 
@@ -95,7 +180,7 @@ var _ = Describe("NotifyParams", func() {
                 "html": "<html><body><p>the html</p></body></html>"
             }`)
 
-            params = handlers.NewNotifyParams(body)
+            params, _ = handlers.NewNotifyParams(body)
             Expect(params.Validate()).To(BeTrue())
             Expect(len(params.Errors)).To(Equal(0))
 
@@ -105,7 +190,7 @@ var _ = Describe("NotifyParams", func() {
                 "html": "<html><body><p>the html</p></body></html>"
             }`)
 
-            params = handlers.NewNotifyParams(body)
+            params, _ = handlers.NewNotifyParams(body)
             Expect(params.Validate()).To(BeTrue())
             Expect(len(params.Errors)).To(Equal(0))
         })
