@@ -83,7 +83,7 @@ func (helper NotifyHelper) SendMail(w http.ResponseWriter, req *http.Request,
 
     token, err := helper.uaaClient.GetClientToken()
     if err != nil {
-        panic(err) // this probably shouldn't be panic'ing
+        panic(err)
     }
     helper.uaaClient.SetToken(token.Access)
 
