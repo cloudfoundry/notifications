@@ -1,0 +1,3 @@
+The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:
+
+{{.Text}}

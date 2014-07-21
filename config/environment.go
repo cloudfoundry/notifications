@@ -21,6 +21,7 @@ type Environment struct {
     Sender          string
     CCHost          string
     VerifySSL       bool
+    RootPath        string
 }
 
 func NewEnvironment() Environment {
@@ -36,6 +37,7 @@ func NewEnvironment() Environment {
         Sender:          loadOrPanic("SENDER"),
         CCHost:          loadOrPanic("CC_HOST"),
         VerifySSL:       loadBool("VERIFY_SSL", true),
+        RootPath:        loadOrPanic("ROOT_PATH"),
     }
 }
 

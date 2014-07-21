@@ -21,6 +21,7 @@ var _ = Describe("Environment", func() {
         "SENDER":            os.Getenv("SENDER"),
         "CC_HOST":           os.Getenv("CC_HOST"),
         "VERIFY_SSL":        os.Getenv("VERIFY_SSL"),
+        "ROOT_PATH":         os.Getenv("ROOT_PATH"),
     }
 
     AfterEach(func() {
@@ -210,6 +211,15 @@ var _ = Describe("Environment", func() {
             env := config.NewEnvironment()
 
             Expect(env.VerifySSL).To(BeTrue())
+        })
+    })
+
+    Describe("RootPath config", func() {
+        It("loads the config value", func() {
+            os.Setenv("ROOT_PATH", "bananaDAMAGE")
+            env := config.NewEnvironment()
+
+            Expect(env.RootPath).To(Equal("bananaDAMAGE"))
         })
     })
 })

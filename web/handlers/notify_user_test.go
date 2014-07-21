@@ -123,6 +123,7 @@ Content-type: text/plain
 The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:
 
 Please reset your password by clicking on this link...
+
 --our-content-boundary
 Content-Type: text/html
 Content-Disposition: inline
@@ -133,6 +134,7 @@ Content-Transfer-Encoding: quoted-printable
         <p>The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:</p>
 
 <p>Please reset your password by clicking on this link...</p>
+
     </body>
 </html>
 --our-content-boundary--`,

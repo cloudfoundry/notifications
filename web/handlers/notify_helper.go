@@ -9,6 +9,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/fileUtilities"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/dgrijalva/jwt-go"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -65,7 +66,7 @@ func (helper NotifyHelper) LoadUser(w http.ResponseWriter, guid string, uaaClien
 func (helper NotifyHelper) SendMail(w http.ResponseWriter, req *http.Request,
     loadGuid func(path string) string,
     loadUsers func(spaceGuid, accessToken string) ([]cf.CloudControllerUser, error),
-    loadSpace bool, plainTextTemplate, htmlTemplate string) {
+    loadSpace bool) {
 
     guid := loadGuid(req.URL.Path)
 
@@ -118,6 +119,11 @@ func (helper NotifyHelper) SendMail(w http.ResponseWriter, req *http.Request,
         }
 
         if len(user.Emails) > 0 {
+            plainTextTemplate, htmlTemplate, err := helper.loadTemplates(loadSpace, env.RootPath)
+            if err != nil {
+                helper.Error(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
+                return
+            }
             context := helper.BuildSpaceContext(user, params, env, space, organization,
                 clientToken.Claims["client_id"].(string), helper.guidGenerator,
                 plainTextTemplate, htmlTemplate)
@@ -136,6 +142,29 @@ func (helper NotifyHelper) SendMail(w http.ResponseWriter, req *http.Request,
     response := helper.generateResponse(responseInformation)
     w.WriteHeader(http.StatusOK)
     w.Write(response)
+}
+
+func (helper NotifyHelper) loadTemplates(isSpace bool, rootPath string) (string, string, error) {
+    var plainTextFileName, htmlFileName string
+    if isSpace {
+        plainTextFileName = rootPath + "/templates/space_body.text"
+        htmlFileName = rootPath + "/templates/space_body.html"
+    } else {
+        plainTextFileName = rootPath + "/templates/user_body.text"
+        htmlFileName = rootPath + "/templates/user_body.html"
+    }
+
+    plainTextTemplate, err := fileUtilities.ReadFile(plainTextFileName)
+    if err != nil {
+        return "", "", err
+    }
+
+    htmlTemplate, err := fileUtilities.ReadFile(htmlFileName)
+    if err != nil {
+        return "", "", err
+    }
+
+    return plainTextTemplate, htmlTemplate, nil
 }
 
 func (helper NotifyHelper) generateResponse(userInformation []map[string]string) []byte {

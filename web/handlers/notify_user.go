@@ -11,14 +11,6 @@ import (
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
-const plainTextEmailTemplate = `The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:
-
-{{.Text}}`
-
-const htmlEmailTemplate = `<p>The following "{{.KindDescription}}" notification was sent to you directly by the "{{.SourceDescription}}" component of Cloud Foundry:</p>
-
-{{.HTML}}`
-
 type GUIDGenerationFunc func() (*uuid.UUID, error)
 
 type NotifyUser struct {
@@ -56,6 +48,5 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     }
 
     loadSpaceAndOrganization := false
-    handler.helper.SendMail(w, req, determineGUID, loadUsers, loadSpaceAndOrganization,
-        plainTextEmailTemplate, htmlEmailTemplate)
+    handler.helper.SendMail(w, req, determineGUID, loadUsers, loadSpaceAndOrganization)
 }
