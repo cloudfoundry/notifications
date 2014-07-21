@@ -176,7 +176,7 @@ func (helper NotifyHelper) BuildSpaceContext(user uaa.User, params NotifyParams,
     return helper.buildContext(user, params, env, space, organization, clientID, guidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
 }
 
-func (helper NotifyHelper) BuildUserContext(user uaa.User, params NotifyParams, env config.Environment, clientID string, guidGenerator GUIDGenerationFunc, plainTextEmailTemplate, htmlEmailTexmplate string) MessageContext {
+func (helper NotifyHelper) BuildUserContext(user uaa.User, params NotifyParams, env config.Environment, clientID string, guidGenerator GUIDGenerationFunc, plainTextEmailTemplate, htmlEmailTemplate string) MessageContext {
     return helper.buildContext(user, params, env, "", "", clientID, guidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
 }
 
