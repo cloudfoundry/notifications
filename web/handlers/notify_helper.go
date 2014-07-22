@@ -9,7 +9,6 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
-    "github.com/cloudfoundry-incubator/notifications/fileUtilities"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/dgrijalva/jwt-go"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -21,8 +20,6 @@ type NotifyHelper struct {
     uaaClient       uaa.UAAInterface
     guidGenerator   GUIDGenerationFunc
     mailClient      mail.ClientInterface
-    ReadFile        func(string) (string, error)
-    FileExists      func(string) bool
 }
 
 func NewNotifyHelper(cloudController cf.CloudControllerInterface, logger *log.Logger,
@@ -34,8 +31,6 @@ func NewNotifyHelper(cloudController cf.CloudControllerInterface, logger *log.Lo
         uaaClient:       uaaClient,
         guidGenerator:   guidGenerator,
         mailClient:      mailClient,
-        ReadFile:        fileUtilities.ReadFile,
-        FileExists:      fileUtilities.FileExists,
     }
 }
 
@@ -67,15 +62,11 @@ func (helper NotifyHelper) LoadUser(w http.ResponseWriter, guid string, uaaClien
     return user, true
 }
 
-func (helper NotifyHelper) SendMail(w http.ResponseWriter, req *http.Request,
-    loadGuid func(path string) string,
-    loadUsers func(spaceGuid, accessToken string) ([]cf.CloudControllerUser, error),
+func (helper NotifyHelper) NotifyServeHTTP(w http.ResponseWriter, req *http.Request,
+    guid string, loadUsers func(spaceGuid, accessToken string) ([]cf.CloudControllerUser, error),
     loadSpace bool) {
 
-    guid := loadGuid(req.URL.Path)
-
     params, err := NewNotifyParams(req.Body)
-
     if err != nil {
         helper.Error(w, 422, []string{"Request body could not be parsed"})
         return
@@ -123,23 +114,24 @@ func (helper NotifyHelper) SendMail(w http.ResponseWriter, req *http.Request,
         }
 
         if len(user.Emails) > 0 {
-            plainTextTemplate, htmlTemplate, err := helper.LoadTemplates(loadSpace, env.RootPath)
+            plainTextTemplate, htmlTemplate, err := helper.LoadTemplates(loadSpace)
             if err != nil {
                 helper.Error(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
                 return
             }
-            context := helper.BuildSpaceContext(user, params, env, space, organization,
+
+            context := helper.BuildContext(user, params, env, space, organization,
                 clientToken.Claims["client_id"].(string), helper.guidGenerator,
                 plainTextTemplate, htmlTemplate)
-            status := helper.SendMailToUser(context, helper.logger, helper.mailClient)
-            helper.logger.Println(status)
+            emailStatus := helper.SendMailToUser(context, helper.logger, helper.mailClient)
+            helper.logger.Println(emailStatus)
 
-            userInfo := make(map[string]string)
-            userInfo["status"] = status
-            userInfo["recipient"] = ccUser.Guid
-            userInfo["notification_id"] = context.MessageID
+            mailInfo := make(map[string]string)
+            mailInfo["status"] = emailStatus
+            mailInfo["recipient"] = ccUser.Guid
+            mailInfo["notification_id"] = context.MessageID
 
-            responseInformation[index] = userInfo
+            responseInformation[index] = mailInfo
         }
     }
 
@@ -148,40 +140,25 @@ func (helper NotifyHelper) SendMail(w http.ResponseWriter, req *http.Request,
     w.Write(response)
 }
 
-func (helper NotifyHelper) determineTemplate(userOrSpace, extension, rootPath string) string {
-    var templatePath string
-    overRidePath := rootPath + "/templates/overrides/" + userOrSpace + "_body." + extension
-    useOverride := helper.FileExists(overRidePath)
-
-    if useOverride {
-        templatePath = overRidePath
-    } else {
-        templatePath = rootPath + "/templates/" + userOrSpace + "_body." + extension
-    }
-
-    return templatePath
-}
-
-func (helper NotifyHelper) LoadTemplates(isSpace bool, rootPath string) (string, string, error) {
-    var plainTextFileName, htmlFileName string
-    var err error
+func (helper NotifyHelper) LoadTemplates(isSpace bool) (string, string, error) {
+    var plainTextTemplate, htmlTemplate string
+    var plainErr, htmlErr error
+    templateManager := NewTemplateManager()
 
     if isSpace {
-        plainTextFileName = helper.determineTemplate("space", "text", rootPath)
-        htmlFileName = helper.determineTemplate("space", "html", rootPath)
+        plainTextTemplate, plainErr = templateManager.LoadEmailTemplate("space_body.text")
+        htmlTemplate, htmlErr = templateManager.LoadEmailTemplate("space_body.html")
     } else {
-        plainTextFileName = helper.determineTemplate("user", "text", rootPath)
-        htmlFileName = helper.determineTemplate("user", "html", rootPath)
+        plainTextTemplate, plainErr = templateManager.LoadEmailTemplate("user_body.text")
+        htmlTemplate, htmlErr = templateManager.LoadEmailTemplate("user_body.html")
     }
 
-    plainTextTemplate, err := helper.ReadFile(plainTextFileName)
-    if err != nil {
-        return "", "", err
+    if plainErr != nil {
+        return "", "", plainErr
     }
 
-    htmlTemplate, err := helper.ReadFile(htmlFileName)
-    if err != nil {
-        return "", "", err
+    if htmlErr != nil {
+        return "", "", htmlErr
     }
 
     return plainTextTemplate, htmlTemplate, nil
@@ -221,15 +198,7 @@ func (helper NotifyHelper) SendMailToUser(context MessageContext, logger *log.Lo
     return status
 }
 
-func (helper NotifyHelper) BuildSpaceContext(user uaa.User, params NotifyParams, env config.Environment, space, organization, clientID string, guidGenerator GUIDGenerationFunc, plainTextEmailTemplate, htmlEmailTemplate string) MessageContext {
-    return helper.buildContext(user, params, env, space, organization, clientID, guidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
-}
-
-func (helper NotifyHelper) BuildUserContext(user uaa.User, params NotifyParams, env config.Environment, clientID string, guidGenerator GUIDGenerationFunc, plainTextEmailTemplate, htmlEmailTemplate string) MessageContext {
-    return helper.buildContext(user, params, env, "", "", clientID, guidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
-}
-
-func (handler NotifyHelper) buildContext(user uaa.User, params NotifyParams, env config.Environment, space, organization, clientID string, guidGenerator GUIDGenerationFunc, plainTextEmailTemplate, htmlEmailTemplate string) MessageContext {
+func (helper NotifyHelper) BuildContext(user uaa.User, params NotifyParams, env config.Environment, space, organization, clientID string, guidGenerator GUIDGenerationFunc, plainTextEmailTemplate, htmlEmailTemplate string) MessageContext {
     guid, err := guidGenerator()
     if err != nil {
         panic(err)

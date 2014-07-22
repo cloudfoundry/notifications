@@ -2,7 +2,6 @@ package handlers_test
 
 import (
     "os"
-    "strings"
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -43,7 +42,7 @@ var _ = Describe("NotifyHelper", func() {
 
     Describe("BuildContext", func() {
         It("returns the appropriate MessageContext when all params are specified", func() {
-            messageContext := helper.BuildSpaceContext(user, params, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
+            messageContext := helper.BuildContext(user, params, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
 
             guid, err := FakeGuidGenerator()
             if err != nil {
@@ -68,7 +67,7 @@ var _ = Describe("NotifyHelper", func() {
         It("falls back to Kind if KindDescription is missing", func() {
             params.KindDescription = ""
 
-            messageContext := helper.BuildUserContext(user, params, env, "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
+            messageContext := helper.BuildContext(user, params, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
 
             Expect(messageContext.KindDescription).To(Equal("the-kind"))
         })
@@ -76,57 +75,9 @@ var _ = Describe("NotifyHelper", func() {
         It("falls back to clientID when SourceDescription is missing", func() {
             params.SourceDescription = ""
 
-            messageContext := helper.BuildSpaceContext(user, params, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
+            messageContext := helper.BuildContext(user, params, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
 
             Expect(messageContext.SourceDescription).To(Equal("the-client-ID"))
-        })
-    })
-
-    Describe("LoadTemplates", func() {
-        Context("when there are no template overrides", func() {
-            It("loads the templates from the default location", func() {
-                helper.ReadFile = func(path string) (string, error) {
-                    if strings.Contains(path, "html") {
-                        return "the fake html", nil
-                    } else {
-                        return "the fake text", nil
-                    }
-                }
-
-                helper.FileExists = func(path string) bool {
-                    return false
-                }
-
-                plainTextTemplate, htmlTemplate, err := helper.LoadTemplates(false, env.RootPath)
-                if err != nil {
-                    panic(err)
-                }
-                Expect(htmlTemplate).To(Equal("the fake html"))
-                Expect(plainTextTemplate).To(Equal("the fake text"))
-            })
-        })
-
-        Context("when a template has an override set", func() {
-            It("replaces the default template with the user provided one", func() {
-                var loadedPaths []string
-
-                helper.ReadFile = func(path string) (string, error) {
-                    loadedPaths = append(loadedPaths, path)
-                    return "the fake template", nil
-                }
-
-                helper.FileExists = func(path string) bool {
-                    return true
-                }
-
-                _, _, err := helper.LoadTemplates(false, env.RootPath)
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(loadedPaths).To(ContainElement(env.RootPath + "/templates/overrides/user_body.text"))
-                Expect(loadedPaths).To(ContainElement(env.RootPath + "/templates/overrides/user_body.html"))
-            })
         })
     })
 })

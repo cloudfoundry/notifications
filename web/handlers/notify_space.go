@@ -32,10 +32,7 @@ func NewNotifySpace(logger *log.Logger, cloudController cf.CloudControllerInterf
 }
 
 func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-
-    determineGUID := func(path string) string {
-        return strings.TrimPrefix(path, "/spaces/")
-    }
+    spaceGUID := strings.TrimPrefix(req.URL.Path, "/spaces/")
 
     loadUsers := func(spaceGuid, accessToken string) ([]cf.CloudControllerUser, error) {
         ccUsers, err := handler.cloudController.GetUsersBySpaceGuid(spaceGuid, accessToken)
@@ -43,5 +40,5 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     }
 
     isSpace := true
-    handler.helper.SendMail(w, req, determineGUID, loadUsers, isSpace)
+    handler.helper.NotifyServeHTTP(w, req, spaceGUID, loadUsers, isSpace)
 }

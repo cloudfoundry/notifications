@@ -32,9 +32,7 @@ func NewNotifyUser(logger *log.Logger, mailClient mail.ClientInterface, uaaClien
 }
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-    determineGUID := func(path string) string {
-        return strings.TrimPrefix(path, "/users/")
-    }
+    userGUID := strings.TrimPrefix(req.URL.Path, "/users/")
 
     loadUsers := func(userGuid, accessToken string) ([]cf.CloudControllerUser, error) {
         ccUsers := []cf.CloudControllerUser{}
@@ -48,5 +46,5 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     }
 
     loadSpaceAndOrganization := false
-    handler.helper.SendMail(w, req, determineGUID, loadUsers, loadSpaceAndOrganization)
+    handler.helper.NotifyServeHTTP(w, req, userGUID, loadUsers, loadSpaceAndOrganization)
 }
