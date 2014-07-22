@@ -21,4 +21,24 @@ var _ = Describe("fileReader", func() {
             Expect(contents).To(Equal("We have some content\n\n\nAnd some more\n\n"))
         })
     })
+
+    Describe("FileExists", func() {
+        var path string
+
+        BeforeEach(func() {
+            env := config.NewEnvironment()
+            path = env.RootPath + "/fileUtilities/fixtures/test.text"
+        })
+
+        It("returns true if the file exists", func() {
+            response := fileUtilities.FileExists(path)
+            Expect(response).To(Equal(true))
+        })
+
+        It("returns false the file does not exist", func() {
+            response := fileUtilities.FileExists(path + "not.There")
+            Expect(response).To(Equal(false))
+        })
+
+    })
 })

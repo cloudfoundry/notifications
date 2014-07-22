@@ -1,8 +1,9 @@
 package fileUtilities
 
-import "io/ioutil"
-
-var NotificationsRoot string
+import (
+    "io/ioutil"
+    "os"
+)
 
 func ReadFile(path string) (string, error) {
     buffer, err := ioutil.ReadFile(path)
@@ -13,4 +14,12 @@ func ReadFile(path string) (string, error) {
     contents := string(buffer)
 
     return contents, nil
+}
+
+func FileExists(path string) bool {
+    _, err := os.Stat(path)
+    if err != nil {
+        return false
+    }
+    return true
 }

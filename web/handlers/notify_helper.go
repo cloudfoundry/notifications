@@ -21,6 +21,8 @@ type NotifyHelper struct {
     uaaClient       uaa.UAAInterface
     guidGenerator   GUIDGenerationFunc
     mailClient      mail.ClientInterface
+    ReadFile        func(string) (string, error)
+    FileExists      func(string) bool
 }
 
 func NewNotifyHelper(cloudController cf.CloudControllerInterface, logger *log.Logger,
@@ -32,6 +34,8 @@ func NewNotifyHelper(cloudController cf.CloudControllerInterface, logger *log.Lo
         uaaClient:       uaaClient,
         guidGenerator:   guidGenerator,
         mailClient:      mailClient,
+        ReadFile:        fileUtilities.ReadFile,
+        FileExists:      fileUtilities.FileExists,
     }
 }
 
@@ -119,7 +123,7 @@ func (helper NotifyHelper) SendMail(w http.ResponseWriter, req *http.Request,
         }
 
         if len(user.Emails) > 0 {
-            plainTextTemplate, htmlTemplate, err := helper.loadTemplates(loadSpace, env.RootPath)
+            plainTextTemplate, htmlTemplate, err := helper.LoadTemplates(loadSpace, env.RootPath)
             if err != nil {
                 helper.Error(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
                 return
@@ -144,22 +148,38 @@ func (helper NotifyHelper) SendMail(w http.ResponseWriter, req *http.Request,
     w.Write(response)
 }
 
-func (helper NotifyHelper) loadTemplates(isSpace bool, rootPath string) (string, string, error) {
-    var plainTextFileName, htmlFileName string
-    if isSpace {
-        plainTextFileName = rootPath + "/templates/space_body.text"
-        htmlFileName = rootPath + "/templates/space_body.html"
+func (helper NotifyHelper) determineTemplate(userOrSpace, extension, rootPath string) string {
+    var templatePath string
+    overRidePath := rootPath + "/templates/overrides/" + userOrSpace + "_body." + extension
+    useOverride := helper.FileExists(overRidePath)
+
+    if useOverride {
+        templatePath = overRidePath
     } else {
-        plainTextFileName = rootPath + "/templates/user_body.text"
-        htmlFileName = rootPath + "/templates/user_body.html"
+        templatePath = rootPath + "/templates/" + userOrSpace + "_body." + extension
     }
 
-    plainTextTemplate, err := fileUtilities.ReadFile(plainTextFileName)
+    return templatePath
+}
+
+func (helper NotifyHelper) LoadTemplates(isSpace bool, rootPath string) (string, string, error) {
+    var plainTextFileName, htmlFileName string
+    var err error
+
+    if isSpace {
+        plainTextFileName = helper.determineTemplate("space", "text", rootPath)
+        htmlFileName = helper.determineTemplate("space", "html", rootPath)
+    } else {
+        plainTextFileName = helper.determineTemplate("user", "text", rootPath)
+        htmlFileName = helper.determineTemplate("user", "html", rootPath)
+    }
+
+    plainTextTemplate, err := helper.ReadFile(plainTextFileName)
     if err != nil {
         return "", "", err
     }
 
-    htmlTemplate, err := fileUtilities.ReadFile(htmlFileName)
+    htmlTemplate, err := helper.ReadFile(htmlFileName)
     if err != nil {
         return "", "", err
     }
