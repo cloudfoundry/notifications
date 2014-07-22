@@ -34,8 +34,8 @@ func NewNotifyHelper(cloudController cf.CloudControllerInterface, logger *log.Lo
     }
 }
 
-func (helper NotifyHelper) Error(w http.ResponseWriter, code int, errors []string) {
-    response, err := json.Marshal(map[string][]string{
+func Error(w http.ResponseWriter, code int, errors []string) {
+    response, err := json.Marshal(NotifyFailureResponse{
         "errors": errors,
     })
     if err != nil {
@@ -46,34 +46,18 @@ func (helper NotifyHelper) Error(w http.ResponseWriter, code int, errors []strin
     w.Write(response)
 }
 
-func (helper NotifyHelper) LoadUser(w http.ResponseWriter, guid string, uaaClient uaa.UAAInterface) (uaa.User, bool) {
-    user, err := uaaClient.UserByID(guid)
-    if err != nil {
-        switch err.(type) {
-        case *url.Error:
-            w.WriteHeader(http.StatusBadGateway)
-        case uaa.Failure:
-            w.WriteHeader(http.StatusGone)
-        default:
-            w.WriteHeader(http.StatusInternalServerError)
-        }
-        return uaa.User{}, false
-    }
-    return user, true
-}
-
 func (helper NotifyHelper) NotifyServeHTTP(w http.ResponseWriter, req *http.Request,
-    guid string, loadUsers func(spaceGuid, accessToken string) ([]cf.CloudControllerUser, error),
+    guid string, loadCCUsers func(spaceGuid, accessToken string) ([]cf.CloudControllerUser, error),
     loadSpace bool) {
 
     params, err := NewNotifyParams(req.Body)
     if err != nil {
-        helper.Error(w, 422, []string{"Request body could not be parsed"})
+        Error(w, 422, []string{"Request body could not be parsed"})
         return
     }
 
     if !params.Validate() {
-        helper.Error(w, 422, params.Errors)
+        Error(w, 422, params.Errors)
         return
     }
 
@@ -83,19 +67,27 @@ func (helper NotifyHelper) NotifyServeHTTP(w http.ResponseWriter, req *http.Requ
     }
     helper.uaaClient.SetToken(token.Access)
 
-    ccUsers, err := loadUsers(guid, token.Access)
+    ccUsers, err := loadCCUsers(guid, token.Access)
     if err != nil {
-        helper.Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+        Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
         return
     }
 
-    env := config.NewEnvironment()
+    uaaUsers := make([]uaa.User, len(ccUsers))
+    for index, ccUser := range ccUsers {
+        helper.logger.Println(ccUser.Guid)
+        user, ok := helper.LoadUaaUser(w, ccUser.Guid, helper.uaaClient)
+        if !ok {
+            return
+        }
+        uaaUsers[index] = user
+    }
 
     var space, organization string
     if loadSpace {
         space, organization, err = helper.loadSpaceAndOrganization(guid, token.Access)
         if err != nil {
-            helper.Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+            Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
             return
         }
     }
@@ -105,72 +97,11 @@ func (helper NotifyHelper) NotifyServeHTTP(w http.ResponseWriter, req *http.Requ
         return []byte(config.UAAPublicKey), nil
     })
 
-    responseInformation := make([]map[string]string, len(ccUsers))
-    for index, ccUser := range ccUsers {
-        helper.logger.Println(ccUser.Guid)
-        user, ok := helper.LoadUser(w, ccUser.Guid, helper.uaaClient)
-        if !ok {
-            return
-        }
+    responseGenerator := NewNotifyResponseGenerator(helper.logger, helper.guidGenerator,
+        helper.mailClient, helper.uaaClient)
 
-        if len(user.Emails) > 0 {
-            plainTextTemplate, htmlTemplate, err := helper.LoadTemplates(loadSpace)
-            if err != nil {
-                helper.Error(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
-                return
-            }
-
-            context := helper.BuildContext(user, params, env, space, organization,
-                clientToken.Claims["client_id"].(string), helper.guidGenerator,
-                plainTextTemplate, htmlTemplate)
-            emailStatus := helper.SendMailToUser(context, helper.logger, helper.mailClient)
-            helper.logger.Println(emailStatus)
-
-            mailInfo := make(map[string]string)
-            mailInfo["status"] = emailStatus
-            mailInfo["recipient"] = ccUser.Guid
-            mailInfo["notification_id"] = context.MessageID
-
-            responseInformation[index] = mailInfo
-        }
-    }
-
-    response := helper.generateResponse(responseInformation)
-    w.WriteHeader(http.StatusOK)
-    w.Write(response)
-}
-
-func (helper NotifyHelper) LoadTemplates(isSpace bool) (string, string, error) {
-    var plainTextTemplate, htmlTemplate string
-    var plainErr, htmlErr error
-    templateManager := NewTemplateManager()
-
-    if isSpace {
-        plainTextTemplate, plainErr = templateManager.LoadEmailTemplate("space_body.text")
-        htmlTemplate, htmlErr = templateManager.LoadEmailTemplate("space_body.html")
-    } else {
-        plainTextTemplate, plainErr = templateManager.LoadEmailTemplate("user_body.text")
-        htmlTemplate, htmlErr = templateManager.LoadEmailTemplate("user_body.html")
-    }
-
-    if plainErr != nil {
-        return "", "", plainErr
-    }
-
-    if htmlErr != nil {
-        return "", "", htmlErr
-    }
-
-    return plainTextTemplate, htmlTemplate, nil
-}
-
-func (helper NotifyHelper) generateResponse(userInformation []map[string]string) []byte {
-    response, err := json.Marshal(userInformation)
-    if err != nil {
-        panic(err)
-    }
-
-    return response
+    responseGenerator.GenerateResponse(uaaUsers, params, space,
+        organization, clientToken.Claims["client_id"].(string), w, loadSpace)
 }
 
 func (helper NotifyHelper) loadSpaceAndOrganization(spaceGuid, token string) (string, string, error) {
@@ -187,50 +118,18 @@ func (helper NotifyHelper) loadSpaceAndOrganization(spaceGuid, token string) (st
     return space.Name, org.Name, nil
 }
 
-func (helper NotifyHelper) SendMailToUser(context MessageContext, logger *log.Logger, mailClient mail.ClientInterface) string {
-    logger.Printf("Sending email to %s", context.To)
-    status, message, err := SendMail(mailClient, context)
+func (helper NotifyHelper) LoadUaaUser(w http.ResponseWriter, guid string, uaaClient uaa.UAAInterface) (uaa.User, bool) {
+    user, err := uaaClient.UserByID(guid)
     if err != nil {
-        panic(err)
+        switch err.(type) {
+        case *url.Error:
+            Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
+        case uaa.Failure:
+            Error(w, http.StatusGone, []string{"UAA is unavailable"})
+        default:
+            Error(w, http.StatusInternalServerError, []string{"UAA is unavailable"})
+        }
+        return uaa.User{}, false
     }
-
-    logger.Print(message.Data())
-    return status
-}
-
-func (helper NotifyHelper) BuildContext(user uaa.User, params NotifyParams, env config.Environment, space, organization, clientID string, guidGenerator GUIDGenerationFunc, plainTextEmailTemplate, htmlEmailTemplate string) MessageContext {
-    guid, err := guidGenerator()
-    if err != nil {
-        panic(err)
-    }
-
-    var kindDescription string
-    if params.KindDescription == "" {
-        kindDescription = params.Kind
-    } else {
-        kindDescription = params.KindDescription
-    }
-
-    var sourceDescription string
-    if params.SourceDescription == "" {
-        sourceDescription = clientID
-    } else {
-        sourceDescription = params.SourceDescription
-    }
-
-    return MessageContext{
-        From:    env.Sender,
-        To:      user.Emails[0],
-        Subject: params.Subject,
-        Text:    params.Text,
-        HTML:    params.HTML,
-        PlainTextEmailTemplate: plainTextEmailTemplate,
-        HTMLEmailTemplate:      htmlEmailTemplate,
-        KindDescription:        kindDescription,
-        SourceDescription:      sourceDescription,
-        ClientID:               clientID,
-        MessageID:              guid.String(),
-        Space:                  space,
-        Organization:           organization,
-    }
+    return user, true
 }

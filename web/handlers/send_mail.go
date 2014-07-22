@@ -5,7 +5,9 @@ import (
     "fmt"
     "text/template"
 
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
+    "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
 const (
@@ -40,6 +42,46 @@ type MessageContext struct {
     MessageID              string
     Space                  string
     Organization           string
+}
+
+func NewMessageContext(user uaa.User, params NotifyParams,
+    env config.Environment, space, organization, clientID string, guidGenerator GUIDGenerationFunc,
+    plainTextEmailTemplate, htmlEmailTemplate string) MessageContext {
+
+    guid, err := guidGenerator()
+    if err != nil {
+        panic(err)
+    }
+
+    var kindDescription string
+    if params.KindDescription == "" {
+        kindDescription = params.Kind
+    } else {
+        kindDescription = params.KindDescription
+    }
+
+    var sourceDescription string
+    if params.SourceDescription == "" {
+        sourceDescription = clientID
+    } else {
+        sourceDescription = params.SourceDescription
+    }
+
+    return MessageContext{
+        From:    env.Sender,
+        To:      user.Emails[0],
+        Subject: params.Subject,
+        Text:    params.Text,
+        HTML:    params.HTML,
+        PlainTextEmailTemplate: plainTextEmailTemplate,
+        HTMLEmailTemplate:      htmlEmailTemplate,
+        KindDescription:        kindDescription,
+        SourceDescription:      sourceDescription,
+        ClientID:               clientID,
+        MessageID:              guid.String(),
+        Space:                  space,
+        Organization:           organization,
+    }
 }
 
 type MailSender struct {
