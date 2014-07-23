@@ -35,14 +35,14 @@ func (generator NotifyResponseGenerator) GenerateResponse(uaaUsers []uaa.User,
     env := config.NewEnvironment()
     messages := make(NotifyResponse, len(uaaUsers))
 
+    plainTextTemplate, htmlTemplate, err := generator.LoadTemplates(loadSpace, NewTemplateManager())
+    if err != nil {
+        Error(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
+        return
+    }
+
     for index, uaaUser := range uaaUsers {
         if len(uaaUser.Emails) > 0 {
-            plainTextTemplate, htmlTemplate, err := generator.LoadTemplates(loadSpace, NewTemplateManager())
-            if err != nil {
-                Error(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
-                return
-            }
-
             context := NewMessageContext(uaaUser, params, env, space, organization,
                 token, generator.guidGenerator, plainTextTemplate, htmlTemplate)
 
