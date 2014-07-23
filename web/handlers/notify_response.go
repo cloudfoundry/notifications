@@ -35,7 +35,13 @@ func (generator NotifyResponseGenerator) GenerateResponse(uaaUsers []uaa.User,
     env := config.NewEnvironment()
     messages := make(NotifyResponse, len(uaaUsers))
 
-    plainTextTemplate, htmlTemplate, err := generator.LoadTemplates(loadSpace, NewTemplateManager())
+    subjectTemplate, err := generator.LoadSubjectTemplate(params.Subject, NewTemplateManager())
+    if err != nil {
+        Error(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
+        return
+    }
+
+    plainTextTemplate, htmlTemplate, err := generator.LoadBodyTemplates(loadSpace, NewTemplateManager())
     if err != nil {
         Error(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
         return
@@ -44,7 +50,7 @@ func (generator NotifyResponseGenerator) GenerateResponse(uaaUsers []uaa.User,
     for index, uaaUser := range uaaUsers {
         if len(uaaUser.Emails) > 0 {
             context := NewMessageContext(uaaUser, params, env, space, organization,
-                token, generator.guidGenerator, plainTextTemplate, htmlTemplate)
+                token, generator.guidGenerator, plainTextTemplate, htmlTemplate, subjectTemplate)
 
             emailStatus := generator.SendMailToUser(context, generator.logger, generator.mailClient)
             generator.logger.Println(emailStatus)
@@ -79,7 +85,23 @@ func (generator NotifyResponseGenerator) SendMailToUser(context MessageContext, 
     return status
 }
 
-func (generator NotifyResponseGenerator) LoadTemplates(isSpace bool, templateManager EmailTemplateManager) (string, string, error) {
+func (generator NotifyResponseGenerator) LoadSubjectTemplate(subject string, templateManager EmailTemplateManager) (string, error) {
+    var templateToLoad string
+    if subject == "" {
+        templateToLoad = "subject.missing"
+    } else {
+        templateToLoad = "subject.provided"
+    }
+
+    subjectTemplate, err := templateManager.LoadEmailTemplate(templateToLoad)
+    if err != nil {
+        return "", err
+    }
+
+    return subjectTemplate, nil
+}
+
+func (generator NotifyResponseGenerator) LoadBodyTemplates(isSpace bool, templateManager EmailTemplateManager) (string, string, error) {
     var plainTextTemplate, htmlTemplate string
     var plainErr, htmlErr error
 

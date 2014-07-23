@@ -67,7 +67,6 @@ var _ = Describe("NotifyUser", func() {
                 "kind":               "forgot_password",
                 "kind_description":   "Password reminder",
                 "source_description": "Login system",
-                "subject":            "Reset your password",
                 "text":               "Please reset your password by clicking on this link...",
                 "html":               "<p>Please reset your password by clicking on this link...</p>",
             })
@@ -94,7 +93,7 @@ var _ = Describe("NotifyUser", func() {
             data := []string{
                 "From: no-reply@notifications.example.com",
                 "To: fake-user@example.com",
-                "Subject: CF Notification: Reset your password",
+                "Subject: CF Notification: Password reminder",
                 `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:`,
                 "Please reset your password by clicking on this link...",
             }
@@ -113,7 +112,7 @@ var _ = Describe("NotifyUser", func() {
             Expect(msg).To(Equal(mail.Message{
                 From:    "no-reply@notifications.example.com",
                 To:      "fake-user@example.com",
-                Subject: "CF Notification: Reset your password",
+                Subject: "CF Notification: Password reminder",
                 Body: `
 This is a multi-part message in MIME format...
 
@@ -123,7 +122,6 @@ Content-type: text/plain
 The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:
 
 Please reset your password by clicking on this link...
-
 --our-content-boundary
 Content-Type: text/html
 Content-Disposition: inline
@@ -134,7 +132,6 @@ Content-Transfer-Encoding: quoted-printable
         <p>The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:</p>
 
 <p>Please reset your password by clicking on this link...</p>
-
     </body>
 </html>
 --our-content-boundary--`,

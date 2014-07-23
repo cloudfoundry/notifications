@@ -163,7 +163,6 @@ Content-type: text/plain
 The following "Instance Alert" notification was sent to you by the "MySQL Service" component of Cloud Foundry because you are a member of the "production" space in the "pivotaltracker" organization:
 
 This is the plain text body of the email
-
 --our-content-boundary
 Content-Type: text/html
 Content-Disposition: inline
@@ -174,7 +173,6 @@ Content-Transfer-Encoding: quoted-printable
         <p>The following "Instance Alert" notification was sent to you by the "MySQL Service" component of Cloud Foundry because you are a member of the "production" space in the "pivotaltracker" organization:</p>
 
 <p>This is the HTML Body of the email</p>
-
     </body>
 </html>
 --our-content-boundary--`

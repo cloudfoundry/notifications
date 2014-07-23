@@ -3,6 +3,7 @@ package handlers
 import (
     "bytes"
     "fmt"
+    "strings"
     "text/template"
 
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -24,7 +25,11 @@ func SendMail(client mail.ClientInterface, context MessageContext) (string, mail
         return "", mail.Message{}, err
     }
 
-    message := sender.CompileMessage(compiledBody)
+    message, err := sender.CompileMessage(compiledBody)
+    if err != nil {
+        return "", message, err
+    }
+
     return sender.Deliver(message), message, nil
 }
 
@@ -36,6 +41,7 @@ type MessageContext struct {
     HTML                   string
     PlainTextEmailTemplate string
     HTMLEmailTemplate      string
+    SubjectEmailTemplate   string
     KindDescription        string
     SourceDescription      string
     ClientID               string
@@ -46,7 +52,7 @@ type MessageContext struct {
 
 func NewMessageContext(user uaa.User, params NotifyParams,
     env config.Environment, space, organization, clientID string, guidGenerator GUIDGenerationFunc,
-    plainTextEmailTemplate, htmlEmailTemplate string) MessageContext {
+    plainTextEmailTemplate, htmlEmailTemplate, subjectEmailTemplate string) MessageContext {
 
     guid, err := guidGenerator()
     if err != nil {
@@ -75,6 +81,7 @@ func NewMessageContext(user uaa.User, params NotifyParams,
         HTML:    params.HTML,
         PlainTextEmailTemplate: plainTextEmailTemplate,
         HTMLEmailTemplate:      htmlEmailTemplate,
+        SubjectEmailTemplate:   subjectEmailTemplate,
         KindDescription:        kindDescription,
         SourceDescription:      sourceDescription,
         ClientID:               clientID,
@@ -97,7 +104,7 @@ func NewMailSender(client mail.ClientInterface, context MessageContext) MailSend
 }
 
 func (sender MailSender) CompileBody() (string, error) {
-    var plainTextBuffer *bytes.Buffer
+    var plainText string
     var err error
 
     headerPart := "\nThis is a multi-part message in MIME format...\n\n"
@@ -107,17 +114,17 @@ func (sender MailSender) CompileBody() (string, error) {
     closingBoundary := "--our-content-boundary--"
 
     if sender.context.Text != "" {
-        plainTextBuffer, err = sender.compileTemplate(sender.context.PlainTextEmailTemplate)
+        plainText, err = sender.compileTemplate(sender.context.PlainTextEmailTemplate)
         if err != nil {
             return "", err
         }
 
-        plainTextPart = fmt.Sprintf("--our-content-boundary\nContent-type: text/plain\n\n%s\n", plainTextBuffer.String())
+        plainTextPart = fmt.Sprintf("--our-content-boundary\nContent-type: text/plain\n\n%s\n", plainText)
     }
 
-    var htmlBuffer *bytes.Buffer
+    var html string
     if sender.context.HTML != "" {
-        htmlBuffer, err = sender.compileTemplate(sender.context.HTMLEmailTemplate)
+        html, err = sender.compileTemplate(sender.context.HTMLEmailTemplate)
         if err != nil {
             return "", err
         }
@@ -131,35 +138,43 @@ Content-Transfer-Encoding: quoted-printable
         %s
     </body>
 </html>
-`, htmlBuffer.String())
+`, html)
     }
 
     return headerPart + plainTextPart + htmlPart + closingBoundary, nil
 }
 
-func (sender MailSender) compileTemplate(theTemplate string) (*bytes.Buffer, error) {
+func (sender MailSender) compileTemplate(theTemplate string) (string, error) {
     buffer := bytes.NewBuffer([]byte{})
 
     source, err := template.New("compileTemplate").Parse(theTemplate)
     if err != nil {
-        return buffer, err
+        return "", err
     }
 
     source.Execute(buffer, sender.context)
-    return buffer, nil
+
+    compiledTemplate := strings.TrimSuffix(buffer.String(), "\n")
+
+    return compiledTemplate, nil
 }
 
-func (sender MailSender) CompileMessage(body string) mail.Message {
+func (sender MailSender) CompileMessage(body string) (mail.Message, error) {
+    compiledSubject, err := sender.compileTemplate(sender.context.SubjectEmailTemplate)
+    if err != nil {
+        return mail.Message{}, err
+    }
+
     return mail.Message{
         From:    sender.context.From,
         To:      sender.context.To,
-        Subject: fmt.Sprintf("CF Notification: %s", sender.context.Subject),
+        Subject: compiledSubject,
         Body:    body,
         Headers: []string{
             fmt.Sprintf("X-CF-Client-ID: %s", sender.context.ClientID),
             fmt.Sprintf("X-CF-Notification-ID: %s", sender.context.MessageID),
         },
-    }
+    }, nil
 }
 
 func (sender MailSender) Deliver(msg mail.Message) string {

@@ -30,6 +30,7 @@ var _ = Describe("MailSender", func() {
             HTML:      "<p>user supplied banana html</p>",
             PlainTextEmailTemplate: "Banana preamble {{.Text}}",
             HTMLEmailTemplate:      "Banana preamble {{.HTML}}",
+            SubjectEmailTemplate:   "The Subject: {{.Subject}}",
         }
         mailSender = handlers.NewMailSender(&client, context)
     })
@@ -116,18 +117,21 @@ Content-Transfer-Encoding: quoted-printable
 
     Describe("CompileMessage", func() {
         It("returns a mail message with all fields", func() {
-            message := mailSender.CompileMessage("New Body")
+            message, err := mailSender.CompileMessage("New Body")
+            if err != nil {
+                panic(err)
+            }
+
             Expect(message.From).To(Equal("banana man"))
             Expect(message.To).To(Equal("endless monkeys"))
-            Expect(message.Subject).To(Equal("CF Notification: we will be eaten"))
+            Expect(message.Subject).To(Equal("The Subject: we will be eaten"))
             Expect(message.Body).To(Equal("New Body"))
             Expect(message.Headers).To(Equal([]string{"X-CF-Client-ID: 333", "X-CF-Notification-ID: 4444"}))
         })
     })
 
     Describe("NewMessageContext", func() {
-        var plainTextEmailTemplate string
-        var htmlEmailTemplate string
+        var plainTextEmailTemplate, htmlEmailTemplate, subjectEmailTemplate string
         var user uaa.User
         var env config.Environment
         var params handlers.NotifyParams
@@ -142,6 +146,7 @@ Content-Transfer-Encoding: quoted-printable
 
             plainTextEmailTemplate = "the plainText email template"
             htmlEmailTemplate = "the html email template"
+            subjectEmailTemplate = "the subject template"
 
             params = handlers.NotifyParams{
                 Subject:           "the subject",
@@ -155,7 +160,7 @@ Content-Transfer-Encoding: quoted-printable
 
         It("returns the appropriate MessageContext when all params are specified", func() {
             messageContext := handlers.NewMessageContext(user, params, env, "the-space", "the-org",
-                "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
+                "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate, subjectEmailTemplate)
 
             guid, err := FakeGuidGenerator()
             if err != nil {
@@ -169,6 +174,7 @@ Content-Transfer-Encoding: quoted-printable
             Expect(messageContext.HTML).To(Equal(params.HTML))
             Expect(messageContext.PlainTextEmailTemplate).To(Equal(plainTextEmailTemplate))
             Expect(messageContext.HTMLEmailTemplate).To(Equal(htmlEmailTemplate))
+            Expect(messageContext.SubjectEmailTemplate).To(Equal(subjectEmailTemplate))
             Expect(messageContext.KindDescription).To(Equal(params.KindDescription))
             Expect(messageContext.SourceDescription).To(Equal(params.SourceDescription))
             Expect(messageContext.ClientID).To(Equal("the-client-ID"))
@@ -181,7 +187,7 @@ Content-Transfer-Encoding: quoted-printable
             params.KindDescription = ""
 
             messageContext := handlers.NewMessageContext(user, params, env, "the-space",
-                "the-org", "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
+                "the-org", "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate, subjectEmailTemplate)
 
             Expect(messageContext.KindDescription).To(Equal("the-kind"))
         })
@@ -190,7 +196,7 @@ Content-Transfer-Encoding: quoted-printable
             params.SourceDescription = ""
 
             messageContext := handlers.NewMessageContext(user, params, env, "the-space",
-                "the-org", "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate)
+                "the-org", "the-client-ID", FakeGuidGenerator, plainTextEmailTemplate, htmlEmailTemplate, subjectEmailTemplate)
 
             Expect(messageContext.SourceDescription).To(Equal("the-client-ID"))
         })

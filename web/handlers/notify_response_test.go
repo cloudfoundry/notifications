@@ -10,7 +10,61 @@ import (
 )
 
 var _ = Describe("NotifyResponseGenerator", func() {
-    Describe("LoadTemplates", func() {
+
+    Describe("LoadSubjectTemplate", func() {
+        var manager handlers.EmailTemplateManager
+        var notifyResponse handlers.NotifyResponseGenerator
+
+        Context("when subject is not set in the params", func() {
+            It("returns the subject.missing template", func() {
+                manager.ReadFile = func(path string) (string, error) {
+                    if strings.Contains(path, "missing") {
+                        return "the missing subject", nil
+                    }
+                    return "incorrect", nil
+                }
+
+                manager.FileExists = func(path string) bool {
+                    return false
+                }
+
+                subject := ""
+
+                subjectTemplate, err := notifyResponse.LoadSubjectTemplate(subject, manager)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(subjectTemplate).To(Equal("the missing subject"))
+            })
+        })
+
+        Context("when subject is set in the params", func() {
+            It("returns the subject.provided template", func() {
+                manager.ReadFile = func(path string) (string, error) {
+                    if strings.Contains(path, "provided") {
+                        return "the provided subject", nil
+                    }
+                    return "incorrect", nil
+                }
+
+                manager.FileExists = func(path string) bool {
+                    return false
+                }
+
+                subject := "is provided"
+
+                subjectTemplate, err := notifyResponse.LoadSubjectTemplate(subject, manager)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(subjectTemplate).To(Equal("the provided subject"))
+            })
+        })
+    })
+
+    Describe("LoadBodyTemplates", func() {
         var manager handlers.EmailTemplateManager
 
         Context("loadSpace is true", func() {
@@ -32,7 +86,7 @@ var _ = Describe("NotifyResponseGenerator", func() {
 
                 notifyResponse := handlers.NotifyResponseGenerator{}
 
-                plain, html, err := notifyResponse.LoadTemplates(true, manager)
+                plain, html, err := notifyResponse.LoadBodyTemplates(true, manager)
                 if err != nil {
                     panic(err)
                 }
@@ -60,7 +114,7 @@ var _ = Describe("NotifyResponseGenerator", func() {
 
                 notifyResponse := handlers.NotifyResponseGenerator{}
 
-                plain, html, err := notifyResponse.LoadTemplates(false, manager)
+                plain, html, err := notifyResponse.LoadBodyTemplates(false, manager)
                 if err != nil {
                     panic(err)
                 }
