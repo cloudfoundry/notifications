@@ -14,17 +14,14 @@ type NotifyResponseGenerator struct {
     logger        *log.Logger
     guidGenerator GUIDGenerationFunc
     mailClient    mail.ClientInterface
-    uaaClient     uaa.UAAInterface
 }
 
 func NewNotifyResponseGenerator(logger *log.Logger,
-    guidGenerator GUIDGenerationFunc, mailClient mail.ClientInterface,
-    uaaClient uaa.UAAInterface) NotifyResponseGenerator {
+    guidGenerator GUIDGenerationFunc, mailClient mail.ClientInterface) NotifyResponseGenerator {
     return NotifyResponseGenerator{
         logger:        logger,
         guidGenerator: guidGenerator,
         mailClient:    mailClient,
-        uaaClient:     uaaClient,
     }
 }
 
@@ -40,7 +37,7 @@ func (generator NotifyResponseGenerator) GenerateResponse(uaaUsers []uaa.User,
 
     for index, uaaUser := range uaaUsers {
         if len(uaaUser.Emails) > 0 {
-            plainTextTemplate, htmlTemplate, err := generator.LoadTemplates(loadSpace)
+            plainTextTemplate, htmlTemplate, err := generator.LoadTemplates(loadSpace, NewTemplateManager())
             if err != nil {
                 Error(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
                 return
@@ -82,10 +79,9 @@ func (generator NotifyResponseGenerator) SendMailToUser(context MessageContext, 
     return status
 }
 
-func (generator NotifyResponseGenerator) LoadTemplates(isSpace bool) (string, string, error) {
+func (generator NotifyResponseGenerator) LoadTemplates(isSpace bool, templateManager EmailTemplateManager) (string, string, error) {
     var plainTextTemplate, htmlTemplate string
     var plainErr, htmlErr error
-    templateManager := NewTemplateManager()
 
     if isSpace {
         plainTextTemplate, plainErr = templateManager.LoadEmailTemplate("space_body.text")

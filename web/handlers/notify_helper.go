@@ -98,7 +98,7 @@ func (helper NotifyHelper) NotifyServeHTTP(w http.ResponseWriter, req *http.Requ
     })
 
     responseGenerator := NewNotifyResponseGenerator(helper.logger, helper.guidGenerator,
-        helper.mailClient, helper.uaaClient)
+        helper.mailClient)
 
     responseGenerator.GenerateResponse(uaaUsers, params, space,
         organization, clientToken.Claims["client_id"].(string), w, loadSpace)
