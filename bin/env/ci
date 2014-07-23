@@ -1,0 +1,15 @@
+#! /usr/bin/env bash
+set -e
+
+export HTTP_LOGGING_ENABLED=true
+export SMTP_HOST=smtp.example.com
+export SMTP_PASS=password
+export SMTP_PORT=587
+export SMTP_USER=user
+export SMTP_TLS=false
+export UAA_CLIENT_ID=notifications
+export UAA_CLIENT_SECRET=secret
+export UAA_HOST=http://uaa.example.com
+export SENDER=no-reply@notifications.example.com
+export CC_HOST=https://api.example.com
+export ROOT_PATH=$TRAVIS_BUILD_DIR
