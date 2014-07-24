@@ -24,19 +24,19 @@ var _ = Describe("MailSender", func() {
             From:      "banana man",
             To:        "endless monkeys",
             Subject:   "we will be eaten",
-            ClientID:  "333",
-            MessageID: "4444",
-            Text:      "User supplied banana text",
+            ClientID:  "3&3",
+            MessageID: "4'4",
+            Text:      "User <supplied> \"banana\" text",
             HTML:      "<p>user supplied banana html</p>",
-            PlainTextEmailTemplate: "Banana preamble {{.Text}}",
-            HTMLEmailTemplate:      "Banana preamble {{.HTML}}",
+            PlainTextEmailTemplate: "Banana preamble {{.Text}} {{.ClientID}} {{.MessageID}}",
+            HTMLEmailTemplate:      "Banana preamble {{.HTML}} {{.Text}} {{.ClientID}} {{.MessageID}}",
             SubjectEmailTemplate:   "The Subject: {{.Subject}}",
         }
         mailSender = handlers.NewMailSender(&client, context)
     })
 
     Describe("CompileBody", func() {
-        It("returns the compiled email containing both the plaintext and html portions", func() {
+        It("returns the compiled email containing both the plaintext and html portions, escaping variables for the html portion only", func() {
             body, err := mailSender.CompileBody()
             if err != nil {
                 panic(err)
@@ -48,7 +48,7 @@ This is a multi-part message in MIME format...
 --our-content-boundary
 Content-type: text/plain
 
-Banana preamble User supplied banana text
+Banana preamble User <supplied> "banana" text 3&3 4'4
 --our-content-boundary
 Content-Type: text/html
 Content-Disposition: inline
@@ -56,7 +56,7 @@ Content-Transfer-Encoding: quoted-printable
 
 <html>
     <body>
-        Banana preamble <p>user supplied banana html</p>
+        Banana preamble <p>user supplied banana html</p> User &lt;supplied&gt; &#34;banana&#34; text 3&amp;3 4&#39;4
     </body>
 </html>
 --our-content-boundary--`
@@ -80,7 +80,7 @@ This is a multi-part message in MIME format...
 --our-content-boundary
 Content-type: text/plain
 
-Banana preamble User supplied banana text
+Banana preamble User <supplied> "banana" text 3&3 4'4
 --our-content-boundary--`
                 Expect(body).To(Equal(emailBody))
             })
@@ -106,7 +106,7 @@ Content-Transfer-Encoding: quoted-printable
 
 <html>
     <body>
-        Banana preamble <p>user supplied banana html</p>
+        Banana preamble <p>user supplied banana html</p>  3&amp;3 4&#39;4
     </body>
 </html>
 --our-content-boundary--`
@@ -126,7 +126,7 @@ Content-Transfer-Encoding: quoted-printable
             Expect(message.To).To(Equal("endless monkeys"))
             Expect(message.Subject).To(Equal("The Subject: we will be eaten"))
             Expect(message.Body).To(Equal("New Body"))
-            Expect(message.Headers).To(Equal([]string{"X-CF-Client-ID: 333", "X-CF-Notification-ID: 4444"}))
+            Expect(message.Headers).To(Equal([]string{"X-CF-Client-ID: 3&3", "X-CF-Notification-ID: 4'4"}))
         })
     })
 

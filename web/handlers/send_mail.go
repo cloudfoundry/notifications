@@ -3,6 +3,7 @@ package handlers
 import (
     "bytes"
     "fmt"
+    "html"
     "strings"
     "text/template"
 
@@ -114,7 +115,7 @@ func (sender MailSender) CompileBody() (string, error) {
     closingBoundary := "--our-content-boundary--"
 
     if sender.context.Text != "" {
-        plainText, err = sender.compileTemplate(sender.context.PlainTextEmailTemplate)
+        plainText, err = sender.compileTemplate(sender.context.PlainTextEmailTemplate, false)
         if err != nil {
             return "", err
         }
@@ -124,7 +125,7 @@ func (sender MailSender) CompileBody() (string, error) {
 
     var html string
     if sender.context.HTML != "" {
-        html, err = sender.compileTemplate(sender.context.HTMLEmailTemplate)
+        html, err = sender.compileTemplate(sender.context.HTMLEmailTemplate, true)
         if err != nil {
             return "", err
         }
@@ -144,7 +145,7 @@ Content-Transfer-Encoding: quoted-printable
     return headerPart + plainTextPart + htmlPart + closingBoundary, nil
 }
 
-func (sender MailSender) compileTemplate(theTemplate string) (string, error) {
+func (sender MailSender) compileTemplate(theTemplate string, escapeContext bool) (string, error) {
     buffer := bytes.NewBuffer([]byte{})
 
     source, err := template.New("compileTemplate").Parse(theTemplate)
@@ -152,15 +153,38 @@ func (sender MailSender) compileTemplate(theTemplate string) (string, error) {
         return "", err
     }
 
-    source.Execute(buffer, sender.context)
+    if escapeContext {
+        source.Execute(buffer, sender.escapeContext(sender.context))
+    } else {
+        source.Execute(buffer, sender.context)
+    }
 
     compiledTemplate := strings.TrimSuffix(buffer.String(), "\n")
 
     return compiledTemplate, nil
 }
 
+func (sender MailSender) escapeContext(context MessageContext) MessageContext {
+    return MessageContext{
+        From:    html.EscapeString(context.From),
+        To:      html.EscapeString(context.To),
+        Subject: html.EscapeString(context.Subject),
+        Text:    html.EscapeString(context.Text),
+        HTML:    context.HTML,
+        PlainTextEmailTemplate: context.PlainTextEmailTemplate,
+        HTMLEmailTemplate:      context.HTMLEmailTemplate,
+        SubjectEmailTemplate:   context.SubjectEmailTemplate,
+        KindDescription:        html.EscapeString(context.KindDescription),
+        SourceDescription:      html.EscapeString(context.SourceDescription),
+        ClientID:               html.EscapeString(context.ClientID),
+        MessageID:              html.EscapeString(context.MessageID),
+        Space:                  html.EscapeString(context.Space),
+        Organization:           html.EscapeString(context.Organization),
+    }
+}
+
 func (sender MailSender) CompileMessage(body string) (mail.Message, error) {
-    compiledSubject, err := sender.compileTemplate(sender.context.SubjectEmailTemplate)
+    compiledSubject, err := sender.compileTemplate(sender.context.SubjectEmailTemplate, false)
     if err != nil {
         return mail.Message{}, err
     }
