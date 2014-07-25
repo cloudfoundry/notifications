@@ -6,7 +6,6 @@ import (
     "log"
     "net/http"
     "net/http/httptest"
-    "strings"
 
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -78,28 +77,6 @@ var _ = Describe("NotifyUser", func() {
             request.Header.Set("Authorization", "Bearer "+token)
         })
 
-        It("logs the email address of the recipient", func() {
-            handler.ServeHTTP(writer, request)
-
-            Expect(buffer.String()).To(ContainSubstring("Sending email to fake-user@example.com"))
-        })
-
-        It("logs the message envelope", func() {
-            handler.ServeHTTP(writer, request)
-
-            data := []string{
-                "From: no-reply@notifications.example.com",
-                "To: fake-user@example.com",
-                "Subject: CF Notification: Password reminder",
-                `The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:`,
-                "Please reset your password by clicking on this link...",
-            }
-            results := strings.Split(buffer.String(), "\n")
-            for _, item := range data {
-                Expect(results).To(ContainElement(item))
-            }
-        })
-
         It("talks to the SMTP server, sending the email", func() {
             handler.ServeHTTP(writer, request)
 
@@ -137,21 +114,6 @@ Content-Transfer-Encoding: quoted-printable
                     "X-CF-Notification-ID: deadbeef-aabb-ccdd-eeff-001122334455",
                 },
             }))
-        })
-
-        It("returns necessary info in the response for the sent mail", func() {
-            handler.ServeHTTP(writer, request)
-
-            Expect(writer.Code).To(Equal(http.StatusOK))
-            parsed := []map[string]string{}
-            err := json.Unmarshal(writer.Body.Bytes(), &parsed)
-            if err != nil {
-                panic(err)
-            }
-
-            Expect(parsed[0]["status"]).To(Equal("delivered"))
-            Expect(parsed[0]["recipient"]).To(Equal("user-123"))
-            Expect(parsed[0]["notification_id"]).NotTo(Equal(""))
         })
     })
 })

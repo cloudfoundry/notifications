@@ -12,6 +12,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -261,20 +262,51 @@ var _ = Describe("NotifyHelper", func() {
                 })
             })
 
-            It("logs the UUIDs of all recipients", func() {
-                loadCCUsers = func(userGUID, accessToken string) ([]cf.CloudControllerUser, error) {
-                    return []cf.CloudControllerUser{
-                        cf.CloudControllerUser{Guid: "user-123"},
-                        cf.CloudControllerUser{Guid: "user-456"},
-                    }, nil
-                }
+            Context("When load Users returns multiple users", func() {
+                BeforeEach(func() {
+                    loadCCUsers = func(userGUID, accessToken string) ([]cf.CloudControllerUser, error) {
+                        return []cf.CloudControllerUser{
+                            cf.CloudControllerUser{Guid: "user-123"},
+                            cf.CloudControllerUser{Guid: "user-456"},
+                        }, nil
+                    }
+                })
 
-                helper.NotifyServeHTTP(writer, request, "user-123", loadCCUsers, true)
+                It("logs the UUIDs of all recipients", func() {
+                    helper.NotifyServeHTTP(writer, request, "user-123", loadCCUsers, true)
 
-                lines := strings.Split(buffer.String(), "\n")
+                    lines := strings.Split(buffer.String(), "\n")
 
-                Expect(lines).To(ContainElement("CloudController user guid: user-123"))
-                Expect(lines).To(ContainElement("CloudController user guid: user-456"))
+                    Expect(lines).To(ContainElement("CloudController user guid: user-123"))
+                    Expect(lines).To(ContainElement("CloudController user guid: user-456"))
+                })
+
+                It("returns necessary info in the response for the sent mail", func() {
+                    helper = handlers.NewNotifyHelper(fakeCC, logger, &fakeUAA, func() (*uuid.UUID, error) {
+                        guid, err := uuid.NewV4()
+                        if err != nil {
+                            panic(err)
+                        }
+                        return guid, nil
+                    }, &mailClient)
+
+                    helper.NotifyServeHTTP(writer, request, "user-123", loadCCUsers, false)
+
+                    Expect(writer.Code).To(Equal(http.StatusOK))
+                    parsed := []map[string]string{}
+                    err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+                    if err != nil {
+                        panic(err)
+                    }
+
+                    Expect(parsed[0]["status"]).To(Equal("delivered"))
+                    Expect(parsed[0]["recipient"]).To(Equal("user-123"))
+                    Expect(parsed[0]["notification_id"]).NotTo(Equal(""))
+
+                    Expect(parsed[1]["status"]).To(Equal("delivered"))
+                    Expect(parsed[1]["recipient"]).To(Equal("user-456"))
+                    Expect(parsed[1]["notification_id"]).NotTo(Equal(parsed[0]["notification_id"]))
+                })
             })
 
             Context("when sending emails to a space", func() {
