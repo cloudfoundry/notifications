@@ -7,7 +7,6 @@ import (
     "log"
     "net/http"
     "net/http/httptest"
-    "strings"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -103,35 +102,10 @@ var _ = Describe("NotifySpace", func() {
             handler = handlers.NewNotifySpace(logger, fakeCC, &fakeUAA, &mailClient, FakeGuidGenerator)
         })
 
-        It("logs the UUIDs of all users in the space", func() {
+        It("uses the notifications app token when making calls to cloud controller", func() {
             handler.ServeHTTP(writer, request)
 
             Expect(fakeCC.CurrentToken).To(Equal(token))
-
-            lines := strings.Split(buffer.String(), "\n")
-
-            Expect(lines).To(ContainElement("CloudController user guid: user-123"))
-            Expect(lines).To(ContainElement("CloudController user guid: user-456"))
-        })
-
-        It("validates the presence of required fields", func() {
-            request, err := http.NewRequest("POST", "/spaces/space-001", strings.NewReader(""))
-            if err != nil {
-                panic(err)
-            }
-            request.Header.Set("Authorization", "Bearer "+token)
-
-            handler.ServeHTTP(writer, request)
-
-            Expect(writer.Code).To(Equal(422))
-            body := make(map[string]interface{})
-            err = json.Unmarshal(writer.Body.Bytes(), &body)
-            if err != nil {
-                panic(err)
-            }
-
-            Expect(body["errors"]).To(ContainElement(`"kind" is a required field`))
-            Expect(body["errors"]).To(ContainElement(`"text" or "html" fields must be supplied`))
         })
 
         It("returns a 502 when CloudController fails to respond", func() {
@@ -223,90 +197,6 @@ Content-Transfer-Encoding: quoted-printable
             Expect(parsed[1]["status"]).To(Equal("delivered"))
             Expect(parsed[1]["recipient"]).To(Equal("user-456"))
             Expect(parsed[1]["notification_id"]).NotTo(Equal(parsed[0]["notification_id"]))
-        })
-
-        Context("when the SMTP server fails to deliver the mail", func() {
-            It("returns a status indicating that delivery failed", func() {
-                mailClient.errorOnSend = true
-                handler.ServeHTTP(writer, request)
-
-                Expect(writer.Code).To(Equal(http.StatusOK))
-                parsed := []map[string]string{}
-                err := json.Unmarshal(writer.Body.Bytes(), &parsed)
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(parsed[0]["status"]).To(Equal("failed"))
-                Expect(parsed[1]["status"]).To(Equal("failed"))
-            })
-        })
-
-        Context("when the SMTP server cannot be reached", func() {
-            It("returns a status indicating that the server is unavailable", func() {
-                mailClient.errorOnConnect = true
-                handler.ServeHTTP(writer, request)
-
-                Expect(writer.Code).To(Equal(http.StatusOK))
-                parsed := []map[string]string{}
-                err := json.Unmarshal(writer.Body.Bytes(), &parsed)
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(parsed[0]["status"]).To(Equal("unavailable"))
-                Expect(parsed[1]["status"]).To(Equal("unavailable"))
-            })
-        })
-
-        Context("when UAA cannot be reached", func() {
-            It("returns a 502 status code", func() {
-                fakeUAA.ErrorForUserByID = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
-                handler.ServeHTTP(writer, request)
-
-                Expect(writer.Code).To(Equal(http.StatusBadGateway))
-            })
-        })
-
-        Context("when UAA cannot find the user", func() {
-            It("returns that the user in the response with status notfound", func() {
-                fakeUAA.ErrorForUserByID = uaa.NewFailure(404, []byte("User f3b51aac-866e-4b7a-948c-de31beefc475d does not exist"))
-                handler.ServeHTTP(writer, request)
-
-                Expect(writer.Code).To(Equal(http.StatusOK))
-
-                response := []map[string]string{}
-                err := json.Unmarshal(writer.Body.Bytes(), &response)
-                if err != nil {
-                    panic(err)
-                }
-                Expect(response[0]["status"]).To(Equal("notfound"))
-                Expect(response[0]["recipient"]).To(Equal("user-123"))
-
-                Expect(response[1]["status"]).To(Equal("notfound"))
-                Expect(response[1]["recipient"]).To(Equal("user-456"))
-            })
-        })
-
-        Context("when the UAA user has no email", func() {
-            It("returns the user in the response with the status noaddress", func() {
-                fakeUAA.UsersByID["user-123"] = uaa.User{
-                    ID:     "user-123",
-                    Emails: []string{},
-                }
-
-                handler.ServeHTTP(writer, request)
-
-                response := []map[string]string{}
-                err := json.Unmarshal(writer.Body.Bytes(), &response)
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(writer.Code).To(Equal(http.StatusOK))
-                Expect(response[0]["status"]).To(Equal("noaddress"))
-                Expect(response[1]["status"]).To(Equal("delivered"))
-            })
         })
     })
 })
