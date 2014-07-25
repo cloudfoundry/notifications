@@ -7,7 +7,6 @@ import (
     "log"
     "net/http"
     "net/http/httptest"
-    "net/url"
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
@@ -111,8 +110,8 @@ var _ = Describe("NotifySpace", func() {
 
             lines := strings.Split(buffer.String(), "\n")
 
-            Expect(lines).To(ContainElement("user-123"))
-            Expect(lines).To(ContainElement("user-456"))
+            Expect(lines).To(ContainElement("CloudController user guid: user-123"))
+            Expect(lines).To(ContainElement("CloudController user guid: user-456"))
         })
 
         It("validates the presence of required fields", func() {
@@ -262,7 +261,7 @@ Content-Transfer-Encoding: quoted-printable
 
         Context("when UAA cannot be reached", func() {
             It("returns a 502 status code", func() {
-                fakeUAA.ErrorForUserByID = &url.Error{}
+                fakeUAA.ErrorForUserByID = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
                 handler.ServeHTTP(writer, request)
 
                 Expect(writer.Code).To(Equal(http.StatusBadGateway))
@@ -282,7 +281,10 @@ Content-Transfer-Encoding: quoted-printable
                     panic(err)
                 }
                 Expect(response[0]["status"]).To(Equal("notfound"))
+                Expect(response[0]["recipient"]).To(Equal("user-123"))
+
                 Expect(response[1]["status"]).To(Equal("notfound"))
+                Expect(response[1]["recipient"]).To(Equal("user-456"))
             })
         })
 

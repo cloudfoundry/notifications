@@ -213,11 +213,13 @@ Content-Transfer-Encoding: quoted-printable
                 if err != nil {
                     panic(err)
                 }
+
+                Expect(response[0]["recipient"]).To(Equal("user-123"))
                 Expect(response[0]["status"]).To(Equal("notfound"))
             })
         })
 
-        Context("when  UAA cannot find the users's email address", func() {
+        Context("when UAA cannot find the users's email address", func() {
             It("returns the user in the response with the status noaddress", func() {
                 uaaClient.UsersByID["user-123"] = uaa.User{
                     ID:     "user-123",
@@ -238,11 +240,11 @@ Content-Transfer-Encoding: quoted-printable
         })
 
         Context("when UAA causes some unknown error", func() {
-            It("returns a 500 status code", func() {
+            It("returns a 502 status code", func() {
                 uaaClient.ErrorForUserByID = errors.New("Boom!")
                 handler.ServeHTTP(writer, request)
 
-                Expect(writer.Code).To(Equal(http.StatusInternalServerError))
+                Expect(writer.Code).To(Equal(http.StatusBadGateway))
             })
         })
     })

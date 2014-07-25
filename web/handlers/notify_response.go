@@ -28,12 +28,12 @@ func NewNotifyResponseGenerator(logger *log.Logger,
 type NotifyResponse []map[string]string
 type NotifyFailureResponse map[string][]string
 
-func (generator NotifyResponseGenerator) GenerateResponse(uaaUsers []uaa.User,
+func (generator NotifyResponseGenerator) GenerateResponse(uaaUsers map[string]uaa.User,
     params NotifyParams, space, organization, token string,
     w http.ResponseWriter, loadSpace bool) {
 
     env := config.NewEnvironment()
-    messages := make(NotifyResponse, len(uaaUsers))
+    messages := NotifyResponse{}
 
     subjectTemplate, err := generator.LoadSubjectTemplate(params.Subject, NewTemplateManager())
     if err != nil {
@@ -47,7 +47,7 @@ func (generator NotifyResponseGenerator) GenerateResponse(uaaUsers []uaa.User,
         return
     }
 
-    for index, uaaUser := range uaaUsers {
+    for userGUID, uaaUser := range uaaUsers {
         if len(uaaUser.Emails) > 0 {
             context := NewMessageContext(uaaUser, params, env, space, organization,
                 token, generator.guidGenerator, plainTextTemplate, htmlTemplate, subjectTemplate)
@@ -60,7 +60,7 @@ func (generator NotifyResponseGenerator) GenerateResponse(uaaUsers []uaa.User,
             mailInfo["recipient"] = uaaUser.ID
             mailInfo["notification_id"] = context.MessageID
 
-            messages[index] = mailInfo
+            messages = append(messages, mailInfo)
         } else {
             var status string
             if uaaUser.ID == "" {
@@ -70,10 +70,10 @@ func (generator NotifyResponseGenerator) GenerateResponse(uaaUsers []uaa.User,
             }
             mailInfo := make(map[string]string)
             mailInfo["status"] = status
-            mailInfo["recipient"] = uaaUser.ID
+            mailInfo["recipient"] = userGUID
             mailInfo["notification_id"] = ""
 
-            messages[index] = mailInfo
+            messages = append(messages, mailInfo)
         }
     }
 

@@ -14,6 +14,30 @@ import (
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
+type UAADownError struct {
+    message string
+}
+
+func (err UAADownError) Error() string {
+    return err.message
+}
+
+type UAAUserNotFoundError struct {
+    message string
+}
+
+func (err UAAUserNotFoundError) Error() string {
+    return err.message
+}
+
+type UAAGenericError struct {
+    message string
+}
+
+func (err UAAGenericError) Error() string {
+    return err.message
+}
+
 type NotifyHelper struct {
     cloudController cf.CloudControllerInterface
     logger          *log.Logger
@@ -73,14 +97,27 @@ func (helper NotifyHelper) NotifyServeHTTP(w http.ResponseWriter, req *http.Requ
         return
     }
 
-    uaaUsers := make([]uaa.User, len(ccUsers))
-    for index, ccUser := range ccUsers {
-        helper.logger.Println(ccUser.Guid)
-        user, ok := helper.LoadUaaUser(w, ccUser.Guid, helper.uaaClient)
-        if !ok {
-            return
+    uaaUsers := make(map[string]uaa.User)
+    for _, ccUser := range ccUsers {
+        helper.logger.Println("CloudController user guid: " + ccUser.Guid)
+        user, err := helper.LoadUaaUser(ccUser.Guid, helper.uaaClient)
+        if err != nil {
+            switch err.(type) {
+            case UAADownError:
+                Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
+                return
+            case UAAUserNotFoundError:
+                user = uaa.User{}
+            case UAAGenericError:
+                Error(w, http.StatusBadGateway, []string{err.Error()})
+                return
+            default:
+                Error(w, http.StatusBadGateway, []string{err.Error()})
+                return
+            }
         }
-        uaaUsers[index] = user
+
+        uaaUsers[ccUser.Guid] = user
     }
 
     var space, organization string
@@ -118,33 +155,42 @@ func (helper NotifyHelper) loadSpaceAndOrganization(spaceGuid, token string) (st
     return space.Name, org.Name, nil
 }
 
-func (helper NotifyHelper) LoadUaaUser(w http.ResponseWriter, guid string, uaaClient uaa.UAAInterface) (uaa.User, bool) {
+func (helper NotifyHelper) LoadUaaUser(guid string, uaaClient uaa.UAAInterface) (uaa.User, error) {
     user, err := uaaClient.UserByID(guid)
     if err != nil {
         switch err.(type) {
         case *url.Error:
-            Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
+            return uaa.User{}, UAADownError{
+                message: "UAA is unavailable",
+            }
         case uaa.Failure:
             uaaFailure := uaa.Failure(err.(uaa.Failure))
             helper.logger.Printf("error:  %v", err)
+
             if uaaFailure.Code() == 404 {
                 if strings.Contains(uaaFailure.Message(), "Requested route") {
-                    Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
-                    return uaa.User{}, false
+                    return uaa.User{}, UAADownError{
+                        message: "UAA is unavailable",
+                    }
                 } else if strings.Contains(uaaFailure.Message(), "User") {
-                    return uaa.User{}, true
+                    return uaa.User{}, UAAUserNotFoundError{
+                        message: "UAA did not find the user",
+                    }
                 } else {
-                    Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
-                    return uaa.User{}, false
+                    return uaa.User{}, UAAGenericError{
+                        message: "UAA Unknown 404 error message: " + uaaFailure.Message(),
+                    }
                 }
             }
 
-            Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
-            return uaa.User{}, false
+            return uaa.User{}, UAADownError{
+                message: "UAA is unavailable",
+            }
         default:
-            Error(w, http.StatusInternalServerError, []string{"UAA is unavailable"})
+            return uaa.User{}, UAAGenericError{
+                message: "UAA Unknown Error: " + err.Error(),
+            }
         }
-        return uaa.User{}, false
     }
-    return user, true
+    return user, nil
 }
