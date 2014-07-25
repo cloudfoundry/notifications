@@ -8,7 +8,6 @@ import (
     "log"
     "net/http"
     "net/http/httptest"
-    "net/url"
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/mail"
@@ -195,7 +194,7 @@ Content-Transfer-Encoding: quoted-printable
 
         Context("when UAA cannot be reached", func() {
             It("returns a 502 status code", func() {
-                uaaClient.ErrorForUserByID = &url.Error{}
+                uaaClient.ErrorForUserByID = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
                 handler.ServeHTTP(writer, request)
 
                 Expect(writer.Code).To(Equal(http.StatusBadGateway))
@@ -203,11 +202,38 @@ Content-Transfer-Encoding: quoted-printable
         })
 
         Context("when UAA cannot find the user", func() {
-            It("returns a 410 status code", func() {
-                uaaClient.ErrorForUserByID = uaa.Failure{}
+            It("returns the user in the response with status notfound", func() {
+                uaaClient.ErrorForUserByID = uaa.NewFailure(404, []byte("User f3b51aac-866e-4b7a-948c-de31beefc475d does not exist"))
                 handler.ServeHTTP(writer, request)
 
-                Expect(writer.Code).To(Equal(http.StatusGone))
+                Expect(writer.Code).To(Equal(http.StatusOK))
+
+                response := []map[string]string{}
+                err := json.Unmarshal(writer.Body.Bytes(), &response)
+                if err != nil {
+                    panic(err)
+                }
+                Expect(response[0]["status"]).To(Equal("notfound"))
+            })
+        })
+
+        Context("when  UAA cannot find the users's email address", func() {
+            It("returns the user in the response with the status noaddress", func() {
+                uaaClient.UsersByID["user-123"] = uaa.User{
+                    ID:     "user-123",
+                    Emails: []string{},
+                }
+
+                handler.ServeHTTP(writer, request)
+
+                response := []map[string]string{}
+                err := json.Unmarshal(writer.Body.Bytes(), &response)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(writer.Code).To(Equal(http.StatusOK))
+                Expect(response[0]["status"]).To(Equal("noaddress"))
             })
         })
 

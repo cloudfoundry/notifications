@@ -7,6 +7,7 @@ import (
     "log"
     "net/http"
     "net/http/httptest"
+    "net/url"
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
@@ -28,7 +29,7 @@ var _ = Describe("NotifySpace", func() {
         var mailClient FakeMailClient
         var token string
         var logger *log.Logger
-        var fakeUAA uaa.UAAInterface
+        var fakeUAA FakeUAAClient
 
         BeforeEach(func() {
             var err error
@@ -100,7 +101,7 @@ var _ = Describe("NotifySpace", func() {
                 },
             }
 
-            handler = handlers.NewNotifySpace(logger, fakeCC, fakeUAA, &mailClient, FakeGuidGenerator)
+            handler = handlers.NewNotifySpace(logger, fakeCC, &fakeUAA, &mailClient, FakeGuidGenerator)
         })
 
         It("logs the UUIDs of all users in the space", func() {
@@ -199,7 +200,6 @@ Content-Transfer-Encoding: quoted-printable
         })
 
         It("returns necessary info in the response for the sent mail", func() {
-
             handler = handlers.NewNotifySpace(logger, fakeCC, fakeUAA, &mailClient, func() (*uuid.UUID, error) {
                 guid, err := uuid.NewV4()
                 if err != nil {
@@ -257,6 +257,53 @@ Content-Transfer-Encoding: quoted-printable
 
                 Expect(parsed[0]["status"]).To(Equal("unavailable"))
                 Expect(parsed[1]["status"]).To(Equal("unavailable"))
+            })
+        })
+
+        Context("when UAA cannot be reached", func() {
+            It("returns a 502 status code", func() {
+                fakeUAA.ErrorForUserByID = &url.Error{}
+                handler.ServeHTTP(writer, request)
+
+                Expect(writer.Code).To(Equal(http.StatusBadGateway))
+            })
+        })
+
+        Context("when UAA cannot find the user", func() {
+            It("returns that the user in the response with status notfound", func() {
+                fakeUAA.ErrorForUserByID = uaa.NewFailure(404, []byte("User f3b51aac-866e-4b7a-948c-de31beefc475d does not exist"))
+                handler.ServeHTTP(writer, request)
+
+                Expect(writer.Code).To(Equal(http.StatusOK))
+
+                response := []map[string]string{}
+                err := json.Unmarshal(writer.Body.Bytes(), &response)
+                if err != nil {
+                    panic(err)
+                }
+                Expect(response[0]["status"]).To(Equal("notfound"))
+                Expect(response[1]["status"]).To(Equal("notfound"))
+            })
+        })
+
+        Context("when the UAA user has no email", func() {
+            It("returns the user in the response with the status noaddress", func() {
+                fakeUAA.UsersByID["user-123"] = uaa.User{
+                    ID:     "user-123",
+                    Emails: []string{},
+                }
+
+                handler.ServeHTTP(writer, request)
+
+                response := []map[string]string{}
+                err := json.Unmarshal(writer.Body.Bytes(), &response)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(writer.Code).To(Equal(http.StatusOK))
+                Expect(response[0]["status"]).To(Equal("noaddress"))
+                Expect(response[1]["status"]).To(Equal("delivered"))
             })
         })
     })

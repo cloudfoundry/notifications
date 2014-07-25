@@ -5,4 +5,5 @@ import (
 )
 
 var _ = Describe("NotifyHelper", func() {
+    // Currently still tested through NotifyUser and NotifySpace
 })

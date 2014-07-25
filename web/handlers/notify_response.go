@@ -61,6 +61,19 @@ func (generator NotifyResponseGenerator) GenerateResponse(uaaUsers []uaa.User,
             mailInfo["notification_id"] = context.MessageID
 
             messages[index] = mailInfo
+        } else {
+            var status string
+            if uaaUser.ID == "" {
+                status = "notfound"
+            } else {
+                status = "noaddress"
+            }
+            mailInfo := make(map[string]string)
+            mailInfo["status"] = status
+            mailInfo["recipient"] = uaaUser.ID
+            mailInfo["notification_id"] = ""
+
+            messages[index] = mailInfo
         }
     }
 

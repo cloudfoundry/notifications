@@ -29,6 +29,14 @@ func NewFailure(code int, message []byte) Failure {
     }
 }
 
+func (failure Failure) Code() int {
+    return failure.code
+}
+
+func (failure Failure) Message() string {
+    return failure.message
+}
+
 func (failure Failure) Error() string {
     return fmt.Sprintf("UAA Failure: %d %s", failure.code, failure.message)
 }

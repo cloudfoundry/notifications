@@ -125,7 +125,22 @@ func (helper NotifyHelper) LoadUaaUser(w http.ResponseWriter, guid string, uaaCl
         case *url.Error:
             Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
         case uaa.Failure:
-            Error(w, http.StatusGone, []string{"UAA is unavailable"})
+            uaaFailure := uaa.Failure(err.(uaa.Failure))
+            helper.logger.Printf("error:  %v", err)
+            if uaaFailure.Code() == 404 {
+                if strings.Contains(uaaFailure.Message(), "Requested route") {
+                    Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
+                    return uaa.User{}, false
+                } else if strings.Contains(uaaFailure.Message(), "User") {
+                    return uaa.User{}, true
+                } else {
+                    Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
+                    return uaa.User{}, false
+                }
+            }
+
+            Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
+            return uaa.User{}, false
         default:
             Error(w, http.StatusInternalServerError, []string{"UAA is unavailable"})
         }
