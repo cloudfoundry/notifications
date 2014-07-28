@@ -1,8 +1,8 @@
-package fileUtilities_test
+package file_utilities_test
 
 import (
     "github.com/cloudfoundry-incubator/notifications/config"
-    "github.com/cloudfoundry-incubator/notifications/fileUtilities"
+    "github.com/cloudfoundry-incubator/notifications/file_utilities"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -12,8 +12,8 @@ var _ = Describe("fileReader", func() {
     Describe("ReadFile", func() {
         It("returns a string of the file contents at the specified location", func() {
             env := config.NewEnvironment()
-            path := env.RootPath + "/fileUtilities/fixtures/test.text"
-            contents, err := fileUtilities.ReadFile(path)
+            path := env.RootPath + "/file_utilities/fixtures/test.text"
+            contents, err := file_utilities.ReadFile(path)
             if err != nil {
                 panic(err)
             }
@@ -27,16 +27,16 @@ var _ = Describe("fileReader", func() {
 
         BeforeEach(func() {
             env := config.NewEnvironment()
-            path = env.RootPath + "/fileUtilities/fixtures/test.text"
+            path = env.RootPath + "/file_utilities/fixtures/test.text"
         })
 
         It("returns true if the file exists", func() {
-            response := fileUtilities.FileExists(path)
+            response := file_utilities.FileExists(path)
             Expect(response).To(Equal(true))
         })
 
         It("returns false the file does not exist", func() {
-            response := fileUtilities.FileExists(path + "not.There")
+            response := file_utilities.FileExists(path + "not.There")
             Expect(response).To(Equal(false))
         })
 

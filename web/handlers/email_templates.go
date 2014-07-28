@@ -2,7 +2,7 @@ package handlers
 
 import (
     "github.com/cloudfoundry-incubator/notifications/config"
-    "github.com/cloudfoundry-incubator/notifications/fileUtilities"
+    "github.com/cloudfoundry-incubator/notifications/file_utilities"
 )
 
 type EmailTemplateManager struct {
@@ -12,8 +12,8 @@ type EmailTemplateManager struct {
 
 func NewTemplateManager() EmailTemplateManager {
     return EmailTemplateManager{
-        ReadFile:   fileUtilities.ReadFile,
-        FileExists: fileUtilities.FileExists,
+        ReadFile:   file_utilities.ReadFile,
+        FileExists: file_utilities.FileExists,
     }
 }
 

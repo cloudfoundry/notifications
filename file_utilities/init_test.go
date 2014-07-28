@@ -1,4 +1,4 @@
-package fileUtilities_test
+package file_utilities_test
 
 import (
     "testing"
