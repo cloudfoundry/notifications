@@ -299,12 +299,13 @@ var _ = Describe("NotifyHelper", func() {
                         panic(err)
                     }
 
+                    Expect(string(writer.Body.Bytes())).To(ContainSubstring(`"recipient":"user-123"`))
+                    Expect(string(writer.Body.Bytes())).To(ContainSubstring(`"recipient":"user-456"`))
+
                     Expect(parsed[0]["status"]).To(Equal("delivered"))
-                    Expect(parsed[0]["recipient"]).To(Equal("user-123"))
                     Expect(parsed[0]["notification_id"]).NotTo(Equal(""))
 
                     Expect(parsed[1]["status"]).To(Equal("delivered"))
-                    Expect(parsed[1]["recipient"]).To(Equal("user-456"))
                     Expect(parsed[1]["notification_id"]).NotTo(Equal(parsed[0]["notification_id"]))
                 })
             })
