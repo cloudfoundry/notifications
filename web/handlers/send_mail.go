@@ -36,6 +36,7 @@ func SendMail(client mail.ClientInterface, context MessageContext) (string, mail
 
 type MessageContext struct {
     From                   string
+    ReplyTo                string
     To                     string
     Subject                string
     Text                   string
@@ -76,6 +77,7 @@ func NewMessageContext(user uaa.User, params NotifyParams,
 
     return MessageContext{
         From:    env.Sender,
+        ReplyTo: params.ReplyTo,
         To:      user.Emails[0],
         Subject: params.Subject,
         Text:    params.Text,
@@ -191,6 +193,7 @@ func (sender MailSender) CompileMessage(body string) (mail.Message, error) {
 
     return mail.Message{
         From:    sender.context.From,
+        ReplyTo: sender.context.ReplyTo,
         To:      sender.context.To,
         Subject: compiledSubject,
         Body:    body,

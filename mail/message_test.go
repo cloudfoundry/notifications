@@ -35,20 +35,38 @@ var _ = Describe("Message", func() {
             }))
         })
 
-        It("includes headers in the response if there are any", func() {
-            msg.Headers = append(msg.Headers, "X-ClientID: banana")
+        Context("when optional fields are present", func() {
+            It("includes Reply-To in message body", func() {
+                msg.ReplyTo = "banana@chiquita.com"
 
-            parts := strings.Split(msg.Data(), "\n")
-            Expect(parts).To(Equal([]string{
-                "X-ClientID: banana",
-                "From: me@example.com",
-                "To: you@example.com",
-                "Subject: Super Urgent! Read Now!",
-                "MIME-Version: 1.0",
-                "Content-Type: multipart/alternative; boundary=\"our-content-boundary\"",
-                "",
-                "Banana",
-            }))
+                parts := strings.Split(msg.Data(), "\n")
+                Expect(parts).To(Equal([]string{
+                    "From: me@example.com",
+                    "Reply-To: banana@chiquita.com",
+                    "To: you@example.com",
+                    "Subject: Super Urgent! Read Now!",
+                    "MIME-Version: 1.0",
+                    "Content-Type: multipart/alternative; boundary=\"our-content-boundary\"",
+                    "",
+                    "Banana",
+                }))
+            })
+
+            It("includes headers in the response if there are any", func() {
+                msg.Headers = append(msg.Headers, "X-ClientID: banana")
+
+                parts := strings.Split(msg.Data(), "\n")
+                Expect(parts).To(Equal([]string{
+                    "X-ClientID: banana",
+                    "From: me@example.com",
+                    "To: you@example.com",
+                    "Subject: Super Urgent! Read Now!",
+                    "MIME-Version: 1.0",
+                    "Content-Type: multipart/alternative; boundary=\"our-content-boundary\"",
+                    "",
+                    "Banana",
+                }))
+            })
         })
     })
 })

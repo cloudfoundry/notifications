@@ -27,7 +27,7 @@ The default templates are located in **./templates**. The templates directory sh
 
 When emailing a space, `space_body.html` and `space_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a single user, `user_body.html` and `user_body.text` are used as templates in the email body for the html and plaintext, respectively. When the subject is provided, the default subject template is found in `subject.provided`, while `subject.missing` is used when the email subject is not provided.
 
-The files located in the templates directory are defaults and will be used if there is no override of the same name.  
+The files located in the templates directory are defaults and will be used if there is no override of the same name.
 
 ### Overriding default templates
 
@@ -39,6 +39,7 @@ The templates are [go templates](http://golang.org/pkg/text/template/).  The tem
 | -------- | ----------- |
 | KindDescription | Pulled from json posted to endpoint under: kind_description, falls back to kind if not set |
 | From | what account is in the from field of the email |
+| ReplyTo | the address is in the reply to field of the email |
 | To | the address the email is going to |
 | Subject | Pulled from json posted to endpoint under: subject |
 | Text | Pulled from json posted to endpoint under: text |

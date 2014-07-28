@@ -16,6 +16,7 @@ var _ = Describe("NotifyParams", func() {
                 "kind": "test_email",
                 "kind_description": "Descriptive Email Name",
                 "source_description": "Descriptive Component Name",
+                "reply_to": "me@awesome.com",
                 "subject": "Summary of contents",
                 "text": "Contents of the email message"
             }`)
@@ -25,6 +26,7 @@ var _ = Describe("NotifyParams", func() {
             Expect(params.Kind).To(Equal("test_email"))
             Expect(params.KindDescription).To(Equal("Descriptive Email Name"))
             Expect(params.SourceDescription).To(Equal("Descriptive Component Name"))
+            Expect(params.ReplyTo).To(Equal("me@awesome.com"))
             Expect(params.Subject).To(Equal("Summary of contents"))
             Expect(params.Text).To(Equal("Contents of the email message"))
         })

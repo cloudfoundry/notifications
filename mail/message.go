@@ -6,7 +6,8 @@ import (
 )
 
 const emailTemplate = `{{range .Headers}}{{.}}
-{{end}}From: {{.From}}
+{{end}}From: {{.From}}{{if .ReplyTo}}
+Reply-To: {{.ReplyTo}}{{end}}
 To: {{.To}}
 Subject: {{.Subject}}
 MIME-Version: 1.0
@@ -16,6 +17,7 @@ Content-Type: multipart/alternative; boundary="our-content-boundary"
 
 type Message struct {
     From    string
+    ReplyTo string
     To      string
     Subject string
     Body    string

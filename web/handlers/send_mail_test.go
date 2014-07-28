@@ -22,6 +22,7 @@ var _ = Describe("MailSender", func() {
         client = mail.Client{}
         context = handlers.MessageContext{
             From:      "banana man",
+            ReplyTo:   "awesomeness",
             To:        "endless monkeys",
             Subject:   "we will be eaten",
             ClientID:  "3&3",
@@ -123,6 +124,7 @@ Content-Transfer-Encoding: quoted-printable
             }
 
             Expect(message.From).To(Equal("banana man"))
+            Expect(message.ReplyTo).To(Equal("awesomeness"))
             Expect(message.To).To(Equal("endless monkeys"))
             Expect(message.Subject).To(Equal("The Subject: we will be eaten"))
             Expect(message.Body).To(Equal("New Body"))
@@ -149,6 +151,7 @@ Content-Transfer-Encoding: quoted-printable
             subjectEmailTemplate = "the subject template"
 
             params = handlers.NotifyParams{
+                ReplyTo:           "awesomeness",
                 Subject:           "the subject",
                 KindDescription:   "the kind description",
                 SourceDescription: "the source description",
@@ -168,6 +171,7 @@ Content-Transfer-Encoding: quoted-printable
             }
 
             Expect(messageContext.From).To(Equal(os.Getenv("SENDER")))
+            Expect(messageContext.ReplyTo).To(Equal(params.ReplyTo))
             Expect(messageContext.To).To(Equal(user.Emails[0]))
             Expect(messageContext.Subject).To(Equal(params.Subject))
             Expect(messageContext.Text).To(Equal(params.Text))

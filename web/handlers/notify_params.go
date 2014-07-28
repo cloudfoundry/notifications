@@ -10,6 +10,7 @@ import (
 )
 
 type NotifyParams struct {
+    ReplyTo           string `json:"reply_to"`
     Subject           string `json:"subject"`
     KindDescription   string `json:"kind_description"`
     SourceDescription string `json:"source_description"`
