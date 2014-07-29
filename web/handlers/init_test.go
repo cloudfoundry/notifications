@@ -7,7 +7,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/dgrijalva/jwt-go"
     "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -160,7 +160,7 @@ func (fake *FakeCloudController) LoadOrganization(guid, token string) (cf.CloudC
     }
 }
 
-var FakeGuidGenerator = handlers.GUIDGenerationFunc(func() (*uuid.UUID, error) {
+var FakeGuidGenerator = postal.GUIDGenerationFunc(func() (*uuid.UUID, error) {
     guid := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55})
     return &guid, nil
 })

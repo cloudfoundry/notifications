@@ -3,13 +3,12 @@ package handlers_test
 import (
     "bytes"
     "encoding/json"
-    "log"
+    "errors"
     "net/http"
     "net/http/httptest"
 
-    "github.com/cloudfoundry-incubator/notifications/mail"
+    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
-    "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -17,13 +16,10 @@ import (
 
 var _ = Describe("NotifyUser", func() {
     var handler handlers.NotifyUser
-    var buffer *bytes.Buffer
-    var logger *log.Logger
     var writer *httptest.ResponseRecorder
     var request *http.Request
     var token string
-    var mailClient FakeMailClient
-    var uaaClient FakeUAAClient
+    var fakeCourier *FakeCourier
 
     BeforeEach(func() {
         tokenHeader := map[string]interface{}{
@@ -35,85 +31,158 @@ var _ = Describe("NotifyUser", func() {
             "scope":     []string{"notifications.write"},
         }
         token = BuildToken(tokenHeader, tokenClaims)
-
-        buffer = bytes.NewBuffer([]byte{})
-        logger = log.New(buffer, "", 0)
         writer = httptest.NewRecorder()
 
-        mailClient = FakeMailClient{}
-        uaaClient = FakeUAAClient{
-            UsersByID: map[string]uaa.User{
-                "user-123": uaa.User{
-                    ID:     "user-123",
-                    Emails: []string{"fake-user@example.com"},
-                },
-                "user-456": uaa.User{
-                    ID:     "user-456",
-                    Emails: []string{"bounce@example.com"},
-                },
-            },
+        fakeCourier = NewFakeCourier()
+        handler = handlers.NewNotifyUser(fakeCourier)
+
+        requestBody, err := json.Marshal(map[string]string{
+            "kind":               "forgot_password",
+            "kind_description":   "Password reminder",
+            "source_description": "Login system",
+            "text":               "Please reset your password by clicking on this link...",
+            "html":               "<p>Please reset your password by clicking on this link...</p>",
+        })
+        if err != nil {
+            panic(err)
         }
 
-        handler = handlers.NewNotifyUser(logger, &mailClient, &uaaClient, FakeGuidGenerator)
+        request, err = http.NewRequest("POST", "/users/user-123", bytes.NewReader(requestBody))
+        if err != nil {
+            panic(err)
+        }
+        request.Header.Set("Authorization", "Bearer "+token)
     })
 
-    Context("when the request is valid", func() {
-        BeforeEach(func() {
-            requestBody, err := json.Marshal(map[string]string{
-                "kind":               "forgot_password",
-                "kind_description":   "Password reminder",
-                "source_description": "Login system",
-                "text":               "Please reset your password by clicking on this link...",
-                "html":               "<p>Please reset your password by clicking on this link...</p>",
+    Context("when the courier returns a successful response", func() {
+        It("returns the JSON representation of the response", func() {
+            fakeCourier.Responses = []postal.Response{
+                {
+                    Status:         "delivered",
+                    Recipient:      "user-123",
+                    NotificationID: "abc-123",
+                },
+            }
+
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(http.StatusOK))
+
+            parsed := []map[string]string{}
+            err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(len(parsed)).To(Equal(1))
+            Expect(parsed).To(ContainElement(map[string]string{
+                "status":          "delivered",
+                "recipient":       "user-123",
+                "notification_id": "abc-123",
+            }))
+        })
+    })
+
+    Context("when validating params", func() {
+        It("returns a error response when params are missing", func() {
+            body, err := json.Marshal(map[string]string{
+                "subject":            "Your instance is down",
+                "source_description": "MySQL Service",
+                "kind_description":   "Instance Alert",
             })
             if err != nil {
                 panic(err)
             }
-
-            request, err = http.NewRequest("POST", "/users/user-123", bytes.NewReader(requestBody))
+            request, err = http.NewRequest("POST", "/spaces/space-001", bytes.NewBuffer(body))
             if err != nil {
                 panic(err)
             }
             request.Header.Set("Authorization", "Bearer "+token)
-        })
 
-        It("talks to the SMTP server, sending the email", func() {
             handler.ServeHTTP(writer, request)
 
-            Expect(len(mailClient.messages)).To(Equal(1))
+            parsed := map[string][]string{}
+            err = json.Unmarshal(writer.Body.Bytes(), &parsed)
+            if err != nil {
+                panic(err)
+            }
 
-            msg := mailClient.messages[0]
-            Expect(msg).To(Equal(mail.Message{
-                From:    "no-reply@notifications.example.com",
-                To:      "fake-user@example.com",
-                Subject: "CF Notification: Password reminder",
-                Body: `
-This is a multi-part message in MIME format...
+            Expect(parsed["errors"]).To(ContainElement(`"kind" is a required field`))
+            Expect(parsed["errors"]).To(ContainElement(`"text" or "html" fields must be supplied`))
+        })
+    })
 
---our-content-boundary
-Content-type: text/plain
+    Context("when the courier returns errors", func() {
+        It("returns a 502 when CloudController fails to respond", func() {
+            fakeCourier.Error = postal.CCDownError("BOOM!")
 
-The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:
+            handler.ServeHTTP(writer, request)
 
-Please reset your password by clicking on this link...
---our-content-boundary
-Content-Type: text/html
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+            Expect(writer.Code).To(Equal(http.StatusBadGateway))
 
-<html>
-    <body>
-        <p>The following "Password reminder" notification was sent to you directly by the "Login system" component of Cloud Foundry:</p>
+            body := make(map[string]interface{})
+            err := json.Unmarshal(writer.Body.Bytes(), &body)
+            if err != nil {
+                panic(err)
+            }
 
-<p>Please reset your password by clicking on this link...</p>
-    </body>
-</html>
---our-content-boundary--`,
-                Headers: []string{
-                    "X-CF-Client-ID: mister-client",
-                    "X-CF-Notification-ID: deadbeef-aabb-ccdd-eeff-001122334455",
-                },
-            }))
+            Expect(body["errors"]).To(ContainElement("Cloud Controller is unavailable"))
+        })
+
+        It("returns a 502 when UAA fails to respond", func() {
+            fakeCourier.Error = postal.UAADownError("BOOM!")
+
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(http.StatusBadGateway))
+
+            body := make(map[string]interface{})
+            err := json.Unmarshal(writer.Body.Bytes(), &body)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(body["errors"]).To(ContainElement("UAA is unavailable"))
+        })
+
+        It("returns a 502 when UAA fails for unknown reasons", func() {
+            fakeCourier.Error = postal.UAAGenericError("UAA Unknown Error: BOOM!")
+
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(http.StatusBadGateway))
+
+            body := make(map[string]interface{})
+            err := json.Unmarshal(writer.Body.Bytes(), &body)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(body["errors"]).To(ContainElement("UAA Unknown Error: BOOM!"))
+        })
+
+        It("returns a 500 when the is a template loading error", func() {
+            fakeCourier.Error = postal.TemplateLoadError("BOOM!")
+
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(http.StatusInternalServerError))
+
+            body := make(map[string]interface{})
+            err := json.Unmarshal(writer.Body.Bytes(), &body)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(body["errors"]).To(ContainElement("An email template could not be loaded"))
+        })
+
+        It("panics for unknown errors", func() {
+            fakeCourier.Error = errors.New("BOOM!")
+
+            Expect(func() {
+                handler.ServeHTTP(writer, request)
+            }).To(Panic())
         })
     })
 })

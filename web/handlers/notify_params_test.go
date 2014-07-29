@@ -3,6 +3,7 @@ package handlers_test
 import (
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
 
     . "github.com/onsi/ginkgo"
@@ -195,6 +196,33 @@ var _ = Describe("NotifyParams", func() {
             params, _ = handlers.NewNotifyParams(body)
             Expect(params.Validate()).To(BeTrue())
             Expect(len(params.Errors)).To(Equal(0))
+        })
+    })
+
+    Describe("ToOptions", func() {
+        It("converts itself to a postal.Options object", func() {
+            body := strings.NewReader(`{
+                "kind": "test_email",
+                "kind_description": "Descriptive Email Name",
+                "source_description": "Descriptive Component Name",
+                "reply_to": "me@awesome.com",
+                "subject": "Summary of contents",
+                "text": "Contents of the email message",
+                "html": "<div>Some HTML</div>"
+            }`)
+
+            params, _ := handlers.NewNotifyParams(body)
+
+            options := params.ToOptions()
+            Expect(options).To(Equal(postal.Options{
+                Kind:              "test_email",
+                KindDescription:   "Descriptive Email Name",
+                SourceDescription: "Descriptive Component Name",
+                ReplyTo:           "me@awesome.com",
+                Subject:           "Summary of contents",
+                Text:              "Contents of the email message",
+                HTML:              "<div>Some HTML</div>",
+            }))
         })
     })
 })
