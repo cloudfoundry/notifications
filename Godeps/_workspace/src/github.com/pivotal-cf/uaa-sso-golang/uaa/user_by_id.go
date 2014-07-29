@@ -6,6 +6,10 @@ import (
     "net/url"
 )
 
+type UserByIDInterface interface {
+    UserByID(string) (User, error)
+}
+
 type User struct {
     Username string
     ID       string
@@ -50,35 +54,39 @@ func UserByID(u UAA, id string) (User, error) {
 }
 
 func UserFromJSON(jsonBytes []byte) (User, error) {
-    user := User{}
-
     var parsed map[string]interface{}
     err := json.Unmarshal(jsonBytes, &parsed)
     if err != nil {
-        return user, err
+        return User{}, err
     }
 
-    userName, ok := parsed["userName"].(string)
+    return UserFromResource(parsed)
+}
+
+func UserFromResource(resource map[string]interface{}) (User, error) {
+    user := User{}
+
+    userName, ok := resource["userName"].(string)
     if ok {
         user.Username = userName
     }
 
-    id, ok := parsed["id"].(string)
+    id, ok := resource["id"].(string)
     if ok {
         user.ID = id
     }
 
-    active, ok := parsed["active"].(bool)
+    active, ok := resource["active"].(bool)
     if ok {
         user.Active = active
     }
 
-    verified, ok := parsed["verified"].(bool)
+    verified, ok := resource["verified"].(bool)
     if ok {
         user.Verified = verified
     }
 
-    name, ok := parsed["name"].(map[string]interface{})
+    name, ok := resource["name"].(map[string]interface{})
     if ok {
         givenName, ok := name["givenName"].(string)
         if ok {
@@ -91,7 +99,7 @@ func UserFromJSON(jsonBytes []byte) (User, error) {
         }
     }
 
-    emailInterfaces, ok := parsed["emails"].([]interface{})
+    emailInterfaces, ok := resource["emails"].([]interface{})
     if ok {
         for _, emailInterface := range emailInterfaces {
             emailMap, ok := emailInterface.(map[string]interface{})

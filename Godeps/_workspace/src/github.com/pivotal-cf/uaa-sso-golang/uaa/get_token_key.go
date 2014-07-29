@@ -5,6 +5,10 @@ import (
     "net/url"
 )
 
+type GetTokenKeyInterface interface {
+    GetTokenKey() (string, error)
+}
+
 func GetTokenKey(u UAA) (string, error) {
     tokenURL := u.uaaURL + "/token_key"
     uri, err := url.Parse(tokenURL)

@@ -20,8 +20,6 @@ function run() {
   set -e
 }
 
-godep restore
-
 if [[ -z "$1" ]]; then
     run ./...
 else

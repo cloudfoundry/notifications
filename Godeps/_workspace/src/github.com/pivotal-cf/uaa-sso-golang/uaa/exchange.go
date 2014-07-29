@@ -6,6 +6,10 @@ import (
     "strings"
 )
 
+type ExchangeInterface interface {
+    Exchange(string) (Token, error)
+}
+
 func Exchange(u UAA, authCode string) (Token, error) {
     token := NewToken()
 

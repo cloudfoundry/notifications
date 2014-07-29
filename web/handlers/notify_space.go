@@ -7,20 +7,19 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/mail"
-    "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
 type NotifySpace struct {
     logger          *log.Logger
     cloudController cf.CloudControllerInterface
-    uaaClient       uaa.UAAInterface
+    uaaClient       UAAInterface
     mailClient      mail.ClientInterface
     guidGenerator   GUIDGenerationFunc
     helper          NotifyHelper
 }
 
 func NewNotifySpace(logger *log.Logger, cloudController cf.CloudControllerInterface,
-    uaaClient uaa.UAAInterface, mailClient mail.ClientInterface, guidGenerator GUIDGenerationFunc) NotifySpace {
+    uaaClient UAAInterface, mailClient mail.ClientInterface, guidGenerator GUIDGenerationFunc) NotifySpace {
     return NotifySpace{
         logger:          logger,
         cloudController: cloudController,
@@ -35,8 +34,7 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     spaceGUID := strings.TrimPrefix(req.URL.Path, "/spaces/")
 
     loadUsers := func(spaceGuid, accessToken string) ([]cf.CloudControllerUser, error) {
-        ccUsers, err := handler.cloudController.GetUsersBySpaceGuid(spaceGuid, accessToken)
-        return ccUsers, err
+        return handler.cloudController.GetUsersBySpaceGuid(spaceGuid, accessToken)
     }
 
     isSpace := true

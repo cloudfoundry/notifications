@@ -7,6 +7,10 @@ import (
     "strings"
 )
 
+type RefreshInterface interface {
+    Refresh(string) (Token, error)
+}
+
 func Refresh(u UAA, refreshToken string) (Token, error) {
     token := NewToken()
     params := url.Values{

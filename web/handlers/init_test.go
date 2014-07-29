@@ -103,34 +103,21 @@ type FakeUAAClient struct {
     ErrorForUserByID error
 }
 
-func (fake FakeUAAClient) AuthorizeURL() string {
-    return ""
-}
-
-func (fake FakeUAAClient) LoginURL() string {
-    return ""
-}
-
 func (fake FakeUAAClient) SetToken(token string) {}
-
-func (fake FakeUAAClient) Exchange(code string) (uaa.Token, error) {
-    return uaa.Token{}, nil
-}
-
-func (fake FakeUAAClient) Refresh(token string) (uaa.Token, error) {
-    return uaa.Token{}, nil
-}
 
 func (fake FakeUAAClient) GetClientToken() (uaa.Token, error) {
     return fake.ClientToken, nil
 }
 
-func (fake FakeUAAClient) GetTokenKey() (string, error) {
-    return "", nil
-}
+func (fake FakeUAAClient) UsersByIDs(ids ...string) ([]uaa.User, error) {
+    users := []uaa.User{}
+    for _, id := range ids {
+        if user, ok := fake.UsersByID[id]; ok {
+            users = append(users, user)
+        }
+    }
 
-func (fake FakeUAAClient) UserByID(id string) (uaa.User, error) {
-    return fake.UsersByID[id], fake.ErrorForUserByID
+    return users, fake.ErrorForUserByID
 }
 
 type FakeCloudController struct {

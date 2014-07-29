@@ -43,14 +43,27 @@ func (failure Failure) Error() string {
 
 // Defines methods needed for clients to use UAA
 type UAAInterface interface {
+    AuthorizeURLInterface
+    LoginURLInterface
+    SetTokenInterface
+    ExchangeInterface
+    GetClientTokenInterface
+    GetTokenKeyInterface
+    RefreshInterface
+    UserByIDInterface
+    UsersByIDsInterface
+}
+
+type AuthorizeURLInterface interface {
     AuthorizeURL() string
+}
+
+type LoginURLInterface interface {
     LoginURL() string
+}
+
+type SetTokenInterface interface {
     SetToken(string)
-    Exchange(string) (Token, error)
-    Refresh(string) (Token, error)
-    GetClientToken() (Token, error)
-    UserByID(string) (User, error)
-    GetTokenKey() (string, error)
 }
 
 // Contains necessary info to communicate with Cloudfoundry UAA server, use
@@ -73,6 +86,7 @@ type UAA struct {
     GetClientTokenCommand func(UAA) (Token, error)
     UserByIDCommand       func(UAA, string) (User, error)
     GetTokenKeyCommand    func(UAA) (string, error)
+    UsersByIDsCommand     func(UAA, ...string) ([]User, error)
 }
 
 func NewUAA(loginURL, uaaURL, clientID, clientSecret, token string) UAA {
@@ -84,10 +98,11 @@ func NewUAA(loginURL, uaaURL, clientID, clientSecret, token string) UAA {
         AccessToken:           token,
         VerifySSL:             true,
         ExchangeCommand:       Exchange,
-        RefreshCommand:        Refresh,
         GetClientTokenCommand: GetClientToken,
-        UserByIDCommand:       UserByID,
         GetTokenKeyCommand:    GetTokenKey,
+        RefreshCommand:        Refresh,
+        UserByIDCommand:       UserByID,
+        UsersByIDsCommand:     UsersByIDs,
     }
 }
 
@@ -139,4 +154,8 @@ func (u UAA) UserByID(id string) (User, error) {
 
 func (u UAA) GetTokenKey() (string, error) {
     return u.GetTokenKeyCommand(u)
+}
+
+func (u UAA) UsersByIDs(ids ...string) ([]User, error) {
+    return u.UsersByIDsCommand(u, ids...)
 }

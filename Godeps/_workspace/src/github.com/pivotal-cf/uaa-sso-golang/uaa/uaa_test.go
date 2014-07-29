@@ -135,4 +135,21 @@ var _ = Describe("UAA", func() {
             Expect(getTokenKeyWasCalled).To(BeTrue())
         })
     })
+
+    Describe("UsersByIDs", func() {
+        var usersByIDsWasCalledWith []string
+
+        It("delegates to the UsersByIDs command", func() {
+            Expect(reflect.ValueOf(auth.UsersByIDsCommand).Pointer()).To(Equal(reflect.ValueOf(uaa.UsersByIDs).Pointer()))
+
+            auth.UsersByIDsCommand = func(u uaa.UAA, ids ...string) ([]uaa.User, error) {
+                usersByIDsWasCalledWith = ids
+                return []uaa.User{}, nil
+            }
+
+            auth.UsersByIDs([]string{"something", "another-thing"}...)
+
+            Expect(usersByIDsWasCalledWith).To(Equal([]string{"something", "another-thing"}))
+        })
+    })
 })

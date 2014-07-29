@@ -6,6 +6,10 @@ import (
     "strings"
 )
 
+type GetClientTokenInterface interface {
+    GetClientToken() (Token, error)
+}
+
 // Retrieves ClientToken from UAA server
 func GetClientToken(u UAA) (Token, error) {
     token := NewToken()

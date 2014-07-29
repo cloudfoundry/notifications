@@ -31,7 +31,6 @@ var _ = Describe("NotifyHelper", func() {
     var buffer *bytes.Buffer
 
     BeforeEach(func() {
-
         tokenHeader := map[string]interface{}{
             "alg": "FAST",
         }
@@ -217,8 +216,7 @@ var _ = Describe("NotifyHelper", func() {
 
             Context("when UAA cannot find the user", func() {
                 It("returns that the user in the response with status notfound", func() {
-                    fakeUAA.ErrorForUserByID = uaa.NewFailure(404, []byte("User f3b51aac-866e-4b7a-948c-de31beefc475d does not exist"))
-                    helper.NotifyServeHTTP(writer, request, "user-123", loadCCUsers, false)
+                    helper.NotifyServeHTTP(writer, request, "user-789", loadCCUsers, false)
 
                     Expect(writer.Code).To(Equal(http.StatusOK))
 
@@ -228,7 +226,7 @@ var _ = Describe("NotifyHelper", func() {
                         panic(err)
                     }
                     Expect(response[0]["status"]).To(Equal("notfound"))
-                    Expect(response[0]["recipient"]).To(Equal("user-123"))
+                    Expect(response[0]["recipient"]).To(Equal("user-789"))
                 })
             })
 
@@ -342,11 +340,14 @@ var _ = Describe("NotifyHelper", func() {
     Describe("LoadUaaUser", func() {
         Context("UAA returns a user", func() {
             It("returns the uaa.User", func() {
-                user, err := helper.LoadUaaUser("user-123", fakeUAA)
+                users, err := helper.LoadUaaUsers([]string{"user-123"}, fakeUAA)
                 if err != nil {
                     panic(err)
                 }
 
+                Expect(len(users)).To(Equal(1))
+
+                user := users[0]
                 Expect(user.ID).To(Equal("user-123"))
                 Expect(user.Emails[0]).To(Equal("user-123@example.com"))
             })
@@ -357,19 +358,9 @@ var _ = Describe("NotifyHelper", func() {
                 It("returns a UAADownError", func() {
                     fakeUAA.ErrorForUserByID = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
 
-                    _, err := helper.LoadUaaUser("user-123", fakeUAA)
+                    _, err := helper.LoadUaaUsers([]string{"user-123"}, fakeUAA)
 
                     Expect(err).To(BeAssignableToTypeOf(handlers.UAADownError{}))
-                })
-            })
-
-            Context("when UAA cannot find the user", func() {
-                It("returns a UAAUserNotFoundError", func() {
-                    fakeUAA.ErrorForUserByID = uaa.NewFailure(404, []byte("User f3b51aac-866e-4b7a-948c-de31beefc475d does not exist"))
-
-                    _, err := helper.LoadUaaUser("user-123", fakeUAA)
-
-                    Expect(err).To(BeAssignableToTypeOf(handlers.UAAUserNotFoundError{}))
                 })
             })
 
@@ -377,7 +368,7 @@ var _ = Describe("NotifyHelper", func() {
                 It("returns a UAAGenericError", func() {
                     fakeUAA.ErrorForUserByID = uaa.NewFailure(404, []byte("Weird message we haven't seen"))
 
-                    _, err := helper.LoadUaaUser("user-123", fakeUAA)
+                    _, err := helper.LoadUaaUsers([]string{"user-123"}, fakeUAA)
 
                     Expect(err).To(BeAssignableToTypeOf(handlers.UAAGenericError{}))
                 })
@@ -387,7 +378,7 @@ var _ = Describe("NotifyHelper", func() {
                 It("returns a UAADownError", func() {
                     fakeUAA.ErrorForUserByID = uaa.NewFailure(500, []byte("Doesn't matter"))
 
-                    _, err := helper.LoadUaaUser("user-123", fakeUAA)
+                    _, err := helper.LoadUaaUsers([]string{"user-123"}, fakeUAA)
 
                     Expect(err).To(BeAssignableToTypeOf(handlers.UAADownError{}))
                 })
