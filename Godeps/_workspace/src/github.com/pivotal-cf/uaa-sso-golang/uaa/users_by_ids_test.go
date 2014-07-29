@@ -122,7 +122,7 @@ var _ = Describe("UsersByIds", func() {
                     }
 
                     filter := req.FormValue("filter")
-                    matcher := regexp.MustCompile(`Ids eq "([a-zA-Z0-9\-]*)"`)
+                    matcher := regexp.MustCompile(`Id eq "([a-zA-Z0-9\-]*)"`)
                     matches := matcher.FindAllStringSubmatch(filter, -1)
 
                     usersList := []interface{}{}

@@ -23,7 +23,7 @@ func UsersByIDsWithMaxLength(u UAA, length int, ids ...string) ([]User, error) {
     users := []User{}
 
     for _, id := range ids {
-        filters = append(filters, fmt.Sprintf(`Ids eq "%s"`, id))
+        filters = append(filters, fmt.Sprintf(`Id eq "%s"`, id))
     }
 
     var start = 0
