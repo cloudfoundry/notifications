@@ -5,6 +5,7 @@ import (
     "net/url"
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
@@ -38,6 +39,12 @@ func (err TemplateLoadError) Error() string {
     return string(err)
 }
 
+type CCNotFoundError string
+
+func (err CCNotFoundError) Error() string {
+    return "CloudController Error: " + string(err)
+}
+
 func UAAErrorFor(err error) error {
     switch err.(type) {
     case *url.Error:
@@ -57,4 +64,14 @@ func UAAErrorFor(err error) error {
     default:
         return UAAGenericError("UAA Unknown Error: " + err.Error())
     }
+}
+
+func CCErrorFor(err error) error {
+    if failure, ok := err.(cf.Failure); ok {
+        if failure.Code == http.StatusNotFound {
+            return CCNotFoundError(err.Error())
+        }
+        return CCDownError("CloudController is unavailable")
+    }
+    return err
 }

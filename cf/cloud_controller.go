@@ -3,6 +3,7 @@ package cf
 import (
     "bytes"
     "crypto/tls"
+    "fmt"
     "io"
     "net/http"
 
@@ -61,4 +62,20 @@ func (client CloudControllerClient) MakeRequest(method, path, token string, body
     }
 
     return code, buffer.Bytes(), nil
+}
+
+type Failure struct {
+    Code    int
+    Message string
+}
+
+func NewFailure(code int, message string) Failure {
+    return Failure{
+        Code:    code,
+        Message: message,
+    }
+}
+
+func (failure Failure) Error() string {
+    return fmt.Sprintf("CloudController Failure (%d): %s", failure.Code, failure.Message)
 }

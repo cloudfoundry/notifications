@@ -1,10 +1,6 @@
 package cf
 
-import (
-    "encoding/json"
-    "errors"
-    "fmt"
-)
+import "encoding/json"
 
 type CloudControllerSpace struct {
     Guid             string
@@ -32,7 +28,7 @@ func (cc CloudController) LoadSpace(spaceGuid, token string) (CloudControllerSpa
     }
 
     if code > 399 {
-        return space, errors.New(fmt.Sprintf("CloudController Failure (%d): %s", code, body))
+        return space, NewFailure(code, string(body))
     }
 
     spaceResponse := CloudControllerSpaceResponse{}

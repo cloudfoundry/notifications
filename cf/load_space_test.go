@@ -3,6 +3,7 @@ package cf_test
 import (
     "net/http"
     "net/http/httptest"
+    "strings"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
 
@@ -13,6 +14,7 @@ import (
 var SpacesEndpoint = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
     if req.URL.Path != "/v2/spaces/space-guid" {
         w.WriteHeader(http.StatusNotFound)
+        w.Write([]byte(`{"code":40004,"description":"The app space could not be found: ` + strings.TrimPrefix(req.URL.Path, "/v2/spaces/") + `","error_code":"CF-SpaceNotFound"}`))
         return
     }
 
@@ -44,9 +46,11 @@ var SpacesEndpoint = http.HandlerFunc(func(w http.ResponseWriter, req *http.Requ
 
 var _ = Describe("LoadSpace", func() {
     var CCServer *httptest.Server
+    var cc cf.CloudController
 
     BeforeEach(func() {
         CCServer = httptest.NewServer(SpacesEndpoint)
+        cc = cf.NewCloudController(CCServer.URL)
     })
 
     AfterEach(func() {
@@ -54,8 +58,6 @@ var _ = Describe("LoadSpace", func() {
     })
 
     It("loads the space from cloud controller", func() {
-        cc := cf.NewCloudController(CCServer.URL)
-
         space, err := cc.LoadSpace("space-guid", "notification-token")
         if err != nil {
             panic(err)
@@ -64,5 +66,16 @@ var _ = Describe("LoadSpace", func() {
         Expect(space.Guid).To(Equal("space-guid"))
         Expect(space.Name).To(Equal("duh space"))
         Expect(space.OrganizationGuid).To(Equal("first-rate"))
+    })
+
+    It("returns a Failure instance when the space cannot be found", func() {
+        _, err := cc.LoadSpace("banana", "notification-token")
+
+        Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
+
+        failure := err.(cf.Failure)
+        Expect(failure.Code).To(Equal(http.StatusNotFound))
+        Expect(failure.Message).To(Equal(`{"code":40004,"description":"The app space could not be found: banana","error_code":"CF-SpaceNotFound"}`))
+        Expect(failure.Error()).To(Equal(`CloudController Failure (404): {"code":40004,"description":"The app space could not be found: banana","error_code":"CF-SpaceNotFound"}`))
     })
 })

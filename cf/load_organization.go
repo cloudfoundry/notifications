@@ -2,7 +2,6 @@ package cf
 
 import (
     "encoding/json"
-    "errors"
     "fmt"
 )
 
@@ -30,7 +29,7 @@ func (cc CloudController) LoadOrganization(guid, token string) (CloudControllerO
     }
 
     if code > 399 {
-        return org, errors.New(fmt.Sprintf("CloudController Failure (%d): %s", code, body))
+        return org, NewFailure(code, string(body))
     }
 
     response := CloudControllerOrganizationResponse{}

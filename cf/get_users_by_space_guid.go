@@ -2,7 +2,6 @@ package cf
 
 import (
     "encoding/json"
-    "errors"
     "fmt"
 )
 
@@ -28,7 +27,7 @@ func (cc CloudController) GetUsersBySpaceGuid(guid, token string) ([]CloudContro
     }
 
     if code > 399 {
-        return users, errors.New(fmt.Sprintf("CloudController Failure (%d): %s", code, body))
+        return users, NewFailure(code, string(body))
     }
 
     usersResponse := CloudControllerUsersResponse{}

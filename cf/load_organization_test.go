@@ -3,6 +3,7 @@ package cf_test
 import (
     "net/http"
     "net/http/httptest"
+    "strings"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
 
@@ -13,6 +14,7 @@ import (
 var OrganizationsEndpoint = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
     if req.URL.Path != "/v2/organizations/org-guid" {
         w.WriteHeader(http.StatusNotFound)
+        w.Write([]byte(`{"code": 30003, "description": "The organization could not be found: ` + strings.TrimPrefix(req.URL.Path, "/v2/organizations/") + `", "error_code": "CF-OrganizationNotFound"}`))
         return
     }
 
@@ -44,9 +46,11 @@ var OrganizationsEndpoint = http.HandlerFunc(func(w http.ResponseWriter, req *ht
 
 var _ = Describe("LoadOrganization", func() {
     var CCServer *httptest.Server
+    var cc cf.CloudController
 
     BeforeEach(func() {
         CCServer = httptest.NewServer(OrganizationsEndpoint)
+        cc = cf.NewCloudController(CCServer.URL)
     })
 
     AfterEach(func() {
@@ -54,7 +58,6 @@ var _ = Describe("LoadOrganization", func() {
     })
 
     It("loads the organization from cloud controller", func() {
-        cc := cf.NewCloudController(CCServer.URL)
 
         org, err := cc.LoadOrganization("org-guid", "notification-token")
         if err != nil {
@@ -63,5 +66,16 @@ var _ = Describe("LoadOrganization", func() {
 
         Expect(org.Guid).To(Equal("org-guid"))
         Expect(org.Name).To(Equal("Initech"))
+    })
+
+    It("returns a Failure instance when the org cannot be found", func() {
+        _, err := cc.LoadOrganization("banana", "notification-token")
+
+        Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
+
+        failure := err.(cf.Failure)
+        Expect(failure.Code).To(Equal(http.StatusNotFound))
+        Expect(failure.Message).To(Equal(`{"code": 30003, "description": "The organization could not be found: banana", "error_code": "CF-OrganizationNotFound"}`))
+        Expect(failure.Error()).To(Equal(`CloudController Failure (404): {"code": 30003, "description": "The organization could not be found: banana", "error_code": "CF-OrganizationNotFound"}`))
     })
 })

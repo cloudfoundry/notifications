@@ -226,6 +226,22 @@ var _ = Describe("NotifySpace", func() {
                 Expect(body["errors"]).To(ContainElement("An email template could not be loaded"))
             })
 
+            It("returns a 404 when the space cannot be found", func() {
+                fakeCourier.Error = postal.CCNotFoundError("Organization could not be found")
+
+                handler.ServeHTTP(writer, request)
+
+                Expect(writer.Code).To(Equal(http.StatusNotFound))
+
+                body := make(map[string]interface{})
+                err := json.Unmarshal(writer.Body.Bytes(), &body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(body["errors"]).To(ContainElement("CloudController Error: Organization could not be found"))
+            })
+
             It("panics for unknown errors", func() {
                 fakeCourier.Error = errors.New("BOOM!")
 

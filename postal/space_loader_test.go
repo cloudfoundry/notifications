@@ -1,6 +1,8 @@
 package postal_test
 
 import (
+    "errors"
+
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/postal"
 
@@ -47,7 +49,50 @@ var _ = Describe("SpaceLoader", func() {
                 It("returns an error object", func() {
                     _, _, err := loader.Load("space-doesnotexist", token, postal.IsSpace)
 
-                    Expect(err.Error()).To(Equal("CloudController Failure (404): NOT FOUND"))
+                    Expect(err).To(BeAssignableToTypeOf(postal.CCNotFoundError("")))
+                    Expect(err.Error()).To(Equal(`CloudController Error: CloudController Failure (404): {"code":40004,"description":"The app space could not be found: space-doesnotexist","error_code":"CF-SpaceNotFound"}`))
+                })
+            })
+
+            Context("when the org cannot be found", func() {
+                It("returns an error object", func() {
+                    delete(fakeCC.Orgs, "org-001")
+                    _, _, err := loader.Load("space-001", token, postal.IsSpace)
+
+                    Expect(err).To(BeAssignableToTypeOf(postal.CCNotFoundError("")))
+                    Expect(err.Error()).To(Equal(`CloudController Error: CloudController Failure (404): {"code":30003,"description":"The organization could not be found: org-001","error_code":"CF-OrganizationNotFound"}`))
+                })
+            })
+
+            Context("when LoadSpace returns any other type of error", func() {
+                It("returns a CCDownError when the error is cf.Failure", func() {
+                    fakeCC.LoadSpaceError = cf.NewFailure(401, "BOOM!")
+                    _, _, err := loader.Load("space-001", token, postal.IsSpace)
+
+                    Expect(err).To(Equal(postal.CCDownError("CloudController is unavailable")))
+                })
+
+                It("returns the same error for all other cases", func() {
+                    fakeCC.LoadSpaceError = errors.New("BOOM!")
+                    _, _, err := loader.Load("space-001", token, postal.IsSpace)
+
+                    Expect(err).To(Equal(errors.New("BOOM!")))
+                })
+            })
+
+            Context("when LoadOrganization returns any other type of error", func() {
+                It("returns a CCDownError", func() {
+                    fakeCC.LoadOrganizationError = cf.NewFailure(401, "BOOM!")
+                    _, _, err := loader.Load("space-001", token, postal.IsSpace)
+
+                    Expect(err).To(Equal(postal.CCDownError("CloudController is unavailable")))
+                })
+
+                It("returns the same error for all other cases", func() {
+                    fakeCC.LoadOrganizationError = errors.New("BOOM!")
+                    _, _, err := loader.Load("space-001", token, postal.IsSpace)
+
+                    Expect(err).To(Equal(errors.New("BOOM!")))
                 })
             })
         })

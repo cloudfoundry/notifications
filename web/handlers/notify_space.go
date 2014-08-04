@@ -50,6 +50,8 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
         switch err.(type) {
         case postal.CCDownError:
             Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+        case postal.CCNotFoundError:
+            Error(w, http.StatusNotFound, []string{err.Error()})
         case postal.UAADownError:
             Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
         case postal.UAAGenericError:

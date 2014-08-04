@@ -112,7 +112,7 @@ var _ = Describe("Courier", func() {
                 Context("when Cloud Controller is unavailable to load space users", func() {
                     It("returns a CCDownError error", func() {
                         fakeCC.GetUsersBySpaceGuidError = errors.New("BOOM!")
-                        _, err := courier.Dispatch(token, "user-123", postal.IsSpace, options)
+                        _, err := courier.Dispatch(token, "space-001", postal.IsSpace, options)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.CCDownError("")))
                     })
@@ -123,7 +123,7 @@ var _ = Describe("Courier", func() {
                         fakeCC.LoadSpaceError = errors.New("BOOM!")
                         _, err := courier.Dispatch(token, "user-123", postal.IsSpace, options)
 
-                        Expect(err).To(BeAssignableToTypeOf(postal.CCDownError("")))
+                        Expect(err).To(Equal(errors.New("BOOM!")))
                     })
                 })
 

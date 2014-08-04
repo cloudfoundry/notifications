@@ -68,14 +68,14 @@ func (courier Courier) Dispatch(rawToken, guid string, notificationType Notifica
         return responses, err
     }
 
-    users, err := courier.userLoader.Load(notificationType, guid, token)
+    space, organization, err := courier.spaceLoader.Load(guid, token, notificationType)
     if err != nil {
         return responses, err
     }
 
-    space, organization, err := courier.spaceLoader.Load(guid, token, notificationType)
+    users, err := courier.userLoader.Load(notificationType, guid, token)
     if err != nil {
-        return responses, CCDownError("Cloud Controller is unavailable")
+        return responses, err
     }
 
     clientToken, _ := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {

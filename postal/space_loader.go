@@ -19,12 +19,12 @@ func (loader SpaceLoader) Load(guid, token string, notificationType Notification
 
     space, err := loader.cloudController.LoadSpace(guid, token)
     if err != nil {
-        return "", "", err
+        return "", "", CCErrorFor(err)
     }
 
     org, err := loader.cloudController.LoadOrganization(space.OrganizationGuid, token)
     if err != nil {
-        return "", "", err
+        return "", "", CCErrorFor(err)
     }
 
     return space.Name, org.Name, nil
