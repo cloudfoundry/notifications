@@ -9,12 +9,14 @@ import (
 )
 
 type NotifyUser struct {
-    courier postal.CourierInterface
+    courier     postal.CourierInterface
+    errorWriter ErrorWriterInterface
 }
 
-func NewNotifyUser(courier postal.CourierInterface) NotifyUser {
+func NewNotifyUser(courier postal.CourierInterface, errorWriter ErrorWriterInterface) NotifyUser {
     return NotifyUser{
-        courier: courier,
+        courier:     courier,
+        errorWriter: errorWriter,
     }
 }
 
@@ -36,18 +38,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     responses, err := handler.courier.Dispatch(rawToken, userGUID, postal.IsUser, params.ToOptions())
     if err != nil {
-        switch err.(type) {
-        case postal.CCDownError:
-            Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
-        case postal.UAADownError:
-            Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
-        case postal.UAAGenericError:
-            Error(w, http.StatusBadGateway, []string{err.Error()})
-        case postal.TemplateLoadError:
-            Error(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
-        default:
-            panic(err)
-        }
+        handler.errorWriter.Write(w, err)
         return
     }
 

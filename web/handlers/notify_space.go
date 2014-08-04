@@ -9,25 +9,15 @@ import (
 )
 
 type NotifySpace struct {
-    courier postal.CourierInterface
+    courier     postal.CourierInterface
+    errorWriter ErrorWriterInterface
 }
 
-func NewNotifySpace(courier postal.CourierInterface) NotifySpace {
+func NewNotifySpace(courier postal.CourierInterface, errorWriter ErrorWriterInterface) NotifySpace {
     return NotifySpace{
-        courier: courier,
+        courier:     courier,
+        errorWriter: errorWriter,
     }
-}
-
-func Error(w http.ResponseWriter, code int, errors []string) {
-    response, err := json.Marshal(map[string][]string{
-        "errors": errors,
-    })
-    if err != nil {
-        panic(err)
-    }
-
-    w.WriteHeader(code)
-    w.Write(response)
 }
 
 func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -47,20 +37,7 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     responses, err := handler.courier.Dispatch(rawToken, spaceGUID, postal.IsSpace, params.ToOptions())
     if err != nil {
-        switch err.(type) {
-        case postal.CCDownError:
-            Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
-        case postal.CCNotFoundError:
-            Error(w, http.StatusNotFound, []string{err.Error()})
-        case postal.UAADownError:
-            Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
-        case postal.UAAGenericError:
-            Error(w, http.StatusBadGateway, []string{err.Error()})
-        case postal.TemplateLoadError:
-            Error(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
-        default:
-            panic(err)
-        }
+        handler.errorWriter.Write(w, err)
         return
     }
 

@@ -14,21 +14,6 @@ import (
     . "github.com/onsi/gomega"
 )
 
-type FakeCourier struct {
-    Error     error
-    Responses []postal.Response
-}
-
-func NewFakeCourier() *FakeCourier {
-    return &FakeCourier{
-        Responses: make([]postal.Response, 0),
-    }
-}
-
-func (fake FakeCourier) Dispatch(token, guid string, notificationType postal.NotificationType, options postal.Options) ([]postal.Response, error) {
-    return fake.Responses, fake.Error
-}
-
 var _ = Describe("NotifySpace", func() {
     Describe("ServeHTTP", func() {
         var handler handlers.NotifySpace
@@ -36,9 +21,12 @@ var _ = Describe("NotifySpace", func() {
         var request *http.Request
         var token string
         var fakeCourier *FakeCourier
+        var errorWriter *FakeErrorWriter
 
         BeforeEach(func() {
             var err error
+
+            errorWriter = &FakeErrorWriter{}
 
             writer = httptest.NewRecorder()
             body, err := json.Marshal(map[string]string{
@@ -70,7 +58,7 @@ var _ = Describe("NotifySpace", func() {
             request.Header.Set("Authorization", "Bearer "+token)
 
             fakeCourier = NewFakeCourier()
-            handler = handlers.NewNotifySpace(fakeCourier)
+            handler = handlers.NewNotifySpace(fakeCourier, errorWriter)
         })
 
         Context("when the courier returns a successful response", func() {
@@ -162,92 +150,12 @@ var _ = Describe("NotifySpace", func() {
         })
 
         Context("when the courier returns errors", func() {
-            It("returns a 502 when CloudController fails to respond", func() {
-                fakeCourier.Error = postal.CCDownError("BOOM!")
-
-                handler.ServeHTTP(writer, request)
-
-                Expect(writer.Code).To(Equal(http.StatusBadGateway))
-
-                body := make(map[string]interface{})
-                err := json.Unmarshal(writer.Body.Bytes(), &body)
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(body["errors"]).To(ContainElement("Cloud Controller is unavailable"))
-            })
-
-            It("returns a 502 when UAA fails to respond", func() {
-                fakeCourier.Error = postal.UAADownError("BOOM!")
-
-                handler.ServeHTTP(writer, request)
-
-                Expect(writer.Code).To(Equal(http.StatusBadGateway))
-
-                body := make(map[string]interface{})
-                err := json.Unmarshal(writer.Body.Bytes(), &body)
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(body["errors"]).To(ContainElement("UAA is unavailable"))
-            })
-
-            It("returns a 502 when UAA fails for unknown reasons", func() {
-                fakeCourier.Error = postal.UAAGenericError("UAA Unknown Error: BOOM!")
-
-                handler.ServeHTTP(writer, request)
-
-                Expect(writer.Code).To(Equal(http.StatusBadGateway))
-
-                body := make(map[string]interface{})
-                err := json.Unmarshal(writer.Body.Bytes(), &body)
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(body["errors"]).To(ContainElement("UAA Unknown Error: BOOM!"))
-            })
-
-            It("returns a 500 when the is a template loading error", func() {
-                fakeCourier.Error = postal.TemplateLoadError("BOOM!")
-
-                handler.ServeHTTP(writer, request)
-
-                Expect(writer.Code).To(Equal(http.StatusInternalServerError))
-
-                body := make(map[string]interface{})
-                err := json.Unmarshal(writer.Body.Bytes(), &body)
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(body["errors"]).To(ContainElement("An email template could not be loaded"))
-            })
-
-            It("returns a 404 when the space cannot be found", func() {
-                fakeCourier.Error = postal.CCNotFoundError("Organization could not be found")
-
-                handler.ServeHTTP(writer, request)
-
-                Expect(writer.Code).To(Equal(http.StatusNotFound))
-
-                body := make(map[string]interface{})
-                err := json.Unmarshal(writer.Body.Bytes(), &body)
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(body["errors"]).To(ContainElement("CloudController Error: Organization could not be found"))
-            })
-
-            It("panics for unknown errors", func() {
+            It("delegates to the errorWriter", func() {
                 fakeCourier.Error = errors.New("BOOM!")
 
-                Expect(func() {
-                    handler.ServeHTTP(writer, request)
-                }).To(Panic())
+                handler.ServeHTTP(writer, request)
+
+                Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
             })
         })
     })

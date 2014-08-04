@@ -2,6 +2,7 @@ package handlers_test
 
 import (
     "errors"
+    "net/http"
     "testing"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
@@ -164,3 +165,26 @@ var FakeGuidGenerator = postal.GUIDGenerationFunc(func() (*uuid.UUID, error) {
     guid := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55})
     return &guid, nil
 })
+
+type FakeCourier struct {
+    Error     error
+    Responses []postal.Response
+}
+
+func NewFakeCourier() *FakeCourier {
+    return &FakeCourier{
+        Responses: make([]postal.Response, 0),
+    }
+}
+
+func (fake FakeCourier) Dispatch(token, guid string, notificationType postal.NotificationType, options postal.Options) ([]postal.Response, error) {
+    return fake.Responses, fake.Error
+}
+
+type FakeErrorWriter struct {
+    Error error
+}
+
+func (writer *FakeErrorWriter) Write(w http.ResponseWriter, err error) {
+    writer.Error = err
+}

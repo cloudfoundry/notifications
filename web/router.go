@@ -48,12 +48,13 @@ func NewRouter() Router {
     mailer := postal.NewMailer(uuid.NewV4, logger, &mailClient)
 
     courier := postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer)
+    errorWriter := handlers.NewErrorWriter()
 
     return Router{
         stacks: map[string]stack.Stack{
             "GET /info":           stack.NewStack(handlers.NewGetInfo()).Use(logging),
-            "POST /users/{guid}":  stack.NewStack(handlers.NewNotifyUser(courier)).Use(logging, authenticator),
-            "POST /spaces/{guid}": stack.NewStack(handlers.NewNotifySpace(courier)).Use(logging, authenticator),
+            "POST /users/{guid}":  stack.NewStack(handlers.NewNotifyUser(courier, errorWriter)).Use(logging, authenticator),
+            "POST /spaces/{guid}": stack.NewStack(handlers.NewNotifySpace(courier, errorWriter)).Use(logging, authenticator),
         },
     }
 }
