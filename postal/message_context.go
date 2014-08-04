@@ -4,7 +4,6 @@ import (
     "html"
 
     "github.com/cloudfoundry-incubator/notifications/config"
-    "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
 type MessageContext struct {
@@ -25,7 +24,7 @@ type MessageContext struct {
     Organization      string
 }
 
-func NewMessageContext(user uaa.User, options Options, env config.Environment, space, organization,
+func NewMessageContext(email string, options Options, env config.Environment, space, organization,
     clientID string, guidGenerator GUIDGenerationFunc, templates Templates) MessageContext {
 
     guid, err := guidGenerator()
@@ -50,7 +49,7 @@ func NewMessageContext(user uaa.User, options Options, env config.Environment, s
     return MessageContext{
         From:              env.Sender,
         ReplyTo:           options.ReplyTo,
-        To:                user.Emails[0],
+        To:                email,
         Subject:           options.Subject,
         Text:              options.Text,
         HTML:              options.HTML,

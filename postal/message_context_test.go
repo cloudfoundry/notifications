@@ -1,11 +1,8 @@
 package postal_test
 
 import (
-    "os"
-
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/postal"
-    "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -14,15 +11,12 @@ import (
 var _ = Describe("MessageContext", func() {
     Describe("NewMessageContext", func() {
         var templates postal.Templates
-        var user uaa.User
+        var email string
         var env config.Environment
         var options postal.Options
 
         BeforeEach(func() {
-            user = uaa.User{
-                ID:     "user-456",
-                Emails: []string{"bounce@example.com"},
-            }
+            email = "bounce@example.com"
 
             env = config.NewEnvironment()
 
@@ -44,47 +38,43 @@ var _ = Describe("MessageContext", func() {
         })
 
         It("returns the appropriate MessageContext when all options are specified", func() {
-            messageContext := postal.NewMessageContext(user, options, env, "the-space", "the-org",
-                "the-client-ID", FakeGuidGenerator, templates)
+            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, templates)
+            env := config.NewEnvironment()
 
             guid, err := FakeGuidGenerator()
             if err != nil {
                 panic(err)
             }
 
-            Expect(messageContext.From).To(Equal(os.Getenv("SENDER")))
-            Expect(messageContext.ReplyTo).To(Equal(options.ReplyTo))
-            Expect(messageContext.To).To(Equal(user.Emails[0]))
-            Expect(messageContext.Subject).To(Equal(options.Subject))
-            Expect(messageContext.Text).To(Equal(options.Text))
-            Expect(messageContext.HTML).To(Equal(options.HTML))
-            Expect(messageContext.TextTemplate).To(Equal(templates.Text))
-            Expect(messageContext.HTMLTemplate).To(Equal(templates.HTML))
-            Expect(messageContext.SubjectTemplate).To(Equal(templates.Subject))
-            Expect(messageContext.KindDescription).To(Equal(options.KindDescription))
-            Expect(messageContext.SourceDescription).To(Equal(options.SourceDescription))
-            Expect(messageContext.ClientID).To(Equal("the-client-ID"))
-            Expect(messageContext.MessageID).To(Equal(guid.String()))
-            Expect(messageContext.Space).To(Equal("the-space"))
-            Expect(messageContext.Organization).To(Equal("the-org"))
+            Expect(context.From).To(Equal(env.Sender))
+            Expect(context.ReplyTo).To(Equal(options.ReplyTo))
+            Expect(context.To).To(Equal(email))
+            Expect(context.Subject).To(Equal(options.Subject))
+            Expect(context.Text).To(Equal(options.Text))
+            Expect(context.HTML).To(Equal(options.HTML))
+            Expect(context.TextTemplate).To(Equal(templates.Text))
+            Expect(context.HTMLTemplate).To(Equal(templates.HTML))
+            Expect(context.SubjectTemplate).To(Equal(templates.Subject))
+            Expect(context.KindDescription).To(Equal(options.KindDescription))
+            Expect(context.SourceDescription).To(Equal(options.SourceDescription))
+            Expect(context.ClientID).To(Equal("the-client-ID"))
+            Expect(context.MessageID).To(Equal(guid.String()))
+            Expect(context.Space).To(Equal("the-space"))
+            Expect(context.Organization).To(Equal("the-org"))
         })
 
         It("falls back to Kind if KindDescription is missing", func() {
             options.KindDescription = ""
+            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, templates)
 
-            messageContext := postal.NewMessageContext(user, options, env, "the-space",
-                "the-org", "the-client-ID", FakeGuidGenerator, templates)
-
-            Expect(messageContext.KindDescription).To(Equal("the-kind"))
+            Expect(context.KindDescription).To(Equal("the-kind"))
         })
 
         It("falls back to clientID when SourceDescription is missing", func() {
             options.SourceDescription = ""
+            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, templates)
 
-            messageContext := postal.NewMessageContext(user, options, env, "the-space",
-                "the-org", "the-client-ID", FakeGuidGenerator, templates)
-
-            Expect(messageContext.SourceDescription).To(Equal("the-client-ID"))
+            Expect(context.SourceDescription).To(Equal("the-client-ID"))
         })
     })
 })

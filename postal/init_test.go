@@ -95,6 +95,7 @@ func (fake *FakeCloudController) LoadOrganization(guid, token string) (cf.CloudC
 
 type FakeUAAClient struct {
     ClientToken      uaa.Token
+    ClientTokenError error
     UsersByID        map[string]uaa.User
     ErrorForUserByID error
 }
@@ -102,7 +103,7 @@ type FakeUAAClient struct {
 func (fake FakeUAAClient) SetToken(token string) {}
 
 func (fake FakeUAAClient) GetClientToken() (uaa.Token, error) {
-    return fake.ClientToken, nil
+    return fake.ClientToken, fake.ClientTokenError
 }
 
 func (fake FakeUAAClient) UsersByIDs(ids ...string) ([]uaa.User, error) {

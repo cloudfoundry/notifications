@@ -16,9 +16,6 @@ type Response struct {
 type NotificationType int
 
 const (
-    StatusNotFound  = "notfound"
-    StatusNoAddress = "noaddress"
-
     IsSpace NotificationType = iota
     IsUser
 )
@@ -66,19 +63,16 @@ func NewCourier(uaaClient UAAInterface, userLoader UserLoader, spaceLoader Space
 
 func (courier Courier) Dispatch(rawToken, guid string, notificationType NotificationType, options Options) ([]Response, error) {
     responses := []Response{}
+    tokenLoader := NewTokenLoader(courier.uaaClient)
+    token, err := tokenLoader.Load()
+    courier.uaaClient.SetToken(token)
 
-    token, err := courier.uaaClient.GetClientToken()
-    if err != nil {
-        panic(err)
-    }
-    courier.uaaClient.SetToken(token.Access)
-
-    users, err := courier.userLoader.Load(notificationType, guid, token.Access)
+    users, err := courier.userLoader.Load(notificationType, guid, token)
     if err != nil {
         return responses, err
     }
 
-    space, organization, err := courier.spaceLoader.Load(guid, token.Access, notificationType)
+    space, organization, err := courier.spaceLoader.Load(guid, token, notificationType)
     if err != nil {
         return responses, CCDownError("Cloud Controller is unavailable")
     }

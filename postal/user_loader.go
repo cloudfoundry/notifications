@@ -2,9 +2,6 @@ package postal
 
 import (
     "log"
-    "net/http"
-    "net/url"
-    "strings"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -47,7 +44,8 @@ func (loader UserLoader) Load(notificationType NotificationType, guid, token str
 
     usersByIDs, err := loader.uaaClient.UsersByIDs(guids...)
     if err != nil {
-        return loader.errorFor(err)
+        err = UAAErrorFor(err)
+        return users, err
     }
 
     for _, user := range usersByIDs {
@@ -61,28 +59,4 @@ func (loader UserLoader) Load(notificationType NotificationType, guid, token str
     }
 
     return users, nil
-}
-
-func (loader UserLoader) errorFor(err error) (map[string]uaa.User, error) {
-    users := make(map[string]uaa.User)
-
-    switch err.(type) {
-    case *url.Error:
-        return users, UAADownError("UAA is unavailable")
-    case uaa.Failure:
-        uaaFailure := err.(uaa.Failure)
-        loader.logger.Printf("error:  %v", err)
-
-        if uaaFailure.Code() == http.StatusNotFound {
-            if strings.Contains(uaaFailure.Message(), "Requested route") {
-                return users, UAADownError("UAA is unavailable")
-            } else {
-                return users, UAAGenericError("UAA Unknown 404 error message: " + uaaFailure.Message())
-            }
-        }
-
-        return users, UAADownError("UAA is unavailable")
-    default:
-        return users, UAAGenericError("UAA Unknown Error: " + err.Error())
-    }
 }
