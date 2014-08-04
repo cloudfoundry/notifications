@@ -40,13 +40,14 @@ func NewRouter() Router {
 
     cloudController := cf.NewCloudController(env.CCHost)
 
+    tokenLoader := postal.NewTokenLoader(&uaaClient)
     userLoader := postal.NewUserLoader(&uaaClient, logger, cloudController)
     spaceLoader := postal.NewSpaceLoader(cloudController)
     fs := postal.NewFileSystem()
     templateLoader := postal.NewTemplateLoader(&fs)
     mailer := postal.NewMailer(uuid.NewV4, logger, &mailClient)
 
-    courier := postal.NewCourier(&uaaClient, userLoader, spaceLoader, templateLoader, mailer)
+    courier := postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer)
 
     return Router{
         stacks: map[string]stack.Stack{

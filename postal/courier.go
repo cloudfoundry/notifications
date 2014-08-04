@@ -39,8 +39,7 @@ type Options struct {
 }
 
 type Courier struct {
-    uaaClient UAAInterface
-
+    tokenLoader    TokenLoader
     userLoader     UserLoader
     spaceLoader    SpaceLoader
     templateLoader TemplateLoader
@@ -51,9 +50,9 @@ type CourierInterface interface {
     Dispatch(string, string, NotificationType, Options) ([]Response, error)
 }
 
-func NewCourier(uaaClient UAAInterface, userLoader UserLoader, spaceLoader SpaceLoader, templateLoader TemplateLoader, mailer Mailer) Courier {
+func NewCourier(tokenLoader TokenLoader, userLoader UserLoader, spaceLoader SpaceLoader, templateLoader TemplateLoader, mailer Mailer) Courier {
     return Courier{
-        uaaClient:      uaaClient,
+        tokenLoader:    tokenLoader,
         userLoader:     userLoader,
         spaceLoader:    spaceLoader,
         templateLoader: templateLoader,
@@ -63,9 +62,11 @@ func NewCourier(uaaClient UAAInterface, userLoader UserLoader, spaceLoader Space
 
 func (courier Courier) Dispatch(rawToken, guid string, notificationType NotificationType, options Options) ([]Response, error) {
     responses := []Response{}
-    tokenLoader := NewTokenLoader(courier.uaaClient)
-    token, err := tokenLoader.Load()
-    courier.uaaClient.SetToken(token)
+
+    token, err := courier.tokenLoader.Load()
+    if err != nil {
+        return responses, err
+    }
 
     users, err := courier.userLoader.Load(notificationType, guid, token)
     if err != nil {

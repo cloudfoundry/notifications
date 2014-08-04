@@ -16,5 +16,7 @@ func (loader TokenLoader) Load() (string, error) {
         err = UAAErrorFor(err)
         return "", err
     }
+
+    loader.uaaClient.SetToken(token.Access)
     return token.Access, nil
 }

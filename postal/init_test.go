@@ -98,9 +98,12 @@ type FakeUAAClient struct {
     ClientTokenError error
     UsersByID        map[string]uaa.User
     ErrorForUserByID error
+    AccessToken      string
 }
 
-func (fake FakeUAAClient) SetToken(token string) {}
+func (fake *FakeUAAClient) SetToken(token string) {
+    fake.AccessToken = token
+}
 
 func (fake FakeUAAClient) GetClientToken() (uaa.Token, error) {
     return fake.ClientToken, fake.ClientTokenError

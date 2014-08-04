@@ -36,6 +36,15 @@ var _ = Describe("TokenLoader", func() {
             Expect(token).To(Equal("the-client-token"))
         })
 
+        It("assigns the access token on the uaa client", func() {
+            _, err := tokenLoader.Load()
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(fakeUAA.AccessToken).To(Equal("the-client-token"))
+        })
+
         Context("error handling", func() {
             It("identifies UAA being down, returning an error", func() {
                 fakeUAA.ClientTokenError = uaa.NewFailure(http.StatusNotFound, []byte("404 Not Found: Requested route ('uaa.10.244.0.34.xip.io') does not exist."))

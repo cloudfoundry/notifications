@@ -24,6 +24,7 @@ var _ = Describe("Courier", func() {
     var token string
     var buffer *bytes.Buffer
     var options postal.Options
+    var tokenLoader postal.TokenLoader
     var userLoader postal.UserLoader
     var spaceLoader postal.SpaceLoader
     var templateLoader postal.TemplateLoader
@@ -86,12 +87,13 @@ var _ = Describe("Courier", func() {
         env = config.NewEnvironment()
         fs = NewFakeFileSystem(env)
 
+        tokenLoader = postal.NewTokenLoader(&fakeUAA)
         userLoader = postal.NewUserLoader(&fakeUAA, logger, fakeCC)
         spaceLoader = postal.NewSpaceLoader(fakeCC)
         templateLoader = postal.NewTemplateLoader(&fs)
         mailer = postal.NewMailer(FakeGuidGenerator, logger, &mailClient)
 
-        courier = postal.NewCourier(&fakeUAA, userLoader, spaceLoader, templateLoader, mailer)
+        courier = postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer)
     })
 
     Describe("Dispatch", func() {
@@ -224,7 +226,7 @@ var _ = Describe("Courier", func() {
                 })
 
                 It("returns necessary info in the response for the sent mail", func() {
-                    courier = postal.NewCourier(&fakeUAA, userLoader, spaceLoader, templateLoader, mailer)
+                    courier = postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer)
                     responses, err := courier.Dispatch(token, "space-001", postal.IsSpace, options)
                     if err != nil {
                         panic(err)
