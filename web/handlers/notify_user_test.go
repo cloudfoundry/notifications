@@ -6,6 +6,7 @@ import (
     "errors"
     "net/http"
     "net/http/httptest"
+    "strings"
 
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -96,7 +97,7 @@ var _ = Describe("NotifyUser", func() {
             if err != nil {
                 panic(err)
             }
-            request, err = http.NewRequest("POST", "/spaces/space-001", bytes.NewBuffer(body))
+            request, err = http.NewRequest("POST", "/users/user-001", bytes.NewBuffer(body))
             if err != nil {
                 panic(err)
             }
@@ -104,14 +105,22 @@ var _ = Describe("NotifyUser", func() {
 
             handler.ServeHTTP(writer, request)
 
-            parsed := map[string][]string{}
-            err = json.Unmarshal(writer.Body.Bytes(), &parsed)
+            Expect(errorWriter.Error).ToNot(BeNil())
+            validationErr := errorWriter.Error.(handlers.ParamsValidationError)
+            Expect(validationErr.Errors()).To(ContainElement(`"kind" is a required field`))
+            Expect(validationErr.Errors()).To(ContainElement(`"text" or "html" fields must be supplied`))
+        })
+
+        It("returns a error response when params cannot be parsed", func() {
+            request, err := http.NewRequest("POST", "/users/user-001", strings.NewReader("this is not JSON"))
             if err != nil {
                 panic(err)
             }
+            request.Header.Set("Authorization", "Bearer "+token)
 
-            Expect(parsed["errors"]).To(ContainElement(`"kind" is a required field`))
-            Expect(parsed["errors"]).To(ContainElement(`"text" or "html" fields must be supplied`))
+            handler.ServeHTTP(writer, request)
+
+            Expect(errorWriter.Error).To(Equal(handlers.ParamsParseError{}))
         })
     })
 

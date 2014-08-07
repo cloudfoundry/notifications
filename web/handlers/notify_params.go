@@ -10,6 +10,22 @@ import (
     "github.com/cloudfoundry-incubator/notifications/postal"
 )
 
+type ParamsParseError struct{}
+
+func (err ParamsParseError) Error() string {
+    return "Request body could not be parsed"
+}
+
+type ParamsValidationError []string
+
+func (err ParamsValidationError) Error() string {
+    return strings.Join(err, ", ")
+}
+
+func (err ParamsValidationError) Errors() []string {
+    return []string(err)
+}
+
 type NotifyParams struct {
     ReplyTo           string `json:"reply_to"`
     Subject           string `json:"subject"`
@@ -23,8 +39,12 @@ type NotifyParams struct {
 
 func NewNotifyParams(body io.Reader) (NotifyParams, error) {
     params := NotifyParams{}
-    params.parseRequestBody(body)
-    err := params.extractHTML()
+    err := params.parseRequestBody(body)
+    if err != nil {
+        return params, err
+    }
+
+    err = params.extractHTML()
     if err != nil {
         return params, err
     }
@@ -46,15 +66,16 @@ func (params *NotifyParams) Validate() bool {
     return len(params.Errors) == 0
 }
 
-func (params *NotifyParams) parseRequestBody(body io.Reader) {
+func (params *NotifyParams) parseRequestBody(body io.Reader) error {
     buffer := bytes.NewBuffer([]byte{})
     buffer.ReadFrom(body)
     if buffer.Len() > 0 {
         err := json.Unmarshal(buffer.Bytes(), &params)
         if err != nil {
-            panic(err)
+            return ParamsParseError{}
         }
     }
+    return nil
 }
 
 func (params *NotifyParams) ToOptions() postal.Options {

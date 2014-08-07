@@ -17,24 +17,28 @@ func NewErrorWriter() ErrorWriter {
     return ErrorWriter{}
 }
 
-func (handler ErrorWriter) Write(w http.ResponseWriter, err error) {
+func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
     switch err.(type) {
     case postal.CCDownError:
-        Error(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+        writer.write(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
     case postal.CCNotFoundError:
-        Error(w, http.StatusNotFound, []string{err.Error()})
+        writer.write(w, http.StatusNotFound, []string{err.Error()})
     case postal.UAADownError:
-        Error(w, http.StatusBadGateway, []string{"UAA is unavailable"})
+        writer.write(w, http.StatusBadGateway, []string{"UAA is unavailable"})
     case postal.UAAGenericError:
-        Error(w, http.StatusBadGateway, []string{err.Error()})
+        writer.write(w, http.StatusBadGateway, []string{err.Error()})
     case postal.TemplateLoadError:
-        Error(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
+        writer.write(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
+    case ParamsParseError:
+        writer.write(w, 422, []string{err.Error()})
+    case ParamsValidationError:
+        writer.write(w, 422, err.(ParamsValidationError).Errors())
     default:
         panic(err)
     }
 }
 
-func Error(w http.ResponseWriter, code int, errors []string) {
+func (writer ErrorWriter) write(w http.ResponseWriter, code int, errors []string) {
     response, err := json.Marshal(map[string][]string{
         "errors": errors,
     })

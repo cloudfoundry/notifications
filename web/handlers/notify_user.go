@@ -25,12 +25,12 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     params, err := NewNotifyParams(req.Body)
     if err != nil {
-        Error(w, 422, []string{"Request body could not be parsed"})
+        handler.errorWriter.Write(w, err)
         return
     }
 
     if !params.Validate() {
-        Error(w, 422, params.Errors)
+        handler.errorWriter.Write(w, ParamsValidationError(params.Errors))
         return
     }
 

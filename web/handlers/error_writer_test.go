@@ -92,6 +92,35 @@ var _ = Describe("ErrorWriter", func() {
         Expect(body["errors"]).To(ContainElement("CloudController Error: Organization could not be found"))
     })
 
+    It("returns a 422 when the params cannot be parsed", func() {
+        writer.Write(recorder, handlers.ParamsParseError{})
+
+        Expect(recorder.Code).To(Equal(422))
+
+        body := make(map[string]interface{})
+        err := json.Unmarshal(recorder.Body.Bytes(), &body)
+        if err != nil {
+            panic(err)
+        }
+
+        Expect(body["errors"]).To(ContainElement("Request body could not be parsed"))
+    })
+
+    It("returns a 422 when the params are not valid", func() {
+        writer.Write(recorder, handlers.ParamsValidationError([]string{"something", "another"}))
+
+        Expect(recorder.Code).To(Equal(422))
+
+        body := make(map[string]interface{})
+        err := json.Unmarshal(recorder.Body.Bytes(), &body)
+        if err != nil {
+            panic(err)
+        }
+
+        Expect(body["errors"]).To(ContainElement("something"))
+        Expect(body["errors"]).To(ContainElement("another"))
+    })
+
     It("panics for unknown errors", func() {
         Expect(func() {
             writer.Write(recorder, errors.New("BOOM!"))
