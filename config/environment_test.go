@@ -11,24 +11,57 @@ import (
 
 var _ = Describe("Environment", func() {
     variables := map[string]string{
-        "UAA_HOST":          os.Getenv("UAA_HOST"),
+        "CC_HOST":           os.Getenv("CC_HOST"),
+        "DATABASE_URL":      os.Getenv("DATABASE_URL"),
+        "PORT":              os.Getenv("PORT"),
+        "ROOT_PATH":         os.Getenv("ROOT_PATH"),
+        "SENDER":            os.Getenv("SENDER"),
+        "SMTP_HOST":         os.Getenv("SMTP_HOST"),
+        "SMTP_PASS":         os.Getenv("SMTP_PASS"),
+        "SMTP_PORT":         os.Getenv("SMTP_PORT"),
+        "SMTP_USER":         os.Getenv("SMTP_USER"),
         "UAA_CLIENT_ID":     os.Getenv("UAA_CLIENT_ID"),
         "UAA_CLIENT_SECRET": os.Getenv("UAA_CLIENT_SECRET"),
-        "SMTP_USER":         os.Getenv("SMTP_USER"),
-        "SMTP_PASS":         os.Getenv("SMTP_PASS"),
-        "SMTP_HOST":         os.Getenv("SMTP_HOST"),
-        "SMTP_PORT":         os.Getenv("SMTP_PORT"),
-        "SENDER":            os.Getenv("SENDER"),
-        "CC_HOST":           os.Getenv("CC_HOST"),
+        "UAA_HOST":          os.Getenv("UAA_HOST"),
         "VERIFY_SSL":        os.Getenv("VERIFY_SSL"),
-        "ROOT_PATH":         os.Getenv("ROOT_PATH"),
-        "PORT":              os.Getenv("PORT"),
     }
 
     AfterEach(func() {
         for key, value := range variables {
             os.Setenv(key, value)
         }
+    })
+
+    Describe("Database URL", func() {
+        Context("when DATABASE_URL is properly formatted", func() {
+            It("converts the DATABASE_URL into a database driver DSN format", func() {
+                os.Setenv("DATABASE_URL", "user-123:mypassword@example.com/banana")
+                env := config.NewEnvironment()
+                Expect(env.DatabaseURL).To(Equal("user-123:mypassword@tcp(example.com)/banana?parseTime=true"))
+            })
+
+            It("converts the DATABASE_URL into a database driver DSN format", func() {
+                os.Setenv("DATABASE_URL", "https://user-123:mypassword@example.com/banana")
+                env := config.NewEnvironment()
+                Expect(env.DatabaseURL).To(Equal("user-123:mypassword@tcp(example.com)/banana?parseTime=true"))
+            })
+        })
+
+        Context("when DATABASE_URL is not properly formatted", func() {
+            It("panics when the url is not set", func() {
+                os.Setenv("DATABASE_URL", "")
+                Expect(func() {
+                    config.NewEnvironment()
+                }).To(Panic())
+            })
+
+            It("panics when the url is not properly formatted", func() {
+                os.Setenv("DATABASE_URL", "s%%oe\\mthing!!")
+                Expect(func() {
+                    config.NewEnvironment()
+                }).To(Panic())
+            })
+        })
     })
 
     Describe("Port configuration", func() {
