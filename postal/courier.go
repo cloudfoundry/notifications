@@ -3,40 +3,7 @@ package postal
 import (
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/dgrijalva/jwt-go"
-    "github.com/nu7hatch/gouuid"
-    "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
-
-type Response struct {
-    Status         string `json:"status"`
-    Recipient      string `json:"recipient"`
-    NotificationID string `json:"notification_id"`
-}
-
-type NotificationType int
-
-const (
-    IsSpace NotificationType = iota
-    IsUser
-)
-
-type GUIDGenerationFunc func() (*uuid.UUID, error)
-
-type UAAInterface interface {
-    uaa.GetClientTokenInterface
-    uaa.SetTokenInterface
-    uaa.UsersByIDsInterface
-}
-
-type Options struct {
-    ReplyTo           string
-    Subject           string
-    KindDescription   string
-    SourceDescription string
-    Text              string
-    HTML              string
-    Kind              string
-}
 
 type Courier struct {
     tokenLoader    TokenLoader
@@ -47,7 +14,7 @@ type Courier struct {
 }
 
 type CourierInterface interface {
-    Dispatch(string, string, NotificationType, Options) ([]Response, error)
+    Dispatch(string, TypedGUID, Options) ([]Response, error)
 }
 
 func NewCourier(tokenLoader TokenLoader, userLoader UserLoader, spaceLoader SpaceLoader, templateLoader TemplateLoader, mailer Mailer) Courier {
@@ -60,7 +27,7 @@ func NewCourier(tokenLoader TokenLoader, userLoader UserLoader, spaceLoader Spac
     }
 }
 
-func (courier Courier) Dispatch(rawToken, guid string, notificationType NotificationType, options Options) ([]Response, error) {
+func (courier Courier) Dispatch(rawToken string, guid TypedGUID, options Options) ([]Response, error) {
     responses := []Response{}
 
     token, err := courier.tokenLoader.Load()
@@ -68,12 +35,12 @@ func (courier Courier) Dispatch(rawToken, guid string, notificationType Notifica
         return responses, err
     }
 
-    space, organization, err := courier.spaceLoader.Load(guid, token, notificationType)
+    space, organization, err := courier.spaceLoader.Load(guid, token)
     if err != nil {
         return responses, err
     }
 
-    users, err := courier.userLoader.Load(notificationType, guid, token)
+    users, err := courier.userLoader.Load(guid, token)
     if err != nil {
         return responses, err
     }
@@ -83,7 +50,7 @@ func (courier Courier) Dispatch(rawToken, guid string, notificationType Notifica
     })
     clientID := clientToken.Claims["client_id"].(string)
 
-    templates, err := courier.templateLoader.Load(options.Subject, notificationType)
+    templates, err := courier.templateLoader.Load(options.Subject, guid)
     if err != nil {
         return responses, TemplateLoadError("An email template could not be loaded")
     }

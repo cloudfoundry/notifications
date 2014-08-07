@@ -21,20 +21,20 @@ func NewUserLoader(uaaClient UAAInterface, logger *log.Logger, cloudController c
     }
 }
 
-func (loader UserLoader) Load(notificationType NotificationType, guid, token string) (map[string]uaa.User, error) {
+func (loader UserLoader) Load(guid TypedGUID, token string) (map[string]uaa.User, error) {
     users := make(map[string]uaa.User)
 
     var guids []string
     var ccUsers []cf.CloudControllerUser
     var err error
 
-    if notificationType == IsSpace {
-        ccUsers, err = loader.cloudController.GetUsersBySpaceGuid(guid, token)
+    if guid.BelongsToSpace() {
+        ccUsers, err = loader.cloudController.GetUsersBySpaceGuid(guid.String(), token)
         if err != nil {
             return users, CCDownError("Cloud Controller is unavailable")
         }
     } else {
-        ccUsers = []cf.CloudControllerUser{{Guid: guid}}
+        ccUsers = []cf.CloudControllerUser{{Guid: guid.String()}}
     }
 
     for _, ccUser := range ccUsers {

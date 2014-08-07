@@ -36,7 +36,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     rawToken := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
 
-    responses, err := handler.courier.Dispatch(rawToken, userGUID, postal.IsUser, params.ToOptions())
+    responses, err := handler.courier.Dispatch(rawToken, postal.UserGUID(userGUID), params.ToOptions())
     if err != nil {
         handler.errorWriter.Write(w, err)
         return

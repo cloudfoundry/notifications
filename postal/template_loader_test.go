@@ -53,7 +53,7 @@ var _ = Describe("TemplateLoader", func() {
     Describe("Load", func() {
         Context("when subject is not set in the params", func() {
             It("returns the subject.missing template", func() {
-                templates, err := loader.Load("", postal.IsSpace)
+                templates, err := loader.Load("", postal.SpaceGUID("space-001"))
                 if err != nil {
                     panic(err)
                 }
@@ -64,7 +64,7 @@ var _ = Describe("TemplateLoader", func() {
 
         Context("when subject is set in the params", func() {
             It("returns the subject.provided template", func() {
-                templates, err := loader.Load("is provided", postal.IsSpace)
+                templates, err := loader.Load("is provided", postal.SpaceGUID("space-001"))
                 if err != nil {
                     panic(err)
                 }
@@ -73,9 +73,9 @@ var _ = Describe("TemplateLoader", func() {
             })
         })
 
-        Context("notificationType is IsSpace", func() {
+        Context("guid is SpaceGUID", func() {
             It("returns the space templates", func() {
-                templates, err := loader.Load("", postal.IsSpace)
+                templates, err := loader.Load("", postal.SpaceGUID("space-001"))
                 if err != nil {
                     panic(err)
                 }
@@ -85,9 +85,9 @@ var _ = Describe("TemplateLoader", func() {
             })
         })
 
-        Context("notificationType is IsSpace", func() {
+        Context("guid is UserGUID", func() {
             It("returns the user templates", func() {
-                templates, err := loader.Load("", postal.IsUser)
+                templates, err := loader.Load("", postal.UserGUID("user-123"))
                 if err != nil {
                     panic(err)
                 }

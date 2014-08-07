@@ -27,7 +27,7 @@ func NewTemplateLoader(fs FileSystemInterface) TemplateLoader {
     }
 }
 
-func (loader TemplateLoader) Load(subject string, notificationType NotificationType) (Templates, error) {
+func (loader TemplateLoader) Load(subject string, guid TypedGUID) (Templates, error) {
     var err error
     templates := Templates{}
 
@@ -36,12 +36,12 @@ func (loader TemplateLoader) Load(subject string, notificationType NotificationT
         return templates, err
     }
 
-    templates.Text, err = loader.loadText(notificationType)
+    templates.Text, err = loader.loadText(guid)
     if err != nil {
         return templates, err
     }
 
-    templates.HTML, err = loader.loadHTML(notificationType)
+    templates.HTML, err = loader.loadHTML(guid)
     if err != nil {
         return templates, err
     }
@@ -57,16 +57,16 @@ func (loader TemplateLoader) loadSubject(subject string) (string, error) {
     }
 }
 
-func (loader TemplateLoader) loadText(notificationType NotificationType) (string, error) {
-    if notificationType == IsSpace {
+func (loader TemplateLoader) loadText(guid TypedGUID) (string, error) {
+    if guid.BelongsToSpace() {
         return loader.LoadTemplate(SpaceTextTemplateName)
     } else {
         return loader.LoadTemplate(UserTextTemplateName)
     }
 }
 
-func (loader TemplateLoader) loadHTML(notificationType NotificationType) (string, error) {
-    if notificationType == IsSpace {
+func (loader TemplateLoader) loadHTML(guid TypedGUID) (string, error) {
+    if guid.BelongsToSpace() {
         return loader.LoadTemplate(SpaceHTMLTemplateName)
     } else {
         return loader.LoadTemplate(UserHTMLTemplateName)

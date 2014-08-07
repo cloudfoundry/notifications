@@ -12,12 +12,12 @@ func NewSpaceLoader(cloudController cf.CloudControllerInterface) SpaceLoader {
     }
 }
 
-func (loader SpaceLoader) Load(guid, token string, notificationType NotificationType) (string, string, error) {
-    if notificationType != IsSpace {
+func (loader SpaceLoader) Load(guid TypedGUID, token string) (string, string, error) {
+    if !guid.BelongsToSpace() {
         return "", "", nil
     }
 
-    space, err := loader.cloudController.LoadSpace(guid, token)
+    space, err := loader.cloudController.LoadSpace(guid.String(), token)
     if err != nil {
         return "", "", CCErrorFor(err)
     }

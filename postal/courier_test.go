@@ -122,7 +122,7 @@ var _ = Describe("Courier", func() {
                 Context("when Cloud Controller is unavailable to load space users", func() {
                     It("returns a CCDownError error", func() {
                         fakeCC.GetUsersBySpaceGuidError = errors.New("BOOM!")
-                        _, err := courier.Dispatch(token, "space-001", postal.IsSpace, options)
+                        _, err := courier.Dispatch(token, postal.SpaceGUID("space-001"), options)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.CCDownError("")))
                     })
@@ -131,7 +131,7 @@ var _ = Describe("Courier", func() {
                 Context("when Cloud Controller is unavailable to load a space", func() {
                     It("returns a CCDownError error", func() {
                         fakeCC.LoadSpaceError = errors.New("BOOM!")
-                        _, err := courier.Dispatch(token, "user-123", postal.IsSpace, options)
+                        _, err := courier.Dispatch(token, postal.SpaceGUID("space-000"), options)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
                     })
@@ -140,7 +140,7 @@ var _ = Describe("Courier", func() {
                 Context("when UAA cannot be reached", func() {
                     It("returns a UAADownError", func() {
                         fakeUAA.ErrorForUserByID = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
-                        _, err := courier.Dispatch(token, "user-123", postal.IsUser, options)
+                        _, err := courier.Dispatch(token, postal.UserGUID("user-123"), options)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
                     })
@@ -149,7 +149,7 @@ var _ = Describe("Courier", func() {
                 Context("when UAA fails for unknown reasons", func() {
                     It("returns a UAAGenericError", func() {
                         fakeUAA.ErrorForUserByID = errors.New("BOOM!")
-                        _, err := courier.Dispatch(token, "user-123", postal.IsUser, options)
+                        _, err := courier.Dispatch(token, postal.UserGUID("user-123"), options)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.UAAGenericError("")))
                     })
@@ -159,7 +159,7 @@ var _ = Describe("Courier", func() {
                     It("returns a TemplateLoadError", func() {
                         delete(fs.Files, env.RootPath+"/templates/user_body.text")
 
-                        _, err := courier.Dispatch(token, "user-123", postal.IsUser, options)
+                        _, err := courier.Dispatch(token, postal.UserGUID("user-123"), options)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.TemplateLoadError("")))
                     })
@@ -169,7 +169,7 @@ var _ = Describe("Courier", func() {
             Context("when the SMTP server fails to deliver the mail", func() {
                 It("returns a status indicating that delivery failed", func() {
                     mailClient.errorOnSend = true
-                    responses, err := courier.Dispatch(token, "user-123", postal.IsUser, options)
+                    responses, err := courier.Dispatch(token, postal.UserGUID("user-123"), options)
                     if err != nil {
                         panic(err)
                     }
@@ -182,7 +182,7 @@ var _ = Describe("Courier", func() {
             Context("when the SMTP server cannot be reached", func() {
                 It("returns a status indicating that the server is unavailable", func() {
                     mailClient.errorOnConnect = true
-                    responses, err := courier.Dispatch(token, "user-123", postal.IsUser, options)
+                    responses, err := courier.Dispatch(token, postal.UserGUID("user-123"), options)
                     if err != nil {
                         panic(err)
                     }
@@ -194,7 +194,7 @@ var _ = Describe("Courier", func() {
 
             Context("when UAA cannot find the user", func() {
                 It("returns that the user in the response with status notfound", func() {
-                    responses, err := courier.Dispatch(token, "user-789", postal.IsUser, options)
+                    responses, err := courier.Dispatch(token, postal.UserGUID("user-789"), options)
                     if err != nil {
                         panic(err)
                     }
@@ -212,7 +212,7 @@ var _ = Describe("Courier", func() {
                         Emails: []string{},
                     }
 
-                    responses, err := courier.Dispatch(token, "user-123", postal.IsUser, options)
+                    responses, err := courier.Dispatch(token, postal.UserGUID("user-123"), options)
                     if err != nil {
                         panic(err)
                     }
@@ -224,7 +224,7 @@ var _ = Describe("Courier", func() {
 
             Context("When load Users returns multiple users", func() {
                 It("logs the UUIDs of all recipients", func() {
-                    _, err := courier.Dispatch(token, "space-001", postal.IsSpace, options)
+                    _, err := courier.Dispatch(token, postal.SpaceGUID("space-001"), options)
                     if err != nil {
                         panic(err)
                     }
@@ -237,7 +237,7 @@ var _ = Describe("Courier", func() {
 
                 It("returns necessary info in the response for the sent mail", func() {
                     courier = postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer)
-                    responses, err := courier.Dispatch(token, "space-001", postal.IsSpace, options)
+                    responses, err := courier.Dispatch(token, postal.SpaceGUID("space-001"), options)
                     if err != nil {
                         panic(err)
                     }

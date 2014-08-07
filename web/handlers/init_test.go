@@ -177,7 +177,7 @@ func NewFakeCourier() *FakeCourier {
     }
 }
 
-func (fake FakeCourier) Dispatch(token, guid string, notificationType postal.NotificationType, options postal.Options) ([]postal.Response, error) {
+func (fake FakeCourier) Dispatch(token string, guid postal.TypedGUID, options postal.Options) ([]postal.Response, error) {
     return fake.Responses, fake.Error
 }
 

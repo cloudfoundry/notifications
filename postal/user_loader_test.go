@@ -74,7 +74,7 @@ var _ = Describe("UserLoader", func() {
 
         Context("UAA returns a collection of users", func() {
             It("returns a map of users from GUID to uaa.User", func() {
-                users, err := loader.Load(postal.IsSpace, "space-001", token)
+                users, err := loader.Load(postal.SpaceGUID("space-001"), token)
                 if err != nil {
                     panic(err)
                 }
@@ -96,7 +96,7 @@ var _ = Describe("UserLoader", func() {
                 It("returns a UAADownError", func() {
                     fakeUAAClient.ErrorForUserByID = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
 
-                    _, err := loader.Load(postal.IsUser, "user-123", token)
+                    _, err := loader.Load(postal.UserGUID("user-123"), token)
 
                     Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
                 })
@@ -106,7 +106,7 @@ var _ = Describe("UserLoader", func() {
                 It("returns a UAAGenericError", func() {
                     fakeUAAClient.ErrorForUserByID = uaa.NewFailure(404, []byte("Weird message we haven't seen"))
 
-                    _, err := loader.Load(postal.IsUser, "user-123", token)
+                    _, err := loader.Load(postal.UserGUID("user-123"), token)
 
                     Expect(err).To(BeAssignableToTypeOf(postal.UAAGenericError("")))
                 })
@@ -116,7 +116,7 @@ var _ = Describe("UserLoader", func() {
                 It("returns a UAADownError", func() {
                     fakeUAAClient.ErrorForUserByID = uaa.NewFailure(500, []byte("Doesn't matter"))
 
-                    _, err := loader.Load(postal.IsUser, "user-123", token)
+                    _, err := loader.Load(postal.UserGUID("user-123"), token)
 
                     Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
                 })
