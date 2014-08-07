@@ -6,6 +6,11 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "bitbucket.org/chrj/smtpd",
+			"Comment": "null-24",
+			"Rev": "10bcb042194e344946fc7d9a6dad3cd87c05ec04"
+		},
+		{
 			"ImportPath": "code.google.com/p/cascadia",
 			"Comment": "null-30",
 			"Rev": "4f03c71bc42ba0015a68bea86422f0ecbb71bf70"
