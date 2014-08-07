@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/cloudfoundry-incubator/notifications",
-	"GoVersion": "go1.3",
+	"GoVersion": "go1.2.1",
 	"Packages": [
 		"./..."
 	],
