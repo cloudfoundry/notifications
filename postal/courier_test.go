@@ -31,6 +31,8 @@ var _ = Describe("Courier", func() {
     var mailer postal.Mailer
     var fs FakeFileSystem
     var env config.Environment
+    var queue *postal.DeliveryQueue
+    var worker postal.DeliveryWorker
 
     BeforeEach(func() {
         tokenHeader := map[string]interface{}{
@@ -87,13 +89,21 @@ var _ = Describe("Courier", func() {
         env = config.NewEnvironment()
         fs = NewFakeFileSystem(env)
 
+        queue = postal.NewDeliveryQueue()
+        worker = postal.NewDeliveryWorker(FakeGuidGenerator, logger, &mailClient, queue)
+        go worker.Work()
+        mailer = postal.NewMailer(queue)
+
         tokenLoader = postal.NewTokenLoader(&fakeUAA)
         userLoader = postal.NewUserLoader(&fakeUAA, logger, fakeCC)
         spaceLoader = postal.NewSpaceLoader(fakeCC)
         templateLoader = postal.NewTemplateLoader(&fs)
-        mailer = postal.NewMailer(FakeGuidGenerator, logger, &mailClient)
 
         courier = postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer)
+    })
+
+    AfterEach(func() {
+        worker.Halt()
     })
 
     Describe("Dispatch", func() {

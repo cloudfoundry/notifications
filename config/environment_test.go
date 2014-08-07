@@ -22,12 +22,27 @@ var _ = Describe("Environment", func() {
         "CC_HOST":           os.Getenv("CC_HOST"),
         "VERIFY_SSL":        os.Getenv("VERIFY_SSL"),
         "ROOT_PATH":         os.Getenv("ROOT_PATH"),
+        "PORT":              os.Getenv("PORT"),
     }
 
     AfterEach(func() {
         for key, value := range variables {
             os.Setenv(key, value)
         }
+    })
+
+    Describe("Port configuration", func() {
+        It("loads the value when it is set", func() {
+            os.Setenv("PORT", "5001")
+            env := config.NewEnvironment()
+            Expect(env.Port).To(Equal("5001"))
+        })
+
+        It("sets the value to 3000 when it is not set", func() {
+            os.Setenv("PORT", "")
+            env := config.NewEnvironment()
+            Expect(env.Port).To(Equal("3000"))
+        })
     })
 
     Describe("UAA configuration", func() {

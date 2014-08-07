@@ -3,7 +3,6 @@ package postal_test
 import (
     "bytes"
     "log"
-    "strings"
 
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -17,12 +16,22 @@ var _ = Describe("Mailer", func() {
     var mailer postal.Mailer
     var logger *log.Logger
     var buffer *bytes.Buffer
+    var queue *postal.DeliveryQueue
+    var worker postal.DeliveryWorker
 
     BeforeEach(func() {
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
         mailClient = FakeMailClient{}
-        mailer = postal.NewMailer(FakeGuidGenerator, logger, &mailClient)
+        queue = postal.NewDeliveryQueue()
+        mailer = postal.NewMailer(queue)
+
+        worker = postal.NewDeliveryWorker(FakeGuidGenerator, logger, &mailClient, queue)
+        go worker.Work()
+    })
+
+    AfterEach(func() {
+        worker.Halt()
     })
 
     Describe("Deliver", func() {
@@ -59,48 +68,6 @@ var _ = Describe("Mailer", func() {
                 Recipient:      "user-4",
                 NotificationID: "",
             }))
-        })
-    })
-
-    Describe("SendMailToUser", func() {
-        It("logs the email address of the recipient and returns the status", func() {
-            messageContext := postal.MessageContext{
-                To: "fake-user@example.com",
-            }
-
-            mailClient = FakeMailClient{}
-
-            status := mailer.SendMailToUser(messageContext, logger, &mailClient)
-
-            Expect(buffer.String()).To(ContainSubstring("Sending email to fake-user@example.com"))
-            Expect(status).To(Equal("delivered"))
-        })
-
-        It("logs the message envelope", func() {
-            messageContext := postal.MessageContext{
-                To:              "fake-user@example.com",
-                From:            "from@email.com",
-                Subject:         "the subject",
-                Text:            "body content",
-                KindDescription: "the kind description",
-                TextTemplate:    "{{.Text}}",
-                SubjectTemplate: "{{.Subject}}",
-            }
-
-            mailClient = FakeMailClient{}
-
-            mailer.SendMailToUser(messageContext, logger, &mailClient)
-
-            data := []string{
-                "From: from@email.com",
-                "To: fake-user@example.com",
-                "Subject: the subject",
-                `body content`,
-            }
-            results := strings.Split(buffer.String(), "\n")
-            for _, item := range data {
-                Expect(results).To(ContainElement(item))
-            }
         })
     })
 })

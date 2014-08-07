@@ -193,4 +193,37 @@ var _ = Describe("Authenticator", func() {
             Expect(parsed["errors"]).To(ContainElement("You are not authorized to perform the requested action"))
         })
     })
+
+    Context("when the request does not contain a auth valid token", func() {
+        BeforeEach(func() {
+            requestBody, err := json.Marshal(map[string]string{
+                "kind": "forgot_password",
+                "text": "Try to remember your password next time",
+            })
+            if err != nil {
+                panic(err)
+            }
+
+            request, err = http.NewRequest("POST", "/users/user-123", bytes.NewReader(requestBody))
+            if err != nil {
+                panic(err)
+            }
+            request.Header.Set("Authorization", "Bearer something-invalid")
+        })
+
+        It("returns a 401 status code and error message", func() {
+            returnValue := ware.ServeHTTP(writer, request)
+
+            Expect(returnValue).To(BeFalse())
+            Expect(writer.Code).To(Equal(http.StatusUnauthorized))
+
+            parsed := map[string][]string{}
+            err := json.Unmarshal(writer.Body.Bytes(), &parsed)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(parsed["errors"]).To(ContainElement("Authorization header is invalid: corrupt"))
+        })
+    })
 })

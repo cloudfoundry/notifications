@@ -1,88 +1,38 @@
 package postal
 
-import (
-    "log"
-    "strings"
-
-    "github.com/cloudfoundry-incubator/notifications/config"
-    "github.com/cloudfoundry-incubator/notifications/mail"
-    "github.com/pivotal-cf/uaa-sso-golang/uaa"
-)
-
-const (
-    StatusUnavailable = "unavailable"
-    StatusFailed      = "failed"
-    StatusDelivered   = "delivered"
-    StatusNotFound    = "notfound"
-    StatusNoAddress   = "noaddress"
-)
+import "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 type Mailer struct {
-    guidGenerator GUIDGenerationFunc
-    logger        *log.Logger
-    mailClient    mail.ClientInterface
+    queue *DeliveryQueue
 }
 
-func NewMailer(guidGenerator GUIDGenerationFunc, logger *log.Logger, mailClient mail.ClientInterface) Mailer {
+func NewMailer(queue *DeliveryQueue) Mailer {
     return Mailer{
-        guidGenerator: guidGenerator,
-        logger:        logger,
-        mailClient:    mailClient,
+        queue: queue,
     }
 }
 
 func (mailer Mailer) Deliver(templates Templates, users map[string]uaa.User, options Options, space, organization, clientID string) []Response {
-    env := config.NewEnvironment()
-    messages := []Response{}
+    responses := []Response{}
+    deliveryResponses := make(chan Response)
 
     for userGUID, user := range users {
-        var status, notificationID string
-        if len(user.Emails) > 0 && strings.Contains(user.Emails[0], "@") {
-            context := NewMessageContext(user.Emails[0], options, env, space, organization, clientID, mailer.guidGenerator, templates)
-            status = mailer.SendMailToUser(context, mailer.logger, mailer.mailClient)
-            notificationID = context.MessageID
-        } else {
-            if user.ID == "" {
-                status = StatusNotFound
-            } else {
-                status = StatusNoAddress
-            }
+        delivery := Delivery{
+            User:         user,
+            Options:      options,
+            UserGUID:     userGUID,
+            Space:        space,
+            Organization: organization,
+            ClientID:     clientID,
+            Templates:    templates,
+            Response:     deliveryResponses,
         }
-
-        messages = append(messages, Response{
-            Status:         status,
-            Recipient:      userGUID,
-            NotificationID: notificationID,
-        })
-    }
-    return messages
-}
-
-func (mailer Mailer) SendMailToUser(context MessageContext, logger *log.Logger, mailClient mail.ClientInterface) string {
-    logger.Printf("Sending email to %s", context.To)
-    packager := NewPackager()
-
-    message, err := packager.Pack(context)
-    if err != nil {
-        panic(err)
+        mailer.queue.Enqueue(delivery)
     }
 
-    status := mailer.SendMail(message)
-
-    logger.Print(message.Data())
-    return status
-}
-
-func (mailer Mailer) SendMail(msg mail.Message) string {
-    err := mailer.mailClient.Connect()
-    if err != nil {
-        return StatusUnavailable
+    for _, _ = range users {
+        responses = append(responses, <-deliveryResponses)
     }
 
-    err = mailer.mailClient.Send(msg)
-    if err != nil {
-        return StatusFailed
-    }
-
-    return StatusDelivered
+    return responses
 }

@@ -45,7 +45,13 @@ func NewRouter() Router {
     spaceLoader := postal.NewSpaceLoader(cloudController)
     fs := postal.NewFileSystem()
     templateLoader := postal.NewTemplateLoader(&fs)
-    mailer := postal.NewMailer(uuid.NewV4, logger, &mailClient)
+    queue := postal.NewDeliveryQueue()
+    mailer := postal.NewMailer(queue)
+
+    for i := 0; i < 10; i++ {
+        worker := postal.NewDeliveryWorker(uuid.NewV4, logger, &mailClient, queue)
+        worker.Run()
+    }
 
     courier := postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer)
     errorWriter := handlers.NewErrorWriter()

@@ -29,6 +29,7 @@ func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request) bo
         if strings.Contains(err.Error(), "Token is expired") {
             return ware.Error(w, http.StatusUnauthorized, "Authorization header is invalid: expired")
         }
+        return ware.Error(w, http.StatusUnauthorized, "Authorization header is invalid: corrupt")
     }
 
     if scopes, ok := token.Claims["scope"]; ok {
