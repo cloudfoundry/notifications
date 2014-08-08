@@ -2,7 +2,7 @@
 set -e
 
 export CC_HOST=https://api.example.com
-export DATABASE_URL=fakeuser:fakepassword@example.com/bananas
+export DATABASE_URL=root:root@127.0.0.1:3306/notifications_test
 export HTTP_LOGGING_ENABLED=true
 export ROOT_PATH=$HOME/workspace/go/src/github.com/cloudfoundry-incubator/notifications
 export SENDER=no-reply@notifications.example.com
