@@ -9,6 +9,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/middleware"
@@ -56,11 +57,15 @@ func NewRouter() Router {
     courier := postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer)
     errorWriter := handlers.NewErrorWriter()
 
+    clientsRepo := models.NewClientsRepo()
+    kindsRepo := models.NewKindsRepo()
+
     return Router{
         stacks: map[string]stack.Stack{
             "GET /info":           stack.NewStack(handlers.NewGetInfo()).Use(logging),
             "POST /users/{guid}":  stack.NewStack(handlers.NewNotifyUser(courier, errorWriter)).Use(logging, authenticator),
             "POST /spaces/{guid}": stack.NewStack(handlers.NewNotifySpace(courier, errorWriter)).Use(logging, authenticator),
+            "PUT /registration":   stack.NewStack(handlers.NewRegistration(clientsRepo, kindsRepo)).Use(logging, authenticator),
         },
     }
 }

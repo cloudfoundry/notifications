@@ -36,4 +36,11 @@ var _ = Describe("Router", func() {
         Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
         Expect(s.Middleware[1]).To(BeAssignableToTypeOf(middleware.Authenticator{}))
     })
+
+    It("routes PUT /registration", func() {
+        s := router.Routes().Get("PUT /registration").GetHandler().(stack.Stack)
+        Expect(s.Handler).To(BeAssignableToTypeOf(handlers.Registration{}))
+        Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+        Expect(s.Middleware[1]).To(BeAssignableToTypeOf(middleware.Authenticator{}))
+    })
 })

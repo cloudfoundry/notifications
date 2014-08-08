@@ -8,6 +8,11 @@ import (
 
 type KindsRepo struct{}
 
+type KindsRepoInterface interface {
+    Create(Kind) (Kind, error)
+    Find(string) (Kind, error)
+}
+
 func NewKindsRepo() KindsRepo {
     return KindsRepo{}
 }

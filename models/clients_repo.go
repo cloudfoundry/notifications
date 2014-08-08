@@ -8,6 +8,11 @@ import (
 
 type ClientsRepo struct{}
 
+type ClientsRepoInterface interface {
+    Create(Client) (Client, error)
+    Find(string) (Client, error)
+}
+
 func NewClientsRepo() ClientsRepo {
     return ClientsRepo{}
 }
