@@ -45,5 +45,19 @@ func Database() *DB {
             },
         },
     }
+
+    _database.migrate()
+
     return _database
+}
+
+func (database DB) migrate() {
+    database.Connection.AddTableWithName(Client{}, "clients").SetKeys(false, "ID")
+    database.Connection.AddTableWithName(Kind{}, "kinds").SetKeys(false, "ID")
+
+    err := database.Connection.CreateTablesIfNotExists()
+    if err != nil {
+        panic(err)
+    }
+
 }

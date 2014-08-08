@@ -8,23 +8,50 @@ import (
 )
 
 var _ = Describe("Database", func() {
+    var db *models.DB
+
+    BeforeEach(func() {
+        db = models.Database()
+    })
+
     It("returns a connection to the database", func() {
-        db := models.Database()
         err := db.Connection.Db.Ping()
         Expect(err).To(BeNil())
 
-        _, err = db.Connection.Db.Exec("SHOW TABLES")
+        _, err = db.Connection.Db.Query("SHOW TABLES")
         Expect(err).To(BeNil())
     })
 
     It("returns a single connection only", func() {
-        db1 := models.Database()
         db2 := models.Database()
 
-        for i := 0; i < 20; i++ {
-            go models.Database()
+        Expect(db).To(Equal(db2))
+    })
+
+    It("has the correct tables", func() {
+        err := db.Connection.Db.Ping()
+        Expect(err).To(BeNil())
+
+        rows, err := db.Connection.Db.Query("SHOW TABLES")
+        Expect(err).To(BeNil())
+
+        tables := []string{}
+        for rows.Next() {
+            var table string
+            err = rows.Scan(&table)
+            if err != nil {
+                panic(err)
+            }
+            tables = append(tables, table)
+        }
+        err = rows.Err()
+        if err != nil {
+            panic(err)
         }
 
-        Expect(db1).To(Equal(db2))
+        rows.Close()
+
+        Expect(tables).To(ContainElement("clients"))
+        Expect(tables).To(ContainElement("kinds"))
     })
 })
