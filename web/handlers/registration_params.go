@@ -4,9 +4,12 @@ import (
     "encoding/json"
     "io"
     "io/ioutil"
+    "regexp"
 
     "github.com/cloudfoundry-incubator/notifications/models"
 )
+
+var kindIDFormat = regexp.MustCompile(`^[0-9a-zA-z_\-.]+$`)
 
 type RegistrationParams struct {
     SourceDescription string        `json:"source_description"`
@@ -39,6 +42,8 @@ func (params RegistrationParams) Validate() error {
     for _, kind := range params.Kinds {
         if kind.ID == "" {
             kindErrors = append(kindErrors, `"kind.id" is a required field`)
+        } else if !kindIDFormat.MatchString(kind.ID) {
+            kindErrors = append(kindErrors, `"kind.id" is improperly formatted`)
         }
 
         if kind.Description == "" {

@@ -76,7 +76,7 @@ var _ = Describe("RegistrationParams", func() {
                 "source_description": "Raptor Containment Unit",
                 "kinds": []map[string]interface{}{
                     {
-                        "id":          "perimeter_breach",
+                        "id":          "perimeter_breach-88._",
                         "description": "Perimeter Breach",
                         "critical":    true,
                     },
@@ -119,5 +119,31 @@ var _ = Describe("RegistrationParams", func() {
             Expect(err).To(ContainElement(`"kind.id" is a required field`))
             Expect(err).To(ContainElement(`"kind.description" is a required field`))
         })
+
+        It("validates the format of kind.ID's", func() {
+            body, err := json.Marshal(map[string]interface{}{
+                "source_description": "the source description",
+                "kinds": []models.Kind{
+                    {
+                        ID:          "not-Valid@",
+                        Description: "kind description",
+                    },
+                },
+            })
+            if err != nil {
+                panic(err)
+            }
+
+            params, err := handlers.NewRegistrationParams(bytes.NewBuffer(body))
+            if err != nil {
+                panic(err)
+            }
+            err = params.Validate()
+            Expect(err).To(BeAssignableToTypeOf(handlers.ParamsValidationError{}))
+            errs := err.(handlers.ParamsValidationError).Errors()
+            Expect(len(errs)).To(Equal(1))
+            Expect(err).To(ContainElement(`"kind.id" is improperly formatted`))
+        })
+
     })
 })
