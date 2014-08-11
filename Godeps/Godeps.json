@@ -26,9 +26,19 @@
 			"Rev": "a3fdc62e311a44c5199b0ef323ee5e056c527ef1"
 		},
 		{
+			"ImportPath": "github.com/coopernurse/gorp",
+			"Comment": "v1.5",
+			"Rev": "242be3eec6e4d545d0eca24b5dc71236b71ac656"
+		},
+		{
 			"ImportPath": "github.com/dgrijalva/jwt-go",
 			"Comment": "v1.0.0-2-gf7a9d2e",
 			"Rev": "f7a9d2e66ed71a4e3bfaa24380e84bf465d665a8"
+		},
+		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "v1.1",
+			"Rev": "9a7aa3606b82e2081a13a008ada88dfdb96c20fd"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",
