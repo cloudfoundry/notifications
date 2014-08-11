@@ -54,11 +54,13 @@
 		},
 		{
 			"ImportPath": "github.com/onsi/ginkgo",
-			"Rev": "7083fb7612a8bc8ef9a48c35b8364fd06fadf9ad"
+			"Comment": "v1.1.0-1-g32204a3",
+			"Rev": "32204a3eab0576cbea19f5ff8b27d3a928647ea6"
 		},
 		{
 			"ImportPath": "github.com/onsi/gomega",
-			"Rev": "ff48b6baeb8028ce0ad570efbe36b1534b7efd0c"
+			"Comment": "v1.0",
+			"Rev": "a78ae492d53aad5a7a232d0d0462c14c400e3ee7"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",
