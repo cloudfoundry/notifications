@@ -57,6 +57,23 @@ var _ = Describe("RegistrationParams", func() {
                 Description: "Feeding Time",
                 Critical:    false,
             }))
+            Expect(params.IncludesKinds).To(BeTrue())
+        })
+
+        It("sets the IncludesKinds flag to false when the kinds are missing", func() {
+            body, err := json.Marshal(map[string]interface{}{
+                "source_description": "Raptor Containment Unit",
+            })
+            if err != nil {
+                panic(err)
+            }
+
+            params, err := handlers.NewRegistrationParams(bytes.NewBuffer(body))
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(params.IncludesKinds).To(BeFalse())
         })
 
         It("returns an error when the params are invalid JSON", func() {

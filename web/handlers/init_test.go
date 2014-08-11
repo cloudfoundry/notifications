@@ -125,13 +125,15 @@ func (fake *FakeClientsRepo) Find(id string) (models.Client, error) {
 }
 
 type FakeKindsRepo struct {
-    Kinds       map[string]models.Kind
-    UpsertError error
+    Kinds         map[string]models.Kind
+    UpsertError   error
+    TrimArguments []interface{}
 }
 
 func NewFakeKindsRepo() *FakeKindsRepo {
     return &FakeKindsRepo{
-        Kinds: make(map[string]models.Kind),
+        Kinds:         make(map[string]models.Kind),
+        TrimArguments: make([]interface{}, 0),
     }
 }
 
@@ -155,4 +157,9 @@ func (fake *FakeKindsRepo) Find(id string) (models.Kind, error) {
         return kind, nil
     }
     return models.Kind{}, models.ErrRecordNotFound{}
+}
+
+func (fake *FakeKindsRepo) Trim(clientID string, kindIDs []string) (int, error) {
+    fake.TrimArguments = []interface{}{clientID, kindIDs}
+    return 0, nil
 }

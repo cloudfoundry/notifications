@@ -3,6 +3,7 @@ package handlers_test
 import (
     "bytes"
     "encoding/json"
+    "io/ioutil"
     "net/http"
     "net/http/httptest"
     "strings"
@@ -134,6 +135,93 @@ var _ = Describe("Registration", func() {
             Critical:    false,
             ClientID:    "raptors",
         }))
+    })
+
+    Describe("trimming kinds", func() {
+        BeforeEach(func() {
+            _, err := fakeClientsRepo.Create(models.Client{
+                ID: "raptors",
+            })
+            if err != nil {
+                panic(err)
+            }
+
+            _, err = fakeKindsRepo.Create(models.Kind{
+                ID: "perimeter_breach",
+            })
+            if err != nil {
+                panic(err)
+            }
+
+            _, err = fakeKindsRepo.Create(models.Kind{
+                ID: "feeding_time",
+            })
+            if err != nil {
+                panic(err)
+            }
+        })
+
+        It("removes kinds that are not included in the request set", func() {
+            requestBody, err := json.Marshal(map[string]interface{}{
+                "source_description": "Raptor Containment Unit",
+                "kinds": []map[string]interface{}{
+                    {
+                        "id":          "perimeter_breach",
+                        "description": "Perimeter Breach",
+                        "critical":    true,
+                    },
+                },
+            })
+            if err != nil {
+                panic(err)
+            }
+            request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
+
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(http.StatusOK))
+
+            Expect(fakeKindsRepo.TrimArguments).To(Equal([]interface{}{
+                "raptors",
+                []string{"perimeter_breach"},
+            }))
+        })
+
+        It("does not trim kinds if they are not in the request", func() {
+            requestBody, err := json.Marshal(map[string]interface{}{
+                "source_description": "Raptor Containment Unit",
+            })
+            if err != nil {
+                panic(err)
+            }
+            request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
+
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(http.StatusOK))
+
+            Expect(fakeKindsRepo.TrimArguments).To(Equal([]interface{}{}))
+        })
+
+        It("trims all kinds if the key is empty", func() {
+            requestBody, err := json.Marshal(map[string]interface{}{
+                "source_description": "Raptor Containment Unit",
+                "kinds":              []interface{}{},
+            })
+            if err != nil {
+                panic(err)
+            }
+            request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
+
+            handler.ServeHTTP(writer, request)
+
+            Expect(writer.Code).To(Equal(http.StatusOK))
+
+            Expect(fakeKindsRepo.TrimArguments).To(Equal([]interface{}{
+                "raptors",
+                []string{},
+            }))
+        })
     })
 
     Context("failure cases", func() {

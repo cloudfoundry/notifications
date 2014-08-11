@@ -6,6 +6,17 @@ import (
     "time"
 )
 
+type IDSet []string
+
+func (set IDSet) Contains(id string) bool {
+    for _, item := range set {
+        if id == item {
+            return true
+        }
+    }
+    return false
+}
+
 type KindsRepo struct{}
 
 type KindsRepoInterface interface {
@@ -13,6 +24,7 @@ type KindsRepoInterface interface {
     Find(string) (Kind, error)
     Update(Kind) (Kind, error)
     Upsert(Kind) (Kind, error)
+    Trim(string, []string) (int, error)
 }
 
 func NewKindsRepo() KindsRepo {
@@ -64,4 +76,35 @@ func (repo KindsRepo) Upsert(kind Kind) (Kind, error) {
         }
     }
     return repo.Update(kind)
+}
+
+func (repo KindsRepo) Trim(clientID string, kindIDs []string) (int, error) {
+    kinds, err := repo.findAllByClientID(clientID)
+    if err != nil {
+        return 0, err
+    }
+
+    ids := IDSet(kindIDs)
+    var kindsToDelete []interface{}
+    for _, k := range kinds {
+        var kind = k
+        if !ids.Contains(kind.ID) {
+            kindsToDelete = append(kindsToDelete, &kind)
+        }
+    }
+
+    count, err := Database().Connection.Delete(kindsToDelete...)
+    return int(count), err
+}
+
+func (repo KindsRepo) findAllByClientID(clientID string) ([]Kind, error) {
+    var kinds []Kind
+    results, err := Database().Connection.Select(Kind{}, "SELECT * FROM `kinds` WHERE `client_id` = ?", clientID)
+    if err != nil {
+        return kinds, err
+    }
+    for _, result := range results {
+        kinds = append(kinds, *result.(*Kind))
+    }
+    return kinds, nil
 }

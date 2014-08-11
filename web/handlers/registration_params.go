@@ -14,6 +14,7 @@ var kindIDFormat = regexp.MustCompile(`^[0-9a-zA-z_\-.]+$`)
 type RegistrationParams struct {
     SourceDescription string        `json:"source_description"`
     Kinds             []models.Kind `json:"kinds"`
+    IncludesKinds     bool
 }
 
 func NewRegistrationParams(body io.Reader) (RegistrationParams, error) {
@@ -22,6 +23,16 @@ func NewRegistrationParams(body io.Reader) (RegistrationParams, error) {
     bytes, err := ioutil.ReadAll(body)
     if err != nil {
         return params, ParamsParseError{}
+    }
+
+    var hashParams map[string]interface{}
+    err = json.Unmarshal(bytes, &hashParams)
+    if err != nil {
+        return params, ParamsParseError{}
+    }
+
+    if _, ok := hashParams["kinds"]; ok {
+        params.IncludesKinds = true
     }
 
     err = json.Unmarshal(bytes, &params)

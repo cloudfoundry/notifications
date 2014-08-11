@@ -141,4 +141,59 @@ var _ = Describe("KindsRepo", func() {
             })
         })
     })
+
+    Describe("Trim", func() {
+        It("deletes any kinds for the clientID that are not in the kindArray", func() {
+            kind := models.Kind{
+                ID:       "my-kind",
+                ClientID: "the-client-id",
+            }
+
+            kindToDelete := models.Kind{
+                ID:       "other-kind",
+                ClientID: "the-client-id",
+            }
+
+            ignoredKind := models.Kind{
+                ID:       "ignored-kind",
+                ClientID: "other-client-id",
+            }
+
+            kind, err := repo.Create(kind)
+            if err != nil {
+                panic(err)
+            }
+
+            kindToDelete, err = repo.Create(kindToDelete)
+            if err != nil {
+                panic(err)
+            }
+
+            ignoredKind, err = repo.Create(ignoredKind)
+            if err != nil {
+                panic(err)
+            }
+
+            count, err := repo.Trim("the-client-id", []string{"other-kind"})
+
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(count).To(Equal(1))
+
+            _, err = repo.Find("my-kind")
+            Expect(err).To(BeAssignableToTypeOf(models.ErrRecordNotFound{}))
+
+            _, err = repo.Find("ignored-kind")
+            if err != nil {
+                panic(err)
+            }
+
+            _, err = repo.Find("other-kind")
+            if err != nil {
+                panic(err)
+            }
+        })
+    })
 })

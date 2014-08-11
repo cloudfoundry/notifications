@@ -46,9 +46,20 @@ func (handler Registration) ServeHTTP(w http.ResponseWriter, req *http.Request) 
         return
     }
 
+    kindIDs := []string{}
     for _, kind := range params.Kinds {
+        kindIDs = append(kindIDs, kind.ID)
+
         kind.ClientID = client.ID
         _, err = handler.kindsRepo.Upsert(kind)
+        if err != nil {
+            handler.errorWriter.Write(w, err)
+            return
+        }
+    }
+
+    if params.IncludesKinds {
+        _, err = handler.kindsRepo.Trim(client.ID, kindIDs)
         if err != nil {
             handler.errorWriter.Write(w, err)
             return
