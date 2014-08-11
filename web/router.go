@@ -65,7 +65,7 @@ func NewRouter() Router {
             "GET /info":           stack.NewStack(handlers.NewGetInfo()).Use(logging),
             "POST /users/{guid}":  stack.NewStack(handlers.NewNotifyUser(courier, errorWriter)).Use(logging, authenticator),
             "POST /spaces/{guid}": stack.NewStack(handlers.NewNotifySpace(courier, errorWriter)).Use(logging, authenticator),
-            "PUT /registration":   stack.NewStack(handlers.NewRegistration(clientsRepo, kindsRepo)).Use(logging, authenticator),
+            "PUT /registration":   stack.NewStack(handlers.NewRegistration(clientsRepo, kindsRepo, errorWriter)).Use(logging, authenticator),
         },
     }
 }

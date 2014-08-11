@@ -1,10 +1,13 @@
 package models
 
-import (
-    "errors"
-)
+type ErrRecordNotFound struct{}
 
-var (
-    ErrRecordNotFound  = errors.New("Record Not Found")
-    ErrDuplicateRecord = errors.New("Duplicate Record")
-)
+func (err ErrRecordNotFound) Error() string {
+    return "Record Not Found"
+}
+
+type ErrDuplicateRecord struct{}
+
+func (err ErrDuplicateRecord) Error() string {
+    return "Duplicate Record"
+}

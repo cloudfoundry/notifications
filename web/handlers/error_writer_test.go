@@ -6,6 +6,7 @@ import (
     "net/http"
     "net/http/httptest"
 
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
 
@@ -119,6 +120,34 @@ var _ = Describe("ErrorWriter", func() {
 
         Expect(body["errors"]).To(ContainElement("something"))
         Expect(body["errors"]).To(ContainElement("another"))
+    })
+
+    It("returns a 409 when there is a duplicate record", func() {
+        writer.Write(recorder, models.ErrDuplicateRecord{})
+
+        Expect(recorder.Code).To(Equal(409))
+
+        body := make(map[string]interface{})
+        err := json.Unmarshal(recorder.Body.Bytes(), &body)
+        if err != nil {
+            panic(err)
+        }
+
+        Expect(body["errors"]).To(ContainElement("Duplicate Record"))
+    })
+
+    It("returns a 404 when a record cannot be found", func() {
+        writer.Write(recorder, models.ErrRecordNotFound{})
+
+        Expect(recorder.Code).To(Equal(404))
+
+        body := make(map[string]interface{})
+        err := json.Unmarshal(recorder.Body.Bytes(), &body)
+        if err != nil {
+            panic(err)
+        }
+
+        Expect(body["errors"]).To(ContainElement("Record Not Found"))
     })
 
     It("panics for unknown errors", func() {

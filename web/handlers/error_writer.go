@@ -4,6 +4,7 @@ import (
     "encoding/json"
     "net/http"
 
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
 )
 
@@ -33,6 +34,10 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
         writer.write(w, 422, []string{err.Error()})
     case ParamsValidationError:
         writer.write(w, 422, err.(ParamsValidationError).Errors())
+    case models.ErrDuplicateRecord:
+        writer.write(w, 409, []string{err.Error()})
+    case models.ErrRecordNotFound:
+        writer.write(w, 404, []string{err.Error()})
     default:
         panic(err)
     }
