@@ -4,6 +4,7 @@ import (
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/coopernurse/gorp"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -11,10 +12,12 @@ import (
 
 var _ = Describe("KindsRepo", func() {
     var repo models.KindsRepo
+    var conn *gorp.DbMap
 
     BeforeEach(func() {
         TruncateTables()
         repo = models.NewKindsRepo()
+        conn = models.Database().Connection
     })
 
     Describe("Create", func() {
@@ -26,12 +29,12 @@ var _ = Describe("KindsRepo", func() {
                 ClientID:    "my-client",
             }
 
-            kind, err := repo.Create(kind)
+            kind, err := repo.Create(conn, kind)
             if err != nil {
                 panic(err)
             }
 
-            kind, err = repo.Find("my-kind")
+            kind, err = repo.Find(conn, "my-kind")
             if err != nil {
                 panic(err)
             }
@@ -50,7 +53,7 @@ var _ = Describe("KindsRepo", func() {
                 ID: "my-kind",
             }
 
-            kind, err := repo.Create(kind)
+            kind, err := repo.Create(conn, kind)
             if err != nil {
                 panic(err)
             }
@@ -59,12 +62,12 @@ var _ = Describe("KindsRepo", func() {
             kind.Critical = true
             kind.ClientID = "my-client"
 
-            kind, err = repo.Update(kind)
+            kind, err = repo.Update(conn, kind)
             if err != nil {
                 panic(err)
             }
 
-            kind, err = repo.Find("my-kind")
+            kind, err = repo.Find(conn, "my-kind")
             if err != nil {
                 panic(err)
             }
@@ -87,12 +90,12 @@ var _ = Describe("KindsRepo", func() {
                     ClientID:    "my-client",
                 }
 
-                kind, err := repo.Upsert(kind)
+                kind, err := repo.Upsert(conn, kind)
                 if err != nil {
                     panic(err)
                 }
 
-                kind, err = repo.Find("my-kind")
+                kind, err = repo.Find(conn, "my-kind")
                 if err != nil {
                     panic(err)
                 }
@@ -111,7 +114,7 @@ var _ = Describe("KindsRepo", func() {
                     ID: "my-kind",
                 }
 
-                kind, err := repo.Create(kind)
+                kind, err := repo.Create(conn, kind)
                 if err != nil {
                     panic(err)
                 }
@@ -123,12 +126,12 @@ var _ = Describe("KindsRepo", func() {
                     ClientID:    "my-client",
                 }
 
-                kind, err = repo.Upsert(kind)
+                kind, err = repo.Upsert(conn, kind)
                 if err != nil {
                     panic(err)
                 }
 
-                kind, err = repo.Find("my-kind")
+                kind, err = repo.Find(conn, "my-kind")
                 if err != nil {
                     panic(err)
                 }
@@ -159,22 +162,22 @@ var _ = Describe("KindsRepo", func() {
                 ClientID: "other-client-id",
             }
 
-            kind, err := repo.Create(kind)
+            kind, err := repo.Create(conn, kind)
             if err != nil {
                 panic(err)
             }
 
-            kindToDelete, err = repo.Create(kindToDelete)
+            kindToDelete, err = repo.Create(conn, kindToDelete)
             if err != nil {
                 panic(err)
             }
 
-            ignoredKind, err = repo.Create(ignoredKind)
+            ignoredKind, err = repo.Create(conn, ignoredKind)
             if err != nil {
                 panic(err)
             }
 
-            count, err := repo.Trim("the-client-id", []string{"other-kind"})
+            count, err := repo.Trim(conn, "the-client-id", []string{"other-kind"})
 
             if err != nil {
                 panic(err)
@@ -182,15 +185,15 @@ var _ = Describe("KindsRepo", func() {
 
             Expect(count).To(Equal(1))
 
-            _, err = repo.Find("my-kind")
+            _, err = repo.Find(conn, "my-kind")
             Expect(err).To(BeAssignableToTypeOf(models.ErrRecordNotFound{}))
 
-            _, err = repo.Find("ignored-kind")
+            _, err = repo.Find(conn, "ignored-kind")
             if err != nil {
                 panic(err)
             }
 
-            _, err = repo.Find("other-kind")
+            _, err = repo.Find(conn, "other-kind")
             if err != nil {
                 panic(err)
             }

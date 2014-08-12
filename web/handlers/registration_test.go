@@ -22,8 +22,10 @@ var _ = Describe("Registration", func() {
     var fakeClientsRepo *FakeClientsRepo
     var fakeKindsRepo *FakeKindsRepo
     var fakeErrorWriter *FakeErrorWriter
+    var fakeConn *FakeDBConn
 
     BeforeEach(func() {
+        fakeConn = &FakeDBConn{}
         fakeClientsRepo = NewFakeClientsRepo()
         fakeKindsRepo = NewFakeKindsRepo()
         fakeErrorWriter = &FakeErrorWriter{}
@@ -62,210 +64,260 @@ var _ = Describe("Registration", func() {
         request.Header.Set("Authorization", "Bearer "+BuildToken(tokenHeader, tokenClaims))
     })
 
-    It("stores the client and kind records in the database", func() {
-        handler.ServeHTTP(writer, request)
+    Describe("Execute", func() {
+        It("stores the client and kind records in the database", func() {
+            handler.Execute(writer, request, fakeConn)
 
-        Expect(writer.Code).To(Equal(http.StatusOK))
+            Expect(writer.Code).To(Equal(http.StatusOK))
 
-        Expect(len(fakeClientsRepo.Clients)).To(Equal(1))
-        client := fakeClientsRepo.Clients["raptors"]
+            Expect(len(fakeClientsRepo.Clients)).To(Equal(1))
+            client := fakeClientsRepo.Clients["raptors"]
 
-        Expect(client.ID).To(Equal("raptors"))
-        Expect(client.Description).To(Equal("Raptor Containment Unit"))
+            Expect(client.ID).To(Equal("raptors"))
+            Expect(client.Description).To(Equal("Raptor Containment Unit"))
 
-        Expect(len(fakeKindsRepo.Kinds)).To(Equal(2))
-        Expect(fakeKindsRepo.Kinds["perimeter_breach"]).To(Equal(models.Kind{
-            ID:          "perimeter_breach",
-            Description: "Perimeter Breach",
-            Critical:    true,
-            ClientID:    "raptors",
-        }))
+            Expect(len(fakeKindsRepo.Kinds)).To(Equal(2))
+            Expect(fakeKindsRepo.Kinds["perimeter_breach"]).To(Equal(models.Kind{
+                ID:          "perimeter_breach",
+                Description: "Perimeter Breach",
+                Critical:    true,
+                ClientID:    "raptors",
+            }))
 
-        Expect(fakeKindsRepo.Kinds["feeding_time"]).To(Equal(models.Kind{
-            ID:          "feeding_time",
-            Description: "Feeding Time",
-            Critical:    false,
-            ClientID:    "raptors",
-        }))
-    })
+            Expect(fakeKindsRepo.Kinds["feeding_time"]).To(Equal(models.Kind{
+                ID:          "feeding_time",
+                Description: "Feeding Time",
+                Critical:    false,
+                ClientID:    "raptors",
+            }))
 
-    It("idempotently updates the client and kinds", func() {
-        _, err := fakeClientsRepo.Create(models.Client{
-            ID: "raptors",
+            Expect(fakeConn.BeginWasCalled).To(BeTrue())
+            Expect(fakeConn.CommitWasCalled).To(BeTrue())
+            Expect(fakeConn.RollbackWasCalled).To(BeFalse())
         })
-        if err != nil {
-            panic(err)
-        }
 
-        _, err = fakeKindsRepo.Create(models.Kind{
-            ID: "perimeter_breach",
-        })
-        if err != nil {
-            panic(err)
-        }
-
-        _, err = fakeKindsRepo.Create(models.Kind{
-            ID: "feeding_time",
-        })
-        if err != nil {
-            panic(err)
-        }
-
-        handler.ServeHTTP(writer, request)
-
-        Expect(writer.Code).To(Equal(http.StatusOK))
-
-        Expect(len(fakeClientsRepo.Clients)).To(Equal(1))
-        Expect(fakeClientsRepo.Clients["raptors"]).To(Equal(models.Client{
-            ID:          "raptors",
-            Description: "Raptor Containment Unit",
-        }))
-
-        Expect(len(fakeKindsRepo.Kinds)).To(Equal(2))
-        Expect(fakeKindsRepo.Kinds["perimeter_breach"]).To(Equal(models.Kind{
-            ID:          "perimeter_breach",
-            Description: "Perimeter Breach",
-            Critical:    true,
-            ClientID:    "raptors",
-        }))
-
-        Expect(fakeKindsRepo.Kinds["feeding_time"]).To(Equal(models.Kind{
-            ID:          "feeding_time",
-            Description: "Feeding Time",
-            Critical:    false,
-            ClientID:    "raptors",
-        }))
-    })
-
-    Describe("trimming kinds", func() {
-        BeforeEach(func() {
-            _, err := fakeClientsRepo.Create(models.Client{
+        It("idempotently updates the client and kinds", func() {
+            _, err := fakeClientsRepo.Create(fakeConn, models.Client{
                 ID: "raptors",
             })
             if err != nil {
                 panic(err)
             }
 
-            _, err = fakeKindsRepo.Create(models.Kind{
+            _, err = fakeKindsRepo.Create(fakeConn, models.Kind{
                 ID: "perimeter_breach",
             })
             if err != nil {
                 panic(err)
             }
 
-            _, err = fakeKindsRepo.Create(models.Kind{
+            _, err = fakeKindsRepo.Create(fakeConn, models.Kind{
                 ID: "feeding_time",
             })
             if err != nil {
                 panic(err)
             }
+
+            handler.Execute(writer, request, fakeConn)
+
+            Expect(writer.Code).To(Equal(http.StatusOK))
+
+            Expect(len(fakeClientsRepo.Clients)).To(Equal(1))
+            Expect(fakeClientsRepo.Clients["raptors"]).To(Equal(models.Client{
+                ID:          "raptors",
+                Description: "Raptor Containment Unit",
+            }))
+
+            Expect(len(fakeKindsRepo.Kinds)).To(Equal(2))
+            Expect(fakeKindsRepo.Kinds["perimeter_breach"]).To(Equal(models.Kind{
+                ID:          "perimeter_breach",
+                Description: "Perimeter Breach",
+                Critical:    true,
+                ClientID:    "raptors",
+            }))
+
+            Expect(fakeKindsRepo.Kinds["feeding_time"]).To(Equal(models.Kind{
+                ID:          "feeding_time",
+                Description: "Feeding Time",
+                Critical:    false,
+                ClientID:    "raptors",
+            }))
+
+            Expect(fakeConn.BeginWasCalled).To(BeTrue())
+            Expect(fakeConn.CommitWasCalled).To(BeTrue())
+            Expect(fakeConn.RollbackWasCalled).To(BeFalse())
         })
 
-        It("removes kinds that are not included in the request set", func() {
-            requestBody, err := json.Marshal(map[string]interface{}{
-                "source_description": "Raptor Containment Unit",
-                "kinds": []map[string]interface{}{
-                    {
-                        "id":          "perimeter_breach",
-                        "description": "Perimeter Breach",
-                        "critical":    true,
+        Describe("trimming kinds", func() {
+            BeforeEach(func() {
+                _, err := fakeClientsRepo.Create(fakeConn, models.Client{
+                    ID: "raptors",
+                })
+                if err != nil {
+                    panic(err)
+                }
+
+                _, err = fakeKindsRepo.Create(fakeConn, models.Kind{
+                    ID: "perimeter_breach",
+                })
+                if err != nil {
+                    panic(err)
+                }
+
+                _, err = fakeKindsRepo.Create(fakeConn, models.Kind{
+                    ID: "feeding_time",
+                })
+                if err != nil {
+                    panic(err)
+                }
+            })
+
+            It("removes kinds that are not included in the request set", func() {
+                requestBody, err := json.Marshal(map[string]interface{}{
+                    "source_description": "Raptor Containment Unit",
+                    "kinds": []map[string]interface{}{
+                        {
+                            "id":          "perimeter_breach",
+                            "description": "Perimeter Breach",
+                            "critical":    true,
+                        },
                     },
-                },
+                })
+                if err != nil {
+                    panic(err)
+                }
+                request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
+
+                handler.Execute(writer, request, fakeConn)
+
+                Expect(writer.Code).To(Equal(http.StatusOK))
+
+                Expect(fakeKindsRepo.TrimArguments).To(Equal([]interface{}{
+                    "raptors",
+                    []string{"perimeter_breach"},
+                }))
+
+                Expect(fakeConn.BeginWasCalled).To(BeTrue())
+                Expect(fakeConn.CommitWasCalled).To(BeTrue())
+                Expect(fakeConn.RollbackWasCalled).To(BeFalse())
             })
-            if err != nil {
-                panic(err)
-            }
-            request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
-            handler.ServeHTTP(writer, request)
+            It("does not trim kinds if they are not in the request", func() {
+                requestBody, err := json.Marshal(map[string]interface{}{
+                    "source_description": "Raptor Containment Unit",
+                })
+                if err != nil {
+                    panic(err)
+                }
+                request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
-            Expect(writer.Code).To(Equal(http.StatusOK))
+                handler.Execute(writer, request, fakeConn)
 
-            Expect(fakeKindsRepo.TrimArguments).To(Equal([]interface{}{
-                "raptors",
-                []string{"perimeter_breach"},
-            }))
-        })
+                Expect(writer.Code).To(Equal(http.StatusOK))
 
-        It("does not trim kinds if they are not in the request", func() {
-            requestBody, err := json.Marshal(map[string]interface{}{
-                "source_description": "Raptor Containment Unit",
+                Expect(fakeKindsRepo.TrimArguments).To(Equal([]interface{}{}))
+
+                Expect(fakeConn.BeginWasCalled).To(BeTrue())
+                Expect(fakeConn.CommitWasCalled).To(BeTrue())
+                Expect(fakeConn.RollbackWasCalled).To(BeFalse())
             })
-            if err != nil {
-                panic(err)
-            }
-            request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
-            handler.ServeHTTP(writer, request)
+            It("trims all kinds if the key is empty", func() {
+                requestBody, err := json.Marshal(map[string]interface{}{
+                    "source_description": "Raptor Containment Unit",
+                    "kinds":              []interface{}{},
+                })
+                if err != nil {
+                    panic(err)
+                }
+                request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
-            Expect(writer.Code).To(Equal(http.StatusOK))
+                handler.Execute(writer, request, fakeConn)
 
-            Expect(fakeKindsRepo.TrimArguments).To(Equal([]interface{}{}))
-        })
+                Expect(writer.Code).To(Equal(http.StatusOK))
 
-        It("trims all kinds if the key is empty", func() {
-            requestBody, err := json.Marshal(map[string]interface{}{
-                "source_description": "Raptor Containment Unit",
-                "kinds":              []interface{}{},
+                Expect(fakeKindsRepo.TrimArguments).To(Equal([]interface{}{
+                    "raptors",
+                    []string{},
+                }))
+
+                Expect(fakeConn.BeginWasCalled).To(BeTrue())
+                Expect(fakeConn.CommitWasCalled).To(BeTrue())
+                Expect(fakeConn.RollbackWasCalled).To(BeFalse())
             })
-            if err != nil {
-                panic(err)
-            }
-            request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
-
-            handler.ServeHTTP(writer, request)
-
-            Expect(writer.Code).To(Equal(http.StatusOK))
-
-            Expect(fakeKindsRepo.TrimArguments).To(Equal([]interface{}{
-                "raptors",
-                []string{},
-            }))
-        })
-    })
-
-    Context("failure cases", func() {
-        It("delegates parsing errors to the ErrorWriter", func() {
-            var err error
-            request, err = http.NewRequest("PUT", "/registration", strings.NewReader("this is not valid JSON"))
-            if err != nil {
-                panic(err)
-            }
-
-            handler.ServeHTTP(writer, request)
-
-            Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(handlers.ParamsParseError{}))
         })
 
-        It("delegates validation errors to the ErrorWriter", func() {
-            requestBody, err := json.Marshal(map[string]interface{}{})
-            if err != nil {
-                panic(err)
-            }
-            request, err = http.NewRequest("PUT", "/registration", bytes.NewBuffer(requestBody))
-            if err != nil {
-                panic(err)
-            }
+        Context("failure cases", func() {
+            It("delegates parsing errors to the ErrorWriter", func() {
+                var err error
+                request, err = http.NewRequest("PUT", "/registration", strings.NewReader("this is not valid JSON"))
+                if err != nil {
+                    panic(err)
+                }
 
-            handler.ServeHTTP(writer, request)
+                handler.Execute(writer, request, fakeConn)
 
-            Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(handlers.ParamsValidationError{}))
-        })
+                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(handlers.ParamsParseError{}))
 
-        It("delegates client repo errors to the ErrorWriter", func() {
-            fakeClientsRepo.UpsertError = models.ErrDuplicateRecord{}
+                Expect(fakeConn.BeginWasCalled).To(BeFalse())
+                Expect(fakeConn.CommitWasCalled).To(BeFalse())
+                Expect(fakeConn.RollbackWasCalled).To(BeFalse())
+            })
 
-            handler.ServeHTTP(writer, request)
+            It("delegates validation errors to the ErrorWriter", func() {
+                requestBody, err := json.Marshal(map[string]interface{}{})
+                if err != nil {
+                    panic(err)
+                }
+                request, err = http.NewRequest("PUT", "/registration", bytes.NewBuffer(requestBody))
+                if err != nil {
+                    panic(err)
+                }
 
-            Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(models.ErrDuplicateRecord{}))
-        })
+                handler.Execute(writer, request, fakeConn)
 
-        It("delegates kind repo errors to the ErrorWriter", func() {
-            fakeKindsRepo.UpsertError = models.ErrDuplicateRecord{}
+                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(handlers.ParamsValidationError{}))
 
-            handler.ServeHTTP(writer, request)
+                Expect(fakeConn.BeginWasCalled).To(BeFalse())
+                Expect(fakeConn.CommitWasCalled).To(BeFalse())
+                Expect(fakeConn.RollbackWasCalled).To(BeFalse())
+            })
 
-            Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(models.ErrDuplicateRecord{}))
+            It("delegates client repo errors to the ErrorWriter", func() {
+                fakeClientsRepo.UpsertError = models.ErrDuplicateRecord{}
+
+                handler.Execute(writer, request, fakeConn)
+
+                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(models.ErrDuplicateRecord{}))
+
+                Expect(fakeConn.BeginWasCalled).To(BeTrue())
+                Expect(fakeConn.CommitWasCalled).To(BeFalse())
+                Expect(fakeConn.RollbackWasCalled).To(BeTrue())
+            })
+
+            It("delegates kind repo upsert errors to the ErrorWriter", func() {
+                fakeKindsRepo.UpsertError = models.ErrDuplicateRecord{}
+
+                handler.Execute(writer, request, fakeConn)
+
+                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(models.ErrDuplicateRecord{}))
+
+                Expect(fakeConn.BeginWasCalled).To(BeTrue())
+                Expect(fakeConn.CommitWasCalled).To(BeFalse())
+                Expect(fakeConn.RollbackWasCalled).To(BeTrue())
+            })
+
+            It("delegates kind repo trim errors to the ErrorWriter", func() {
+                fakeKindsRepo.TrimError = models.ErrDuplicateRecord{}
+
+                handler.Execute(writer, request, fakeConn)
+
+                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(models.ErrDuplicateRecord{}))
+
+                Expect(fakeConn.BeginWasCalled).To(BeTrue())
+                Expect(fakeConn.CommitWasCalled).To(BeFalse())
+                Expect(fakeConn.RollbackWasCalled).To(BeTrue())
+            })
         })
     })
 })

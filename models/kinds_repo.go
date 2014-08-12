@@ -20,20 +20,20 @@ func (set IDSet) Contains(id string) bool {
 type KindsRepo struct{}
 
 type KindsRepoInterface interface {
-    Create(Kind) (Kind, error)
-    Find(string) (Kind, error)
-    Update(Kind) (Kind, error)
-    Upsert(Kind) (Kind, error)
-    Trim(string, []string) (int, error)
+    Create(ConnectionInterface, Kind) (Kind, error)
+    Find(ConnectionInterface, string) (Kind, error)
+    Update(ConnectionInterface, Kind) (Kind, error)
+    Upsert(ConnectionInterface, Kind) (Kind, error)
+    Trim(ConnectionInterface, string, []string) (int, error)
 }
 
 func NewKindsRepo() KindsRepo {
     return KindsRepo{}
 }
 
-func (repo KindsRepo) Create(kind Kind) (Kind, error) {
+func (repo KindsRepo) Create(conn ConnectionInterface, kind Kind) (Kind, error) {
     kind.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
-    err := Database().Connection.Insert(&kind)
+    err := conn.Insert(&kind)
     if err != nil {
         if strings.Contains(err.Error(), "Duplicate entry") {
             err = ErrDuplicateRecord{}
@@ -43,9 +43,9 @@ func (repo KindsRepo) Create(kind Kind) (Kind, error) {
     return kind, nil
 }
 
-func (repo KindsRepo) Find(id string) (Kind, error) {
+func (repo KindsRepo) Find(conn ConnectionInterface, id string) (Kind, error) {
     kind := Kind{}
-    err := Database().Connection.SelectOne(&kind, "SELECT * FROM `kinds` WHERE `id` = ?", id)
+    err := conn.SelectOne(&kind, "SELECT * FROM `kinds` WHERE `id` = ?", id)
     if err != nil {
         if err == sql.ErrNoRows {
             err = ErrRecordNotFound{}
@@ -55,31 +55,31 @@ func (repo KindsRepo) Find(id string) (Kind, error) {
     return kind, nil
 }
 
-func (repo KindsRepo) Update(kind Kind) (Kind, error) {
-    _, err := Database().Connection.Update(&kind)
+func (repo KindsRepo) Update(conn ConnectionInterface, kind Kind) (Kind, error) {
+    _, err := conn.Update(&kind)
     if err != nil {
         return kind, err
     }
 
-    return repo.Find(kind.ID)
+    return repo.Find(conn, kind.ID)
 }
 
-func (repo KindsRepo) Upsert(kind Kind) (Kind, error) {
-    existingKind, err := repo.Find(kind.ID)
+func (repo KindsRepo) Upsert(conn ConnectionInterface, kind Kind) (Kind, error) {
+    existingKind, err := repo.Find(conn, kind.ID)
     kind.CreatedAt = existingKind.CreatedAt
 
     if err != nil {
         if (err == ErrRecordNotFound{}) {
-            return repo.Create(kind)
+            return repo.Create(conn, kind)
         } else {
             return kind, err
         }
     }
-    return repo.Update(kind)
+    return repo.Update(conn, kind)
 }
 
-func (repo KindsRepo) Trim(clientID string, kindIDs []string) (int, error) {
-    kinds, err := repo.findAllByClientID(clientID)
+func (repo KindsRepo) Trim(conn ConnectionInterface, clientID string, kindIDs []string) (int, error) {
+    kinds, err := repo.findAllByClientID(conn, clientID)
     if err != nil {
         return 0, err
     }
@@ -93,13 +93,13 @@ func (repo KindsRepo) Trim(clientID string, kindIDs []string) (int, error) {
         }
     }
 
-    count, err := Database().Connection.Delete(kindsToDelete...)
+    count, err := conn.Delete(kindsToDelete...)
     return int(count), err
 }
 
-func (repo KindsRepo) findAllByClientID(clientID string) ([]Kind, error) {
+func (repo KindsRepo) findAllByClientID(conn ConnectionInterface, clientID string) ([]Kind, error) {
     var kinds []Kind
-    results, err := Database().Connection.Select(Kind{}, "SELECT * FROM `kinds` WHERE `client_id` = ?", clientID)
+    results, err := conn.Select(Kind{}, "SELECT * FROM `kinds` WHERE `client_id` = ?", clientID)
     if err != nil {
         return kinds, err
     }

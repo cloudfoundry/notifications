@@ -24,6 +24,10 @@ func NewRegistration(clientsRepo models.ClientsRepoInterface, kindsRepo models.K
 }
 
 func (handler Registration) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+    handler.Execute(w, req, models.NewTransaction())
+}
+
+func (handler Registration) Execute(w http.ResponseWriter, req *http.Request, transaction models.TransactionInterface) {
     params, err := NewRegistrationParams(req.Body)
     if err != nil {
         handler.errorWriter.Write(w, err)
@@ -36,12 +40,15 @@ func (handler Registration) ServeHTTP(w http.ResponseWriter, req *http.Request) 
         return
     }
 
+    transaction.Begin()
+
     client := models.Client{
         ID:          handler.parseClientID(req),
         Description: params.SourceDescription,
     }
-    client, err = handler.clientsRepo.Upsert(client)
+    client, err = handler.clientsRepo.Upsert(transaction, client)
     if err != nil {
+        transaction.Rollback()
         handler.errorWriter.Write(w, err)
         return
     }
@@ -51,20 +58,24 @@ func (handler Registration) ServeHTTP(w http.ResponseWriter, req *http.Request) 
         kindIDs = append(kindIDs, kind.ID)
 
         kind.ClientID = client.ID
-        _, err = handler.kindsRepo.Upsert(kind)
+        _, err = handler.kindsRepo.Upsert(transaction, kind)
         if err != nil {
+            transaction.Rollback()
             handler.errorWriter.Write(w, err)
             return
         }
     }
 
     if params.IncludesKinds {
-        _, err = handler.kindsRepo.Trim(client.ID, kindIDs)
+        _, err = handler.kindsRepo.Trim(transaction, client.ID, kindIDs)
         if err != nil {
+            transaction.Rollback()
             handler.errorWriter.Write(w, err)
             return
         }
     }
+
+    transaction.Commit()
 }
 
 func (handler Registration) parseClientID(req *http.Request) string {

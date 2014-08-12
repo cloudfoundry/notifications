@@ -9,19 +9,19 @@ import (
 type ClientsRepo struct{}
 
 type ClientsRepoInterface interface {
-    Create(Client) (Client, error)
-    Find(string) (Client, error)
-    Update(Client) (Client, error)
-    Upsert(Client) (Client, error)
+    Create(ConnectionInterface, Client) (Client, error)
+    Find(ConnectionInterface, string) (Client, error)
+    Update(ConnectionInterface, Client) (Client, error)
+    Upsert(ConnectionInterface, Client) (Client, error)
 }
 
 func NewClientsRepo() ClientsRepo {
     return ClientsRepo{}
 }
 
-func (repo ClientsRepo) Create(client Client) (Client, error) {
+func (repo ClientsRepo) Create(conn ConnectionInterface, client Client) (Client, error) {
     client.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
-    err := Database().Connection.Insert(&client)
+    err := conn.Insert(&client)
     if err != nil {
         if strings.Contains(err.Error(), "Duplicate entry") {
             err = ErrDuplicateRecord{}
@@ -31,9 +31,9 @@ func (repo ClientsRepo) Create(client Client) (Client, error) {
     return client, nil
 }
 
-func (repo ClientsRepo) Find(id string) (Client, error) {
+func (repo ClientsRepo) Find(conn ConnectionInterface, id string) (Client, error) {
     client := Client{}
-    err := Database().Connection.SelectOne(&client, "SELECT * FROM `clients` WHERE `id` = ?", id)
+    err := conn.SelectOne(&client, "SELECT * FROM `clients` WHERE `id` = ?", id)
     if err != nil {
         if err == sql.ErrNoRows {
             err = ErrRecordNotFound{}
@@ -43,26 +43,26 @@ func (repo ClientsRepo) Find(id string) (Client, error) {
     return client, nil
 }
 
-func (repo ClientsRepo) Update(client Client) (Client, error) {
-    _, err := Database().Connection.Update(&client)
+func (repo ClientsRepo) Update(conn ConnectionInterface, client Client) (Client, error) {
+    _, err := conn.Update(&client)
     if err != nil {
         return client, err
     }
 
-    return repo.Find(client.ID)
+    return repo.Find(conn, client.ID)
 }
 
-func (repo ClientsRepo) Upsert(client Client) (Client, error) {
-    existingClient, err := repo.Find(client.ID)
+func (repo ClientsRepo) Upsert(conn ConnectionInterface, client Client) (Client, error) {
+    existingClient, err := repo.Find(conn, client.ID)
     client.CreatedAt = existingClient.CreatedAt
 
     if err != nil {
         if (err == ErrRecordNotFound{}) {
-            return repo.Create(client)
+            return repo.Create(conn, client)
         } else {
             return client, err
         }
     }
 
-    return repo.Update(client)
+    return repo.Update(conn, client)
 }

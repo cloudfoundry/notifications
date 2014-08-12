@@ -4,6 +4,7 @@ import (
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/coopernurse/gorp"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -11,10 +12,12 @@ import (
 
 var _ = Describe("ClientsRepo", func() {
     var repo models.ClientsRepo
+    var conn *gorp.DbMap
 
     BeforeEach(func() {
         TruncateTables()
         repo = models.NewClientsRepo()
+        conn = models.Database().Connection
     })
 
     Describe("Create", func() {
@@ -24,12 +27,12 @@ var _ = Describe("ClientsRepo", func() {
                 Description: "My Client",
             }
 
-            client, err := repo.Create(client)
+            client, err := repo.Create(conn, client)
             if err != nil {
                 panic(err)
             }
 
-            client, err = repo.Find("my-client")
+            client, err = repo.Find(conn, "my-client")
             if err != nil {
                 panic(err)
             }
@@ -46,7 +49,7 @@ var _ = Describe("ClientsRepo", func() {
                 ID: "my-client",
             }
 
-            client, err := repo.Create(client)
+            client, err := repo.Create(conn, client)
             if err != nil {
                 panic(err)
             }
@@ -54,12 +57,12 @@ var _ = Describe("ClientsRepo", func() {
             client.ID = "my-client"
             client.Description = "My Client"
 
-            client, err = repo.Update(client)
+            client, err = repo.Update(conn, client)
             if err != nil {
                 panic(err)
             }
 
-            client, err = repo.Find("my-client")
+            client, err = repo.Find(conn, "my-client")
             if err != nil {
                 panic(err)
             }
@@ -78,7 +81,7 @@ var _ = Describe("ClientsRepo", func() {
                     Description: "My Client",
                 }
 
-                client, err := repo.Upsert(client)
+                client, err := repo.Upsert(conn, client)
                 if err != nil {
                     panic(err)
                 }
@@ -95,7 +98,7 @@ var _ = Describe("ClientsRepo", func() {
                     ID: "my-client",
                 }
 
-                client, err := repo.Create(client)
+                client, err := repo.Create(conn, client)
                 if err != nil {
                     panic(err)
                 }
@@ -105,7 +108,7 @@ var _ = Describe("ClientsRepo", func() {
                     Description: "My Client",
                 }
 
-                client, err = repo.Upsert(client)
+                client, err = repo.Upsert(conn, client)
                 if err != nil {
                     panic(err)
                 }

@@ -18,6 +18,14 @@ type DB struct {
     Connection *gorp.DbMap
 }
 
+type ConnectionInterface interface {
+    Delete(...interface{}) (int64, error)
+    Insert(...interface{}) error
+    Select(interface{}, string, ...interface{}) ([]interface{}, error)
+    SelectOne(interface{}, string, ...interface{}) error
+    Update(...interface{}) (int64, error)
+}
+
 func Database() *DB {
     if _database != nil {
         return _database

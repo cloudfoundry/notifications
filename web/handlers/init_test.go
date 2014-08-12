@@ -91,6 +91,47 @@ func (writer *FakeErrorWriter) Write(w http.ResponseWriter, err error) {
     writer.Error = err
 }
 
+type FakeDBConn struct {
+    BeginWasCalled    bool
+    CommitWasCalled   bool
+    RollbackWasCalled bool
+}
+
+func (conn *FakeDBConn) Begin() error {
+    conn.BeginWasCalled = true
+    return nil
+}
+
+func (conn *FakeDBConn) Commit() error {
+    conn.CommitWasCalled = true
+    return nil
+}
+
+func (conn *FakeDBConn) Rollback() error {
+    conn.RollbackWasCalled = true
+    return nil
+}
+
+func (conn FakeDBConn) Delete(list ...interface{}) (int64, error) {
+    return 0, nil
+}
+
+func (conn FakeDBConn) Insert(list ...interface{}) error {
+    return nil
+}
+
+func (conn FakeDBConn) Select(i interface{}, query string, args ...interface{}) ([]interface{}, error) {
+    return []interface{}{}, nil
+}
+
+func (conn FakeDBConn) SelectOne(i interface{}, query string, args ...interface{}) error {
+    return nil
+}
+
+func (conn FakeDBConn) Update(list ...interface{}) (int64, error) {
+    return 0, nil
+}
+
 type FakeClientsRepo struct {
     Clients     map[string]models.Client
     UpsertError error
@@ -102,22 +143,22 @@ func NewFakeClientsRepo() *FakeClientsRepo {
     }
 }
 
-func (fake *FakeClientsRepo) Create(client models.Client) (models.Client, error) {
+func (fake *FakeClientsRepo) Create(conn models.ConnectionInterface, client models.Client) (models.Client, error) {
     fake.Clients[client.ID] = client
     return client, nil
 }
 
-func (fake *FakeClientsRepo) Update(client models.Client) (models.Client, error) {
+func (fake *FakeClientsRepo) Update(conn models.ConnectionInterface, client models.Client) (models.Client, error) {
     fake.Clients[client.ID] = client
     return client, nil
 }
 
-func (fake *FakeClientsRepo) Upsert(client models.Client) (models.Client, error) {
+func (fake *FakeClientsRepo) Upsert(conn models.ConnectionInterface, client models.Client) (models.Client, error) {
     fake.Clients[client.ID] = client
     return client, fake.UpsertError
 }
 
-func (fake *FakeClientsRepo) Find(id string) (models.Client, error) {
+func (fake *FakeClientsRepo) Find(conn models.ConnectionInterface, id string) (models.Client, error) {
     if client, ok := fake.Clients[id]; ok {
         return client, nil
     }
@@ -127,6 +168,7 @@ func (fake *FakeClientsRepo) Find(id string) (models.Client, error) {
 type FakeKindsRepo struct {
     Kinds         map[string]models.Kind
     UpsertError   error
+    TrimError     error
     TrimArguments []interface{}
 }
 
@@ -137,29 +179,29 @@ func NewFakeKindsRepo() *FakeKindsRepo {
     }
 }
 
-func (fake *FakeKindsRepo) Create(kind models.Kind) (models.Kind, error) {
+func (fake *FakeKindsRepo) Create(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
     fake.Kinds[kind.ID] = kind
     return kind, nil
 }
 
-func (fake *FakeKindsRepo) Update(kind models.Kind) (models.Kind, error) {
+func (fake *FakeKindsRepo) Update(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
     fake.Kinds[kind.ID] = kind
     return kind, nil
 }
 
-func (fake *FakeKindsRepo) Upsert(kind models.Kind) (models.Kind, error) {
+func (fake *FakeKindsRepo) Upsert(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
     fake.Kinds[kind.ID] = kind
     return kind, fake.UpsertError
 }
 
-func (fake *FakeKindsRepo) Find(id string) (models.Kind, error) {
+func (fake *FakeKindsRepo) Find(conn models.ConnectionInterface, id string) (models.Kind, error) {
     if kind, ok := fake.Kinds[id]; ok {
         return kind, nil
     }
     return models.Kind{}, models.ErrRecordNotFound{}
 }
 
-func (fake *FakeKindsRepo) Trim(clientID string, kindIDs []string) (int, error) {
+func (fake *FakeKindsRepo) Trim(conn models.ConnectionInterface, clientID string, kindIDs []string) (int, error) {
     fake.TrimArguments = []interface{}{clientID, kindIDs}
-    return 0, nil
+    return 0, fake.TrimError
 }
