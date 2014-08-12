@@ -65,21 +65,16 @@ func NewMessageContext(email string, options Options, env config.Environment, sp
     }
 }
 
-func (context MessageContext) Escape() MessageContext {
-    return MessageContext{
-        From:              html.EscapeString(context.From),
-        To:                html.EscapeString(context.To),
-        Subject:           html.EscapeString(context.Subject),
-        Text:              html.EscapeString(context.Text),
-        HTML:              context.HTML,
-        TextTemplate:      context.TextTemplate,
-        HTMLTemplate:      context.HTMLTemplate,
-        SubjectTemplate:   context.SubjectTemplate,
-        KindDescription:   html.EscapeString(context.KindDescription),
-        SourceDescription: html.EscapeString(context.SourceDescription),
-        ClientID:          html.EscapeString(context.ClientID),
-        MessageID:         html.EscapeString(context.MessageID),
-        Space:             html.EscapeString(context.Space),
-        Organization:      html.EscapeString(context.Organization),
-    }
+func (context *MessageContext) Escape() {
+    context.From = html.EscapeString(context.From)
+    context.To = html.EscapeString(context.To)
+    context.ReplyTo = html.EscapeString(context.ReplyTo)
+    context.Subject = html.EscapeString(context.Subject)
+    context.Text = html.EscapeString(context.Text)
+    context.KindDescription = html.EscapeString(context.KindDescription)
+    context.SourceDescription = html.EscapeString(context.SourceDescription)
+    context.ClientID = html.EscapeString(context.ClientID)
+    context.MessageID = html.EscapeString(context.MessageID)
+    context.Space = html.EscapeString(context.Space)
+    context.Organization = html.EscapeString(context.Organization)
 }

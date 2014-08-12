@@ -88,11 +88,10 @@ func (packager Packager) compileTemplate(context MessageContext, theTemplate str
     }
 
     if escapeContext {
-        source.Execute(buffer, context.Escape())
-    } else {
-        source.Execute(buffer, context)
+        context.Escape()
     }
 
+    source.Execute(buffer, context)
     compiledTemplate := strings.TrimSuffix(buffer.String(), "\n")
 
     return compiledTemplate, nil
