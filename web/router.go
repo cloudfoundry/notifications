@@ -30,11 +30,6 @@ func NewRouter() Router {
     authenticator := middleware.NewAuthenticator()
 
     env := config.NewEnvironment()
-    mailClient, err := mail.NewClient(env.SMTPUser, env.SMTPPass, net.JoinHostPort(env.SMTPHost, env.SMTPPort))
-    if err != nil {
-        panic(err)
-    }
-    mailClient.Insecure = !env.VerifySSL
 
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
     uaaClient.VerifySSL = env.VerifySSL
@@ -50,6 +45,11 @@ func NewRouter() Router {
     mailer := postal.NewMailer(queue)
 
     for i := 0; i < 10; i++ {
+        mailClient, err := mail.NewClient(env.SMTPUser, env.SMTPPass, net.JoinHostPort(env.SMTPHost, env.SMTPPort))
+        if err != nil {
+            panic(err)
+        }
+        mailClient.Insecure = !env.VerifySSL
         worker := postal.NewDeliveryWorker(uuid.NewV4, logger, &mailClient, queue)
         worker.Run()
     }
