@@ -68,3 +68,7 @@ func (s NotificationsServer) SpacesPath(space string) string {
 func (s NotificationsServer) UsersPath(user string) string {
     return "http://localhost:" + s.env.Port + "/users/" + user
 }
+
+func (s NotificationsServer) RegistrationPath() string {
+    return "http://localhost:" + s.env.Port + "/registration"
+}

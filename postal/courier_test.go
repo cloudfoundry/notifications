@@ -110,7 +110,7 @@ var _ = Describe("Courier", func() {
         Context("when the request is valid", func() {
             BeforeEach(func() {
                 options = postal.Options{
-                    Kind:              "forgot_password",
+                    KindID:            "forgot_password",
                     KindDescription:   "Password reminder",
                     SourceDescription: "Login system",
                     Text:              "Please reset your password by clicking on this link...",

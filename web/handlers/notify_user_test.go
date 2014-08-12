@@ -8,6 +8,7 @@ import (
     "net/http/httptest"
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
 
@@ -22,6 +23,8 @@ var _ = Describe("NotifyUser", func() {
     var token string
     var fakeCourier *FakeCourier
     var errorWriter *FakeErrorWriter
+    var clientsRepo *FakeClientsRepo
+    var kindsRepo *FakeKindsRepo
 
     BeforeEach(func() {
         tokenHeader := map[string]interface{}{
@@ -38,14 +41,28 @@ var _ = Describe("NotifyUser", func() {
         fakeCourier = NewFakeCourier()
         errorWriter = &FakeErrorWriter{}
 
-        handler = handlers.NewNotifyUser(fakeCourier, errorWriter)
+        conn := FakeDBConn{}
+        clientsRepo = NewFakeClientsRepo()
+        clientsRepo.Create(conn, models.Client{
+            ID:          "mister-client",
+            Description: "Login System",
+        })
+
+        kindsRepo = NewFakeKindsRepo()
+        kindsRepo.Create(conn, models.Kind{
+            ID:          "forgot_password",
+            Description: "Password Reminder",
+            ClientID:    "mister-client",
+        })
+
+        handler = handlers.NewNotifyUser(fakeCourier, errorWriter, clientsRepo, kindsRepo)
 
         requestBody, err := json.Marshal(map[string]string{
-            "kind":               "forgot_password",
-            "kind_description":   "Password reminder",
-            "source_description": "Login system",
-            "text":               "Please reset your password by clicking on this link...",
-            "html":               "<p>Please reset your password by clicking on this link...</p>",
+            "kind_id":  "forgot_password",
+            "subject":  "Forgot password request",
+            "text":     "Please reset your password by clicking on this link...",
+            "html":     "<p>Please reset your password by clicking on this link...</p>",
+            "reply_to": "me@example.com",
         })
         if err != nil {
             panic(err)
@@ -84,53 +101,136 @@ var _ = Describe("NotifyUser", func() {
                 "recipient":       "user-123",
                 "notification_id": "abc-123",
             }))
+            Expect(fakeCourier.DispatchArguments).To(Equal([]interface{}{
+                token,
+                postal.UserGUID("user-123"),
+                postal.Options{
+                    ReplyTo:           "me@example.com",
+                    Subject:           "Forgot password request",
+                    KindDescription:   "Password Reminder",
+                    SourceDescription: "Login System",
+                    Text:              "Please reset your password by clicking on this link...",
+                    HTML:              "<p>Please reset your password by clicking on this link...</p>",
+                    KindID:            "forgot_password",
+                },
+            }))
         })
     })
 
-    Context("when validating params", func() {
-        It("returns a error response when params are missing", func() {
-            body, err := json.Marshal(map[string]string{
-                "subject":            "Your instance is down",
-                "source_description": "MySQL Service",
-                "kind_description":   "Instance Alert",
+    Context("failure cases", func() {
+        Context("when validating params", func() {
+            It("returns a error response when params are missing", func() {
+                body, err := json.Marshal(map[string]string{
+                    "subject": "Your instance is down",
+                })
+                if err != nil {
+                    panic(err)
+                }
+                request, err = http.NewRequest("POST", "/users/user-001", bytes.NewBuffer(body))
+                if err != nil {
+                    panic(err)
+                }
+                request.Header.Set("Authorization", "Bearer "+token)
+
+                handler.ServeHTTP(writer, request)
+
+                Expect(errorWriter.Error).ToNot(BeNil())
+                validationErr := errorWriter.Error.(handlers.ParamsValidationError)
+                Expect(validationErr.Errors()).To(ContainElement(`"kind_id" is a required field`))
+                Expect(validationErr.Errors()).To(ContainElement(`"text" or "html" fields must be supplied`))
             })
-            if err != nil {
-                panic(err)
-            }
-            request, err = http.NewRequest("POST", "/users/user-001", bytes.NewBuffer(body))
-            if err != nil {
-                panic(err)
-            }
-            request.Header.Set("Authorization", "Bearer "+token)
 
-            handler.ServeHTTP(writer, request)
+            It("returns a error response when params cannot be parsed", func() {
+                request, err := http.NewRequest("POST", "/users/user-001", strings.NewReader("this is not JSON"))
+                if err != nil {
+                    panic(err)
+                }
+                request.Header.Set("Authorization", "Bearer "+token)
 
-            Expect(errorWriter.Error).ToNot(BeNil())
-            validationErr := errorWriter.Error.(handlers.ParamsValidationError)
-            Expect(validationErr.Errors()).To(ContainElement(`"kind" is a required field`))
-            Expect(validationErr.Errors()).To(ContainElement(`"text" or "html" fields must be supplied`))
+                handler.ServeHTTP(writer, request)
+
+                Expect(errorWriter.Error).To(Equal(handlers.ParamsParseError{}))
+            })
         })
 
-        It("returns a error response when params cannot be parsed", func() {
-            request, err := http.NewRequest("POST", "/users/user-001", strings.NewReader("this is not JSON"))
-            if err != nil {
-                panic(err)
-            }
-            request.Header.Set("Authorization", "Bearer "+token)
+        Context("when the courier returns errors", func() {
+            It("delegates to the errorWriter", func() {
+                fakeCourier.Error = errors.New("BOOM!")
 
-            handler.ServeHTTP(writer, request)
+                handler.ServeHTTP(writer, request)
 
-            Expect(errorWriter.Error).To(Equal(handlers.ParamsParseError{}))
+                Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
+            })
         })
-    })
 
-    Context("when the courier returns errors", func() {
-        It("delegates to the errorWriter", func() {
-            fakeCourier.Error = errors.New("BOOM!")
+        Context("when the client repo return errors", func() {
+            Context("when the error is a RecordNotFound", func() {
+                It("does not populate the SourceDescription", func() {
+                    clientsRepo.Clients = map[string]models.Client{}
 
-            handler.ServeHTTP(writer, request)
+                    handler.ServeHTTP(writer, request)
 
-            Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
+                    Expect(errorWriter.Error).To(BeNil())
+                    Expect(fakeCourier.DispatchArguments).To(Equal([]interface{}{
+                        token,
+                        postal.UserGUID("user-123"),
+                        postal.Options{
+                            ReplyTo:           "me@example.com",
+                            Subject:           "Forgot password request",
+                            KindDescription:   "Password Reminder",
+                            SourceDescription: "",
+                            Text:              "Please reset your password by clicking on this link...",
+                            HTML:              "<p>Please reset your password by clicking on this link...</p>",
+                            KindID:            "forgot_password",
+                        },
+                    }))
+                })
+            })
+
+            Context("when the error is not a RecordNotFound", func() {
+                It("delegates to the errorWriter", func() {
+                    clientsRepo.FindError = errors.New("BOOM!")
+
+                    handler.ServeHTTP(writer, request)
+
+                    Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
+                })
+            })
+        })
+
+        Context("when the kind repo return errors", func() {
+            Context("when the error is a RecordNotFound", func() {
+                It("does not populate the KindDescription", func() {
+                    kindsRepo.Kinds = map[string]models.Kind{}
+
+                    handler.ServeHTTP(writer, request)
+
+                    Expect(errorWriter.Error).To(BeNil())
+                    Expect(fakeCourier.DispatchArguments).To(Equal([]interface{}{
+                        token,
+                        postal.UserGUID("user-123"),
+                        postal.Options{
+                            ReplyTo:           "me@example.com",
+                            Subject:           "Forgot password request",
+                            KindDescription:   "",
+                            SourceDescription: "Login System",
+                            Text:              "Please reset your password by clicking on this link...",
+                            HTML:              "<p>Please reset your password by clicking on this link...</p>",
+                            KindID:            "forgot_password",
+                        },
+                    }))
+                })
+            })
+
+            Context("when the error is not a RecordNotFound", func() {
+                It("delegates to the errorWriter", func() {
+                    kindsRepo.FindError = errors.New("BOOM!")
+
+                    handler.ServeHTTP(writer, request)
+
+                    Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
+                })
+            })
         })
     })
 })

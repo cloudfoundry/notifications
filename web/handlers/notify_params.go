@@ -7,6 +7,7 @@ import (
     "strings"
 
     "github.com/PuerkitoBio/goquery"
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
 )
 
@@ -29,11 +30,11 @@ func (err ParamsValidationError) Errors() []string {
 type NotifyParams struct {
     ReplyTo           string `json:"reply_to"`
     Subject           string `json:"subject"`
-    KindDescription   string `json:"kind_description"`
-    SourceDescription string `json:"source_description"`
     Text              string `json:"text"`
     HTML              string `json:"html"`
-    Kind              string `json:"kind"`
+    KindID            string `json:"kind_id"`
+    KindDescription   string
+    SourceDescription string
     Errors            []string
 }
 
@@ -55,8 +56,12 @@ func NewNotifyParams(body io.Reader) (NotifyParams, error) {
 func (params *NotifyParams) Validate() bool {
     params.Errors = []string{}
 
-    if params.Kind == "" {
-        params.Errors = append(params.Errors, `"kind" is a required field`)
+    if params.KindID == "" {
+        params.Errors = append(params.Errors, `"kind_id" is a required field`)
+    } else {
+        if !kindIDFormat.MatchString(params.KindID) {
+            params.Errors = append(params.Errors, `"kind_id" is improperly formatted`)
+        }
     }
 
     if params.Text == "" && params.HTML == "" {
@@ -78,16 +83,15 @@ func (params *NotifyParams) parseRequestBody(body io.Reader) error {
     return nil
 }
 
-func (params *NotifyParams) ToOptions() postal.Options {
-
+func (params *NotifyParams) ToOptions(client models.Client, kind models.Kind) postal.Options {
     return postal.Options{
         ReplyTo:           params.ReplyTo,
         Subject:           params.Subject,
-        KindDescription:   params.KindDescription,
-        SourceDescription: params.SourceDescription,
+        KindDescription:   kind.Description,
+        SourceDescription: client.Description,
         Text:              params.Text,
         HTML:              params.HTML,
-        Kind:              params.Kind,
+        KindID:            params.KindID,
     }
 }
 

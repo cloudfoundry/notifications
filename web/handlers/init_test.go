@@ -69,17 +69,20 @@ func BuildToken(header map[string]interface{}, claims map[string]interface{}) st
 }
 
 type FakeCourier struct {
-    Error     error
-    Responses []postal.Response
+    Error             error
+    Responses         []postal.Response
+    DispatchArguments []interface{}
 }
 
 func NewFakeCourier() *FakeCourier {
     return &FakeCourier{
-        Responses: make([]postal.Response, 0),
+        Responses:         make([]postal.Response, 0),
+        DispatchArguments: make([]interface{}, 0),
     }
 }
 
-func (fake FakeCourier) Dispatch(token string, guid postal.TypedGUID, options postal.Options) ([]postal.Response, error) {
+func (fake *FakeCourier) Dispatch(token string, guid postal.TypedGUID, options postal.Options) ([]postal.Response, error) {
+    fake.DispatchArguments = []interface{}{token, guid, options}
     return fake.Responses, fake.Error
 }
 
@@ -135,6 +138,7 @@ func (conn FakeDBConn) Update(list ...interface{}) (int64, error) {
 type FakeClientsRepo struct {
     Clients     map[string]models.Client
     UpsertError error
+    FindError   error
 }
 
 func NewFakeClientsRepo() *FakeClientsRepo {
@@ -160,7 +164,7 @@ func (fake *FakeClientsRepo) Upsert(conn models.ConnectionInterface, client mode
 
 func (fake *FakeClientsRepo) Find(conn models.ConnectionInterface, id string) (models.Client, error) {
     if client, ok := fake.Clients[id]; ok {
-        return client, nil
+        return client, fake.FindError
     }
     return models.Client{}, models.ErrRecordNotFound{}
 }
@@ -169,6 +173,7 @@ type FakeKindsRepo struct {
     Kinds         map[string]models.Kind
     UpsertError   error
     TrimError     error
+    FindError     error
     TrimArguments []interface{}
 }
 
@@ -196,7 +201,7 @@ func (fake *FakeKindsRepo) Upsert(conn models.ConnectionInterface, kind models.K
 
 func (fake *FakeKindsRepo) Find(conn models.ConnectionInterface, id string) (models.Kind, error) {
     if kind, ok := fake.Kinds[id]; ok {
-        return kind, nil
+        return kind, fake.FindError
     }
     return models.Kind{}, models.ErrRecordNotFound{}
 }

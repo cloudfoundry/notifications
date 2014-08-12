@@ -36,26 +36,62 @@ var _ = Describe("Sending notifications to all users in a space", func() {
         notificationsServer.Boot()
         defer notificationsServer.Close()
 
-        // Make request to /users/:guid
-        body, err := json.Marshal(map[string]string{
-            "kind":    "space-test",
-            "text":    "this is a space test",
-            "subject": "space-subject",
-        })
-        request, err := http.NewRequest("POST", notificationsServer.SpacesPath("space-123"), bytes.NewBuffer(body))
-        if err != nil {
-            panic(err)
-        }
-
+        // Retrieve UAA token
         env := config.NewEnvironment()
         uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
         token, err := uaaClient.GetClientToken()
         if err != nil {
             panic(err)
         }
+
+        // Make request to /registation
+        body, err := json.Marshal(map[string]interface{}{
+            "source_description": "Notifications Sender",
+            "kinds": []map[string]string{
+                {
+                    "id":          "space-test",
+                    "description": "Space Test",
+                },
+            },
+        })
+        if err != nil {
+            panic(err)
+        }
+
+        request, err := http.NewRequest("PUT", notificationsServer.RegistrationPath(), bytes.NewBuffer(body))
+        if err != nil {
+            panic(err)
+        }
+
         request.Header.Set("Authorization", "Bearer "+token.Access)
 
         response, err := http.DefaultClient.Do(request)
+        if err != nil {
+            panic(err)
+        }
+
+        body, err = ioutil.ReadAll(response.Body)
+        if err != nil {
+            panic(err)
+        }
+
+        // Confirm response status code looks ok
+        Expect(response.StatusCode).To(Equal(http.StatusOK))
+
+        // Make request to /users/:guid
+        body, err = json.Marshal(map[string]string{
+            "kind_id": "space-test",
+            "text":    "this is a space test",
+            "subject": "space-subject",
+        })
+        request, err = http.NewRequest("POST", notificationsServer.SpacesPath("space-123"), bytes.NewBuffer(body))
+        if err != nil {
+            panic(err)
+        }
+
+        request.Header.Set("Authorization", "Bearer "+token.Access)
+
+        response, err = http.DefaultClient.Do(request)
         if err != nil {
             panic(err)
         }
@@ -107,6 +143,7 @@ var _ = Describe("Sending notifications to all users in a space", func() {
         Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
         Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["user-456"]["notification_id"]))
         Expect(data).To(ContainElement("Subject: CF Notification: space-subject"))
+        Expect(data).To(ContainElement(`The following "Space Test" notification was sent to you by the "Notifications Sender" component of Cloud Foundry because you are a member of the "notifications-service" space in the "notifications-service" organization:`))
         Expect(data).To(ContainElement("this is a space test"))
     })
 })

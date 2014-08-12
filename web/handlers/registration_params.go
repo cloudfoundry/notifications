@@ -9,7 +9,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/models"
 )
 
-var kindIDFormat = regexp.MustCompile(`^[0-9a-zA-z_\-.]+$`)
+var kindIDFormat = regexp.MustCompile(`^[0-9a-zA-Z_\-.]+$`)
 
 type RegistrationParams struct {
     SourceDescription string        `json:"source_description"`

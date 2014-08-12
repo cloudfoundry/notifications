@@ -31,26 +31,66 @@ var _ = Describe("Send a notification to a user", func() {
         notificationsServer.Boot()
         defer notificationsServer.Close()
 
-        // Make request to /users/:guid
-        body, err := json.Marshal(map[string]string{
-            "kind":    "acceptance-test",
-            "text":    "this is an acceptance test",
-            "subject": "my-special-subject",
-        })
-        request, err := http.NewRequest("POST", notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
-        if err != nil {
-            panic(err)
-        }
-
+        // Retrieve UAA token
         env := config.NewEnvironment()
         uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
         token, err := uaaClient.GetClientToken()
         if err != nil {
             panic(err)
         }
+
+        // Make request to /registation
+        body, err := json.Marshal(map[string]interface{}{
+            "source_description": "Notifications Sender",
+            "kinds": []map[string]string{
+                {
+                    "id":          "acceptance-test",
+                    "description": "Acceptance Test",
+                },
+            },
+        })
+        if err != nil {
+            panic(err)
+        }
+
+        request, err := http.NewRequest("PUT", notificationsServer.RegistrationPath(), bytes.NewBuffer(body))
+        if err != nil {
+            panic(err)
+        }
+
         request.Header.Set("Authorization", "Bearer "+token.Access)
 
         response, err := http.DefaultClient.Do(request)
+        if err != nil {
+            panic(err)
+        }
+
+        body, err = ioutil.ReadAll(response.Body)
+        if err != nil {
+            panic(err)
+        }
+
+        // Confirm response status code looks ok
+        Expect(response.StatusCode).To(Equal(http.StatusOK))
+
+        // Make request to /users/:guid
+        body, err = json.Marshal(map[string]string{
+            "kind_id": "acceptance-test",
+            "text":    "this is an acceptance test",
+            "subject": "my-special-subject",
+        })
+        if err != nil {
+            panic(err)
+        }
+
+        request, err = http.NewRequest("POST", notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
+        if err != nil {
+            panic(err)
+        }
+
+        request.Header.Set("Authorization", "Bearer "+token.Access)
+
+        response, err = http.DefaultClient.Do(request)
         if err != nil {
             panic(err)
         }
@@ -86,6 +126,7 @@ var _ = Describe("Send a notification to a user", func() {
         Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
         Expect(data).To(ContainElement("X-CF-Notification-ID: " + responseItem["notification_id"]))
         Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
+        Expect(data).To(ContainElement(`The following "Acceptance Test" notification was sent to you directly by the "Notifications Sender" component of Cloud Foundry:`))
         Expect(data).To(ContainElement("this is an acceptance test"))
     })
 })

@@ -51,5 +51,5 @@ type Options struct {
     SourceDescription string
     Text              string
     HTML              string
-    Kind              string
+    KindID            string
 }

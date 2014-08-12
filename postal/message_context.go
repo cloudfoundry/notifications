@@ -34,7 +34,7 @@ func NewMessageContext(email string, options Options, env config.Environment, sp
 
     var kindDescription string
     if options.KindDescription == "" {
-        kindDescription = options.Kind
+        kindDescription = options.KindID
     } else {
         kindDescription = options.KindDescription
     }

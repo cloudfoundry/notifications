@@ -36,7 +36,7 @@ var _ = Describe("MessageContext", func() {
                 SourceDescription: "the source description",
                 Text:              "user supplied email text",
                 HTML:              "user supplied html",
-                Kind:              "the-kind",
+                KindID:            "the-kind",
             }
         })
 
@@ -104,7 +104,7 @@ var _ = Describe("MessageContext", func() {
                 SourceDescription: "the & source description",
                 Text:              "user & supplied email text",
                 HTML:              "user & supplied html",
-                Kind:              "the & kind",
+                KindID:            "the & kind",
             }
         })
 
