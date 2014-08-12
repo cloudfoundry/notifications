@@ -17,7 +17,10 @@ func main() {
 
     env := config.NewEnvironment()
     configure(env)
-    confirmSMTPConfiguration(env)
+
+    if !env.TestMode {
+        confirmSMTPConfiguration(env)
+    }
     retrieveUAAPublicKey()
 
     server := web.NewServer()
@@ -37,6 +40,7 @@ func configure(env config.Environment) {
     log.Printf("\tSender          -> %+v", env.Sender)
     log.Printf("\tCCHost          -> %+v", env.CCHost)
     log.Printf("\tVerifySSL       -> %+v", env.VerifySSL)
+    log.Printf("\tTest mode       -> %+v", env.TestMode)
 }
 
 func confirmSMTPConfiguration(env config.Environment) {

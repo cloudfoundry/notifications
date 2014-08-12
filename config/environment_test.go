@@ -24,6 +24,7 @@ var _ = Describe("Environment", func() {
         "UAA_CLIENT_SECRET": os.Getenv("UAA_CLIENT_SECRET"),
         "UAA_HOST":          os.Getenv("UAA_HOST"),
         "VERIFY_SSL":        os.Getenv("VERIFY_SSL"),
+        "TEST_MODE":         os.Getenv("TEST_MODE"),
     }
 
     AfterEach(func() {
@@ -268,6 +269,24 @@ var _ = Describe("Environment", func() {
             env := config.NewEnvironment()
 
             Expect(env.RootPath).To(Equal("bananaDAMAGE"))
+        })
+    })
+
+    Describe("TestMode config", func() {
+        It("sets the value to false by default", func() {
+            os.Setenv("TEST_MODE", "")
+
+            env := config.NewEnvironment()
+
+            Expect(env.TestMode).To(BeFalse())
+        })
+
+        It("can be set to true", func() {
+            os.Setenv("TEST_MODE", "TRUE")
+
+            env := config.NewEnvironment()
+
+            Expect(env.TestMode).To(BeTrue())
         })
     })
 })

@@ -26,6 +26,46 @@ var _ = Describe("Mail", func() {
         })
     })
 
+    Describe("Send", func() {
+        Context("when in Testmode", func() {
+            BeforeEach(func() {
+                var err error
+
+                mailServer = NewSMTPServer("user", "pass")
+                mailServer.SupportsTLS = true
+                serverURL := mailServer.URL.String()
+                client, err = mail.NewClient("user", "pass", serverURL)
+                if err != nil {
+                    panic(err)
+                }
+
+                os.Setenv("TEST_MODE", "true")
+            })
+
+            AfterEach(func() {
+                os.Setenv("TEST_MODE", "false")
+            })
+
+            It("does not connect to the smtp server", func() {
+                msg := mail.Message{
+                    From:    "me@example.com",
+                    To:      "you@example.com",
+                    Subject: "Urgent! Read now!",
+                    Body:    "This email is the most important thing you will read all day!",
+                }
+
+                err := client.Send(msg)
+                if err != nil {
+                    panic(err)
+                }
+
+                Eventually(func() int {
+                    return len(mailServer.Deliveries)
+                }).Should(Equal(0))
+            })
+        })
+    })
+
     Context("when the SMTP server is properly configured", func() {
         BeforeEach(func() {
             var err error
@@ -148,7 +188,29 @@ var _ = Describe("Mail", func() {
         })
     })
 
-    Context("Connect", func() {
+    Describe("Connect", func() {
+        Context("when in test mode", func() {
+            BeforeEach(func() {
+                os.Setenv("TEST_MODE", "TRUE")
+            })
+
+            AfterEach(func() {
+                os.Setenv("TEST_MODE", "FALSE")
+            })
+
+            It("does not connect to the smtp server", func() {
+
+                serverURL := "fakewebsiteoninternet.com:587"
+                client, err := mail.NewClient("user", "pass", serverURL)
+                if err != nil {
+                    panic(err)
+                }
+                err = client.Connect()
+
+                Expect(err).To(BeNil())
+            })
+        })
+
         It("returns an error if it cannot connect within the given timeout duration", func() {
             mailServer = NewSMTPServer("user", "pass")
             mailServer.ConnectWait = 5 * time.Second

@@ -4,6 +4,7 @@ import (
     "crypto/tls"
     "errors"
     "fmt"
+    "log"
     "net"
     "net/smtp"
     "time"
@@ -47,6 +48,12 @@ func NewClient(user, pass, url string) (Client, error) {
 }
 
 func (c *Client) Connect() error {
+
+    env := config.NewEnvironment()
+    if env.TestMode {
+        return nil
+    }
+
     if c.client != nil {
         return nil
     }
@@ -80,6 +87,12 @@ func (c *Client) connect() chan connection {
 }
 
 func (c *Client) Send(msg Message) error {
+    env := config.NewEnvironment()
+    if env.TestMode {
+        log.Println("TEST_MODE is true, emails not being sent")
+        return nil
+    }
+
     err := c.Connect()
     if err != nil {
         return err

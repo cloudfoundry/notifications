@@ -26,6 +26,7 @@ type Environment struct {
     UAAClientSecret string
     UAAHost         string
     VerifySSL       bool
+    TestMode        bool
 }
 
 func NewEnvironment() Environment {
@@ -44,6 +45,7 @@ func NewEnvironment() Environment {
         UAAClientSecret: loadOrPanic("UAA_CLIENT_SECRET"),
         UAAHost:         loadOrPanic("UAA_HOST"),
         VerifySSL:       loadBool("VERIFY_SSL", true),
+        TestMode:        loadBool("TEST_MODE", false),
     }
 }
 
