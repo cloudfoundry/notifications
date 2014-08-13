@@ -86,6 +86,11 @@ func (loader TemplateLoader) LoadTemplate(filename string) (string, error) {
         return loader.fs.Read(clientKindOverridePath)
     }
 
+    clientOverridePath := env.RootPath + "/templates/overrides/" + loader.ClientID + "." + filename
+    if loader.fs.Exists(clientOverridePath) {
+        return loader.fs.Read(clientOverridePath)
+    }
+
     overRidePath := env.RootPath + "/templates/overrides/" + filename
     if loader.fs.Exists(overRidePath) {
         return loader.fs.Read(overRidePath)

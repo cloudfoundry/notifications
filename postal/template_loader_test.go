@@ -113,12 +113,12 @@ var _ = Describe("TemplateLoader", func() {
             })
         })
 
-        Context("when a template has a global override set", func() {
+        Context("when a template has a global override set and no other matching overrides", func() {
             BeforeEach(func() {
                 fs.Files[env.RootPath+"/templates/overrides/user_body.text"] = "override-user-text"
             })
 
-            It("replaces the default template with the user provided one", func() {
+            It("replaces the default template with the generic override", func() {
                 text, err := loader.LoadTemplate("user_body.text")
                 if err != nil {
                     panic(err)
@@ -145,6 +145,29 @@ var _ = Describe("TemplateLoader", func() {
                 }
 
                 Expect(text).To(Equal("client-kind-override-user-text"))
+            })
+        })
+
+        Context("when a template has no clientID/kind matching override set", func() {
+            Context("when a template has a clientID matching override set", func() {
+                var fileName string
+                BeforeEach(func() {
+                    fileName = clientID + ".user_body.text"
+                    fs.Files[env.RootPath+"/templates/overrides/user_body.text"] = "override-user-text"
+                    fs.Files[env.RootPath+"/templates/overrides/"+fileName] = "client-override-user-text"
+                    fs.Files[env.RootPath+"/templates/overrides/"+clientID+".some-other-kind.user-body-text"] = "client-some-other-kind-override-user-text"
+                    loader.ClientID = clientID
+                    loader.Kind = kind
+                })
+
+                It("returns the matching override", func() {
+                    text, err := loader.LoadTemplate("user_body.text")
+                    if err != nil {
+                        panic(err)
+                    }
+
+                    Expect(text).To(Equal("client-override-user-text"))
+                })
             })
         })
     })
