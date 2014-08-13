@@ -29,6 +29,29 @@ When emailing a space, `space_body.html` and `space_body.text` are used as templ
 
 The files located in the templates directory are defaults and will be used if there is no override of the same name.
 
+## Posting to a notifications endpoint
+
+Notifications currently supports two different types of messages.  Messages to individual users and messages to spaces.
+
+Users are messaged via the `/users/id` endpoint and spaces are messaged via `/spaces/id` endpoint.
+
+Both endpoints expect a json body to be posted with following keys:
+
+| Key | Description |
+| ---- | ------ |
+| kind_id\* | a key to identify the type of email to be sent |
+| text\*\* | the text version of the email |
+| html\*\* | the html version of the email |
+| kind_description | a description of the kind_id |
+| subject | the text of the subject |
+| reply_to | the Reply-To address for the email |
+| source_description | a description of the sender |
+
+\* required 
+ 
+\*\* either text or html have to be set, not both
+
+
 ### Overriding default templates
 There are three types of overrides. 
 
@@ -61,7 +84,7 @@ The templates are [go templates](http://golang.org/pkg/text/template/).  The tem
 | Organization | The name of the organization of the space (used for emails to spaces) |
 | Space | The name of the space (used for emails to spaces) |
 
-### Example: Overriding space_body.text
+##### Example: Overriding space_body.text
 To override the plain text template in the email body, write the following in `./templates/overrides/space_body.text`:
 
 ```
@@ -83,9 +106,9 @@ So to override the subject.missing the file name would be:
 This override would only be applied to emails sent by the client banana.
 	
 
-#### overriding by clientID and kind
+#### overriding by clientID and kind_id
 
-To override a template for client `banana` with the kind `damage` you would place a file in the `./templates/overrides` directory with the following name scheme:
+To override a template for client `banana` with the kind_id `damage` you would place a file in the `./templates/overrides` directory with the following name scheme:
 
 	clientID.kind_id.templateName.templateExtension
 	
