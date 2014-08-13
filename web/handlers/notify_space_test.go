@@ -3,15 +3,12 @@ package handlers_test
 import (
     "bytes"
     "encoding/json"
-    "errors"
     "net/http"
     "net/http/httptest"
-    "strings"
 
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -25,27 +22,21 @@ var _ = Describe("NotifySpace", func() {
         var token string
         var fakeCourier *FakeCourier
         var errorWriter *FakeErrorWriter
-        var clientsRepo *FakeClientsRepo
-        var kindsRepo *FakeKindsRepo
+        var finder *FakeFinder
 
         BeforeEach(func() {
-            var err error
-
             errorWriter = &FakeErrorWriter{}
 
-            conn := FakeDBConn{}
-            clientsRepo = NewFakeClientsRepo()
-            clientsRepo.Create(conn, models.Client{
+            finder = NewFakeFinder()
+            finder.Clients["mister-client"] = models.Client{
                 ID:          "mister-client",
                 Description: "Health Monitor",
-            })
-
-            kindsRepo = NewFakeKindsRepo()
-            kindsRepo.Create(conn, models.Kind{
+            }
+            finder.Kinds["test_email|mister-client"] = models.Kind{
                 ID:          "test_email",
                 Description: "Instance Down",
                 ClientID:    "mister-client",
-            })
+            }
 
             writer = httptest.NewRecorder()
             body, err := json.Marshal(map[string]string{
@@ -76,7 +67,7 @@ var _ = Describe("NotifySpace", func() {
             request.Header.Set("Authorization", "Bearer "+token)
 
             fakeCourier = NewFakeCourier()
-            handler = handlers.NewNotifySpace(fakeCourier, errorWriter, clientsRepo, kindsRepo)
+            handler = handlers.NewNotifySpace(handlers.NewNotify(fakeCourier, finder), errorWriter)
         })
 
         Context("when the courier returns a successful response", func() {
@@ -137,7 +128,7 @@ var _ = Describe("NotifySpace", func() {
                 }))
 
                 Expect(fakeCourier.DispatchArguments).To(Equal([]interface{}{
-                    token,
+                    "mister-client",
                     postal.SpaceGUID("space-001"),
                     postal.Options{
                         ReplyTo:           "me@example.com",
@@ -149,123 +140,6 @@ var _ = Describe("NotifySpace", func() {
                         KindID:            "test_email",
                     },
                 }))
-            })
-        })
-
-        Context("failure cases", func() {
-            Context("when validating params", func() {
-                It("returns a error response when params are missing", func() {
-                    body, err := json.Marshal(map[string]string{
-                        "subject": "Your instance is down",
-                    })
-                    if err != nil {
-                        panic(err)
-                    }
-                    request, err = http.NewRequest("POST", "/spaces/space-001", bytes.NewBuffer(body))
-                    if err != nil {
-                        panic(err)
-                    }
-                    request.Header.Set("Authorization", "Bearer "+token)
-
-                    handler.ServeHTTP(writer, request)
-
-                    Expect(errorWriter.Error).ToNot(BeNil())
-                    validationErr := errorWriter.Error.(params.ValidationError)
-                    Expect(validationErr.Errors()).To(ContainElement(`"kind_id" is a required field`))
-                    Expect(validationErr.Errors()).To(ContainElement(`"text" or "html" fields must be supplied`))
-                })
-
-                It("returns a error response when params cannot be parsed", func() {
-                    request, err := http.NewRequest("POST", "/spaces/space-001", strings.NewReader("this is not JSON"))
-                    if err != nil {
-                        panic(err)
-                    }
-                    request.Header.Set("Authorization", "Bearer "+token)
-
-                    handler.ServeHTTP(writer, request)
-
-                    Expect(errorWriter.Error).To(Equal(params.ParseError{}))
-                })
-            })
-
-            Context("when the courier returns errors", func() {
-                It("delegates to the errorWriter", func() {
-                    fakeCourier.Error = errors.New("BOOM!")
-
-                    handler.ServeHTTP(writer, request)
-
-                    Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
-                })
-            })
-
-            Context("when the client repo return errors", func() {
-                Context("when the error is a RecordNotFound", func() {
-                    It("does not populate the SourceDescription", func() {
-                        clientsRepo.Clients = map[string]models.Client{}
-
-                        handler.ServeHTTP(writer, request)
-
-                        Expect(errorWriter.Error).To(BeNil())
-                        Expect(fakeCourier.DispatchArguments).To(Equal([]interface{}{
-                            token,
-                            postal.SpaceGUID("space-001"),
-                            postal.Options{
-                                ReplyTo:           "me@example.com",
-                                Subject:           "Your instance is down",
-                                KindDescription:   "Instance Down",
-                                SourceDescription: "",
-                                Text:              "This is the plain text body of the email",
-                                HTML:              "<p>This is the HTML Body of the email</p>",
-                                KindID:            "test_email",
-                            },
-                        }))
-                    })
-                })
-
-                Context("when the error is not a RecordNotFound", func() {
-                    It("delegates to the errorWriter", func() {
-                        clientsRepo.FindError = errors.New("BOOM!")
-
-                        handler.ServeHTTP(writer, request)
-
-                        Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
-                    })
-                })
-            })
-
-            Context("when the kind repo return errors", func() {
-                Context("when the error is a RecordNotFound", func() {
-                    It("does not populate the KindDescription", func() {
-                        kindsRepo.Kinds = map[string]models.Kind{}
-
-                        handler.ServeHTTP(writer, request)
-
-                        Expect(errorWriter.Error).To(BeNil())
-                        Expect(fakeCourier.DispatchArguments).To(Equal([]interface{}{
-                            token,
-                            postal.SpaceGUID("space-001"),
-                            postal.Options{
-                                ReplyTo:           "me@example.com",
-                                Subject:           "Your instance is down",
-                                KindDescription:   "",
-                                SourceDescription: "Health Monitor",
-                                Text:              "This is the plain text body of the email",
-                                HTML:              "<p>This is the HTML Body of the email</p>",
-                                KindID:            "test_email",
-                            },
-                        }))
-                    })
-                })
-
-                Context("when the error is not a RecordNotFound", func() {
-                    It("delegates to the errorWriter", func() {
-                        kindsRepo.FindError = errors.New("BOOM!")
-
-                        handler.ServeHTTP(writer, request)
-
-                        Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
-                    })
-                })
             })
         })
     })

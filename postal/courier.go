@@ -1,10 +1,5 @@
 package postal
 
-import (
-    "github.com/cloudfoundry-incubator/notifications/config"
-    "github.com/dgrijalva/jwt-go"
-)
-
 type Courier struct {
     tokenLoader    TokenLoader
     userLoader     UserLoader
@@ -27,7 +22,7 @@ func NewCourier(tokenLoader TokenLoader, userLoader UserLoader, spaceLoader Spac
     }
 }
 
-func (courier Courier) Dispatch(rawToken string, guid TypedGUID, options Options) ([]Response, error) {
+func (courier Courier) Dispatch(clientID string, guid TypedGUID, options Options) ([]Response, error) {
     responses := []Response{}
 
     token, err := courier.tokenLoader.Load()
@@ -44,11 +39,6 @@ func (courier Courier) Dispatch(rawToken string, guid TypedGUID, options Options
     if err != nil {
         return responses, err
     }
-
-    clientToken, _ := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
-        return []byte(config.UAAPublicKey), nil
-    })
-    clientID := clientToken.Claims["client_id"].(string)
 
     templates, err := courier.templateLoader.Load(options.Subject, guid, clientID, options.KindID)
     if err != nil {
