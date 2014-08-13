@@ -8,6 +8,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
@@ -22,6 +23,7 @@ func main() {
         confirmSMTPConfiguration(env)
     }
     retrieveUAAPublicKey()
+    migrate()
 
     server := web.NewServer()
     server.Run()
@@ -84,6 +86,10 @@ func retrieveUAAPublicKey() {
 
     config.UAAPublicKey = key
     log.Printf("UAA Public Key: %s", config.UAAPublicKey)
+}
+
+func migrate() {
+    models.Database()
 }
 
 // This is a hack to get the logs to output to the loggregator before the process exits
