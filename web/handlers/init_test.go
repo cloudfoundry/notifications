@@ -185,22 +185,26 @@ func NewFakeKindsRepo() *FakeKindsRepo {
 }
 
 func (fake *FakeKindsRepo) Create(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
-    fake.Kinds[kind.ID] = kind
+    key := kind.ID + kind.ClientID
+    fake.Kinds[key] = kind
     return kind, nil
 }
 
 func (fake *FakeKindsRepo) Update(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
-    fake.Kinds[kind.ID] = kind
+    key := kind.ID + kind.ClientID
+    fake.Kinds[key] = kind
     return kind, nil
 }
 
 func (fake *FakeKindsRepo) Upsert(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
-    fake.Kinds[kind.ID] = kind
+    key := kind.ID + kind.ClientID
+    fake.Kinds[key] = kind
     return kind, fake.UpsertError
 }
 
-func (fake *FakeKindsRepo) Find(conn models.ConnectionInterface, id string) (models.Kind, error) {
-    if kind, ok := fake.Kinds[id]; ok {
+func (fake *FakeKindsRepo) Find(conn models.ConnectionInterface, id, clientID string) (models.Kind, error) {
+    key := id + clientID
+    if kind, ok := fake.Kinds[key]; ok {
         return kind, fake.FindError
     }
     return models.Kind{}, models.ErrRecordNotFound{}

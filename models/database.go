@@ -61,7 +61,7 @@ func Database() *DB {
 
 func (database DB) migrate() {
     database.Connection.AddTableWithName(Client{}, "clients").SetKeys(false, "ID")
-    database.Connection.AddTableWithName(Kind{}, "kinds").SetKeys(false, "ID")
+    database.Connection.AddTableWithName(Kind{}, "kinds").SetKeys(false, "ID", "ClientID")
 
     err := database.Connection.CreateTablesIfNotExists()
     if err != nil {

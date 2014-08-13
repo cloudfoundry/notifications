@@ -21,7 +21,7 @@ type KindsRepo struct{}
 
 type KindsRepoInterface interface {
     Create(ConnectionInterface, Kind) (Kind, error)
-    Find(ConnectionInterface, string) (Kind, error)
+    Find(ConnectionInterface, string, string) (Kind, error)
     Update(ConnectionInterface, Kind) (Kind, error)
     Upsert(ConnectionInterface, Kind) (Kind, error)
     Trim(ConnectionInterface, string, []string) (int, error)
@@ -43,9 +43,9 @@ func (repo KindsRepo) Create(conn ConnectionInterface, kind Kind) (Kind, error) 
     return kind, nil
 }
 
-func (repo KindsRepo) Find(conn ConnectionInterface, id string) (Kind, error) {
+func (repo KindsRepo) Find(conn ConnectionInterface, id, clientID string) (Kind, error) {
     kind := Kind{}
-    err := conn.SelectOne(&kind, "SELECT * FROM `kinds` WHERE `id` = ?", id)
+    err := conn.SelectOne(&kind, "SELECT * FROM `kinds` WHERE `id` = ? AND `client_id` = ?", id, clientID)
     if err != nil {
         if err == sql.ErrNoRows {
             err = ErrRecordNotFound{}
@@ -61,11 +61,11 @@ func (repo KindsRepo) Update(conn ConnectionInterface, kind Kind) (Kind, error) 
         return kind, err
     }
 
-    return repo.Find(conn, kind.ID)
+    return repo.Find(conn, kind.ID, kind.ClientID)
 }
 
 func (repo KindsRepo) Upsert(conn ConnectionInterface, kind Kind) (Kind, error) {
-    existingKind, err := repo.Find(conn, kind.ID)
+    existingKind, err := repo.Find(conn, kind.ID, kind.ClientID)
     kind.CreatedAt = existingKind.CreatedAt
 
     if err != nil {

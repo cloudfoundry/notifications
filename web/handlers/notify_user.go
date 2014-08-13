@@ -49,13 +49,14 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
         return []byte(config.UAAPublicKey), nil
     })
 
-    client, err := handler.FindClient(token.Claims["client_id"].(string))
+    clientID := token.Claims["client_id"].(string)
+    client, err := handler.FindClient(clientID)
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
     }
 
-    kind, err := handler.FindKind(params.KindID)
+    kind, err := handler.FindKind(params.KindID, clientID)
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
@@ -88,8 +89,8 @@ func (handler NotifyUser) FindClient(clientID string) (models.Client, error) {
     return client, nil
 }
 
-func (handler NotifyUser) FindKind(kindID string) (models.Kind, error) {
-    kind, err := handler.kindsRepo.Find(models.Database().Connection, kindID)
+func (handler NotifyUser) FindKind(kindID, clientID string) (models.Kind, error) {
+    kind, err := handler.kindsRepo.Find(models.Database().Connection, kindID, clientID)
     if err != nil {
         if _, ok := err.(models.ErrRecordNotFound); ok {
             return models.Kind{}, nil

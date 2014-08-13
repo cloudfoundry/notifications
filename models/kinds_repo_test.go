@@ -34,7 +34,7 @@ var _ = Describe("KindsRepo", func() {
                 panic(err)
             }
 
-            kind, err = repo.Find(conn, "my-kind")
+            kind, err = repo.Find(conn, "my-kind", "my-client")
             if err != nil {
                 panic(err)
             }
@@ -45,12 +45,44 @@ var _ = Describe("KindsRepo", func() {
             Expect(kind.ClientID).To(Equal("my-client"))
             Expect(kind.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
         })
+
+        It("allows duplicate kindIDs that are unique by clientID", func() {
+            kind1 := models.Kind{
+                ID:       "forgotten-password",
+                ClientID: "a-client",
+            }
+
+            kind2 := models.Kind{
+                ID:       "forgotten-password",
+                ClientID: "another-client",
+            }
+
+            kind1, err := repo.Create(conn, kind1)
+            Expect(err).To(BeNil())
+
+            kind2, err = repo.Create(conn, kind2)
+            Expect(err).To(BeNil())
+
+            firstKind, err := repo.Find(conn, "forgotten-password", "a-client")
+            if err != nil {
+                panic(err)
+            }
+
+            secondKind, err := repo.Find(conn, "forgotten-password", "another-client")
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(firstKind).To(Equal(kind1))
+            Expect(secondKind).To(Equal(kind2))
+        })
     })
 
     Describe("Update", func() {
         It("updates the record in the database", func() {
             kind := models.Kind{
-                ID: "my-kind",
+                ID:       "my-kind",
+                ClientID: "my-client",
             }
 
             kind, err := repo.Create(conn, kind)
@@ -60,14 +92,13 @@ var _ = Describe("KindsRepo", func() {
 
             kind.Description = "My Kind"
             kind.Critical = true
-            kind.ClientID = "my-client"
 
             kind, err = repo.Update(conn, kind)
             if err != nil {
                 panic(err)
             }
 
-            kind, err = repo.Find(conn, "my-kind")
+            kind, err = repo.Find(conn, "my-kind", "my-client")
             if err != nil {
                 panic(err)
             }
@@ -95,7 +126,7 @@ var _ = Describe("KindsRepo", func() {
                     panic(err)
                 }
 
-                kind, err = repo.Find(conn, "my-kind")
+                kind, err = repo.Find(conn, "my-kind", "my-client")
                 if err != nil {
                     panic(err)
                 }
@@ -111,7 +142,8 @@ var _ = Describe("KindsRepo", func() {
         Context("when the record exists", func() {
             It("updates the record in the database", func() {
                 kind := models.Kind{
-                    ID: "my-kind",
+                    ID:       "my-kind",
+                    ClientID: "my-client",
                 }
 
                 kind, err := repo.Create(conn, kind)
@@ -131,7 +163,7 @@ var _ = Describe("KindsRepo", func() {
                     panic(err)
                 }
 
-                kind, err = repo.Find(conn, "my-kind")
+                kind, err = repo.Find(conn, "my-kind", "my-client")
                 if err != nil {
                     panic(err)
                 }
@@ -185,15 +217,15 @@ var _ = Describe("KindsRepo", func() {
 
             Expect(count).To(Equal(1))
 
-            _, err = repo.Find(conn, "my-kind")
+            _, err = repo.Find(conn, "my-kind", "the-client-id")
             Expect(err).To(BeAssignableToTypeOf(models.ErrRecordNotFound{}))
 
-            _, err = repo.Find(conn, "ignored-kind")
+            _, err = repo.Find(conn, "ignored-kind", "other-client-id")
             if err != nil {
                 panic(err)
             }
 
-            _, err = repo.Find(conn, "other-kind")
+            _, err = repo.Find(conn, "other-kind", "the-client-id")
             if err != nil {
                 panic(err)
             }

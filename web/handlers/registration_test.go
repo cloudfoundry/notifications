@@ -77,14 +77,24 @@ var _ = Describe("Registration", func() {
             Expect(client.Description).To(Equal("Raptor Containment Unit"))
 
             Expect(len(fakeKindsRepo.Kinds)).To(Equal(2))
-            Expect(fakeKindsRepo.Kinds["perimeter_breach"]).To(Equal(models.Kind{
+            kind, err := fakeKindsRepo.Find(fakeConn, "perimeter_breach", "raptors")
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(kind).To(Equal(models.Kind{
                 ID:          "perimeter_breach",
                 Description: "Perimeter Breach",
                 Critical:    true,
                 ClientID:    "raptors",
             }))
 
-            Expect(fakeKindsRepo.Kinds["feeding_time"]).To(Equal(models.Kind{
+            kind, err = fakeKindsRepo.Find(fakeConn, "feeding_time", "raptors")
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(kind).To(Equal(models.Kind{
                 ID:          "feeding_time",
                 Description: "Feeding Time",
                 Critical:    false,
@@ -105,14 +115,16 @@ var _ = Describe("Registration", func() {
             }
 
             _, err = fakeKindsRepo.Create(fakeConn, models.Kind{
-                ID: "perimeter_breach",
+                ID:       "perimeter_breach",
+                ClientID: "raptors",
             })
             if err != nil {
                 panic(err)
             }
 
             _, err = fakeKindsRepo.Create(fakeConn, models.Kind{
-                ID: "feeding_time",
+                ID:       "feeding_time",
+                ClientID: "raptors",
             })
             if err != nil {
                 panic(err)
@@ -129,14 +141,24 @@ var _ = Describe("Registration", func() {
             }))
 
             Expect(len(fakeKindsRepo.Kinds)).To(Equal(2))
-            Expect(fakeKindsRepo.Kinds["perimeter_breach"]).To(Equal(models.Kind{
+            kind, err := fakeKindsRepo.Find(fakeConn, "perimeter_breach", "raptors")
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(kind).To(Equal(models.Kind{
                 ID:          "perimeter_breach",
                 Description: "Perimeter Breach",
                 Critical:    true,
                 ClientID:    "raptors",
             }))
 
-            Expect(fakeKindsRepo.Kinds["feeding_time"]).To(Equal(models.Kind{
+            kind, err = fakeKindsRepo.Find(fakeConn, "feeding_time", "raptors")
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(kind).To(Equal(models.Kind{
                 ID:          "feeding_time",
                 Description: "Feeding Time",
                 Critical:    false,
