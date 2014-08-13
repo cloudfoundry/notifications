@@ -50,7 +50,7 @@ func (courier Courier) Dispatch(rawToken string, guid TypedGUID, options Options
     })
     clientID := clientToken.Claims["client_id"].(string)
 
-    templates, err := courier.templateLoader.Load(options.Subject, guid)
+    templates, err := courier.templateLoader.Load(options.Subject, guid, clientID, options.Kind)
     if err != nil {
         return responses, TemplateLoadError("An email template could not be loaded")
     }

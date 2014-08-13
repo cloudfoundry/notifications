@@ -43,17 +43,21 @@ var _ = Describe("TemplateLoader", func() {
     var loader postal.TemplateLoader
     var fs FakeFileSystem
     var env config.Environment
+    var kind string
+    var clientID string
 
     BeforeEach(func() {
         env = config.NewEnvironment()
         fs = NewFakeFileSystem(env)
         loader = postal.NewTemplateLoader(&fs)
+        kind = "maximumBananaDamage"
+        clientID = "DirkVonPiel"
     })
 
     Describe("Load", func() {
         Context("when subject is not set in the params", func() {
             It("returns the subject.missing template", func() {
-                templates, err := loader.Load("", postal.SpaceGUID("space-001"))
+                templates, err := loader.Load("", postal.SpaceGUID("space-001"), clientID, kind)
                 if err != nil {
                     panic(err)
                 }
@@ -64,7 +68,7 @@ var _ = Describe("TemplateLoader", func() {
 
         Context("when subject is set in the params", func() {
             It("returns the subject.provided template", func() {
-                templates, err := loader.Load("is provided", postal.SpaceGUID("space-001"))
+                templates, err := loader.Load("is provided", postal.SpaceGUID("space-001"), clientID, kind)
                 if err != nil {
                     panic(err)
                 }
@@ -75,7 +79,7 @@ var _ = Describe("TemplateLoader", func() {
 
         Context("guid is SpaceGUID", func() {
             It("returns the space templates", func() {
-                templates, err := loader.Load("", postal.SpaceGUID("space-001"))
+                templates, err := loader.Load("", postal.SpaceGUID("space-001"), clientID, kind)
                 if err != nil {
                     panic(err)
                 }
@@ -87,7 +91,7 @@ var _ = Describe("TemplateLoader", func() {
 
         Context("guid is UserGUID", func() {
             It("returns the user templates", func() {
-                templates, err := loader.Load("", postal.UserGUID("user-123"))
+                templates, err := loader.Load("", postal.UserGUID("user-123"), clientID, kind)
                 if err != nil {
                     panic(err)
                 }
@@ -109,7 +113,7 @@ var _ = Describe("TemplateLoader", func() {
             })
         })
 
-        Context("when a template has an override set", func() {
+        Context("when a template has a global override set", func() {
             BeforeEach(func() {
                 fs.Files[env.RootPath+"/templates/overrides/user_body.text"] = "override-user-text"
             })
@@ -121,6 +125,26 @@ var _ = Describe("TemplateLoader", func() {
                 }
 
                 Expect(text).To(Equal("override-user-text"))
+            })
+        })
+
+        Context("when a template has a clientID/kind matching override set", func() {
+            var fileName string
+            BeforeEach(func() {
+                fileName = clientID + "." + kind + ".user_body.text"
+                fs.Files[env.RootPath+"/templates/overrides/user_body.text"] = "override-user-text"
+                fs.Files[env.RootPath+"/templates/overrides/"+fileName] = "client-kind-override-user-text"
+                loader.ClientID = clientID
+                loader.Kind = kind
+            })
+
+            It("returns the matching override", func() {
+                text, err := loader.LoadTemplate("user_body.text")
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(text).To(Equal("client-kind-override-user-text"))
             })
         })
     })

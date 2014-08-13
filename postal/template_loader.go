@@ -18,7 +18,9 @@ type Templates struct {
 }
 
 type TemplateLoader struct {
-    fs FileSystemInterface
+    fs       FileSystemInterface
+    ClientID string
+    Kind     string
 }
 
 func NewTemplateLoader(fs FileSystemInterface) TemplateLoader {
@@ -27,8 +29,10 @@ func NewTemplateLoader(fs FileSystemInterface) TemplateLoader {
     }
 }
 
-func (loader TemplateLoader) Load(subject string, guid TypedGUID) (Templates, error) {
+func (loader TemplateLoader) Load(subject string, guid TypedGUID, clientID string, kind string) (Templates, error) {
     var err error
+    loader.ClientID = clientID
+    loader.Kind = kind
     templates := Templates{}
 
     templates.Subject, err = loader.loadSubject(subject)
@@ -76,6 +80,11 @@ func (loader TemplateLoader) loadHTML(guid TypedGUID) (string, error) {
 
 func (loader TemplateLoader) LoadTemplate(filename string) (string, error) {
     env := config.NewEnvironment()
+
+    clientKindOverridePath := env.RootPath + "/templates/overrides/" + loader.ClientID + "." + loader.Kind + "." + filename
+    if loader.fs.Exists(clientKindOverridePath) {
+        return loader.fs.Read(clientKindOverridePath)
+    }
 
     overRidePath := env.RootPath + "/templates/overrides/" + filename
     if loader.fs.Exists(overRidePath) {
