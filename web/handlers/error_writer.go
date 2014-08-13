@@ -6,6 +6,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
 )
 
 type ErrorWriterInterface interface {
@@ -30,10 +31,10 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
         writer.write(w, http.StatusBadGateway, []string{err.Error()})
     case postal.TemplateLoadError:
         writer.write(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
-    case ParamsParseError:
+    case params.ParseError:
         writer.write(w, 422, []string{err.Error()})
-    case ParamsValidationError:
-        writer.write(w, 422, err.(ParamsValidationError).Errors())
+    case params.ValidationError:
+        writer.write(w, 422, err.(params.ValidationError).Errors())
     case models.ErrDuplicateRecord:
         writer.write(w, 409, []string{err.Error()})
     case models.ErrRecordNotFound:

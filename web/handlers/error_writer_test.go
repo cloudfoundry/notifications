@@ -9,6 +9,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -94,7 +95,7 @@ var _ = Describe("ErrorWriter", func() {
     })
 
     It("returns a 422 when the params cannot be parsed", func() {
-        writer.Write(recorder, handlers.ParamsParseError{})
+        writer.Write(recorder, params.ParseError{})
 
         Expect(recorder.Code).To(Equal(422))
 
@@ -108,7 +109,7 @@ var _ = Describe("ErrorWriter", func() {
     })
 
     It("returns a 422 when the params are not valid", func() {
-        writer.Write(recorder, handlers.ParamsValidationError([]string{"something", "another"}))
+        writer.Write(recorder, params.ValidationError([]string{"something", "another"}))
 
         Expect(recorder.Code).To(Equal(422))
 

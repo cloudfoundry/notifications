@@ -6,6 +6,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
     "github.com/dgrijalva/jwt-go"
 )
 
@@ -28,13 +29,13 @@ func (handler Registration) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 }
 
 func (handler Registration) Execute(w http.ResponseWriter, req *http.Request, transaction models.TransactionInterface) {
-    params, err := NewRegistrationParams(req.Body)
+    parameters, err := params.NewRegistration(req.Body)
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
     }
 
-    err = params.Validate()
+    err = parameters.Validate()
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
@@ -44,7 +45,7 @@ func (handler Registration) Execute(w http.ResponseWriter, req *http.Request, tr
 
     client := models.Client{
         ID:          handler.parseClientID(req),
-        Description: params.SourceDescription,
+        Description: parameters.SourceDescription,
     }
     client, err = handler.clientsRepo.Upsert(transaction, client)
     if err != nil {
@@ -54,7 +55,7 @@ func (handler Registration) Execute(w http.ResponseWriter, req *http.Request, tr
     }
 
     kindIDs := []string{}
-    for _, kind := range params.Kinds {
+    for _, kind := range parameters.Kinds {
         kindIDs = append(kindIDs, kind.ID)
 
         kind.ClientID = client.ID
@@ -66,7 +67,7 @@ func (handler Registration) Execute(w http.ResponseWriter, req *http.Request, tr
         }
     }
 
-    if params.IncludesKinds {
+    if parameters.IncludesKinds {
         _, err = handler.kindsRepo.Trim(transaction, client.ID, kindIDs)
         if err != nil {
             transaction.Rollback()

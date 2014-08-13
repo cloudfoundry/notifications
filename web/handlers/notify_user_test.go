@@ -11,6 +11,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -135,7 +136,7 @@ var _ = Describe("NotifyUser", func() {
                 handler.ServeHTTP(writer, request)
 
                 Expect(errorWriter.Error).ToNot(BeNil())
-                validationErr := errorWriter.Error.(handlers.ParamsValidationError)
+                validationErr := errorWriter.Error.(params.ValidationError)
                 Expect(validationErr.Errors()).To(ContainElement(`"kind_id" is a required field`))
                 Expect(validationErr.Errors()).To(ContainElement(`"text" or "html" fields must be supplied`))
             })
@@ -149,7 +150,7 @@ var _ = Describe("NotifyUser", func() {
 
                 handler.ServeHTTP(writer, request)
 
-                Expect(errorWriter.Error).To(Equal(handlers.ParamsParseError{}))
+                Expect(errorWriter.Error).To(Equal(params.ParseError{}))
             })
         })
 

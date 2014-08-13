@@ -8,6 +8,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
     "github.com/dgrijalva/jwt-go"
 )
 
@@ -32,14 +33,14 @@ func NewNotifyUser(courier postal.CourierInterface, errorWriter ErrorWriterInter
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     userGUID := strings.TrimPrefix(req.URL.Path, "/users/")
 
-    params, err := NewNotifyParams(req.Body)
+    parameters, err := params.NewNotify(req.Body)
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
     }
 
-    if !params.Validate() {
-        handler.errorWriter.Write(w, ParamsValidationError(params.Errors))
+    if !parameters.Validate() {
+        handler.errorWriter.Write(w, params.ValidationError(parameters.Errors))
         return
     }
 
@@ -56,13 +57,13 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
         return
     }
 
-    kind, err := handler.FindKind(params.KindID, clientID)
+    kind, err := handler.FindKind(parameters.KindID, clientID)
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
     }
 
-    responses, err := handler.courier.Dispatch(rawToken, postal.UserGUID(userGUID), params.ToOptions(client, kind))
+    responses, err := handler.courier.Dispatch(rawToken, postal.UserGUID(userGUID), parameters.ToOptions(client, kind))
     if err != nil {
         handler.errorWriter.Write(w, err)
         return

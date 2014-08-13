@@ -1,4 +1,4 @@
-package handlers
+package params
 
 import (
     "encoding/json"
@@ -11,46 +11,46 @@ import (
 
 var kindIDFormat = regexp.MustCompile(`^[0-9a-zA-Z_\-.]+$`)
 
-type RegistrationParams struct {
+type Registration struct {
     SourceDescription string        `json:"source_description"`
     Kinds             []models.Kind `json:"kinds"`
     IncludesKinds     bool
 }
 
-func NewRegistrationParams(body io.Reader) (RegistrationParams, error) {
-    var params RegistrationParams
+func NewRegistration(body io.Reader) (Registration, error) {
+    var registration Registration
 
     bytes, err := ioutil.ReadAll(body)
     if err != nil {
-        return params, ParamsParseError{}
+        return registration, ParseError{}
     }
 
     var hashParams map[string]interface{}
     err = json.Unmarshal(bytes, &hashParams)
     if err != nil {
-        return params, ParamsParseError{}
+        return registration, ParseError{}
     }
 
     if _, ok := hashParams["kinds"]; ok {
-        params.IncludesKinds = true
+        registration.IncludesKinds = true
     }
 
-    err = json.Unmarshal(bytes, &params)
+    err = json.Unmarshal(bytes, &registration)
     if err != nil {
-        return params, ParamsParseError{}
+        return registration, ParseError{}
     }
 
-    return params, nil
+    return registration, nil
 }
 
-func (params RegistrationParams) Validate() error {
-    errors := ParamsValidationError{}
-    if params.SourceDescription == "" {
+func (registration Registration) Validate() error {
+    errors := ValidationError{}
+    if registration.SourceDescription == "" {
         errors = append(errors, `"source_description" is a required field`)
     }
 
-    kindErrors := ParamsValidationError{}
-    for _, kind := range params.Kinds {
+    kindErrors := ValidationError{}
+    for _, kind := range registration.Kinds {
         if kind.ID == "" {
             kindErrors = append(kindErrors, `"kind.id" is a required field`)
         } else if !kindIDFormat.MatchString(kind.ID) {

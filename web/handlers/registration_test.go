@@ -10,6 +10,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -279,7 +280,7 @@ var _ = Describe("Registration", func() {
 
                 handler.Execute(writer, request, fakeConn)
 
-                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(handlers.ParamsParseError{}))
+                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
 
                 Expect(fakeConn.BeginWasCalled).To(BeFalse())
                 Expect(fakeConn.CommitWasCalled).To(BeFalse())
@@ -298,7 +299,7 @@ var _ = Describe("Registration", func() {
 
                 handler.Execute(writer, request, fakeConn)
 
-                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(handlers.ParamsValidationError{}))
+                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
 
                 Expect(fakeConn.BeginWasCalled).To(BeFalse())
                 Expect(fakeConn.CommitWasCalled).To(BeFalse())
