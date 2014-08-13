@@ -30,6 +30,17 @@ When emailing a space, `space_body.html` and `space_body.text` are used as templ
 The files located in the templates directory are defaults and will be used if there is no override of the same name.
 
 ### Overriding default templates
+There are three types of overrides. 
+
+| Type | Effect |
+| ---- | ------ |
+| global | applies to any email sent, has least precedence |
+| client specific | applies to any email sent by a client, higher precedence than global |
+| client and kind specific | applies to any email sent by a client with the kind_id, has highest precedence |
+
+All types of overrides have access to the same variables described in global overrides.  The only difference is which email types they are applied to.
+
+#### global overrides
 
 Any file that exists in `./templates` can be overriden by placing a file of the same name in `./templates/overrides`.
 
@@ -58,4 +69,29 @@ You are receiving this electronic mail because you are a member of {{.Space}}
 
 All apps in {{.Space}} have had an emergency of type {{.KindDescription}}
 ```
+
+#### overriding by clientID
+
+To override a template for a client with id `banana`. You would place a file in the `./templates/overrides` directory with the following name scheme:
+
+	clientID.templateName.templateExtension
+	
+So to override the subject.missing the file name would be: 
+
+	banana.subject.missing
+	
+This override would only be applied to emails sent by the client banana.
+	
+
+#### overriding by clientID and kind
+
+To override a template for client `banana` with the kind `damage` you would place a file in the `./templates/overrides` directory with the following name scheme:
+
+	clientID.kind_id.templateName.templateExtension
+	
+So to override the user_body.text template the file name would be:
+
+	banana.damage.user_body.text
+	
+This override only applies to requests that match both the clientId and the kind.  This has the most precedence and overrides all other overrides.
 
