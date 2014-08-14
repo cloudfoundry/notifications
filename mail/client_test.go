@@ -13,7 +13,7 @@ import (
 
 var _ = Describe("Mail", func() {
     var mailServer *SMTPServer
-    var client mail.Client
+    var client *mail.Client
 
     Context("NewClient", func() {
         It("defaults the ConnectTimeout to 15 seconds", func() {

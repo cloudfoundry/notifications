@@ -32,18 +32,21 @@ type connection struct {
     err    error
 }
 
-func NewClient(user, pass, url string) (Client, error) {
-    client := Client{
+func NewClient(user, pass, url string) (*Client, error) {
+    client := &Client{
         user: user,
         pass: pass,
     }
+
     host, port, err := net.SplitHostPort(url)
     if err != nil {
         return client, err
     }
+
     client.Host = host
     client.Port = port
     client.ConnectTimeout = 15 * time.Second
+
     return client, nil
 }
 

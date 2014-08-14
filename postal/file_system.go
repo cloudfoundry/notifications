@@ -12,8 +12,8 @@ type FileSystemInterface interface {
 
 type FileSystem struct{}
 
-func NewFileSystem() FileSystem {
-    return FileSystem{}
+func NewFileSystem() *FileSystem {
+    return &FileSystem{}
 }
 
 func (fs FileSystem) Exists(path string) bool {
