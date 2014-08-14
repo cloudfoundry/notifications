@@ -54,6 +54,7 @@ func (repo ClientsRepo) Update(conn ConnectionInterface, client Client) (Client,
 
 func (repo ClientsRepo) Upsert(conn ConnectionInterface, client Client) (Client, error) {
     existingClient, err := repo.Find(conn, client.ID)
+    client.Primary = existingClient.Primary
     client.CreatedAt = existingClient.CreatedAt
 
     if err != nil {

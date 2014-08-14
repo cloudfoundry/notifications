@@ -66,6 +66,7 @@ func (repo KindsRepo) Update(conn ConnectionInterface, kind Kind) (Kind, error) 
 
 func (repo KindsRepo) Upsert(conn ConnectionInterface, kind Kind) (Kind, error) {
     existingKind, err := repo.Find(conn, kind.ID, kind.ClientID)
+    kind.Primary = existingKind.Primary
     kind.CreatedAt = existingKind.CreatedAt
 
     if err != nil {
