@@ -20,21 +20,29 @@ var _ = Describe("Notify", func() {
     var handler handlers.Notify
     var fakeFinder *FakeFinder
     var fakeCourier *FakeCourier
+    var fakeRegistrar *FakeRegistrar
     var request *http.Request
     var token string
+    var client models.Client
+    var kind models.Kind
+    var fakeDBConn *FakeDBConn
 
     BeforeEach(func() {
-        fakeFinder = NewFakeFinder()
-        fakeFinder.Clients["mister-client"] = models.Client{
+        client = models.Client{
             ID:          "mister-client",
             Description: "Health Monitor",
         }
-        fakeFinder.Kinds["test_email|mister-client"] = models.Kind{
+        kind = models.Kind{
             ID:          "test_email",
             Description: "Instance Down",
             ClientID:    "mister-client",
         }
+        fakeFinder = NewFakeFinder()
+        fakeFinder.Clients["mister-client"] = client
+        fakeFinder.Kinds["test_email|mister-client"] = kind
         fakeCourier = NewFakeCourier()
+
+        fakeRegistrar = NewFakeRegistrar()
 
         body, err := json.Marshal(map[string]string{
             "kind_id":  "test_email",
@@ -63,7 +71,41 @@ var _ = Describe("Notify", func() {
         }
         request.Header.Set("Authorization", "Bearer "+token)
 
-        handler = handlers.NewNotify(fakeCourier, fakeFinder)
+        handler = handlers.NewNotify(fakeCourier, fakeFinder, fakeRegistrar)
+    })
+
+    It("delegates to the courier", func() {
+        _, err := handler.Execute(fakeDBConn, request, postal.SpaceGUID("space-001"))
+        if err != nil {
+            panic(err)
+        }
+
+        Expect(fakeCourier.DispatchArguments).To(Equal([]interface{}{
+            "mister-client",
+            postal.SpaceGUID("space-001"),
+            postal.Options{
+                ReplyTo:           "me@example.com",
+                Subject:           "Your instance is down",
+                KindDescription:   "Instance Down",
+                SourceDescription: "Health Monitor",
+                Text:              "This is the plain text body of the email",
+                HTML:              "<p>This is the HTML Body of the email</p>",
+                KindID:            "test_email",
+            },
+        }))
+    })
+
+    It("registers the client and kind", func() {
+        _, err := handler.Execute(fakeDBConn, request, postal.SpaceGUID("space-001"))
+        if err != nil {
+            panic(err)
+        }
+
+        Expect(fakeRegistrar.RegisterArguments).To(Equal([]interface{}{
+            fakeDBConn,
+            client,
+            []models.Kind{kind},
+        }))
     })
 
     Context("failure cases", func() {
@@ -81,7 +123,7 @@ var _ = Describe("Notify", func() {
                 }
                 request.Header.Set("Authorization", "Bearer "+token)
 
-                _, err = handler.Execute(request, postal.SpaceGUID("space-001"))
+                _, err = handler.Execute(fakeDBConn, request, postal.SpaceGUID("space-001"))
 
                 Expect(err).ToNot(BeNil())
                 validationErr := err.(params.ValidationError)
@@ -96,27 +138,37 @@ var _ = Describe("Notify", func() {
                 }
                 request.Header.Set("Authorization", "Bearer "+token)
 
-                _, err = handler.Execute(request, postal.SpaceGUID("space-001"))
+                _, err = handler.Execute(fakeDBConn, request, postal.SpaceGUID("space-001"))
 
                 Expect(err).To(Equal(params.ParseError{}))
             })
         })
 
         Context("when the courier returns errors", func() {
-            It("delegates to the errorWriter", func() {
+            It("returns the error", func() {
                 fakeCourier.Error = errors.New("BOOM!")
 
-                _, err := handler.Execute(request, postal.UserGUID("user-123"))
+                _, err := handler.Execute(fakeDBConn, request, postal.UserGUID("user-123"))
 
                 Expect(err).To(Equal(errors.New("BOOM!")))
             })
         })
 
         Context("when the finder return errors", func() {
-            It("delegates to the errorWriter", func() {
+            It("returns the error", func() {
                 fakeFinder.ClientAndKindError = errors.New("BOOM!")
 
-                _, err := handler.Execute(request, postal.UserGUID("user-123"))
+                _, err := handler.Execute(fakeDBConn, request, postal.UserGUID("user-123"))
+
+                Expect(err).To(Equal(errors.New("BOOM!")))
+            })
+        })
+
+        Context("when the registrar returns errors", func() {
+            It("returns the error", func() {
+                fakeRegistrar.RegisterError = errors.New("BOOM!")
+
+                _, err := handler.Execute(fakeDBConn, request, postal.UserGUID("user-123"))
 
                 Expect(err).To(Equal(errors.New("BOOM!")))
             })

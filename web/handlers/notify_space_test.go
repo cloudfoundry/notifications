@@ -3,6 +3,7 @@ package handlers_test
 import (
     "bytes"
     "encoding/json"
+    "errors"
     "net/http"
     "net/http/httptest"
 
@@ -23,6 +24,8 @@ var _ = Describe("NotifySpace", func() {
         var fakeCourier *FakeCourier
         var errorWriter *FakeErrorWriter
         var finder *FakeFinder
+        var transaction *FakeDBConn
+        var fakeRegistrar *FakeRegistrar
 
         BeforeEach(func() {
             errorWriter = &FakeErrorWriter{}
@@ -66,8 +69,11 @@ var _ = Describe("NotifySpace", func() {
             }
             request.Header.Set("Authorization", "Bearer "+token)
 
+            transaction = &FakeDBConn{}
+
             fakeCourier = NewFakeCourier()
-            handler = handlers.NewNotifySpace(handlers.NewNotify(fakeCourier, finder), errorWriter)
+            fakeRegistrar = NewFakeRegistrar()
+            handler = handlers.NewNotifySpace(handlers.NewNotify(fakeCourier, finder, fakeRegistrar), errorWriter)
         })
 
         Context("when the courier returns a successful response", func() {
@@ -95,7 +101,7 @@ var _ = Describe("NotifySpace", func() {
                     },
                 }
 
-                handler.ServeHTTP(writer, request)
+                handler.Execute(writer, request, transaction)
 
                 Expect(writer.Code).To(Equal(http.StatusOK))
 
@@ -140,6 +146,20 @@ var _ = Describe("NotifySpace", func() {
                         KindID:            "test_email",
                     },
                 }))
+
+                Expect(transaction.BeginWasCalled).To(BeTrue())
+                Expect(transaction.CommitWasCalled).To(BeTrue())
+                Expect(transaction.RollbackWasCalled).To(BeFalse())
+            })
+
+            It("rollsback the transaction when there is an error", func() {
+                fakeRegistrar.RegisterError = errors.New("BOOM!")
+
+                handler.Execute(writer, request, transaction)
+
+                Expect(transaction.BeginWasCalled).To(BeTrue())
+                Expect(transaction.CommitWasCalled).To(BeFalse())
+                Expect(transaction.RollbackWasCalled).To(BeTrue())
             })
         })
     })

@@ -25,11 +25,11 @@ func NewRouter() Router {
 
     StartWorkers(mother)
 
-    notify := handlers.NewNotify(mother.Courier(), mother.Finder())
+    registrar := mother.Registrar()
+    notify := handlers.NewNotify(mother.Courier(), mother.Finder(), registrar)
     logging := mother.Logging()
     errorWriter := mother.ErrorWriter()
     authenticator := mother.Authenticator()
-    registrar := mother.Registrar()
 
     return Router{
         stacks: map[string]stack.Stack{
