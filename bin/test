@@ -12,6 +12,7 @@ RED="\033[0;31m"
 NONE="\033[0m"
 
 source $DIR/env/$ENVIRONMENT
+godep restore
 
 function run() {
   set +e
