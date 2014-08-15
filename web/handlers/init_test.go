@@ -148,6 +148,9 @@ func NewFakeClientsRepo() *FakeClientsRepo {
 }
 
 func (fake *FakeClientsRepo) Create(conn models.ConnectionInterface, client models.Client) (models.Client, error) {
+    if _, ok := fake.Clients[client.ID]; ok {
+        return client, models.ErrDuplicateRecord{}
+    }
     fake.Clients[client.ID] = client
     return client, nil
 }
@@ -186,6 +189,9 @@ func NewFakeKindsRepo() *FakeKindsRepo {
 
 func (fake *FakeKindsRepo) Create(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
     key := kind.ID + kind.ClientID
+    if _, ok := fake.Kinds[key]; ok {
+        return kind, models.ErrDuplicateRecord{}
+    }
     fake.Kinds[key] = kind
     return kind, nil
 }
@@ -230,4 +236,25 @@ func NewFakeFinder() *FakeFinder {
 
 func (finder *FakeFinder) ClientAndKind(clientID, kindID string) (models.Client, models.Kind, error) {
     return finder.Clients[clientID], finder.Kinds[kindID+"|"+clientID], finder.ClientAndKindError
+}
+
+type FakeRegistrar struct {
+    RegisterArguments []interface{}
+    RegisterError     error
+    PruneArguments    []interface{}
+    PruneError        error
+}
+
+func NewFakeRegistrar() *FakeRegistrar {
+    return &FakeRegistrar{}
+}
+
+func (fake *FakeRegistrar) Register(conn models.ConnectionInterface, client models.Client, kinds []models.Kind) error {
+    fake.RegisterArguments = []interface{}{conn, client, kinds}
+    return fake.RegisterError
+}
+
+func (fake *FakeRegistrar) Prune(conn models.ConnectionInterface, client models.Client, kinds []models.Kind) error {
+    fake.PruneArguments = []interface{}{conn, client, kinds}
+    return fake.PruneError
 }

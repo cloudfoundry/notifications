@@ -11,15 +11,13 @@ import (
 )
 
 type Registration struct {
-    clientsRepo models.ClientsRepoInterface
-    kindsRepo   models.KindsRepoInterface
+    registrar   RegistrarInterface
     errorWriter ErrorWriterInterface
 }
 
-func NewRegistration(clientsRepo models.ClientsRepoInterface, kindsRepo models.KindsRepoInterface, errorWriter ErrorWriterInterface) Registration {
+func NewRegistration(registrar RegistrarInterface, errorWriter ErrorWriterInterface) Registration {
     return Registration{
-        clientsRepo: clientsRepo,
-        kindsRepo:   kindsRepo,
+        registrar:   registrar,
         errorWriter: errorWriter,
     }
 }
@@ -47,28 +45,22 @@ func (handler Registration) Execute(w http.ResponseWriter, req *http.Request, tr
         ID:          handler.parseClientID(req),
         Description: parameters.SourceDescription,
     }
-    client, err = handler.clientsRepo.Upsert(transaction, client)
+
+    kinds := []models.Kind{}
+    for _, kind := range parameters.Kinds {
+        kind.ClientID = client.ID
+        kinds = append(kinds, kind)
+    }
+
+    err = handler.registrar.Register(transaction, client, kinds)
     if err != nil {
         transaction.Rollback()
         handler.errorWriter.Write(w, err)
         return
     }
 
-    kindIDs := []string{}
-    for _, kind := range parameters.Kinds {
-        kindIDs = append(kindIDs, kind.ID)
-
-        kind.ClientID = client.ID
-        _, err = handler.kindsRepo.Upsert(transaction, kind)
-        if err != nil {
-            transaction.Rollback()
-            handler.errorWriter.Write(w, err)
-            return
-        }
-    }
-
     if parameters.IncludesKinds {
-        _, err = handler.kindsRepo.Trim(transaction, client.ID, kindIDs)
+        err = handler.registrar.Prune(transaction, client, kinds)
         if err != nil {
             transaction.Rollback()
             handler.errorWriter.Write(w, err)

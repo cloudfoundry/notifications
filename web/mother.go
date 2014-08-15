@@ -72,3 +72,8 @@ func (mother Mother) ErrorWriter() handlers.ErrorWriter {
 func (mother Mother) Authenticator() middleware.Authenticator {
     return middleware.NewAuthenticator()
 }
+
+func (mother Mother) Registrar() handlers.Registrar {
+    clientsRepo, kindsRepo := mother.Repos()
+    return handlers.NewRegistrar(clientsRepo, kindsRepo)
+}

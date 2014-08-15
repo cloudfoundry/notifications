@@ -29,14 +29,14 @@ func NewRouter() Router {
     logging := mother.Logging()
     errorWriter := mother.ErrorWriter()
     authenticator := mother.Authenticator()
-    clientsRepo, kindsRepo := mother.Repos()
+    registrar := mother.Registrar()
 
     return Router{
         stacks: map[string]stack.Stack{
             "GET /info":           stack.NewStack(handlers.NewGetInfo()).Use(logging),
             "POST /users/{guid}":  stack.NewStack(handlers.NewNotifyUser(notify, errorWriter)).Use(logging, authenticator),
             "POST /spaces/{guid}": stack.NewStack(handlers.NewNotifySpace(notify, errorWriter)).Use(logging, authenticator),
-            "PUT /registration":   stack.NewStack(handlers.NewRegistration(clientsRepo, kindsRepo, errorWriter)).Use(logging, authenticator),
+            "PUT /registration":   stack.NewStack(handlers.NewRegistration(registrar, errorWriter)).Use(logging, authenticator),
         },
     }
 }
