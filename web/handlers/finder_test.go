@@ -50,7 +50,9 @@ var _ = Describe("Finder", func() {
         Context("when the client cannot be found", func() {
             It("returns an empty models.Client", func() {
                 client, _, err := finder.ClientAndKind("bad-client-id", "perimeter_breach")
-                Expect(client).To(Equal(models.Client{}))
+                Expect(client).To(Equal(models.Client{
+                    ID: "bad-client-id",
+                }))
                 Expect(err).To(BeNil())
             })
         })
@@ -59,7 +61,10 @@ var _ = Describe("Finder", func() {
             It("returns an empty models.Kind", func() {
                 client, kind, err := finder.ClientAndKind("raptors", "bad-kind-id")
                 Expect(client).To(Equal(raptors))
-                Expect(kind).To(Equal(models.Kind{}))
+                Expect(kind).To(Equal(models.Kind{
+                    ID:       "bad-kind-id",
+                    ClientID: "raptors",
+                }))
                 Expect(err).To(BeNil())
             })
         })
