@@ -12,7 +12,28 @@ properties:
         secret: my-secret
         authorities: cloud_controller.admin,scim.read
         authorized-grant-types: client_credentials
-```
+
+##Configuring Environment Variables
+
+| Variable            | Description                         | Default  |
+| ------------------- | ----------------------------------- | -------- |
+| CC_HOST\*           | Cloud Controller Host               | \<none\> |
+| DATABASE_URL\*      | URL to your Database                | \<none\> |
+| PORT                | Port that application will bind to  | 3000     |
+| ROOT_PATH\*         | Root path of your application       | \<none\> |
+| SMTP_HOST\*         | SMTP Host                           | \<none\> |
+| SMTP_PASS\*         | SMTP Password                       | \<none\> |
+| SMTP_PORT\*         | SMTP Port                           | \<none\> |
+| SMTP_TLS            | Use TLS when talking to SMTP server | true     |
+| SMTP_USER\*         | SMTP Username                       | \<none\> |
+| SENDER\*            | Emails are sent from this address   | \<none\> |
+| UAA_CLIENT_ID\*     | The UAA client ID                   | \<none\> |
+| UAA_CLIENT_SECRET\* | The UAA client secret               | \<none\> |
+| UAA_HOST\*          | The UAA Host                        | \<none\> |
+| VERIFY_SSL          | Verifies SSL                        | true     |
+| TEST_MODE           | Run in test mode                    | false    |
+
+\* required
 
 ## Configuring Email Templates
 The default templates are located in **./templates**. The templates directory should look similar to this:
@@ -37,15 +58,15 @@ Users are messaged via the `/users/id` endpoint and spaces are messaged via `/sp
 
 Both endpoints expect a json body to be posted with following keys:
 
-| Key | Description |
-| ---- | ------ |
-| kind_id\* | a key to identify the type of email to be sent |
-| text\*\* | the text version of the email |
-| html\*\* | the html version of the email |
-| kind_description | a description of the kind_id |
-| subject | the text of the subject |
-| reply_to | the Reply-To address for the email |
-| source_description | a description of the sender |
+| Key                | Description                                    |
+| ------------------ | ---------------------------------------------- |
+| kind_id\*          | a key to identify the type of email to be sent |
+| text\*\*           | the text version of the email                  |
+| html\*\*           | the html version of the email                  |
+| kind_description   | a description of the kind_id                   |
+| subject            | the text of the subject                        |
+| reply_to           | the Reply-To address for the email             |
+| source_description | a description of the sender                    |
 
 \* required 
  
@@ -55,10 +76,10 @@ Both endpoints expect a json body to be posted with following keys:
 ### Overriding default templates
 There are three types of overrides. 
 
-| Type | Effect |
-| ---- | ------ |
-| global | applies to any email sent, has least precedence |
-| client specific | applies to any email sent by a client, higher precedence than global |
+| Type                     | Effect                                                                         |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| global                   | applies to any email sent, has least precedence                                |
+| client specific          | applies to any email sent by a client, higher precedence than global           |
 | client and kind specific | applies to any email sent by a client with the kind_id, has highest precedence |
 
 All types of overrides have access to the same variables described in global overrides.  The only difference is which email types they are applied to.
@@ -69,20 +90,20 @@ Any file that exists in `./templates` can be overriden by placing a file of the 
 
 The templates are [go templates](http://golang.org/pkg/text/template/).  The templates have access to the following variables:
 
-| Variable | Description |
-| -------- | ----------- |
-| KindDescription | Pulled from json posted to endpoint under: kind_description, falls back to kind if not set |
-| From | what account is in the from field of the email |
-| ReplyTo | the address is in the reply to field of the email |
-| To | the address the email is going to |
-| Subject | Pulled from json posted to endpoint under: subject |
-| Text | Pulled from json posted to endpoint under: text |
-| HTML | Pulled from json posted to endpoint under: html |
+| Variable          | Description                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------ |
+| KindDescription   | Pulled from json posted to endpoint under: kind_description, falls back to kind if not set       |
+| From              | Which account is in the from field of the email                                                  |
+| ReplyTo           | The address is in the reply to field of the email                                                |
+| To                | The address the email is going to                                                                |
+| Subject           | Pulled from json posted to endpoint under: subject                                               |
+| Text              | Pulled from json posted to endpoint under: text                                                  |
+| HTML              | Pulled from json posted to endpoint under: html                                                  |
 | SourceDescription | Pulled from json posted to endpoint under: source_description, falls back to ClientID if not set |
-| ClientID | the access token of the user requesting the email be sent |
-| MessageID | unique id for the email being sent |
-| Organization | The name of the organization of the space (used for emails to spaces) |
-| Space | The name of the space (used for emails to spaces) |
+| ClientID          | The access token of the user requesting the email be sent                                        |
+| MessageID         | Unique id for the email being sent                                                               |
+| Organization      | The name of the organization of the space (used for emails to spaces)                            |
+| Space             | The name of the space (used for emails to spaces)                                                |
 
 ##### Example: Overriding space_body.text
 To override the plain text template in the email body, write the following in `./templates/overrides/space_body.text`:
