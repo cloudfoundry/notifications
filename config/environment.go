@@ -62,6 +62,7 @@ func loadDatabaseURL(name string) string {
     databaseURL = strings.TrimPrefix(databaseURL, "http://")
     databaseURL = strings.TrimPrefix(databaseURL, "https://")
     databaseURL = strings.TrimPrefix(databaseURL, "tcp://")
+    databaseURL = strings.TrimPrefix(databaseURL, "mysql2://")
     parsedURL, err := url.Parse("tcp://" + databaseURL)
     if err != nil {
         panic(errors.New(fmt.Sprintf("Could not parse DATABASE_URL %q, it does not fit format %q", loadOrPanic(name), "tcp://user:pass@host/dname")))
