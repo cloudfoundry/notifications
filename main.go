@@ -31,18 +31,19 @@ func main() {
 
 func configure(env config.Environment) {
     log.Println("Booting with configuration:")
-    log.Printf("\tUAAHost         -> %+v", env.UAAHost)
-    log.Printf("\tUAAClientID     -> %+v", env.UAAClientID)
-    log.Printf("\tUAAClientSecret -> %+v", env.UAAClientSecret)
-    log.Printf("\tSMTPUser        -> %+v", env.SMTPUser)
-    log.Printf("\tSMTPPass        -> %+v", env.SMTPPass)
+    log.Printf("\tCCHost          -> %+v", env.CCHost)
+    log.Printf("\tDatabaseURL     -> %+v", env.DatabaseURL)
     log.Printf("\tSMTPHost        -> %+v", env.SMTPHost)
+    log.Printf("\tSMTPPass        -> %+v", env.SMTPPass)
     log.Printf("\tSMTPPort        -> %+v", env.SMTPPort)
     log.Printf("\tSMTPTLS         -> %+v", env.SMTPTLS)
+    log.Printf("\tSMTPUser        -> %+v", env.SMTPUser)
     log.Printf("\tSender          -> %+v", env.Sender)
-    log.Printf("\tCCHost          -> %+v", env.CCHost)
-    log.Printf("\tVerifySSL       -> %+v", env.VerifySSL)
     log.Printf("\tTest mode       -> %+v", env.TestMode)
+    log.Printf("\tUAAClientID     -> %+v", env.UAAClientID)
+    log.Printf("\tUAAClientSecret -> %+v", env.UAAClientSecret)
+    log.Printf("\tUAAHost         -> %+v", env.UAAHost)
+    log.Printf("\tVerifySSL       -> %+v", env.VerifySSL)
 }
 
 func confirmSMTPConfiguration(env config.Environment) {
