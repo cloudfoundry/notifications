@@ -8,7 +8,9 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/coopernurse/gorp"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -33,9 +35,12 @@ var _ = Describe("Courier", func() {
     var queue *postal.DeliveryQueue
     var worker postal.DeliveryWorker
     var clientID string
+    var fakeReceiptsRepo FakeReceiptsRepo
+    var conn *gorp.DbMap
 
     BeforeEach(func() {
         clientID = "mister-client"
+        conn = models.Database().Connection
 
         fakeCC = NewFakeCloudController()
         fakeCC.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
@@ -82,6 +87,8 @@ var _ = Describe("Courier", func() {
             },
         }
 
+        fakeReceiptsRepo = NewFakeReceiptsRepo()
+
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
         mailClient = FakeMailClient{}
@@ -98,7 +105,7 @@ var _ = Describe("Courier", func() {
         spaceLoader = postal.NewSpaceLoader(fakeCC)
         templateLoader = postal.NewTemplateLoader(&fs)
 
-        courier = postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer)
+        courier = postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, &fakeReceiptsRepo)
     })
 
     AfterEach(func() {
@@ -121,7 +128,7 @@ var _ = Describe("Courier", func() {
                 Context("when Cloud Controller is unavailable to load space users", func() {
                     It("returns a CCDownError error", func() {
                         fakeCC.GetUsersBySpaceGuidError = errors.New("BOOM!")
-                        _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options)
+                        _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.CCDownError("")))
                     })
@@ -130,7 +137,7 @@ var _ = Describe("Courier", func() {
                 Context("when Cloud Controller is unavailable to load a space", func() {
                     It("returns a CCDownError error", func() {
                         fakeCC.LoadSpaceError = errors.New("BOOM!")
-                        _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-000"), options)
+                        _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-000"), options, conn)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
                     })
@@ -139,7 +146,7 @@ var _ = Describe("Courier", func() {
                 Context("when UAA cannot be reached", func() {
                     It("returns a UAADownError", func() {
                         fakeUAA.ErrorForUserByID = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
-                        _, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options)
+                        _, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
                     })
@@ -148,7 +155,7 @@ var _ = Describe("Courier", func() {
                 Context("when UAA fails for unknown reasons", func() {
                     It("returns a UAAGenericError", func() {
                         fakeUAA.ErrorForUserByID = errors.New("BOOM!")
-                        _, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options)
+                        _, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.UAAGenericError("")))
                     })
@@ -158,7 +165,7 @@ var _ = Describe("Courier", func() {
                     It("returns a TemplateLoadError", func() {
                         delete(fs.Files, env.RootPath+"/templates/user_body.text")
 
-                        _, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options)
+                        _, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.TemplateLoadError("")))
                     })
@@ -168,7 +175,7 @@ var _ = Describe("Courier", func() {
             Context("when the SMTP server fails to deliver the mail", func() {
                 It("returns a status indicating that delivery failed", func() {
                     mailClient.errorOnSend = true
-                    responses, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options)
+                    responses, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
                     if err != nil {
                         panic(err)
                     }
@@ -181,7 +188,7 @@ var _ = Describe("Courier", func() {
             Context("when the SMTP server cannot be reached", func() {
                 It("returns a status indicating that the server is unavailable", func() {
                     mailClient.errorOnConnect = true
-                    responses, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options)
+                    responses, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
                     if err != nil {
                         panic(err)
                     }
@@ -193,7 +200,7 @@ var _ = Describe("Courier", func() {
 
             Context("when UAA cannot find the user", func() {
                 It("returns that the user in the response with status notfound", func() {
-                    responses, err := courier.Dispatch(clientID, postal.UserGUID("user-789"), options)
+                    responses, err := courier.Dispatch(clientID, postal.UserGUID("user-789"), options, conn)
                     if err != nil {
                         panic(err)
                     }
@@ -211,7 +218,7 @@ var _ = Describe("Courier", func() {
                         Emails: []string{},
                     }
 
-                    responses, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options)
+                    responses, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
                     if err != nil {
                         panic(err)
                     }
@@ -222,8 +229,28 @@ var _ = Describe("Courier", func() {
             })
 
             Context("When load Users returns multiple users", func() {
+                Context("when create receipts call returns an err", func() {
+                    It("returns an error", func() {
+                        fakeReceiptsRepo.CreateReceiptsError = true
+
+                        _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                        Expect(err).ToNot(BeNil())
+                    })
+                })
+
+                It("records a receipt for each user", func() {
+                    _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                    if err != nil {
+                        panic(err)
+                    }
+
+                    Expect(fakeReceiptsRepo.CreateUserGUIDs).To(Equal([]string{"user-123", "user-456"}))
+                    Expect(fakeReceiptsRepo.ClientID).To(Equal(clientID))
+                    Expect(fakeReceiptsRepo.KindID).To(Equal(options.KindID))
+                })
+
                 It("logs the UUIDs of all recipients", func() {
-                    _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options)
+                    _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
                     if err != nil {
                         panic(err)
                     }
@@ -235,8 +262,8 @@ var _ = Describe("Courier", func() {
                 })
 
                 It("returns necessary info in the response for the sent mail", func() {
-                    courier = postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer)
-                    responses, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options)
+                    courier = postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, &fakeReceiptsRepo)
+                    responses, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
                     if err != nil {
                         panic(err)
                     }

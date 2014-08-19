@@ -1,28 +1,33 @@
 package postal
 
+import "github.com/cloudfoundry-incubator/notifications/models"
+
 type Courier struct {
     tokenLoader    TokenLoader
     userLoader     UserLoader
     spaceLoader    SpaceLoader
     templateLoader TemplateLoader
     mailer         Mailer
+    receiptsRepo   models.ReceiptsRepoInterface
 }
 
 type CourierInterface interface {
-    Dispatch(string, TypedGUID, Options) ([]Response, error)
+    Dispatch(string, TypedGUID, Options, models.ConnectionInterface) ([]Response, error)
 }
 
-func NewCourier(tokenLoader TokenLoader, userLoader UserLoader, spaceLoader SpaceLoader, templateLoader TemplateLoader, mailer Mailer) Courier {
+func NewCourier(tokenLoader TokenLoader, userLoader UserLoader, spaceLoader SpaceLoader,
+    templateLoader TemplateLoader, mailer Mailer, receiptsRepo models.ReceiptsRepoInterface) Courier {
     return Courier{
         tokenLoader:    tokenLoader,
         userLoader:     userLoader,
         spaceLoader:    spaceLoader,
         templateLoader: templateLoader,
         mailer:         mailer,
+        receiptsRepo:   receiptsRepo,
     }
 }
 
-func (courier Courier) Dispatch(clientID string, guid TypedGUID, options Options) ([]Response, error) {
+func (courier Courier) Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
     responses := []Response{}
 
     token, err := courier.tokenLoader.Load()
@@ -43,6 +48,16 @@ func (courier Courier) Dispatch(clientID string, guid TypedGUID, options Options
     templates, err := courier.templateLoader.Load(options.Subject, guid, clientID, options.KindID)
     if err != nil {
         return responses, TemplateLoadError("An email template could not be loaded")
+    }
+
+    var userGUIDs []string
+    for key := range users {
+        userGUIDs = append(userGUIDs, key)
+    }
+
+    err = courier.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)
+    if err != nil {
+        return responses, err
     }
 
     responses = courier.mailer.Deliver(templates, users, options, space, organization, clientID)

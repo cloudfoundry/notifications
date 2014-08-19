@@ -47,7 +47,7 @@ func (handler Notify) Execute(conn models.ConnectionInterface, req *http.Request
         return []byte{}, err
     }
 
-    responses, err := handler.courier.Dispatch(clientID, guid, parameters.ToOptions(client, kind))
+    responses, err := handler.courier.Dispatch(clientID, guid, parameters.ToOptions(client, kind), conn)
     if err != nil {
         return []byte{}, err
     }

@@ -9,6 +9,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/dgrijalva/jwt-go"
     "github.com/nu7hatch/gouuid"
@@ -129,6 +130,29 @@ func (fake FakeUAAClient) UsersByIDs(ids ...string) ([]uaa.User, error) {
     }
 
     return users, fake.ErrorForUserByID
+}
+
+type FakeReceiptsRepo struct {
+    CreateUserGUIDs     []string
+    ClientID            string
+    KindID              string
+    CreateReceiptsError bool
+}
+
+func NewFakeReceiptsRepo() FakeReceiptsRepo {
+    return FakeReceiptsRepo{}
+}
+
+func (fake *FakeReceiptsRepo) CreateReceipts(conn models.ConnectionInterface, userGUIDs []string, clientID, kindID string) error {
+    if fake.CreateReceiptsError {
+        return errors.New("a database error")
+    }
+
+    fake.CreateUserGUIDs = userGUIDs
+    fake.ClientID = clientID
+    fake.KindID = kindID
+
+    return nil
 }
 
 type FakeMailClient struct {

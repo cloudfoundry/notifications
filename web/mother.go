@@ -48,8 +48,9 @@ func (mother Mother) Courier() postal.Courier {
     spaceLoader := postal.NewSpaceLoader(cloudController)
     templateLoader := postal.NewTemplateLoader(postal.NewFileSystem())
     mailer := postal.NewMailer(mother.Queue())
+    receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer)
+    return postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) Finder() handlers.Finder {

@@ -81,7 +81,7 @@ func NewFakeCourier() *FakeCourier {
     }
 }
 
-func (fake *FakeCourier) Dispatch(token string, guid postal.TypedGUID, options postal.Options) ([]postal.Response, error) {
+func (fake *FakeCourier) Dispatch(token string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]postal.Response, error) {
     fake.DispatchArguments = []interface{}{token, guid, options}
     return fake.Responses, fake.Error
 }
