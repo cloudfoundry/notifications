@@ -51,21 +51,14 @@ func (repo ReceiptsRepo) Update(conn ConnectionInterface, receipt Receipt) (Rece
     return repo.Find(conn, receipt.UserGUID, receipt.ClientID, receipt.KindID)
 }
 
-func (repo ReceiptsRepo) Upsert(conn ConnectionInterface, receipt Receipt) (Receipt, error) {
-    existingReceipt, err := repo.Find(conn, receipt.UserGUID, receipt.ClientID, receipt.KindID)
+func (repo ReceiptsRepo) Upsert(conn ConnectionInterface, receipt Receipt) error {
+    query := "INSERT INTO `receipts` (`user_guid`, `client_id`, `kind_id`, `count`, `created_at`) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `count`=`count`+1"
+    _, err := conn.Exec(query, receipt.UserGUID, receipt.ClientID, receipt.KindID, 1, time.Now().Truncate(1*time.Second).UTC())
     if err != nil {
-        if (err == ErrRecordNotFound{}) {
-            return repo.Create(conn, receipt)
-        } else {
-            return receipt, err
-        }
+        return err
     }
 
-    receipt.Primary = existingReceipt.Primary
-    receipt.CreatedAt = existingReceipt.CreatedAt
-    receipt.Count = existingReceipt.Count + 1
-
-    return repo.Update(conn, receipt)
+    return nil
 }
 
 func (repo ReceiptsRepo) CreateReceipts(conn ConnectionInterface, userGUIDs []string, clientID, kindID string) error {
@@ -75,7 +68,7 @@ func (repo ReceiptsRepo) CreateReceipts(conn ConnectionInterface, userGUIDs []st
             ClientID: clientID,
             KindID:   kindID,
         }
-        _, err := repo.Upsert(conn, receipt)
+        err := repo.Upsert(conn, receipt)
         if err != nil {
             return err
         }

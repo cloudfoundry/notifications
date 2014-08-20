@@ -135,7 +135,7 @@ var _ = Describe("Receipts Repo", func() {
         })
 
         It("creates a receipt in the database when no matching record exists", func() {
-            receipt, err := repo.Upsert(conn, receipt)
+            err := repo.Upsert(conn, receipt)
             if err != nil {
                 panic(err)
             }
@@ -158,14 +158,17 @@ var _ = Describe("Receipts Repo", func() {
                 panic(err)
             }
 
-            second_receipt, err := repo.Upsert(conn, receipt)
+            err = repo.Upsert(conn, receipt)
             if err != nil {
                 panic(err)
             }
 
+            reloadedReceipt, err := repo.Find(conn, userGUID, clientID, kindID)
+
             Expect(receipt.Count).To(Equal(1))
-            Expect(second_receipt.Count).To(Equal(2))
-            Expect(receipt.Primary).To(Equal(second_receipt.Primary))
+            Expect(reloadedReceipt.Count).To(Equal(2))
+            Expect(receipt.Primary).To(Equal(reloadedReceipt.Primary))
+            Expect(receipt.CreatedAt).To(Equal(reloadedReceipt.CreatedAt))
         })
     })
 

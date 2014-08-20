@@ -24,6 +24,7 @@ type ConnectionInterface interface {
     Select(interface{}, string, ...interface{}) ([]interface{}, error)
     SelectOne(interface{}, string, ...interface{}) error
     Update(...interface{}) (int64, error)
+    Exec(string, ...interface{}) (sql.Result, error)
 }
 
 func Database() *DB {

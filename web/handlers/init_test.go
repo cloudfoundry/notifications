@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+    "database/sql"
     "errors"
     "net/http"
     "testing"
@@ -94,6 +95,16 @@ func (writer *FakeErrorWriter) Write(w http.ResponseWriter, err error) {
     writer.Error = err
 }
 
+type FakeDBResult struct{}
+
+func (fake FakeDBResult) LastInsertId() (int64, error) {
+    return 0, nil
+}
+
+func (fake FakeDBResult) RowsAffected() (int64, error) {
+    return 0, nil
+}
+
 type FakeDBConn struct {
     BeginWasCalled    bool
     CommitWasCalled   bool
@@ -113,6 +124,10 @@ func (conn *FakeDBConn) Commit() error {
 func (conn *FakeDBConn) Rollback() error {
     conn.RollbackWasCalled = true
     return nil
+}
+
+func (conn *FakeDBConn) Exec(query string, args ...interface{}) (sql.Result, error) {
+    return FakeDBResult{}, nil
 }
 
 func (conn FakeDBConn) Delete(list ...interface{}) (int64, error) {
