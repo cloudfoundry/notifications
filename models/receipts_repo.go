@@ -2,6 +2,7 @@ package models
 
 import (
     "database/sql"
+    "fmt"
     "strings"
     "time"
 )
@@ -51,27 +52,33 @@ func (repo ReceiptsRepo) Update(conn ConnectionInterface, receipt Receipt) (Rece
     return repo.Find(conn, receipt.UserGUID, receipt.ClientID, receipt.KindID)
 }
 
-func (repo ReceiptsRepo) Upsert(conn ConnectionInterface, receipt Receipt) error {
-    query := "INSERT INTO `receipts` (`user_guid`, `client_id`, `kind_id`, `count`, `created_at`) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `count`=`count`+1"
-    _, err := conn.Exec(query, receipt.UserGUID, receipt.ClientID, receipt.KindID, 1, time.Now().Truncate(1*time.Second).UTC())
-    if err != nil {
-        return err
-    }
-
-    return nil
-}
-
 func (repo ReceiptsRepo) CreateReceipts(conn ConnectionInterface, userGUIDs []string, clientID, kindID string) error {
-    for _, guid := range userGUIDs {
+
+    query := "INSERT INTO `receipts` (`user_guid`, `client_id`, `kind_id`, `count`, `created_at`) VALUES %s ON DUPLICATE KEY UPDATE `count`=`count`+1"
+    values := ""
+    var execArguments []interface{}
+
+    for index, guid := range userGUIDs {
         receipt := Receipt{
             UserGUID: guid,
             ClientID: clientID,
             KindID:   kindID,
         }
-        err := repo.Upsert(conn, receipt)
-        if err != nil {
-            return err
+        execArguments = append(execArguments, repo.buildExecArguments(receipt)...)
+        values += "(?, ?, ?, ?, ?)"
+        if index != len(userGUIDs)-1 {
+            values += ","
         }
     }
+    query = fmt.Sprintf(query, values)
+
+    _, err := conn.Exec(query, execArguments...)
+    if err != nil {
+        return err
+    }
     return nil
+}
+
+func (repo ReceiptsRepo) buildExecArguments(receipt Receipt) []interface{} {
+    return []interface{}{receipt.UserGUID, receipt.ClientID, receipt.KindID, 1, time.Now().Truncate(1 * time.Second).UTC()}
 }
