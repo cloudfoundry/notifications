@@ -5,6 +5,7 @@ import (
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
     "github.com/dgrijalva/jwt-go"
@@ -23,6 +24,10 @@ func NewRegistration(registrar RegistrarInterface, errorWriter ErrorWriterInterf
 }
 
 func (handler Registration) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+    metrics.NewMetric("counter", map[string]interface{}{
+        "name": "notifications.web.registration",
+    }).Log()
+
     handler.Execute(w, req, models.NewTransaction())
 }
 

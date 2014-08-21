@@ -4,6 +4,7 @@ import (
     "net/http"
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
 )
@@ -21,6 +22,10 @@ func NewNotifySpace(notify Notify, errorWriter ErrorWriterInterface) NotifySpace
 }
 
 func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+    metrics.NewMetric("counter", map[string]interface{}{
+        "name": "notifications.web.spaces",
+    }).Log()
+
     transaction := models.NewTransaction()
     err := handler.Execute(w, req, transaction)
     if err != nil {

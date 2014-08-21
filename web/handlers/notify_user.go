@@ -4,6 +4,7 @@ import (
     "net/http"
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
 )
@@ -21,6 +22,10 @@ func NewNotifyUser(notify Notify, errorWriter ErrorWriterInterface) NotifyUser {
 }
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+    metrics.NewMetric("counter", map[string]interface{}{
+        "name": "notifications.web.users",
+    }).Log()
+
     transaction := models.NewTransaction()
     err := handler.Execute(w, req, transaction)
     if err != nil {
