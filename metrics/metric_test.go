@@ -26,7 +26,7 @@ var _ = Describe("Metric", func() {
 
     It("can log itself", func() {
         metric := metrics.NewMetric("counter", map[string]interface{}{
-            "inc": 15,
+            "name": "test",
         })
         metric.Log()
 
@@ -35,6 +35,6 @@ var _ = Describe("Metric", func() {
             panic(err)
         }
 
-        Expect(message).To(Equal("[METRIC] {\"kind\":\"counter\",\"payload\":\"{\"inc\":15}\"}\n"))
+        Expect(message).To(Equal(`[METRIC] {"kind":"counter","payload":{"name":"test"}}` + "\n"))
     })
 })

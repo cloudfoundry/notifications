@@ -9,21 +9,21 @@ import (
 var Logger = log.New(os.Stdout, "", 0)
 
 type Metric struct {
-    kind    string
-    payload map[string]interface{}
+    Kind    string                 `json:"kind"`
+    Payload map[string]interface{} `json:"payload"`
 }
 
 func NewMetric(kind string, payload map[string]interface{}) Metric {
     return Metric{
-        kind:    kind,
-        payload: payload,
+        Kind:    kind,
+        Payload: payload,
     }
 }
 
 func (metric Metric) Log() {
-    payload, err := json.Marshal(metric.payload)
+    message, err := json.Marshal(metric)
     if err != nil {
         panic(err)
     }
-    Logger.Printf("[METRIC] {\"kind\":\"%s\",\"payload\":\"%s\"}", metric.kind, payload)
+    Logger.Printf("[METRIC] %s", message)
 }
