@@ -5,6 +5,15 @@ import (
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
+const (
+    StatusUnavailable = "unavailable"
+    StatusFailed      = "failed"
+    StatusDelivered   = "delivered"
+    StatusNotFound    = "notfound"
+    StatusNoAddress   = "noaddress"
+    StatusQueued      = "queued"
+)
+
 type Response struct {
     Status         string `json:"status"`
     Recipient      string `json:"recipient"`

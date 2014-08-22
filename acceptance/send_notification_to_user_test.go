@@ -6,6 +6,7 @@ import (
     "io/ioutil"
     "net/http"
     "strings"
+    "time"
 
     "github.com/cloudfoundry-incubator/notifications/acceptance/servers"
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -111,11 +112,12 @@ var _ = Describe("Send a notification to a user", func() {
 
         Expect(len(responseJSON)).To(Equal(1))
         responseItem := responseJSON[0]
-        Expect(responseItem["status"]).To(Equal("delivered"))
+        Expect(responseItem["status"]).To(Equal("queued"))
         Expect(responseItem["recipient"]).To(Equal("user-123"))
         Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
 
         // Confirm the email message was delivered correctly
+        <-time.After(100 * time.Millisecond)
         Expect(len(smtpServer.Deliveries)).To(Equal(1))
         delivery := smtpServer.Deliveries[0]
 

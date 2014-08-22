@@ -96,9 +96,9 @@ var _ = Describe("Courier", func() {
         fs = NewFakeFileSystem(env)
 
         queue = postal.NewDeliveryQueue()
-        worker = postal.NewDeliveryWorker(FakeGuidGenerator, logger, &mailClient, queue)
+        worker = postal.NewDeliveryWorker(logger, &mailClient, queue)
         go worker.Work()
-        mailer = postal.NewMailer(queue)
+        mailer = postal.NewMailer(queue, FakeGuidGenerator)
 
         tokenLoader = postal.NewTokenLoader(&fakeUAA)
         userLoader = postal.NewUserLoader(&fakeUAA, logger, fakeCC)
@@ -172,62 +172,6 @@ var _ = Describe("Courier", func() {
                 })
             })
 
-            Context("when the SMTP server fails to deliver the mail", func() {
-                It("returns a status indicating that delivery failed", func() {
-                    mailClient.errorOnSend = true
-                    responses, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
-                    if err != nil {
-                        panic(err)
-                    }
-
-                    Expect(len(responses)).To(Equal(1))
-                    Expect(responses[0].Status).To(Equal("failed"))
-                })
-            })
-
-            Context("when the SMTP server cannot be reached", func() {
-                It("returns a status indicating that the server is unavailable", func() {
-                    mailClient.errorOnConnect = true
-                    responses, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
-                    if err != nil {
-                        panic(err)
-                    }
-
-                    Expect(len(responses)).To(Equal(1))
-                    Expect(responses[0].Status).To(Equal("unavailable"))
-                })
-            })
-
-            Context("when UAA cannot find the user", func() {
-                It("returns that the user in the response with status notfound", func() {
-                    responses, err := courier.Dispatch(clientID, postal.UserGUID("user-789"), options, conn)
-                    if err != nil {
-                        panic(err)
-                    }
-
-                    Expect(len(responses)).To(Equal(1))
-                    Expect(responses[0].Status).To(Equal(postal.StatusNotFound))
-                    Expect(responses[0].Recipient).To(Equal("user-789"))
-                })
-            })
-
-            Context("when the UAA user has no email", func() {
-                It("returns the user in the response with the status noaddress", func() {
-                    fakeUAA.UsersByID["user-123"] = uaa.User{
-                        ID:     "user-123",
-                        Emails: []string{},
-                    }
-
-                    responses, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
-                    if err != nil {
-                        panic(err)
-                    }
-
-                    Expect(len(responses)).To(Equal(1))
-                    Expect(responses[0].Status).To(Equal(postal.StatusNoAddress))
-                })
-            })
-
             Context("When load Users returns multiple users", func() {
                 Context("when create receipts call returns an err", func() {
                     It("returns an error", func() {
@@ -271,13 +215,13 @@ var _ = Describe("Courier", func() {
                     Expect(len(responses)).To(Equal(2))
                     Expect(responses).To(ContainElement(postal.Response{
                         Recipient:      "user-123",
-                        Status:         "delivered",
+                        Status:         "queued",
                         NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
                     }))
 
                     Expect(responses).To(ContainElement(postal.Response{
                         Recipient:      "user-456",
-                        Status:         "delivered",
+                        Status:         "queued",
                         NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
                     }))
                 })

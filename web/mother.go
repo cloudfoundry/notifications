@@ -10,6 +10,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/middleware"
+    "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
     "github.com/ryanmoran/stack"
 )
@@ -47,7 +48,7 @@ func (mother Mother) Courier() postal.Courier {
     userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
     spaceLoader := postal.NewSpaceLoader(cloudController)
     templateLoader := postal.NewTemplateLoader(postal.NewFileSystem())
-    mailer := postal.NewMailer(mother.Queue())
+    mailer := postal.NewMailer(mother.Queue(), uuid.NewV4)
     receiptsRepo := models.NewReceiptsRepo()
 
     return postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, receiptsRepo)

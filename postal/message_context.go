@@ -25,12 +25,7 @@ type MessageContext struct {
 }
 
 func NewMessageContext(email string, options Options, env config.Environment, space, organization,
-    clientID string, guidGenerator GUIDGenerationFunc, templates Templates) MessageContext {
-
-    guid, err := guidGenerator()
-    if err != nil {
-        panic(err)
-    }
+    clientID string, messageID string, templates Templates) MessageContext {
 
     var kindDescription string
     if options.KindDescription == "" {
@@ -59,7 +54,7 @@ func NewMessageContext(email string, options Options, env config.Environment, sp
         KindDescription:   kindDescription,
         SourceDescription: sourceDescription,
         ClientID:          clientID,
-        MessageID:         guid.String(),
+        MessageID:         messageID,
         Space:             space,
         Organization:      organization,
     }

@@ -6,6 +6,7 @@ import (
     "io/ioutil"
     "net/http"
     "strings"
+    "time"
 
     "github.com/cloudfoundry-incubator/notifications/acceptance/servers"
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -119,20 +120,21 @@ var _ = Describe("Sending notifications to all users in a space", func() {
 
         responseItem := indexedResponses["user-456"]
         Expect(responseItem["recipient"]).To(Equal("user-456"))
-        Expect(responseItem["status"]).To(Equal("delivered"))
+        Expect(responseItem["status"]).To(Equal("queued"))
         Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
 
         responseItem = indexedResponses["user-789"]
         Expect(responseItem["recipient"]).To(Equal("user-789"))
-        Expect(responseItem["status"]).To(Equal("noaddress"))
-        Expect(responseItem["notification_id"]).To(Equal(""))
+        Expect(responseItem["status"]).To(Equal("queued"))
+        Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
 
         responseItem = indexedResponses["user-000"]
         Expect(responseItem["recipient"]).To(Equal("user-000"))
-        Expect(responseItem["status"]).To(Equal("notfound"))
-        Expect(responseItem["notification_id"]).To(Equal(""))
+        Expect(responseItem["status"]).To(Equal("queued"))
+        Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
 
         // Confirm the email message was delivered correctly
+        <-time.After(100 * time.Millisecond)
         Expect(len(smtpServer.Deliveries)).To(Equal(1))
         delivery := smtpServer.Deliveries[0]
 

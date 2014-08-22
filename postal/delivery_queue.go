@@ -2,6 +2,17 @@ package postal
 
 import "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
+type Delivery struct {
+    User         uaa.User
+    Options      Options
+    UserGUID     string
+    Space        string
+    Organization string
+    ClientID     string
+    Templates    Templates
+    MessageID    string
+}
+
 type DeliveryQueue struct {
     deliveries chan Delivery
 }
@@ -22,15 +33,4 @@ func (queue *DeliveryQueue) Enqueue(delivery Delivery) {
 
 func (queue *DeliveryQueue) Dequeue() <-chan Delivery {
     return queue.deliveries
-}
-
-type Delivery struct {
-    User         uaa.User
-    Options      Options
-    UserGUID     string
-    Space        string
-    Organization string
-    ClientID     string
-    Templates    Templates
-    Response     chan Response
 }

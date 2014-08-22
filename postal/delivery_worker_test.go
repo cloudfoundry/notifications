@@ -5,7 +5,9 @@ import (
     "log"
     "os"
     "strings"
+    "time"
 
+    "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -27,7 +29,7 @@ var _ = Describe("DeliveryWorker", func() {
         mailClient = FakeMailClient{}
         queue = postal.NewDeliveryQueue()
 
-        worker = postal.NewDeliveryWorker(FakeGuidGenerator, logger, &mailClient, queue)
+        worker = postal.NewDeliveryWorker(logger, &mailClient, queue)
 
         os.Setenv("SENDER", "from@email.com")
 
@@ -35,16 +37,18 @@ var _ = Describe("DeliveryWorker", func() {
             User: uaa.User{
                 Emails: []string{"fake-user@example.com"},
             },
+            ClientID: "some-client",
             UserGUID: "user-123",
             Options: postal.Options{
                 Subject: "the subject",
                 Text:    "body content",
+                ReplyTo: "thesender@example.com",
             },
             Templates: postal.Templates{
                 Text:    "{{.Text}}",
                 Subject: "{{.Subject}}",
             },
-            Response: make(chan postal.Response),
+            MessageID: "randomly-generated-guid",
         }
     })
 
@@ -54,28 +58,18 @@ var _ = Describe("DeliveryWorker", func() {
 
             worker.Run()
 
-            Expect(<-delivery.Response).To(Equal(postal.Response{
-                Status:         "delivered",
-                Recipient:      "user-123",
-                NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-            }))
-
             delivery2 := postal.Delivery{
                 User: uaa.User{
                     Emails: []string{"fake-user@example.com"},
                 },
                 UserGUID: "user-456",
-                Response: make(chan postal.Response),
             }
             queue.Enqueue(delivery2)
 
-            Expect(<-delivery2.Response).To(Equal(postal.Response{
-                Status:         "delivered",
-                Recipient:      "user-456",
-                NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-            }))
-
+            <-time.After(10 * time.Millisecond)
             worker.Halt()
+
+            Expect(len(mailClient.messages)).To(Equal(2))
         })
 
         It("can be halted", func() {
@@ -91,15 +85,10 @@ var _ = Describe("DeliveryWorker", func() {
     })
 
     Describe("Deliver", func() {
-        It("logs the email address of the recipient and returns the response object", func() {
-            response := worker.Deliver(delivery)
+        It("logs the email address of the recipient", func() {
+            worker.Deliver(delivery)
 
             Expect(buffer.String()).To(ContainSubstring("Sending email to fake-user@example.com"))
-            Expect(response).To(Equal(postal.Response{
-                Status:         "delivered",
-                Recipient:      "user-123",
-                NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-            }))
         })
 
         It("logs the message envelope", func() {
@@ -115,6 +104,22 @@ var _ = Describe("DeliveryWorker", func() {
             for _, item := range data {
                 Expect(results).To(ContainElement(item))
             }
+        })
+
+        It("ensures message delivery", func() {
+            worker.Deliver(delivery)
+
+            Expect(mailClient.messages).To(ContainElement(mail.Message{
+                From:    "from@email.com",
+                ReplyTo: "thesender@example.com",
+                To:      "fake-user@example.com",
+                Subject: "the subject",
+                Body:    "\nThis is a multi-part message in MIME format...\n\n--our-content-boundary\nContent-type: text/plain\n\nbody content\n--our-content-boundary--",
+                Headers: []string{
+                    "X-CF-Client-ID: some-client",
+                    "X-CF-Notification-ID: randomly-generated-guid",
+                },
+            }))
         })
     })
 })

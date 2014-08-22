@@ -20,7 +20,6 @@ var _ = Describe("MessageContext", func() {
 
         BeforeEach(func() {
             email = "bounce@example.com"
-
             env = config.NewEnvironment()
 
             templates = postal.Templates{
@@ -41,12 +40,7 @@ var _ = Describe("MessageContext", func() {
         })
 
         It("returns the appropriate MessageContext when all options are specified", func() {
-            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, templates)
-
-            guid, err := FakeGuidGenerator()
-            if err != nil {
-                panic(err)
-            }
+            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-ID", "message-id", templates)
 
             Expect(context.From).To(Equal(env.Sender))
             Expect(context.ReplyTo).To(Equal(options.ReplyTo))
@@ -60,21 +54,21 @@ var _ = Describe("MessageContext", func() {
             Expect(context.KindDescription).To(Equal(options.KindDescription))
             Expect(context.SourceDescription).To(Equal(options.SourceDescription))
             Expect(context.ClientID).To(Equal("the-client-ID"))
-            Expect(context.MessageID).To(Equal(guid.String()))
+            Expect(context.MessageID).To(Equal("message-id"))
             Expect(context.Space).To(Equal("the-space"))
             Expect(context.Organization).To(Equal("the-org"))
         })
 
         It("falls back to Kind if KindDescription is missing", func() {
             options.KindDescription = ""
-            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, templates)
+            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-ID", "random-id", templates)
 
             Expect(context.KindDescription).To(Equal("the-kind"))
         })
 
         It("falls back to clientID when SourceDescription is missing", func() {
             options.SourceDescription = ""
-            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-ID", FakeGuidGenerator, templates)
+            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-ID", "my-message-id", templates)
 
             Expect(context.SourceDescription).To(Equal("the-client-ID"))
         })
@@ -109,13 +103,7 @@ var _ = Describe("MessageContext", func() {
         })
 
         It("html escapes various fields on the message context", func() {
-            context := postal.NewMessageContext(email, options, env, "the<space", "the>org", "the\"client ID", FakeGuidGenerator, templates)
-
-            guid, err := FakeGuidGenerator()
-            if err != nil {
-                panic(err)
-            }
-
+            context := postal.NewMessageContext(email, options, env, "the<space", "the>org", "the\"client ID", "some>id", templates)
             context.Escape()
 
             Expect(context.From).To(Equal(html.EscapeString(env.Sender)))
@@ -130,7 +118,7 @@ var _ = Describe("MessageContext", func() {
             Expect(context.KindDescription).To(Equal("the &amp; kind description"))
             Expect(context.SourceDescription).To(Equal("the &amp; source description"))
             Expect(context.ClientID).To(Equal("the&#34;client ID"))
-            Expect(context.MessageID).To(Equal(guid.String()))
+            Expect(context.MessageID).To(Equal("some&gt;id"))
             Expect(context.Space).To(Equal("the&lt;space"))
             Expect(context.Organization).To(Equal("the&gt;org"))
         })

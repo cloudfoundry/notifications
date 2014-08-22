@@ -24,9 +24,9 @@ var _ = Describe("Mailer", func() {
         logger = log.New(buffer, "", 0)
         mailClient = FakeMailClient{}
         queue = postal.NewDeliveryQueue()
-        mailer = postal.NewMailer(queue)
+        mailer = postal.NewMailer(queue, FakeGuidGenerator)
 
-        worker = postal.NewDeliveryWorker(FakeGuidGenerator, logger, &mailClient, queue)
+        worker = postal.NewDeliveryWorker(logger, &mailClient, queue)
         go worker.Work()
     })
 
@@ -46,27 +46,27 @@ var _ = Describe("Mailer", func() {
 
             Expect(len(responses)).To(Equal(4))
             Expect(responses).To(ContainElement(postal.Response{
-                Status:         "delivered",
+                Status:         "queued",
                 Recipient:      "user-1",
                 NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
             }))
 
             Expect(responses).To(ContainElement(postal.Response{
-                Status:         "notfound",
+                Status:         "queued",
                 Recipient:      "user-2",
-                NotificationID: "",
+                NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
             }))
 
             Expect(responses).To(ContainElement(postal.Response{
-                Status:         "noaddress",
+                Status:         "queued",
                 Recipient:      "user-3",
-                NotificationID: "",
+                NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
             }))
 
             Expect(responses).To(ContainElement(postal.Response{
-                Status:         "noaddress",
+                Status:         "queued",
                 Recipient:      "user-4",
-                NotificationID: "",
+                NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
             }))
         })
     })
