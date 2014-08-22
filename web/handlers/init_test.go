@@ -9,6 +9,8 @@ import (
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/web/handlers"
+
     "github.com/dgrijalva/jwt-go"
 
     . "github.com/onsi/ginkgo"
@@ -272,4 +274,39 @@ func (fake *FakeRegistrar) Register(conn models.ConnectionInterface, client mode
 func (fake *FakeRegistrar) Prune(conn models.ConnectionInterface, client models.Client, kinds []models.Kind) error {
     fake.PruneArguments = []interface{}{conn, client, kinds}
     return fake.PruneError
+}
+
+type FakePreference struct {
+    ReturnValue   map[string]map[string]map[string]string
+    ExecuteErrors bool
+    UserGUID      string
+}
+
+func NewFakePreference(returnValue handlers.NotificationPreferences) *FakePreference {
+    return &FakePreference{
+        ReturnValue: returnValue,
+    }
+}
+
+func (fake *FakePreference) Execute(userGUID string) (handlers.NotificationPreferences, error) {
+    fake.UserGUID = userGUID
+    if fake.ExecuteErrors {
+        return fake.ReturnValue, errors.New("Meltdown")
+    }
+    return fake.ReturnValue, nil
+}
+
+type FakePreferencesRepo struct {
+    NonCriticalPreferences []models.Preference
+    FindError              error
+}
+
+func NewFakePreferencesRepo(nonCriticalPreferences []models.Preference) *FakePreferencesRepo {
+    return &FakePreferencesRepo{
+        NonCriticalPreferences: nonCriticalPreferences,
+    }
+}
+
+func (fake FakePreferencesRepo) FindNonCriticalPreferences(conn models.ConnectionInterface, userGUID string) ([]models.Preference, error) {
+    return fake.NonCriticalPreferences, fake.FindError
 }
