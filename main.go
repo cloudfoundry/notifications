@@ -93,7 +93,7 @@ func migrate() {
     models.Database()
 }
 
-// This is a hack to get the logs to output to the loggregator before the process exits
+// This is a hack to get the logs output to the loggregator before the process exits
 func crash() {
     err := recover()
     if err != nil {

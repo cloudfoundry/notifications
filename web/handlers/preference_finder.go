@@ -9,6 +9,16 @@ import (
     "github.com/dgrijalva/jwt-go"
 )
 
+type InvalidScopeError string
+
+func (err InvalidScopeError) Error() string {
+    return string(err)
+}
+
+func NewInvalidScopeError(err string) InvalidScopeError {
+    return InvalidScopeError(err)
+}
+
 type PreferenceFinder struct {
     Preference  PreferenceInterface
     ErrorWriter ErrorWriterInterface
@@ -22,7 +32,12 @@ func NewPreferenceFinder(preference PreferenceInterface, errorWriter ErrorWriter
 }
 
 func (handler PreferenceFinder) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-    userID := handler.ParseUserID(strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer "))
+    userID, err := handler.ParseUserID(strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer "))
+    if err != nil {
+        errorWriter := NewErrorWriter()
+        errorWriter.Write(w, err)
+        return
+    }
 
     parsed, err := handler.Preference.Execute(userID)
     if err != nil {
@@ -39,10 +54,28 @@ func (handler PreferenceFinder) ServeHTTP(w http.ResponseWriter, req *http.Reque
     w.Write(result)
 }
 
-func (handler PreferenceFinder) ParseUserID(rawToken string) string {
-    token, _ := jwt.Parse(rawToken, func(token *jwt.Token) ([]byte, error) {
+func (handler PreferenceFinder) ParseUserID(rawToken string) (string, error) {
+    token, err := jwt.Parse(rawToken, func(token *jwt.Token) ([]byte, error) {
         return []byte(config.UAAPublicKey), nil
     })
+    if err != nil {
+        return "", NewInvalidScopeError(err.Error())
+    }
 
-    return token.Claims["user_id"].(string)
+    if scopes, ok := token.Claims["scope"]; ok {
+        if handler.HasScope(scopes, "notification_preferences.read") {
+            return token.Claims["user_id"].(string), nil
+        }
+    }
+
+    return "", NewInvalidScopeError("You are not authorized to perform the requested action")
+}
+
+func (handler PreferenceFinder) HasScope(elements interface{}, key string) bool {
+    for _, elem := range elements.([]interface{}) {
+        if elem.(string) == key {
+            return true
+        }
+    }
+    return false
 }

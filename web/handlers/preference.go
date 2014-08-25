@@ -6,8 +6,6 @@ type Preference struct {
     repo models.PreferencesRepoInterface
 }
 
-type NotificationPreferences map[string]map[string]map[string]string
-
 type PreferenceInterface interface {
     Execute(string) (NotificationPreferences, error)
 }
@@ -19,26 +17,19 @@ func NewPreference(repo models.PreferencesRepoInterface) *Preference {
 }
 
 func (preference Preference) Execute(UserGUID string) (NotificationPreferences, error) {
-    data, err := preference.repo.FindNonCriticalPreferences(models.Database().Connection, UserGUID)
+    preferencesData, err := preference.repo.FindNonCriticalPreferences(models.Database().Connection, UserGUID)
+
     if err != nil {
         return NotificationPreferences{}, err
     }
 
-    resultsMap := NotificationPreferences{}
-    for _, preferenceData := range data {
+    preferences := NewNotificationPreferences()
 
-        if userPreferences, ok := resultsMap[preferenceData.ClientID]; ok {
-            userPreferences[preferenceData.KindID] = map[string]string{
-                "email": "true",
-            }
-        } else {
-            resultsMap[preferenceData.ClientID] = map[string]map[string]string{
-                preferenceData.KindID: map[string]string{
-                    "email": "true",
-                },
-            }
-        }
+    for _, preferenceData := range preferencesData {
+
+        //true will change after story #76994664
+        preferences.Add(preferenceData.ClientID, preferenceData.KindID, true)
 
     }
-    return resultsMap, nil
+    return preferences, nil
 }

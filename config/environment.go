@@ -62,6 +62,7 @@ func loadDatabaseURL(name string) string {
     databaseURL = strings.TrimPrefix(databaseURL, "http://")
     databaseURL = strings.TrimPrefix(databaseURL, "https://")
     databaseURL = strings.TrimPrefix(databaseURL, "tcp://")
+    databaseURL = strings.TrimPrefix(databaseURL, "mysql://")
     databaseURL = strings.TrimPrefix(databaseURL, "mysql2://")
     parsedURL, err := url.Parse("tcp://" + databaseURL)
     if err != nil {

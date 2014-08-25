@@ -277,7 +277,7 @@ func (fake *FakeRegistrar) Prune(conn models.ConnectionInterface, client models.
 }
 
 type FakePreference struct {
-    ReturnValue   map[string]map[string]map[string]string
+    ReturnValue   handlers.NotificationPreferences
     ExecuteErrors bool
     UserGUID      string
 }

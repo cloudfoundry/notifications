@@ -36,9 +36,11 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
     case params.ValidationError:
         writer.write(w, 422, err.(params.ValidationError).Errors())
     case models.ErrDuplicateRecord:
-        writer.write(w, 409, []string{err.Error()})
+        writer.write(w, http.StatusConflict, []string{err.Error()})
     case models.ErrRecordNotFound:
-        writer.write(w, 404, []string{err.Error()})
+        writer.write(w, http.StatusNotFound, []string{err.Error()})
+    case InvalidScopeError:
+        writer.write(w, http.StatusForbidden, []string{err.Error()})
     default:
         panic(err)
     }

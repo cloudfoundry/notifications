@@ -28,16 +28,10 @@ var _ = Describe("Preferences", func() {
 
     Describe("Execute", func() {
         It("returns the set of notifications that are not critical", func() {
-            result := handlers.NotificationPreferences{
-                "raptors": map[string]map[string]string{
-                    "non-critical-kind": map[string]string{
-                        "email": "true",
-                    },
-                    "other-kind": map[string]string{
-                        "email": "true",
-                    },
-                },
-            }
+
+            result := handlers.NewNotificationPreferences()
+            result.Add("raptors", "non-critical-kind", true)
+            result.Add("raptors", "other-kind", true)
 
             preferences, err := preference.Execute("correct-user")
             if err != nil {
