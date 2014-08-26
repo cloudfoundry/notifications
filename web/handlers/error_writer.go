@@ -22,11 +22,11 @@ func NewErrorWriter() ErrorWriter {
 func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
     switch err.(type) {
     case postal.CCDownError:
-        writer.write(w, http.StatusBadGateway, []string{"Cloud Controller is unavailable"})
+        writer.write(w, http.StatusBadGateway, []string{err.Error()})
     case postal.CCNotFoundError:
         writer.write(w, http.StatusNotFound, []string{err.Error()})
     case postal.UAADownError:
-        writer.write(w, http.StatusBadGateway, []string{"UAA is unavailable"})
+        writer.write(w, http.StatusBadGateway, []string{err.Error()})
     case postal.UAAGenericError:
         writer.write(w, http.StatusBadGateway, []string{err.Error()})
     case postal.TemplateLoadError:

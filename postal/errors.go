@@ -60,7 +60,7 @@ func UAAErrorFor(err error) error {
             }
         }
 
-        return UAADownError("UAA is unavailable")
+        return UAADownError(failure.Message())
     default:
         return UAAGenericError("UAA Unknown Error: " + err.Error())
     }
@@ -71,7 +71,7 @@ func CCErrorFor(err error) error {
         if failure.Code == http.StatusNotFound {
             return CCNotFoundError(err.Error())
         }
-        return CCDownError("CloudController is unavailable")
+        return CCDownError(err.Error())
     }
     return err
 }

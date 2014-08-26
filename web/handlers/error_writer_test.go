@@ -25,7 +25,7 @@ var _ = Describe("ErrorWriter", func() {
     })
 
     It("returns a 502 when CloudController fails to respond", func() {
-        writer.Write(recorder, postal.CCDownError("BOOM!"))
+        writer.Write(recorder, postal.CCDownError("Bad things happened!"))
 
         Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 
@@ -35,11 +35,11 @@ var _ = Describe("ErrorWriter", func() {
             panic(err)
         }
 
-        Expect(body["errors"]).To(ContainElement("Cloud Controller is unavailable"))
+        Expect(body["errors"]).To(ContainElement("Bad things happened!"))
     })
 
     It("returns a 502 when UAA fails to respond", func() {
-        writer.Write(recorder, postal.UAADownError("BOOM!"))
+        writer.Write(recorder, postal.UAADownError("Whoops!"))
 
         Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 
@@ -49,7 +49,7 @@ var _ = Describe("ErrorWriter", func() {
             panic(err)
         }
 
-        Expect(body["errors"]).To(ContainElement("UAA is unavailable"))
+        Expect(body["errors"]).To(ContainElement("Whoops!"))
     })
 
     It("returns a 502 when UAA fails for unknown reasons", func() {
