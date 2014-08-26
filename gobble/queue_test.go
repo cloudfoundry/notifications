@@ -185,4 +185,29 @@ var _ = Describe("Queue", func() {
             Expect(len(results)).To(Equal(0))
         })
     })
+
+    Describe("Unlock", func() {
+        It("clears the workerID values for any jobs in the queue", func() {
+            queue.Enqueue(gobble.Job{})
+            results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
+            if err != nil {
+                panic(err)
+            }
+            Expect(len(results)).To(Equal(1))
+
+            <-queue.Reserve("my-worker")
+            results, err = gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
+            if err != nil {
+                panic(err)
+            }
+            Expect(len(results)).To(Equal(0))
+
+            queue.Unlock()
+            results, err = gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
+            if err != nil {
+                panic(err)
+            }
+            Expect(len(results)).To(Equal(1))
+        })
+    })
 })

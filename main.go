@@ -7,6 +7,7 @@ import (
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web"
@@ -22,8 +23,10 @@ func main() {
     if !env.TestMode {
         confirmSMTPConfiguration(env)
     }
-    retrieveUAAPublicKey()
+    retrieveUAAPublicKey(env)
     migrate()
+
+    unlockJobs(env)
 
     server := web.NewServer()
     server.Run()
@@ -75,8 +78,7 @@ func confirmSMTPConfiguration(env config.Environment) {
     }
 }
 
-func retrieveUAAPublicKey() {
-    env := config.NewEnvironment()
+func retrieveUAAPublicKey(env config.Environment) {
     auth := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
     auth.VerifySSL = env.VerifySSL
 
@@ -91,6 +93,13 @@ func retrieveUAAPublicKey() {
 
 func migrate() {
     models.Database()
+    gobble.Database()
+}
+
+func unlockJobs(env config.Environment) {
+    if env.InstanceIndex == 0 {
+        gobble.NewQueue().Unlock()
+    }
 }
 
 // This is a hack to get the logs output to the loggregator before the process exits

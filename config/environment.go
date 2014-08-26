@@ -1,6 +1,7 @@
 package config
 
 import (
+    "encoding/json"
     "errors"
     "fmt"
     "net/url"
@@ -14,6 +15,7 @@ var UAAPublicKey string
 type Environment struct {
     CCHost          string
     DatabaseURL     string
+    InstanceIndex   int
     Port            string
     RootPath        string
     SMTPHost        string
@@ -22,17 +24,18 @@ type Environment struct {
     SMTPTLS         bool
     SMTPUser        string
     Sender          string
+    TestMode        bool
     UAAClientID     string
     UAAClientSecret string
     UAAHost         string
     VerifySSL       bool
-    TestMode        bool
 }
 
 func NewEnvironment() Environment {
     return Environment{
         CCHost:          loadOrPanic("CC_HOST"),
         DatabaseURL:     loadDatabaseURL("DATABASE_URL"),
+        InstanceIndex:   loadInstanceIndex(),
         Port:            loadPort(),
         RootPath:        loadOrPanic("ROOT_PATH"),
         SMTPHost:        loadOrPanic("SMTP_HOST"),
@@ -41,11 +44,11 @@ func NewEnvironment() Environment {
         SMTPTLS:         loadBool("SMTP_TLS", true),
         SMTPUser:        loadOrPanic("SMTP_USER"),
         Sender:          loadOrPanic("SENDER"),
+        TestMode:        loadBool("TEST_MODE", false),
         UAAClientID:     loadOrPanic("UAA_CLIENT_ID"),
         UAAClientSecret: loadOrPanic("UAA_CLIENT_SECRET"),
         UAAHost:         loadOrPanic("UAA_HOST"),
         VerifySSL:       loadBool("VERIFY_SSL", true),
-        TestMode:        loadBool("TEST_MODE", false),
     }
 }
 
@@ -88,4 +91,15 @@ func loadBool(name string, defaultValue bool) bool {
     }
 
     return value
+}
+
+func loadInstanceIndex() int {
+    value := loadOrPanic("VCAP_APPLICATION")
+    var application map[string]interface{}
+    err := json.Unmarshal([]byte(value), &application)
+    if err != nil {
+        panic(err)
+    }
+
+    return int(application["instance_index"].(float64))
 }

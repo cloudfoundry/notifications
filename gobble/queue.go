@@ -83,6 +83,13 @@ func (queue *Queue) Dequeue(job Job) {
     }
 }
 
+func (queue Queue) Unlock() {
+    _, err := Database().Connection.Exec("UPDATE `jobs` set `worker_id` = \"\" WHERE `worker_id` != \"\"")
+    if err != nil {
+        panic(err)
+    }
+}
+
 func (queue *Queue) findJob() Job {
     job := Job{}
     for job.ID == 0 {

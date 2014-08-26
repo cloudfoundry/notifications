@@ -20,11 +20,12 @@ var _ = Describe("Environment", func() {
         "SMTP_PASS":         os.Getenv("SMTP_PASS"),
         "SMTP_PORT":         os.Getenv("SMTP_PORT"),
         "SMTP_USER":         os.Getenv("SMTP_USER"),
+        "TEST_MODE":         os.Getenv("TEST_MODE"),
         "UAA_CLIENT_ID":     os.Getenv("UAA_CLIENT_ID"),
         "UAA_CLIENT_SECRET": os.Getenv("UAA_CLIENT_SECRET"),
         "UAA_HOST":          os.Getenv("UAA_HOST"),
+        "VCAP_APPLICATION":  os.Getenv("VCAP_APPLICATION"),
         "VERIFY_SSL":        os.Getenv("VERIFY_SSL"),
-        "TEST_MODE":         os.Getenv("TEST_MODE"),
     }
 
     AfterEach(func() {
@@ -287,6 +288,24 @@ var _ = Describe("Environment", func() {
             env := config.NewEnvironment()
 
             Expect(env.TestMode).To(BeTrue())
+        })
+    })
+
+    Describe("InstanceIndex config", func() {
+        It("sets the value if it is available", func() {
+            os.Setenv("VCAP_APPLICATION", `{"instance_index":1}`)
+
+            env := config.NewEnvironment()
+
+            Expect(env.InstanceIndex).To(Equal(1))
+        })
+
+        It("panics if it cannot find the value", func() {
+            os.Setenv("VCAP_APPLICATION", "{}")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).To(Panic())
         })
     })
 })
