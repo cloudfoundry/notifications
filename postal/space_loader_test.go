@@ -66,10 +66,11 @@ var _ = Describe("SpaceLoader", func() {
 
             Context("when LoadSpace returns any other type of error", func() {
                 It("returns a CCDownError when the error is cf.Failure", func() {
-                    fakeCC.LoadSpaceError = cf.NewFailure(401, "BOOM!")
+                    failure := cf.NewFailure(401, "BOOM!")
+                    fakeCC.LoadSpaceError = failure
                     _, _, err := loader.Load(postal.SpaceGUID("space-001"), token)
 
-                    Expect(err).To(Equal(postal.CCDownError("CloudController is unavailable")))
+                    Expect(err).To(Equal(postal.CCDownError(failure.Error())))
                 })
 
                 It("returns the same error for all other cases", func() {
@@ -82,10 +83,11 @@ var _ = Describe("SpaceLoader", func() {
 
             Context("when LoadOrganization returns any other type of error", func() {
                 It("returns a CCDownError", func() {
-                    fakeCC.LoadOrganizationError = cf.NewFailure(401, "BOOM!")
+                    failure := cf.NewFailure(401, "BOOM!")
+                    fakeCC.LoadOrganizationError = failure
                     _, _, err := loader.Load(postal.SpaceGUID("space-001"), token)
 
-                    Expect(err).To(Equal(postal.CCDownError("CloudController is unavailable")))
+                    Expect(err).To(Equal(postal.CCDownError(failure.Error())))
                 })
 
                 It("returns the same error for all other cases", func() {

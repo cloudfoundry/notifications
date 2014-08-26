@@ -65,12 +65,13 @@ var _ = Describe("TokenLoader", func() {
             })
 
             It("handles non-404 UAAFailure errors", func() {
-                fakeUAA.ClientTokenError = uaa.NewFailure(http.StatusInternalServerError, []byte("Banana!"))
+                failure := uaa.NewFailure(http.StatusInternalServerError, []byte("Banana!"))
+                fakeUAA.ClientTokenError = failure
 
                 _, err := tokenLoader.Load()
 
                 Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
-                Expect(err.Error()).To(Equal("UAA is unavailable"))
+                Expect(err.Error()).To(Equal(failure.Message()))
             })
 
             It("returns an error when it cannot make a connection to UAA", func() {
