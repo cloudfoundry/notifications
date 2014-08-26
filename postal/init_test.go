@@ -231,3 +231,9 @@ func (fake *FakeQueue) Reserve(string) <-chan gobble.Job {
 
 func (fake *FakeQueue) Dequeue(job gobble.Job) {
 }
+
+func (fake *FakeQueue) Requeue(job gobble.Job) {
+    go func(job gobble.Job) {
+        fake.jobs <- job
+    }(job)
+}

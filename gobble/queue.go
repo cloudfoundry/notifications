@@ -14,9 +14,12 @@ type QueueInterface interface {
     Enqueue(Job) Job
     Reserve(string) <-chan Job
     Dequeue(Job)
+    Requeue(Job)
 }
 
-type Queue struct{}
+type Queue struct {
+    closed bool
+}
 
 func NewQueue() *Queue {
     return &Queue{}
@@ -31,30 +34,46 @@ func (queue *Queue) Enqueue(job Job) Job {
     return job
 }
 
+func (queue *Queue) Requeue(job Job) {
+    _, err := Database().Connection.Update(&job)
+    if err != nil {
+        panic(err)
+    }
+}
+
 func (queue *Queue) Reserve(workerID string) <-chan Job {
     channel := make(chan Job)
-
-    go func() {
-        job := Job{}
-        for job.ID == 0 {
-            var err error
-
-            job = queue.findJob()
-            job, err = queue.updateJob(job, workerID)
-            if err != nil {
-                if _, ok := err.(gorp.OptimisticLockError); ok {
-                    job = Job{}
-                    continue
-                } else {
-                    panic(err)
-                }
-            }
-        }
-
-        channel <- job
-    }()
+    go queue.reserve(channel, workerID)
 
     return channel
+}
+
+func (queue *Queue) Close() {
+    queue.closed = true
+}
+
+func (queue *Queue) reserve(channel chan Job, workerID string) {
+    job := Job{}
+    for job.ID == 0 {
+        var err error
+
+        job = queue.findJob()
+        job, err = queue.updateJob(job, workerID)
+        if err != nil {
+            if _, ok := err.(gorp.OptimisticLockError); ok {
+                job = Job{}
+                continue
+            } else {
+                panic(err)
+            }
+        }
+    }
+    if queue.closed {
+        queue.updateJob(job, "")
+        return
+    }
+
+    channel <- job
 }
 
 func (queue *Queue) Dequeue(job Job) {
@@ -67,7 +86,7 @@ func (queue *Queue) Dequeue(job Job) {
 func (queue *Queue) findJob() Job {
     job := Job{}
     for job.ID == 0 {
-        err := Database().Connection.SelectOne(&job, "SELECT * FROM `jobs` WHERE `worker_id` = \"\" LIMIT 1")
+        err := Database().Connection.SelectOne(&job, "SELECT * FROM `jobs` WHERE `worker_id` = \"\" AND `active_at` <= ? LIMIT 1", time.Now())
         if err != nil {
             if err == sql.ErrNoRows {
                 job = Job{}

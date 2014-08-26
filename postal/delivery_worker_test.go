@@ -88,14 +88,20 @@ var _ = Describe("DeliveryWorker", func() {
     })
 
     Describe("Deliver", func() {
+        var job gobble.Job
+
+        BeforeEach(func() {
+            job = gobble.NewJob(delivery)
+        })
+
         It("logs the email address of the recipient", func() {
-            worker.Deliver(gobble.NewJob(delivery))
+            worker.Deliver(&job)
 
             Expect(buffer.String()).To(ContainSubstring("Sending email to fake-user@example.com"))
         })
 
         It("logs the message envelope", func() {
-            worker.Deliver(gobble.NewJob(delivery))
+            worker.Deliver(&job)
 
             data := []string{
                 "From: from@email.com",
@@ -110,7 +116,7 @@ var _ = Describe("DeliveryWorker", func() {
         })
 
         It("ensures message delivery", func() {
-            worker.Deliver(gobble.NewJob(delivery))
+            worker.Deliver(&job)
 
             Expect(mailClient.messages).To(ContainElement(mail.Message{
                 From:    "from@email.com",
@@ -123,6 +129,65 @@ var _ = Describe("DeliveryWorker", func() {
                     "X-CF-Notification-ID: randomly-generated-guid",
                 },
             }))
+        })
+
+        Context("when the delivery fails to be sent", func() {
+            It("marks the job for retry", func() {
+                mailClient.errorOnSend = true
+
+                worker.Deliver(&job)
+
+                Expect(len(mailClient.messages)).To(Equal(0))
+                Expect(job.ShouldRetry).To(BeTrue())
+            })
+
+            It("sets the retry duration using an exponential backoff algorithm", func() {
+                mailClient.errorOnConnect = true
+
+                worker.Deliver(&job)
+                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 10*time.Second))
+                Expect(job.RetryCount).To(Equal(1))
+
+                worker.Deliver(&job)
+                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(2*time.Minute), 10*time.Second))
+                Expect(job.RetryCount).To(Equal(2))
+
+                worker.Deliver(&job)
+                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(4*time.Minute), 10*time.Second))
+                Expect(job.RetryCount).To(Equal(3))
+
+                worker.Deliver(&job)
+                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(8*time.Minute), 10*time.Second))
+                Expect(job.RetryCount).To(Equal(4))
+
+                worker.Deliver(&job)
+                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(16*time.Minute), 10*time.Second))
+                Expect(job.RetryCount).To(Equal(5))
+
+                worker.Deliver(&job)
+                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(32*time.Minute), 10*time.Second))
+                Expect(job.RetryCount).To(Equal(6))
+
+                worker.Deliver(&job)
+                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(64*time.Minute), 10*time.Second))
+                Expect(job.RetryCount).To(Equal(7))
+
+                worker.Deliver(&job)
+                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(128*time.Minute), 10*time.Second))
+                Expect(job.RetryCount).To(Equal(8))
+
+                worker.Deliver(&job)
+                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(256*time.Minute), 10*time.Second))
+                Expect(job.RetryCount).To(Equal(9))
+
+                worker.Deliver(&job)
+                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(512*time.Minute), 10*time.Second))
+                Expect(job.RetryCount).To(Equal(10))
+
+                job.ShouldRetry = false
+                worker.Deliver(&job)
+                Expect(job.ShouldRetry).To(BeFalse())
+            })
         })
     })
 })

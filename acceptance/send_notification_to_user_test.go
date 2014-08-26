@@ -6,6 +6,7 @@ import (
     "io/ioutil"
     "net/http"
     "strings"
+    "time"
 
     "github.com/cloudfoundry-incubator/notifications/acceptance/servers"
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -122,7 +123,7 @@ var _ = Describe("Send a notification to a user", func() {
         // Confirm the email message was delivered correctly
         Eventually(func() int {
             return len(smtpServer.Deliveries)
-        }).Should(Equal(1))
+        }, 5*time.Second).Should(Equal(1))
         delivery := smtpServer.Deliveries[0]
 
         Expect(delivery.Sender).To(Equal(env.Sender))

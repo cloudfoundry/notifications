@@ -1,6 +1,8 @@
 package gobble_test
 
 import (
+    "time"
+
     "github.com/cloudfoundry-incubator/notifications/gobble"
 
     . "github.com/onsi/ginkgo"
@@ -38,6 +40,22 @@ var _ = Describe("Job", func() {
             }
 
             Expect(payload).To(Equal(data))
+        })
+    })
+
+    Describe("Retry", func() {
+        It("sets up the job to be retried", func() {
+            job := gobble.NewJob("the data")
+            job.RetryCount = 1
+            job.WorkerID = "my-id"
+            job.ActiveAt = time.Now().Add(-5 * time.Minute)
+
+            job.Retry(10 * time.Minute)
+
+            Expect(job.WorkerID).To(Equal(""))
+            Expect(job.RetryCount).To(Equal(2))
+            Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(10*time.Minute), 10*time.Second))
+            Expect(job.ShouldRetry).To(BeTrue())
         })
     })
 })

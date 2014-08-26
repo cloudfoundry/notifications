@@ -5,7 +5,6 @@ import (
     "sync"
 
     "bitbucket.org/liamstask/goose/lib/goose"
-
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/coopernurse/gorp"
 
@@ -42,8 +41,8 @@ func Database() *DB {
         },
     }
 
-    conn.AddTableWithName(Job{}, "jobs").SetKeys(true, "ID")
     migrate(env)
+    conn.AddTableWithName(Job{}, "jobs").SetKeys(true, "ID")
 
     _database = &DB{
         Connection: conn,

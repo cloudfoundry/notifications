@@ -1,6 +1,8 @@
 package gobble_test
 
 import (
+    "time"
+
     "github.com/cloudfoundry-incubator/notifications/gobble"
 
     . "github.com/onsi/ginkgo"
@@ -11,16 +13,21 @@ var _ = Describe("Worker", func() {
     var queue *gobble.Queue
     var worker gobble.Worker
     var callbackWasCalledWith gobble.Job
+    var callback func(*gobble.Job)
 
     BeforeEach(func() {
         TruncateTables()
 
-        callback := func(job gobble.Job) {
-            callbackWasCalledWith = job
+        callback = func(job *gobble.Job) {
+            callbackWasCalledWith = *job
         }
 
         queue = gobble.NewQueue()
         worker = gobble.NewWorker(1, queue, callback)
+    })
+
+    AfterEach(func() {
+        queue.Close()
     })
 
     Describe("Perform", func() {
@@ -39,6 +46,27 @@ var _ = Describe("Worker", func() {
             }
 
             Expect(len(results)).To(Equal(0))
+        })
+
+        It("re-enqueues jobs that are marked for retry", func() {
+            callback = func(job *gobble.Job) {
+                job.Retry(1 * time.Minute)
+            }
+            worker = gobble.NewWorker(1, queue, callback)
+
+            job := queue.Enqueue(gobble.Job{})
+            worker.Perform()
+
+            results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(len(results)).To(Equal(1))
+            retriedJob := results[0].(*gobble.Job)
+            Expect(retriedJob.ID).To(Equal(job.ID))
+            Expect(retriedJob.RetryCount).To(Equal(1))
+            Expect(retriedJob.ActiveAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 1*time.Minute))
         })
     })
 

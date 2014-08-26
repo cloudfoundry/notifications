@@ -67,6 +67,14 @@ var _ = Describe("Database", func() {
             Field: "version",
             Type:  "bigint",
         }))
+        Expect(columns).To(ContainElement(Column{
+            Field: "retry_count",
+            Type:  "int",
+        }))
+        Expect(columns).To(ContainElement(Column{
+            Field: "active_at",
+            Type:  "timestamp",
+        }))
     })
 
     It("only ever instantiates a single DB object", func() {

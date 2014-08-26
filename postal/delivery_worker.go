@@ -2,7 +2,9 @@ package postal
 
 import (
     "log"
+    "math"
     "strings"
+    "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/gobble"
@@ -37,7 +39,7 @@ func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterfa
     return worker
 }
 
-func (worker DeliveryWorker) Deliver(job gobble.Job) {
+func (worker DeliveryWorker) Deliver(job *gobble.Job) {
     var delivery Delivery
     err := job.Unmarshal(&delivery)
     if err != nil {
@@ -46,7 +48,11 @@ func (worker DeliveryWorker) Deliver(job gobble.Job) {
 
     if len(delivery.User.Emails) > 0 && strings.Contains(delivery.User.Emails[0], "@") {
         _, message := worker.Pack(delivery)
-        worker.SendMail(message)
+        status := worker.SendMail(message)
+        if status != StatusDelivered && job.RetryCount < 10 {
+            duration := time.Duration(int64(math.Pow(2, float64(job.RetryCount))))
+            job.Retry(duration * time.Minute)
+        }
     }
 }
 

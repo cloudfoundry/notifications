@@ -8,11 +8,11 @@ import (
 type Worker struct {
     ID       string
     queue    QueueInterface
-    callback func(Job)
+    callback func(*Job)
     halt     chan bool
 }
 
-func NewWorker(id int, queue QueueInterface, callback func(Job)) Worker {
+func NewWorker(id int, queue QueueInterface, callback func(*Job)) Worker {
     return Worker{
         ID:       fmt.Sprintf("worker-%d-%d", id, os.Getpid()),
         queue:    queue,
@@ -24,8 +24,13 @@ func NewWorker(id int, queue QueueInterface, callback func(Job)) Worker {
 func (worker *Worker) Perform() int {
     select {
     case job := <-worker.queue.Reserve(worker.ID):
-        worker.callback(job)
-        worker.queue.Dequeue(job)
+        worker.callback(&job)
+
+        if job.ShouldRetry {
+            worker.queue.Requeue(job)
+        } else {
+            worker.queue.Dequeue(job)
+        }
         return 0
     case <-worker.halt:
         return 1

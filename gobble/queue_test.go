@@ -23,6 +23,7 @@ var _ = Describe("Queue", func() {
 
     AfterEach(func() {
         gobble.WaitMaxDuration = waitMaxDuration
+        queue.Close()
     })
 
     Describe("Enqueue", func() {
@@ -45,6 +46,29 @@ var _ = Describe("Queue", func() {
 
             Expect(len(jobs)).To(Equal(1))
             Expect(jobs).To(ContainElement(job))
+        })
+    })
+
+    Describe("Requeue", func() {
+        It("updates the queue in the database", func() {
+            job := gobble.NewJob(map[string]bool{
+                "testing": true,
+            })
+
+            job = queue.Enqueue(job)
+
+            job.RetryCount = 5
+
+            queue.Requeue(job)
+
+            reloadedJob := gobble.Job{}
+            err := gobble.Database().Connection.SelectOne(&reloadedJob, "SELECT * FROM `jobs` where id = ?", job.ID)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(reloadedJob.ID).To(Equal(job.ID))
+            Expect(reloadedJob.RetryCount).To(Equal(5))
         })
     })
 
@@ -77,10 +101,12 @@ var _ = Describe("Queue", func() {
             job2 = queue.Enqueue(job1)
 
             jobChannel := queue.Reserve("1")
-            reservedJob1 := <-jobChannel
+            var reservedJob1 gobble.Job
+            Eventually(jobChannel).Should(Receive(&reservedJob1))
 
             jobChannel = queue.Reserve("1")
-            reservedJob2 := <-jobChannel
+            var reservedJob2 gobble.Job
+            Eventually(jobChannel).Should(Receive(&reservedJob2))
 
             Expect(reservedJob1.ID).To(Equal(job1.ID))
             Expect(reservedJob2.ID).To(Equal(job2.ID))
@@ -119,8 +145,8 @@ var _ = Describe("Queue", func() {
             go reserveJob("worker-1")
             go reserveJob("worker-2")
 
-            <-done
-            <-done
+            Eventually(done, 5*time.Second).Should(Receive())
+            Eventually(done, 5*time.Second).Should(Receive())
 
             results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
             if err != nil {
@@ -128,6 +154,17 @@ var _ = Describe("Queue", func() {
             }
 
             Expect(len(results)).To(Equal(0))
+        })
+
+        It("picks the first job that is active", func() {
+            queue.Enqueue(gobble.Job{
+                ActiveAt: time.Now().Add(1 * time.Hour),
+            })
+            job2 := queue.Enqueue(gobble.Job{})
+
+            job := <-queue.Reserve("worker-id")
+
+            Expect(job.ID).To(Equal(job2.ID))
         })
     })
 
