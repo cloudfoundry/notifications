@@ -16,17 +16,17 @@ var _ = Describe("Mailer", func() {
     var mailer postal.Mailer
     var logger *log.Logger
     var buffer *bytes.Buffer
-    var queue *postal.DeliveryQueue
+    var queue *FakeQueue
     var worker postal.DeliveryWorker
 
     BeforeEach(func() {
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
         mailClient = FakeMailClient{}
-        queue = postal.NewDeliveryQueue()
+        queue = NewFakeQueue()
         mailer = postal.NewMailer(queue, FakeGuidGenerator)
 
-        worker = postal.NewDeliveryWorker(logger, &mailClient, queue)
+        worker = postal.NewDeliveryWorker(1234, logger, &mailClient, queue)
         go worker.Work()
     })
 

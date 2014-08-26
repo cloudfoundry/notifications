@@ -7,6 +7,8 @@ import (
     "testing"
 
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/gobble"
+    "github.com/cloudfoundry-incubator/notifications/models"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -48,4 +50,9 @@ func Teardown(env config.Environment) {
     if err != nil {
         panic(err)
     }
+}
+
+func TruncateTables() {
+    models.Database().Connection.TruncateTables()
+    gobble.Database().Connection.TruncateTables()
 }

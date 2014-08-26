@@ -8,6 +8,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
@@ -203,3 +204,30 @@ var FakeGuidGenerator = postal.GUIDGenerationFunc(func() (*uuid.UUID, error) {
     guid := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55})
     return &guid, nil
 })
+
+type FakeQueue struct {
+    jobs chan gobble.Job
+    pk   int
+}
+
+func NewFakeQueue() *FakeQueue {
+    return &FakeQueue{
+        jobs: make(chan gobble.Job),
+    }
+}
+
+func (fake *FakeQueue) Enqueue(job gobble.Job) gobble.Job {
+    fake.pk++
+    job.ID = fake.pk
+    go func(job gobble.Job) {
+        fake.jobs <- job
+    }(job)
+    return job
+}
+
+func (fake *FakeQueue) Reserve(string) <-chan gobble.Job {
+    return fake.jobs
+}
+
+func (fake *FakeQueue) Dequeue(job gobble.Job) {
+}

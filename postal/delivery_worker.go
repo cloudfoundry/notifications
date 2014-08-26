@@ -5,45 +5,45 @@ import (
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
+    "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
+
+type Delivery struct {
+    User         uaa.User
+    Options      Options
+    UserGUID     string
+    Space        string
+    Organization string
+    ClientID     string
+    Templates    Templates
+    MessageID    string
+}
 
 type DeliveryWorker struct {
     logger     *log.Logger
     mailClient mail.ClientInterface
-    queue      *DeliveryQueue
-    halt       chan bool
+    gobble.Worker
 }
 
-func NewDeliveryWorker(logger *log.Logger, mailClient mail.ClientInterface, queue *DeliveryQueue) DeliveryWorker {
-    return DeliveryWorker{
+func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface) DeliveryWorker {
+    worker := DeliveryWorker{
         logger:     logger,
         mailClient: mailClient,
-        queue:      queue,
-        halt:       make(chan bool),
     }
+    worker.Worker = gobble.NewWorker(id, queue, worker.Deliver)
+
+    return worker
 }
 
-func (worker DeliveryWorker) Run() {
-    go worker.Work()
-}
-
-func (worker DeliveryWorker) Work() {
-    for {
-        select {
-        case delivery := <-worker.queue.Dequeue():
-            worker.Deliver(delivery)
-        case <-worker.halt:
-            return
-        }
+func (worker DeliveryWorker) Deliver(job gobble.Job) {
+    var delivery Delivery
+    err := job.Unmarshal(&delivery)
+    if err != nil {
+        panic(err)
     }
-}
 
-func (worker DeliveryWorker) Halt() {
-    worker.halt <- true
-}
-
-func (worker DeliveryWorker) Deliver(delivery Delivery) {
     if len(delivery.User.Emails) > 0 && strings.Contains(delivery.User.Emails[0], "@") {
         _, message := worker.Pack(delivery)
         worker.SendMail(message)

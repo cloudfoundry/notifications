@@ -18,7 +18,7 @@ func NewNotificationsServer() NotificationsServer {
     cmd := exec.Cmd{
         Path: env.RootPath + "/bin/notifications",
         Dir:  env.RootPath,
-        //Stdout: os.Stdout,  // Uncomment to get server output for debugging
+        //Stdout: os.Stdout, // Uncomment to get server output for debugging
         //Stderr: os.Stderr,
     }
 

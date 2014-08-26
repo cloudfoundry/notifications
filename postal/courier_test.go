@@ -20,6 +20,7 @@ import (
 var _ = Describe("Courier", func() {
     var courier postal.Courier
     var fakeCC *FakeCloudController
+    var id int
     var logger *log.Logger
     var fakeUAA FakeUAAClient
     var mailClient FakeMailClient
@@ -32,7 +33,7 @@ var _ = Describe("Courier", func() {
     var mailer postal.Mailer
     var fs FakeFileSystem
     var env config.Environment
-    var queue *postal.DeliveryQueue
+    var queue *FakeQueue
     var worker postal.DeliveryWorker
     var clientID string
     var fakeReceiptsRepo FakeReceiptsRepo
@@ -90,13 +91,14 @@ var _ = Describe("Courier", func() {
         fakeReceiptsRepo = NewFakeReceiptsRepo()
 
         buffer = bytes.NewBuffer([]byte{})
+        id = 1234
         logger = log.New(buffer, "", 0)
         mailClient = FakeMailClient{}
         env = config.NewEnvironment()
         fs = NewFakeFileSystem(env)
 
-        queue = postal.NewDeliveryQueue()
-        worker = postal.NewDeliveryWorker(logger, &mailClient, queue)
+        queue = NewFakeQueue()
+        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue)
         go worker.Work()
         mailer = postal.NewMailer(queue, FakeGuidGenerator)
 

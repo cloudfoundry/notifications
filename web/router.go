@@ -10,7 +10,6 @@ import (
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/gorilla/mux"
-
     "github.com/ryanmoran/stack"
 )
 
@@ -51,8 +50,8 @@ func StartWorkers(mother *Mother) {
             panic(err)
         }
         mailClient.Insecure = !env.VerifySSL
-        worker := postal.NewDeliveryWorker(mother.Logger(), mailClient, mother.Queue())
-        worker.Run()
+        worker := postal.NewDeliveryWorker(i+1, mother.Logger(), mailClient, mother.Queue())
+        worker.Work()
     }
 }
 

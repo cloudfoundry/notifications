@@ -7,6 +7,7 @@ import (
     "strings"
     "time"
 
+    "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -18,18 +19,20 @@ import (
 var _ = Describe("DeliveryWorker", func() {
     var mailClient FakeMailClient
     var worker postal.DeliveryWorker
+    var id int
     var logger *log.Logger
     var buffer *bytes.Buffer
     var delivery postal.Delivery
-    var queue *postal.DeliveryQueue
+    var queue *FakeQueue
 
     BeforeEach(func() {
         buffer = bytes.NewBuffer([]byte{})
+        id = 1234
         logger = log.New(buffer, "", 0)
         mailClient = FakeMailClient{}
-        queue = postal.NewDeliveryQueue()
+        queue = NewFakeQueue()
 
-        worker = postal.NewDeliveryWorker(logger, &mailClient, queue)
+        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue)
 
         os.Setenv("SENDER", "from@email.com")
 
@@ -53,10 +56,10 @@ var _ = Describe("DeliveryWorker", func() {
     })
 
     Describe("Work", func() {
-        It("pops Deliveries off the queue, passing them to Deliver, and sending their responses on the Delivery.Response chan", func() {
-            queue.Enqueue(delivery)
+        It("pops Deliveries off the queue, sending emails for each", func() {
+            queue.Enqueue(gobble.NewJob(delivery))
 
-            worker.Run()
+            worker.Work()
 
             delivery2 := postal.Delivery{
                 User: uaa.User{
@@ -64,7 +67,7 @@ var _ = Describe("DeliveryWorker", func() {
                 },
                 UserGUID: "user-456",
             }
-            queue.Enqueue(delivery2)
+            queue.Enqueue(gobble.NewJob(delivery2))
 
             <-time.After(10 * time.Millisecond)
             worker.Halt()
@@ -86,13 +89,13 @@ var _ = Describe("DeliveryWorker", func() {
 
     Describe("Deliver", func() {
         It("logs the email address of the recipient", func() {
-            worker.Deliver(delivery)
+            worker.Deliver(gobble.NewJob(delivery))
 
             Expect(buffer.String()).To(ContainSubstring("Sending email to fake-user@example.com"))
         })
 
         It("logs the message envelope", func() {
-            worker.Deliver(delivery)
+            worker.Deliver(gobble.NewJob(delivery))
 
             data := []string{
                 "From: from@email.com",
@@ -107,7 +110,7 @@ var _ = Describe("DeliveryWorker", func() {
         })
 
         It("ensures message delivery", func() {
-            worker.Deliver(delivery)
+            worker.Deliver(gobble.NewJob(delivery))
 
             Expect(mailClient.messages).To(ContainElement(mail.Message{
                 From:    "from@email.com",

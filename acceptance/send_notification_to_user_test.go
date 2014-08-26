@@ -6,7 +6,6 @@ import (
     "io/ioutil"
     "net/http"
     "strings"
-    "time"
 
     "github.com/cloudfoundry-incubator/notifications/acceptance/servers"
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -17,6 +16,10 @@ import (
 )
 
 var _ = Describe("Send a notification to a user", func() {
+    BeforeEach(func() {
+        TruncateTables()
+    })
+
     It("sends a single notification email to a user", func() {
         // Boot Fake SMTP Server
         smtpServer := servers.NewSMTPServer()
@@ -77,7 +80,7 @@ var _ = Describe("Send a notification to a user", func() {
         // Make request to /users/:guid
         body, err = json.Marshal(map[string]string{
             "kind_id": "acceptance-test",
-            "text":    "this is an acceptance test",
+            "html":    "<p>this is an acceptance test</p>",
             "subject": "my-special-subject",
         })
         if err != nil {
@@ -117,8 +120,9 @@ var _ = Describe("Send a notification to a user", func() {
         Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
 
         // Confirm the email message was delivered correctly
-        <-time.After(100 * time.Millisecond)
-        Expect(len(smtpServer.Deliveries)).To(Equal(1))
+        Eventually(func() int {
+            return len(smtpServer.Deliveries)
+        }).Should(Equal(1))
         delivery := smtpServer.Deliveries[0]
 
         Expect(delivery.Sender).To(Equal(env.Sender))
@@ -128,7 +132,7 @@ var _ = Describe("Send a notification to a user", func() {
         Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
         Expect(data).To(ContainElement("X-CF-Notification-ID: " + responseItem["notification_id"]))
         Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
-        Expect(data).To(ContainElement(`The following "Acceptance Test" notification was sent to you directly by the "Notifications Sender" component of Cloud Foundry:`))
-        Expect(data).To(ContainElement("this is an acceptance test"))
+        Expect(data).To(ContainElement(`        <p>The following "Acceptance Test" notification was sent to you directly by the "Notifications Sender" component of Cloud Foundry:</p>`))
+        Expect(data).To(ContainElement("<p>this is an acceptance test</p>"))
     })
 })

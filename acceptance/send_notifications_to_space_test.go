@@ -6,7 +6,6 @@ import (
     "io/ioutil"
     "net/http"
     "strings"
-    "time"
 
     "github.com/cloudfoundry-incubator/notifications/acceptance/servers"
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -17,6 +16,10 @@ import (
 )
 
 var _ = Describe("Sending notifications to all users in a space", func() {
+    BeforeEach(func() {
+        TruncateTables()
+    })
+
     It("sends a notification to each user in a space", func() {
         // Boot Fake SMTP Server
         smtpServer := servers.NewSMTPServer()
@@ -134,8 +137,9 @@ var _ = Describe("Sending notifications to all users in a space", func() {
         Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
 
         // Confirm the email message was delivered correctly
-        <-time.After(100 * time.Millisecond)
-        Expect(len(smtpServer.Deliveries)).To(Equal(1))
+        Eventually(func() int {
+            return len(smtpServer.Deliveries)
+        }).Should(Equal(1))
         delivery := smtpServer.Deliveries[0]
 
         Expect(delivery.Sender).To(Equal(env.Sender))

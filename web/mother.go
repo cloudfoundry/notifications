@@ -6,6 +6,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -17,7 +18,7 @@ import (
 
 type Mother struct {
     logger *log.Logger
-    queue  *postal.DeliveryQueue
+    queue  *gobble.Queue
 }
 
 func NewMother() *Mother {
@@ -31,9 +32,9 @@ func (mother *Mother) Logger() *log.Logger {
     return mother.logger
 }
 
-func (mother *Mother) Queue() *postal.DeliveryQueue {
+func (mother *Mother) Queue() *gobble.Queue {
     if mother.queue == nil {
-        mother.queue = postal.NewDeliveryQueue()
+        mother.queue = gobble.NewQueue()
     }
     return mother.queue
 }
