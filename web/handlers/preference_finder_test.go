@@ -44,7 +44,7 @@ var _ = Describe("PreferenceFinder", func() {
 
         token := BuildToken(tokenHeader, tokenClaims)
 
-        request, err = http.NewRequest("POST", "/preferences", bytes.NewBuffer(body))
+        request, err = http.NewRequest("GET", "/user_preferences", bytes.NewBuffer(body))
         if err != nil {
             panic(err)
         }

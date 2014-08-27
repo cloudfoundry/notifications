@@ -27,7 +27,7 @@ func (repo PreferencesRepo) FindNonCriticalPreferences(conn ConnectionInterface,
     }
 
     for index, _ := range preferences {
-        preferences[index].Email = "true"
+        preferences[index].Email = true
     }
 
     return preferences, nil

@@ -112,13 +112,19 @@ var _ = Describe("PreferencesRepo", func() {
                 Expect(results).To(ContainElement(models.Preference{
                     ClientID: "raptors",
                     KindID:   "sleepy",
-                    Email:    "true",
+                    Email:    true,
                 }))
 
                 Expect(results).To(ContainElement(models.Preference{
                     ClientID: "raptors",
                     KindID:   "dead",
-                    Email:    "true",
+                    Email:    true,
+                }))
+
+                Expect(results).To(ContainElement(models.Preference{
+                    ClientID: "raptors",
+                    KindID:   "orange",
+                    Email:    true,
                 }))
 
                 Expect(results).To(ContainElement(models.Preference{

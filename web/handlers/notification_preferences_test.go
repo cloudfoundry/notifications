@@ -1,20 +1,21 @@
 package handlers_test
 
 import (
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 )
 
 var _ = Describe("NotificationsPreferences", func() {
-
     var pref handlers.NotificationPreferences
 
     Describe("Add", func() {
-
         BeforeEach(func() {
             pref = handlers.NewNotificationPreferences()
         })
+
         It("Adding a new client, kind, and email", func() {
             pref.Add("client", "kind", true)
 

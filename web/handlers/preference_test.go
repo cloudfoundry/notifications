@@ -17,10 +17,10 @@ var _ = Describe("Preferences", func() {
         preferences := []models.Preference{models.Preference{
             ClientID: "raptors",
             KindID:   "non-critical-kind",
-            Email:    "true",
+            Email:    true,
         }}
 
-        preferences = append(preferences, models.Preference{ClientID: "raptors", KindID: "other-kind", Email: "false"})
+        preferences = append(preferences, models.Preference{ClientID: "raptors", KindID: "other-kind", Email: false})
 
         fakePreferencesRepo = NewFakePreferencesRepo(preferences)
         preference = handlers.NewPreference(fakePreferencesRepo)

@@ -1,5 +1,7 @@
 package handlers
 
+import "github.com/cloudfoundry-incubator/notifications/models"
+
 type NotificationPreferences map[string]map[string]map[string]bool
 
 func NewNotificationPreferences() NotificationPreferences {
