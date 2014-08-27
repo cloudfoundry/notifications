@@ -47,6 +47,12 @@ var _ = Describe("PreferencesRepo", func() {
                     Critical: false,
                 }
 
+                nonCriticalKindThatUserHasNotReceived := models.Kind{
+                    ID:       "orange",
+                    ClientID: "raptors",
+                    Critical: false,
+                }
+
                 criticalKind := models.Kind{
                     ID:       "hungry",
                     ClientID: "raptors",
@@ -61,6 +67,7 @@ var _ = Describe("PreferencesRepo", func() {
 
                 kinds.Create(conn, nonCriticalKind)
                 kinds.Create(conn, secondNonCriticalKind)
+                kinds.Create(conn, nonCriticalKindThatUserHasNotReceived)
                 kinds.Create(conn, criticalKind)
                 kinds.Create(conn, otherUserKind)
 
@@ -95,9 +102,12 @@ var _ = Describe("PreferencesRepo", func() {
             })
 
             It("Returns a slice of non-critical notifications for this user", func() {
-                results, _ := repo.FindNonCriticalPreferences(conn, "correct-user")
+                results, err := repo.FindNonCriticalPreferences(conn, "correct-user")
+                if err != nil {
+                    panic(err)
+                }
 
-                Expect(len(results)).To(Equal(2))
+                Expect(len(results)).To(Equal(3))
 
                 Expect(results).To(ContainElement(models.Preference{
                     ClientID: "raptors",
@@ -110,7 +120,14 @@ var _ = Describe("PreferencesRepo", func() {
                     KindID:   "dead",
                     Email:    "true",
                 }))
+
+                Expect(results).To(ContainElement(models.Preference{
+                    ClientID: "raptors",
+                    KindID:   "orange",
+                    Email:    "true",
+                }))
             })
+
         })
     })
 })
