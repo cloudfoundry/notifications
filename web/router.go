@@ -27,17 +27,19 @@ func NewRouter() Router {
     registrar := mother.Registrar()
     notify := handlers.NewNotify(mother.Courier(), mother.Finder(), registrar)
     preference := handlers.NewPreference(models.NewPreferencesRepo())
+    preferenceUpdater := handlers.NewPreferenceUpdater(models.NewUnsubscribesRepo())
     logging := mother.Logging()
     errorWriter := mother.ErrorWriter()
     authenticator := mother.Authenticator()
 
     return Router{
         stacks: map[string]stack.Stack{
-            "GET /info":             stack.NewStack(handlers.NewGetInfo()).Use(logging),
-            "GET /user_preferences": stack.NewStack(handlers.NewPreferenceFinder(preference, errorWriter)).Use(logging),
-            "POST /users/{guid}":    stack.NewStack(handlers.NewNotifyUser(notify, errorWriter)).Use(logging, authenticator),
-            "POST /spaces/{guid}":   stack.NewStack(handlers.NewNotifySpace(notify, errorWriter)).Use(logging, authenticator),
-            "PUT /registration":     stack.NewStack(handlers.NewRegistration(registrar, errorWriter)).Use(logging, authenticator),
+            "GET /info":               stack.NewStack(handlers.NewGetInfo()).Use(logging),
+            "POST /users/{guid}":      stack.NewStack(handlers.NewNotifyUser(notify, errorWriter)).Use(logging, authenticator),
+            "POST /spaces/{guid}":     stack.NewStack(handlers.NewNotifySpace(notify, errorWriter)).Use(logging, authenticator),
+            "PUT /registration":       stack.NewStack(handlers.NewRegistration(registrar, errorWriter)).Use(logging, authenticator),
+            "GET /user_preferences":   stack.NewStack(handlers.NewPreferenceFinder(preference, errorWriter)).Use(logging),
+            "PATCH /user_preferences": stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging),
         },
     }
 }

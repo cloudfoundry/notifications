@@ -314,3 +314,49 @@ func NewFakePreferencesRepo(nonCriticalPreferences []models.Preference) *FakePre
 func (fake FakePreferencesRepo) FindNonCriticalPreferences(conn models.ConnectionInterface, userGUID string) ([]models.Preference, error) {
     return fake.NonCriticalPreferences, fake.FindError
 }
+
+type FakePreferenceUpdater struct {
+    ExecuteArguments []interface{}
+}
+
+func NewFakePreferenceUpdater() *FakePreferenceUpdater {
+    return &FakePreferenceUpdater{}
+}
+
+func (fake *FakePreferenceUpdater) Execute(conn models.ConnectionInterface, preferences []models.Preference, userID string) error {
+    fake.ExecuteArguments = append(fake.ExecuteArguments, preferences, userID)
+    return nil
+}
+
+type FakeUnsubscribesRepo struct {
+    Unsubscribes map[string]models.Unsubscribe
+}
+
+func NewFakeUnsubscribesRepo() *FakeUnsubscribesRepo {
+    return &FakeUnsubscribesRepo{
+        Unsubscribes: map[string]models.Unsubscribe{},
+    }
+}
+
+func (fake *FakeUnsubscribesRepo) Create(conn models.ConnectionInterface, unsubscribe models.Unsubscribe) (models.Unsubscribe, error) {
+    key := unsubscribe.ClientID + unsubscribe.KindID + unsubscribe.UserID
+    if _, ok := fake.Unsubscribes[key]; ok {
+        return unsubscribe, models.ErrDuplicateRecord{}
+    }
+    fake.Unsubscribes[unsubscribe.ClientID+unsubscribe.KindID] = unsubscribe
+    return unsubscribe, nil
+}
+
+func (fake *FakeUnsubscribesRepo) Upsert(conn models.ConnectionInterface, unsubscribe models.Unsubscribe) (models.Unsubscribe, error) {
+    key := unsubscribe.ClientID + unsubscribe.KindID + unsubscribe.UserID
+    fake.Unsubscribes[key] = unsubscribe
+    return unsubscribe, nil
+}
+
+func (fake *FakeUnsubscribesRepo) Find(conn models.ConnectionInterface, clientID string, kindID string, userID string) (models.Unsubscribe, error) {
+    key := clientID + kindID + userID
+    if unsubscribe, ok := fake.Unsubscribes[key]; ok {
+        return unsubscribe, models.ErrDuplicateRecord{}
+    }
+    return models.Unsubscribe{}, models.ErrRecordNotFound{}
+}

@@ -27,8 +27,7 @@ func (preference Preference) Execute(UserGUID string) (NotificationPreferences, 
 
     for _, preferenceData := range preferencesData {
 
-        //true will change after story #76994664
-        preferences.Add(preferenceData.ClientID, preferenceData.KindID, true)
+        preferences.Add(preferenceData.ClientID, preferenceData.KindID, preferenceData.Email)
 
     }
     return preferences, nil

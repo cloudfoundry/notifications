@@ -21,5 +21,19 @@ func (pref NotificationPreferences) Add(client string, kind string, emails bool)
         }
 
     }
+}
 
+func (pref NotificationPreferences) ToPreferences() []models.Preference {
+    preferences := []models.Preference{}
+    for clientID, kind := range pref {
+        for kindID, email := range kind {
+            preferences = append(preferences, models.Preference{
+                ClientID: clientID,
+                KindID:   kindID,
+                Email:    email["email"],
+            })
+        }
+    }
+
+    return preferences
 }

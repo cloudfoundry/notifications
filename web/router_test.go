@@ -23,9 +23,15 @@ var _ = Describe("Router", func() {
         Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
     })
 
-    It("routes GET /preferences", func() {
+    It("routes GET /user_preferences", func() {
         s := router.Routes().Get("GET /user_preferences").GetHandler().(stack.Stack)
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.PreferenceFinder{}))
+        Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+    })
+
+    It("routes PATCH /user_preferences", func() {
+        s := router.Routes().Get("PATCH /user_preferences").GetHandler().(stack.Stack)
+        Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UpdatePreferences{}))
         Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
     })
 

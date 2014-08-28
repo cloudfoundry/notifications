@@ -130,7 +130,7 @@ var _ = Describe("PreferencesRepo", func() {
                 Expect(results).To(ContainElement(models.Preference{
                     ClientID: "raptors",
                     KindID:   "orange",
-                    Email:    "true",
+                    Email:    true,
                 }))
             })
 

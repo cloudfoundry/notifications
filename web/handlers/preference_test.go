@@ -31,7 +31,7 @@ var _ = Describe("Preferences", func() {
 
             result := handlers.NewNotificationPreferences()
             result.Add("raptors", "non-critical-kind", true)
-            result.Add("raptors", "other-kind", true)
+            result.Add("raptors", "other-kind", false)
 
             preferences, err := preference.Execute("correct-user")
             if err != nil {

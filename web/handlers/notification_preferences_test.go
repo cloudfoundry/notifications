@@ -53,4 +53,34 @@ var _ = Describe("NotificationsPreferences", func() {
             Expect(pref["client2"]["kind2"]["email"]).To(Equal(true))
         })
     })
+
+    Describe("ToPreferences", func() {
+        BeforeEach(func() {
+            pref = handlers.NewNotificationPreferences()
+        })
+
+        It("returns a slice of preferences from the populated map", func() {
+            pref.Add("raptors", "door-open", true)
+            pref.Add("raptors", "feeding-time", false)
+            pref.Add("dogs", "barking", true)
+
+            preferences := pref.ToPreferences()
+            Expect(len(preferences)).To(Equal(3))
+            Expect(preferences).To(ContainElement(models.Preference{
+                ClientID: "raptors",
+                KindID:   "door-open",
+                Email:    true,
+            }))
+            Expect(preferences).To(ContainElement(models.Preference{
+                ClientID: "raptors",
+                KindID:   "feeding-time",
+                Email:    false,
+            }))
+            Expect(preferences).To(ContainElement(models.Preference{
+                ClientID: "dogs",
+                KindID:   "barking",
+                Email:    true,
+            }))
+        })
+    })
 })
