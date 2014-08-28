@@ -9,6 +9,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
@@ -24,15 +25,17 @@ type Delivery struct {
 }
 
 type DeliveryWorker struct {
-    logger     *log.Logger
-    mailClient mail.ClientInterface
+    logger           *log.Logger
+    mailClient       mail.ClientInterface
+    unsubscribesRepo models.UnsubscribesRepoInterface
     gobble.Worker
 }
 
-func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface) DeliveryWorker {
+func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface, unsubscribesRepo models.UnsubscribesRepoInterface) DeliveryWorker {
     worker := DeliveryWorker{
-        logger:     logger,
-        mailClient: mailClient,
+        logger:           logger,
+        mailClient:       mailClient,
+        unsubscribesRepo: unsubscribesRepo,
     }
     worker.Worker = gobble.NewWorker(id, queue, worker.Deliver)
 
@@ -46,7 +49,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
         panic(err)
     }
 
-    if len(delivery.User.Emails) > 0 && strings.Contains(delivery.User.Emails[0], "@") {
+    if worker.ShouldDeliver(delivery) {
         _, message := worker.Pack(delivery)
         status := worker.SendMail(message)
         if status != StatusDelivered && job.RetryCount < 10 {
@@ -54,6 +57,17 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
             job.Retry(duration * time.Minute)
         }
     }
+}
+
+func (worker DeliveryWorker) ShouldDeliver(delivery Delivery) bool {
+    _, err := worker.unsubscribesRepo.Find(models.Database().Connection, delivery.ClientID, delivery.Options.KindID, delivery.UserGUID)
+    if err != nil {
+        if (err == models.ErrRecordNotFound{}) {
+            return len(delivery.User.Emails) > 0 && strings.Contains(delivery.User.Emails[0], "@")
+        }
+        return false
+    }
+    return false
 }
 
 func (worker DeliveryWorker) Pack(delivery Delivery) (MessageContext, mail.Message) {

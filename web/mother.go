@@ -80,3 +80,15 @@ func (mother Mother) Registrar() handlers.Registrar {
     clientsRepo, kindsRepo := mother.Repos()
     return handlers.NewRegistrar(clientsRepo, kindsRepo)
 }
+
+func (mother Mother) Preference() *handlers.Preference {
+    return handlers.NewPreference(models.NewPreferencesRepo())
+}
+
+func (mother Mother) PreferenceUpdater() handlers.PreferenceUpdater {
+    return handlers.NewPreferenceUpdater(mother.UnsubscribesRepo())
+}
+
+func (mother Mother) UnsubscribesRepo() models.UnsubscribesRepo {
+    return models.NewUnsubscribesRepo()
+}

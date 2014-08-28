@@ -9,3 +9,14 @@ type Unsubscribe struct {
     KindID    string    `db:"kind_id"`
     CreatedAt time.Time `db:"created_at"`
 }
+
+type Unsubscribes []Unsubscribe
+
+func (unsubscribes Unsubscribes) Contains(clientID, kindID string) bool {
+    for _, unsubscribe := range unsubscribes {
+        if unsubscribe.ClientID == clientID && unsubscribe.KindID == kindID {
+            return true
+        }
+    }
+    return false
+}

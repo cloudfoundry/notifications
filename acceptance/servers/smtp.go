@@ -7,13 +7,13 @@ import (
     "bitbucket.org/chrj/smtpd"
 )
 
-type SMTPServer struct {
+type SMTP struct {
     server     *smtpd.Server
     Deliveries []smtpd.Envelope
 }
 
-func NewSMTPServer() *SMTPServer {
-    return &SMTPServer{
+func NewSMTP() *SMTP {
+    return &SMTP{
         server: &smtpd.Server{
             Addr: "127.0.0.1:0",
         },
@@ -21,7 +21,7 @@ func NewSMTPServer() *SMTPServer {
     }
 }
 
-func (s *SMTPServer) Boot() {
+func (s *SMTP) Boot() {
     listener, err := net.Listen("tcp", "127.0.0.1:0")
     if err != nil {
         panic(err)
@@ -40,7 +40,11 @@ func (s *SMTPServer) Boot() {
     os.Setenv("SMTP_PORT", port)
 }
 
-func (s *SMTPServer) Handler(peer smtpd.Peer, env smtpd.Envelope) error {
+func (s *SMTP) Handler(peer smtpd.Peer, env smtpd.Envelope) error {
     s.Deliveries = append(s.Deliveries, env)
     return nil
+}
+
+func (s *SMTP) Reset() {
+    s.Deliveries = []smtpd.Envelope{}
 }

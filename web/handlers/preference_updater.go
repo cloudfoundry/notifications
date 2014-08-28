@@ -18,14 +18,15 @@ func NewPreferenceUpdater(repo models.UnsubscribesRepoInterface) PreferenceUpdat
 
 func (updater PreferenceUpdater) Execute(conn models.ConnectionInterface, preferences []models.Preference, userID string) error {
     for _, preference := range preferences {
-        _, err := updater.repo.Upsert(conn, models.Unsubscribe{
-            ClientID: preference.ClientID,
-            KindID:   preference.KindID,
-            UserID:   userID,
-        })
-        //TODO: error handling
-        if err != nil {
-            return err
+        if !preference.Email {
+            _, err := updater.repo.Upsert(conn, models.Unsubscribe{
+                ClientID: preference.ClientID,
+                KindID:   preference.KindID,
+                UserID:   userID,
+            })
+            if err != nil {
+                return err
+            }
         }
     }
     return nil

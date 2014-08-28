@@ -9,6 +9,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -24,6 +25,8 @@ var _ = Describe("DeliveryWorker", func() {
     var buffer *bytes.Buffer
     var delivery postal.Delivery
     var queue *FakeQueue
+    var unsubscribesRepo *FakeUnsubscribesRepo
+    var conn *FakeDBConn
 
     BeforeEach(func() {
         buffer = bytes.NewBuffer([]byte{})
@@ -31,8 +34,10 @@ var _ = Describe("DeliveryWorker", func() {
         logger = log.New(buffer, "", 0)
         mailClient = FakeMailClient{}
         queue = NewFakeQueue()
+        unsubscribesRepo = NewFakeUnsubscribesRepo()
+        conn = &FakeDBConn{}
 
-        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue)
+        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, unsubscribesRepo)
 
         os.Setenv("SENDER", "from@email.com")
 
@@ -46,6 +51,7 @@ var _ = Describe("DeliveryWorker", func() {
                 Subject: "the subject",
                 Text:    "body content",
                 ReplyTo: "thesender@example.com",
+                KindID:  "some-kind",
             },
             Templates: postal.Templates{
                 Text:    "{{.Text}}",
@@ -187,6 +193,25 @@ var _ = Describe("DeliveryWorker", func() {
                 job.ShouldRetry = false
                 worker.Deliver(&job)
                 Expect(job.ShouldRetry).To(BeFalse())
+            })
+        })
+
+        Context("when receipient has unsubscribed", func() {
+            BeforeEach(func() {
+                _, err := unsubscribesRepo.Create(conn, models.Unsubscribe{
+                    UserID:   "user-123",
+                    ClientID: "some-client",
+                    KindID:   "some-kind",
+                })
+                if err != nil {
+                    panic(err)
+                }
+            })
+
+            It("does not send the email", func() {
+                worker.Deliver(&job)
+
+                Expect(len(mailClient.messages)).To(Equal(0))
             })
         })
     })

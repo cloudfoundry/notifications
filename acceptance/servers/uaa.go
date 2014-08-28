@@ -17,11 +17,11 @@ import (
     "github.com/gorilla/mux"
 )
 
-type UAAServer struct {
+type UAA struct {
     server *httptest.Server
 }
 
-func NewUAAServer() UAAServer {
+func NewUAA() UAA {
     router := mux.NewRouter()
     router.HandleFunc("/oauth/token", UAAPostOAuthToken).Methods("POST")
     router.HandleFunc("/token_key", UAAGetTokenKey).Methods("GET")
@@ -30,17 +30,17 @@ func NewUAAServer() UAAServer {
         fmt.Printf("UAA ROUTE REQUEST ---> %+v\n", req)
         w.WriteHeader(http.StatusTeapot)
     }))
-    return UAAServer{
+    return UAA{
         server: httptest.NewUnstartedServer(router),
     }
 }
 
-func (s UAAServer) Boot() {
+func (s UAA) Boot() {
     s.server.Start()
     os.Setenv("UAA_HOST", s.server.URL)
 }
 
-func (s UAAServer) Close() {
+func (s UAA) Close() {
     s.server.Close()
 }
 
@@ -55,6 +55,11 @@ func ReadFile(filename string) string {
 }
 
 var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+    err := req.ParseForm()
+    if err != nil {
+        panic(err)
+    }
+
     encodedCredentials := strings.TrimPrefix(req.Header.Get("Authorization"), "Basic ")
     decodedCredentials, err := base64.StdEncoding.DecodeString(encodedCredentials)
     credentialsParts := strings.Split(string(decodedCredentials), ":")
@@ -62,8 +67,16 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
 
     token := jwt.New(jwt.GetSigningMethod("RS256"))
     token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
-    token.Claims["scope"] = []string{"notifications.write"}
     token.Claims["client_id"] = clientID
+
+    switch req.Form.Get("grant_type") {
+    case "client_credentials":
+        token.Claims["scope"] = []string{"notifications.write"}
+    case "authorization_code":
+        token.Claims["scope"] = []string{"notification_preferences.read"}
+        token.Claims["user_id"] = strings.TrimSuffix(req.Form.Get("code"), "-code")
+    }
+
     tokenString, err := token.SignedString([]byte(ReadFile("/acceptance/fixtures/private.pem")))
     if err != nil {
         panic(err)

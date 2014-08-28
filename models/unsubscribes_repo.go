@@ -30,11 +30,6 @@ func (repo UnsubscribesRepo) Create(conn ConnectionInterface, unsubscribe Unsubs
     return unsubscribe, nil
 }
 
-//TODO: this is not needed until resubscribing to notifications story 76994722
-func (repo UnsubscribesRepo) Upsert(conn ConnectionInterface, unsubscribe Unsubscribe) (Unsubscribe, error) {
-    return unsubscribe, nil
-}
-
 func (repo UnsubscribesRepo) Find(conn ConnectionInterface, clientID string, kindID string, userID string) (Unsubscribe, error) {
     unsubscribe := Unsubscribe{}
     err := conn.SelectOne(&unsubscribe, "SELECT * FROM `unsubscribes` WHERE `client_id` = ? AND `kind_id` = ? AND `user_id` = ?", clientID, kindID, userID)
@@ -45,4 +40,29 @@ func (repo UnsubscribesRepo) Find(conn ConnectionInterface, clientID string, kin
         return unsubscribe, err
     }
     return unsubscribe, nil
+}
+
+func (repo UnsubscribesRepo) Upsert(conn ConnectionInterface, unsubscribe Unsubscribe) (Unsubscribe, error) {
+    _, err := repo.Find(conn, unsubscribe.ClientID, unsubscribe.KindID, unsubscribe.UserID)
+    if err != nil {
+        if (err == ErrRecordNotFound{}) {
+            return repo.Create(conn, unsubscribe)
+        }
+        return unsubscribe, err
+    }
+    return unsubscribe, nil
+}
+
+func (repo UnsubscribesRepo) FindAllByUserID(conn ConnectionInterface, userID string) ([]Unsubscribe, error) {
+    unsubscribes := []Unsubscribe{}
+    results, err := conn.Select(Unsubscribe{}, "SELECT * FROM `unsubscribes` WHERE `user_id` = ?", userID)
+    if err != nil {
+        return unsubscribes, err
+    }
+
+    for _, result := range results {
+        unsubscribes = append(unsubscribes, *(result.(*Unsubscribe)))
+    }
+
+    return unsubscribes, nil
 }

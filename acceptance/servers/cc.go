@@ -9,11 +9,11 @@ import (
     "github.com/gorilla/mux"
 )
 
-type CCServer struct {
+type CC struct {
     server *httptest.Server
 }
 
-func NewCCServer() CCServer {
+func NewCC() CC {
     router := mux.NewRouter()
     router.HandleFunc("/v2/spaces/{guid}", CCGetSpace).Methods("GET")
     router.HandleFunc("/v2/organizations/{guid}", CCGetOrg).Methods("GET")
@@ -23,17 +23,17 @@ func NewCCServer() CCServer {
         w.WriteHeader(http.StatusTeapot)
     }))
 
-    return CCServer{
+    return CC{
         server: httptest.NewUnstartedServer(router),
     }
 }
 
-func (s CCServer) Boot() {
+func (s CC) Boot() {
     s.server.Start()
     os.Setenv("CC_HOST", s.server.URL)
 }
 
-func (s CCServer) Close() {
+func (s CC) Close() {
     s.server.Close()
 }
 

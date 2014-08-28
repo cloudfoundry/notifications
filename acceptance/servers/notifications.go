@@ -8,12 +8,12 @@ import (
     "github.com/cloudfoundry-incubator/notifications/config"
 )
 
-type NotificationsServer struct {
+type Notifications struct {
     cmd *exec.Cmd
     env config.Environment
 }
 
-func NewNotificationsServer() NotificationsServer {
+func NewNotifications() Notifications {
     env := config.NewEnvironment()
     cmd := exec.Cmd{
         Path: env.RootPath + "/bin/notifications",
@@ -22,13 +22,13 @@ func NewNotificationsServer() NotificationsServer {
         //Stderr: os.Stderr,
     }
 
-    return NotificationsServer{
+    return Notifications{
         cmd: &cmd,
         env: config.NewEnvironment(),
     }
 }
 
-func (s NotificationsServer) Boot() {
+func (s Notifications) Boot() {
     err := s.cmd.Start()
     if err != nil {
         panic(err)
@@ -36,7 +36,7 @@ func (s NotificationsServer) Boot() {
     s.Ping()
 }
 
-func (s NotificationsServer) Ping() {
+func (s Notifications) Ping() {
     timer := time.After(0 * time.Second)
     timeout := time.After(10 * time.Second)
     for {
@@ -54,21 +54,25 @@ func (s NotificationsServer) Ping() {
     }
 }
 
-func (s NotificationsServer) Close() {
+func (s Notifications) Close() {
     err := s.cmd.Process.Kill()
     if err != nil {
         panic(err)
     }
 }
 
-func (s NotificationsServer) SpacesPath(space string) string {
+func (s Notifications) SpacesPath(space string) string {
     return "http://localhost:" + s.env.Port + "/spaces/" + space
 }
 
-func (s NotificationsServer) UsersPath(user string) string {
+func (s Notifications) UsersPath(user string) string {
     return "http://localhost:" + s.env.Port + "/users/" + user
 }
 
-func (s NotificationsServer) RegistrationPath() string {
+func (s Notifications) RegistrationPath() string {
     return "http://localhost:" + s.env.Port + "/registration"
+}
+
+func (s Notifications) UserPreferencesPath() string {
+    return "http://localhost:" + s.env.Port + "/user_preferences"
 }

@@ -44,6 +44,7 @@ func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Requ
         transaction.Rollback()
         //TODO this should just be a simple database error
         handler.errorWriter.Write(w, err)
+        return
     }
 
     transaction.Commit()

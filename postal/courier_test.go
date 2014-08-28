@@ -38,6 +38,7 @@ var _ = Describe("Courier", func() {
     var clientID string
     var fakeReceiptsRepo FakeReceiptsRepo
     var conn *gorp.DbMap
+    var fakeUnsubscribesRepo *FakeUnsubscribesRepo
 
     BeforeEach(func() {
         clientID = "mister-client"
@@ -89,6 +90,7 @@ var _ = Describe("Courier", func() {
         }
 
         fakeReceiptsRepo = NewFakeReceiptsRepo()
+        fakeUnsubscribesRepo = NewFakeUnsubscribesRepo()
 
         buffer = bytes.NewBuffer([]byte{})
         id = 1234
@@ -98,7 +100,7 @@ var _ = Describe("Courier", func() {
         fs = NewFakeFileSystem(env)
 
         queue = NewFakeQueue()
-        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue)
+        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, fakeUnsubscribesRepo)
         go worker.Work()
         mailer = postal.NewMailer(queue, FakeGuidGenerator)
 

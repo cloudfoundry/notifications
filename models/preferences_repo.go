@@ -1,6 +1,8 @@
 package models
 
-type PreferencesRepo struct{}
+type PreferencesRepo struct {
+    unsubscribesRepo UnsubscribesRepo
+}
 
 type PreferencesRepoInterface interface {
     FindNonCriticalPreferences(ConnectionInterface, string) ([]Preference, error)
@@ -26,8 +28,14 @@ func (repo PreferencesRepo) FindNonCriticalPreferences(conn ConnectionInterface,
         return preferences, err
     }
 
-    for index, _ := range preferences {
-        preferences[index].Email = true
+    unsubs, err := repo.unsubscribesRepo.FindAllByUserID(conn, userGUID)
+    if err != nil {
+        return preferences, err
+    }
+
+    unsubscribes := Unsubscribes(unsubs)
+    for index, preference := range preferences {
+        preferences[index].Email = !unsubscribes.Contains(preference.ClientID, preference.KindID)
     }
 
     return preferences, nil

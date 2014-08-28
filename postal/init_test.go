@@ -1,6 +1,7 @@
 package postal_test
 
 import (
+    "database/sql"
     "errors"
     "fmt"
     "net/http"
@@ -236,4 +237,92 @@ func (fake *FakeQueue) Requeue(job gobble.Job) {
     go func(job gobble.Job) {
         fake.jobs <- job
     }(job)
+}
+
+type FakeUnsubscribesRepo struct {
+    Unsubscribes map[string]models.Unsubscribe
+}
+
+func NewFakeUnsubscribesRepo() *FakeUnsubscribesRepo {
+    return &FakeUnsubscribesRepo{
+        Unsubscribes: map[string]models.Unsubscribe{},
+    }
+}
+
+func (fake *FakeUnsubscribesRepo) Create(conn models.ConnectionInterface, unsubscribe models.Unsubscribe) (models.Unsubscribe, error) {
+    key := unsubscribe.ClientID + unsubscribe.KindID + unsubscribe.UserID
+    if _, ok := fake.Unsubscribes[key]; ok {
+        return unsubscribe, models.ErrDuplicateRecord{}
+    }
+    fake.Unsubscribes[key] = unsubscribe
+    return unsubscribe, nil
+}
+
+func (fake *FakeUnsubscribesRepo) Upsert(conn models.ConnectionInterface, unsubscribe models.Unsubscribe) (models.Unsubscribe, error) {
+    key := unsubscribe.ClientID + unsubscribe.KindID + unsubscribe.UserID
+    fake.Unsubscribes[key] = unsubscribe
+    return unsubscribe, nil
+}
+
+func (fake *FakeUnsubscribesRepo) Find(conn models.ConnectionInterface, clientID string, kindID string, userID string) (models.Unsubscribe, error) {
+    key := clientID + kindID + userID
+    if unsubscribe, ok := fake.Unsubscribes[key]; ok {
+        return unsubscribe, models.ErrDuplicateRecord{}
+    }
+    return models.Unsubscribe{}, models.ErrRecordNotFound{}
+}
+
+type FakeDBResult struct{}
+
+func (fake FakeDBResult) LastInsertId() (int64, error) {
+    return 0, nil
+}
+
+func (fake FakeDBResult) RowsAffected() (int64, error) {
+    return 0, nil
+}
+
+type FakeDBConn struct {
+    BeginWasCalled    bool
+    CommitWasCalled   bool
+    RollbackWasCalled bool
+}
+
+func (conn *FakeDBConn) Begin() error {
+    conn.BeginWasCalled = true
+    return nil
+}
+
+func (conn *FakeDBConn) Commit() error {
+    conn.CommitWasCalled = true
+    return nil
+}
+
+func (conn *FakeDBConn) Rollback() error {
+    conn.RollbackWasCalled = true
+    return nil
+}
+
+func (conn *FakeDBConn) Exec(query string, args ...interface{}) (sql.Result, error) {
+    return FakeDBResult{}, nil
+}
+
+func (conn FakeDBConn) Delete(list ...interface{}) (int64, error) {
+    return 0, nil
+}
+
+func (conn FakeDBConn) Insert(list ...interface{}) error {
+    return nil
+}
+
+func (conn FakeDBConn) Select(i interface{}, query string, args ...interface{}) ([]interface{}, error) {
+    return []interface{}{}, nil
+}
+
+func (conn FakeDBConn) SelectOne(i interface{}, query string, args ...interface{}) error {
+    return nil
+}
+
+func (conn FakeDBConn) Update(list ...interface{}) (int64, error) {
+    return 0, nil
 }

@@ -343,7 +343,7 @@ func (fake *FakeUnsubscribesRepo) Create(conn models.ConnectionInterface, unsubs
     if _, ok := fake.Unsubscribes[key]; ok {
         return unsubscribe, models.ErrDuplicateRecord{}
     }
-    fake.Unsubscribes[unsubscribe.ClientID+unsubscribe.KindID] = unsubscribe
+    fake.Unsubscribes[key] = unsubscribe
     return unsubscribe, nil
 }
 

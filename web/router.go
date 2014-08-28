@@ -6,7 +6,6 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/mail"
-    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/gorilla/mux"
@@ -26,8 +25,8 @@ func NewRouter() Router {
 
     registrar := mother.Registrar()
     notify := handlers.NewNotify(mother.Courier(), mother.Finder(), registrar)
-    preference := handlers.NewPreference(models.NewPreferencesRepo())
-    preferenceUpdater := handlers.NewPreferenceUpdater(models.NewUnsubscribesRepo())
+    preference := mother.Preference()
+    preferenceUpdater := mother.PreferenceUpdater()
     logging := mother.Logging()
     errorWriter := mother.ErrorWriter()
     authenticator := mother.Authenticator()
@@ -52,7 +51,7 @@ func StartWorkers(mother *Mother) {
             panic(err)
         }
         mailClient.Insecure = !env.VerifySSL
-        worker := postal.NewDeliveryWorker(i+1, mother.Logger(), mailClient, mother.Queue())
+        worker := postal.NewDeliveryWorker(i+1, mother.Logger(), mailClient, mother.Queue(), mother.UnsubscribesRepo())
         worker.Work()
     }
 }

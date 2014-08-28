@@ -25,8 +25,9 @@ var _ = Describe("Mailer", func() {
         mailClient = FakeMailClient{}
         queue = NewFakeQueue()
         mailer = postal.NewMailer(queue, FakeGuidGenerator)
+        fakeUnsubscribesRepo := NewFakeUnsubscribesRepo()
 
-        worker = postal.NewDeliveryWorker(1234, logger, &mailClient, queue)
+        worker = postal.NewDeliveryWorker(1234, logger, &mailClient, queue, fakeUnsubscribesRepo)
         go worker.Work()
     })
 

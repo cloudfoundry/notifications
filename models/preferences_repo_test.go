@@ -13,12 +13,14 @@ var _ = Describe("PreferencesRepo", func() {
     var kinds models.KindsRepo
     var receipts models.ReceiptsRepo
     var conn *gorp.DbMap
+    var unsubscribeRepo models.UnsubscribesRepo
 
     BeforeEach(func() {
         TruncateTables()
         conn = models.Database().Connection
         kinds = models.NewKindsRepo()
         receipts = models.NewReceiptsRepo()
+        unsubscribeRepo = models.NewUnsubscribesRepo()
         repo = models.NewPreferencesRepo()
     })
 
@@ -102,6 +104,12 @@ var _ = Describe("PreferencesRepo", func() {
             })
 
             It("Returns a slice of non-critical notifications for this user", func() {
+                unsubscribeRepo.Create(conn, models.Unsubscribe{
+                    UserID:   "correct-user",
+                    ClientID: "raptors",
+                    KindID:   "sleepy",
+                })
+
                 results, err := repo.FindNonCriticalPreferences(conn, "correct-user")
                 if err != nil {
                     panic(err)
@@ -112,7 +120,7 @@ var _ = Describe("PreferencesRepo", func() {
                 Expect(results).To(ContainElement(models.Preference{
                     ClientID: "raptors",
                     KindID:   "sleepy",
-                    Email:    true,
+                    Email:    false,
                 }))
 
                 Expect(results).To(ContainElement(models.Preference{
