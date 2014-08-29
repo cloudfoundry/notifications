@@ -8,6 +8,7 @@ install:
   - export PATH=$HOME/gopath/bin:$PATH
   - go get code.google.com/p/go.tools/cmd/cover
   - go get github.com/tools/godep
+  - go get github.com/onsi/ginkgo/ginkgo
   - godep restore
   - mysql -e 'create database notifications_test;'
 
