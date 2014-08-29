@@ -12,17 +12,17 @@ RED="\033[0;31m"
 NONE="\033[0m"
 
 source $DIR/env/$ENVIRONMENT
-#godep restore
 
 function run() {
   set +e
-  go test -v $@
+  ginkgo -r -slowSpecThreshold=10 -randomizeAllSpecs=true -succinct=true $@
   EXIT_CODE=$?
   set -e
 }
 
 if [[ -z "$1" ]]; then
-    run ./...
+    run -skipPackage=acceptance ./
+    run ./acceptance
 else
     run $@
 fi
