@@ -158,4 +158,49 @@ var _ = Describe("UnsubscribesRepo", func() {
             Expect(unsubscribes).To(ContainElement(unsub2))
         })
     })
+
+    Describe("Destroy", func() {
+        It("removes the record from the database", func() {
+            unsub1, err := repo.Create(conn, models.Unsubscribe{
+                UserID:   "correct-user",
+                ClientID: "raptors",
+                KindID:   "hungry",
+            })
+            if err != nil {
+                panic(err)
+            }
+
+            unsub2, err := repo.Create(conn, models.Unsubscribe{
+                UserID:   "correct-user",
+                ClientID: "raptors",
+                KindID:   "sleepy",
+            })
+            if err != nil {
+                panic(err)
+            }
+
+            unsubscribes, err := repo.FindAllByUserID(conn, "correct-user")
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(len(unsubscribes)).To(Equal(2))
+            Expect(unsubscribes).To(ContainElement(unsub1))
+            Expect(unsubscribes).To(ContainElement(unsub2))
+
+            _, err = repo.Destroy(conn, unsub1)
+            if err != nil {
+                panic(err)
+            }
+
+            unsubscribes, err = repo.FindAllByUserID(conn, "correct-user")
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(len(unsubscribes)).To(Equal(1))
+            Expect(unsubscribes).ToNot(ContainElement(unsub1))
+            Expect(unsubscribes).To(ContainElement(unsub2))
+        })
+    })
 })

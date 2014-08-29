@@ -36,7 +36,6 @@ var _ = Describe("PreferenceUpdater", func() {
         })
 
         It("Adds New Unsubscribes to the unsubscribes Repo", func() {
-
             updater.Execute(fakeDBConn, []models.Preference{
                 {
                     ClientID: "raptors",
@@ -88,6 +87,29 @@ var _ = Describe("PreferenceUpdater", func() {
                 },
             }, "the-user")
 
+            Expect(len(repo.Unsubscribes)).To(Equal(0))
+        })
+
+        It("removes unsubscribes when they are resubscribed", func() {
+            _, err := repo.Create(fakeDBConn, models.Unsubscribe{
+                UserID:   "my-user",
+                ClientID: "raptors",
+                KindID:   "door-open",
+            })
+            if err != nil {
+                panic(err)
+            }
+            Expect(len(repo.Unsubscribes)).To(Equal(1))
+
+            err = updater.Execute(fakeDBConn, []models.Preference{
+                {
+                    ClientID: "raptors",
+                    KindID:   "door-open",
+                    Email:    true,
+                },
+            }, "my-user")
+
+            Expect(err).To(BeNil())
             Expect(len(repo.Unsubscribes)).To(Equal(0))
         })
     })

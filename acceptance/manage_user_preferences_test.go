@@ -55,9 +55,11 @@ var _ = Describe("Preferences Endpoint", func() {
         test.RegisterClientNotifications(notificationsServer, clientToken)
         test.SendNotificationToUser(notificationsServer, clientToken, smtpServer)
         test.RetrieveUserPreferences(notificationsServer, userToken)
-        test.UpdateUserPreferences(notificationsServer, userToken)
-        test.ConfirmUserPreferencesWereUpdated(notificationsServer, userToken)
+        test.UnsubscribeFromNotification(notificationsServer, userToken)
+        test.ConfirmUserUnsubscribed(notificationsServer, userToken)
         test.ConfirmsUnsubscribedNotificationsAreNotReceived(notificationsServer, clientToken, smtpServer)
+        test.ResubscribeToNotification(notificationsServer, userToken)
+        test.ConfirmUserResubscribed(notificationsServer, userToken)
     })
 
 })
@@ -107,7 +109,7 @@ func (t ManageUserPreferences) RegisterClientNotifications(notificationsServer s
 // Make request to /users/:guid
 func (t ManageUserPreferences) SendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
     body, err := json.Marshal(map[string]string{
-        "kind_id": "acceptance-test",
+        "kind_id": "unsubscribe-acceptance-test",
         "html":    "<p>this is an acceptance test</p>",
         "subject": "my-special-subject",
     })
@@ -161,7 +163,7 @@ func (t ManageUserPreferences) SendNotificationToUser(notificationsServer server
     Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
     Expect(data).To(ContainElement("X-CF-Notification-ID: " + responseItem["notification_id"]))
     Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
-    Expect(data).To(ContainElement(`        <p>The following "Acceptance Test" notification was sent to you directly by the "Notifications Sender" component of Cloud Foundry:</p>`))
+    Expect(data).To(ContainElement(`        <p>The following "Unsubscribe Acceptance Test" notification was sent to you directly by the "Notifications Sender" component of Cloud Foundry:</p>`))
     Expect(data).To(ContainElement("<p>this is an acceptance test</p>"))
 }
 
@@ -198,7 +200,7 @@ func (t ManageUserPreferences) RetrieveUserPreferences(notificationsServer serve
 }
 
 // Make a PATCH request to /user_preferences
-func (t ManageUserPreferences) UpdateUserPreferences(notificationsServer servers.Notifications, userToken uaa.Token) {
+func (t ManageUserPreferences) UnsubscribeFromNotification(notificationsServer servers.Notifications, userToken uaa.Token) {
     unsubscribe := handlers.NewNotificationPreferences()
     unsubscribe.Add("notifications-sender", "unsubscribe-acceptance-test", false)
 
@@ -223,7 +225,7 @@ func (t ManageUserPreferences) UpdateUserPreferences(notificationsServer servers
 }
 
 // Make a GET request to /user_preferences
-func (t ManageUserPreferences) ConfirmUserPreferencesWereUpdated(notificationsServer servers.Notifications, userToken uaa.Token) {
+func (t ManageUserPreferences) ConfirmUserUnsubscribed(notificationsServer servers.Notifications, userToken uaa.Token) {
     request, err := http.NewRequest("GET", notificationsServer.UserPreferencesPath(), nil)
     if err != nil {
         panic(err)
@@ -303,4 +305,60 @@ func (t ManageUserPreferences) ConfirmsUnsubscribedNotificationsAreNotReceived(n
     Consistently(func() int {
         return len(smtpServer.Deliveries)
     }, 5*time.Second).Should(Equal(0))
+}
+
+// Make PATCH request to /user_preferences
+func (t ManageUserPreferences) ResubscribeToNotification(notificationsServer servers.Notifications, userToken uaa.Token) {
+    unsubscribe := handlers.NewNotificationPreferences()
+    unsubscribe.Add("notifications-sender", "unsubscribe-acceptance-test", true)
+
+    body, err := json.Marshal(unsubscribe)
+    if err != nil {
+        panic(err)
+    }
+
+    request, err := http.NewRequest("PATCH", notificationsServer.UserPreferencesPath(), bytes.NewBuffer(body))
+    if err != nil {
+        panic(err)
+    }
+
+    request.Header.Set("Authorization", "Bearer "+userToken.Access)
+
+    response, err := http.DefaultClient.Do(request)
+    if err != nil {
+        panic(err)
+    }
+
+    Expect(response.StatusCode).To(Equal(http.StatusOK))
+}
+
+func (t ManageUserPreferences) ConfirmUserResubscribed(notificationsServer servers.Notifications, userToken uaa.Token) {
+    request, err := http.NewRequest("GET", notificationsServer.UserPreferencesPath(), nil)
+    if err != nil {
+        panic(err)
+    }
+
+    request.Header.Set("Authorization", "Bearer "+userToken.Access)
+
+    response, err := http.DefaultClient.Do(request)
+    if err != nil {
+        panic(err)
+    }
+
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        panic(err)
+    }
+
+    // Confirm the request response looks correct
+    Expect(response.StatusCode).To(Equal(http.StatusOK))
+
+    prefsResponseJSON := handlers.NotificationPreferences{}
+    err = json.Unmarshal(body, &prefsResponseJSON)
+    if err != nil {
+        panic(err)
+    }
+
+    Expect(prefsResponseJSON["notifications-sender"]["acceptance-test"]["email"]).To(BeTrue())
+    Expect(prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]["email"]).To(BeTrue())
 }

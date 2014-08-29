@@ -27,6 +27,16 @@ func (updater PreferenceUpdater) Execute(conn models.ConnectionInterface, prefer
             if err != nil {
                 return err
             }
+        } else {
+            _, err := updater.repo.Destroy(conn, models.Unsubscribe{
+                ClientID: preference.ClientID,
+                KindID:   preference.KindID,
+                UserID:   userID,
+            })
+            if err != nil {
+                return err
+            }
+
         }
     }
     return nil

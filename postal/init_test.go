@@ -272,6 +272,12 @@ func (fake *FakeUnsubscribesRepo) Find(conn models.ConnectionInterface, clientID
     return models.Unsubscribe{}, models.ErrRecordNotFound{}
 }
 
+func (fake *FakeUnsubscribesRepo) Destroy(conn models.ConnectionInterface, unsubscribe models.Unsubscribe) (int, error) {
+    key := unsubscribe.ClientID + unsubscribe.KindID + unsubscribe.UserID
+    delete(fake.Unsubscribes, key)
+    return 0, nil
+}
+
 type FakeDBResult struct{}
 
 func (fake FakeDBResult) LastInsertId() (int64, error) {

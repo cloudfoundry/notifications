@@ -10,6 +10,7 @@ type UnsubscribesRepoInterface interface {
     Create(ConnectionInterface, Unsubscribe) (Unsubscribe, error)
     Upsert(ConnectionInterface, Unsubscribe) (Unsubscribe, error)
     Find(ConnectionInterface, string, string, string) (Unsubscribe, error)
+    Destroy(ConnectionInterface, Unsubscribe) (int, error)
 }
 
 type UnsubscribesRepo struct{}
@@ -65,4 +66,16 @@ func (repo UnsubscribesRepo) FindAllByUserID(conn ConnectionInterface, userID st
     }
 
     return unsubscribes, nil
+}
+
+func (repo UnsubscribesRepo) Destroy(conn ConnectionInterface, unsubscribe Unsubscribe) (int, error) {
+    unsubscribe, err := repo.Find(conn, unsubscribe.ClientID, unsubscribe.KindID, unsubscribe.UserID)
+    if err != nil {
+        if (err == ErrRecordNotFound{}) {
+            return 0, nil
+        }
+        return 0, err
+    }
+    rowsAffected, err := conn.Delete(&unsubscribe)
+    return int(rowsAffected), err
 }

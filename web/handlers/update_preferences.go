@@ -42,13 +42,11 @@ func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Requ
     err = handler.preferenceUpdater.Execute(transaction, preferences, userID)
     if err != nil {
         transaction.Rollback()
-        //TODO this should just be a simple database error
         handler.errorWriter.Write(w, err)
         return
     }
 
     transaction.Commit()
-
     w.WriteHeader(http.StatusOK)
 }
 
