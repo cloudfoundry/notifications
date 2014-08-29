@@ -62,7 +62,7 @@ func (app Application) ConfigureSMTP() {
         return
     }
 
-    mailClient, err := mail.NewClient(app.env.SMTPUser, app.env.SMTPPass, net.JoinHostPort(app.env.SMTPHost, app.env.SMTPPort))
+    mailClient, err := mail.NewClient(app.env.SMTPUser, app.env.SMTPPass, net.JoinHostPort(app.env.SMTPHost, app.env.SMTPPort), app.mother.Logger())
     if err != nil {
         panic(err)
     }
@@ -122,7 +122,7 @@ func (app Application) UnlockJobs() {
 
 func (app Application) StartWorkers() {
     for i := 0; i < WorkerCount; i++ {
-        mailClient, err := mail.NewClient(app.env.SMTPUser, app.env.SMTPPass, net.JoinHostPort(app.env.SMTPHost, app.env.SMTPPort))
+        mailClient, err := mail.NewClient(app.env.SMTPUser, app.env.SMTPPass, net.JoinHostPort(app.env.SMTPHost, app.env.SMTPPort), app.mother.Logger())
         if err != nil {
             panic(err)
         }

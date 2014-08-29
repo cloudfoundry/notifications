@@ -1,6 +1,8 @@
 package mail_test
 
 import (
+    "bytes"
+    "log"
     "os"
     "strings"
     "time"
@@ -14,10 +16,17 @@ import (
 var _ = Describe("Mail", func() {
     var mailServer *SMTPServer
     var client *mail.Client
+    var logger *log.Logger
+    var buffer *bytes.Buffer
+
+    BeforeEach(func() {
+        buffer = bytes.NewBuffer([]byte{})
+        logger = log.New(buffer, "", 0)
+    })
 
     Context("NewClient", func() {
         It("defaults the ConnectTimeout to 15 seconds", func() {
-            client, err := mail.NewClient("user", "pass", "0.0.0.0:3000")
+            client, err := mail.NewClient("user", "pass", "0.0.0.0:3000", logger)
             if err != nil {
                 panic(err)
             }
@@ -28,32 +37,36 @@ var _ = Describe("Mail", func() {
 
     Describe("Send", func() {
         Context("when in Testmode", func() {
+            var msg mail.Message
+            var testMode string
+
             BeforeEach(func() {
                 var err error
 
                 mailServer = NewSMTPServer("user", "pass")
                 mailServer.SupportsTLS = true
                 serverURL := mailServer.URL.String()
-                client, err = mail.NewClient("user", "pass", serverURL)
+                client, err = mail.NewClient("user", "pass", serverURL, logger)
                 if err != nil {
                     panic(err)
                 }
 
-                os.Setenv("TEST_MODE", "true")
-            })
-
-            AfterEach(func() {
-                os.Setenv("TEST_MODE", "false")
-            })
-
-            It("does not connect to the smtp server", func() {
-                msg := mail.Message{
+                msg = mail.Message{
                     From:    "me@example.com",
                     To:      "you@example.com",
                     Subject: "Urgent! Read now!",
                     Body:    "This email is the most important thing you will read all day!",
                 }
 
+                testMode = os.Getenv("TEST_MODE")
+                os.Setenv("TEST_MODE", "true")
+            })
+
+            AfterEach(func() {
+                os.Setenv("TEST_MODE", testMode)
+            })
+
+            It("does not connect to the smtp server", func() {
                 err := client.Send(msg)
                 if err != nil {
                     panic(err)
@@ -62,6 +75,20 @@ var _ = Describe("Mail", func() {
                 Eventually(func() int {
                     return len(mailServer.Deliveries)
                 }).Should(Equal(0))
+            })
+
+            It("logs that it is in test mode", func() {
+                err := client.Send(msg)
+                if err != nil {
+                    panic(err)
+                }
+
+                line, err := buffer.ReadString('\n')
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(line).To(Equal("TEST_MODE is true, emails not being sent\n"))
             })
         })
     })
@@ -73,7 +100,7 @@ var _ = Describe("Mail", func() {
             mailServer = NewSMTPServer("user", "pass")
             mailServer.SupportsTLS = true
             serverURL := mailServer.URL.String()
-            client, err = mail.NewClient("user", "pass", serverURL)
+            client, err = mail.NewClient("user", "pass", serverURL, logger)
             if err != nil {
                 panic(err)
             }
@@ -201,7 +228,7 @@ var _ = Describe("Mail", func() {
             It("does not connect to the smtp server", func() {
 
                 serverURL := "fakewebsiteoninternet.com:587"
-                client, err := mail.NewClient("user", "pass", serverURL)
+                client, err := mail.NewClient("user", "pass", serverURL, logger)
                 if err != nil {
                     panic(err)
                 }
@@ -216,7 +243,7 @@ var _ = Describe("Mail", func() {
             mailServer.ConnectWait = 5 * time.Second
 
             serverURL := mailServer.URL.String()
-            client, err := mail.NewClient("user", "pass", serverURL)
+            client, err := mail.NewClient("user", "pass", serverURL, logger)
             if err != nil {
                 panic(err)
             }
@@ -235,7 +262,7 @@ var _ = Describe("Mail", func() {
 
             mailServer = NewSMTPServer("user", "pass")
             serverURL := mailServer.URL.String()
-            client, err = mail.NewClient("user", "pass", serverURL)
+            client, err = mail.NewClient("user", "pass", serverURL, logger)
             if err != nil {
                 panic(err)
             }

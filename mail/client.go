@@ -18,6 +18,7 @@ type Client struct {
     user           string
     pass           string
     client         *smtp.Client
+    logger         *log.Logger
     Insecure       bool
     ConnectTimeout time.Duration
 }
@@ -32,10 +33,11 @@ type connection struct {
     err    error
 }
 
-func NewClient(user, pass, url string) (*Client, error) {
+func NewClient(user, pass, url string, logger *log.Logger) (*Client, error) {
     client := &Client{
-        user: user,
-        pass: pass,
+        user:   user,
+        pass:   pass,
+        logger: logger,
     }
 
     host, port, err := net.SplitHostPort(url)
@@ -92,7 +94,7 @@ func (c *Client) connect() chan connection {
 func (c *Client) Send(msg Message) error {
     env := config.NewEnvironment()
     if env.TestMode {
-        log.Println("TEST_MODE is true, emails not being sent")
+        c.logger.Println("TEST_MODE is true, emails not being sent")
         return nil
     }
 
