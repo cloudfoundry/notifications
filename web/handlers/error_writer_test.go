@@ -151,14 +151,6 @@ var _ = Describe("ErrorWriter", func() {
         Expect(body["errors"]).To(ContainElement("Record Not Found"))
     })
 
-    It("returns a 403 when token does not have the correct scope", func() {
-
-        writer.Write(recorder, handlers.NewInvalidScopeError("You are not authorized to perform the requested action"))
-
-        Expect(recorder.Code).To(Equal(403))
-
-    })
-
     It("panics for unknown errors", func() {
         Expect(func() {
             writer.Write(recorder, errors.New("BOOM!"))

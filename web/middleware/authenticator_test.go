@@ -21,12 +21,50 @@ var _ = Describe("Authenticator", func() {
     BeforeEach(func() {
         var err error
 
-        ware = middleware.NewAuthenticator()
+        ware = middleware.NewAuthenticator([]string{"fake.scope"})
         writer = httptest.NewRecorder()
         request, err = http.NewRequest("GET", "/some/path", nil)
         if err != nil {
             panic(err)
         }
+    })
+
+    Context("when the request contains a valid auth token", func() {
+        BeforeEach(func() {
+            tokenHeader := map[string]interface{}{
+                "alg": "FAST",
+            }
+            tokenClaims := map[string]interface{}{
+                "jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
+                "client_id": "mister-client",
+                "cid":       "mister-client",
+                "exp":       3404281214,
+                "scope":     []string{"fake.scope"},
+            }
+            token = BuildToken(tokenHeader, tokenClaims)
+
+            requestBody, err := json.Marshal(map[string]string{
+                "kind": "forgot_password",
+                "text": "Try to remember your password next time",
+            })
+            if err != nil {
+                panic(err)
+            }
+
+            request, err = http.NewRequest("POST", "/users/user-123", bytes.NewReader(requestBody))
+            if err != nil {
+                panic(err)
+            }
+            request.Header.Set("Authorization", "Bearer "+token)
+        })
+
+        It("allows the request through", func() {
+            returnValue := ware.ServeHTTP(writer, request)
+
+            Expect(returnValue).To(BeTrue())
+            Expect(writer.Code).To(Equal(http.StatusOK))
+            Expect(len(writer.Body.Bytes())).To(Equal(0))
+        })
     })
 
     Context("when the request uses an expired auth token", func() {

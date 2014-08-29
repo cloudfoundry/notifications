@@ -72,8 +72,8 @@ func (mother Mother) ErrorWriter() handlers.ErrorWriter {
     return handlers.NewErrorWriter()
 }
 
-func (mother Mother) Authenticator() middleware.Authenticator {
-    return middleware.NewAuthenticator()
+func (mother Mother) Authenticator(scopes []string) middleware.Authenticator {
+    return middleware.NewAuthenticator(scopes)
 }
 
 func (mother Mother) Registrar() handlers.Registrar {

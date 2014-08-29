@@ -15,13 +15,13 @@ source $DIR/env/$ENVIRONMENT
 
 function run() {
   set +e
-  ginkgo -r -randomizeAllSpecs=true -succinct=true $@
+  ginkgo -randomizeAllSpecs=true -succinct=true $@
   EXIT_CODE=$?
   set -e
 }
 
 if [[ -z "$1" ]]; then
-    run -skipPackage=acceptance ./
+    run -r -skipPackage=acceptance ./
     if [[ $EXIT_CODE = 0 ]]; then
         run -slowSpecThreshold=10 ./acceptance
     fi

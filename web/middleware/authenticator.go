@@ -8,10 +8,14 @@ import (
     "github.com/dgrijalva/jwt-go"
 )
 
-type Authenticator struct{}
+type Authenticator struct {
+    Scopes []string
+}
 
-func NewAuthenticator() Authenticator {
-    return Authenticator{}
+func NewAuthenticator(scopes []string) Authenticator {
+    return Authenticator{
+        Scopes: scopes,
+    }
 }
 
 func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request) bool {
@@ -33,8 +37,10 @@ func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request) bo
     }
 
     if scopes, ok := token.Claims["scope"]; ok {
-        if !ware.HasScope(scopes, "notifications.write") {
-            return ware.Error(w, http.StatusForbidden, "You are not authorized to perform the requested action")
+        for _, scope := range ware.Scopes {
+            if !ware.HasScope(scopes, scope) {
+                return ware.Error(w, http.StatusForbidden, "You are not authorized to perform the requested action")
+            }
         }
     } else {
         return ware.Error(w, http.StatusForbidden, "You are not authorized to perform the requested action")

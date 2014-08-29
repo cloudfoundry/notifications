@@ -19,16 +19,18 @@ func NewRouter(mother *Mother) Router {
     preferenceUpdater := mother.PreferenceUpdater()
     logging := mother.Logging()
     errorWriter := mother.ErrorWriter()
-    authenticator := mother.Authenticator()
+    notificationsWriteAuthenticator := mother.Authenticator([]string{"notifications.write"})
+    notificationPreferencesReadAuthenticator := mother.Authenticator([]string{"notification_preferences.read"})
+    notificationPreferencesWriteAuthenticator := mother.Authenticator([]string{"notification_preferences.write"})
 
     return Router{
         stacks: map[string]stack.Stack{
             "GET /info":               stack.NewStack(handlers.NewGetInfo()).Use(logging),
-            "POST /users/{guid}":      stack.NewStack(handlers.NewNotifyUser(notify, errorWriter)).Use(logging, authenticator),
-            "POST /spaces/{guid}":     stack.NewStack(handlers.NewNotifySpace(notify, errorWriter)).Use(logging, authenticator),
-            "PUT /registration":       stack.NewStack(handlers.NewRegistration(registrar, errorWriter)).Use(logging, authenticator),
-            "GET /user_preferences":   stack.NewStack(handlers.NewPreferenceFinder(preference, errorWriter)).Use(logging),
-            "PATCH /user_preferences": stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging),
+            "POST /users/{guid}":      stack.NewStack(handlers.NewNotifyUser(notify, errorWriter)).Use(logging, notificationsWriteAuthenticator),
+            "POST /spaces/{guid}":     stack.NewStack(handlers.NewNotifySpace(notify, errorWriter)).Use(logging, notificationsWriteAuthenticator),
+            "PUT /registration":       stack.NewStack(handlers.NewRegistration(registrar, errorWriter)).Use(logging, notificationsWriteAuthenticator),
+            "GET /user_preferences":   stack.NewStack(handlers.NewPreferenceFinder(preference, errorWriter)).Use(logging, notificationPreferencesReadAuthenticator),
+            "PATCH /user_preferences": stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging, notificationPreferencesWriteAuthenticator),
         },
     }
 }

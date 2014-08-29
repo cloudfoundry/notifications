@@ -39,8 +39,6 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
         writer.write(w, http.StatusConflict, []string{err.Error()})
     case models.ErrRecordNotFound:
         writer.write(w, http.StatusNotFound, []string{err.Error()})
-    case InvalidScopeError:
-        writer.write(w, http.StatusForbidden, []string{err.Error()})
     default:
         panic(err)
     }

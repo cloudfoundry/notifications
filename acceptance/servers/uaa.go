@@ -73,7 +73,7 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
     case "client_credentials":
         token.Claims["scope"] = []string{"notifications.write"}
     case "authorization_code":
-        token.Claims["scope"] = []string{"notification_preferences.read"}
+        token.Claims["scope"] = []string{"notification_preferences.read", "notification_preferences.write"}
         token.Claims["user_id"] = strings.TrimSuffix(req.Form.Get("code"), "-code")
     }
 
