@@ -214,5 +214,23 @@ var _ = Describe("DeliveryWorker", func() {
                 Expect(len(mailClient.messages)).To(Equal(0))
             })
         })
+
+        Context("when the job contains malformed JSON", func() {
+            BeforeEach(func() {
+                job.Payload = `{"Space":"my-space","Options":{"HTML":"<p>some text that just abruptly ends`
+            })
+
+            It("does not crash the process", func() {
+                Expect(func() {
+                    worker.Deliver(&job)
+                }).ToNot(Panic())
+            })
+
+            It("marks the job for retry later", func() {
+                worker.Deliver(&job)
+                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 10*time.Second))
+                Expect(job.RetryCount).To(Equal(1))
+            })
+        })
     })
 })

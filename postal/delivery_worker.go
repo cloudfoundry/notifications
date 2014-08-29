@@ -9,6 +9,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
+    "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
@@ -46,16 +47,25 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
     var delivery Delivery
     err := job.Unmarshal(&delivery)
     if err != nil {
-        panic(err)
+        metrics.NewMetric("counter", map[string]interface{}{
+            "name": "notifications.worker.panic.json",
+        })
+        worker.Retry(job)
     }
 
     if worker.ShouldDeliver(delivery) {
         _, message := worker.Pack(delivery)
         status := worker.SendMail(message)
-        if status != StatusDelivered && job.RetryCount < 10 {
-            duration := time.Duration(int64(math.Pow(2, float64(job.RetryCount))))
-            job.Retry(duration * time.Minute)
+        if status != StatusDelivered {
+            worker.Retry(job)
         }
+    }
+}
+
+func (worker DeliveryWorker) Retry(job *gobble.Job) {
+    if job.RetryCount < 10 {
+        duration := time.Duration(int64(math.Pow(2, float64(job.RetryCount))))
+        job.Retry(duration * time.Minute)
     }
 }
 
