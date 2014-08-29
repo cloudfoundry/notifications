@@ -4,6 +4,7 @@ import (
     "errors"
     "log"
     "net"
+    "reflect"
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -21,7 +22,7 @@ func main() {
     app := NewApplication()
     defer app.Crash()
 
-    app.Configure()
+    app.PrintConfiguration()
     app.ConfigureSMTP()
     app.RetrieveUAAPublicKey()
     app.Migrate()
@@ -43,21 +44,17 @@ func NewApplication() Application {
     }
 }
 
-func (app Application) Configure() {
-    log.Println("Booting with configuration:")
-    log.Printf("\tCCHost          -> %+v", app.env.CCHost)
-    log.Printf("\tDatabaseURL     -> %+v", app.env.DatabaseURL)
-    log.Printf("\tSMTPHost        -> %+v", app.env.SMTPHost)
-    log.Printf("\tSMTPPass        -> %+v", app.env.SMTPPass)
-    log.Printf("\tSMTPPort        -> %+v", app.env.SMTPPort)
-    log.Printf("\tSMTPTLS         -> %+v", app.env.SMTPTLS)
-    log.Printf("\tSMTPUser        -> %+v", app.env.SMTPUser)
-    log.Printf("\tSender          -> %+v", app.env.Sender)
-    log.Printf("\tTest mode       -> %+v", app.env.TestMode)
-    log.Printf("\tUAAClientID     -> %+v", app.env.UAAClientID)
-    log.Printf("\tUAAClientSecret -> %+v", app.env.UAAClientSecret)
-    log.Printf("\tUAAHost         -> %+v", app.env.UAAHost)
-    log.Printf("\tVerifySSL       -> %+v", app.env.VerifySSL)
+func (app Application) PrintConfiguration() {
+    logger := app.mother.Logger()
+    logger.Println("Booting with configuration:")
+
+    t := reflect.TypeOf(app.env)
+    v := reflect.ValueOf(app.env)
+    for i := 0; i < v.NumField(); i++ {
+        fieldType := t.Field(i)
+        fieldValue := v.Field(i)
+        logger.Printf("  %-16s -> %+v", fieldType.Name, fieldValue.Interface())
+    }
 }
 
 func (app Application) ConfigureSMTP() {
