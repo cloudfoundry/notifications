@@ -1,14 +1,14 @@
-package handlers
+package services
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-type NotificationPreferences map[string]map[string]map[string]bool
+type PreferencesBuilder map[string]map[string]map[string]bool
 
-func NewNotificationPreferences() NotificationPreferences {
+func NewPreferencesBuilder() PreferencesBuilder {
     return map[string]map[string]map[string]bool{}
 }
 
-func (pref NotificationPreferences) Add(client string, kind string, emails bool) {
+func (pref PreferencesBuilder) Add(client string, kind string, emails bool) {
     if clientMap, ok := pref[client]; ok {
         clientMap[kind] = map[string]bool{
             "email": emails,
@@ -23,7 +23,7 @@ func (pref NotificationPreferences) Add(client string, kind string, emails bool)
     }
 }
 
-func (pref NotificationPreferences) ToPreferences() []models.Preference {
+func (pref PreferencesBuilder) ToPreferences() []models.Preference {
     preferences := []models.Preference{}
     for clientID, kind := range pref {
         for kindID, email := range kind {

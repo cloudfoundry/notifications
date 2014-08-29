@@ -11,6 +11,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/middleware"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/nu7hatch/gouuid"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
     "github.com/ryanmoran/stack"
@@ -55,9 +56,9 @@ func (mother Mother) Courier() postal.Courier {
     return postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, receiptsRepo)
 }
 
-func (mother Mother) Finder() handlers.Finder {
+func (mother Mother) NotificationFinder() services.NotificationFinder {
     clientsRepo, kindsRepo := mother.Repos()
-    return handlers.NewFinder(clientsRepo, kindsRepo)
+    return services.NewNotificationFinder(clientsRepo, kindsRepo)
 }
 
 func (mother Mother) Repos() (models.ClientsRepo, models.KindsRepo) {
@@ -76,17 +77,17 @@ func (mother Mother) Authenticator(scopes []string) middleware.Authenticator {
     return middleware.NewAuthenticator(scopes)
 }
 
-func (mother Mother) Registrar() handlers.Registrar {
+func (mother Mother) Registrar() services.Registrar {
     clientsRepo, kindsRepo := mother.Repos()
-    return handlers.NewRegistrar(clientsRepo, kindsRepo)
+    return services.NewRegistrar(clientsRepo, kindsRepo)
 }
 
-func (mother Mother) Preference() *handlers.Preference {
-    return handlers.NewPreference(models.NewPreferencesRepo())
+func (mother Mother) Preference() *services.Preference {
+    return services.NewPreference(models.NewPreferencesRepo())
 }
 
-func (mother Mother) PreferenceUpdater() handlers.PreferenceUpdater {
-    return handlers.NewPreferenceUpdater(mother.UnsubscribesRepo())
+func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
+    return services.NewPreferenceUpdater(mother.UnsubscribesRepo())
 }
 
 func (mother Mother) UnsubscribesRepo() models.UnsubscribesRepo {

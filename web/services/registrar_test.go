@@ -1,17 +1,17 @@
-package handlers_test
+package services_test
 
 import (
     "errors"
 
     "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 )
 
 var _ = Describe("Registrar", func() {
-    var registrar handlers.Registrar
+    var registrar services.Registrar
     var fakeClientsRepo *FakeClientsRepo
     var fakeKindsRepo *FakeKindsRepo
     var fakeDBConn *FakeDBConn
@@ -20,7 +20,7 @@ var _ = Describe("Registrar", func() {
     BeforeEach(func() {
         fakeClientsRepo = NewFakeClientsRepo()
         fakeKindsRepo = NewFakeKindsRepo()
-        registrar = handlers.NewRegistrar(fakeClientsRepo, fakeKindsRepo)
+        registrar = services.NewRegistrar(fakeClientsRepo, fakeKindsRepo)
         fakeDBConn = &FakeDBConn{}
     })
 

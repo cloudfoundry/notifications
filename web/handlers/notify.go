@@ -8,17 +8,18 @@ import (
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
+    "github.com/cloudfoundry-incubator/notifications/web/params"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/dgrijalva/jwt-go"
 )
 
 type Notify struct {
     courier   postal.CourierInterface
-    finder    FinderInterface
-    registrar RegistrarInterface
+    finder    services.NotificationFinderInterface
+    registrar services.RegistrarInterface
 }
 
-func NewNotify(courier postal.CourierInterface, finder FinderInterface, registrar RegistrarInterface) Notify {
+func NewNotify(courier postal.CourierInterface, finder services.NotificationFinderInterface, registrar services.RegistrarInterface) Notify {
     return Notify{
         courier:   courier,
         finder:    finder,

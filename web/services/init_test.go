@@ -1,4 +1,4 @@
-package handlers_test
+package services_test
 
 import (
     "database/sql"
@@ -17,11 +17,11 @@ import (
     . "github.com/onsi/gomega"
 )
 
-func TestWebHandlersSuite(t *testing.T) {
+func TestWebHandlersServicesSuite(t *testing.T) {
     RegisterFastTokenSigningMethod()
 
     RegisterFailHandler(Fail)
-    RunSpecs(t, "Web Handlers Suite")
+    RunSpecs(t, "Web Handlers Services Suite")
 }
 
 const (

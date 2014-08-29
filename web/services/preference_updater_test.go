@@ -1,8 +1,9 @@
-package handlers_test
+package services_test
 
 import (
     "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
+
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 )
@@ -14,12 +15,12 @@ var _ = Describe("PreferenceUpdater", func() {
         var barking models.Unsubscribe
         var repo *FakeUnsubscribesRepo
         var fakeDBConn *FakeDBConn
-        var updater handlers.PreferenceUpdater
+        var updater services.PreferenceUpdater
 
         BeforeEach(func() {
             fakeDBConn = &FakeDBConn{}
             repo = NewFakeUnsubscribesRepo()
-            updater = handlers.NewPreferenceUpdater(repo)
+            updater = services.NewPreferenceUpdater(repo)
 
             doorOpen = models.Unsubscribe{
                 UserID:   "the-user",

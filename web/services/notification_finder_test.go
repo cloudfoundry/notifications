@@ -1,17 +1,18 @@
-package handlers_test
+package services_test
 
 import (
     "errors"
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
+
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 )
 
 var _ = Describe("Finder", func() {
-    var finder handlers.Finder
+    var finder services.NotificationFinder
     var clientsRepo *FakeClientsRepo
     var kindsRepo *FakeKindsRepo
     var raptors models.Client
@@ -34,7 +35,7 @@ var _ = Describe("Finder", func() {
             }
             kindsRepo.Kinds[breach.ID+breach.ClientID] = breach
 
-            finder = handlers.NewFinder(clientsRepo, kindsRepo)
+            finder = services.NewNotificationFinder(clientsRepo, kindsRepo)
         })
 
         It("retrieves clients and kinds from the database", func() {

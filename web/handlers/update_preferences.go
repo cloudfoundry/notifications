@@ -8,16 +8,17 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
+    "github.com/cloudfoundry-incubator/notifications/web/params"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/dgrijalva/jwt-go"
 )
 
 type UpdatePreferences struct {
-    preferenceUpdater PreferenceUpdaterInterface
+    preferenceUpdater services.PreferenceUpdaterInterface
     errorWriter       ErrorWriterInterface
 }
 
-func NewUpdatePreferences(preferenceUpdater PreferenceUpdaterInterface, errorWriter ErrorWriterInterface) UpdatePreferences {
+func NewUpdatePreferences(preferenceUpdater services.PreferenceUpdaterInterface, errorWriter ErrorWriterInterface) UpdatePreferences {
     return UpdatePreferences{
         preferenceUpdater: preferenceUpdater,
         errorWriter:       errorWriter,
@@ -51,12 +52,12 @@ func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Requ
 }
 
 func (handler UpdatePreferences) ParsePreferences(body []byte) ([]models.Preference, error) {
-    preferences := NewNotificationPreferences()
-    err := json.Unmarshal(body, &preferences)
+    builder := services.NewPreferencesBuilder()
+    err := json.Unmarshal(body, &builder)
     if err != nil {
         return []models.Preference{}, err
     }
-    return preferences.ToPreferences(), nil
+    return builder.ToPreferences(), nil
 }
 
 func (handler UpdatePreferences) ParseUserID(rawToken string) (string, error) {

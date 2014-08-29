@@ -1,4 +1,4 @@
-package handlers
+package services
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
@@ -7,7 +7,7 @@ type Preference struct {
 }
 
 type PreferenceInterface interface {
-    Execute(string) (NotificationPreferences, error)
+    Execute(string) (PreferencesBuilder, error)
 }
 
 func NewPreference(repo models.PreferencesRepoInterface) *Preference {
@@ -16,19 +16,15 @@ func NewPreference(repo models.PreferencesRepoInterface) *Preference {
     }
 }
 
-func (preference Preference) Execute(UserGUID string) (NotificationPreferences, error) {
+func (preference Preference) Execute(UserGUID string) (PreferencesBuilder, error) {
     preferencesData, err := preference.repo.FindNonCriticalPreferences(models.Database().Connection, UserGUID)
-
     if err != nil {
-        return NotificationPreferences{}, err
+        return PreferencesBuilder{}, err
     }
 
-    preferences := NewNotificationPreferences()
-
+    preferences := NewPreferencesBuilder()
     for _, preferenceData := range preferencesData {
-
         preferences.Add(preferenceData.ClientID, preferenceData.KindID, preferenceData.Email)
-
     }
     return preferences, nil
 }

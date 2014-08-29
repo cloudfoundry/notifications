@@ -1,4 +1,4 @@
-package handlers
+package services
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 

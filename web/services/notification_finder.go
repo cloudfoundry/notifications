@@ -1,24 +1,24 @@
-package handlers
+package services
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-type Finder struct {
+type NotificationFinder struct {
     clientsRepo models.ClientsRepoInterface
     kindsRepo   models.KindsRepoInterface
 }
 
-type FinderInterface interface {
+type NotificationFinderInterface interface {
     ClientAndKind(string, string) (models.Client, models.Kind, error)
 }
 
-func NewFinder(clientsRepo models.ClientsRepoInterface, kindsRepo models.KindsRepoInterface) Finder {
-    return Finder{
+func NewNotificationFinder(clientsRepo models.ClientsRepoInterface, kindsRepo models.KindsRepoInterface) NotificationFinder {
+    return NotificationFinder{
         clientsRepo: clientsRepo,
         kindsRepo:   kindsRepo,
     }
 }
 
-func (finder Finder) ClientAndKind(clientID, kindID string) (models.Client, models.Kind, error) {
+func (finder NotificationFinder) ClientAndKind(clientID, kindID string) (models.Client, models.Kind, error) {
     client, err := finder.client(clientID)
     if err != nil {
         return models.Client{}, models.Kind{}, err
@@ -32,7 +32,7 @@ func (finder Finder) ClientAndKind(clientID, kindID string) (models.Client, mode
     return client, kind, nil
 }
 
-func (finder Finder) client(clientID string) (models.Client, error) {
+func (finder NotificationFinder) client(clientID string) (models.Client, error) {
     client, err := finder.clientsRepo.Find(models.Database().Connection, clientID)
     if err != nil {
         if _, ok := err.(models.ErrRecordNotFound); ok {
@@ -44,7 +44,7 @@ func (finder Finder) client(clientID string) (models.Client, error) {
     return client, nil
 }
 
-func (finder Finder) kind(clientID, kindID string) (models.Kind, error) {
+func (finder NotificationFinder) kind(clientID, kindID string) (models.Kind, error) {
     kind, err := finder.kindsRepo.Find(models.Database().Connection, kindID, clientID)
     if err != nil {
         if _, ok := err.(models.ErrRecordNotFound); ok {

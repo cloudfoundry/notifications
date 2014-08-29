@@ -1,16 +1,17 @@
-package handlers_test
+package services_test
 
 import (
     "errors"
 
     "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
+
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 )
 
 var _ = Describe("Preferences", func() {
-    var preference *handlers.Preference
+    var preference *services.Preference
     var fakePreferencesRepo *FakePreferencesRepo
 
     BeforeEach(func() {
@@ -23,13 +24,12 @@ var _ = Describe("Preferences", func() {
         preferences = append(preferences, models.Preference{ClientID: "raptors", KindID: "other-kind", Email: false})
 
         fakePreferencesRepo = NewFakePreferencesRepo(preferences)
-        preference = handlers.NewPreference(fakePreferencesRepo)
+        preference = services.NewPreference(fakePreferencesRepo)
     })
 
     Describe("Execute", func() {
         It("returns the set of notifications that are not critical", func() {
-
-            result := handlers.NewNotificationPreferences()
+            result := services.NewPreferencesBuilder()
             result.Add("raptors", "non-critical-kind", true)
             result.Add("raptors", "other-kind", false)
 
@@ -44,7 +44,6 @@ var _ = Describe("Preferences", func() {
         Context("when the preferences repo returns an error", func() {
             It("should propagate the error", func() {
                 fakePreferencesRepo.FindError = errors.New("BOOM!")
-
                 _, err := preference.Execute("correct-user")
 
                 Expect(err).To(Equal(fakePreferencesRepo.FindError))

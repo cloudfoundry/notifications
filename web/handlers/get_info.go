@@ -10,5 +10,5 @@ func NewGetInfo() GetInfo {
 
 func (handler GetInfo) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     w.WriteHeader(http.StatusOK)
-    w.Write([]byte(`{}`))
+    w.Write([]byte("{}"))
 }

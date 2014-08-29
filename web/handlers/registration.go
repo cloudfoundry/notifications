@@ -7,16 +7,17 @@ import (
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
+    "github.com/cloudfoundry-incubator/notifications/web/params"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/dgrijalva/jwt-go"
 )
 
 type Registration struct {
-    registrar   RegistrarInterface
+    registrar   services.RegistrarInterface
     errorWriter ErrorWriterInterface
 }
 
-func NewRegistration(registrar RegistrarInterface, errorWriter ErrorWriterInterface) Registration {
+func NewRegistration(registrar services.RegistrarInterface, errorWriter ErrorWriterInterface) Registration {
     return Registration{
         registrar:   registrar,
         errorWriter: errorWriter,

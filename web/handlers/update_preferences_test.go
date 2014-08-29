@@ -9,7 +9,8 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
+    "github.com/cloudfoundry-incubator/notifications/web/params"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -24,13 +25,13 @@ var _ = Describe("UpdatePreferences", func() {
         var errorWriter *FakeErrorWriter
 
         BeforeEach(func() {
-            preferences := handlers.NewNotificationPreferences()
+            builder := services.NewPreferencesBuilder()
 
-            preferences.Add("raptors", "door-opening", false)
-            preferences.Add("raptors", "feeding-time", true)
-            preferences.Add("dogs", "barking", false)
+            builder.Add("raptors", "door-opening", false)
+            builder.Add("raptors", "feeding-time", true)
+            builder.Add("dogs", "barking", false)
 
-            body, err := json.MarshalIndent(preferences, "", "  ")
+            body, err := json.MarshalIndent(builder, "", "  ")
             if err != nil {
                 panic(err)
             }

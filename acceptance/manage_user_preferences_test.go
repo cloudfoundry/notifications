@@ -10,7 +10,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/acceptance/servers"
     "github.com/cloudfoundry-incubator/notifications/config"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -189,7 +189,7 @@ func (t ManageUserPreferences) RetrieveUserPreferences(notificationsServer serve
         panic(err)
     }
 
-    prefsResponseJSON := handlers.NotificationPreferences{}
+    prefsResponseJSON := services.PreferencesBuilder{}
     err = json.Unmarshal(body, &prefsResponseJSON)
     if err != nil {
         panic(err)
@@ -201,10 +201,10 @@ func (t ManageUserPreferences) RetrieveUserPreferences(notificationsServer serve
 
 // Make a PATCH request to /user_preferences
 func (t ManageUserPreferences) UnsubscribeFromNotification(notificationsServer servers.Notifications, userToken uaa.Token) {
-    unsubscribe := handlers.NewNotificationPreferences()
-    unsubscribe.Add("notifications-sender", "unsubscribe-acceptance-test", false)
+    builder := services.NewPreferencesBuilder()
+    builder.Add("notifications-sender", "unsubscribe-acceptance-test", false)
 
-    body, err := json.Marshal(unsubscribe)
+    body, err := json.Marshal(builder)
     if err != nil {
         panic(err)
     }
@@ -246,7 +246,7 @@ func (t ManageUserPreferences) ConfirmUserUnsubscribed(notificationsServer serve
     // Confirm the request response looks correct
     Expect(response.StatusCode).To(Equal(http.StatusOK))
 
-    prefsResponseJSON := handlers.NotificationPreferences{}
+    prefsResponseJSON := services.PreferencesBuilder{}
     err = json.Unmarshal(body, &prefsResponseJSON)
     if err != nil {
         panic(err)
@@ -309,10 +309,10 @@ func (t ManageUserPreferences) ConfirmsUnsubscribedNotificationsAreNotReceived(n
 
 // Make PATCH request to /user_preferences
 func (t ManageUserPreferences) ResubscribeToNotification(notificationsServer servers.Notifications, userToken uaa.Token) {
-    unsubscribe := handlers.NewNotificationPreferences()
-    unsubscribe.Add("notifications-sender", "unsubscribe-acceptance-test", true)
+    builder := services.NewPreferencesBuilder()
+    builder.Add("notifications-sender", "unsubscribe-acceptance-test", true)
 
-    body, err := json.Marshal(unsubscribe)
+    body, err := json.Marshal(builder)
     if err != nil {
         panic(err)
     }
@@ -353,7 +353,7 @@ func (t ManageUserPreferences) ConfirmUserResubscribed(notificationsServer serve
     // Confirm the request response looks correct
     Expect(response.StatusCode).To(Equal(http.StatusOK))
 
-    prefsResponseJSON := handlers.NotificationPreferences{}
+    prefsResponseJSON := services.PreferencesBuilder{}
     err = json.Unmarshal(body, &prefsResponseJSON)
     if err != nil {
         panic(err)

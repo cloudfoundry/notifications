@@ -6,7 +6,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers/params"
+    "github.com/cloudfoundry-incubator/notifications/web/params"
 )
 
 type ErrorWriterInterface interface {

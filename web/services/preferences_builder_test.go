@@ -1,19 +1,19 @@
-package handlers_test
+package services_test
 
 import (
     "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 )
 
 var _ = Describe("NotificationsPreferences", func() {
-    var pref handlers.NotificationPreferences
+    var pref services.PreferencesBuilder
 
     Describe("Add", func() {
         BeforeEach(func() {
-            pref = handlers.NewNotificationPreferences()
+            pref = services.NewPreferencesBuilder()
         })
 
         It("Adding a new client, kind, and email", func() {
@@ -56,7 +56,7 @@ var _ = Describe("NotificationsPreferences", func() {
 
     Describe("ToPreferences", func() {
         BeforeEach(func() {
-            pref = handlers.NewNotificationPreferences()
+            pref = services.NewPreferencesBuilder()
         })
 
         It("returns a slice of preferences from the populated map", func() {

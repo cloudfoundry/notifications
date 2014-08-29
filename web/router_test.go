@@ -52,7 +52,7 @@ var _ = Describe("Router", func() {
 
     It("routes GET /user_preferences", func() {
         s := router.Routes().Get("GET /user_preferences").GetHandler().(stack.Stack)
-        Expect(s.Handler).To(BeAssignableToTypeOf(handlers.PreferenceFinder{}))
+        Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetPreferences{}))
         Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
 
         authenticator := s.Middleware[1].(middleware.Authenticator)

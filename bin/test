@@ -15,7 +15,7 @@ source $DIR/env/$ENVIRONMENT
 
 function run() {
   set +e
-  ginkgo -randomizeAllSpecs=true -succinct=true $@
+  ginkgo -randomizeAllSpecs=true -randomizeSuites=true -succinct=true $@
   EXIT_CODE=$?
   set -e
 }
