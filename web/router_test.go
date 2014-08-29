@@ -14,7 +14,7 @@ var _ = Describe("Router", func() {
     var router web.Router
 
     BeforeEach(func() {
-        router = web.NewRouter()
+        router = web.NewRouter(web.NewMother())
     })
 
     It("routes GET /info", func() {

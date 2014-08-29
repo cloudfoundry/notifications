@@ -14,9 +14,9 @@ func NewServer() Server {
     return Server{}
 }
 
-func (s Server) Run() {
+func (s Server) Run(mother *Mother) {
     env := config.NewEnvironment()
-    router := NewRouter()
+    router := NewRouter(mother)
     log.Printf("Listening on localhost:%s\n", env.Port)
 
     http.ListenAndServe(":"+env.Port, router.Routes())

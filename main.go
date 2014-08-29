@@ -10,47 +10,62 @@ import (
     "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
+const WorkerCount = 10
+
 func main() {
-    defer crash()
+    app := NewApplication()
+    defer app.Crash()
 
-    env := config.NewEnvironment()
-    configure(env)
+    app.Configure()
+    app.ConfigureSMTP()
+    app.RetrieveUAAPublicKey()
+    app.Migrate()
+    app.EnableDBLogging()
+    app.UnlockJobs()
+    app.StartWorkers()
+    app.StartServer()
+}
 
-    if !env.TestMode {
-        confirmSMTPConfiguration(env)
+type Application struct {
+    env    config.Environment
+    mother *web.Mother
+}
+
+func NewApplication() Application {
+    return Application{
+        env:    config.NewEnvironment(),
+        mother: web.NewMother(),
     }
-    retrieveUAAPublicKey(env)
-    migrate()
-
-    unlockJobs(env)
-
-    server := web.NewServer()
-    server.Run()
 }
 
-func configure(env config.Environment) {
+func (app Application) Configure() {
     log.Println("Booting with configuration:")
-    log.Printf("\tCCHost          -> %+v", env.CCHost)
-    log.Printf("\tDatabaseURL     -> %+v", env.DatabaseURL)
-    log.Printf("\tSMTPHost        -> %+v", env.SMTPHost)
-    log.Printf("\tSMTPPass        -> %+v", env.SMTPPass)
-    log.Printf("\tSMTPPort        -> %+v", env.SMTPPort)
-    log.Printf("\tSMTPTLS         -> %+v", env.SMTPTLS)
-    log.Printf("\tSMTPUser        -> %+v", env.SMTPUser)
-    log.Printf("\tSender          -> %+v", env.Sender)
-    log.Printf("\tTest mode       -> %+v", env.TestMode)
-    log.Printf("\tUAAClientID     -> %+v", env.UAAClientID)
-    log.Printf("\tUAAClientSecret -> %+v", env.UAAClientSecret)
-    log.Printf("\tUAAHost         -> %+v", env.UAAHost)
-    log.Printf("\tVerifySSL       -> %+v", env.VerifySSL)
+    log.Printf("\tCCHost          -> %+v", app.env.CCHost)
+    log.Printf("\tDatabaseURL     -> %+v", app.env.DatabaseURL)
+    log.Printf("\tSMTPHost        -> %+v", app.env.SMTPHost)
+    log.Printf("\tSMTPPass        -> %+v", app.env.SMTPPass)
+    log.Printf("\tSMTPPort        -> %+v", app.env.SMTPPort)
+    log.Printf("\tSMTPTLS         -> %+v", app.env.SMTPTLS)
+    log.Printf("\tSMTPUser        -> %+v", app.env.SMTPUser)
+    log.Printf("\tSender          -> %+v", app.env.Sender)
+    log.Printf("\tTest mode       -> %+v", app.env.TestMode)
+    log.Printf("\tUAAClientID     -> %+v", app.env.UAAClientID)
+    log.Printf("\tUAAClientSecret -> %+v", app.env.UAAClientSecret)
+    log.Printf("\tUAAHost         -> %+v", app.env.UAAHost)
+    log.Printf("\tVerifySSL       -> %+v", app.env.VerifySSL)
 }
 
-func confirmSMTPConfiguration(env config.Environment) {
-    mailClient, err := mail.NewClient(env.SMTPUser, env.SMTPPass, net.JoinHostPort(env.SMTPHost, env.SMTPPort))
+func (app Application) ConfigureSMTP() {
+    if !app.env.TestMode {
+        return
+    }
+
+    mailClient, err := mail.NewClient(app.env.SMTPUser, app.env.SMTPPass, net.JoinHostPort(app.env.SMTPHost, app.env.SMTPPort))
     if err != nil {
         panic(err)
     }
@@ -69,18 +84,18 @@ func confirmSMTPConfiguration(env config.Environment) {
 
     mailClient.Quit()
 
-    if !startTLSSupported && env.SMTPTLS {
+    if !startTLSSupported && app.env.SMTPTLS {
         panic(errors.New(`SMTP TLS configuration mismatch: Configured to use TLS over SMTP, but the mail server does not support the "STARTTLS" extension.`))
     }
 
-    if startTLSSupported && !env.SMTPTLS {
+    if startTLSSupported && !app.env.SMTPTLS {
         panic(errors.New(`SMTP TLS configuration mismatch: Not configured to use TLS over SMTP, but the mail server does support the "STARTTLS" extension.`))
     }
 }
 
-func retrieveUAAPublicKey(env config.Environment) {
-    auth := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
-    auth.VerifySSL = env.VerifySSL
+func (app Application) RetrieveUAAPublicKey() {
+    auth := uaa.NewUAA("", app.env.UAAHost, app.env.UAAClientID, app.env.UAAClientSecret, "")
+    auth.VerifySSL = app.env.VerifySSL
 
     key, err := uaa.GetTokenKey(auth)
     if err != nil {
@@ -91,19 +106,41 @@ func retrieveUAAPublicKey(env config.Environment) {
     log.Printf("UAA Public Key: %s", config.UAAPublicKey)
 }
 
-func migrate() {
+func (app Application) Migrate() {
     models.Database()
     gobble.Database()
 }
 
-func unlockJobs(env config.Environment) {
-    if env.InstanceIndex == 0 {
+func (app Application) EnableDBLogging() {
+    if app.env.DBLoggingEnabled {
+        models.Database().Connection.TraceOn("[DB]", app.mother.Logger())
+    }
+}
+
+func (app Application) UnlockJobs() {
+    if app.env.InstanceIndex == 0 {
         gobble.NewQueue().Unlock()
     }
 }
 
+func (app Application) StartWorkers() {
+    for i := 0; i < WorkerCount; i++ {
+        mailClient, err := mail.NewClient(app.env.SMTPUser, app.env.SMTPPass, net.JoinHostPort(app.env.SMTPHost, app.env.SMTPPort))
+        if err != nil {
+            panic(err)
+        }
+        mailClient.Insecure = !app.env.VerifySSL
+        worker := postal.NewDeliveryWorker(i+1, app.mother.Logger(), mailClient, app.mother.Queue(), app.mother.UnsubscribesRepo())
+        worker.Work()
+    }
+}
+
+func (app Application) StartServer() {
+    web.NewServer().Run(app.mother)
+}
+
 // This is a hack to get the logs output to the loggregator before the process exits
-func crash() {
+func (app Application) Crash() {
     err := recover()
     if err != nil {
         time.Sleep(5 * time.Second)

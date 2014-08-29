@@ -22,7 +22,9 @@ function run() {
 
 if [[ -z "$1" ]]; then
     run -skipPackage=acceptance ./
-    run -slowSpecThreshold=10 ./acceptance
+    if [[ $EXIT_CODE = 0 ]]; then
+        run -slowSpecThreshold=10 ./acceptance
+    fi
 else
     run $@
 fi

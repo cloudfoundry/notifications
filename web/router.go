@@ -1,28 +1,18 @@
 package web
 
 import (
-    "net"
     "strings"
 
-    "github.com/cloudfoundry-incubator/notifications/config"
-    "github.com/cloudfoundry-incubator/notifications/mail"
-    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/gorilla/mux"
     "github.com/ryanmoran/stack"
 )
 
-const WorkerCount = 10
-
 type Router struct {
     stacks map[string]stack.Stack
 }
 
-func NewRouter() Router {
-    mother := NewMother()
-
-    StartWorkers(mother)
-
+func NewRouter(mother *Mother) Router {
     registrar := mother.Registrar()
     notify := handlers.NewNotify(mother.Courier(), mother.Finder(), registrar)
     preference := mother.Preference()
@@ -40,19 +30,6 @@ func NewRouter() Router {
             "GET /user_preferences":   stack.NewStack(handlers.NewPreferenceFinder(preference, errorWriter)).Use(logging),
             "PATCH /user_preferences": stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging),
         },
-    }
-}
-
-func StartWorkers(mother *Mother) {
-    env := config.NewEnvironment()
-    for i := 0; i < WorkerCount; i++ {
-        mailClient, err := mail.NewClient(env.SMTPUser, env.SMTPPass, net.JoinHostPort(env.SMTPHost, env.SMTPPort))
-        if err != nil {
-            panic(err)
-        }
-        mailClient.Insecure = !env.VerifySSL
-        worker := postal.NewDeliveryWorker(i+1, mother.Logger(), mailClient, mother.Queue(), mother.UnsubscribesRepo())
-        worker.Work()
     }
 }
 

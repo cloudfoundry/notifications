@@ -13,42 +13,44 @@ import (
 var UAAPublicKey string
 
 type Environment struct {
-    CCHost          string
-    DatabaseURL     string
-    InstanceIndex   int
-    Port            string
-    RootPath        string
-    SMTPHost        string
-    SMTPPass        string
-    SMTPPort        string
-    SMTPTLS         bool
-    SMTPUser        string
-    Sender          string
-    TestMode        bool
-    UAAClientID     string
-    UAAClientSecret string
-    UAAHost         string
-    VerifySSL       bool
+    CCHost           string
+    DatabaseURL      string
+    DBLoggingEnabled bool
+    InstanceIndex    int
+    Port             string
+    RootPath         string
+    SMTPHost         string
+    SMTPPass         string
+    SMTPPort         string
+    SMTPTLS          bool
+    SMTPUser         string
+    Sender           string
+    TestMode         bool
+    UAAClientID      string
+    UAAClientSecret  string
+    UAAHost          string
+    VerifySSL        bool
 }
 
 func NewEnvironment() Environment {
     return Environment{
-        CCHost:          loadOrPanic("CC_HOST"),
-        DatabaseURL:     loadDatabaseURL("DATABASE_URL"),
-        InstanceIndex:   loadInstanceIndex(),
-        Port:            loadPort(),
-        RootPath:        loadOrPanic("ROOT_PATH"),
-        SMTPHost:        loadOrPanic("SMTP_HOST"),
-        SMTPPass:        loadOrPanic("SMTP_PASS"),
-        SMTPPort:        loadOrPanic("SMTP_PORT"),
-        SMTPTLS:         loadBool("SMTP_TLS", true),
-        SMTPUser:        loadOrPanic("SMTP_USER"),
-        Sender:          loadOrPanic("SENDER"),
-        TestMode:        loadBool("TEST_MODE", false),
-        UAAClientID:     loadOrPanic("UAA_CLIENT_ID"),
-        UAAClientSecret: loadOrPanic("UAA_CLIENT_SECRET"),
-        UAAHost:         loadOrPanic("UAA_HOST"),
-        VerifySSL:       loadBool("VERIFY_SSL", true),
+        CCHost:           loadOrPanic("CC_HOST"),
+        DBLoggingEnabled: loadBool("DB_LOGGING_ENABLED", false),
+        DatabaseURL:      loadDatabaseURL("DATABASE_URL"),
+        InstanceIndex:    loadInstanceIndex(),
+        Port:             loadPort(),
+        RootPath:         loadOrPanic("ROOT_PATH"),
+        SMTPHost:         loadOrPanic("SMTP_HOST"),
+        SMTPPass:         loadOrPanic("SMTP_PASS"),
+        SMTPPort:         loadOrPanic("SMTP_PORT"),
+        SMTPTLS:          loadBool("SMTP_TLS", true),
+        SMTPUser:         loadOrPanic("SMTP_USER"),
+        Sender:           loadOrPanic("SENDER"),
+        TestMode:         loadBool("TEST_MODE", false),
+        UAAClientID:      loadOrPanic("UAA_CLIENT_ID"),
+        UAAClientSecret:  loadOrPanic("UAA_CLIENT_SECRET"),
+        UAAHost:          loadOrPanic("UAA_HOST"),
+        VerifySSL:        loadBool("VERIFY_SSL", true),
     }
 }
 

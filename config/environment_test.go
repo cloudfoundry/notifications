@@ -10,23 +10,31 @@ import (
 )
 
 var _ = Describe("Environment", func() {
-    variables := map[string]string{
-        "CC_HOST":           os.Getenv("CC_HOST"),
-        "DATABASE_URL":      os.Getenv("DATABASE_URL"),
-        "PORT":              os.Getenv("PORT"),
-        "ROOT_PATH":         os.Getenv("ROOT_PATH"),
-        "SENDER":            os.Getenv("SENDER"),
-        "SMTP_HOST":         os.Getenv("SMTP_HOST"),
-        "SMTP_PASS":         os.Getenv("SMTP_PASS"),
-        "SMTP_PORT":         os.Getenv("SMTP_PORT"),
-        "SMTP_USER":         os.Getenv("SMTP_USER"),
-        "TEST_MODE":         os.Getenv("TEST_MODE"),
-        "UAA_CLIENT_ID":     os.Getenv("UAA_CLIENT_ID"),
-        "UAA_CLIENT_SECRET": os.Getenv("UAA_CLIENT_SECRET"),
-        "UAA_HOST":          os.Getenv("UAA_HOST"),
-        "VCAP_APPLICATION":  os.Getenv("VCAP_APPLICATION"),
-        "VERIFY_SSL":        os.Getenv("VERIFY_SSL"),
+    var variables = map[string]string{}
+    var envVars = []string{
+        "CC_HOST",
+        "DATABASE_URL",
+        "DB_LOGGING_ENABLED",
+        "PORT",
+        "ROOT_PATH",
+        "SENDER",
+        "SMTP_HOST",
+        "SMTP_PASS",
+        "SMTP_PORT",
+        "SMTP_USER",
+        "TEST_MODE",
+        "UAA_CLIENT_ID",
+        "UAA_CLIENT_SECRET",
+        "UAA_HOST",
+        "VCAP_APPLICATION",
+        "VERIFY_SSL",
     }
+
+    BeforeEach(func() {
+        for _, envVar := range envVars {
+            variables[envVar] = os.Getenv(envVar)
+        }
+    })
 
     AfterEach(func() {
         for key, value := range variables {
@@ -306,6 +314,20 @@ var _ = Describe("Environment", func() {
             Expect(func() {
                 config.NewEnvironment()
             }).To(Panic())
+        })
+    })
+
+    Describe("Database logging config", func() {
+        It("defaults to false", func() {
+            os.Setenv("DB_LOGGING_ENABLED", "")
+            env := config.NewEnvironment()
+            Expect(env.DBLoggingEnabled).To(BeFalse())
+        })
+
+        It("can be set to true", func() {
+            os.Setenv("DB_LOGGING_ENABLED", "true")
+            env := config.NewEnvironment()
+            Expect(env.DBLoggingEnabled).To(BeTrue())
         })
     })
 })

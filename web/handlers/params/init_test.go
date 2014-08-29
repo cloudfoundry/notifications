@@ -7,7 +7,7 @@ import (
     . "github.com/onsi/gomega"
 )
 
-func TestParamsSuite(t *testing.T) {
+func TestWebHandlersParamsSuite(t *testing.T) {
     RegisterFailHandler(Fail)
-    RunSpecs(t, "Params Suite")
+    RunSpecs(t, "Web Handlers Params Suite")
 }
