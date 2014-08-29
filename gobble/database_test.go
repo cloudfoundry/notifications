@@ -61,7 +61,7 @@ var _ = Describe("Database", func() {
         }))
         Expect(columns).To(ContainElement(Column{
             Field: "payload",
-            Type:  "text",
+            Type:  "longtext",
         }))
         Expect(columns).To(ContainElement(Column{
             Field: "version",
