@@ -26,7 +26,7 @@ var _ = Describe("UserLoader", func() {
 
             tokenClaims := map[string]interface{}{
                 "client_id": "mister-client",
-                "exp":       3404281214,
+                "exp":       int64(3404281214),
                 "scope":     []string{"notifications.write"},
             }
 

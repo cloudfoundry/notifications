@@ -25,11 +25,11 @@ const (
     UAAPublicKey  = "PUBLIC-KEY"
 )
 
-func TestNotifierSuite(t *testing.T) {
+func TestPostalSuite(t *testing.T) {
     RegisterFastTokenSigningMethod()
 
     RegisterFailHandler(Fail)
-    RunSpecs(t, "Notifier Suite")
+    RunSpecs(t, "Postal Suite")
 }
 
 func RegisterFastTokenSigningMethod() {
@@ -207,8 +207,9 @@ var FakeGuidGenerator = postal.GUIDGenerationFunc(func() (*uuid.UUID, error) {
 })
 
 type FakeQueue struct {
-    jobs chan gobble.Job
-    pk   int
+    jobs         chan gobble.Job
+    pk           int
+    EnqueueError error
 }
 
 func NewFakeQueue() *FakeQueue {
@@ -217,13 +218,17 @@ func NewFakeQueue() *FakeQueue {
     }
 }
 
-func (fake *FakeQueue) Enqueue(job gobble.Job) gobble.Job {
+func (fake *FakeQueue) Enqueue(job gobble.Job) (gobble.Job, error) {
+    if fake.EnqueueError != nil {
+        return job, fake.EnqueueError
+    }
     fake.pk++
     job.ID = fake.pk
     go func(job gobble.Job) {
         fake.jobs <- job
     }(job)
-    return job
+
+    return job, nil
 }
 
 func (fake *FakeQueue) Reserve(string) <-chan gobble.Job {
@@ -331,4 +336,8 @@ func (conn FakeDBConn) SelectOne(i interface{}, query string, args ...interface{
 
 func (conn FakeDBConn) Update(list ...interface{}) (int64, error) {
     return 0, nil
+}
+
+func (conn *FakeDBConn) Transaction() models.TransactionInterface {
+    return conn
 }

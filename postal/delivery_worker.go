@@ -70,7 +70,7 @@ func (worker DeliveryWorker) Retry(job *gobble.Job) {
 }
 
 func (worker DeliveryWorker) ShouldDeliver(delivery Delivery) bool {
-    _, err := worker.unsubscribesRepo.Find(models.Database().Connection, delivery.ClientID, delivery.Options.KindID, delivery.UserGUID)
+    _, err := worker.unsubscribesRepo.Find(models.Database().Connection(), delivery.ClientID, delivery.Options.KindID, delivery.UserGUID)
     if err != nil {
         if (err == models.ErrRecordNotFound{}) {
             return len(delivery.User.Emails) > 0 && strings.Contains(delivery.User.Emails[0], "@")

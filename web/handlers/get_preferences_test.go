@@ -37,7 +37,7 @@ var _ = Describe("GetPreferences", func() {
         }
         tokenClaims := map[string]interface{}{
             "user_id": "correct-user",
-            "exp":     3404281214,
+            "exp":     int64(3404281214),
             "scope":   []string{"notification_preferences.read"},
         }
 

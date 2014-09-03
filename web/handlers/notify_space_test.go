@@ -3,7 +3,6 @@ package handlers_test
 import (
     "bytes"
     "encoding/json"
-    "errors"
     "net/http"
     "net/http/httptest"
 
@@ -58,7 +57,7 @@ var _ = Describe("NotifySpace", func() {
             }
             tokenClaims := map[string]interface{}{
                 "client_id": "mister-client",
-                "exp":       3404281214,
+                "exp":       int64(3404281214),
                 "scope":     []string{"notifications.write"},
             }
             token = BuildToken(tokenHeader, tokenClaims)
@@ -146,20 +145,6 @@ var _ = Describe("NotifySpace", func() {
                         KindID:            "test_email",
                     },
                 }))
-
-                Expect(transaction.BeginWasCalled).To(BeTrue())
-                Expect(transaction.CommitWasCalled).To(BeTrue())
-                Expect(transaction.RollbackWasCalled).To(BeFalse())
-            })
-
-            It("rollsback the transaction when there is an error", func() {
-                fakeRegistrar.RegisterError = errors.New("BOOM!")
-
-                handler.Execute(writer, request, transaction)
-
-                Expect(transaction.BeginWasCalled).To(BeTrue())
-                Expect(transaction.CommitWasCalled).To(BeFalse())
-                Expect(transaction.RollbackWasCalled).To(BeTrue())
             })
         })
     })

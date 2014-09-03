@@ -4,7 +4,6 @@ import (
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/coopernurse/gorp"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -12,12 +11,12 @@ import (
 
 var _ = Describe("UnsubscribesRepo", func() {
     var repo models.UnsubscribesRepo
-    var conn *gorp.DbMap
+    var conn *models.Connection
 
     BeforeEach(func() {
         TruncateTables()
         repo = models.NewUnsubscribesRepo()
-        conn = models.Database().Connection
+        conn = models.Database().Connection()
     })
 
     Describe("Create/Find", func() {

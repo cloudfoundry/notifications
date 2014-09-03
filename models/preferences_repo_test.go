@@ -2,7 +2,6 @@ package models_test
 
 import (
     "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/coopernurse/gorp"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -12,12 +11,12 @@ var _ = Describe("PreferencesRepo", func() {
     var repo models.PreferencesRepo
     var kinds models.KindsRepo
     var receipts models.ReceiptsRepo
-    var conn *gorp.DbMap
+    var conn *models.Connection
     var unsubscribeRepo models.UnsubscribesRepo
 
     BeforeEach(func() {
         TruncateTables()
-        conn = models.Database().Connection
+        conn = models.Database().Connection()
         kinds = models.NewKindsRepo()
         receipts = models.NewReceiptsRepo()
         unsubscribeRepo = models.NewUnsubscribesRepo()

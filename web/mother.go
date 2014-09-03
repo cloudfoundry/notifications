@@ -50,7 +50,7 @@ func (mother Mother) Courier() postal.Courier {
     userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
     spaceLoader := postal.NewSpaceLoader(cloudController)
     templateLoader := postal.NewTemplateLoader(postal.NewFileSystem())
-    mailer := postal.NewMailer(mother.Queue(), uuid.NewV4)
+    mailer := postal.NewMailer(mother.Queue(), uuid.NewV4, mother.UnsubscribesRepo())
     receiptsRepo := models.NewReceiptsRepo()
 
     return postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, receiptsRepo)

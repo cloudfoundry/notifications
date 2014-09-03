@@ -60,7 +60,7 @@ func (courier Courier) Dispatch(clientID string, guid TypedGUID, options Options
         return responses, err
     }
 
-    responses = courier.mailer.Deliver(templates, users, options, space, organization, clientID)
+    responses = courier.mailer.Deliver(conn, templates, users, options, space, organization, clientID)
 
     return responses, nil
 }

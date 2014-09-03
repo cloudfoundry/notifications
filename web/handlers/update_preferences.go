@@ -26,6 +26,11 @@ func NewUpdatePreferences(preferenceUpdater services.PreferenceUpdaterInterface,
 }
 
 func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+    connection := models.Database().Connection()
+    handler.Execute(w, req, connection)
+}
+
+func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) {
     userID, err := handler.ParseUserID(strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer "))
     body, err := ioutil.ReadAll(req.Body)
     if err != nil {
@@ -38,7 +43,7 @@ func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Requ
         return
     }
 
-    transaction := models.NewTransaction()
+    transaction := connection.Transaction()
     transaction.Begin()
     err = handler.preferenceUpdater.Execute(transaction, preferences, userID)
     if err != nil {

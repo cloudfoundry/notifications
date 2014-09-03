@@ -26,26 +26,21 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
         "name": "notifications.web.users",
     }).Log()
 
-    transaction := models.NewTransaction()
-    err := handler.Execute(w, req, transaction)
+    connection := models.Database().Connection()
+    err := handler.Execute(w, req, connection)
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
     }
 }
 
-func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request, transaction models.TransactionInterface) error {
-    transaction.Begin()
-
+func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) error {
     spaceGUID := postal.UserGUID(strings.TrimPrefix(req.URL.Path, "/users/"))
 
-    output, err := handler.notify.Execute(transaction, req, spaceGUID)
+    output, err := handler.notify.Execute(connection, req, spaceGUID)
     if err != nil {
-        transaction.Rollback()
         return err
     }
-
-    transaction.Commit()
 
     w.WriteHeader(http.StatusOK)
     w.Write(output)

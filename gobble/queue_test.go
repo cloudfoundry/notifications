@@ -32,7 +32,10 @@ var _ = Describe("Queue", func() {
                 "testing": true,
             })
 
-            job = queue.Enqueue(job)
+            job, err := queue.Enqueue(job)
+            if err != nil {
+                panic(err)
+            }
 
             results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
             if err != nil {
@@ -55,14 +58,17 @@ var _ = Describe("Queue", func() {
                 "testing": true,
             })
 
-            job = queue.Enqueue(job)
+            job, err := queue.Enqueue(job)
+            if err != nil {
+                panic(err)
+            }
 
             job.RetryCount = 5
 
             queue.Requeue(job)
 
             reloadedJob := gobble.Job{}
-            err := gobble.Database().Connection.SelectOne(&reloadedJob, "SELECT * FROM `jobs` where id = ?", job.ID)
+            err = gobble.Database().Connection.SelectOne(&reloadedJob, "SELECT * FROM `jobs` where id = ?", job.ID)
             if err != nil {
                 panic(err)
             }
@@ -97,8 +103,15 @@ var _ = Describe("Queue", func() {
                 Payload: "second",
             }
 
-            job1 = queue.Enqueue(job1)
-            job2 = queue.Enqueue(job1)
+            job1, err := queue.Enqueue(job1)
+            if err != nil {
+                panic(err)
+            }
+
+            job2, err = queue.Enqueue(job1)
+            if err != nil {
+                panic(err)
+            }
 
             jobChannel := queue.Reserve("1")
             var reservedJob1 gobble.Job
@@ -117,9 +130,12 @@ var _ = Describe("Queue", func() {
 
             Consistently(jobChannel).ShouldNot(Receive())
 
-            job := queue.Enqueue(gobble.Job{
+            job, err := queue.Enqueue(gobble.Job{
                 Payload: "hello",
             })
+            if err != nil {
+                panic(err)
+            }
 
             var reservedJob gobble.Job
             Eventually(jobChannel).Should(Receive(&reservedJob))
@@ -160,7 +176,10 @@ var _ = Describe("Queue", func() {
             queue.Enqueue(gobble.Job{
                 ActiveAt: time.Now().Add(1 * time.Hour),
             })
-            job2 := queue.Enqueue(gobble.Job{})
+            job2, err := queue.Enqueue(gobble.Job{})
+            if err != nil {
+                panic(err)
+            }
 
             job := <-queue.Reserve("worker-id")
 
@@ -170,7 +189,10 @@ var _ = Describe("Queue", func() {
 
     Describe("Dequeue", func() {
         It("deletes the job from the queue", func() {
-            job := queue.Enqueue(gobble.Job{})
+            job, err := queue.Enqueue(gobble.Job{})
+            if err != nil {
+                panic(err)
+            }
             results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
             if err != nil {
                 panic(err)

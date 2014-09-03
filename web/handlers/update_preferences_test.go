@@ -17,14 +17,16 @@ import (
 )
 
 var _ = Describe("UpdatePreferences", func() {
-    Describe("ServeHTTP", func() {
+    Describe("Execute", func() {
         var handler handlers.UpdatePreferences
         var writer *httptest.ResponseRecorder
         var request *http.Request
         var updater *FakePreferenceUpdater
         var errorWriter *FakeErrorWriter
+        var fakeDBConn *FakeDBConn
 
         BeforeEach(func() {
+            fakeDBConn = &FakeDBConn{}
             builder := services.NewPreferencesBuilder()
 
             builder.Add("raptors", "door-opening", false)
@@ -46,7 +48,7 @@ var _ = Describe("UpdatePreferences", func() {
             }
             tokenClaims := map[string]interface{}{
                 "user_id": "correct-user",
-                "exp":     3404281214,
+                "exp":     int64(3404281214),
             }
 
             token := BuildToken(tokenHeader, tokenClaims)
@@ -60,7 +62,7 @@ var _ = Describe("UpdatePreferences", func() {
         })
 
         It("Passes The Correct Arguments to PreferenceUpdater Execute", func() {
-            handler.ServeHTTP(writer, request)
+            handler.Execute(writer, request, fakeDBConn)
             Expect(len(updater.ExecuteArguments)).To(Equal(2))
 
             preferencesArguments := updater.ExecuteArguments[0]
@@ -85,7 +87,7 @@ var _ = Describe("UpdatePreferences", func() {
         })
 
         It("Returns a 200 status code when the Preference object does not error", func() {
-            handler.ServeHTTP(writer, request)
+            handler.Execute(writer, request, fakeDBConn)
 
             Expect(writer.Code).To(Equal(http.StatusOK))
         })
@@ -98,7 +100,7 @@ var _ = Describe("UpdatePreferences", func() {
                     panic(err)
                 }
 
-                handler.ServeHTTP(writer, request)
+                handler.Execute(writer, request, fakeDBConn)
 
                 Expect(errorWriter.Error).To(Equal(params.ParseError{}))
             })

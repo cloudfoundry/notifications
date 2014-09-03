@@ -60,7 +60,7 @@ var _ = Describe("Notify", func() {
         }
         tokenClaims := map[string]interface{}{
             "client_id": "mister-client",
-            "exp":       3404281214,
+            "exp":       int64(3404281214),
             "scope":     []string{"notifications.write"},
         }
         token = BuildToken(tokenHeader, tokenClaims)
@@ -70,6 +70,7 @@ var _ = Describe("Notify", func() {
             panic(err)
         }
         request.Header.Set("Authorization", "Bearer "+token)
+        fakeDBConn = &FakeDBConn{}
 
         handler = handlers.NewNotify(fakeCourier, fakeFinder, fakeRegistrar)
     })

@@ -53,7 +53,6 @@ func (repo ReceiptsRepo) Update(conn ConnectionInterface, receipt Receipt) (Rece
 }
 
 func (repo ReceiptsRepo) CreateReceipts(conn ConnectionInterface, userGUIDs []string, clientID, kindID string) error {
-
     query := "INSERT INTO `receipts` (`user_guid`, `client_id`, `kind_id`, `count`, `created_at`) VALUES %s ON DUPLICATE KEY UPDATE `count`=`count`+1"
     values := ""
     var execArguments []interface{}

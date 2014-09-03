@@ -15,16 +15,7 @@ var _database *DB
 var mutex sync.Mutex
 
 type DB struct {
-    Connection *gorp.DbMap
-}
-
-type ConnectionInterface interface {
-    Delete(...interface{}) (int64, error)
-    Insert(...interface{}) error
-    Select(interface{}, string, ...interface{}) ([]interface{}, error)
-    SelectOne(interface{}, string, ...interface{}) error
-    Update(...interface{}) (int64, error)
-    Exec(string, ...interface{}) (sql.Result, error)
+    connection *Connection
 }
 
 func Database() *DB {
@@ -45,8 +36,8 @@ func Database() *DB {
         panic(err)
     }
 
-    _database = &DB{
-        Connection: &gorp.DbMap{
+    connection := &Connection{
+        DbMap: &gorp.DbMap{
             Db: db,
             Dialect: gorp.MySQLDialect{
                 Engine:   "InnoDB",
@@ -55,20 +46,28 @@ func Database() *DB {
         },
     }
 
+    _database = &DB{
+        connection: connection,
+    }
+
     _database.migrate()
 
     return _database
 }
 
 func (database DB) migrate() {
-    database.Connection.AddTableWithName(Client{}, "clients").SetKeys(true, "Primary").ColMap("ID").SetUnique(true)
-    database.Connection.AddTableWithName(Kind{}, "kinds").SetKeys(true, "Primary").SetUniqueTogether("id", "client_id")
-    database.Connection.AddTableWithName(Receipt{}, "receipts").SetKeys(true, "Primary").SetUniqueTogether("user_guid", "client_id", "kind_id")
-    database.Connection.AddTableWithName(Unsubscribe{}, "unsubscribes").SetKeys(true, "Primary").SetUniqueTogether("user_id", "client_id", "kind_id")
+    database.connection.AddTableWithName(Client{}, "clients").SetKeys(true, "Primary").ColMap("ID").SetUnique(true)
+    database.connection.AddTableWithName(Kind{}, "kinds").SetKeys(true, "Primary").SetUniqueTogether("id", "client_id")
+    database.connection.AddTableWithName(Receipt{}, "receipts").SetKeys(true, "Primary").SetUniqueTogether("user_guid", "client_id", "kind_id")
+    database.connection.AddTableWithName(Unsubscribe{}, "unsubscribes").SetKeys(true, "Primary").SetUniqueTogether("user_id", "client_id", "kind_id")
 
-    err := database.Connection.CreateTablesIfNotExists()
+    err := database.connection.CreateTablesIfNotExists()
     if err != nil {
         panic(err)
     }
 
+}
+
+func (database *DB) Connection() *Connection {
+    return database.connection
 }

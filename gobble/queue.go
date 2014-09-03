@@ -11,7 +11,7 @@ import (
 var WaitMaxDuration = 5 * time.Second
 
 type QueueInterface interface {
-    Enqueue(Job) Job
+    Enqueue(Job) (Job, error)
     Reserve(string) <-chan Job
     Dequeue(Job)
     Requeue(Job)
@@ -25,13 +25,13 @@ func NewQueue() *Queue {
     return &Queue{}
 }
 
-func (queue *Queue) Enqueue(job Job) Job {
+func (queue *Queue) Enqueue(job Job) (Job, error) {
     err := Database().Connection.Insert(&job)
     if err != nil {
-        panic(err)
+        return job, err
     }
 
-    return job
+    return job, nil
 }
 
 func (queue *Queue) Requeue(job Job) {

@@ -53,6 +53,6 @@ func Teardown(env config.Environment) {
 }
 
 func TruncateTables() {
-    models.Database().Connection.TruncateTables()
+    models.Database().Connection().TruncateTables()
     gobble.Database().Connection.TruncateTables()
 }

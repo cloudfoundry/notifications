@@ -17,7 +17,7 @@ func NewPreference(repo models.PreferencesRepoInterface) *Preference {
 }
 
 func (preference Preference) Execute(UserGUID string) (PreferencesBuilder, error) {
-    preferencesData, err := preference.repo.FindNonCriticalPreferences(models.Database().Connection, UserGUID)
+    preferencesData, err := preference.repo.FindNonCriticalPreferences(models.Database().Connection(), UserGUID)
     if err != nil {
         return PreferencesBuilder{}, err
     }

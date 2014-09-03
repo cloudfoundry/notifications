@@ -8,9 +8,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
-    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
-    "github.com/coopernurse/gorp"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -34,15 +32,14 @@ var _ = Describe("Courier", func() {
     var fs FakeFileSystem
     var env config.Environment
     var queue *FakeQueue
-    var worker postal.DeliveryWorker
     var clientID string
     var fakeReceiptsRepo FakeReceiptsRepo
-    var conn *gorp.DbMap
+    var conn *FakeDBConn
     var fakeUnsubscribesRepo *FakeUnsubscribesRepo
 
     BeforeEach(func() {
         clientID = "mister-client"
-        conn = models.Database().Connection
+        conn = &FakeDBConn{}
 
         fakeCC = NewFakeCloudController()
         fakeCC.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
@@ -70,7 +67,7 @@ var _ = Describe("Courier", func() {
 
         tokenClaims := map[string]interface{}{
             "client_id": "mister-client",
-            "exp":       3404281214,
+            "exp":       int64(3404281214),
             "scope":     []string{"notifications.write"},
         }
         fakeUAA = FakeUAAClient{
@@ -100,9 +97,7 @@ var _ = Describe("Courier", func() {
         fs = NewFakeFileSystem(env)
 
         queue = NewFakeQueue()
-        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, fakeUnsubscribesRepo)
-        go worker.Work()
-        mailer = postal.NewMailer(queue, FakeGuidGenerator)
+        mailer = postal.NewMailer(queue, FakeGuidGenerator, fakeUnsubscribesRepo)
 
         tokenLoader = postal.NewTokenLoader(&fakeUAA)
         userLoader = postal.NewUserLoader(&fakeUAA, logger, fakeCC)
@@ -110,10 +105,6 @@ var _ = Describe("Courier", func() {
         templateLoader = postal.NewTemplateLoader(&fs)
 
         courier = postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, &fakeReceiptsRepo)
-    })
-
-    AfterEach(func() {
-        worker.Halt()
     })
 
     Describe("Dispatch", func() {

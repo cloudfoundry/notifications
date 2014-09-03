@@ -15,7 +15,7 @@ func TestModelsSuite(t *testing.T) {
 }
 
 func TruncateTables() {
-    err := models.Database().Connection.TruncateTables()
+    err := models.Database().Connection().TruncateTables()
     if err != nil {
         panic(err)
     }

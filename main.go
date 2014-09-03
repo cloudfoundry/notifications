@@ -110,7 +110,7 @@ func (app Application) Migrate() {
 
 func (app Application) EnableDBLogging() {
     if app.env.DBLoggingEnabled {
-        models.Database().Connection.TraceOn("[DB]", app.mother.Logger())
+        models.Database().Connection().TraceOn("[DB]", app.mother.Logger())
     }
 }
 

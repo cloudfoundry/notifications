@@ -32,9 +32,12 @@ var _ = Describe("Worker", func() {
 
     Describe("Perform", func() {
         It("reserves a job, performs the callback, and then dequeues the completed job", func() {
-            job := queue.Enqueue(gobble.Job{
+            job, err := queue.Enqueue(gobble.Job{
                 Payload: "the-payload",
             })
+            if err != nil {
+                panic(err)
+            }
 
             worker.Perform()
 
@@ -54,7 +57,11 @@ var _ = Describe("Worker", func() {
             }
             worker = gobble.NewWorker(1, queue, callback)
 
-            job := queue.Enqueue(gobble.Job{})
+            job, err := queue.Enqueue(gobble.Job{})
+            if err != nil {
+                panic(err)
+            }
+
             worker.Perform()
 
             results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")

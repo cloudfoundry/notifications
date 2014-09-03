@@ -29,10 +29,10 @@ func (handler Registration) ServeHTTP(w http.ResponseWriter, req *http.Request) 
         "name": "notifications.web.registration",
     }).Log()
 
-    handler.Execute(w, req, models.NewTransaction())
+    handler.Execute(w, req, models.Database().Connection())
 }
 
-func (handler Registration) Execute(w http.ResponseWriter, req *http.Request, transaction models.TransactionInterface) {
+func (handler Registration) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) {
     parameters, err := params.NewRegistration(req.Body)
     if err != nil {
         handler.errorWriter.Write(w, err)
@@ -45,6 +45,7 @@ func (handler Registration) Execute(w http.ResponseWriter, req *http.Request, tr
         return
     }
 
+    transaction := connection.Transaction()
     transaction.Begin()
 
     client := models.Client{

@@ -15,10 +15,10 @@ var _ = Describe("Database", func() {
     })
 
     It("returns a connection to the database", func() {
-        err := db.Connection.Db.Ping()
+        err := db.Connection().Db.Ping()
         Expect(err).To(BeNil())
 
-        _, err = db.Connection.Db.Query("SHOW TABLES")
+        _, err = db.Connection().Db.Query("SHOW TABLES")
         Expect(err).To(BeNil())
     })
 
@@ -29,10 +29,10 @@ var _ = Describe("Database", func() {
     })
 
     It("has the correct tables", func() {
-        err := db.Connection.Db.Ping()
+        err := db.Connection().Db.Ping()
         Expect(err).To(BeNil())
 
-        rows, err := db.Connection.Db.Query("SHOW TABLES")
+        rows, err := db.Connection().Db.Query("SHOW TABLES")
         Expect(err).To(BeNil())
 
         tables := []string{}
@@ -55,5 +55,12 @@ var _ = Describe("Database", func() {
         Expect(tables).To(ContainElement("kinds"))
         Expect(tables).To(ContainElement("receipts"))
         Expect(tables).To(ContainElement("unsubscribes"))
+    })
+
+    Describe("Connection", func() {
+        It("returns a Connection", func() {
+            connection := db.Connection()
+            Expect(connection).To(BeAssignableToTypeOf(&models.Connection{}))
+        })
     })
 })

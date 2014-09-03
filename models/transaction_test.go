@@ -8,11 +8,11 @@ import (
 )
 
 var _ = Describe("Transaction", func() {
-    var transaction *models.Transaction
+    var transaction models.TransactionInterface
 
     BeforeEach(func() {
         TruncateTables()
-        transaction = models.NewTransaction()
+        transaction = models.Database().Connection().Transaction()
     })
 
     Describe("Begin/Commit", func() {
@@ -36,7 +36,7 @@ var _ = Describe("Transaction", func() {
                 panic(err)
             }
 
-            client, err := repo.Find(models.Database().Connection, "my-client")
+            client, err := repo.Find(models.Database().Connection(), "my-client")
             if err != nil {
                 panic(err)
             }
@@ -67,7 +67,7 @@ var _ = Describe("Transaction", func() {
                 panic(err)
             }
 
-            _, err = repo.Find(models.Database().Connection, "my-client")
+            _, err = repo.Find(models.Database().Connection(), "my-client")
             Expect(err).To(BeAssignableToTypeOf(models.ErrRecordNotFound{}))
         })
     })

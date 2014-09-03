@@ -60,7 +60,7 @@ var _ = Describe("Registration", func() {
         }
         tokenClaims := map[string]interface{}{
             "client_id": "raptors",
-            "exp":       3404281214,
+            "exp":       int64(3404281214),
             "scope":     []string{"notifications.write"},
         }
         request.Header.Set("Authorization", "Bearer "+BuildToken(tokenHeader, tokenClaims))
