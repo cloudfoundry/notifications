@@ -12,6 +12,7 @@ properties:
         secret: my-secret
         authorities: cloud_controller.admin,scim.read
         authorized-grant-types: client_credentials
+```
 
 ##Configuring Environment Variables
 
