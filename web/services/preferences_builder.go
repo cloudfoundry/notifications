@@ -2,24 +2,33 @@ package services
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-type PreferencesBuilder map[string]map[string]map[string]bool
+type PreferencesBuilder map[string]map[string]map[string]interface{}
 
 func NewPreferencesBuilder() PreferencesBuilder {
-    return map[string]map[string]map[string]bool{}
+    return map[string]map[string]map[string]interface{}{}
 }
 
-func (pref PreferencesBuilder) Add(client string, kind string, emails bool) {
-    if clientMap, ok := pref[client]; ok {
-        clientMap[kind] = map[string]bool{
-            "email": emails,
-        }
-    } else {
-        pref[client] = map[string]map[string]bool{
-            kind: map[string]bool{
-                "email": emails,
-            },
-        }
+func (pref PreferencesBuilder) Add(preference models.Preference) {
+    if preference.KindDescription == "" {
+        preference.KindDescription = preference.KindID
+    }
 
+    if preference.SourceDescription == "" {
+        preference.SourceDescription = preference.ClientID
+    }
+
+    data := map[string]interface{}{
+        "email":              preference.Email,
+        "kind_description":   preference.KindDescription,
+        "source_description": preference.SourceDescription,
+    }
+
+    if clientMap, ok := pref[preference.ClientID]; ok {
+        clientMap[preference.KindID] = data
+    } else {
+        pref[preference.ClientID] = map[string]map[string]interface{}{
+            preference.KindID: data,
+        }
     }
 }
 
@@ -30,7 +39,7 @@ func (pref PreferencesBuilder) ToPreferences() []models.Preference {
             preferences = append(preferences, models.Preference{
                 ClientID: clientID,
                 KindID:   kindID,
-                Email:    email["email"],
+                Email:    email["email"].(bool),
             })
         }
     }

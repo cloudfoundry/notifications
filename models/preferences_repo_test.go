@@ -10,6 +10,7 @@ import (
 var _ = Describe("PreferencesRepo", func() {
     var repo models.PreferencesRepo
     var kinds models.KindsRepo
+    var clients models.ClientsRepo
     var receipts models.ReceiptsRepo
     var conn *models.Connection
     var unsubscribeRepo models.UnsubscribesRepo
@@ -18,6 +19,7 @@ var _ = Describe("PreferencesRepo", func() {
         TruncateTables()
         conn = models.Database().Connection()
         kinds = models.NewKindsRepo()
+        clients = models.NewClientsRepo()
         receipts = models.NewReceiptsRepo()
         unsubscribeRepo = models.NewUnsubscribesRepo()
         repo = models.NewPreferencesRepo()
@@ -36,34 +38,46 @@ var _ = Describe("PreferencesRepo", func() {
     Context("when there are matching results in the database", func() {
         Describe("FindNonCriticalPreferences", func() {
             BeforeEach(func() {
+                raptorClient := models.Client{
+                    ID:          "raptors",
+                    Description: "raptors description",
+                }
+
+                clients.Create(conn, raptorClient)
+
                 nonCriticalKind := models.Kind{
-                    ID:       "sleepy",
-                    ClientID: "raptors",
-                    Critical: false,
+                    ID:          "sleepy",
+                    Description: "sleepy description",
+                    ClientID:    "raptors",
+                    Critical:    false,
                 }
 
                 secondNonCriticalKind := models.Kind{
-                    ID:       "dead",
-                    ClientID: "raptors",
-                    Critical: false,
+                    ID:          "dead",
+                    Description: "dead description",
+                    ClientID:    "raptors",
+                    Critical:    false,
                 }
 
                 nonCriticalKindThatUserHasNotReceived := models.Kind{
-                    ID:       "orange",
-                    ClientID: "raptors",
-                    Critical: false,
+                    ID:          "orange",
+                    Description: "orange description",
+                    ClientID:    "raptors",
+                    Critical:    false,
                 }
 
                 criticalKind := models.Kind{
-                    ID:       "hungry",
-                    ClientID: "raptors",
-                    Critical: true,
+                    ID:          "hungry",
+                    Description: "hungry description",
+                    ClientID:    "raptors",
+                    Critical:    true,
                 }
 
                 otherUserKind := models.Kind{
-                    ID:       "fast",
-                    ClientID: "raptors",
-                    Critical: true,
+                    ID:          "fast",
+                    Description: "fast description",
+                    ClientID:    "raptors",
+                    Critical:    true,
                 }
 
                 kinds.Create(conn, nonCriticalKind)
@@ -117,27 +131,35 @@ var _ = Describe("PreferencesRepo", func() {
                 Expect(len(results)).To(Equal(3))
 
                 Expect(results).To(ContainElement(models.Preference{
-                    ClientID: "raptors",
-                    KindID:   "sleepy",
-                    Email:    false,
+                    ClientID:          "raptors",
+                    KindID:            "sleepy",
+                    Email:             false,
+                    KindDescription:   "sleepy description",
+                    SourceDescription: "raptors description",
                 }))
 
                 Expect(results).To(ContainElement(models.Preference{
-                    ClientID: "raptors",
-                    KindID:   "dead",
-                    Email:    true,
+                    ClientID:          "raptors",
+                    KindID:            "dead",
+                    Email:             true,
+                    KindDescription:   "dead description",
+                    SourceDescription: "raptors description",
                 }))
 
                 Expect(results).To(ContainElement(models.Preference{
-                    ClientID: "raptors",
-                    KindID:   "orange",
-                    Email:    true,
+                    ClientID:          "raptors",
+                    KindID:            "orange",
+                    Email:             true,
+                    KindDescription:   "orange description",
+                    SourceDescription: "raptors description",
                 }))
 
                 Expect(results).To(ContainElement(models.Preference{
-                    ClientID: "raptors",
-                    KindID:   "orange",
-                    Email:    true,
+                    ClientID:          "raptors",
+                    KindID:            "orange",
+                    Email:             true,
+                    KindDescription:   "orange description",
+                    SourceDescription: "raptors description",
                 }))
             })
 

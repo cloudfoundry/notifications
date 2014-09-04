@@ -29,9 +29,21 @@ var _ = Describe("UpdatePreferences", func() {
             fakeDBConn = &FakeDBConn{}
             builder := services.NewPreferencesBuilder()
 
-            builder.Add("raptors", "door-opening", false)
-            builder.Add("raptors", "feeding-time", true)
-            builder.Add("dogs", "barking", false)
+            builder.Add(models.Preference{
+                ClientID: "raptors",
+                KindID:   "door-opening",
+                Email:    false,
+            })
+            builder.Add(models.Preference{
+                ClientID: "raptors",
+                KindID:   "feeding-time",
+                Email:    true,
+            })
+            builder.Add(models.Preference{
+                ClientID: "dogs",
+                KindID:   "barking",
+                Email:    false,
+            })
 
             body, err := json.MarshalIndent(builder, "", "  ")
             if err != nil {

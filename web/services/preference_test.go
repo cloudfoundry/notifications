@@ -13,15 +13,25 @@ import (
 var _ = Describe("Preferences", func() {
     var preference *services.Preference
     var fakePreferencesRepo *FakePreferencesRepo
+    var preferences []models.Preference
 
     BeforeEach(func() {
-        preferences := []models.Preference{models.Preference{
-            ClientID: "raptors",
-            KindID:   "non-critical-kind",
-            Email:    true,
-        }}
-
-        preferences = append(preferences, models.Preference{ClientID: "raptors", KindID: "other-kind", Email: false})
+        preferences = []models.Preference{
+            {
+                ClientID:          "raptors",
+                SourceDescription: "raptors description",
+                KindID:            "non-critical-kind",
+                KindDescription:   "non critical kind description",
+                Email:             true,
+            },
+            {
+                ClientID:          "raptors",
+                SourceDescription: "raptors description",
+                KindID:            "other-kind",
+                KindDescription:   "other kind description",
+                Email:             false,
+            },
+        }
 
         fakePreferencesRepo = NewFakePreferencesRepo(preferences)
         preference = services.NewPreference(fakePreferencesRepo)
@@ -30,8 +40,8 @@ var _ = Describe("Preferences", func() {
     Describe("Execute", func() {
         It("returns the set of notifications that are not critical", func() {
             result := services.NewPreferencesBuilder()
-            result.Add("raptors", "non-critical-kind", true)
-            result.Add("raptors", "other-kind", false)
+            result.Add(preferences[0])
+            result.Add(preferences[1])
 
             preferences, err := preference.Execute("correct-user")
             if err != nil {

@@ -6,6 +6,7 @@ import (
     "net/http"
     "net/http/httptest"
 
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/services"
 
@@ -49,8 +50,16 @@ var _ = Describe("GetPreferences", func() {
         request.Header.Set("Authorization", "Bearer "+BuildToken(tokenHeader, tokenClaims))
 
         builder = services.NewPreferencesBuilder()
-        builder.Add("raptorClient", "hungry-kind", false)
-        builder.Add("starWarsClient", "vader-kind", true)
+        builder.Add(models.Preference{
+            ClientID: "raptorClient",
+            KindID:   "hungry-kind",
+            Email:    false,
+        })
+        builder.Add(models.Preference{
+            ClientID: "starWarsClient",
+            KindID:   "vader-kind",
+            Email:    true,
+        })
 
         preference = NewFakePreference(builder)
         handler = handlers.NewGetPreferences(preference, errorWriter)

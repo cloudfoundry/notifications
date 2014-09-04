@@ -10,6 +10,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/acceptance/servers"
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -195,14 +196,29 @@ func (t ManageUserPreferences) RetrieveUserPreferences(notificationsServer serve
         panic(err)
     }
 
-    Expect(prefsResponseJSON["notifications-sender"]["acceptance-test"]["email"]).To(BeTrue())
-    Expect(prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]["email"]).To(BeTrue())
+    node := prefsResponseJSON["notifications-sender"]["acceptance-test"]
+    Expect(node).To(Equal(map[string]interface{}{
+        "email":              true,
+        "kind_description":   "Acceptance Test",
+        "source_description": "Notifications Sender",
+    }))
+
+    node = prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]
+    Expect(node).To(Equal(map[string]interface{}{
+        "email":              true,
+        "kind_description":   "Unsubscribe Acceptance Test",
+        "source_description": "Notifications Sender",
+    }))
 }
 
 // Make a PATCH request to /user_preferences
 func (t ManageUserPreferences) UnsubscribeFromNotification(notificationsServer servers.Notifications, userToken uaa.Token) {
     builder := services.NewPreferencesBuilder()
-    builder.Add("notifications-sender", "unsubscribe-acceptance-test", false)
+    builder.Add(models.Preference{
+        ClientID: "notifications-sender",
+        KindID:   "unsubscribe-acceptance-test",
+        Email:    false,
+    })
 
     body, err := json.Marshal(builder)
     if err != nil {
@@ -252,8 +268,19 @@ func (t ManageUserPreferences) ConfirmUserUnsubscribed(notificationsServer serve
         panic(err)
     }
 
-    Expect(prefsResponseJSON["notifications-sender"]["acceptance-test"]["email"]).To(BeTrue())
-    Expect(prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]["email"]).To(BeFalse())
+    node := prefsResponseJSON["notifications-sender"]["acceptance-test"]
+    Expect(node).To(Equal(map[string]interface{}{
+        "email":              true,
+        "kind_description":   "Acceptance Test",
+        "source_description": "Notifications Sender",
+    }))
+
+    node = prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]
+    Expect(node).To(Equal(map[string]interface{}{
+        "email":              false,
+        "kind_description":   "Unsubscribe Acceptance Test",
+        "source_description": "Notifications Sender",
+    }))
 }
 
 // Make request to /users/:guid
@@ -310,7 +337,11 @@ func (t ManageUserPreferences) ConfirmsUnsubscribedNotificationsAreNotReceived(n
 // Make PATCH request to /user_preferences
 func (t ManageUserPreferences) ResubscribeToNotification(notificationsServer servers.Notifications, userToken uaa.Token) {
     builder := services.NewPreferencesBuilder()
-    builder.Add("notifications-sender", "unsubscribe-acceptance-test", true)
+    builder.Add(models.Preference{
+        ClientID: "notifications-sender",
+        KindID:   "unsubscribe-acceptance-test",
+        Email:    true,
+    })
 
     body, err := json.Marshal(builder)
     if err != nil {
@@ -332,6 +363,7 @@ func (t ManageUserPreferences) ResubscribeToNotification(notificationsServer ser
     Expect(response.StatusCode).To(Equal(http.StatusOK))
 }
 
+// Make a GET request to /user_preferences
 func (t ManageUserPreferences) ConfirmUserResubscribed(notificationsServer servers.Notifications, userToken uaa.Token) {
     request, err := http.NewRequest("GET", notificationsServer.UserPreferencesPath(), nil)
     if err != nil {
@@ -359,6 +391,17 @@ func (t ManageUserPreferences) ConfirmUserResubscribed(notificationsServer serve
         panic(err)
     }
 
-    Expect(prefsResponseJSON["notifications-sender"]["acceptance-test"]["email"]).To(BeTrue())
-    Expect(prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]["email"]).To(BeTrue())
+    node := prefsResponseJSON["notifications-sender"]["acceptance-test"]
+    Expect(node).To(Equal(map[string]interface{}{
+        "email":              true,
+        "kind_description":   "Acceptance Test",
+        "source_description": "Notifications Sender",
+    }))
+
+    node = prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]
+    Expect(node).To(Equal(map[string]interface{}{
+        "email":              true,
+        "kind_description":   "Unsubscribe Acceptance Test",
+        "source_description": "Notifications Sender",
+    }))
 }
