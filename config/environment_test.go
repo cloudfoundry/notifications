@@ -153,6 +153,15 @@ var _ = Describe("Environment", func() {
             Expect(env.SMTPTLS).To(BeTrue())
         })
 
+        It("does not panic when SMTP_USER and/or SMTP_PASS are empty", func() {
+            os.Setenv("SMTP_USER", "")
+            os.Setenv("SMTP_PASS", "")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).NotTo(Panic())
+        })
+
         It("panics when the values are missing", func() {
             os.Setenv("SMTP_USER", "my-smtp-user")
             os.Setenv("SMTP_PASS", "my-smtp-password")
@@ -163,24 +172,6 @@ var _ = Describe("Environment", func() {
             Expect(func() {
                 config.NewEnvironment()
             }).NotTo(Panic())
-
-            os.Setenv("SMTP_USER", "")
-            os.Setenv("SMTP_PASS", "my-smtp-password")
-            os.Setenv("SMTP_HOST", "smtp.example.com")
-            os.Setenv("SMTP_PORT", "567")
-
-            Expect(func() {
-                config.NewEnvironment()
-            }).To(Panic())
-
-            os.Setenv("SMTP_USER", "my-smtp-user")
-            os.Setenv("SMTP_PASS", "")
-            os.Setenv("SMTP_HOST", "smtp.example.com")
-            os.Setenv("SMTP_PORT", "567")
-
-            Expect(func() {
-                config.NewEnvironment()
-            }).To(Panic())
 
             os.Setenv("SMTP_USER", "my-smtp-user")
             os.Setenv("SMTP_PASS", "my-smtp-password")
