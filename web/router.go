@@ -15,7 +15,7 @@ type Router struct {
 func NewRouter(mother *Mother) Router {
     registrar := mother.Registrar()
     notify := handlers.NewNotify(mother.Courier(), mother.NotificationFinder(), registrar)
-    preference := mother.Preference()
+    preferencesFinder := mother.PreferencesFinder()
     preferenceUpdater := mother.PreferenceUpdater()
     logging := mother.Logging()
     errorWriter := mother.ErrorWriter()
@@ -28,8 +28,8 @@ func NewRouter(mother *Mother) Router {
             "GET /info":               stack.NewStack(handlers.NewGetInfo()).Use(logging),
             "POST /users/{guid}":      stack.NewStack(handlers.NewNotifyUser(notify, errorWriter)).Use(logging, notificationsWriteAuthenticator),
             "POST /spaces/{guid}":     stack.NewStack(handlers.NewNotifySpace(notify, errorWriter)).Use(logging, notificationsWriteAuthenticator),
-            "PUT /registration":       stack.NewStack(handlers.NewRegistration(registrar, errorWriter)).Use(logging, notificationsWriteAuthenticator),
-            "GET /user_preferences":   stack.NewStack(handlers.NewGetPreferences(preference, errorWriter)).Use(logging, notificationPreferencesReadAuthenticator),
+            "PUT /registration":       stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter)).Use(logging, notificationsWriteAuthenticator),
+            "GET /user_preferences":   stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, notificationPreferencesReadAuthenticator),
             "PATCH /user_preferences": stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging, notificationPreferencesWriteAuthenticator),
         },
     }

@@ -12,19 +12,19 @@ import (
     "github.com/dgrijalva/jwt-go"
 )
 
-type Registration struct {
+type RegisterNotifications struct {
     registrar   services.RegistrarInterface
     errorWriter ErrorWriterInterface
 }
 
-func NewRegistration(registrar services.RegistrarInterface, errorWriter ErrorWriterInterface) Registration {
-    return Registration{
+func NewRegisterNotifications(registrar services.RegistrarInterface, errorWriter ErrorWriterInterface) RegisterNotifications {
+    return RegisterNotifications{
         registrar:   registrar,
         errorWriter: errorWriter,
     }
 }
 
-func (handler Registration) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (handler RegisterNotifications) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     metrics.NewMetric("counter", map[string]interface{}{
         "name": "notifications.web.registration",
     }).Log()
@@ -32,7 +32,7 @@ func (handler Registration) ServeHTTP(w http.ResponseWriter, req *http.Request) 
     handler.Execute(w, req, models.Database().Connection())
 }
 
-func (handler Registration) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) {
+func (handler RegisterNotifications) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) {
     parameters, err := params.NewRegistration(req.Body)
     if err != nil {
         handler.errorWriter.Write(w, err)
@@ -78,7 +78,7 @@ func (handler Registration) Execute(w http.ResponseWriter, req *http.Request, co
     transaction.Commit()
 }
 
-func (handler Registration) parseClientID(req *http.Request) string {
+func (handler RegisterNotifications) parseClientID(req *http.Request) string {
     rawToken := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
     clientToken, _ := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
         return []byte(config.UAAPublicKey), nil

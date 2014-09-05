@@ -18,7 +18,7 @@ var _ = Describe("GetPreferences", func() {
     var handler handlers.GetPreferences
     var writer *httptest.ResponseRecorder
     var request *http.Request
-    var preference *FakePreference
+    var preferencesFinder *FakePreferencesFinder
     var errorWriter *FakeErrorWriter
     var builder services.PreferencesBuilder
 
@@ -61,14 +61,14 @@ var _ = Describe("GetPreferences", func() {
             Email:    true,
         })
 
-        preference = NewFakePreference(builder)
-        handler = handlers.NewGetPreferences(preference, errorWriter)
+        preferencesFinder = NewFakePreferencesFinder(builder)
+        handler = handlers.NewGetPreferences(preferencesFinder, errorWriter)
     })
 
     It("Passes the proper user guid into execute", func() {
         handler.ServeHTTP(writer, request)
 
-        Expect(preference.UserGUID).To(Equal("correct-user"))
+        Expect(preferencesFinder.UserGUID).To(Equal("correct-user"))
     })
 
     It("Returns a proper JSON response when the Preference object does not error", func() {
@@ -87,7 +87,7 @@ var _ = Describe("GetPreferences", func() {
 
     Context("when there is a database error", func() {
         It("panics", func() {
-            preference.ExecuteErrors = true
+            preferencesFinder.FindErrors = true
 
             Expect(func() {
                 handler.ServeHTTP(writer, request)

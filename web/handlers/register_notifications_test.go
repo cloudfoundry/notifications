@@ -17,8 +17,8 @@ import (
     . "github.com/onsi/gomega"
 )
 
-var _ = Describe("Registration", func() {
-    var handler handlers.Registration
+var _ = Describe("RegisterNotifications", func() {
+    var handler handlers.RegisterNotifications
     var writer *httptest.ResponseRecorder
     var request *http.Request
     var fakeErrorWriter *FakeErrorWriter
@@ -31,7 +31,7 @@ var _ = Describe("Registration", func() {
         fakeConn = &FakeDBConn{}
         fakeErrorWriter = &FakeErrorWriter{}
         registrar = NewFakeRegistrar()
-        handler = handlers.NewRegistration(registrar, fakeErrorWriter)
+        handler = handlers.NewRegisterNotifications(registrar, fakeErrorWriter)
         writer = httptest.NewRecorder()
         requestBody, err := json.Marshal(map[string]interface{}{
             "source_description": "Raptor Containment Unit",

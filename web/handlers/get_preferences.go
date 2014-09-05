@@ -11,14 +11,14 @@ import (
 )
 
 type GetPreferences struct {
-    Preference  services.PreferenceInterface
-    ErrorWriter ErrorWriterInterface
+    PreferencesFinder services.PreferencesFinderInterface
+    ErrorWriter       ErrorWriterInterface
 }
 
-func NewGetPreferences(preference services.PreferenceInterface, errorWriter ErrorWriterInterface) GetPreferences {
+func NewGetPreferences(preferencesFinder services.PreferencesFinderInterface, errorWriter ErrorWriterInterface) GetPreferences {
     return GetPreferences{
-        Preference:  preference,
-        ErrorWriter: errorWriter,
+        PreferencesFinder: preferencesFinder,
+        ErrorWriter:       errorWriter,
     }
 }
 
@@ -30,7 +30,7 @@ func (handler GetPreferences) ServeHTTP(w http.ResponseWriter, req *http.Request
         return
     }
 
-    parsed, err := handler.Preference.Execute(userID)
+    parsed, err := handler.PreferencesFinder.Find(userID)
     if err != nil {
         errorWriter := NewErrorWriter()
         errorWriter.Write(w, err)

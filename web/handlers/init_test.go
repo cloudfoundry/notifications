@@ -284,21 +284,21 @@ func (fake *FakeRegistrar) Prune(conn models.ConnectionInterface, client models.
     return fake.PruneError
 }
 
-type FakePreference struct {
-    ReturnValue   services.PreferencesBuilder
-    ExecuteErrors bool
-    UserGUID      string
+type FakePreferencesFinder struct {
+    ReturnValue services.PreferencesBuilder
+    FindErrors  bool
+    UserGUID    string
 }
 
-func NewFakePreference(returnValue services.PreferencesBuilder) *FakePreference {
-    return &FakePreference{
+func NewFakePreferencesFinder(returnValue services.PreferencesBuilder) *FakePreferencesFinder {
+    return &FakePreferencesFinder{
         ReturnValue: returnValue,
     }
 }
 
-func (fake *FakePreference) Execute(userGUID string) (services.PreferencesBuilder, error) {
+func (fake *FakePreferencesFinder) Find(userGUID string) (services.PreferencesBuilder, error) {
     fake.UserGUID = userGUID
-    if fake.ExecuteErrors {
+    if fake.FindErrors {
         return fake.ReturnValue, errors.New("Meltdown")
     }
     return fake.ReturnValue, nil

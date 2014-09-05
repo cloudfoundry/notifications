@@ -82,8 +82,8 @@ func (mother Mother) Registrar() services.Registrar {
     return services.NewRegistrar(clientsRepo, kindsRepo)
 }
 
-func (mother Mother) Preference() *services.Preference {
-    return services.NewPreference(models.NewPreferencesRepo())
+func (mother Mother) PreferencesFinder() *services.PreferencesFinder {
+    return services.NewPreferencesFinder(models.NewPreferencesRepo())
 }
 
 func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
