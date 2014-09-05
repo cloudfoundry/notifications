@@ -5,7 +5,11 @@ import (
     "io"
     "io/ioutil"
     "net/http"
+    "sync"
 )
+
+var _client *http.Client
+var mutex sync.Mutex
 
 // Http Client, wraps go's http.Client for our usecase
 type Client struct {
@@ -37,6 +41,21 @@ func (client Client) WithAuthorizationToken(token string) Client {
     return client
 }
 
+func GetClient(client Client) *http.Client {
+    mutex.Lock()
+    defer mutex.Unlock()
+
+    if _client == nil {
+        _client = &http.Client{
+            Transport: &http.Transport{
+                TLSClientConfig: client.TLSConfig(),
+            },
+        }
+    }
+
+    return _client
+}
+
 // Make request with the given basic auth and ssl settings, returns reponse code and body as a byte array
 func (client Client) MakeRequest(method, path string, requestBody io.Reader) (int, []byte, error) {
     url := client.Host + path
@@ -51,11 +70,7 @@ func (client Client) MakeRequest(method, path string, requestBody io.Reader) (in
     }
     request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-    httpClient := http.Client{
-        Transport: &http.Transport{
-            TLSClientConfig: client.TLSConfig(),
-        },
-    }
+    httpClient := GetClient(client)
     response, err := httpClient.Do(request)
     if err != nil {
         return 0, nil, err

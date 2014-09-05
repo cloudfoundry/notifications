@@ -81,7 +81,7 @@
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",
-			"Rev": "5ca50855488562d531af1f86c65ea72b931c9e90"
+			"Rev": "67bc5e9f93b3dc339b625b298b4cd5fc74a840e4"
 		},
 		{
 			"ImportPath": "github.com/ryanmoran/stack",

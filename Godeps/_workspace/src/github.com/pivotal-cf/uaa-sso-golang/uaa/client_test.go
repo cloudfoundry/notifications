@@ -138,4 +138,16 @@ var _ = Describe("Client", func() {
             })
         })
     })
+
+    Describe("GetClient", func() {
+        It("initializes the shared http client", func() {
+            client = uaa.NewClient("", false)
+            httpClient1 := uaa.GetClient(client)
+            httpClient2 := uaa.GetClient(client)
+
+            Expect(httpClient1).ToNot(BeNil())
+            Expect(httpClient1).To(BeAssignableToTypeOf(&http.Client{}))
+            Expect(httpClient1).To(Equal(httpClient2))
+        })
+    })
 })
