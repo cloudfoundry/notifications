@@ -101,7 +101,7 @@ var _ = Describe("Mailer", func() {
                         KindDescription:   "",
                         SourceDescription: "",
                         Text:              "",
-                        HTML:              "",
+                        HTML:              postal.HTML{},
                         KindID:            "",
                     },
                     UserGUID:     userGUID,

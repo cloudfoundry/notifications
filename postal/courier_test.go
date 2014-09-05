@@ -115,7 +115,7 @@ var _ = Describe("Courier", func() {
                     KindDescription:   "Password reminder",
                     SourceDescription: "Login system",
                     Text:              "Please reset your password by clicking on this link...",
-                    HTML:              "<p>Please reset your password by clicking on this link...</p>",
+                    HTML:              postal.HTML{BodyContent: "<p>Please reset your password by clicking on this link...</p>"},
                 }
             })
 

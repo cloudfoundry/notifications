@@ -68,12 +68,14 @@ Content-Type: text/html
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
+%s
+<head>%s</head>
 <html>
-    <body>
+    <body %s>
         %s
     </body>
 </html>
-`, html)
+`, context.HTMLComponents.Doctype, context.HTMLComponents.Head, context.HTMLComponents.BodyAttributes, html)
     }
 
     return headerPart + plainTextPart + htmlPart + closingBoundary, nil

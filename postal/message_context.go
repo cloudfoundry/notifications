@@ -13,6 +13,7 @@ type MessageContext struct {
     Subject           string
     Text              string
     HTML              string
+    HTMLComponents    HTML
     TextTemplate      string
     HTMLTemplate      string
     SubjectTemplate   string
@@ -47,7 +48,8 @@ func NewMessageContext(email string, options Options, env config.Environment, sp
         To:                email,
         Subject:           options.Subject,
         Text:              options.Text,
-        HTML:              options.HTML,
+        HTML:              options.HTML.BodyContent,
+        HTMLComponents:    options.HTML,
         TextTemplate:      templates.Text,
         HTMLTemplate:      templates.HTML,
         SubjectTemplate:   templates.Subject,

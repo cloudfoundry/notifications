@@ -109,7 +109,7 @@ var _ = Describe("NotifyUser", func() {
                         KindDescription:   "Password Reminder",
                         SourceDescription: "Login System",
                         Text:              "Please reset your password by clicking on this link...",
-                        HTML:              "<p>Please reset your password by clicking on this link...</p>",
+                        HTML:              postal.HTML{BodyAttributes: "", BodyContent: "<p>Please reset your password by clicking on this link...</p>"},
                         KindID:            "forgot_password",
                     },
                 }))

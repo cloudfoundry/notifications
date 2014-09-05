@@ -4,6 +4,7 @@ import (
     "bytes"
     "encoding/json"
     "io"
+    "regexp"
     "strings"
 
     "github.com/PuerkitoBio/goquery"
@@ -31,7 +32,8 @@ type Notify struct {
     ReplyTo           string `json:"reply_to"`
     Subject           string `json:"subject"`
     Text              string `json:"text"`
-    HTML              string `json:"html"`
+    RawHTML           string `json:"html"`
+    ParsedHTML        postal.HTML
     KindID            string `json:"kind_id"`
     KindDescription   string
     SourceDescription string
@@ -40,6 +42,7 @@ type Notify struct {
 
 func NewNotify(body io.Reader) (Notify, error) {
     notify := Notify{}
+
     err := notify.parseRequestBody(body)
     if err != nil {
         return notify, err
@@ -64,7 +67,7 @@ func (notify *Notify) Validate() bool {
         }
     }
 
-    if notify.Text == "" && notify.HTML == "" {
+    if notify.Text == "" && notify.ParsedHTML.BodyContent == "" {
         notify.Errors = append(notify.Errors, `"text" or "html" fields must be supplied`)
     }
 
@@ -90,23 +93,64 @@ func (notify *Notify) ToOptions(client models.Client, kind models.Kind) postal.O
         KindDescription:   kind.Description,
         SourceDescription: client.Description,
         Text:              notify.Text,
-        HTML:              notify.HTML,
+        HTML:              notify.ParsedHTML,
         KindID:            notify.KindID,
     }
 }
 
 func (notify *Notify) extractHTML() error {
-
-    reader := strings.NewReader(notify.HTML)
+    reader := strings.NewReader(notify.RawHTML)
     document, err := goquery.NewDocumentFromReader(reader)
     if err != nil {
         return err
     }
 
-    notify.HTML, err = document.Find("body").Html()
+    notify.ParsedHTML.Doctype, err = notify.extractDoctype(notify.RawHTML)
     if err != nil {
         return err
     }
 
+    notify.ParsedHTML.Head, err = notify.extractHead(document)
+    if err != nil {
+        return err
+    }
+
+    bodyAttributes := ""
+    for _, attribute := range document.Find("body").Nodes[0].Attr {
+        bodyAttributes += " " + attribute.Key + `="` + attribute.Val + `"`
+    }
+    bodyAttributes = strings.TrimPrefix(bodyAttributes, " ")
+
+    bodyContent, err := document.Find("body").Html()
+    if err != nil {
+        return err
+    }
+
+    if bodyContent != "" {
+        notify.ParsedHTML.BodyAttributes = bodyAttributes
+        notify.ParsedHTML.BodyContent = bodyContent
+    }
+
     return nil
+}
+
+func (notify *Notify) extractDoctype(rawHTML string) (string, error) {
+    r, err := regexp.Compile("<!DOCTYPE[^>]*>")
+    if err != nil {
+        return "", err
+    }
+    return r.FindString(rawHTML), nil
+
+}
+
+func (notify *Notify) extractHead(document *goquery.Document) (string, error) {
+    htmlHead, err := document.Find("head").Html()
+    if err != nil {
+        return "", err
+    }
+
+    if htmlHead == "" {
+        return "", nil
+    }
+    return htmlHead, nil
 }

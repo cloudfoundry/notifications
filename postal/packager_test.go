@@ -15,6 +15,13 @@ var _ = Describe("Packager", func() {
 
     BeforeEach(func() {
         client = mail.Client{}
+        html := postal.HTML{
+            BodyContent:    "<p>user supplied banana html</p>",
+            BodyAttributes: "class=\"bananaBody\"",
+            Head:           "<title>The title</title>",
+            Doctype:        "<!DOCTYPE html>",
+        }
+
         context = postal.MessageContext{
             From:            "banana man",
             ReplyTo:         "awesomeness",
@@ -23,7 +30,8 @@ var _ = Describe("Packager", func() {
             ClientID:        "3&3",
             MessageID:       "4'4",
             Text:            "User <supplied> \"banana\" text",
-            HTML:            "<p>user supplied banana html</p>",
+            HTMLComponents:  html,
+            HTML:            html.BodyContent,
             TextTemplate:    "Banana preamble {{.Text}} {{.ClientID}} {{.MessageID}}",
             HTMLTemplate:    "Banana preamble {{.HTML}} {{.Text}} {{.ClientID}} {{.MessageID}}",
             SubjectTemplate: "The Subject: {{.Subject}}",
@@ -50,8 +58,10 @@ Content-Type: text/html
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
+<!DOCTYPE html>
+<head><title>The title</title></head>
 <html>
-    <body>
+    <body class="bananaBody">
         Banana preamble <p>user supplied banana html</p> User &lt;supplied&gt; &#34;banana&#34; text 3&amp;3 4&#39;4
     </body>
 </html>
@@ -100,8 +110,10 @@ Content-Type: text/html
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
+<!DOCTYPE html>
+<head><title>The title</title></head>
 <html>
-    <body>
+    <body class="bananaBody">
         Banana preamble <p>user supplied banana html</p>  3&amp;3 4&#39;4
     </body>
 </html>

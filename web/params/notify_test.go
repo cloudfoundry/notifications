@@ -1,6 +1,7 @@
 package params_test
 
 import (
+    "io"
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/models"
@@ -40,43 +41,103 @@ var _ = Describe("Notify", func() {
         })
 
         Describe("html parsing", func() {
-            Context("when html is passed with a surrounding html and body tag", func() {
-                It("pulls out the html in the body", func() {
-                    body := strings.NewReader(`{
-                        "kind_id": "test_email",
-                        "html": "<html><head><title>BananaDamage</title></head><body><p>The TEXT</p><h1>the TITLE</h1></body></html>"
-                    }`)
+            var body io.Reader
 
+            Context("when a doctype is passed in", func() {
+                It("pulls out the doctype", func() {
+                    body = strings.NewReader(`{
+                        "kind_id": "test_email",
+                        "html": "<!DOCTYPE html>"
+                    }`)
                     parameters, err := params.NewNotify(body)
                     if err != nil {
                         panic(err)
                     }
 
-                    Expect(parameters.HTML).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+                    Expect(parameters.ParsedHTML.Doctype).To(Equal("<!DOCTYPE html>"))
                 })
             })
 
-            Context("when html is passed with a surrounding body tag", func() {
-                It("pulls out the html in the body", func() {
-                    body := strings.NewReader(`{
+            Context("when no doctype is passed", func() {
+                It("returns an empty doctype", func() {
+                    body = strings.NewReader(`{
                         "kind_id": "test_email",
-                        "html": "<body><p>The TEXT</p><h1>the TITLE</h1></body>"
+                        "html": ""
                     }`)
-
                     parameters, err := params.NewNotify(body)
                     if err != nil {
                         panic(err)
                     }
 
-                    Expect(parameters.HTML).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+                    Expect(parameters.ParsedHTML.Doctype).To(Equal(""))
                 })
             })
 
-            Context("when html is passed with a surrounding html tag", func() {
-                It("pulls out the html in the html tag", func() {
+            Context("when a head tag is passed in", func() {
+                It("pulls out the contents of the head tag", func() {
+                    body = strings.NewReader(`{
+                        "kind_id": "test_email",
+                        "html": "<head><title>BananaDamage</title></head>"
+                    }`)
+                    parameters, err := params.NewNotify(body)
+                    if err != nil {
+                        panic(err)
+                    }
+
+                    Expect(parameters.ParsedHTML.Head).To(Equal("<title>BananaDamage</title>"))
+                })
+            })
+
+            Context("when no head tag is passed in", func() {
+                It("Head is left as an empty string", func() {
+                    body = strings.NewReader(`{
+                        "kind_id": "test_email",
+                        "html": ""
+                    }`)
+                    parameters, err := params.NewNotify(body)
+                    if err != nil {
+                        panic(err)
+                    }
+
+                    Expect(parameters.ParsedHTML.Head).To(Equal(""))
+                })
+            })
+
+            Context("body tags are present", func() {
+                var body io.Reader
+
+                BeforeEach(func() {
+                    body = strings.NewReader(`{
+                        "kind_id": "test_email",
+                        "html": "<body class='bananaDamage'><p>The TEXT</p><h1>the TITLE</h1></body>"
+                    }`)
+                })
+
+                It("pulls out the html in the body", func() {
+                    parameters, err := params.NewNotify(body)
+                    if err != nil {
+                        panic(err)
+                    }
+
+                    Expect(parameters.ParsedHTML.BodyContent).To(ContainSubstring("<p>The TEXT</p><h1>the TITLE</h1>"))
+                })
+
+                It("preserves any attributes on the body tag itself", func() {
+                    parameters, err := params.NewNotify(body)
+                    if err != nil {
+                        panic(err)
+                    }
+
+                    Expect(parameters.ParsedHTML.BodyAttributes).To(ContainSubstring(`class="bananaDamage"`))
+                })
+
+            })
+
+            Context("when only an html tag is present", func() {
+                It("the contents in the html tag are put into the body", func() {
                     body := strings.NewReader(`{
                         "kind_id": "test_email",
-                        "html": "<html><p>The TEXT</p><h1>the TITLE</h1></html>"
+                        "html": "<html><head><title>BananaDamage</title></head><p>The TEXT</p><h1>the TITLE</h1></html>"
                     }`)
 
                     parameters, err := params.NewNotify(body)
@@ -84,12 +145,13 @@ var _ = Describe("Notify", func() {
                         panic(err)
                     }
 
-                    Expect(parameters.HTML).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+                    Expect(parameters.ParsedHTML.BodyContent).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+                    Expect(parameters.ParsedHTML.Head).To(Equal("<title>BananaDamage</title>"))
                 })
             })
 
             Context("when just bare html is passed without surrounding html/body tags", func() {
-                It("is a no op", func() {
+                It("the html is placed in the body", func() {
                     body := strings.NewReader(`{
                         "kind_id": "test_email",
                         "html": "<p>The TEXT</p><h1>the TITLE</h1>"
@@ -100,7 +162,7 @@ var _ = Describe("Notify", func() {
                         panic(err)
                     }
 
-                    Expect(parameters.HTML).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+                    Expect(parameters.ParsedHTML.BodyContent).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
                 })
             })
 
@@ -115,7 +177,7 @@ var _ = Describe("Notify", func() {
                         panic(err)
                     }
 
-                    Expect(parameters.HTML).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+                    Expect(parameters.ParsedHTML.BodyContent).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
 
                     body = strings.NewReader(`{
                         "kind_id": "test_email",
@@ -126,7 +188,7 @@ var _ = Describe("Notify", func() {
                         panic(err)
                     }
 
-                    Expect(parameters.HTML).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
+                    Expect(parameters.ParsedHTML.BodyContent).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
                 })
             })
 
@@ -140,8 +202,24 @@ var _ = Describe("Notify", func() {
                     if err != nil {
                         panic(err)
                     }
+                    Expect(parameters.ParsedHTML.BodyContent).To(Equal(""))
+                })
+            })
 
-                    Expect(parameters.HTML).To(Equal(""))
+            Context("when a lot of complicated html is sent", func() {
+                It("does the right thing", func() {
+                    html := `<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\"><head><title>New Relic</title></head><body bgcolor=\"#cccccc\" leftmargin=\"10\" topmargin=\"0\" rightmargin=\"10\" bottommargin=\"10\" marginheight=\"10\" marginwidth=\"10\"><div>div here ya</div></body>`
+                    body := strings.NewReader(`{"kind_id": "test_email", "html": "` + html + `"}`)
+
+                    parameters, err := params.NewNotify(body)
+                    if err != nil {
+                        panic(err)
+                    }
+
+                    Expect(parameters.ParsedHTML.Doctype).To(Equal("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">"))
+                    Expect(parameters.ParsedHTML.BodyAttributes).To(Equal("bgcolor=\"#cccccc\" leftmargin=\"10\" topmargin=\"0\" rightmargin=\"10\" bottommargin=\"10\" marginheight=\"10\" marginwidth=\"10\""))
+                    Expect(parameters.ParsedHTML.BodyContent).To(Equal("<div>div here ya</div>"))
+                    Expect(parameters.ParsedHTML.Head).To(Equal("<title>New Relic</title>"))
                 })
             })
         })
@@ -298,7 +376,7 @@ var _ = Describe("Notify", func() {
                 ReplyTo:           "me@awesome.com",
                 Subject:           "Summary of contents",
                 Text:              "Contents of the email message",
-                HTML:              "<div>Some HTML</div>",
+                HTML:              postal.HTML{BodyAttributes: "", BodyContent: "<div>Some HTML</div>"},
             }))
         })
     })

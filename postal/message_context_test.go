@@ -17,6 +17,7 @@ var _ = Describe("MessageContext", func() {
         var email string
         var env config.Environment
         var options postal.Options
+        var html postal.HTML
 
         BeforeEach(func() {
             email = "bounce@example.com"
@@ -28,13 +29,17 @@ var _ = Describe("MessageContext", func() {
                 Subject: "the subject template",
             }
 
+            html = postal.HTML{
+                BodyContent: "user supplied html",
+            }
+
             options = postal.Options{
                 ReplyTo:           "awesomeness",
                 Subject:           "the subject",
                 KindDescription:   "the kind description",
                 SourceDescription: "the source description",
                 Text:              "user supplied email text",
-                HTML:              "user supplied html",
+                HTML:              html,
                 KindID:            "the-kind",
             }
         })
@@ -47,7 +52,8 @@ var _ = Describe("MessageContext", func() {
             Expect(context.To).To(Equal(email))
             Expect(context.Subject).To(Equal(options.Subject))
             Expect(context.Text).To(Equal(options.Text))
-            Expect(context.HTML).To(Equal(options.HTML))
+            Expect(context.HTML).To(Equal(options.HTML.BodyContent))
+            Expect(context.HTMLComponents).To(Equal(options.HTML))
             Expect(context.TextTemplate).To(Equal(templates.Text))
             Expect(context.HTMLTemplate).To(Equal(templates.HTML))
             Expect(context.SubjectTemplate).To(Equal(templates.Subject))
@@ -97,7 +103,7 @@ var _ = Describe("MessageContext", func() {
                 KindDescription:   "the & kind description",
                 SourceDescription: "the & source description",
                 Text:              "user & supplied email text",
-                HTML:              "user & supplied html",
+                HTML:              postal.HTML{BodyContent: "user & supplied html"},
                 KindID:            "the & kind",
             }
         })

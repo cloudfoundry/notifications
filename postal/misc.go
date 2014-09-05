@@ -53,12 +53,19 @@ type UAAInterface interface {
     uaa.UsersByIDsInterface
 }
 
+type HTML struct {
+    BodyContent    string
+    BodyAttributes string
+    Head           string
+    Doctype        string
+}
+
 type Options struct {
     ReplyTo           string
     Subject           string
     KindDescription   string
     SourceDescription string
     Text              string
-    HTML              string
+    HTML              HTML
     KindID            string
 }

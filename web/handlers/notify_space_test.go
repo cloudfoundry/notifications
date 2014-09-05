@@ -141,7 +141,7 @@ var _ = Describe("NotifySpace", func() {
                         KindDescription:   "Instance Down",
                         SourceDescription: "Health Monitor",
                         Text:              "This is the plain text body of the email",
-                        HTML:              "<p>This is the HTML Body of the email</p>",
+                        HTML:              postal.HTML{BodyAttributes: "", BodyContent: "<p>This is the HTML Body of the email</p>"},
                         KindID:            "test_email",
                     },
                 }))
