@@ -54,8 +54,9 @@ var _ = Describe("Router", func() {
         s := router.Routes().Get("GET /user_preferences").GetHandler().(stack.Stack)
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetPreferences{}))
         Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+        Expect(s.Middleware[1]).To(BeAssignableToTypeOf(middleware.CORS{}))
 
-        authenticator := s.Middleware[1].(middleware.Authenticator)
+        authenticator := s.Middleware[2].(middleware.Authenticator)
         Expect(authenticator.Scopes).To(Equal([]string{"notification_preferences.read"}))
     })
 
@@ -63,8 +64,16 @@ var _ = Describe("Router", func() {
         s := router.Routes().Get("PATCH /user_preferences").GetHandler().(stack.Stack)
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UpdatePreferences{}))
         Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+        Expect(s.Middleware[1]).To(BeAssignableToTypeOf(middleware.CORS{}))
 
-        authenticator := s.Middleware[1].(middleware.Authenticator)
+        authenticator := s.Middleware[2].(middleware.Authenticator)
         Expect(authenticator.Scopes).To(Equal([]string{"notification_preferences.write"}))
+    })
+
+    It("routes OPTIONS /user_preferences", func() {
+        s := router.Routes().Get("OPTIONS /user_preferences").GetHandler().(stack.Stack)
+        Expect(s.Handler).To(BeAssignableToTypeOf(handlers.OptionsPreferences{}))
+        Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+        Expect(s.Middleware[1]).To(BeAssignableToTypeOf(middleware.CORS{}))
     })
 })

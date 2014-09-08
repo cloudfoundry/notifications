@@ -9,5 +9,4 @@ fi
 
 source $DIR/env/$ENVIRONMENT
 
-godep restore
 go run main.go
