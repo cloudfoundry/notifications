@@ -13,6 +13,7 @@ type Courier struct {
 
 type CourierInterface interface {
     Dispatch(string, TypedGUID, Options, models.ConnectionInterface) ([]Response, error)
+    Mailer() MailerInterface
 }
 
 func NewCourier(tokenLoader TokenLoader, userLoader UserLoader, spaceLoader SpaceLoader,
@@ -63,4 +64,8 @@ func (courier Courier) Dispatch(clientID string, guid TypedGUID, options Options
     responses = courier.mailer.Deliver(conn, templates, users, options, space, organization, clientID)
 
     return responses, nil
+}
+
+func (courier Courier) Mailer() MailerInterface {
+    return courier.mailer
 }

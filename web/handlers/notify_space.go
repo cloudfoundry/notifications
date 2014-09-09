@@ -11,13 +11,15 @@ import (
 
 type NotifySpace struct {
     errorWriter ErrorWriterInterface
-    notify      Notify
+    notify      NotifyInterface
+    courier     postal.CourierInterface
 }
 
-func NewNotifySpace(notify Notify, errorWriter ErrorWriterInterface) NotifySpace {
+func NewNotifySpace(notify NotifyInterface, errorWriter ErrorWriterInterface, courier postal.CourierInterface) NotifySpace {
     return NotifySpace{
         errorWriter: errorWriter,
         notify:      notify,
+        courier:     courier,
     }
 }
 
@@ -34,9 +36,11 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     }
 }
 
+
 func (handler NotifySpace) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) error {
-    userGUID := postal.SpaceGUID(strings.TrimPrefix(req.URL.Path, "/spaces/"))
-    output, err := handler.notify.Execute(connection, req, userGUID)
+    spaceGUID := postal.SpaceGUID(strings.TrimPrefix(req.URL.Path, "/spaces/"))
+
+    output, err := handler.notify.Execute(connection, req, spaceGUID, NewUAARecipe(handler.courier))
     if err != nil {
         return err
     }

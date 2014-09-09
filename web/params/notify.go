@@ -12,6 +12,8 @@ import (
     "github.com/cloudfoundry-incubator/notifications/postal"
 )
 
+const InvalidEmail = "<>InvalidEmail<>"
+
 type ParseError struct{}
 
 func (err ParseError) Error() string {
@@ -38,6 +40,7 @@ type Notify struct {
     KindDescription   string
     SourceDescription string
     Errors            []string
+    To                string `json:"to"`
 }
 
 func NewNotify(body io.Reader) (Notify, error) {
@@ -48,6 +51,8 @@ func NewNotify(body io.Reader) (Notify, error) {
         return notify, err
     }
 
+    notify.formatEmail()
+
     err = notify.extractHTML()
     if err != nil {
         return notify, err
@@ -56,14 +61,42 @@ func NewNotify(body io.Reader) (Notify, error) {
     return notify, nil
 }
 
-func (notify *Notify) Validate() bool {
+func (notify *Notify) formatEmail() {
+    if notify.To == "" {
+        return
+    }
+    regex := regexp.MustCompile("[^<]*<([^@]*@[^@]*)>|([^<][^@]*@[^@]*)")
+    email := regex.FindStringSubmatch(notify.To)
+    if len(email) == 0 {
+        notify.To = InvalidEmail
+        return
+    }
+
+    if email[1] != "" {
+        notify.To = email[1]
+    } else {
+        notify.To = email[2]
+    }
+}
+
+func (notify *Notify) Validate(guid postal.TypedGUID) bool {
     notify.Errors = []string{}
 
-    if notify.KindID == "" {
-        notify.Errors = append(notify.Errors, `"kind_id" is a required field`)
+    if guid.IsTypeEmail() {
+        if notify.To == "" {
+            notify.Errors = append(notify.Errors, `"to" is a required field`)
+        }
+
+        if notify.To == InvalidEmail {
+            notify.Errors = append(notify.Errors, `"to" is improperly formatted`)
+        }
     } else {
-        if !kindIDFormat.MatchString(notify.KindID) {
-            notify.Errors = append(notify.Errors, `"kind_id" is improperly formatted`)
+        if notify.KindID == "" {
+            notify.Errors = append(notify.Errors, `"kind_id" is a required field`)
+        } else {
+            if !kindIDFormat.MatchString(notify.KindID) {
+                notify.Errors = append(notify.Errors, `"kind_id" is improperly formatted`)
+            }
         }
     }
 
@@ -95,6 +128,7 @@ func (notify *Notify) ToOptions(client models.Client, kind models.Kind) postal.O
         Text:              notify.Text,
         HTML:              notify.ParsedHTML,
         KindID:            notify.KindID,
+        To:                notify.To,
     }
 }
 

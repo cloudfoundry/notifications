@@ -41,6 +41,13 @@ var _ = Describe("Router", func() {
         Expect(authenticator.Scopes).To(Equal([]string{"notifications.write"}))
     })
 
+    It("routes POST /emails", func() {
+        s := router.Routes().Get("POST /emails").GetHandler().(stack.Stack)
+        Expect(s.Handler).To(BeAssignableToTypeOf(handlers.NotifyEmail{}))
+        Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+
+    })
+
     It("routes PUT /registration", func() {
         s := router.Routes().Get("PUT /registration").GetHandler().(stack.Stack)
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.RegisterNotifications{}))

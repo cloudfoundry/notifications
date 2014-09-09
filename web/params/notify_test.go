@@ -22,7 +22,10 @@ var _ = Describe("Notify", func() {
                 "text": "Contents of the email message"
             }`)
 
-            parameters, _ := params.NewNotify(body)
+            parameters, err := params.NewNotify(body)
+            if err != nil {
+                panic(err)
+            }
 
             Expect(parameters.KindID).To(Equal("test_email"))
             Expect(parameters.KindDescription).To(Equal(""))
@@ -38,6 +41,60 @@ var _ = Describe("Notify", func() {
             Expect(func() {
                 params.NewNotify(body)
             }).NotTo(Panic())
+        })
+
+        Describe("to parsing", func() {
+            It("handles when a name is attached to the address", func() {
+                body := strings.NewReader(`{
+                    "to": "The User <user@example.com>"
+                }`)
+
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.To).To(Equal("user@example.com"))
+            })
+
+            It("populates the To field with the parsed email address", func() {
+                body := strings.NewReader(`{
+                    "to": "user@example.com"
+                }`)
+
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.To).To(Equal("user@example.com"))
+            })
+
+            It("Sets the To field to InvalidEmail cannot be parsed", func() {
+                body := strings.NewReader(`{
+                    "to": "<The User"
+                }`)
+
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.To).To(Equal(params.InvalidEmail))
+            })
+
+            It("Sets the To field to empty of if it is not specified", func() {
+                body := strings.NewReader(`{
+                    "to": ""
+                }`)
+
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.To).To(Equal(""))
+            })
         })
 
         Describe("html parsing", func() {
@@ -226,122 +283,208 @@ var _ = Describe("Notify", func() {
     })
 
     Describe("Validate", func() {
-        It("validates the required parameters in the request body", func() {
-            body := strings.NewReader(`{
-                "kind_id": "test_email",
-                "subject": "Summary of contents",
-                "text": "Contents of the email message"
-            }`)
-            parameters, err := params.NewNotify(body)
-            if err != nil {
-                panic(err)
-            }
 
-            Expect(parameters.Validate()).To(BeTrue())
-            Expect(len(parameters.Errors)).To(Equal(0))
+        Context("the guid corresponds to an email", func() {
+            var emailID postal.TypedGUID
 
-            parameters.KindID = ""
+            BeforeEach(func() {
+                emailID = postal.EmailID("user@example.com")
+            })
 
-            Expect(parameters.Validate()).To(BeFalse())
-            Expect(len(parameters.Errors)).To(Equal(1))
-            Expect(parameters.Errors).To(ContainElement(`"kind_id" is a required field`))
+            It("validates the required parameters in the request body", func() {
+                body := strings.NewReader(`{
+                    "to": "user@example.com",
+                    "text": "Contents of the email message"
+                }`)
 
-            parameters.Text = ""
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
 
-            Expect(parameters.Validate()).To(BeFalse())
-            Expect(len(parameters.Errors)).To(Equal(2))
-            Expect(parameters.Errors).To(ContainElement(`"kind_id" is a required field`))
-            Expect(parameters.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
+                Expect(parameters.Validate(emailID)).To(BeTrue())
+                Expect(len(parameters.Errors)).To(Equal(0))
 
-            parameters.KindID = "something"
-            parameters.Text = "banana"
+                parameters.To = ""
 
-            Expect(parameters.Validate()).To(BeTrue())
-            Expect(len(parameters.Errors)).To(Equal(0))
+                Expect(parameters.Validate(emailID)).To(BeFalse())
+                Expect(len(parameters.Errors)).To(Equal(1))
+                Expect(parameters.Errors).To(ContainElement(`"to" is a required field`))
+
+                parameters.Text = ""
+
+                Expect(parameters.Validate(emailID)).To(BeFalse())
+                Expect(len(parameters.Errors)).To(Equal(2))
+                Expect(parameters.Errors).To(ContainElement(`"to" is a required field`))
+                Expect(parameters.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
+
+                parameters.To = "otherUser@example.com"
+                parameters.ParsedHTML = postal.HTML{BodyContent: "<p>Contents of this email message</p>"}
+
+                Expect(parameters.Validate(emailID)).To(BeTrue())
+                Expect(len(parameters.Errors)).To(Equal(0))
+
+            })
+
+            It("validates the format of an email", func() {
+                body := strings.NewReader(`{
+                    "to": "<invalid email",
+                    "text": "Contents of the email message"
+                }`)
+
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.Validate(emailID)).To(BeFalse())
+                Expect(len(parameters.Errors)).To(Equal(1))
+                Expect(parameters.Errors).To(ContainElement(`"to" is improperly formatted`))
+            })
+
+            It("validates the format of an email", func() {
+                body := strings.NewReader(`{
+                    "to": "invalidemail.com",
+                    "text": "Contents of the email message"
+                }`)
+
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.Validate(emailID)).To(BeFalse())
+                Expect(len(parameters.Errors)).To(Equal(1))
+                Expect(parameters.Errors).To(ContainElement(`"to" is improperly formatted`))
+            })
         })
 
-        It("either text or html must be set", func() {
-            body := strings.NewReader(`{
-                "kind_id": "test_email"
-            }`)
+        Context("the guid corresponds to a space or a user", func() {
+            var guid postal.TypedGUID
+            var emailID postal.TypedGUID
+            BeforeEach(func() {
+                guid = postal.UserGUID("the-user")
+                emailID = postal.EmailID("email@example.com")
+            })
 
-            parameters, err := params.NewNotify(body)
-            if err != nil {
-                panic(err)
-            }
+            It("validates the required parameters in the request body", func() {
+                body := strings.NewReader(`{
+                    "kind_id": "test_email",
+                    "subject": "Summary of contents",
+                    "text": "Contents of the email message"
+                }`)
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
 
-            Expect(parameters.Validate()).To(BeFalse())
-            Expect(parameters.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
+                Expect(parameters.Validate(guid)).To(BeTrue())
+                Expect(len(parameters.Errors)).To(Equal(0))
 
-            body = strings.NewReader(`{
-                "kind_id": "test_email",
-                "text": "Contents of the email message"
-            }`)
+                parameters.KindID = ""
 
-            parameters, err = params.NewNotify(body)
-            if err != nil {
-                panic(err)
-            }
+                Expect(parameters.Validate(guid)).To(BeFalse())
+                Expect(len(parameters.Errors)).To(Equal(1))
+                Expect(parameters.Errors).To(ContainElement(`"kind_id" is a required field`))
 
-            Expect(parameters.Validate()).To(BeTrue())
-            Expect(len(parameters.Errors)).To(Equal(0))
+                parameters.Text = ""
 
-            body = strings.NewReader(`{
-                "kind_id": "test_email",
-                "html": "<html><body><p>the html</p></body></html>"
-            }`)
+                Expect(parameters.Validate(guid)).To(BeFalse())
+                Expect(len(parameters.Errors)).To(Equal(2))
+                Expect(parameters.Errors).To(ContainElement(`"kind_id" is a required field`))
+                Expect(parameters.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
 
-            parameters, err = params.NewNotify(body)
-            if err != nil {
-                panic(err)
-            }
+                parameters.KindID = "something"
+                parameters.Text = "banana"
 
-            Expect(parameters.Validate()).To(BeTrue())
-            Expect(len(parameters.Errors)).To(Equal(0))
+                Expect(parameters.Validate(guid)).To(BeTrue())
+                Expect(len(parameters.Errors)).To(Equal(0))
+            })
 
-            body = strings.NewReader(`{
-                "kind_id": "test_email",
-                "text": "Contents of the email message",
-                "html": "<html><body><p>the html</p></body></html>"
-            }`)
+            It("either text or html must be set", func() {
+                body := strings.NewReader(`{
+                    "kind_id": "test_email"
+                }`)
 
-            parameters, err = params.NewNotify(body)
-            if err != nil {
-                panic(err)
-            }
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
 
-            Expect(parameters.Validate()).To(BeTrue())
-            Expect(len(parameters.Errors)).To(Equal(0))
+                Expect(parameters.Validate(guid)).To(BeFalse())
+                Expect(parameters.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
+
+                body = strings.NewReader(`{
+                    "kind_id": "test_email",
+                    "text": "Contents of the email message"
+                }`)
+
+                parameters, err = params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.Validate(guid)).To(BeTrue())
+                Expect(len(parameters.Errors)).To(Equal(0))
+
+                body = strings.NewReader(`{
+                    "kind_id": "test_email",
+                    "html": "<html><body><p>the html</p></body></html>"
+                }`)
+
+                parameters, err = params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.Validate(guid)).To(BeTrue())
+                Expect(len(parameters.Errors)).To(Equal(0))
+
+                body = strings.NewReader(`{
+                    "kind_id": "test_email",
+                    "text": "Contents of the email message",
+                    "html": "<html><body><p>the html</p></body></html>"
+                }`)
+
+                parameters, err = params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.Validate(guid)).To(BeTrue())
+                Expect(len(parameters.Errors)).To(Equal(0))
+            })
+
+            It("validates the format of kind_id", func() {
+                body := strings.NewReader(`{
+                    "kind_id": "A_valid.id-99",
+                    "text": "Contents of the email message"
+                }`)
+
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.Validate(guid)).To(BeTrue())
+                Expect(len(parameters.Errors)).To(Equal(0))
+
+                body = strings.NewReader(`{
+                    "kind_id": "an_invalid.id-00!",
+                    "text": "Contents of the email message"
+                }`)
+
+                parameters, err = params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.Validate(guid)).To(BeFalse())
+                Expect(len(parameters.Errors)).To(Equal(1))
+                Expect(parameters.Errors).To(ContainElement(`"kind_id" is improperly formatted`))
+            })
         })
 
-        It("validates the format of kind_id", func() {
-            body := strings.NewReader(`{
-                "kind_id": "A_valid.id-99",
-                "text": "Contents of the email message"
-            }`)
-
-            parameters, err := params.NewNotify(body)
-            if err != nil {
-                panic(err)
-            }
-
-            Expect(parameters.Validate()).To(BeTrue())
-            Expect(len(parameters.Errors)).To(Equal(0))
-
-            body = strings.NewReader(`{
-                "kind_id": "an_invalid.id-00!",
-                "text": "Contents of the email message"
-            }`)
-
-            parameters, err = params.NewNotify(body)
-            if err != nil {
-                panic(err)
-            }
-
-            Expect(parameters.Validate()).To(BeFalse())
-            Expect(len(parameters.Errors)).To(Equal(1))
-            Expect(parameters.Errors).To(ContainElement(`"kind_id" is improperly formatted`))
-        })
     })
 
     Describe("ToOptions", func() {

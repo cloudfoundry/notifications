@@ -6,6 +6,10 @@ import (
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
+type MailerInterface interface {
+    Deliver(models.ConnectionInterface, Templates, map[string]uaa.User, Options, string, string, string) []Response
+}
+
 type Mailer struct {
     queue            gobble.QueueInterface
     guidGenerator    GUIDGenerationFunc
@@ -52,10 +56,16 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates Template
             }
         }
 
+        emailAddress := ""
+        if len(user.Emails) > 0 {
+            emailAddress = user.Emails[0]
+        }
+
         responses = append(responses, Response{
             Status:         StatusQueued,
             Recipient:      userGUID,
             NotificationID: messageID,
+            Email:          emailAddress,
         })
     }
 

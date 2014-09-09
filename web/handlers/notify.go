@@ -13,27 +13,30 @@ import (
     "github.com/dgrijalva/jwt-go"
 )
 
+type NotifyInterface interface {
+    Execute(models.ConnectionInterface, *http.Request, postal.TypedGUID, MailRecipeInterface) ([]byte, error)
+}
+
 type Notify struct {
-    courier   postal.CourierInterface
     finder    services.NotificationFinderInterface
     registrar services.RegistrarInterface
 }
 
-func NewNotify(courier postal.CourierInterface, finder services.NotificationFinderInterface, registrar services.RegistrarInterface) Notify {
+func NewNotify(finder services.NotificationFinderInterface, registrar services.RegistrarInterface) Notify {
     return Notify{
-        courier:   courier,
         finder:    finder,
         registrar: registrar,
     }
 }
 
-func (handler Notify) Execute(connection models.ConnectionInterface, req *http.Request, guid postal.TypedGUID) ([]byte, error) {
+func (handler Notify) Execute(connection models.ConnectionInterface, req *http.Request,
+    guid postal.TypedGUID, mailRecipe MailRecipeInterface) ([]byte, error) {
     parameters, err := params.NewNotify(req.Body)
     if err != nil {
         return []byte{}, err
     }
 
-    if !parameters.Validate() {
+    if !parameters.Validate(guid) {
         return []byte{}, params.ValidationError(parameters.Errors)
     }
 
@@ -48,7 +51,9 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
         return []byte{}, err
     }
 
-    responses, err := handler.courier.Dispatch(clientID, guid, parameters.ToOptions(client, kind), connection)
+    var responses []postal.Response
+
+    responses, err = mailRecipe.DeliverMail(clientID, guid, parameters.ToOptions(client, kind), connection)
     if err != nil {
         return []byte{}, err
     }
@@ -57,6 +62,8 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
     if err != nil {
         panic(err)
     }
+
+    output = mailRecipe.Trim(output)
 
     return output, nil
 }

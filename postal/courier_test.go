@@ -212,12 +212,14 @@ var _ = Describe("Courier", func() {
                         Recipient:      "user-123",
                         Status:         "queued",
                         NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
+                        Email:          "user-123@example.com",
                     }))
 
                     Expect(responses).To(ContainElement(postal.Response{
                         Recipient:      "user-456",
                         Status:         "queued",
                         NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
+                        Email:          "user-456@example.com",
                     }))
                 })
             })

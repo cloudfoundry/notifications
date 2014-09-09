@@ -56,24 +56,28 @@ var _ = Describe("Mailer", func() {
                 Status:         "queued",
                 Recipient:      "user-1",
                 NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
+                Email:          "user-1@example.com",
             }))
 
             Expect(responses).To(ContainElement(postal.Response{
                 Status:         "queued",
                 Recipient:      "user-2",
                 NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
+                Email:          "",
             }))
 
             Expect(responses).To(ContainElement(postal.Response{
                 Status:         "queued",
                 Recipient:      "user-3",
                 NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
+                Email:          "",
             }))
 
             Expect(responses).To(ContainElement(postal.Response{
                 Status:         "queued",
                 Recipient:      "user-4",
                 NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
+                Email:          "user-4",
             }))
         })
 
