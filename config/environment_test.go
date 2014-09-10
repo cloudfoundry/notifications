@@ -13,6 +13,7 @@ var _ = Describe("Environment", func() {
     var variables = map[string]string{}
     var envVars = []string{
         "CC_HOST",
+        "CORS_ORIGIN",
         "DATABASE_URL",
         "DB_LOGGING_ENABLED",
         "PORT",
@@ -319,6 +320,19 @@ var _ = Describe("Environment", func() {
             os.Setenv("DB_LOGGING_ENABLED", "true")
             env := config.NewEnvironment()
             Expect(env.DBLoggingEnabled).To(BeTrue())
+        })
+    })
+
+    Describe("CORS origin", func() {
+        It("defaults to *", func() {
+            env := config.NewEnvironment()
+            Expect(env.CORSOrigin).To(Equal("*"))
+        })
+
+        It("uses the value set by CORS_ORIGIN", func() {
+            os.Setenv("CORS_ORIGIN", "banana")
+            env := config.NewEnvironment()
+            Expect(env.CORSOrigin).To(Equal("banana"))
         })
     })
 })

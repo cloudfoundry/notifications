@@ -1,6 +1,10 @@
 package middleware
 
-import "net/http"
+import (
+    "net/http"
+
+    "github.com/cloudfoundry-incubator/notifications/config"
+)
 
 type CORS struct{}
 
@@ -9,9 +13,10 @@ func NewCORS() CORS {
 }
 
 func (ware CORS) ServeHTTP(w http.ResponseWriter, req *http.Request) bool {
-    w.Header().Set("Access-Control-Allow-Origin", "*")
-    w.Header().Set("Access-Control-Allow-Methods", "GET")
-    w.Header().Set("Access-Control-Allow-Headers", "Accept,Authorization")
+    env := config.NewEnvironment()
+    w.Header().Set("Access-Control-Allow-Origin", env.CORSOrigin)
+    w.Header().Set("Access-Control-Allow-Methods", "GET, PATCH")
+    w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization")
 
     return true
 }

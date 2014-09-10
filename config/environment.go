@@ -14,8 +14,9 @@ var UAAPublicKey string
 
 type Environment struct {
     CCHost           string
-    DatabaseURL      string
+    CORSOrigin       string
     DBLoggingEnabled bool
+    DatabaseURL      string
     InstanceIndex    int
     Port             string
     RootPath         string
@@ -51,6 +52,7 @@ func NewEnvironment() Environment {
         UAAClientSecret:  loadOrPanic("UAA_CLIENT_SECRET"),
         UAAHost:          loadOrPanic("UAA_HOST"),
         VerifySSL:        loadBool("VERIFY_SSL", true),
+        CORSOrigin:       loadOrDefault("CORS_ORIGIN", "*"),
     }
 }
 
@@ -58,6 +60,14 @@ func loadOrPanic(name string) string {
     value := os.Getenv(name)
     if value == "" {
         panic(errors.New(fmt.Sprintf("Could not find required %s environment variable", name)))
+    }
+    return value
+}
+
+func loadOrDefault(name string, defaultValue string) string {
+    value := os.Getenv(name)
+    if value == "" {
+        return defaultValue
     }
     return value
 }

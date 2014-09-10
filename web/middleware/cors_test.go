@@ -3,6 +3,7 @@ package middleware_test
 import (
     "net/http"
     "net/http/httptest"
+    "os"
 
     "github.com/cloudfoundry-incubator/notifications/web/middleware"
 
@@ -14,8 +15,18 @@ var _ = Describe("CORS", func() {
     var writer *httptest.ResponseRecorder
     var request *http.Request
     var ware middleware.CORS
+    var corsOrigin string
 
     Describe("ServeHTTP", func() {
+        BeforeEach(func() {
+            corsOrigin = os.Getenv("CORS_ORIGIN")
+            os.Setenv("CORS_ORIGIN", "test-cors-origin")
+        })
+
+        AfterEach(func() {
+            os.Setenv("CORS_ORIGIN", corsOrigin)
+        })
+
         BeforeEach(func() {
             var err error
 
@@ -32,9 +43,9 @@ var _ = Describe("CORS", func() {
             result := ware.ServeHTTP(writer, request)
 
             Expect(result).To(BeTrue())
-            Expect(writer.HeaderMap.Get("Access-Control-Allow-Origin")).To(Equal("*"))
-            Expect(writer.HeaderMap.Get("Access-Control-Allow-Methods")).To(Equal("GET"))
-            Expect(writer.HeaderMap.Get("Access-Control-Allow-Headers")).To(Equal("Accept,Authorization"))
+            Expect(writer.HeaderMap.Get("Access-Control-Allow-Origin")).To(Equal("test-cors-origin"))
+            Expect(writer.HeaderMap.Get("Access-Control-Allow-Methods")).To(Equal("GET, PATCH"))
+            Expect(writer.HeaderMap.Get("Access-Control-Allow-Headers")).To(Equal("Accept, Authorization"))
         })
     })
 })
