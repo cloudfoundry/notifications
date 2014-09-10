@@ -19,6 +19,7 @@ properties:
 | Variable            | Description                         | Default  |
 | ------------------- | ----------------------------------- | -------- |
 | CC_HOST\*           | Cloud Controller Host               | \<none\> |
+| CORS_ORIGIN         | Value to use for CORS Origin Header | *        |
 | DATABASE_URL\*      | URL to your Database                | \<none\> |
 | PORT                | Port that application will bind to  | 3000     |
 | ROOT_PATH\*         | Root path of your application       | \<none\> |
