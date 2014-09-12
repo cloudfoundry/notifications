@@ -3,8 +3,8 @@ package fakes
 import (
     "errors"
 
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/dgrijalva/jwt-go"
-    "github.com/pivotal-cf/notifications-ui/config"
 )
 
 const (
