@@ -5,6 +5,7 @@ import (
     "net/http"
     "net/http/httptest"
 
+    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
 
     . "github.com/onsi/ginkgo"
@@ -34,8 +35,9 @@ var _ = Describe("NotifySpace", func() {
         Context("when the notify.Execute returns a successful response", func() {
             It("returns the JSON representation of the response", func() {
                 fakeNotify.Response = []byte("whatever")
+                recipe := postal.UAARecipe{}
 
-                handler.Execute(writer, request, nil)
+                handler.Execute(writer, request, nil, recipe)
 
                 Expect(writer.Code).To(Equal(http.StatusOK))
                 Expect(fakeNotify.GUID.String()).To(Equal("space-001"))
@@ -49,8 +51,9 @@ var _ = Describe("NotifySpace", func() {
         Context("when the notify.Execute returns an error", func() {
             It("propagates the error", func() {
                 fakeNotify.Error = errors.New("the error")
+                recipe := postal.UAARecipe{}
 
-                err := handler.Execute(writer, request, nil)
+                err := handler.Execute(writer, request, nil, recipe)
                 Expect(err).To(Equal(fakeNotify.Error))
             })
         })

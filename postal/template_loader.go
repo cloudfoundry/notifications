@@ -5,12 +5,6 @@ import "github.com/cloudfoundry-incubator/notifications/config"
 const (
     SubjectMissingTemplateName  = "subject.missing"
     SubjectProvidedTemplateName = "subject.provided"
-    SpaceTextTemplateName       = "space_body.text"
-    SpaceHTMLTemplateName       = "space_body.html"
-    UserTextTemplateName        = "user_body.text"
-    UserHTMLTemplateName        = "user_body.html"
-    EmailTextTemplateName       = "email_body.text"
-    EmailHTMLTemplateName       = "email_body.html"
 )
 
 type Templates struct {
@@ -20,7 +14,8 @@ type Templates struct {
 }
 
 type TemplateLoaderInterface interface {
-    Load(string, TypedGUID, string, string) (Templates, error)
+    LoadNamedTemplates(string, string, string) (Templates, error)
+    LoadNamedTemplatesWithClientAndKind(string, string, string, string, string) (Templates, error)
 }
 
 type TemplateLoader struct {
@@ -35,27 +30,47 @@ func NewTemplateLoader(fs FileSystemInterface) TemplateLoader {
     }
 }
 
-func (loader TemplateLoader) Load(subject string, guid TypedGUID, clientID string, kind string) (Templates, error) {
+func (loader TemplateLoader) LoadNamedTemplates(subjectTemplateName, textTemplateName, htmlTemplateName string) (Templates, error) {
     var err error
-    loader.ClientID = clientID
-    loader.Kind = kind
     templates := Templates{}
 
-    templates.Subject, err = loader.loadSubject(subject)
+    templates.Subject, err = loader.LoadTemplate(subjectTemplateName)
     if err != nil {
         return templates, err
     }
 
-    templates.Text, err = loader.loadText(guid)
+    templates.Text, err = loader.LoadTemplate(textTemplateName)
     if err != nil {
         return templates, err
     }
 
-    templates.HTML, err = loader.loadHTML(guid)
+    templates.HTML, err = loader.LoadTemplate(htmlTemplateName)
+    if err != nil {
+        return templates, err
+    }
+    return templates, nil
+}
+
+func (loader TemplateLoader) LoadNamedTemplatesWithClientAndKind(subjectTemplateName, textTemplateName, htmlTemplateName, clientID, kind string) (Templates, error) {
+    var err error
+    templates := Templates{}
+    loader.ClientID = clientID
+    loader.Kind = kind
+
+    templates.Subject, err = loader.LoadTemplate(subjectTemplateName)
     if err != nil {
         return templates, err
     }
 
+    templates.Text, err = loader.LoadTemplate(textTemplateName)
+    if err != nil {
+        return templates, err
+    }
+
+    templates.HTML, err = loader.LoadTemplate(htmlTemplateName)
+    if err != nil {
+        return templates, err
+    }
     return templates, nil
 }
 
@@ -64,26 +79,6 @@ func (loader TemplateLoader) loadSubject(subject string) (string, error) {
         return loader.LoadTemplate(SubjectMissingTemplateName)
     } else {
         return loader.LoadTemplate(SubjectProvidedTemplateName)
-    }
-}
-
-func (loader TemplateLoader) loadText(guid TypedGUID) (string, error) {
-    if guid.IsTypeEmail() {
-        return loader.LoadTemplate(EmailTextTemplateName)
-    } else if guid.BelongsToSpace() {
-        return loader.LoadTemplate(SpaceTextTemplateName)
-    } else {
-        return loader.LoadTemplate(UserTextTemplateName)
-    }
-}
-
-func (loader TemplateLoader) loadHTML(guid TypedGUID) (string, error) {
-    if guid.IsTypeEmail() {
-        return loader.LoadTemplate(EmailHTMLTemplateName)
-    } else if guid.BelongsToSpace() {
-        return loader.LoadTemplate(SpaceHTMLTemplateName)
-    } else {
-        return loader.LoadTemplate(UserHTMLTemplateName)
     }
 }
 

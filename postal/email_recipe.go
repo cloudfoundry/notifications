@@ -8,41 +8,45 @@ import (
 )
 
 const (
-    EmailFieldName      = "email"
-    RecipientsFieldName = "recipient"
+    EmailFieldName        = "email"
+    RecipientsFieldName   = "recipient"
+    EmailTextTemplateName = "email_body.text"
+    EmailHTMLTemplateName = "email_body.html"
 )
 
 type MailRecipeInterface interface {
-    DeliverMail(clientID string, guid TypedGUID,
+    Dispatch(clientID string, guid TypedGUID,
         options Options, conn models.ConnectionInterface) ([]Response, error)
     Trim([]byte) []byte
 }
 
 type EmailRecipe struct {
-    courier        CourierInterface
+    mailer         MailerInterface
     templateLoader TemplateLoaderInterface
 }
 
-func NewEmailRecipe(courier CourierInterface, templateLoader TemplateLoaderInterface) EmailRecipe {
+func NewEmailRecipe(mailer MailerInterface, templateLoader TemplateLoaderInterface) EmailRecipe {
     return EmailRecipe{
-        courier:        courier,
+        mailer:         mailer,
         templateLoader: templateLoader,
     }
 }
 
-func (recipe EmailRecipe) DeliverMail(clientID string, guid TypedGUID,
+func (recipe EmailRecipe) Dispatch(clientID string, guid TypedGUID,
     options Options, conn models.ConnectionInterface) ([]Response, error) {
 
     users := map[string]uaa.User{"no-guid-yet": uaa.User{Emails: []string{options.To}}}
     space := ""
     organization := ""
 
-    templates, err := recipe.templateLoader.Load(options.Subject, guid, clientID, options.KindID)
+    subjectTemplate := recipe.determineSubjectTemplate(options.Subject)
+    templates, err := recipe.templateLoader.LoadNamedTemplates(subjectTemplate, EmailTextTemplateName, EmailHTMLTemplateName)
+
     if err != nil {
         return []Response{}, TemplateLoadError("An email template could not be loaded")
     }
 
-    return recipe.courier.Mailer().Deliver(conn, templates, users, options, space, organization, clientID), nil
+    return recipe.mailer.Deliver(conn, templates, users, options, space, organization, clientID), nil
 }
 
 func (recipe EmailRecipe) Trim(responses []byte) []byte {
@@ -50,21 +54,11 @@ func (recipe EmailRecipe) Trim(responses []byte) []byte {
     return t.TrimFields(responses, RecipientsFieldName)
 }
 
-type UAARecipe struct {
-    courier CourierInterface
-}
-
-func NewUAARecipe(courier CourierInterface) UAARecipe {
-    return UAARecipe{courier: courier}
-}
-
-func (recipe UAARecipe) DeliverMail(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
-    return recipe.courier.Dispatch(clientID, guid, options, conn)
-}
-
-func (recipe UAARecipe) Trim(responses []byte) []byte {
-    t := Trimmer{}
-    return t.TrimFields(responses, EmailFieldName)
+func (recipe EmailRecipe) determineSubjectTemplate(subject string) string {
+    if subject == "" {
+        return SubjectMissingTemplateName
+    }
+    return SubjectProvidedTemplateName
 }
 
 type Trimmer struct{}

@@ -282,83 +282,76 @@ var _ = Describe("Notify", func() {
         })
     })
 
-    Describe("Validate", func() {
-
-        Context("the guid corresponds to an email", func() {
-            var emailID postal.TypedGUID
-
-            BeforeEach(func() {
-                emailID = postal.EmailID("user@example.com")
-            })
-
-            It("validates the required parameters in the request body", func() {
-                body := strings.NewReader(`{
+    Describe("ValidateEmailRequest", func() {
+        It("validates the required parameters in the request body", func() {
+            body := strings.NewReader(`{
                     "to": "user@example.com",
                     "text": "Contents of the email message"
                 }`)
 
-                parameters, err := params.NewNotify(body)
-                if err != nil {
-                    panic(err)
-                }
+            parameters, err := params.NewNotify(body)
+            if err != nil {
+                panic(err)
+            }
 
-                Expect(parameters.Validate(emailID)).To(BeTrue())
-                Expect(len(parameters.Errors)).To(Equal(0))
+            Expect(parameters.ValidateEmailRequest()).To(BeTrue())
+            Expect(len(parameters.Errors)).To(Equal(0))
 
-                parameters.To = ""
+            parameters.To = ""
 
-                Expect(parameters.Validate(emailID)).To(BeFalse())
-                Expect(len(parameters.Errors)).To(Equal(1))
-                Expect(parameters.Errors).To(ContainElement(`"to" is a required field`))
+            Expect(parameters.ValidateEmailRequest()).To(BeFalse())
+            Expect(len(parameters.Errors)).To(Equal(1))
+            Expect(parameters.Errors).To(ContainElement(`"to" is a required field`))
 
-                parameters.Text = ""
+            parameters.Text = ""
 
-                Expect(parameters.Validate(emailID)).To(BeFalse())
-                Expect(len(parameters.Errors)).To(Equal(2))
-                Expect(parameters.Errors).To(ContainElement(`"to" is a required field`))
-                Expect(parameters.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
+            Expect(parameters.ValidateEmailRequest()).To(BeFalse())
+            Expect(len(parameters.Errors)).To(Equal(2))
+            Expect(parameters.Errors).To(ContainElement(`"to" is a required field`))
+            Expect(parameters.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
 
-                parameters.To = "otherUser@example.com"
-                parameters.ParsedHTML = postal.HTML{BodyContent: "<p>Contents of this email message</p>"}
+            parameters.To = "otherUser@example.com"
+            parameters.ParsedHTML = postal.HTML{BodyContent: "<p>Contents of this email message</p>"}
 
-                Expect(parameters.Validate(emailID)).To(BeTrue())
-                Expect(len(parameters.Errors)).To(Equal(0))
+            Expect(parameters.ValidateEmailRequest()).To(BeTrue())
+            Expect(len(parameters.Errors)).To(Equal(0))
 
-            })
+        })
 
-            It("validates the format of an email", func() {
-                body := strings.NewReader(`{
+        It("validates the format of an email", func() {
+            body := strings.NewReader(`{
                     "to": "<invalid email",
                     "text": "Contents of the email message"
                 }`)
 
-                parameters, err := params.NewNotify(body)
-                if err != nil {
-                    panic(err)
-                }
+            parameters, err := params.NewNotify(body)
+            if err != nil {
+                panic(err)
+            }
 
-                Expect(parameters.Validate(emailID)).To(BeFalse())
-                Expect(len(parameters.Errors)).To(Equal(1))
-                Expect(parameters.Errors).To(ContainElement(`"to" is improperly formatted`))
-            })
+            Expect(parameters.ValidateEmailRequest()).To(BeFalse())
+            Expect(len(parameters.Errors)).To(Equal(1))
+            Expect(parameters.Errors).To(ContainElement(`"to" is improperly formatted`))
+        })
 
-            It("validates the format of an email", func() {
-                body := strings.NewReader(`{
+        It("validates the format of an email", func() {
+            body := strings.NewReader(`{
                     "to": "invalidemail.com",
                     "text": "Contents of the email message"
                 }`)
 
-                parameters, err := params.NewNotify(body)
-                if err != nil {
-                    panic(err)
-                }
+            parameters, err := params.NewNotify(body)
+            if err != nil {
+                panic(err)
+            }
 
-                Expect(parameters.Validate(emailID)).To(BeFalse())
-                Expect(len(parameters.Errors)).To(Equal(1))
-                Expect(parameters.Errors).To(ContainElement(`"to" is improperly formatted`))
-            })
+            Expect(parameters.ValidateEmailRequest()).To(BeFalse())
+            Expect(len(parameters.Errors)).To(Equal(1))
+            Expect(parameters.Errors).To(ContainElement(`"to" is improperly formatted`))
         })
+    })
 
+    Describe("ValidateGUIDRequest", func() {
         Context("the guid corresponds to a space or a user", func() {
             var guid postal.TypedGUID
             var emailID postal.TypedGUID
@@ -378,18 +371,18 @@ var _ = Describe("Notify", func() {
                     panic(err)
                 }
 
-                Expect(parameters.Validate(guid)).To(BeTrue())
+                Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
                 Expect(len(parameters.Errors)).To(Equal(0))
 
                 parameters.KindID = ""
 
-                Expect(parameters.Validate(guid)).To(BeFalse())
+                Expect(parameters.ValidateGUIDRequest()).To(BeFalse())
                 Expect(len(parameters.Errors)).To(Equal(1))
                 Expect(parameters.Errors).To(ContainElement(`"kind_id" is a required field`))
 
                 parameters.Text = ""
 
-                Expect(parameters.Validate(guid)).To(BeFalse())
+                Expect(parameters.ValidateGUIDRequest()).To(BeFalse())
                 Expect(len(parameters.Errors)).To(Equal(2))
                 Expect(parameters.Errors).To(ContainElement(`"kind_id" is a required field`))
                 Expect(parameters.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
@@ -397,7 +390,7 @@ var _ = Describe("Notify", func() {
                 parameters.KindID = "something"
                 parameters.Text = "banana"
 
-                Expect(parameters.Validate(guid)).To(BeTrue())
+                Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
                 Expect(len(parameters.Errors)).To(Equal(0))
             })
 
@@ -411,7 +404,7 @@ var _ = Describe("Notify", func() {
                     panic(err)
                 }
 
-                Expect(parameters.Validate(guid)).To(BeFalse())
+                Expect(parameters.ValidateGUIDRequest()).To(BeFalse())
                 Expect(parameters.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
 
                 body = strings.NewReader(`{
@@ -424,7 +417,7 @@ var _ = Describe("Notify", func() {
                     panic(err)
                 }
 
-                Expect(parameters.Validate(guid)).To(BeTrue())
+                Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
                 Expect(len(parameters.Errors)).To(Equal(0))
 
                 body = strings.NewReader(`{
@@ -437,7 +430,7 @@ var _ = Describe("Notify", func() {
                     panic(err)
                 }
 
-                Expect(parameters.Validate(guid)).To(BeTrue())
+                Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
                 Expect(len(parameters.Errors)).To(Equal(0))
 
                 body = strings.NewReader(`{
@@ -451,7 +444,7 @@ var _ = Describe("Notify", func() {
                     panic(err)
                 }
 
-                Expect(parameters.Validate(guid)).To(BeTrue())
+                Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
                 Expect(len(parameters.Errors)).To(Equal(0))
             })
 
@@ -466,7 +459,7 @@ var _ = Describe("Notify", func() {
                     panic(err)
                 }
 
-                Expect(parameters.Validate(guid)).To(BeTrue())
+                Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
                 Expect(len(parameters.Errors)).To(Equal(0))
 
                 body = strings.NewReader(`{
@@ -479,7 +472,7 @@ var _ = Describe("Notify", func() {
                     panic(err)
                 }
 
-                Expect(parameters.Validate(guid)).To(BeFalse())
+                Expect(parameters.ValidateGUIDRequest()).To(BeFalse())
                 Expect(len(parameters.Errors)).To(Equal(1))
                 Expect(parameters.Errors).To(ContainElement(`"kind_id" is improperly formatted`))
             })

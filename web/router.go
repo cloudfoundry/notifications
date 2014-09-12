@@ -3,6 +3,7 @@ package web
 import (
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/mother"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/middleware"
     "github.com/gorilla/mux"
@@ -13,9 +14,9 @@ type Router struct {
     stacks map[string]stack.Stack
 }
 
-func NewRouter(mother *Mother) Router {
+func NewRouter(mother *mother.Mother) Router {
     registrar := mother.Registrar()
-    courier := mother.Courier()
+    mailer := mother.Mailer()
     notify := handlers.NewNotify(mother.NotificationFinder(), registrar)
     preferencesFinder := mother.PreferencesFinder()
     preferenceUpdater := mother.PreferenceUpdater()
@@ -29,9 +30,9 @@ func NewRouter(mother *Mother) Router {
     return Router{
         stacks: map[string]stack.Stack{
             "GET /info":                 stack.NewStack(handlers.NewGetInfo()).Use(logging),
-            "POST /users/{guid}":        stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, courier)).Use(logging, notificationsWriteAuthenticator),
-            "POST /spaces/{guid}":       stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, courier)).Use(logging, notificationsWriteAuthenticator),
-            "POST /emails":              stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, courier)).Use(logging),
+            "POST /users/{guid}":        stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, mother)).Use(logging, notificationsWriteAuthenticator),
+            "POST /spaces/{guid}":       stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, mother)).Use(logging, notificationsWriteAuthenticator),
+            "POST /emails":              stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, mailer)).Use(logging),
             "PUT /registration":         stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter)).Use(logging, notificationsWriteAuthenticator),
             "OPTIONS /user_preferences": stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),
             "GET /user_preferences":     stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, cors, notificationPreferencesReadAuthenticator),

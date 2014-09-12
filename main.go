@@ -11,6 +11,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/mother"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -34,13 +35,13 @@ func main() {
 
 type Application struct {
     env    config.Environment
-    mother *web.Mother
+    mother *mother.Mother
 }
 
 func NewApplication() Application {
     return Application{
         env:    config.NewEnvironment(),
-        mother: web.NewMother(),
+        mother: mother.NewMother(),
     }
 }
 

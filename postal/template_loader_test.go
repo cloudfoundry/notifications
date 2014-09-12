@@ -25,6 +25,9 @@ func NewFakeFileSystem(env config.Environment) FakeFileSystem {
             env.RootPath + "/templates/user_body.html":   "default-user-html",
             env.RootPath + "/templates/email_body.html":  "email-body-html",
             env.RootPath + "/templates/email_body.text":  "email-body-text",
+            env.RootPath + "/templates/subject.template": "subject text",
+            env.RootPath + "/templates/text.template":    "text text",
+            env.RootPath + "/templates/html.template":    "html text",
         },
     }
 }
@@ -56,63 +59,33 @@ var _ = Describe("TemplateLoader", func() {
         clientID = "DirkVonPiel"
     })
 
-    Describe("Load", func() {
-        Context("when subject is not set in the params", func() {
-            It("returns the subject.missing template", func() {
-                templates, err := loader.Load("", postal.SpaceGUID("space-001"), clientID, kind)
-                if err != nil {
-                    panic(err)
-                }
+    Describe("LoadNamedTemplates", func() {
+        It("loads the the templates mentioned as parameters into a templates object", func() {
+            templates, err := loader.LoadNamedTemplates("subject.template", "text.template", "html.template")
+            if err != nil {
+                panic(err)
+            }
 
-                Expect(templates.Subject).To(Equal("default-missing-subject"))
-            })
+            Expect(templates.Subject).To(Equal("subject text"))
+            Expect(templates.Text).To(Equal("text text"))
+            Expect(templates.HTML).To(Equal("html text"))
+        })
+    })
+
+    Describe("LoadNamedTemplatesWithClientAndKind", func() {
+        BeforeEach(func() {
+            fs.Files[env.RootPath+"/templates/overrides/DirkVonPiel.html.template"] = "html override text"
         })
 
-        Context("when subject is set in the params", func() {
-            It("returns the subject.provided template", func() {
-                templates, err := loader.Load("is provided", postal.SpaceGUID("space-001"), clientID, kind)
-                if err != nil {
-                    panic(err)
-                }
+        It("loads the the templates mentioned as parameters into a templates object", func() {
+            templates, err := loader.LoadNamedTemplatesWithClientAndKind("subject.template", "text.template", "html.template", clientID, kind)
+            if err != nil {
+                panic(err)
+            }
 
-                Expect(templates.Subject).To(Equal("default-provided-subject"))
-            })
-        })
-
-        Context("guid is SpaceGUID", func() {
-            It("returns the space templates", func() {
-                templates, err := loader.Load("", postal.SpaceGUID("space-001"), clientID, kind)
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(templates.Text).To(Equal("default-space-text"))
-                Expect(templates.HTML).To(Equal("default-space-html"))
-            })
-        })
-
-        Context("guid is UserGUID", func() {
-            It("returns the user templates", func() {
-                templates, err := loader.Load("", postal.UserGUID("user-123"), clientID, kind)
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(templates.Text).To(Equal("default-user-text"))
-                Expect(templates.HTML).To(Equal("default-user-html"))
-            })
-        })
-
-        Context("guid is EmailGUID", func() {
-            It("returns the email templates", func() {
-                templates, err := loader.Load("", postal.EmailID("user123@emample.net"), "", "")
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(templates.Text).To(Equal("email-body-text"))
-                Expect(templates.HTML).To(Equal("email-body-html"))
-            })
+            Expect(templates.Subject).To(Equal("subject text"))
+            Expect(templates.Text).To(Equal("text text"))
+            Expect(templates.HTML).To(Equal("html override text"))
         })
     })
 

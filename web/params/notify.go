@@ -79,32 +79,42 @@ func (notify *Notify) formatEmail() {
     }
 }
 
-func (notify *Notify) Validate(guid postal.TypedGUID) bool {
+func (notify *Notify) ValidateEmailRequest() bool {
     notify.Errors = []string{}
 
-    if guid.IsTypeEmail() {
-        if notify.To == "" {
-            notify.Errors = append(notify.Errors, `"to" is a required field`)
-        }
+    if notify.To == "" {
+        notify.Errors = append(notify.Errors, `"to" is a required field`)
+    }
 
-        if notify.To == InvalidEmail {
-            notify.Errors = append(notify.Errors, `"to" is improperly formatted`)
-        }
+    if notify.To == InvalidEmail {
+        notify.Errors = append(notify.Errors, `"to" is improperly formatted`)
+    }
+
+    notify.checkTextHtmlFields()
+
+    return len(notify.Errors) == 0
+}
+
+func (notify *Notify) ValidateGUIDRequest() bool {
+    notify.Errors = []string{}
+
+    if notify.KindID == "" {
+        notify.Errors = append(notify.Errors, `"kind_id" is a required field`)
     } else {
-        if notify.KindID == "" {
-            notify.Errors = append(notify.Errors, `"kind_id" is a required field`)
-        } else {
-            if !kindIDFormat.MatchString(notify.KindID) {
-                notify.Errors = append(notify.Errors, `"kind_id" is improperly formatted`)
-            }
+        if !kindIDFormat.MatchString(notify.KindID) {
+            notify.Errors = append(notify.Errors, `"kind_id" is improperly formatted`)
         }
     }
 
+    notify.checkTextHtmlFields()
+
+    return len(notify.Errors) == 0
+}
+
+func (notify *Notify) checkTextHtmlFields() {
     if notify.Text == "" && notify.ParsedHTML.BodyContent == "" {
         notify.Errors = append(notify.Errors, `"text" or "html" fields must be supplied`)
     }
-
-    return len(notify.Errors) == 0
 }
 
 func (notify *Notify) parseRequestBody(body io.Reader) error {

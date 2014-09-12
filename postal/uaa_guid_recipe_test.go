@@ -2,6 +2,7 @@ package postal_test
 
 import (
     "bytes"
+    "encoding/json"
     "errors"
     "log"
     "strings"
@@ -16,8 +17,9 @@ import (
     . "github.com/onsi/gomega"
 )
 
-var _ = Describe("Courier", func() {
-    var courier postal.Courier
+var _ = Describe("UAA Recipe", func() {
+    var uaaRecipe postal.UAARecipe
+
     var fakeCC *fakes.FakeCloudController
     var id int
     var logger *log.Logger
@@ -105,7 +107,7 @@ var _ = Describe("Courier", func() {
         spaceLoader = postal.NewSpaceLoader(fakeCC)
         templateLoader = postal.NewTemplateLoader(&fs)
 
-        courier = postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, &fakeReceiptsRepo)
+        uaaRecipe = postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, &fakeReceiptsRepo)
     })
 
     Describe("Dispatch", func() {
@@ -124,7 +126,7 @@ var _ = Describe("Courier", func() {
                 Context("when Cloud Controller is unavailable to load space users", func() {
                     It("returns a CCDownError error", func() {
                         fakeCC.GetUsersBySpaceGuidError = errors.New("BOOM!")
-                        _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                        _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.CCDownError("")))
                     })
@@ -133,7 +135,7 @@ var _ = Describe("Courier", func() {
                 Context("when Cloud Controller is unavailable to load a space", func() {
                     It("returns a CCDownError error", func() {
                         fakeCC.LoadSpaceError = errors.New("BOOM!")
-                        _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-000"), options, conn)
+                        _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-000"), options, conn)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
                     })
@@ -142,7 +144,7 @@ var _ = Describe("Courier", func() {
                 Context("when UAA cannot be reached", func() {
                     It("returns a UAADownError", func() {
                         fakeUAA.ErrorForUserByID = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
-                        _, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+                        _, err := uaaRecipe.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
                     })
@@ -151,7 +153,7 @@ var _ = Describe("Courier", func() {
                 Context("when UAA fails for unknown reasons", func() {
                     It("returns a UAAGenericError", func() {
                         fakeUAA.ErrorForUserByID = errors.New("BOOM!")
-                        _, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+                        _, err := uaaRecipe.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.UAAGenericError("")))
                     })
@@ -161,7 +163,7 @@ var _ = Describe("Courier", func() {
                     It("returns a TemplateLoadError", func() {
                         delete(fs.Files, env.RootPath+"/templates/user_body.text")
 
-                        _, err := courier.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+                        _, err := uaaRecipe.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.TemplateLoadError("")))
                     })
@@ -173,13 +175,13 @@ var _ = Describe("Courier", func() {
                     It("returns an error", func() {
                         fakeReceiptsRepo.CreateReceiptsError = true
 
-                        _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                        _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
                         Expect(err).ToNot(BeNil())
                     })
                 })
 
                 It("records a receipt for each user", func() {
-                    _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                    _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
                     if err != nil {
                         panic(err)
                     }
@@ -190,7 +192,7 @@ var _ = Describe("Courier", func() {
                 })
 
                 It("logs the UUIDs of all recipients", func() {
-                    _, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                    _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
                     if err != nil {
                         panic(err)
                     }
@@ -202,8 +204,8 @@ var _ = Describe("Courier", func() {
                 })
 
                 It("returns necessary info in the response for the sent mail", func() {
-                    courier = postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, &fakeReceiptsRepo)
-                    responses, err := courier.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                    uaaRecipe = postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, &fakeReceiptsRepo)
+                    responses, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
                     if err != nil {
                         panic(err)
                     }
@@ -223,6 +225,33 @@ var _ = Describe("Courier", func() {
                         Email:          "user-456@example.com",
                     }))
                 })
+            })
+        })
+    })
+
+    Describe("Trim", func() {
+        Describe("TrimFields", func() {
+            It("trims the specified fields from the response object", func() {
+                responses, err := json.Marshal([]postal.Response{
+                    {
+                        Status:         "delivered",
+                        Recipient:      "user-123",
+                        NotificationID: "123-456",
+                    },
+                })
+
+                trimmedResponses := uaaRecipe.Trim(responses)
+
+                var result []map[string]string
+                err = json.Unmarshal(trimmedResponses, &result)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(result).To(ContainElement(map[string]string{"status": "delivered",
+                    "recipient":       "user-123",
+                    "notification_id": "123-456",
+                }))
             })
         })
     })

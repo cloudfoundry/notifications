@@ -6,6 +6,10 @@ type FakeTemplateLoader struct {
     Templates postal.Templates
 }
 
-func (fake *FakeTemplateLoader) Load(subject string, guid postal.TypedGUID, clientID string, kind string) (postal.Templates, error) {
+func (fake *FakeTemplateLoader) LoadNamedTemplates(subjectTemplateName, textTemplateName, htmlTemplateName string) (postal.Templates, error) {
+    return fake.Templates, nil
+}
+
+func (fake *FakeTemplateLoader) LoadNamedTemplatesWithClientAndKind(subjectTemplateName, textTemplateName, htmlTemplateName, clientID, kind string) (postal.Templates, error) {
     return fake.Templates, nil
 }

@@ -36,8 +36,14 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
         return []byte{}, err
     }
 
-    if !parameters.Validate(guid) {
-        return []byte{}, params.ValidationError(parameters.Errors)
+    if guid.IsTypeEmail() {
+        if !parameters.ValidateEmailRequest() {
+            return []byte{}, params.ValidationError(parameters.Errors)
+        }
+    } else {
+        if !parameters.ValidateGUIDRequest() {
+            return []byte{}, params.ValidationError(parameters.Errors)
+        }
     }
 
     clientID := handler.ParseClientID(strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer "))
@@ -53,7 +59,7 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 
     var responses []postal.Response
 
-    responses, err = mailRecipe.DeliverMail(clientID, guid, parameters.ToOptions(client, kind), connection)
+    responses, err = mailRecipe.Dispatch(clientID, guid, parameters.ToOptions(client, kind), connection)
     if err != nil {
         return []byte{}, err
     }

@@ -6,16 +6,16 @@ import (
 )
 
 type FakeMailRecipe struct {
-    DeliverMailArguments []interface{}
-    Responses            []postal.Response
-    Error                error
-    TrimCalled           bool
+    DispatchArguments []interface{}
+    Responses         []postal.Response
+    Error             error
+    TrimCalled        bool
 }
 
-func (fake *FakeMailRecipe) DeliverMail(clientID string, guid postal.TypedGUID,
+func (fake *FakeMailRecipe) Dispatch(clientID string, guid postal.TypedGUID,
     options postal.Options, conn models.ConnectionInterface) ([]postal.Response, error) {
 
-    fake.DeliverMailArguments = []interface{}{clientID, guid, options}
+    fake.DispatchArguments = []interface{}{clientID, guid, options}
     return fake.Responses, fake.Error
 }
 

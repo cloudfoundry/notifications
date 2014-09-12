@@ -10,16 +10,16 @@ import (
 )
 
 type NotifyUser struct {
-    errorWriter ErrorWriterInterface
-    notify      NotifyInterface
-    courier     postal.CourierInterface
+    errorWriter   ErrorWriterInterface
+    notify        NotifyInterface
+    recipeBuilder RecipeBuilderInterface
 }
 
-func NewNotifyUser(notify NotifyInterface, errorWriter ErrorWriterInterface, courier postal.CourierInterface) NotifyUser {
+func NewNotifyUser(notify NotifyInterface, errorWriter ErrorWriterInterface, recipeBuilder RecipeBuilderInterface) NotifyUser {
     return NotifyUser{
-        errorWriter: errorWriter,
-        notify:      notify,
-        courier:     courier,
+        errorWriter:   errorWriter,
+        notify:        notify,
+        recipeBuilder: recipeBuilder,
     }
 }
 
@@ -29,17 +29,18 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     }).Log()
 
     connection := models.Database().Connection()
-    err := handler.Execute(w, req, connection)
+    err := handler.Execute(w, req, connection, handler.recipeBuilder.NewUAARecipe())
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
     }
 }
 
-func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) error {
+func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request,
+    connection models.ConnectionInterface, recipe postal.UAARecipe) error {
     userGUID := postal.UserGUID(strings.TrimPrefix(req.URL.Path, "/users/"))
 
-    output, err := handler.notify.Execute(connection, req, userGUID, postal.NewUAARecipe(handler.courier))
+    output, err := handler.notify.Execute(connection, req, userGUID, recipe)
     if err != nil {
         return err
     }

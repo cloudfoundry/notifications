@@ -1,4 +1,4 @@
-package web
+package mother
 
 import (
     "log"
@@ -40,7 +40,7 @@ func (mother *Mother) Queue() *gobble.Queue {
     return mother.queue
 }
 
-func (mother Mother) Courier() postal.Courier {
+func (mother Mother) NewUAARecipe() postal.UAARecipe {
     env := config.NewEnvironment()
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
     uaaClient.VerifySSL = env.VerifySSL
@@ -50,15 +50,19 @@ func (mother Mother) Courier() postal.Courier {
     userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
     spaceLoader := postal.NewSpaceLoader(cloudController)
     templateLoader := postal.NewTemplateLoader(postal.NewFileSystem())
-    mailer := postal.NewMailer(mother.Queue(), uuid.NewV4, mother.UnsubscribesRepo())
+    mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewCourier(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, receiptsRepo)
+    return postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) NotificationFinder() services.NotificationFinder {
     clientsRepo, kindsRepo := mother.Repos()
     return services.NewNotificationFinder(clientsRepo, kindsRepo)
+}
+
+func (mother Mother) Mailer() postal.Mailer {
+    return postal.NewMailer(mother.Queue(), uuid.NewV4, mother.UnsubscribesRepo())
 }
 
 func (mother Mother) Repos() (models.ClientsRepo, models.KindsRepo) {

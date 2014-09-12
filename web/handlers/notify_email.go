@@ -8,14 +8,14 @@ import (
 )
 
 type NotifyEmail struct {
-    notify  NotifyInterface
-    courier postal.CourierInterface
+    notify NotifyInterface
+    mailer postal.MailerInterface
 }
 
-func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, courier postal.CourierInterface) NotifyEmail {
+func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, mailer postal.MailerInterface) NotifyEmail {
     return NotifyEmail{
-        notify:  notify,
-        courier: courier,
+        notify: notify,
+        mailer: mailer,
     }
 }
 
@@ -30,7 +30,7 @@ func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (handler NotifyEmail) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) error {
     templateLoader := postal.NewTemplateLoader(postal.NewFileSystem())
-    output, err := handler.notify.Execute(connection, req, postal.NewEmailID(), postal.NewEmailRecipe(handler.courier, templateLoader))
+    output, err := handler.notify.Execute(connection, req, postal.NewEmailID(), postal.NewEmailRecipe(handler.mailer, templateLoader))
     if err != nil {
         return err
     }

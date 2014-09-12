@@ -80,7 +80,7 @@ var _ = Describe("Notify", func() {
             })
 
             Describe("Responses", func() {
-                It("trim is called on the recipe", func() {
+                BeforeEach(func() {
                     fakeRecipe.Responses = []postal.Response{
                         {
                             Status:         "delivered",
@@ -88,7 +88,9 @@ var _ = Describe("Notify", func() {
                             NotificationID: "123-456",
                         },
                     }
+                })
 
+                It("trim is called on the recipe", func() {
                     _, err := handler.Execute(fakeDBConn, request, postal.NewUserGUID(), fakeRecipe)
                     if err != nil {
                         panic(err)
@@ -104,7 +106,7 @@ var _ = Describe("Notify", func() {
                     panic(err)
                 }
 
-                Expect(fakeRecipe.DeliverMailArguments).To(Equal([]interface{}{
+                Expect(fakeRecipe.DispatchArguments).To(Equal([]interface{}{
                     "mister-client",
                     postal.SpaceGUID("space-001"),
                     postal.Options{
@@ -168,7 +170,7 @@ var _ = Describe("Notify", func() {
                     })
                 })
 
-                Context("when the recipe returns errors", func() {
+                Context("when the recipe dispatch method returns errors", func() {
                     It("returns the error", func() {
                         fakeRecipe.Error = errors.New("BOOM!")
 

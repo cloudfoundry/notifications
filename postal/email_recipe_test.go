@@ -15,7 +15,7 @@ var _ = Describe("Recipes", func() {
     Describe("EmailRecipe", func() {
         var emailRecipe postal.EmailRecipe
 
-        Describe("DeliverMail", func() {
+        Describe("DispatchMail", func() {
             var fakeMailer *fakes.FakeMailer
             var fakeDBConn *fakes.FakeDBConn
             var options postal.Options
@@ -24,11 +24,9 @@ var _ = Describe("Recipes", func() {
             var fakeTemplateLoader fakes.FakeTemplateLoader
 
             BeforeEach(func() {
-                fakeCourier := fakes.NewFakeCourier()
                 fakeMailer = fakes.NewFakeMailer()
-                fakeCourier.TheMailer = fakeMailer
                 fakeTemplateLoader = fakes.FakeTemplateLoader{}
-                emailRecipe = postal.NewEmailRecipe(fakeCourier, &fakeTemplateLoader)
+                emailRecipe = postal.NewEmailRecipe(fakeMailer, &fakeTemplateLoader)
 
                 clientID = "raptors-123"
                 emailID = postal.NewEmailID()
@@ -47,8 +45,8 @@ var _ = Describe("Recipes", func() {
                 }
             })
 
-            It("Calls Deliver on its courier's mailer with proper arguments", func() {
-                emailRecipe.DeliverMail(clientID, emailID, options, fakeDBConn)
+            It("Calls Deliver on it's mailer with proper arguments", func() {
+                emailRecipe.Dispatch(clientID, emailID, options, fakeDBConn)
 
                 users := map[string]uaa.User{"no-guid-yet": uaa.User{Emails: []string{options.To}}}
 
@@ -85,38 +83,6 @@ var _ = Describe("Recipes", func() {
                     "email":           "user@example.com",
                     "notification_id": "123-456",
                 }))
-            })
-
-        })
-    })
-
-    Describe("UAA Recipe", func() {
-        var uaaRecipe postal.UAARecipe
-
-        Describe("Trim", func() {
-            Describe("TrimFields", func() {
-                It("trims the specified fields from the response object", func() {
-                    responses, err := json.Marshal([]postal.Response{
-                        {
-                            Status:         "delivered",
-                            Recipient:      "user-123",
-                            NotificationID: "123-456",
-                        },
-                    })
-
-                    trimmedResponses := uaaRecipe.Trim(responses)
-
-                    var result []map[string]string
-                    err = json.Unmarshal(trimmedResponses, &result)
-                    if err != nil {
-                        panic(err)
-                    }
-
-                    Expect(result).To(ContainElement(map[string]string{"status": "delivered",
-                        "recipient":       "user-123",
-                        "notification_id": "123-456",
-                    }))
-                })
             })
         })
     })
