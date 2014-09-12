@@ -9,9 +9,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/services"
-    "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     "github.com/dgrijalva/jwt-go"
 
@@ -71,53 +69,6 @@ func BuildToken(header map[string]interface{}, claims map[string]interface{}) st
     }
 
     return signed
-}
-
-type FakeCourier struct {
-    Error             error
-    Responses         []postal.Response
-    DispatchArguments []interface{}
-    TheMailer         *FakeMailer
-}
-
-func NewFakeCourier() *FakeCourier {
-    return &FakeCourier{
-        Responses:         make([]postal.Response, 0),
-        DispatchArguments: make([]interface{}, 0),
-        TheMailer:         NewFakeMailer(),
-    }
-}
-
-func (fake *FakeCourier) Mailer() postal.MailerInterface {
-    return fake.TheMailer
-}
-
-func (fake *FakeCourier) Dispatch(token string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]postal.Response, error) {
-    fake.DispatchArguments = []interface{}{token, guid, options}
-    return fake.Responses, fake.Error
-}
-
-type FakeMailer struct {
-    DeliverArguments map[string]interface{}
-    Responses        []postal.Response
-}
-
-func NewFakeMailer() *FakeMailer {
-    return &FakeMailer{}
-}
-
-func (fake *FakeMailer) Deliver(conn models.ConnectionInterface, template postal.Templates, users map[string]uaa.User, options postal.Options, space, org, client string) []postal.Response {
-    fake.DeliverArguments = map[string]interface{}{
-        "connection": conn,
-        "template":   template,
-        "users":      users,
-        "options":    options,
-        "space":      space,
-        "org":        org,
-        "client":     client,
-    }
-
-    return fake.Responses
 }
 
 type FakeErrorWriter struct {
@@ -428,7 +379,7 @@ type FakeNotify struct {
 }
 
 func (fake *FakeNotify) Execute(connection models.ConnectionInterface, req *http.Request,
-    guid postal.TypedGUID, mailRecipe handlers.MailRecipeInterface) ([]byte, error) {
+    guid postal.TypedGUID, mailRecipe postal.MailRecipeInterface) ([]byte, error) {
     fake.GUID = guid
 
     return fake.Response, fake.Error

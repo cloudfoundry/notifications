@@ -5,6 +5,7 @@ import (
     "encoding/json"
     "io/ioutil"
     "net/http"
+    "strings"
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/acceptance/servers"
@@ -106,4 +107,10 @@ func (t SendNotificationToEmail) SendNotificationToEmail(notificationsServer ser
     Expect(delivery.Sender).To(Equal(env.Sender))
     Expect(delivery.Recipients).To(Equal([]string{"user@example.com"}))
 
+    data := strings.Split(string(delivery.Data), "\n")
+    Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
+    Expect(data).To(ContainElement("X-CF-Notification-ID: " + responseItem["notification_id"]))
+    Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
+    Expect(data).To(ContainElement("        the template"))
+    Expect(data).To(ContainElement("<p>this is an acceptance test</p>"))
 }

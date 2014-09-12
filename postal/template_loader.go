@@ -9,12 +9,18 @@ const (
     SpaceHTMLTemplateName       = "space_body.html"
     UserTextTemplateName        = "user_body.text"
     UserHTMLTemplateName        = "user_body.html"
+    EmailTextTemplateName       = "email_body.text"
+    EmailHTMLTemplateName       = "email_body.html"
 )
 
 type Templates struct {
     Subject string
     Text    string
     HTML    string
+}
+
+type TemplateLoaderInterface interface {
+    Load(string, TypedGUID, string, string) (Templates, error)
 }
 
 type TemplateLoader struct {
@@ -62,7 +68,9 @@ func (loader TemplateLoader) loadSubject(subject string) (string, error) {
 }
 
 func (loader TemplateLoader) loadText(guid TypedGUID) (string, error) {
-    if guid.BelongsToSpace() {
+    if guid.IsTypeEmail() {
+        return loader.LoadTemplate(EmailTextTemplateName)
+    } else if guid.BelongsToSpace() {
         return loader.LoadTemplate(SpaceTextTemplateName)
     } else {
         return loader.LoadTemplate(UserTextTemplateName)
@@ -70,12 +78,13 @@ func (loader TemplateLoader) loadText(guid TypedGUID) (string, error) {
 }
 
 func (loader TemplateLoader) loadHTML(guid TypedGUID) (string, error) {
-    if guid.BelongsToSpace() {
+    if guid.IsTypeEmail() {
+        return loader.LoadTemplate(EmailHTMLTemplateName)
+    } else if guid.BelongsToSpace() {
         return loader.LoadTemplate(SpaceHTMLTemplateName)
     } else {
         return loader.LoadTemplate(UserHTMLTemplateName)
     }
-
 }
 
 func (loader TemplateLoader) LoadTemplate(filename string) (string, error) {

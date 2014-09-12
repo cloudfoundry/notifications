@@ -39,7 +39,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) error {
     userGUID := postal.UserGUID(strings.TrimPrefix(req.URL.Path, "/users/"))
 
-    output, err := handler.notify.Execute(connection, req, userGUID, NewUAARecipe(handler.courier))
+    output, err := handler.notify.Execute(connection, req, userGUID, postal.NewUAARecipe(handler.courier))
     if err != nil {
         return err
     }

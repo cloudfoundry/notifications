@@ -23,6 +23,8 @@ func NewFakeFileSystem(env config.Environment) FakeFileSystem {
             env.RootPath + "/templates/subject.provided": "default-provided-subject",
             env.RootPath + "/templates/user_body.text":   "default-user-text",
             env.RootPath + "/templates/user_body.html":   "default-user-html",
+            env.RootPath + "/templates/email_body.html":  "email-body-html",
+            env.RootPath + "/templates/email_body.text":  "email-body-text",
         },
     }
 }
@@ -98,6 +100,18 @@ var _ = Describe("TemplateLoader", func() {
 
                 Expect(templates.Text).To(Equal("default-user-text"))
                 Expect(templates.HTML).To(Equal("default-user-html"))
+            })
+        })
+
+        Context("guid is EmailGUID", func() {
+            It("returns the email templates", func() {
+                templates, err := loader.Load("", postal.EmailID("user123@emample.net"), "", "")
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(templates.Text).To(Equal("email-body-text"))
+                Expect(templates.HTML).To(Equal("email-body-html"))
             })
         })
     })

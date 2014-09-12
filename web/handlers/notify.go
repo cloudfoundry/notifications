@@ -14,7 +14,7 @@ import (
 )
 
 type NotifyInterface interface {
-    Execute(models.ConnectionInterface, *http.Request, postal.TypedGUID, MailRecipeInterface) ([]byte, error)
+    Execute(models.ConnectionInterface, *http.Request, postal.TypedGUID, postal.MailRecipeInterface) ([]byte, error)
 }
 
 type Notify struct {
@@ -30,7 +30,7 @@ func NewNotify(finder services.NotificationFinderInterface, registrar services.R
 }
 
 func (handler Notify) Execute(connection models.ConnectionInterface, req *http.Request,
-    guid postal.TypedGUID, mailRecipe MailRecipeInterface) ([]byte, error) {
+    guid postal.TypedGUID, mailRecipe postal.MailRecipeInterface) ([]byte, error) {
     parameters, err := params.NewNotify(req.Body)
     if err != nil {
         return []byte{}, err

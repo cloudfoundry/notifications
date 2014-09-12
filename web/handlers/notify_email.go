@@ -29,7 +29,8 @@ func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (handler NotifyEmail) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) error {
-    output, err := handler.notify.Execute(connection, req, postal.NewEmailID(), NewEmailRecipe(handler.courier))
+    templateLoader := postal.NewTemplateLoader(postal.NewFileSystem())
+    output, err := handler.notify.Execute(connection, req, postal.NewEmailID(), postal.NewEmailRecipe(handler.courier, templateLoader))
     if err != nil {
         return err
     }

@@ -1,10 +1,9 @@
-package handlers_test
+package postal_test
 
 import (
     "encoding/json"
 
     "github.com/cloudfoundry-incubator/notifications/postal"
-    "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -12,25 +11,23 @@ import (
 )
 
 var _ = Describe("Recipes", func() {
-
     Describe("EmailRecipe", func() {
-
-        var emailRecipe handlers.EmailRecipe
+        var emailRecipe postal.EmailRecipe
 
         Describe("DeliverMail", func() {
-
             var fakeMailer *FakeMailer
             var fakeDBConn *FakeDBConn
-            var template postal.Templates
             var options postal.Options
             var clientID string
             var emailID postal.EmailID
+            var fakeTemplateLoader FakeTemplateLoader
 
             BeforeEach(func() {
                 fakeCourier := NewFakeCourier()
                 fakeMailer = NewFakeMailer()
                 fakeCourier.TheMailer = fakeMailer
-                emailRecipe = handlers.NewEmailRecipe(fakeCourier)
+                fakeTemplateLoader = FakeTemplateLoader{}
+                emailRecipe = postal.NewEmailRecipe(fakeCourier, &fakeTemplateLoader)
 
                 clientID = "raptors-123"
                 emailID = postal.NewEmailID()
@@ -42,15 +39,14 @@ var _ = Describe("Recipes", func() {
 
                 fakeDBConn = &FakeDBConn{}
 
-                template = postal.Templates{
-                    Subject: "",
-                    Text:    "",
+                fakeTemplateLoader.Templates = postal.Templates{
+                    Subject: "the subject",
+                    Text:    "the text",
                     HTML:    "email template",
                 }
             })
 
             It("Calls Deliver on its courier's mailer with proper arguments", func() {
-
                 emailRecipe.DeliverMail(clientID, emailID, options, fakeDBConn)
 
                 users := map[string]uaa.User{"no-guid-yet": uaa.User{Emails: []string{options.To}}}
@@ -58,19 +54,16 @@ var _ = Describe("Recipes", func() {
                 Expect(len(fakeMailer.DeliverArguments)).To(Equal(7))
 
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(fakeDBConn))
-                Expect(fakeMailer.DeliverArguments).To(ContainElement(template))
+                Expect(fakeMailer.DeliverArguments).To(ContainElement(fakeTemplateLoader.Templates))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(users))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(options))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(""))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(clientID))
-
             })
         })
 
         Describe("Trim", func() {
-
             It("Trims the recipients field", func() {
-
                 responses, err := json.Marshal([]postal.Response{
                     {
                         Status:         "delivered",
@@ -97,8 +90,7 @@ var _ = Describe("Recipes", func() {
     })
 
     Describe("UAA Recipe", func() {
-
-        var uaaRecipe handlers.UAARecipe
+        var uaaRecipe postal.UAARecipe
 
         Describe("Trim", func() {
             Describe("TrimFields", func() {

@@ -1,10 +1,9 @@
-package handlers
+package postal
 
 import (
     "encoding/json"
 
     "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
@@ -14,34 +13,36 @@ const (
 )
 
 type MailRecipeInterface interface {
-    DeliverMail(clientID string, guid postal.TypedGUID,
-        options postal.Options, conn models.ConnectionInterface) ([]postal.Response, error)
+    DeliverMail(clientID string, guid TypedGUID,
+        options Options, conn models.ConnectionInterface) ([]Response, error)
     Trim([]byte) []byte
 }
 
 type EmailRecipe struct {
-    courier postal.CourierInterface
+    courier        CourierInterface
+    templateLoader TemplateLoaderInterface
 }
 
-func NewEmailRecipe(courier postal.CourierInterface) EmailRecipe {
+func NewEmailRecipe(courier CourierInterface, templateLoader TemplateLoaderInterface) EmailRecipe {
     return EmailRecipe{
-        courier: courier,
+        courier:        courier,
+        templateLoader: templateLoader,
     }
 }
 
-func (recipe EmailRecipe) DeliverMail(clientID string, guid postal.TypedGUID,
-    options postal.Options, conn models.ConnectionInterface) ([]postal.Response, error) {
+func (recipe EmailRecipe) DeliverMail(clientID string, guid TypedGUID,
+    options Options, conn models.ConnectionInterface) ([]Response, error) {
 
     users := map[string]uaa.User{"no-guid-yet": uaa.User{Emails: []string{options.To}}}
     space := ""
     organization := ""
-    template := postal.Templates{
-        Subject: "",
-        Text:    "",
-        HTML:    "email template",
+
+    templates, err := recipe.templateLoader.Load(options.Subject, guid, clientID, options.KindID)
+    if err != nil {
+        return []Response{}, TemplateLoadError("An email template could not be loaded")
     }
 
-    return recipe.courier.Mailer().Deliver(conn, template, users, options, space, organization, clientID), nil
+    return recipe.courier.Mailer().Deliver(conn, templates, users, options, space, organization, clientID), nil
 }
 
 func (recipe EmailRecipe) Trim(responses []byte) []byte {
@@ -50,14 +51,14 @@ func (recipe EmailRecipe) Trim(responses []byte) []byte {
 }
 
 type UAARecipe struct {
-    courier postal.CourierInterface
+    courier CourierInterface
 }
 
-func NewUAARecipe(courier postal.CourierInterface) UAARecipe {
+func NewUAARecipe(courier CourierInterface) UAARecipe {
     return UAARecipe{courier: courier}
 }
 
-func (recipe UAARecipe) DeliverMail(clientID string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]postal.Response, error) {
+func (recipe UAARecipe) DeliverMail(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
     return recipe.courier.Dispatch(clientID, guid, options, conn)
 }
 

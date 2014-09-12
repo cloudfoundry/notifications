@@ -157,6 +157,53 @@ func (fake *FakeReceiptsRepo) CreateReceipts(conn models.ConnectionInterface, us
     return nil
 }
 
+type FakeCourier struct {
+    Error             error
+    Responses         []postal.Response
+    DispatchArguments []interface{}
+    TheMailer         *FakeMailer
+}
+
+func NewFakeCourier() *FakeCourier {
+    return &FakeCourier{
+        Responses:         make([]postal.Response, 0),
+        DispatchArguments: make([]interface{}, 0),
+        TheMailer:         NewFakeMailer(),
+    }
+}
+
+func (fake *FakeCourier) Mailer() postal.MailerInterface {
+    return fake.TheMailer
+}
+
+func (fake *FakeCourier) Dispatch(token string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]postal.Response, error) {
+    fake.DispatchArguments = []interface{}{token, guid, options}
+    return fake.Responses, fake.Error
+}
+
+type FakeMailer struct {
+    DeliverArguments map[string]interface{}
+    Responses        []postal.Response
+}
+
+func NewFakeMailer() *FakeMailer {
+    return &FakeMailer{}
+}
+
+func (fake *FakeMailer) Deliver(conn models.ConnectionInterface, template postal.Templates, users map[string]uaa.User, options postal.Options, space, org, client string) []postal.Response {
+    fake.DeliverArguments = map[string]interface{}{
+        "connection": conn,
+        "template":   template,
+        "users":      users,
+        "options":    options,
+        "space":      space,
+        "org":        org,
+        "client":     client,
+    }
+
+    return fake.Responses
+}
+
 type FakeMailClient struct {
     messages       []mail.Message
     errorOnSend    bool
@@ -182,6 +229,14 @@ func (fake *FakeMailClient) Send(msg mail.Message) error {
 
     fake.messages = append(fake.messages, msg)
     return nil
+}
+
+type FakeTemplateLoader struct {
+    Templates postal.Templates
+}
+
+func (fake *FakeTemplateLoader) Load(subject string, guid postal.TypedGUID, clientID string, kind string) (postal.Templates, error) {
+    return fake.Templates, nil
 }
 
 func BuildToken(header map[string]interface{}, claims map[string]interface{}) string {

@@ -36,11 +36,10 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     }
 }
 
-
 func (handler NotifySpace) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) error {
     spaceGUID := postal.SpaceGUID(strings.TrimPrefix(req.URL.Path, "/spaces/"))
 
-    output, err := handler.notify.Execute(connection, req, spaceGUID, NewUAARecipe(handler.courier))
+    output, err := handler.notify.Execute(connection, req, spaceGUID, postal.NewUAARecipe(handler.courier))
     if err != nil {
         return err
     }
