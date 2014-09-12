@@ -6,6 +6,7 @@ import (
     "net/http"
     "net/http/httptest"
 
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/middleware"
 
     . "github.com/onsi/ginkgo"
@@ -41,7 +42,7 @@ var _ = Describe("Authenticator", func() {
                 "exp":       3404281214,
                 "scope":     []string{"fake.scope"},
             }
-            token = BuildToken(tokenHeader, tokenClaims)
+            token = fakes.BuildToken(tokenHeader, tokenClaims)
 
             requestBody, err := json.Marshal(map[string]string{
                 "kind": "forgot_password",
@@ -78,7 +79,7 @@ var _ = Describe("Authenticator", func() {
                 "cid":       "mister-client",
                 "exp":       1404281214,
             }
-            token = BuildToken(tokenHeader, tokenClaims)
+            token = fakes.BuildToken(tokenHeader, tokenClaims)
 
             requestBody, err := json.Marshal(map[string]string{
                 "kind": "forgot_password",
@@ -155,7 +156,7 @@ var _ = Describe("Authenticator", func() {
                 "exp":       3404281214,
                 "scope":     []string{"cloud_controller.admin"},
             }
-            token = BuildToken(tokenHeader, tokenClaims)
+            token = fakes.BuildToken(tokenHeader, tokenClaims)
 
             requestBody, err := json.Marshal(map[string]string{
                 "kind": "forgot_password",
@@ -199,7 +200,7 @@ var _ = Describe("Authenticator", func() {
                 "cid":       "mister-client",
                 "exp":       3404281214,
             }
-            token = BuildToken(tokenHeader, tokenClaims)
+            token = fakes.BuildToken(tokenHeader, tokenClaims)
 
             requestBody, err := json.Marshal(map[string]string{
                 "kind": "forgot_password",
