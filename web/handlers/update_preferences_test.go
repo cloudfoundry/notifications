@@ -8,6 +8,7 @@ import (
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/params"
     "github.com/cloudfoundry-incubator/notifications/web/services"
@@ -21,12 +22,12 @@ var _ = Describe("UpdatePreferences", func() {
         var handler handlers.UpdatePreferences
         var writer *httptest.ResponseRecorder
         var request *http.Request
-        var updater *FakePreferenceUpdater
-        var errorWriter *FakeErrorWriter
-        var fakeDBConn *FakeDBConn
+        var updater *fakes.FakePreferenceUpdater
+        var errorWriter *fakes.FakeErrorWriter
+        var fakeDBConn *fakes.FakeDBConn
 
         BeforeEach(func() {
-            fakeDBConn = &FakeDBConn{}
+            fakeDBConn = &fakes.FakeDBConn{}
             builder := services.NewPreferencesBuilder()
 
             builder.Add(models.Preference{
@@ -63,12 +64,12 @@ var _ = Describe("UpdatePreferences", func() {
                 "exp":     int64(3404281214),
             }
 
-            token := BuildToken(tokenHeader, tokenClaims)
+            token := fakes.BuildToken(tokenHeader, tokenClaims)
 
             request.Header.Set("Authorization", "Bearer "+token)
 
-            errorWriter = NewFakeErrorWriter()
-            updater = NewFakePreferenceUpdater()
+            errorWriter = fakes.NewFakeErrorWriter()
+            updater = fakes.NewFakePreferenceUpdater()
             handler = handlers.NewUpdatePreferences(updater, errorWriter)
             writer = httptest.NewRecorder()
         })

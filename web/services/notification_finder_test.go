@@ -5,6 +5,7 @@ import (
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/services"
 
     . "github.com/onsi/ginkgo"
@@ -13,21 +14,21 @@ import (
 
 var _ = Describe("Finder", func() {
     var finder services.NotificationFinder
-    var clientsRepo *FakeClientsRepo
-    var kindsRepo *FakeKindsRepo
+    var clientsRepo *fakes.FakeClientsRepo
+    var kindsRepo *fakes.FakeKindsRepo
     var raptors models.Client
     var breach models.Kind
 
     Describe("ClientAndKind", func() {
         BeforeEach(func() {
-            clientsRepo = NewFakeClientsRepo()
+            clientsRepo = fakes.NewFakeClientsRepo()
             raptors = models.Client{
                 ID:        "raptors",
                 CreatedAt: time.Now(),
             }
             clientsRepo.Clients["raptors"] = raptors
 
-            kindsRepo = NewFakeKindsRepo()
+            kindsRepo = fakes.NewFakeKindsRepo()
             breach = models.Kind{
                 ID:        "perimeter_breach",
                 ClientID:  "raptors",

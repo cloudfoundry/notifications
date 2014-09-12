@@ -4,6 +4,7 @@ import (
     "errors"
 
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/services"
 
     . "github.com/onsi/ginkgo"
@@ -12,16 +13,16 @@ import (
 
 var _ = Describe("Registrar", func() {
     var registrar services.Registrar
-    var fakeClientsRepo *FakeClientsRepo
-    var fakeKindsRepo *FakeKindsRepo
-    var fakeDBConn *FakeDBConn
+    var fakeClientsRepo *fakes.FakeClientsRepo
+    var fakeKindsRepo *fakes.FakeKindsRepo
+    var fakeDBConn *fakes.FakeDBConn
     var kinds []models.Kind
 
     BeforeEach(func() {
-        fakeClientsRepo = NewFakeClientsRepo()
-        fakeKindsRepo = NewFakeKindsRepo()
+        fakeClientsRepo = fakes.NewFakeClientsRepo()
+        fakeKindsRepo = fakes.NewFakeKindsRepo()
         registrar = services.NewRegistrar(fakeClientsRepo, fakeKindsRepo)
-        fakeDBConn = &FakeDBConn{}
+        fakeDBConn = &fakes.FakeDBConn{}
     })
 
     Describe("Register", func() {

@@ -10,6 +10,7 @@ import (
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/params"
 
@@ -21,16 +22,16 @@ var _ = Describe("RegisterNotifications", func() {
     var handler handlers.RegisterNotifications
     var writer *httptest.ResponseRecorder
     var request *http.Request
-    var fakeErrorWriter *FakeErrorWriter
-    var fakeConn *FakeDBConn
-    var registrar *FakeRegistrar
+    var fakeErrorWriter *fakes.FakeErrorWriter
+    var fakeConn *fakes.FakeDBConn
+    var registrar *fakes.FakeRegistrar
     var client models.Client
     var kinds []models.Kind
 
     BeforeEach(func() {
-        fakeConn = &FakeDBConn{}
-        fakeErrorWriter = &FakeErrorWriter{}
-        registrar = NewFakeRegistrar()
+        fakeConn = &fakes.FakeDBConn{}
+        fakeErrorWriter = &fakes.FakeErrorWriter{}
+        registrar = fakes.NewFakeRegistrar()
         handler = handlers.NewRegisterNotifications(registrar, fakeErrorWriter)
         writer = httptest.NewRecorder()
         requestBody, err := json.Marshal(map[string]interface{}{
@@ -63,7 +64,7 @@ var _ = Describe("RegisterNotifications", func() {
             "exp":       int64(3404281214),
             "scope":     []string{"notifications.write"},
         }
-        request.Header.Set("Authorization", "Bearer "+BuildToken(tokenHeader, tokenClaims))
+        request.Header.Set("Authorization", "Bearer "+fakes.BuildToken(tokenHeader, tokenClaims))
 
         client = models.Client{
             ID:          "raptors",

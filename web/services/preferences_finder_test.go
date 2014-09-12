@@ -4,6 +4,7 @@ import (
     "errors"
 
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/services"
 
     . "github.com/onsi/ginkgo"
@@ -12,7 +13,7 @@ import (
 
 var _ = Describe("PreferencesFinder", func() {
     var finder *services.PreferencesFinder
-    var fakePreferencesRepo *FakePreferencesRepo
+    var fakePreferencesRepo *fakes.FakePreferencesRepo
     var preferences []models.Preference
 
     BeforeEach(func() {
@@ -33,7 +34,7 @@ var _ = Describe("PreferencesFinder", func() {
             },
         }
 
-        fakePreferencesRepo = NewFakePreferencesRepo(preferences)
+        fakePreferencesRepo = fakes.NewFakePreferencesRepo(preferences)
         finder = services.NewPreferencesFinder(fakePreferencesRepo)
     })
 

@@ -7,6 +7,7 @@ import (
     "net/http/httptest"
 
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/services"
 
@@ -18,12 +19,12 @@ var _ = Describe("GetPreferences", func() {
     var handler handlers.GetPreferences
     var writer *httptest.ResponseRecorder
     var request *http.Request
-    var preferencesFinder *FakePreferencesFinder
-    var errorWriter *FakeErrorWriter
+    var preferencesFinder *fakes.FakePreferencesFinder
+    var errorWriter *fakes.FakeErrorWriter
     var builder services.PreferencesBuilder
 
     BeforeEach(func() {
-        errorWriter = &FakeErrorWriter{}
+        errorWriter = &fakes.FakeErrorWriter{}
 
         writer = httptest.NewRecorder()
         body, err := json.Marshal(map[string]string{
@@ -47,7 +48,7 @@ var _ = Describe("GetPreferences", func() {
             panic(err)
         }
 
-        request.Header.Set("Authorization", "Bearer "+BuildToken(tokenHeader, tokenClaims))
+        request.Header.Set("Authorization", "Bearer "+fakes.BuildToken(tokenHeader, tokenClaims))
 
         builder = services.NewPreferencesBuilder()
         builder.Add(models.Preference{
@@ -61,7 +62,7 @@ var _ = Describe("GetPreferences", func() {
             Email:    true,
         })
 
-        preferencesFinder = NewFakePreferencesFinder(builder)
+        preferencesFinder = fakes.NewFakePreferencesFinder(builder)
         handler = handlers.NewGetPreferences(preferencesFinder, errorWriter)
     })
 

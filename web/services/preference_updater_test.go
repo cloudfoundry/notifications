@@ -2,6 +2,7 @@ package services_test
 
 import (
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/services"
 
     . "github.com/onsi/ginkgo"
@@ -13,13 +14,13 @@ var _ = Describe("PreferenceUpdater", func() {
 
         var doorOpen models.Unsubscribe
         var barking models.Unsubscribe
-        var repo *FakeUnsubscribesRepo
-        var fakeDBConn *FakeDBConn
+        var repo *fakes.FakeUnsubscribesRepo
+        var fakeDBConn *fakes.FakeDBConn
         var updater services.PreferenceUpdater
 
         BeforeEach(func() {
-            fakeDBConn = &FakeDBConn{}
-            repo = NewFakeUnsubscribesRepo()
+            fakeDBConn = &fakes.FakeDBConn{}
+            repo = fakes.NewFakeUnsubscribesRepo()
             updater = services.NewPreferenceUpdater(repo)
 
             doorOpen = models.Unsubscribe{

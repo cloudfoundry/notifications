@@ -5,6 +5,7 @@ import (
     "net/http"
     "net/http/httptest"
 
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
 
     . "github.com/onsi/ginkgo"
@@ -16,12 +17,12 @@ var _ = Describe("NotifyUser", func() {
         var handler handlers.NotifyUser
         var writer *httptest.ResponseRecorder
         var request *http.Request
-        var errorWriter *FakeErrorWriter
+        var errorWriter *fakes.FakeErrorWriter
         var fakeNotify *FakeNotify
 
         BeforeEach(func() {
             var err error
-            errorWriter = &FakeErrorWriter{}
+            errorWriter = &fakes.FakeErrorWriter{}
 
             writer = httptest.NewRecorder()
 

@@ -9,6 +9,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/params"
 
@@ -20,14 +21,14 @@ var _ = Describe("Notify", func() {
     Describe("Execute", func() {
         Context("When Emailing a user or a group", func() {
             var handler handlers.Notify
-            var fakeFinder *FakeFinder
-            var fakeRegistrar *FakeRegistrar
+            var fakeFinder *fakes.FakeFinder
+            var fakeRegistrar *fakes.FakeRegistrar
             var request *http.Request
             var token string
             var client models.Client
             var kind models.Kind
-            var fakeDBConn *FakeDBConn
-            var fakeRecipe *FakeMailRecipe
+            var fakeDBConn *fakes.FakeDBConn
+            var fakeRecipe *fakes.FakeMailRecipe
 
             BeforeEach(func() {
                 client = models.Client{
@@ -39,11 +40,11 @@ var _ = Describe("Notify", func() {
                     Description: "Instance Down",
                     ClientID:    "mister-client",
                 }
-                fakeFinder = NewFakeFinder()
+                fakeFinder = fakes.NewFakeFinder()
                 fakeFinder.Clients["mister-client"] = client
                 fakeFinder.Kinds["test_email|mister-client"] = kind
 
-                fakeRegistrar = NewFakeRegistrar()
+                fakeRegistrar = fakes.NewFakeRegistrar()
 
                 body, err := json.Marshal(map[string]string{
                     "kind_id":  "test_email",
@@ -64,7 +65,7 @@ var _ = Describe("Notify", func() {
                     "exp":       int64(3404281214),
                     "scope":     []string{"notifications.write"},
                 }
-                token = BuildToken(tokenHeader, tokenClaims)
+                token = fakes.BuildToken(tokenHeader, tokenClaims)
 
                 request, err = http.NewRequest("POST", "/spaces/space-001", bytes.NewBuffer(body))
                 if err != nil {
@@ -72,10 +73,10 @@ var _ = Describe("Notify", func() {
                 }
                 request.Header.Set("Authorization", "Bearer "+token)
 
-                fakeDBConn = &FakeDBConn{}
+                fakeDBConn = &fakes.FakeDBConn{}
 
                 handler = handlers.NewNotify(fakeFinder, fakeRegistrar)
-                fakeRecipe = &FakeMailRecipe{}
+                fakeRecipe = &fakes.FakeMailRecipe{}
             })
 
             Describe("Responses", func() {
