@@ -7,6 +7,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -14,22 +15,20 @@ import (
 )
 
 var _ = Describe("Mailer", func() {
-    var mailClient FakeMailClient
     var mailer postal.Mailer
     var logger *log.Logger
     var buffer *bytes.Buffer
-    var queue *FakeQueue
-    var unsubscribesRepo *FakeUnsubscribesRepo
-    var conn *FakeDBConn
+    var queue *fakes.FakeQueue
+    var unsubscribesRepo *fakes.FakeUnsubscribesRepo
+    var conn *fakes.FakeDBConn
 
     BeforeEach(func() {
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
-        mailClient = FakeMailClient{}
-        queue = NewFakeQueue()
-        unsubscribesRepo = NewFakeUnsubscribesRepo()
-        conn = &FakeDBConn{}
-        mailer = postal.NewMailer(queue, FakeGuidGenerator, unsubscribesRepo)
+        queue = fakes.NewFakeQueue()
+        unsubscribesRepo = fakes.NewFakeUnsubscribesRepo()
+        conn = &fakes.FakeDBConn{}
+        mailer = postal.NewMailer(queue, fakes.FakeGuidGenerator, unsubscribesRepo)
     })
 
     Describe("Deliver", func() {

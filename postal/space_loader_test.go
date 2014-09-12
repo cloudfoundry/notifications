@@ -5,6 +5,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -14,10 +15,10 @@ var _ = Describe("SpaceLoader", func() {
     Describe("Load", func() {
         var loader postal.SpaceLoader
         var token string
-        var fakeCC *FakeCloudController
+        var fakeCC *fakes.FakeCloudController
 
         BeforeEach(func() {
-            fakeCC = NewFakeCloudController()
+            fakeCC = fakes.NewFakeCloudController()
             fakeCC.Spaces = map[string]cf.CloudControllerSpace{
                 "space-001": cf.CloudControllerSpace{
                     Guid:             "space-001",

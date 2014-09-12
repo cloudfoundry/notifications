@@ -11,6 +11,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -18,24 +19,24 @@ import (
 )
 
 var _ = Describe("DeliveryWorker", func() {
-    var mailClient FakeMailClient
+    var mailClient fakes.FakeMailClient
     var worker postal.DeliveryWorker
     var id int
     var logger *log.Logger
     var buffer *bytes.Buffer
     var delivery postal.Delivery
-    var queue *FakeQueue
-    var unsubscribesRepo *FakeUnsubscribesRepo
-    var conn *FakeDBConn
+    var queue *fakes.FakeQueue
+    var unsubscribesRepo *fakes.FakeUnsubscribesRepo
+    var conn *fakes.FakeDBConn
 
     BeforeEach(func() {
         buffer = bytes.NewBuffer([]byte{})
         id = 1234
         logger = log.New(buffer, "", 0)
-        mailClient = FakeMailClient{}
-        queue = NewFakeQueue()
-        unsubscribesRepo = NewFakeUnsubscribesRepo()
-        conn = &FakeDBConn{}
+        mailClient = fakes.FakeMailClient{}
+        queue = fakes.NewFakeQueue()
+        unsubscribesRepo = fakes.NewFakeUnsubscribesRepo()
+        conn = &fakes.FakeDBConn{}
 
         worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, unsubscribesRepo)
 
@@ -78,7 +79,7 @@ var _ = Describe("DeliveryWorker", func() {
             <-time.After(10 * time.Millisecond)
             worker.Halt()
 
-            Expect(len(mailClient.messages)).To(Equal(2))
+            Expect(len(mailClient.Messages)).To(Equal(2))
         })
 
         It("can be halted", func() {
@@ -124,7 +125,7 @@ var _ = Describe("DeliveryWorker", func() {
         It("ensures message delivery", func() {
             worker.Deliver(&job)
 
-            Expect(mailClient.messages).To(ContainElement(mail.Message{
+            Expect(mailClient.Messages).To(ContainElement(mail.Message{
                 From:    "from@email.com",
                 ReplyTo: "thesender@example.com",
                 To:      "fake-user@example.com",
@@ -139,16 +140,16 @@ var _ = Describe("DeliveryWorker", func() {
 
         Context("when the delivery fails to be sent", func() {
             It("marks the job for retry", func() {
-                mailClient.errorOnSend = true
+                mailClient.ErrorOnSend = true
 
                 worker.Deliver(&job)
 
-                Expect(len(mailClient.messages)).To(Equal(0))
+                Expect(len(mailClient.Messages)).To(Equal(0))
                 Expect(job.ShouldRetry).To(BeTrue())
             })
 
             It("sets the retry duration using an exponential backoff algorithm", func() {
-                mailClient.errorOnConnect = true
+                mailClient.ErrorOnConnect = true
 
                 worker.Deliver(&job)
                 Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 10*time.Second))
@@ -211,7 +212,7 @@ var _ = Describe("DeliveryWorker", func() {
             It("does not send the email", func() {
                 worker.Deliver(&job)
 
-                Expect(len(mailClient.messages)).To(Equal(0))
+                Expect(len(mailClient.Messages)).To(Equal(0))
             })
         })
 

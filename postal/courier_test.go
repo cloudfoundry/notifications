@@ -9,6 +9,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -17,11 +18,11 @@ import (
 
 var _ = Describe("Courier", func() {
     var courier postal.Courier
-    var fakeCC *FakeCloudController
+    var fakeCC *fakes.FakeCloudController
     var id int
     var logger *log.Logger
-    var fakeUAA FakeUAAClient
-    var mailClient FakeMailClient
+    var fakeUAA fakes.FakeUAAClient
+    var mailClient fakes.FakeMailClient
     var buffer *bytes.Buffer
     var options postal.Options
     var tokenLoader postal.TokenLoader
@@ -31,17 +32,17 @@ var _ = Describe("Courier", func() {
     var mailer postal.Mailer
     var fs FakeFileSystem
     var env config.Environment
-    var queue *FakeQueue
+    var queue *fakes.FakeQueue
     var clientID string
-    var fakeReceiptsRepo FakeReceiptsRepo
-    var conn *FakeDBConn
-    var fakeUnsubscribesRepo *FakeUnsubscribesRepo
+    var fakeReceiptsRepo fakes.FakeReceiptsRepo
+    var conn *fakes.FakeDBConn
+    var fakeUnsubscribesRepo *fakes.FakeUnsubscribesRepo
 
     BeforeEach(func() {
         clientID = "mister-client"
-        conn = &FakeDBConn{}
+        conn = &fakes.FakeDBConn{}
 
-        fakeCC = NewFakeCloudController()
+        fakeCC = fakes.NewFakeCloudController()
         fakeCC.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
             cf.CloudControllerUser{Guid: "user-123"},
             cf.CloudControllerUser{Guid: "user-456"},
@@ -70,9 +71,9 @@ var _ = Describe("Courier", func() {
             "exp":       int64(3404281214),
             "scope":     []string{"notifications.write"},
         }
-        fakeUAA = FakeUAAClient{
+        fakeUAA = fakes.FakeUAAClient{
             ClientToken: uaa.Token{
-                Access: BuildToken(tokenHeader, tokenClaims),
+                Access: fakes.BuildToken(tokenHeader, tokenClaims),
             },
             UsersByID: map[string]uaa.User{
                 "user-123": uaa.User{
@@ -86,18 +87,18 @@ var _ = Describe("Courier", func() {
             },
         }
 
-        fakeReceiptsRepo = NewFakeReceiptsRepo()
-        fakeUnsubscribesRepo = NewFakeUnsubscribesRepo()
+        fakeReceiptsRepo = fakes.NewFakeReceiptsRepo()
+        fakeUnsubscribesRepo = fakes.NewFakeUnsubscribesRepo()
 
         buffer = bytes.NewBuffer([]byte{})
         id = 1234
         logger = log.New(buffer, "", 0)
-        mailClient = FakeMailClient{}
+        mailClient = fakes.FakeMailClient{}
         env = config.NewEnvironment()
         fs = NewFakeFileSystem(env)
 
-        queue = NewFakeQueue()
-        mailer = postal.NewMailer(queue, FakeGuidGenerator, fakeUnsubscribesRepo)
+        queue = fakes.NewFakeQueue()
+        mailer = postal.NewMailer(queue, fakes.FakeGuidGenerator, fakeUnsubscribesRepo)
 
         tokenLoader = postal.NewTokenLoader(&fakeUAA)
         userLoader = postal.NewUserLoader(&fakeUAA, logger, fakeCC)

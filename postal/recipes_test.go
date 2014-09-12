@@ -4,6 +4,7 @@ import (
     "encoding/json"
 
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -15,18 +16,18 @@ var _ = Describe("Recipes", func() {
         var emailRecipe postal.EmailRecipe
 
         Describe("DeliverMail", func() {
-            var fakeMailer *FakeMailer
-            var fakeDBConn *FakeDBConn
+            var fakeMailer *fakes.FakeMailer
+            var fakeDBConn *fakes.FakeDBConn
             var options postal.Options
             var clientID string
             var emailID postal.EmailID
-            var fakeTemplateLoader FakeTemplateLoader
+            var fakeTemplateLoader fakes.FakeTemplateLoader
 
             BeforeEach(func() {
-                fakeCourier := NewFakeCourier()
-                fakeMailer = NewFakeMailer()
+                fakeCourier := fakes.NewFakeCourier()
+                fakeMailer = fakes.NewFakeMailer()
                 fakeCourier.TheMailer = fakeMailer
-                fakeTemplateLoader = FakeTemplateLoader{}
+                fakeTemplateLoader = fakes.FakeTemplateLoader{}
                 emailRecipe = postal.NewEmailRecipe(fakeCourier, &fakeTemplateLoader)
 
                 clientID = "raptors-123"
@@ -37,7 +38,7 @@ var _ = Describe("Recipes", func() {
                     To:   "dr@strangelove.com",
                 }
 
-                fakeDBConn = &FakeDBConn{}
+                fakeDBConn = &fakes.FakeDBConn{}
 
                 fakeTemplateLoader.Templates = postal.Templates{
                     Subject: "the subject",

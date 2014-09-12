@@ -6,6 +6,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -15,8 +16,8 @@ import (
 var _ = Describe("UserLoader", func() {
     var loader postal.UserLoader
     var token string
-    var fakeUAAClient FakeUAAClient
-    var fakeCC *FakeCloudController
+    var fakeUAAClient fakes.FakeUAAClient
+    var fakeCC *fakes.FakeCloudController
 
     Describe("Load", func() {
         BeforeEach(func() {
@@ -30,9 +31,9 @@ var _ = Describe("UserLoader", func() {
                 "scope":     []string{"notifications.write"},
             }
 
-            token = BuildToken(tokenHeader, tokenClaims)
+            token = fakes.BuildToken(tokenHeader, tokenClaims)
 
-            fakeCC = NewFakeCloudController()
+            fakeCC = fakes.NewFakeCloudController()
             fakeCC.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
                 cf.CloudControllerUser{Guid: "user-123"},
                 cf.CloudControllerUser{Guid: "user-789"},
@@ -52,7 +53,7 @@ var _ = Describe("UserLoader", func() {
                 },
             }
 
-            fakeUAAClient = FakeUAAClient{
+            fakeUAAClient = fakes.FakeUAAClient{
                 ClientToken: uaa.Token{
                     Access: token,
                 },

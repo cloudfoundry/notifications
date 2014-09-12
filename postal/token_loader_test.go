@@ -6,6 +6,7 @@ import (
     "net/url"
 
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -14,10 +15,10 @@ import (
 
 var _ = Describe("TokenLoader", func() {
     var tokenLoader postal.TokenLoader
-    var fakeUAA FakeUAAClient
+    var fakeUAA fakes.FakeUAAClient
 
     BeforeEach(func() {
-        fakeUAA = FakeUAAClient{
+        fakeUAA = fakes.FakeUAAClient{
             ClientToken: uaa.Token{
                 Access: "the-client-token",
             },
