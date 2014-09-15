@@ -45,7 +45,7 @@ var _ = Describe("CORS", func() {
             Expect(result).To(BeTrue())
             Expect(writer.HeaderMap.Get("Access-Control-Allow-Origin")).To(Equal("test-cors-origin"))
             Expect(writer.HeaderMap.Get("Access-Control-Allow-Methods")).To(Equal("GET, PATCH"))
-            Expect(writer.HeaderMap.Get("Access-Control-Allow-Headers")).To(Equal("Accept, Authorization"))
+            Expect(writer.HeaderMap.Get("Access-Control-Allow-Headers")).To(Equal("Accept, Authorization, Content-Type"))
         })
     })
 })
