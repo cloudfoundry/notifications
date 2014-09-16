@@ -4,9 +4,7 @@ import (
     "encoding/json"
     "io/ioutil"
     "net/http"
-    "strings"
 
-    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/params"
     "github.com/cloudfoundry-incubator/notifications/web/services"
@@ -28,11 +26,13 @@ func NewUpdatePreferences(preferenceUpdater services.PreferenceUpdaterInterface,
 
 func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
     connection := models.Database().Connection()
-    handler.Execute(w, req, connection)
+    handler.Execute(w, req, connection, context)
 }
 
-func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) {
-    userID, err := handler.ParseUserID(strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer "))
+func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) {
+    token := context.Get("token").(*jwt.Token)
+    userID := token.Claims["user_id"].(string)
+
     body, err := ioutil.ReadAll(req.Body)
     if err != nil {
         panic(err)
@@ -64,16 +64,4 @@ func (handler UpdatePreferences) ParsePreferences(body []byte) ([]models.Prefere
         return []models.Preference{}, err
     }
     return builder.ToPreferences(), nil
-}
-
-func (handler UpdatePreferences) ParseUserID(rawToken string) (string, error) {
-    token, err := jwt.Parse(rawToken, func(token *jwt.Token) ([]byte, error) {
-        return []byte(config.UAAPublicKey), nil
-    })
-    if err != nil {
-        return "", nil
-    }
-
-    return token.Claims["user_id"].(string), nil
-
 }

@@ -6,10 +6,13 @@ import (
     "net/http"
     "net/http/httptest"
 
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/services"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -22,6 +25,7 @@ var _ = Describe("GetPreferences", func() {
     var preferencesFinder *fakes.FakePreferencesFinder
     var errorWriter *fakes.FakeErrorWriter
     var builder services.PreferencesBuilder
+    var context stack.Context
 
     BeforeEach(func() {
         errorWriter = &fakes.FakeErrorWriter{}
@@ -48,7 +52,11 @@ var _ = Describe("GetPreferences", func() {
             panic(err)
         }
 
-        request.Header.Set("Authorization", "Bearer "+fakes.BuildToken(tokenHeader, tokenClaims))
+        token, err := jwt.Parse(fakes.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) ([]byte, error) {
+            return []byte(config.UAAPublicKey), nil
+        })
+        context = stack.NewContext()
+        context.Set("token", token)
 
         builder = services.NewPreferencesBuilder()
         builder.Add(models.Preference{
@@ -67,13 +75,13 @@ var _ = Describe("GetPreferences", func() {
     })
 
     It("Passes the proper user guid into execute", func() {
-        handler.ServeHTTP(writer, request, nil)
+        handler.ServeHTTP(writer, request, context)
 
         Expect(preferencesFinder.UserGUID).To(Equal("correct-user"))
     })
 
     It("Returns a proper JSON response when the Preference object does not error", func() {
-        handler.ServeHTTP(writer, request, nil)
+        handler.ServeHTTP(writer, request, context)
 
         Expect(writer.Code).To(Equal(http.StatusOK))
 
@@ -91,7 +99,7 @@ var _ = Describe("GetPreferences", func() {
             preferencesFinder.FindErrors = true
 
             Expect(func() {
-                handler.ServeHTTP(writer, request, nil)
+                handler.ServeHTTP(writer, request, context)
             }).To(Panic())
         })
     })

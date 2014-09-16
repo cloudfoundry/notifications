@@ -7,11 +7,14 @@ import (
     "net/http/httptest"
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/params"
     "github.com/cloudfoundry-incubator/notifications/web/services"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -25,6 +28,7 @@ var _ = Describe("UpdatePreferences", func() {
         var updater *fakes.FakePreferenceUpdater
         var errorWriter *fakes.FakeErrorWriter
         var fakeDBConn *fakes.FakeDBConn
+        var context stack.Context
 
         BeforeEach(func() {
             fakeDBConn = &fakes.FakeDBConn{}
@@ -64,9 +68,15 @@ var _ = Describe("UpdatePreferences", func() {
                 "exp":     int64(3404281214),
             }
 
-            token := fakes.BuildToken(tokenHeader, tokenClaims)
+            rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+            request.Header.Set("Authorization", "Bearer "+rawToken)
 
-            request.Header.Set("Authorization", "Bearer "+token)
+            token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+                return []byte(config.UAAPublicKey), nil
+            })
+
+            context = stack.NewContext()
+            context.Set("token", token)
 
             errorWriter = fakes.NewFakeErrorWriter()
             updater = fakes.NewFakePreferenceUpdater()
@@ -75,7 +85,7 @@ var _ = Describe("UpdatePreferences", func() {
         })
 
         It("Passes The Correct Arguments to PreferenceUpdater Execute", func() {
-            handler.Execute(writer, request, fakeDBConn)
+            handler.Execute(writer, request, fakeDBConn, context)
             Expect(len(updater.ExecuteArguments)).To(Equal(2))
 
             preferencesArguments := updater.ExecuteArguments[0]
@@ -100,7 +110,7 @@ var _ = Describe("UpdatePreferences", func() {
         })
 
         It("Returns a 200 status code when the Preference object does not error", func() {
-            handler.Execute(writer, request, fakeDBConn)
+            handler.Execute(writer, request, fakeDBConn, context)
 
             Expect(writer.Code).To(Equal(http.StatusOK))
         })
@@ -113,7 +123,7 @@ var _ = Describe("UpdatePreferences", func() {
                     panic(err)
                 }
 
-                handler.Execute(writer, request, fakeDBConn)
+                handler.Execute(writer, request, fakeDBConn, context)
 
                 Expect(errorWriter.Error).To(Equal(params.ParseError{}))
             })

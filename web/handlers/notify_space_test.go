@@ -7,6 +7,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -18,6 +19,7 @@ var _ = Describe("NotifySpace", func() {
         var writer *httptest.ResponseRecorder
         var request *http.Request
         var fakeNotify *FakeNotify
+        var context stack.Context
 
         BeforeEach(func() {
             var err error
@@ -27,6 +29,7 @@ var _ = Describe("NotifySpace", func() {
             if err != nil {
                 panic(err)
             }
+            context = stack.NewContext()
 
             fakeNotify = &FakeNotify{}
             handler = handlers.NewNotifySpace(fakeNotify, nil, nil)
@@ -37,7 +40,7 @@ var _ = Describe("NotifySpace", func() {
                 fakeNotify.Response = []byte("whatever")
                 recipe := postal.UAARecipe{}
 
-                handler.Execute(writer, request, nil, recipe)
+                handler.Execute(writer, request, nil, context, recipe)
 
                 Expect(writer.Code).To(Equal(http.StatusOK))
                 Expect(fakeNotify.GUID.String()).To(Equal("space-001"))
@@ -53,7 +56,7 @@ var _ = Describe("NotifySpace", func() {
                 fakeNotify.Error = errors.New("the error")
                 recipe := postal.UAARecipe{}
 
-                err := handler.Execute(writer, request, nil, recipe)
+                err := handler.Execute(writer, request, nil, context, recipe)
                 Expect(err).To(Equal(fakeNotify.Error))
             })
         })

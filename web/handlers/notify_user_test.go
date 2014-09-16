@@ -8,6 +8,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -20,6 +21,7 @@ var _ = Describe("NotifyUser", func() {
         var request *http.Request
         var errorWriter *fakes.FakeErrorWriter
         var fakeNotify *FakeNotify
+        var context stack.Context
 
         BeforeEach(func() {
             var err error
@@ -29,6 +31,7 @@ var _ = Describe("NotifyUser", func() {
             if err != nil {
                 panic(err)
             }
+            context = stack.NewContext()
 
             fakeNotify = &FakeNotify{}
             handler = handlers.NewNotifyUser(fakeNotify, errorWriter, nil)
@@ -38,7 +41,7 @@ var _ = Describe("NotifyUser", func() {
             It("returns the JSON representation of the response", func() {
                 fakeNotify.Response = []byte("whut")
 
-                handler.Execute(writer, request, nil, postal.UAARecipe{})
+                handler.Execute(writer, request, nil, context, postal.UAARecipe{})
 
                 Expect(writer.Code).To(Equal(http.StatusOK))
                 body := string(writer.Body.Bytes())
@@ -54,7 +57,7 @@ var _ = Describe("NotifyUser", func() {
             It("propagates the error", func() {
                 fakeNotify.Error = errors.New("BOOM!")
 
-                err := handler.Execute(writer, request, nil, postal.UAARecipe{})
+                err := handler.Execute(writer, request, nil, context, postal.UAARecipe{})
 
                 Expect(err).To(Equal(fakeNotify.Error))
             })

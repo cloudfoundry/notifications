@@ -38,6 +38,7 @@ func NewRouter(mother MotherInterface) Router {
     notificationsWriteAuthenticator := mother.Authenticator([]string{"notifications.write"})
     notificationPreferencesReadAuthenticator := mother.Authenticator([]string{"notification_preferences.read"})
     notificationPreferencesWriteAuthenticator := mother.Authenticator([]string{"notification_preferences.write"})
+    emailsWriteAuthenticator := mother.Authenticator([]string{})
     cors := middleware.NewCORS()
 
     return Router{
@@ -45,7 +46,7 @@ func NewRouter(mother MotherInterface) Router {
             "GET /info":                 stack.NewStack(handlers.NewGetInfo()).Use(logging),
             "POST /users/{guid}":        stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, mother)).Use(logging, notificationsWriteAuthenticator),
             "POST /spaces/{guid}":       stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, mother)).Use(logging, notificationsWriteAuthenticator),
-            "POST /emails":              stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailRecipe)).Use(logging),
+            "POST /emails":              stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailRecipe)).Use(logging, emailsWriteAuthenticator),
             "PUT /registration":         stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter)).Use(logging, notificationsWriteAuthenticator),
             "OPTIONS /user_preferences": stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),
             "GET /user_preferences":     stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, cors, notificationPreferencesReadAuthenticator),

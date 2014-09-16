@@ -2,9 +2,7 @@ package handlers
 
 import (
     "net/http"
-    "strings"
 
-    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/params"
@@ -30,10 +28,10 @@ func (handler RegisterNotifications) ServeHTTP(w http.ResponseWriter, req *http.
         "name": "notifications.web.registration",
     }).Log()
 
-    handler.Execute(w, req, models.Database().Connection())
+    handler.Execute(w, req, models.Database().Connection(), context)
 }
 
-func (handler RegisterNotifications) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) {
+func (handler RegisterNotifications) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) {
     parameters, err := params.NewRegistration(req.Body)
     if err != nil {
         handler.errorWriter.Write(w, err)
@@ -49,8 +47,11 @@ func (handler RegisterNotifications) Execute(w http.ResponseWriter, req *http.Re
     transaction := connection.Transaction()
     transaction.Begin()
 
+    token := context.Get("token").(*jwt.Token)
+    clientID := token.Claims["client_id"].(string)
+
     client := models.Client{
-        ID:          handler.parseClientID(req),
+        ID:          clientID,
         Description: parameters.SourceDescription,
     }
 
@@ -77,13 +78,4 @@ func (handler RegisterNotifications) Execute(w http.ResponseWriter, req *http.Re
     }
 
     transaction.Commit()
-}
-
-func (handler RegisterNotifications) parseClientID(req *http.Request) string {
-    rawToken := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
-    clientToken, _ := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
-        return []byte(config.UAAPublicKey), nil
-    })
-
-    return clientToken.Claims["client_id"].(string)
 }

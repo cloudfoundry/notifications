@@ -53,7 +53,6 @@ var _ = Describe("Send a notification to an email", func() {
 type SendNotificationToEmail struct{}
 
 func (t SendNotificationToEmail) SendNotificationToEmail(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
-
     body, err := json.Marshal(map[string]string{
         "kind_id": "acceptance-test",
         "html":    "<p>this is an acceptance test</p>",
@@ -69,7 +68,6 @@ func (t SendNotificationToEmail) SendNotificationToEmail(notificationsServer ser
     if err != nil {
         panic(err)
     }
-
     request.Header.Set("Authorization", "Bearer "+clientToken.Access)
 
     response, err := http.DefaultClient.Do(request)

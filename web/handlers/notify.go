@@ -3,18 +3,17 @@ package handlers
 import (
     "encoding/json"
     "net/http"
-    "strings"
 
-    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/params"
     "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/dgrijalva/jwt-go"
+    "github.com/ryanmoran/stack"
 )
 
 type NotifyInterface interface {
-    Execute(models.ConnectionInterface, *http.Request, postal.TypedGUID, postal.MailRecipeInterface) ([]byte, error)
+    Execute(models.ConnectionInterface, *http.Request, stack.Context, postal.TypedGUID, postal.MailRecipeInterface) ([]byte, error)
 }
 
 type Notify struct {
@@ -29,7 +28,7 @@ func NewNotify(finder services.NotificationFinderInterface, registrar services.R
     }
 }
 
-func (handler Notify) Execute(connection models.ConnectionInterface, req *http.Request,
+func (handler Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
     guid postal.TypedGUID, mailRecipe postal.MailRecipeInterface) ([]byte, error) {
     parameters, err := params.NewNotify(req.Body)
     if err != nil {
@@ -46,7 +45,8 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
         }
     }
 
-    clientID := handler.ParseClientID(strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer "))
+    token := context.Get("token").(*jwt.Token)
+    clientID := token.Claims["client_id"].(string)
     client, kind, err := handler.finder.ClientAndKind(clientID, parameters.KindID)
     if err != nil {
         return []byte{}, err
@@ -72,11 +72,4 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
     output = mailRecipe.Trim(output)
 
     return output, nil
-}
-
-func (handler Notify) ParseClientID(rawToken string) string {
-    token, _ := jwt.Parse(rawToken, func(token *jwt.Token) ([]byte, error) {
-        return []byte(config.UAAPublicKey), nil
-    })
-    return token.Claims["client_id"].(string)
 }

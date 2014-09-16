@@ -34,19 +34,19 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request, c
     }).Log()
 
     connection := models.Database().Connection()
-    err := handler.Execute(w, req, connection, handler.recipeBuilder.NewUAARecipe())
+    err := handler.Execute(w, req, connection, context, handler.recipeBuilder.NewUAARecipe())
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
     }
 }
 
-func (handler NotifySpace) Execute(w http.ResponseWriter, req *http.Request,
-    connection models.ConnectionInterface, recipe postal.UAARecipe) error {
+func (handler NotifySpace) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface,
+    context stack.Context, recipe postal.UAARecipe) error {
 
     spaceGUID := postal.SpaceGUID(strings.TrimPrefix(req.URL.Path, "/spaces/"))
 
-    output, err := handler.notify.Execute(connection, req, spaceGUID, recipe)
+    output, err := handler.notify.Execute(connection, req, context, spaceGUID, recipe)
     if err != nil {
         return err
     }

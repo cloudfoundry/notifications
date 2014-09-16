@@ -6,8 +6,11 @@ import (
     "net/http"
     "net/http/httptest"
 
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/middleware"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -17,7 +20,8 @@ var _ = Describe("Authenticator", func() {
     var ware middleware.Authenticator
     var request *http.Request
     var writer *httptest.ResponseRecorder
-    var token string
+    var rawToken string
+    var context stack.Context
 
     BeforeEach(func() {
         var err error
@@ -28,6 +32,7 @@ var _ = Describe("Authenticator", func() {
         if err != nil {
             panic(err)
         }
+        context = stack.NewContext()
     })
 
     Context("when the request contains a valid auth token", func() {
@@ -42,7 +47,7 @@ var _ = Describe("Authenticator", func() {
                 "exp":       3404281214,
                 "scope":     []string{"fake.scope"},
             }
-            token = fakes.BuildToken(tokenHeader, tokenClaims)
+            rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
 
             requestBody, err := json.Marshal(map[string]string{
                 "kind": "forgot_password",
@@ -56,15 +61,31 @@ var _ = Describe("Authenticator", func() {
             if err != nil {
                 panic(err)
             }
-            request.Header.Set("Authorization", "Bearer "+token)
+            request.Header.Set("Authorization", "Bearer "+rawToken)
         })
 
         It("allows the request through", func() {
-            returnValue := ware.ServeHTTP(writer, request, nil)
+            returnValue := ware.ServeHTTP(writer, request, context)
 
             Expect(returnValue).To(BeTrue())
             Expect(writer.Code).To(Equal(http.StatusOK))
             Expect(len(writer.Body.Bytes())).To(Equal(0))
+        })
+
+        It("sets the token on the context", func() {
+            ware.ServeHTTP(writer, request, context)
+
+            contextToken := context.Get("token")
+            Expect(contextToken).NotTo(BeNil())
+
+            token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+                return []byte(config.UAAPublicKey), nil
+            })
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(*(contextToken.(*jwt.Token))).To(Equal(*token))
         })
     })
 
@@ -79,7 +100,7 @@ var _ = Describe("Authenticator", func() {
                 "cid":       "mister-client",
                 "exp":       1404281214,
             }
-            token = fakes.BuildToken(tokenHeader, tokenClaims)
+            rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
 
             requestBody, err := json.Marshal(map[string]string{
                 "kind": "forgot_password",
@@ -93,11 +114,11 @@ var _ = Describe("Authenticator", func() {
             if err != nil {
                 panic(err)
             }
-            request.Header.Set("Authorization", "Bearer "+token)
+            request.Header.Set("Authorization", "Bearer "+rawToken)
         })
 
         It("returns a 401 status code and error message", func() {
-            returnValue := ware.ServeHTTP(writer, request, nil)
+            returnValue := ware.ServeHTTP(writer, request, context)
 
             Expect(returnValue).To(BeFalse())
             Expect(writer.Code).To(Equal(http.StatusUnauthorized))
@@ -129,7 +150,7 @@ var _ = Describe("Authenticator", func() {
         })
 
         It("returns a 401 status code and error message", func() {
-            returnValue := ware.ServeHTTP(writer, request, nil)
+            returnValue := ware.ServeHTTP(writer, request, context)
 
             Expect(returnValue).To(BeFalse())
             Expect(writer.Code).To(Equal(http.StatusUnauthorized))
@@ -156,7 +177,7 @@ var _ = Describe("Authenticator", func() {
                 "exp":       3404281214,
                 "scope":     []string{"cloud_controller.admin"},
             }
-            token = fakes.BuildToken(tokenHeader, tokenClaims)
+            rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
 
             requestBody, err := json.Marshal(map[string]string{
                 "kind": "forgot_password",
@@ -170,11 +191,11 @@ var _ = Describe("Authenticator", func() {
             if err != nil {
                 panic(err)
             }
-            request.Header.Set("Authorization", "Bearer "+token)
+            request.Header.Set("Authorization", "Bearer "+rawToken)
         })
 
         It("returns a 403 status code and error message", func() {
-            returnValue := ware.ServeHTTP(writer, request, nil)
+            returnValue := ware.ServeHTTP(writer, request, context)
 
             Expect(returnValue).To(BeFalse())
             Expect(writer.Code).To(Equal(http.StatusForbidden))
@@ -200,7 +221,7 @@ var _ = Describe("Authenticator", func() {
                 "cid":       "mister-client",
                 "exp":       3404281214,
             }
-            token = fakes.BuildToken(tokenHeader, tokenClaims)
+            rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
 
             requestBody, err := json.Marshal(map[string]string{
                 "kind": "forgot_password",
@@ -214,11 +235,11 @@ var _ = Describe("Authenticator", func() {
             if err != nil {
                 panic(err)
             }
-            request.Header.Set("Authorization", "Bearer "+token)
+            request.Header.Set("Authorization", "Bearer "+rawToken)
         })
 
         It("returns a 403 status code and error message", func() {
-            returnValue := ware.ServeHTTP(writer, request, nil)
+            returnValue := ware.ServeHTTP(writer, request, context)
 
             Expect(returnValue).To(BeFalse())
             Expect(writer.Code).To(Equal(http.StatusForbidden))
@@ -251,7 +272,7 @@ var _ = Describe("Authenticator", func() {
         })
 
         It("returns a 401 status code and error message", func() {
-            returnValue := ware.ServeHTTP(writer, request, nil)
+            returnValue := ware.ServeHTTP(writer, request, context)
 
             Expect(returnValue).To(BeFalse())
             Expect(writer.Code).To(Equal(http.StatusUnauthorized))

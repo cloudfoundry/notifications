@@ -7,6 +7,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
+    "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -25,7 +26,7 @@ type FakeNotify struct {
     Error    error
 }
 
-func (fake *FakeNotify) Execute(connection models.ConnectionInterface, req *http.Request,
+func (fake *FakeNotify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
     guid postal.TypedGUID, mailRecipe postal.MailRecipeInterface) ([]byte, error) {
     fake.GUID = guid
 

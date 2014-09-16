@@ -30,7 +30,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, co
     }).Log()
 
     connection := models.Database().Connection()
-    err := handler.Execute(w, req, connection, handler.recipeBuilder.NewUAARecipe())
+    err := handler.Execute(w, req, connection, context, handler.recipeBuilder.NewUAARecipe())
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
@@ -38,10 +38,10 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 }
 
 func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request,
-    connection models.ConnectionInterface, recipe postal.UAARecipe) error {
+    connection models.ConnectionInterface, context stack.Context, recipe postal.UAARecipe) error {
     userGUID := postal.UserGUID(strings.TrimPrefix(req.URL.Path, "/users/"))
 
-    output, err := handler.notify.Execute(connection, req, userGUID, recipe)
+    output, err := handler.notify.Execute(connection, req, context, userGUID, recipe)
     if err != nil {
         return err
     }

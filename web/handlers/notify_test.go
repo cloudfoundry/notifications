@@ -7,11 +7,14 @@ import (
     "net/http"
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/params"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -24,11 +27,12 @@ var _ = Describe("Notify", func() {
             var fakeFinder *fakes.FakeFinder
             var fakeRegistrar *fakes.FakeRegistrar
             var request *http.Request
-            var token string
+            var rawToken string
             var client models.Client
             var kind models.Kind
             var fakeDBConn *fakes.FakeDBConn
             var fakeRecipe *fakes.FakeMailRecipe
+            var context stack.Context
 
             BeforeEach(func() {
                 client = models.Client{
@@ -65,13 +69,20 @@ var _ = Describe("Notify", func() {
                     "exp":       int64(3404281214),
                     "scope":     []string{"notifications.write"},
                 }
-                token = fakes.BuildToken(tokenHeader, tokenClaims)
+                rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
 
                 request, err = http.NewRequest("POST", "/spaces/space-001", bytes.NewBuffer(body))
                 if err != nil {
                     panic(err)
                 }
-                request.Header.Set("Authorization", "Bearer "+token)
+                request.Header.Set("Authorization", "Bearer "+rawToken)
+
+                token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+                    return []byte(config.UAAPublicKey), nil
+                })
+
+                context = stack.NewContext()
+                context.Set("token", token)
 
                 fakeDBConn = &fakes.FakeDBConn{}
 
@@ -91,7 +102,7 @@ var _ = Describe("Notify", func() {
                 })
 
                 It("trim is called on the recipe", func() {
-                    _, err := handler.Execute(fakeDBConn, request, postal.NewUserGUID(), fakeRecipe)
+                    _, err := handler.Execute(fakeDBConn, request, context, postal.NewUserGUID(), fakeRecipe)
                     if err != nil {
                         panic(err)
                     }
@@ -101,7 +112,7 @@ var _ = Describe("Notify", func() {
             })
 
             It("delegates to the mailRecipe", func() {
-                _, err := handler.Execute(fakeDBConn, request, postal.SpaceGUID("space-001"), fakeRecipe)
+                _, err := handler.Execute(fakeDBConn, request, context, postal.SpaceGUID("space-001"), fakeRecipe)
                 if err != nil {
                     panic(err)
                 }
@@ -122,7 +133,7 @@ var _ = Describe("Notify", func() {
             })
 
             It("registers the client and kind", func() {
-                _, err := handler.Execute(fakeDBConn, request, postal.SpaceGUID("space-001"), fakeRecipe)
+                _, err := handler.Execute(fakeDBConn, request, context, postal.SpaceGUID("space-001"), fakeRecipe)
                 if err != nil {
                     panic(err)
                 }
@@ -147,9 +158,9 @@ var _ = Describe("Notify", func() {
                         if err != nil {
                             panic(err)
                         }
-                        request.Header.Set("Authorization", "Bearer "+token)
+                        request.Header.Set("Authorization", "Bearer "+rawToken)
 
-                        _, err = handler.Execute(fakeDBConn, request, postal.SpaceGUID("space-001"), fakeRecipe)
+                        _, err = handler.Execute(fakeDBConn, request, context, postal.SpaceGUID("space-001"), fakeRecipe)
 
                         Expect(err).ToNot(BeNil())
                         validationErr := err.(params.ValidationError)
@@ -162,9 +173,9 @@ var _ = Describe("Notify", func() {
                         if err != nil {
                             panic(err)
                         }
-                        request.Header.Set("Authorization", "Bearer "+token)
+                        request.Header.Set("Authorization", "Bearer "+rawToken)
 
-                        _, err = handler.Execute(fakeDBConn, request, postal.SpaceGUID("space-001"), fakeRecipe)
+                        _, err = handler.Execute(fakeDBConn, request, context, postal.SpaceGUID("space-001"), fakeRecipe)
 
                         Expect(err).To(Equal(params.ParseError{}))
                     })
@@ -174,7 +185,7 @@ var _ = Describe("Notify", func() {
                     It("returns the error", func() {
                         fakeRecipe.Error = errors.New("BOOM!")
 
-                        _, err := handler.Execute(fakeDBConn, request, postal.UserGUID("user-123"), fakeRecipe)
+                        _, err := handler.Execute(fakeDBConn, request, context, postal.UserGUID("user-123"), fakeRecipe)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
                     })
@@ -184,7 +195,7 @@ var _ = Describe("Notify", func() {
                     It("returns the error", func() {
                         fakeFinder.ClientAndKindError = errors.New("BOOM!")
 
-                        _, err := handler.Execute(fakeDBConn, request, postal.UserGUID("user-123"), fakeRecipe)
+                        _, err := handler.Execute(fakeDBConn, request, context, postal.UserGUID("user-123"), fakeRecipe)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
                     })
@@ -194,7 +205,7 @@ var _ = Describe("Notify", func() {
                     It("returns the error", func() {
                         fakeRegistrar.RegisterError = errors.New("BOOM!")
 
-                        _, err := handler.Execute(fakeDBConn, request, postal.UserGUID("user-123"), fakeRecipe)
+                        _, err := handler.Execute(fakeDBConn, request, context, postal.UserGUID("user-123"), fakeRecipe)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
                     })

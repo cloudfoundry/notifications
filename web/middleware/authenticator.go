@@ -47,6 +47,8 @@ func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request, co
         return ware.Error(w, http.StatusForbidden, "You are not authorized to perform the requested action")
     }
 
+    context.Set("token", token)
+
     return true
 }
 

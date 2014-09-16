@@ -9,10 +9,13 @@ import (
     "net/http/httptest"
     "strings"
 
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/params"
+    "github.com/dgrijalva/jwt-go"
+    "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -27,6 +30,7 @@ var _ = Describe("RegisterNotifications", func() {
     var registrar *fakes.FakeRegistrar
     var client models.Client
     var kinds []models.Kind
+    var context stack.Context
 
     BeforeEach(func() {
         fakeConn = &fakes.FakeDBConn{}
@@ -64,7 +68,14 @@ var _ = Describe("RegisterNotifications", func() {
             "exp":       int64(3404281214),
             "scope":     []string{"notifications.write"},
         }
-        request.Header.Set("Authorization", "Bearer "+fakes.BuildToken(tokenHeader, tokenClaims))
+        rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+        request.Header.Set("Authorization", "Bearer "+rawToken)
+
+        token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+            return []byte(config.UAAPublicKey), nil
+        })
+        context = stack.NewContext()
+        context.Set("token", token)
 
         client = models.Client{
             ID:          "raptors",
@@ -88,7 +99,7 @@ var _ = Describe("RegisterNotifications", func() {
 
     Describe("Execute", func() {
         It("passes the correct arguments to Register", func() {
-            handler.Execute(writer, request, fakeConn)
+            handler.Execute(writer, request, fakeConn, context)
 
             Expect(registrar.RegisterArguments).To(Equal([]interface{}{fakeConn, client, kinds}))
 
@@ -98,7 +109,7 @@ var _ = Describe("RegisterNotifications", func() {
         })
 
         It("passes the correct arguments to Prune", func() {
-            handler.Execute(writer, request, fakeConn)
+            handler.Execute(writer, request, fakeConn, context)
 
             Expect(registrar.PruneArguments).To(Equal([]interface{}{fakeConn, client, kinds}))
 
@@ -116,7 +127,7 @@ var _ = Describe("RegisterNotifications", func() {
             }
             request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
-            handler.Execute(writer, request, fakeConn)
+            handler.Execute(writer, request, fakeConn, context)
 
             Expect(registrar.PruneArguments).To(BeNil())
 
@@ -133,7 +144,7 @@ var _ = Describe("RegisterNotifications", func() {
                     panic(err)
                 }
 
-                handler.Execute(writer, request, fakeConn)
+                handler.Execute(writer, request, fakeConn, context)
 
                 Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
 
@@ -152,7 +163,7 @@ var _ = Describe("RegisterNotifications", func() {
                     panic(err)
                 }
 
-                handler.Execute(writer, request, fakeConn)
+                handler.Execute(writer, request, fakeConn, context)
 
                 Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
 
@@ -164,7 +175,7 @@ var _ = Describe("RegisterNotifications", func() {
             It("delegates registrar register errors to the ErrorWriter", func() {
                 registrar.RegisterError = errors.New("BOOM!")
 
-                handler.Execute(writer, request, fakeConn)
+                handler.Execute(writer, request, fakeConn, context)
 
                 Expect(fakeErrorWriter.Error).To(Equal(errors.New("BOOM!")))
 
@@ -176,7 +187,7 @@ var _ = Describe("RegisterNotifications", func() {
             It("delegates registrar prune errors to the ErrorWriter", func() {
                 registrar.PruneError = errors.New("BOOM!")
 
-                handler.Execute(writer, request, fakeConn)
+                handler.Execute(writer, request, fakeConn, context)
 
                 Expect(fakeErrorWriter.Error).To(Equal(errors.New("BOOM!")))
 

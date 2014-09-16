@@ -22,14 +22,14 @@ func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, re
 
 func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
     connection := models.Database().Connection()
-    err := handler.Execute(w, req, connection)
+    err := handler.Execute(w, req, connection, context)
     if err != nil {
         panic(err)
     }
 }
 
-func (handler NotifyEmail) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) error {
-    output, err := handler.notify.Execute(connection, req, postal.NewEmailID(), handler.recipe)
+func (handler NotifyEmail) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) error {
+    output, err := handler.notify.Execute(connection, req, context, postal.NewEmailID(), handler.recipe)
     if err != nil {
         return err
     }
