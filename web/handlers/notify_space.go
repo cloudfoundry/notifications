@@ -29,16 +29,16 @@ func NewNotifySpace(notify NotifyInterface, errorWriter ErrorWriterInterface, re
 }
 
 func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-    metrics.NewMetric("counter", map[string]interface{}{
-        "name": "notifications.web.spaces",
-    }).Log()
-
     connection := models.Database().Connection()
     err := handler.Execute(w, req, connection, context, handler.recipeBuilder.NewUAARecipe())
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
     }
+
+    metrics.NewMetric("counter", map[string]interface{}{
+        "name": "notifications.web.spaces",
+    }).Log()
 }
 
 func (handler NotifySpace) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface,

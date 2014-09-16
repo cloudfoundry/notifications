@@ -24,11 +24,11 @@ func NewRegisterNotifications(registrar services.RegistrarInterface, errorWriter
 }
 
 func (handler RegisterNotifications) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+    handler.Execute(w, req, models.Database().Connection(), context)
+
     metrics.NewMetric("counter", map[string]interface{}{
         "name": "notifications.web.registration",
     }).Log()
-
-    handler.Execute(w, req, models.Database().Connection(), context)
 }
 
 func (handler RegisterNotifications) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) {

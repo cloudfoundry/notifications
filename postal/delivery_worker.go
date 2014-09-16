@@ -49,7 +49,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
     if err != nil {
         metrics.NewMetric("counter", map[string]interface{}{
             "name": "notifications.worker.panic.json",
-        })
+        }).Log()
         worker.Retry(job)
     }
 
@@ -58,6 +58,13 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
         status := worker.SendMail(message)
         if status != StatusDelivered {
             worker.Retry(job)
+            metrics.NewMetric("counter", map[string]interface{}{
+                "name": "notifications.worker.retry",
+            }).Log()
+        } else {
+            metrics.NewMetric("counter", map[string]interface{}{
+                "name": "notifications.worker.delivered",
+            }).Log()
         }
     }
 }

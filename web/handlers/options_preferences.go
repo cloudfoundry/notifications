@@ -3,6 +3,7 @@ package handlers
 import (
     "net/http"
 
+    "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/ryanmoran/stack"
 )
 
@@ -13,4 +14,7 @@ func NewOptionsPreferences() OptionsPreferences {
 }
 
 func (handler OptionsPreferences) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+    metrics.NewMetric("counter", map[string]interface{}{
+        "name": "notifications.web.preferences.options",
+    }).Log()
 }
