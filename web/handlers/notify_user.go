@@ -7,6 +7,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/ryanmoran/stack"
 )
 
 type NotifyUser struct {
@@ -23,7 +24,7 @@ func NewNotifyUser(notify NotifyInterface, errorWriter ErrorWriterInterface, rec
     }
 }
 
-func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
     metrics.NewMetric("counter", map[string]interface{}{
         "name": "notifications.web.users",
     }).Log()

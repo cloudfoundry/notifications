@@ -40,7 +40,7 @@ var _ = Describe("CORS", func() {
         })
 
         It("sets the correct CORS headers", func() {
-            result := ware.ServeHTTP(writer, request)
+            result := ware.ServeHTTP(writer, request, nil)
 
             Expect(result).To(BeTrue())
             Expect(writer.HeaderMap.Get("Access-Control-Allow-Origin")).To(Equal("test-cors-origin"))

@@ -20,7 +20,7 @@ var _ = Describe("Recover", func() {
         }
 
         Expect(func() {
-            defer stack.Recover(writer, request, nil)
+            defer stack.Recover(writer, request, nil, nil)
             panic(errors.New("Random Error"))
         }).NotTo(Panic())
     })
@@ -33,7 +33,7 @@ var _ = Describe("Recover", func() {
         }
 
         func() {
-            defer stack.Recover(writer, request, nil)
+            defer stack.Recover(writer, request, nil, nil)
             panic(errors.New("Random Error"))
         }()
 

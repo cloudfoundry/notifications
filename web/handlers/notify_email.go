@@ -5,6 +5,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/ryanmoran/stack"
 )
 
 type NotifyEmail struct {
@@ -19,7 +20,7 @@ func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, re
     }
 }
 
-func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
     connection := models.Database().Connection()
     err := handler.Execute(w, req, connection)
     if err != nil {

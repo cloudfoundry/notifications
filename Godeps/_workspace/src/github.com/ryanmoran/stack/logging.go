@@ -16,7 +16,7 @@ func NewLogging(logger *log.Logger) Logging {
     }
 }
 
-func (ware Logging) ServeHTTP(w http.ResponseWriter, req *http.Request) bool {
+func (ware Logging) ServeHTTP(w http.ResponseWriter, req *http.Request, context Context) bool {
     if os.Getenv("HTTP_LOGGING_ENABLED") == "true" {
         ware.logger.Printf("%s %s\n", req.Method, req.URL.String())
     }

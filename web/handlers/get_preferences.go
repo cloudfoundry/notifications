@@ -8,6 +8,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/dgrijalva/jwt-go"
+    "github.com/ryanmoran/stack"
 )
 
 type GetPreferences struct {
@@ -22,7 +23,7 @@ func NewGetPreferences(preferencesFinder services.PreferencesFinderInterface, er
     }
 }
 
-func (handler GetPreferences) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (handler GetPreferences) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
     userID, err := handler.ParseUserID(strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer "))
     if err != nil {
         errorWriter := NewErrorWriter()

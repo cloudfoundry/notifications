@@ -10,6 +10,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/web/params"
     "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/dgrijalva/jwt-go"
+    "github.com/ryanmoran/stack"
 )
 
 type RegisterNotifications struct {
@@ -24,7 +25,7 @@ func NewRegisterNotifications(registrar services.RegistrarInterface, errorWriter
     }
 }
 
-func (handler RegisterNotifications) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (handler RegisterNotifications) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
     metrics.NewMetric("counter", map[string]interface{}{
         "name": "notifications.web.registration",
     }).Log()

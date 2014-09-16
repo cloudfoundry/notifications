@@ -85,7 +85,7 @@
 		},
 		{
 			"ImportPath": "github.com/ryanmoran/stack",
-			"Rev": "d49bfd8194ebe89813efccde7de6f4d7b0751df5"
+			"Rev": "3debe7a5953ad63d7429bd22b186134c6dea6f73"
 		},
 		{
 			"ImportPath": "github.com/ziutek/mymysql/godrv",

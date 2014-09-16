@@ -6,6 +6,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/dgrijalva/jwt-go"
+    "github.com/ryanmoran/stack"
 )
 
 type Authenticator struct {
@@ -18,7 +19,7 @@ func NewAuthenticator(scopes []string) Authenticator {
     }
 }
 
-func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request) bool {
+func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) bool {
     authHeader := req.Header.Get("Authorization")
     rawToken := strings.TrimPrefix(authHeader, "Bearer ")
 

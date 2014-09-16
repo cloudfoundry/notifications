@@ -60,7 +60,7 @@ var _ = Describe("Authenticator", func() {
         })
 
         It("allows the request through", func() {
-            returnValue := ware.ServeHTTP(writer, request)
+            returnValue := ware.ServeHTTP(writer, request, nil)
 
             Expect(returnValue).To(BeTrue())
             Expect(writer.Code).To(Equal(http.StatusOK))
@@ -97,7 +97,7 @@ var _ = Describe("Authenticator", func() {
         })
 
         It("returns a 401 status code and error message", func() {
-            returnValue := ware.ServeHTTP(writer, request)
+            returnValue := ware.ServeHTTP(writer, request, nil)
 
             Expect(returnValue).To(BeFalse())
             Expect(writer.Code).To(Equal(http.StatusUnauthorized))
@@ -129,7 +129,7 @@ var _ = Describe("Authenticator", func() {
         })
 
         It("returns a 401 status code and error message", func() {
-            returnValue := ware.ServeHTTP(writer, request)
+            returnValue := ware.ServeHTTP(writer, request, nil)
 
             Expect(returnValue).To(BeFalse())
             Expect(writer.Code).To(Equal(http.StatusUnauthorized))
@@ -174,7 +174,7 @@ var _ = Describe("Authenticator", func() {
         })
 
         It("returns a 403 status code and error message", func() {
-            returnValue := ware.ServeHTTP(writer, request)
+            returnValue := ware.ServeHTTP(writer, request, nil)
 
             Expect(returnValue).To(BeFalse())
             Expect(writer.Code).To(Equal(http.StatusForbidden))
@@ -218,7 +218,7 @@ var _ = Describe("Authenticator", func() {
         })
 
         It("returns a 403 status code and error message", func() {
-            returnValue := ware.ServeHTTP(writer, request)
+            returnValue := ware.ServeHTTP(writer, request, nil)
 
             Expect(returnValue).To(BeFalse())
             Expect(writer.Code).To(Equal(http.StatusForbidden))
@@ -251,7 +251,7 @@ var _ = Describe("Authenticator", func() {
         })
 
         It("returns a 401 status code and error message", func() {
-            returnValue := ware.ServeHTTP(writer, request)
+            returnValue := ware.ServeHTTP(writer, request, nil)
 
             Expect(returnValue).To(BeFalse())
             Expect(writer.Code).To(Equal(http.StatusUnauthorized))

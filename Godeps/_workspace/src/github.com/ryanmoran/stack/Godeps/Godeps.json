@@ -1,0 +1,17 @@
+{
+	"ImportPath": "github.com/ryanmoran/stack",
+	"GoVersion": "go1.2.1",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/onsi/ginkgo",
+			"Rev": "7083fb7612a8bc8ef9a48c35b8364fd06fadf9ad"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega",
+			"Rev": "ff48b6baeb8028ce0ad570efbe36b1534b7efd0c"
+		}
+	]
+}

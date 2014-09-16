@@ -15,9 +15,15 @@ import (
 
 type Handler struct{}
 
-func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h Handler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+    var output string
+    for _, key := range context.Keys() {
+        output += context.Get(key).(string)
+    }
+    output += fmt.Sprintf("Handler\n")
+
     w.Header().Add("X-Handler", "my-handler")
-    w.Write([]byte("Handler\n"))
+    w.Write([]byte(output))
 }
 
 type ChannelHandler struct {
@@ -25,7 +31,7 @@ type ChannelHandler struct {
     done   chan bool
 }
 
-func (h ChannelHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h ChannelHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
     <-h.finish
     h.done <- true
 }
@@ -34,8 +40,9 @@ type Middleware struct {
     Name string
 }
 
-func (m Middleware) ServeHTTP(w http.ResponseWriter, req *http.Request) bool {
+func (m Middleware) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) bool {
     str := fmt.Sprintf("Middleware: %s\n", m.Name)
+    context.Set(m.Name, fmt.Sprintf("I'm a middleware %s\n", m.Name))
     w.Header().Add("X-Middleware", m.Name)
     w.Write([]byte(str))
     return true
@@ -45,7 +52,7 @@ type HaltingMiddleware struct {
     Name string
 }
 
-func (m HaltingMiddleware) ServeHTTP(w http.ResponseWriter, req *http.Request) bool {
+func (m HaltingMiddleware) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) bool {
     str := fmt.Sprintf("Middleware: %s\n", m.Name)
     w.WriteHeader(http.StatusUnauthorized)
     w.Write([]byte(str))
@@ -56,7 +63,7 @@ type PanickingMiddleware struct {
     err error
 }
 
-func (m PanickingMiddleware) ServeHTTP(w http.ResponseWriter, req *http.Request) bool {
+func (m PanickingMiddleware) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) bool {
     if m.err != nil {
         panic(m.err)
     }
@@ -91,6 +98,8 @@ var _ = Describe("Stack", func() {
         Expect(strings.Split(writer.Body.String(), "\n")).To(Equal([]string{
             "Middleware: first",
             "Middleware: second",
+            "I'm a middleware first",
+            "I'm a middleware second",
             "Handler",
             "",
         }))
@@ -125,6 +134,8 @@ var _ = Describe("Stack", func() {
         Expect(strings.Split(writer.Body.String(), "\n")).To(Equal([]string{
             "Middleware: first",
             "Middleware: second",
+            "I'm a middleware first",
+            "I'm a middleware second",
             "Handler",
             "",
         }))
@@ -134,6 +145,8 @@ var _ = Describe("Stack", func() {
         Expect(strings.Split(writer.Body.String(), "\n")).To(Equal([]string{
             "Middleware: first",
             "Middleware: second",
+            "I'm a middleware first",
+            "I'm a middleware second",
             "Handler",
             "",
         }))
@@ -180,8 +193,8 @@ var _ = Describe("Stack", func() {
 
             finish <- true
             finish <- true
-            <-done
-            <-done
+            Eventually(done).Should(Receive())
+            Eventually(done).Should(Receive())
 
             <-time.After(10 * time.Millisecond)
 

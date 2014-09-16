@@ -31,7 +31,7 @@ var _ = Describe("Logging", func() {
             panic(err)
         }
 
-        result := ware.ServeHTTP(writer, request)
+        result := ware.ServeHTTP(writer, request, nil)
 
         Expect(result).To(BeTrue())
         Expect(logFile.String()).To(ContainSubstring("GET /some/random/request"))
@@ -45,7 +45,7 @@ var _ = Describe("Logging", func() {
             panic(err)
         }
 
-        result := ware.ServeHTTP(writer, request)
+        result := ware.ServeHTTP(writer, request, nil)
 
         Expect(result).To(BeTrue())
         Expect(logFile.Len()).To(Equal(0))

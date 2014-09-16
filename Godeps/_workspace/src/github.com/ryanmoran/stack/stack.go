@@ -7,7 +7,7 @@ import (
 )
 
 type Stack struct {
-    Handler         http.Handler
+    Handler         Handler
     Middleware      []Middleware
     RecoverCallback *RecoverCallback
 }
@@ -18,7 +18,11 @@ type Response struct {
     header http.Header
 }
 
-func NewStack(handler http.Handler) Stack {
+type Handler interface {
+    ServeHTTP(http.ResponseWriter, *http.Request, Context)
+}
+
+func NewStack(handler Handler) Stack {
     return Stack{
         Handler: handler,
     }
@@ -30,7 +34,10 @@ func (s Stack) Use(wares ...Middleware) Stack {
 }
 
 func (s Stack) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-    defer Recover(w, req, s.RecoverCallback)
+    context := NewContext()
+
+    defer Recover(w, req, s.RecoverCallback, context)
+
     response := Response{
         buffer: bytes.NewBufferString(""),
         code:   http.StatusOK,
@@ -41,7 +48,7 @@ func (s Stack) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
     for _, ware := range s.Middleware {
         rec = httptest.NewRecorder()
-        halt := !ware.ServeHTTP(rec, req)
+        halt := !ware.ServeHTTP(rec, req, context)
         s.Write(&response, rec)
         if halt {
             s.finalize(&response, w)
@@ -49,7 +56,7 @@ func (s Stack) ServeHTTP(w http.ResponseWriter, req *http.Request) {
         }
     }
     rec = httptest.NewRecorder()
-    s.Handler.ServeHTTP(rec, req)
+    s.Handler.ServeHTTP(rec, req, context)
     s.Write(&response, rec)
     s.finalize(&response, w)
 }

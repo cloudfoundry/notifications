@@ -11,6 +11,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/web/params"
     "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/dgrijalva/jwt-go"
+    "github.com/ryanmoran/stack"
 )
 
 type UpdatePreferences struct {
@@ -25,7 +26,7 @@ func NewUpdatePreferences(preferenceUpdater services.PreferenceUpdaterInterface,
     }
 }
 
-func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
     connection := models.Database().Connection()
     handler.Execute(w, req, connection)
 }

@@ -25,7 +25,7 @@ var _ = Describe("GetInfo", func() {
                 panic(err)
             }
 
-            handler.ServeHTTP(writer, request)
+            handler.ServeHTTP(writer, request, nil)
 
             Expect(writer.Code).To(Equal(http.StatusOK))
             Expect(writer.Body.String()).To(Equal("{}"))

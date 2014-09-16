@@ -67,13 +67,13 @@ var _ = Describe("GetPreferences", func() {
     })
 
     It("Passes the proper user guid into execute", func() {
-        handler.ServeHTTP(writer, request)
+        handler.ServeHTTP(writer, request, nil)
 
         Expect(preferencesFinder.UserGUID).To(Equal("correct-user"))
     })
 
     It("Returns a proper JSON response when the Preference object does not error", func() {
-        handler.ServeHTTP(writer, request)
+        handler.ServeHTTP(writer, request, nil)
 
         Expect(writer.Code).To(Equal(http.StatusOK))
 
@@ -91,7 +91,7 @@ var _ = Describe("GetPreferences", func() {
             preferencesFinder.FindErrors = true
 
             Expect(func() {
-                handler.ServeHTTP(writer, request)
+                handler.ServeHTTP(writer, request, nil)
             }).To(Panic())
         })
     })
