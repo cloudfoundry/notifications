@@ -9,19 +9,18 @@ import (
 
 type NotifyEmail struct {
     notify NotifyInterface
-    mailer postal.MailerInterface
+    recipe postal.MailRecipeInterface
 }
 
-func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, mailer postal.MailerInterface) NotifyEmail {
+func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, recipe postal.MailRecipeInterface) NotifyEmail {
     return NotifyEmail{
         notify: notify,
-        mailer: mailer,
+        recipe: recipe,
     }
 }
 
 func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request) {
     connection := models.Database().Connection()
-
     err := handler.Execute(w, req, connection)
     if err != nil {
         panic(err)
@@ -29,8 +28,7 @@ func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (handler NotifyEmail) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface) error {
-    templateLoader := postal.NewTemplateLoader(postal.NewFileSystem())
-    output, err := handler.notify.Execute(connection, req, postal.NewEmailID(), postal.NewEmailRecipe(handler.mailer, templateLoader))
+    output, err := handler.notify.Execute(connection, req, postal.NewEmailID(), handler.recipe)
     if err != nil {
         return err
     }

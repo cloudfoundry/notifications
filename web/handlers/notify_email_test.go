@@ -27,7 +27,7 @@ var _ = Describe("NotifyEmail", func() {
             handler = handlers.NewNotifyEmail(fakeNotify, errorWriter, nil)
         })
 
-        Context("when notify.execute returns a proper response", func() {
+        Context("when notify.Execute returns a proper response", func() {
             It("writes that response", func() {
                 fakeNotify.Response = []byte("whut")
 
@@ -41,7 +41,7 @@ var _ = Describe("NotifyEmail", func() {
             })
         })
 
-        Context("when notify.execute errors", func() {
+        Context("when notify.Execute errors", func() {
             It("propagates the error", func() {
                 fakeNotify.Error = errors.New("Blambo!")
                 err := handler.Execute(writer, nil, nil)

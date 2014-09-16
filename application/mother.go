@@ -1,4 +1,4 @@
-package mother
+package application
 
 import (
     "log"
@@ -54,6 +54,10 @@ func (mother Mother) NewUAARecipe() postal.UAARecipe {
     receiptsRepo := models.NewReceiptsRepo()
 
     return postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, receiptsRepo)
+}
+
+func (mother Mother) EmailRecipe() postal.MailRecipeInterface {
+    return postal.NewEmailRecipe(mother.Mailer(), postal.NewTemplateLoader(postal.NewFileSystem()))
 }
 
 func (mother Mother) NotificationFinder() services.NotificationFinder {

@@ -3,20 +3,33 @@ package web
 import (
     "strings"
 
-    "github.com/cloudfoundry-incubator/notifications/mother"
+    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/middleware"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/gorilla/mux"
     "github.com/ryanmoran/stack"
 )
+
+type MotherInterface interface {
+    Registrar() services.Registrar
+    EmailRecipe() postal.MailRecipeInterface
+    NotificationFinder() services.NotificationFinder
+    PreferencesFinder() *services.PreferencesFinder
+    PreferenceUpdater() services.PreferenceUpdater
+    Logging() stack.Middleware
+    ErrorWriter() handlers.ErrorWriter
+    Authenticator([]string) middleware.Authenticator
+    handlers.RecipeBuilderInterface
+}
 
 type Router struct {
     stacks map[string]stack.Stack
 }
 
-func NewRouter(mother *mother.Mother) Router {
+func NewRouter(mother MotherInterface) Router {
     registrar := mother.Registrar()
-    mailer := mother.Mailer()
+    emailRecipe := mother.EmailRecipe()
     notify := handlers.NewNotify(mother.NotificationFinder(), registrar)
     preferencesFinder := mother.PreferencesFinder()
     preferenceUpdater := mother.PreferenceUpdater()
@@ -32,7 +45,7 @@ func NewRouter(mother *mother.Mother) Router {
             "GET /info":                 stack.NewStack(handlers.NewGetInfo()).Use(logging),
             "POST /users/{guid}":        stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, mother)).Use(logging, notificationsWriteAuthenticator),
             "POST /spaces/{guid}":       stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, mother)).Use(logging, notificationsWriteAuthenticator),
-            "POST /emails":              stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, mailer)).Use(logging),
+            "POST /emails":              stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailRecipe)).Use(logging),
             "PUT /registration":         stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter)).Use(logging, notificationsWriteAuthenticator),
             "OPTIONS /user_preferences": stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),
             "GET /user_preferences":     stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, cors, notificationPreferencesReadAuthenticator),

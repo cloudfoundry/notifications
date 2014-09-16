@@ -15,8 +15,7 @@ const (
 )
 
 type MailRecipeInterface interface {
-    Dispatch(clientID string, guid TypedGUID,
-        options Options, conn models.ConnectionInterface) ([]Response, error)
+    Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error)
     Trim([]byte) []byte
 }
 

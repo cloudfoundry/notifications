@@ -24,9 +24,7 @@ var _ = Describe("NotifyUser", func() {
         BeforeEach(func() {
             var err error
             errorWriter = &fakes.FakeErrorWriter{}
-
             writer = httptest.NewRecorder()
-
             request, err = http.NewRequest("POST", "/users/user-123", nil)
             if err != nil {
                 panic(err)
@@ -49,7 +47,6 @@ var _ = Describe("NotifyUser", func() {
                 Expect(fakeNotify.GUID.String()).To(Equal("user-123"))
                 Expect(fakeNotify.GUID.BelongsToSpace()).To(BeFalse())
                 Expect(fakeNotify.GUID.IsTypeEmail()).To(BeFalse())
-
             })
         })
 
@@ -60,7 +57,6 @@ var _ = Describe("NotifyUser", func() {
                 err := handler.Execute(writer, request, nil, postal.UAARecipe{})
 
                 Expect(err).To(Equal(fakeNotify.Error))
-
             })
         })
     })

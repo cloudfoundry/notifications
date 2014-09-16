@@ -3,9 +3,6 @@ package web
 import (
     "log"
     "net/http"
-
-    "github.com/cloudfoundry-incubator/notifications/config"
-    "github.com/cloudfoundry-incubator/notifications/mother"
 )
 
 type Server struct {
@@ -15,10 +12,9 @@ func NewServer() Server {
     return Server{}
 }
 
-func (s Server) Run(mother *mother.Mother) {
-    env := config.NewEnvironment()
+func (s Server) Run(port string, mother MotherInterface) {
     router := NewRouter(mother)
-    log.Printf("Listening on localhost:%s\n", env.Port)
+    log.Printf("Listening on localhost:%s\n", port)
 
-    http.ListenAndServe(":"+env.Port, router.Routes())
+    http.ListenAndServe(":"+port, router.Routes())
 }
