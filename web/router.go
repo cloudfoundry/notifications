@@ -39,7 +39,7 @@ func NewRouter(mother MotherInterface) Router {
     notificationsWriteAuthenticator := mother.Authenticator([]string{"notifications.write"})
     notificationPreferencesReadAuthenticator := mother.Authenticator([]string{"notification_preferences.read"})
     notificationPreferencesWriteAuthenticator := mother.Authenticator([]string{"notification_preferences.write"})
-    emailsWriteAuthenticator := mother.Authenticator([]string{})
+    emailsWriteAuthenticator := mother.Authenticator([]string{"emails.write"})
     cors := mother.CORS()
 
     return Router{

@@ -37,6 +37,7 @@ var _ = Describe("Router", func() {
         s := router.Routes().Get("POST /spaces/{guid}").GetHandler().(stack.Stack)
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.NotifySpace{}))
         Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+        Expect(s.Middleware[1]).To(BeAssignableToTypeOf(middleware.Authenticator{}))
 
         authenticator := s.Middleware[1].(middleware.Authenticator)
         Expect(authenticator.Scopes).To(Equal([]string{"notifications.write"}))
@@ -46,9 +47,10 @@ var _ = Describe("Router", func() {
         s := router.Routes().Get("POST /emails").GetHandler().(stack.Stack)
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.NotifyEmail{}))
         Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+        Expect(s.Middleware[1]).To(BeAssignableToTypeOf(middleware.Authenticator{}))
 
         authenticator := s.Middleware[1].(middleware.Authenticator)
-        Expect(authenticator.Scopes).To(Equal([]string{}))
+        Expect(authenticator.Scopes).To(Equal([]string{"emails.write"}))
     })
 
     It("routes PUT /registration", func() {
