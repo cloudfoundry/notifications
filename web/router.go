@@ -20,6 +20,7 @@ type MotherInterface interface {
     Logging() stack.Middleware
     ErrorWriter() handlers.ErrorWriter
     Authenticator([]string) middleware.Authenticator
+    CORS() middleware.CORS
     handlers.RecipeBuilderInterface
 }
 
@@ -39,7 +40,7 @@ func NewRouter(mother MotherInterface) Router {
     notificationPreferencesReadAuthenticator := mother.Authenticator([]string{"notification_preferences.read"})
     notificationPreferencesWriteAuthenticator := mother.Authenticator([]string{"notification_preferences.write"})
     emailsWriteAuthenticator := mother.Authenticator([]string{})
-    cors := middleware.NewCORS()
+    cors := mother.CORS()
 
     return Router{
         stacks: map[string]stack.Stack{

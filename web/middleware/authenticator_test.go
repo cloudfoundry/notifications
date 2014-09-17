@@ -26,7 +26,7 @@ var _ = Describe("Authenticator", func() {
     BeforeEach(func() {
         var err error
 
-        ware = middleware.NewAuthenticator([]string{"fake.scope"})
+        ware = middleware.NewAuthenticator([]string{"fake.scope"}, config.UAAPublicKey)
         writer = httptest.NewRecorder()
         request, err = http.NewRequest("GET", "/some/path", nil)
         if err != nil {

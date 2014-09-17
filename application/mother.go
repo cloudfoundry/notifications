@@ -82,7 +82,7 @@ func (mother Mother) ErrorWriter() handlers.ErrorWriter {
 }
 
 func (mother Mother) Authenticator(scopes []string) middleware.Authenticator {
-    return middleware.NewAuthenticator(scopes)
+    return middleware.NewAuthenticator(scopes, config.UAAPublicKey)
 }
 
 func (mother Mother) Registrar() services.Registrar {
@@ -100,4 +100,9 @@ func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
 
 func (mother Mother) UnsubscribesRepo() models.UnsubscribesRepo {
     return models.NewUnsubscribesRepo()
+}
+
+func (mother Mother) CORS() middleware.CORS {
+    env := config.NewEnvironment()
+    return middleware.NewCORS(env.CORSOrigin)
 }

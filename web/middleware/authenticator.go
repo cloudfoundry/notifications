@@ -4,18 +4,19 @@ import (
     "net/http"
     "strings"
 
-    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/dgrijalva/jwt-go"
     "github.com/ryanmoran/stack"
 )
 
 type Authenticator struct {
-    Scopes []string
+    Scopes       []string
+    UAAPublicKey string
 }
 
-func NewAuthenticator(scopes []string) Authenticator {
+func NewAuthenticator(scopes []string, publicKey string) Authenticator {
     return Authenticator{
-        Scopes: scopes,
+        Scopes:       scopes,
+        UAAPublicKey: publicKey,
     }
 }
 
@@ -28,7 +29,7 @@ func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request, co
     }
 
     token, err := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
-        return []byte(config.UAAPublicKey), nil
+        return []byte(ware.UAAPublicKey), nil
     })
     if err != nil {
         if strings.Contains(err.Error(), "Token is expired") {
