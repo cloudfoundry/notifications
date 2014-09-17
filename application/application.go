@@ -101,7 +101,7 @@ func (app Application) EnableDBLogging() {
 }
 
 func (app Application) UnlockJobs() {
-    if app.env.InstanceIndex == 0 {
+    if app.env.VCAPApplication.InstanceIndex == 0 {
         gobble.NewQueue().Unlock()
     }
 }

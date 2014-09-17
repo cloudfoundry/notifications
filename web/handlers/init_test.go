@@ -1,9 +1,12 @@
 package handlers_test
 
 import (
+    "bytes"
+    "log"
     "net/http"
     "testing"
 
+    "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
@@ -16,8 +19,14 @@ import (
 func TestWebHandlersSuite(t *testing.T) {
     fakes.RegisterFastTokenSigningMethod()
 
+    buffer := bytes.NewBuffer([]byte{})
+    metricsLogger := metrics.Logger
+    metrics.Logger = log.New(buffer, "", 0)
+
     RegisterFailHandler(Fail)
     RunSpecs(t, "Web Handlers Suite")
+
+    metrics.Logger = metricsLogger
 }
 
 type FakeNotify struct {

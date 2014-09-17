@@ -147,7 +147,7 @@ var _ = Describe("Environment", func() {
         })
 
         It("defaults to true when SMTP_TLS is not a boolean", func() {
-            os.Setenv("SMTP_TLS", "banana")
+            os.Setenv("SMTP_TLS", "")
 
             env := config.NewEnvironment()
 
@@ -256,7 +256,7 @@ var _ = Describe("Environment", func() {
         })
 
         It("sets the value to true if the value is non-boolean", func() {
-            os.Setenv("VERIFY_SSL", "banana")
+            os.Setenv("VERIFY_SSL", "")
 
             env := config.NewEnvironment()
 
@@ -297,11 +297,11 @@ var _ = Describe("Environment", func() {
 
             env := config.NewEnvironment()
 
-            Expect(env.InstanceIndex).To(Equal(1))
+            Expect(env.VCAPApplication.InstanceIndex).To(Equal(1))
         })
 
         It("panics if it cannot find the value", func() {
-            os.Setenv("VCAP_APPLICATION", "{}")
+            os.Setenv("VCAP_APPLICATION", "")
 
             Expect(func() {
                 config.NewEnvironment()

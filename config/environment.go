@@ -1,79 +1,52 @@
 package config
 
 import (
-    "encoding/json"
     "errors"
     "fmt"
     "net/url"
-    "os"
-    "strconv"
     "strings"
+
+    "github.com/ryanmoran/viron"
 )
 
 var UAAPublicKey string
 
 type Environment struct {
-    CCHost           string
-    CORSOrigin       string
-    DBLoggingEnabled bool
-    DatabaseURL      string
-    InstanceIndex    int
-    Port             string
-    RootPath         string
-    SMTPHost         string
-    SMTPPass         string
-    SMTPPort         string
-    SMTPTLS          bool
-    SMTPUser         string
-    Sender           string
-    TestMode         bool
-    UAAClientID      string
-    UAAClientSecret  string
-    UAAHost          string
-    VerifySSL        bool
+    CCHost           string `env:"CC_HOST"            env-required:"true"`
+    CORSOrigin       string `env:"CORS_ORIGIN"        env-default:"*"`
+    DBLoggingEnabled bool   `env:"DB_LOGGING_ENABLED"`
+    DatabaseURL      string `env:"DATABASE_URL"       env-required:"true"`
+    Port             string `env:"PORT"               env-default:"3000"`
+    RootPath         string `env:"ROOT_PATH"`
+    SMTPHost         string `env:"SMTP_HOST"          env-required:"true"`
+    SMTPPass         string `env:"SMTP_PASS"`
+    SMTPPort         string `env:"SMTP_PORT"          env-required:"true"`
+    SMTPTLS          bool   `env:"SMTP_TLS"           env-default:"true"`
+    SMTPUser         string `env:"SMTP_USER"`
+    Sender           string `env:"SENDER"             env-required:"true"`
+    TestMode         bool   `env:"TEST_MODE"          env-default:"false"`
+    UAAClientID      string `env:"UAA_CLIENT_ID"      env-required:"true"`
+    UAAClientSecret  string `env:"UAA_CLIENT_SECRET"  env-required:"true"`
+    UAAHost          string `env:"UAA_HOST"           env-required:"true"`
+    VerifySSL        bool   `env:"VERIFY_SSL"         env-default:"true"`
+    VCAPApplication  struct {
+        InstanceIndex int `json:"instance_index"`
+    }   `env:"VCAP_APPLICATION" env-required:"true"`
 }
 
 func NewEnvironment() Environment {
-    return Environment{
-        CCHost:           loadOrPanic("CC_HOST"),
-        DBLoggingEnabled: loadBool("DB_LOGGING_ENABLED", false),
-        DatabaseURL:      loadDatabaseURL("DATABASE_URL"),
-        InstanceIndex:    loadInstanceIndex(),
-        Port:             loadPort(),
-        RootPath:         loadOrPanic("ROOT_PATH"),
-        SMTPHost:         loadOrPanic("SMTP_HOST"),
-        SMTPPass:         os.Getenv("SMTP_PASS"),
-        SMTPPort:         loadOrPanic("SMTP_PORT"),
-        SMTPTLS:          loadBool("SMTP_TLS", true),
-        SMTPUser:         os.Getenv("SMTP_USER"),
-        Sender:           loadOrPanic("SENDER"),
-        TestMode:         loadBool("TEST_MODE", false),
-        UAAClientID:      loadOrPanic("UAA_CLIENT_ID"),
-        UAAClientSecret:  loadOrPanic("UAA_CLIENT_SECRET"),
-        UAAHost:          loadOrPanic("UAA_HOST"),
-        VerifySSL:        loadBool("VERIFY_SSL", true),
-        CORSOrigin:       loadOrDefault("CORS_ORIGIN", "*"),
+    env := Environment{}
+    err := viron.Parse(&env)
+    if err != nil {
+        panic(err)
     }
+    env.parseDatabaseURL()
+
+    return env
 }
 
-func loadOrPanic(name string) string {
-    value := os.Getenv(name)
-    if value == "" {
-        panic(errors.New(fmt.Sprintf("Could not find required %s environment variable", name)))
-    }
-    return value
-}
-
-func loadOrDefault(name string, defaultValue string) string {
-    value := os.Getenv(name)
-    if value == "" {
-        return defaultValue
-    }
-    return value
-}
-
-func loadDatabaseURL(name string) string {
-    databaseURL := loadOrPanic(name)
+func (env *Environment) parseDatabaseURL() {
+    databaseURL := env.DatabaseURL
     databaseURL = strings.TrimPrefix(databaseURL, "http://")
     databaseURL = strings.TrimPrefix(databaseURL, "https://")
     databaseURL = strings.TrimPrefix(databaseURL, "tcp://")
@@ -81,37 +54,9 @@ func loadDatabaseURL(name string) string {
     databaseURL = strings.TrimPrefix(databaseURL, "mysql2://")
     parsedURL, err := url.Parse("tcp://" + databaseURL)
     if err != nil {
-        panic(errors.New(fmt.Sprintf("Could not parse DATABASE_URL %q, it does not fit format %q", loadOrPanic(name), "tcp://user:pass@host/dname")))
+        panic(errors.New(fmt.Sprintf("Could not parse DATABASE_URL %q, it does not fit format %q", env.DatabaseURL, "tcp://user:pass@host/dname")))
     }
 
     password, _ := parsedURL.User.Password()
-    return fmt.Sprintf("%s:%s@%s(%s)%s?parseTime=true", parsedURL.User.Username(), password, parsedURL.Scheme, parsedURL.Host, parsedURL.Path)
-}
-
-func loadPort() string {
-    port := os.Getenv("PORT")
-    if port == "" {
-        return "3000"
-    }
-    return port
-}
-
-func loadBool(name string, defaultValue bool) bool {
-    value, err := strconv.ParseBool(os.Getenv(name))
-    if err != nil {
-        return defaultValue
-    }
-
-    return value
-}
-
-func loadInstanceIndex() int {
-    value := loadOrPanic("VCAP_APPLICATION")
-    var application map[string]interface{}
-    err := json.Unmarshal([]byte(value), &application)
-    if err != nil {
-        panic(err)
-    }
-
-    return int(application["instance_index"].(float64))
+    env.DatabaseURL = fmt.Sprintf("%s:%s@%s(%s)%s?parseTime=true", parsedURL.User.Username(), password, parsedURL.Scheme, parsedURL.Host, parsedURL.Path)
 }
