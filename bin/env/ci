@@ -15,3 +15,4 @@ export CC_HOST=https://api.example.com
 export ROOT_PATH=$TRAVIS_BUILD_DIR
 export DATABASE_URL=travis@127.0.0.1:3306/notifications_test
 export VCAP_APPLICATION='{"instance_index":0}'
+export GOBBLE_MIGRATIONS_DIR=$ROOT_PATH/gobble/migrations

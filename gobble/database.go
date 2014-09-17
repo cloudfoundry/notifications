@@ -2,10 +2,14 @@ package gobble
 
 import (
     "database/sql"
+    "errors"
+    "fmt"
+    "net/url"
+    "os"
+    "strings"
     "sync"
 
     "bitbucket.org/liamstask/goose/lib/goose"
-    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/coopernurse/gorp"
 
     _ "github.com/go-sql-driver/mysql"
@@ -27,8 +31,8 @@ func Database() *DB {
     mutex.Lock()
     defer mutex.Unlock()
 
-    env := config.NewEnvironment()
-    db, err := sql.Open("mysql", env.DatabaseURL)
+    databaseURL := loadDatabaseURL()
+    db, err := sql.Open("mysql", databaseURL)
     if err != nil {
         panic(err)
     }
@@ -41,7 +45,8 @@ func Database() *DB {
         },
     }
 
-    migrate(env)
+    migrationsDir := os.Getenv("GOBBLE_MIGRATIONS_DIR")
+    migrate(databaseURL, migrationsDir)
     conn.AddTableWithName(Job{}, "jobs").SetKeys(true, "ID")
 
     _database = &DB{
@@ -51,14 +56,29 @@ func Database() *DB {
     return _database
 }
 
-func migrate(env config.Environment) {
+func loadDatabaseURL() string {
+    databaseURL := os.Getenv("DATABASE_URL")
+    databaseURL = strings.TrimPrefix(databaseURL, "http://")
+    databaseURL = strings.TrimPrefix(databaseURL, "https://")
+    databaseURL = strings.TrimPrefix(databaseURL, "tcp://")
+    databaseURL = strings.TrimPrefix(databaseURL, "mysql://")
+    databaseURL = strings.TrimPrefix(databaseURL, "mysql2://")
+    parsedURL, err := url.Parse("tcp://" + databaseURL)
+    if err != nil {
+        panic(errors.New(fmt.Sprintf("Could not parse DATABASE_URL %q, it does not fit format %q", os.Getenv("DATABASE_URL"), "tcp://user:pass@host/dname")))
+    }
+
+    password, _ := parsedURL.User.Password()
+    return fmt.Sprintf("%s:%s@%s(%s)%s?parseTime=true", parsedURL.User.Username(), password, parsedURL.Scheme, parsedURL.Host, parsedURL.Path)
+}
+
+func migrate(databaseURL, migrationsDir string) {
     dbDriver := goose.DBDriver{
         Name:    "mysql",
-        OpenStr: env.DatabaseURL,
+        OpenStr: databaseURL,
         Import:  "github.com/go-sql-driver/mysql",
         Dialect: &goose.MySqlDialect{},
     }
-    migrationsDir := env.RootPath + "/gobble/migrations"
 
     dbConf := &goose.DBConf{
         MigrationsDir: migrationsDir,
