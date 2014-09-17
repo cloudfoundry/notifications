@@ -88,6 +88,10 @@
 			"Rev": "3debe7a5953ad63d7429bd22b186134c6dea6f73"
 		},
 		{
+			"ImportPath": "github.com/ryanmoran/viron",
+			"Rev": "5164295e4b29d160ff32185c80e662a384d613e4"
+		},
+		{
 			"ImportPath": "github.com/ziutek/mymysql/godrv",
 			"Comment": "v1.5.3-12-g1928d33",
 			"Rev": "1928d3379a32cc58b535ea2d03c017ade9eb2d0d"
