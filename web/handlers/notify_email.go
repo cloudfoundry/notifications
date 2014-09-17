@@ -10,14 +10,16 @@ import (
 )
 
 type NotifyEmail struct {
-    notify NotifyInterface
-    recipe postal.MailRecipeInterface
+    errorWriter ErrorWriterInterface
+    notify      NotifyInterface
+    recipe      postal.MailRecipeInterface
 }
 
 func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, recipe postal.MailRecipeInterface) NotifyEmail {
     return NotifyEmail{
-        notify: notify,
-        recipe: recipe,
+        errorWriter: errorWriter,
+        notify:      notify,
+        recipe:      recipe,
     }
 }
 
@@ -25,7 +27,8 @@ func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request, c
     connection := models.Database().Connection()
     err := handler.Execute(w, req, connection, context)
     if err != nil {
-        panic(err)
+        handler.errorWriter.Write(w, err)
+        return
     }
 
     metrics.NewMetric("counter", map[string]interface{}{
