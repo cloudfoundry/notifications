@@ -32,7 +32,7 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
     case postal.TemplateLoadError:
         writer.write(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
     case params.ParseError:
-        writer.write(w, 422, []string{err.Error()})
+        writer.write(w, http.StatusBadRequest, []string{err.Error()})
     case params.ValidationError:
         writer.write(w, 422, err.(params.ValidationError).Errors())
     case models.ErrDuplicateRecord:

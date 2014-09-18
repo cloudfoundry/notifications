@@ -150,7 +150,11 @@ var _ = Describe("NotificationsPreferences", func() {
                 Email:    true,
             })
 
-            preferences := builder.ToPreferences()
+            preferences, err := builder.ToPreferences()
+            if err != nil {
+                panic(err)
+            }
+
             Expect(len(preferences)).To(Equal(3))
             Expect(preferences).To(ContainElement(models.Preference{
                 ClientID: "raptors",
@@ -167,6 +171,59 @@ var _ = Describe("NotificationsPreferences", func() {
                 KindID:   "barking",
                 Email:    true,
             }))
+        })
+
+        Context("invalid preferences", func() {
+
+            var badBuilder services.PreferencesBuilder
+
+            BeforeEach(func() {
+                badBuilder = services.NewPreferencesBuilder()
+            })
+
+            It("returns an error when there are no kinds within a client", func() {
+
+                badBuilder.Add(models.Preference{
+                    ClientID: "electric-fence",
+                    KindID:   "zap",
+                    Email:    false,
+                })
+
+                delete(badBuilder["electric-fence"], "zap")
+
+                _, err := badBuilder.ToPreferences()
+
+                Expect(err).ToNot(BeNil())
+
+            })
+
+            It("returns an error when the email data map is empty", func() {
+                badBuilder.Add(models.Preference{
+                    ClientID: "TRex",
+                    KindID:   "glass-of-water",
+                    Email:    false,
+                })
+
+                delete(badBuilder["TRex"]["glass-of-water"], "email")
+
+                _, err := badBuilder.ToPreferences()
+
+                Expect(err).ToNot(BeNil())
+            })
+
+            It("returns an error when the email data map for emails cannot be coerced to a bool", func() {
+                badBuilder.Add(models.Preference{
+                    ClientID: "raptors",
+                    KindID:   "feeding-time",
+                    Email:    true,
+                })
+
+                badBuilder["raptors"]["feeding-time"]["email"] = "RUNNNNNNNNNNNNNNNN!"
+
+                _, err := badBuilder.ToPreferences()
+
+                Expect(err).ToNot(BeNil())
+            })
         })
     })
 })

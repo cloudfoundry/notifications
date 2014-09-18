@@ -1,25 +1,41 @@
 package services
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+    "fmt"
+
+    "github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type PreferenceUpdaterInterface interface {
     Execute(models.ConnectionInterface, []models.Preference, string) error
 }
 
 type PreferenceUpdater struct {
-    repo models.UnsubscribesRepoInterface
+    unsubscribesRepo models.UnsubscribesRepoInterface
+    kindsRepo        models.KindsRepoInterface
 }
 
-func NewPreferenceUpdater(repo models.UnsubscribesRepoInterface) PreferenceUpdater {
+func NewPreferenceUpdater(unsubscribesRepo models.UnsubscribesRepoInterface, kindsRepo models.KindsRepoInterface) PreferenceUpdater {
     return PreferenceUpdater{
-        repo: repo,
+        unsubscribesRepo: unsubscribesRepo,
+        kindsRepo:        kindsRepo,
     }
 }
 
 func (updater PreferenceUpdater) Execute(conn models.ConnectionInterface, preferences []models.Preference, userID string) error {
     for _, preference := range preferences {
+
+        kind, err := updater.kindsRepo.Find(conn, preference.KindID, preference.ClientID)
+        if err != nil {
+            return MissingKindOrClientError(fmt.Sprintf("The kind '%s' cannot be found for client '%s'", preference.KindID, preference.ClientID))
+        }
+
+        if kind.Critical {
+            return CriticalKindError(fmt.Sprintf("The kind '%s' for the '%s' client is critical and cannot be unsubscribed from", preference.KindID, preference.ClientID))
+        }
+
         if !preference.Email {
-            _, err := updater.repo.Upsert(conn, models.Unsubscribe{
+            _, err := updater.unsubscribesRepo.Upsert(conn, models.Unsubscribe{
                 ClientID: preference.ClientID,
                 KindID:   preference.KindID,
                 UserID:   userID,
@@ -28,7 +44,7 @@ func (updater PreferenceUpdater) Execute(conn models.ConnectionInterface, prefer
                 return err
             }
         } else {
-            _, err := updater.repo.Destroy(conn, models.Unsubscribe{
+            _, err := updater.unsubscribesRepo.Destroy(conn, models.Unsubscribe{
                 ClientID: preference.ClientID,
                 KindID:   preference.KindID,
                 UserID:   userID,

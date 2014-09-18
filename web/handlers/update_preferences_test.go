@@ -3,9 +3,9 @@ package handlers_test
 import (
     "bytes"
     "encoding/json"
+    "errors"
     "net/http"
     "net/http/httptest"
-    "strings"
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
@@ -115,18 +115,66 @@ var _ = Describe("UpdatePreferences", func() {
             Expect(writer.Code).To(Equal(http.StatusOK))
         })
 
-        Context("when the JSON body cannot be parsed", func() {
-            It("sends a params.ParseError to the error writer", func() {
-                var err error
-                request, err = http.NewRequest("PATCH", "/user_preferences", strings.NewReader(""))
+        Context("Failure cases", func() {
+            Context("preferenceUpdater.Execute errors", func() {
+
+                It("delegates MissingKindOrClientErrors as params.ValidationError to the ErrorWriter", func() {
+                    updater.ExecuteError = services.MissingKindOrClientError("BOOM!")
+
+                    handler.Execute(writer, request, fakeDBConn, context)
+
+                    Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{"BOOM!"})))
+
+                    Expect(fakeDBConn.BeginWasCalled).To(BeTrue())
+                    Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
+                    Expect(fakeDBConn.RollbackWasCalled).To(BeTrue())
+                })
+
+                It("delegates CriticalKindErrors as params.ValidationError to the ErrorWriter", func() {
+                    updater.ExecuteError = services.CriticalKindError("BOOM!")
+
+                    handler.Execute(writer, request, fakeDBConn, context)
+
+                    Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{"BOOM!"})))
+
+                    Expect(fakeDBConn.BeginWasCalled).To(BeTrue())
+                    Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
+                    Expect(fakeDBConn.RollbackWasCalled).To(BeTrue())
+                })
+
+                It("delegates other errors to the ErrorWriter", func() {
+                    updater.ExecuteError = errors.New("BOOM!")
+
+                    handler.Execute(writer, request, fakeDBConn, context)
+
+                    Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
+
+                    Expect(fakeDBConn.BeginWasCalled).To(BeTrue())
+                    Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
+                    Expect(fakeDBConn.RollbackWasCalled).To(BeTrue())
+                })
+            })
+
+            It("delegates parse errors to the ErrorWriter", func() {
+                requestBody, err := json.Marshal(map[string]interface{}{"raptors": "RAWR"})
+                if err != nil {
+                    panic(err)
+                }
+
+                request, err = http.NewRequest("PATCH", "/user_preferences", bytes.NewBuffer(requestBody))
                 if err != nil {
                     panic(err)
                 }
 
                 handler.Execute(writer, request, fakeDBConn, context)
 
-                Expect(errorWriter.Error).To(Equal(params.ParseError{}))
+                Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
+
+                Expect(fakeDBConn.BeginWasCalled).To(BeFalse())
+                Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
+                Expect(fakeDBConn.RollbackWasCalled).To(BeFalse())
             })
         })
     })
+
 })

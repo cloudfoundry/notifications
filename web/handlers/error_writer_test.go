@@ -94,10 +94,10 @@ var _ = Describe("ErrorWriter", func() {
         Expect(body["errors"]).To(ContainElement("CloudController Error: Organization could not be found"))
     })
 
-    It("returns a 422 when the params cannot be parsed", func() {
+    It("returns a 400 when the params cannot be parsed due to syntatically invalid JSON", func() {
         writer.Write(recorder, params.ParseError{})
 
-        Expect(recorder.Code).To(Equal(422))
+        Expect(recorder.Code).To(Equal(400))
 
         body := make(map[string]interface{})
         err := json.Unmarshal(recorder.Body.Bytes(), &body)
@@ -108,7 +108,7 @@ var _ = Describe("ErrorWriter", func() {
         Expect(body["errors"]).To(ContainElement("Request body could not be parsed"))
     })
 
-    It("returns a 422 when the params are not valid", func() {
+    It("returns a 422 when the params are not valid due to semantically invalid JSON", func() {
         writer.Write(recorder, params.ValidationError([]string{"something", "another"}))
 
         Expect(recorder.Code).To(Equal(422))

@@ -1,6 +1,10 @@
 package services
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+    "errors"
+
+    "github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type PreferencesBuilder map[string]map[string]map[string]interface{}
 
@@ -32,17 +36,32 @@ func (pref PreferencesBuilder) Add(preference models.Preference) {
     }
 }
 
-func (pref PreferencesBuilder) ToPreferences() []models.Preference {
+func (pref PreferencesBuilder) ToPreferences() ([]models.Preference, error) {
     preferences := []models.Preference{}
-    for clientID, kind := range pref {
-        for kindID, email := range kind {
+    for clientID, kinds := range pref {
+        if len(kinds) == 0 {
+            return preferences, errors.New("Missing kinds")
+        }
+
+        for kindID, kind := range kinds {
+
+            email, ok := kind["email"]
+            if !ok {
+                return preferences, errors.New("Missing the email field")
+            }
+
+            shouldEmail, ok := email.(bool)
+            if !ok {
+                return preferences, errors.New("Email field cannot be coerced to bool")
+            }
+
             preferences = append(preferences, models.Preference{
                 ClientID: clientID,
                 KindID:   kindID,
-                Email:    email["email"].(bool),
+                Email:    shouldEmail,
             })
         }
     }
 
-    return preferences
+    return preferences, nil
 }

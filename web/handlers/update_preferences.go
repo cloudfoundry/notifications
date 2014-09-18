@@ -54,7 +54,13 @@ func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Reques
     err = handler.preferenceUpdater.Execute(transaction, preferences, userID)
     if err != nil {
         transaction.Rollback()
-        handler.errorWriter.Write(w, err)
+
+        switch err.(type) {
+        case services.MissingKindOrClientError, services.CriticalKindError:
+            handler.errorWriter.Write(w, params.ValidationError([]string{err.Error()}))
+        default:
+            handler.errorWriter.Write(w, err)
+        }
         return
     }
 
@@ -68,5 +74,5 @@ func (handler UpdatePreferences) ParsePreferences(body []byte) ([]models.Prefere
     if err != nil {
         return []models.Preference{}, err
     }
-    return builder.ToPreferences(), nil
+    return builder.ToPreferences()
 }

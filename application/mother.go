@@ -95,7 +95,7 @@ func (mother Mother) PreferencesFinder() *services.PreferencesFinder {
 }
 
 func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
-    return services.NewPreferenceUpdater(mother.UnsubscribesRepo())
+    return services.NewPreferenceUpdater(mother.UnsubscribesRepo(), models.NewKindsRepo())
 }
 
 func (mother Mother) UnsubscribesRepo() models.UnsubscribesRepo {
