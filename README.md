@@ -38,21 +38,6 @@ properties:
 
 \* required
 
-## Configuring Email Templates
-The default templates are located in **./templates**. The templates directory should look similar to this:
-
-	overrides/
-	space_body.html
-	space_body.text
-	subject.missing
-	subject.provided
-	user_body.html
-	user_body.text
-
-When emailing a space, `space_body.html` and `space_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a single user, `user_body.html` and `user_body.text` are used as templates in the email body for the html and plaintext, respectively. When the subject is provided, the default subject template is found in `subject.provided`, while `subject.missing` is used when the email subject is not provided.
-
-The files located in the templates directory are defaults and will be used if there is no override of the same name.
-
 ## Posting to a notifications endpoint
 
 Notifications currently supports two different types of messages.  Messages to individual users and messages to spaces.
@@ -74,6 +59,23 @@ Both endpoints expect a json body to be posted with following keys:
 \* required
 
 \*\* either text or html have to be set, not both
+
+## Configuring Email Templates
+The default templates are located in **./templates**. The templates directory should look similar to this:
+
+	overrides/
+	email_body.html
+	email_body.text
+	space_body.html
+	space_body.text
+	subject.missing
+	subject.provided
+	user_body.html
+	user_body.text
+
+When emailing a space, `space_body.html` and `space_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a single user, `user_body.html` and `user_body.text` are used as templates in the email body for the html and plaintext, respectively. When the subject is provided, the default subject template is found in `subject.provided`, while `subject.missing` is used when the email subject is not provided. When using the `/emails` endpoint, `email_body.html` and `email_body.text` are used as templates in the email body for the html and plaintext, respectively.
+
+The files located in the templates directory are defaults and will be used if there is no override of the same name.
 
 
 ### Overriding default templates
