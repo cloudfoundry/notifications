@@ -237,7 +237,7 @@ func (t ManageUserPreferences) UnsubscribeFromNotification(notificationsServer s
         panic(err)
     }
 
-    Expect(response.StatusCode).To(Equal(http.StatusOK))
+    Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 }
 
 // Make a GET request to /user_preferences
@@ -360,7 +360,7 @@ func (t ManageUserPreferences) ResubscribeToNotification(notificationsServer ser
         panic(err)
     }
 
-    Expect(response.StatusCode).To(Equal(http.StatusOK))
+    Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 }
 
 // Make a GET request to /user_preferences

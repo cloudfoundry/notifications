@@ -17,4 +17,6 @@ func (handler OptionsPreferences) ServeHTTP(w http.ResponseWriter, req *http.Req
     metrics.NewMetric("counter", map[string]interface{}{
         "name": "notifications.web.preferences.options",
     }).Log()
+
+    w.WriteHeader(http.StatusNoContent)
 }

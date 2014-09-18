@@ -109,10 +109,10 @@ var _ = Describe("UpdatePreferences", func() {
             Expect(updater.ExecuteArguments[1]).To(Equal("correct-user"))
         })
 
-        It("Returns a 200 status code when the Preference object does not error", func() {
+        It("Returns a 204 status code when the Preference object does not error", func() {
             handler.Execute(writer, request, fakeDBConn, context)
 
-            Expect(writer.Code).To(Equal(http.StatusOK))
+            Expect(writer.Code).To(Equal(http.StatusNoContent))
         })
 
         Context("Failure cases", func() {

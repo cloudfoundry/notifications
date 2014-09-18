@@ -65,7 +65,7 @@ func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Reques
     }
 
     transaction.Commit()
-    w.WriteHeader(http.StatusOK)
+    w.WriteHeader(http.StatusNoContent)
 }
 
 func (handler UpdatePreferences) ParsePreferences(body []byte) ([]models.Preference, error) {
