@@ -71,13 +71,13 @@ Both endpoints expect a json body to be posted with following keys:
 | reply_to           | the Reply-To address for the email             |
 | source_description | a description of the sender                    |
 
-\* required 
- 
+\* required
+
 \*\* either text or html have to be set, not both
 
 
 ### Overriding default templates
-There are three types of overrides. 
+There are three types of overrides.
 
 | Type                     | Effect                                                                         |
 | ------------------------ | ------------------------------------------------------------------------------ |
@@ -123,7 +123,7 @@ To override a template for a client with id `banana`. You would place a file in 
 
 	clientID.templateName.templateExtension
 	
-So to override the subject.missing the file name would be: 
+So to override the subject.missing the file name would be:
 
 	banana.subject.missing
 	
@@ -142,3 +142,8 @@ So to override the user_body.text template the file name would be:
 	
 This override only applies to requests that match both the clientId and the kind.  This has the most precedence and overrides all other overrides.
 
+### Development
+
+#### Running locally
+
+The application can be run locally by executing the `./bin/run` script. This script will look for a file called `./bin/env/development` to load environment variables. Setting the `TEST_MODE` env var to true will disable the requirement for a running SMTP server.
