@@ -16,24 +16,25 @@ properties:
 
 ##Configuring Environment Variables
 
-| Variable            | Description                         | Default  |
-| ------------------- | ----------------------------------- | -------- |
-| CC_HOST\*           | Cloud Controller Host               | \<none\> |
-| CORS_ORIGIN         | Value to use for CORS Origin Header | *        |
-| DATABASE_URL\*      | URL to your Database                | \<none\> |
-| PORT                | Port that application will bind to  | 3000     |
-| ROOT_PATH\*         | Root path of your application       | \<none\> |
-| SMTP_HOST\*         | SMTP Host                           | \<none\> |
-| SMTP_PASS\*         | SMTP Password                       | \<none\> |
-| SMTP_PORT\*         | SMTP Port                           | \<none\> |
-| SMTP_TLS            | Use TLS when talking to SMTP server | true     |
-| SMTP_USER\*         | SMTP Username                       | \<none\> |
-| SENDER\*            | Emails are sent from this address   | \<none\> |
-| UAA_CLIENT_ID\*     | The UAA client ID                   | \<none\> |
-| UAA_CLIENT_SECRET\* | The UAA client secret               | \<none\> |
-| UAA_HOST\*          | The UAA Host                        | \<none\> |
-| VERIFY_SSL          | Verifies SSL                        | true     |
-| TEST_MODE           | Run in test mode                    | false    |
+| Variable              | Description                                 | Default  |
+| --------------------- | ------------------------------------------- | -------- |
+| CC_HOST\*             | Cloud Controller Host                       | \<none\> |
+| CORS_ORIGIN           | Value to use for CORS Origin Header         | *        |
+| DATABASE_URL\*        | URL to your Database                        | \<none\> |
+| PORT                  | Port that application will bind to          | 3000     |
+| ROOT_PATH\*           | Root path of your application               | \<none\> |
+| SMTP_HOST\*           | SMTP Host                                   | \<none\> |
+| SMTP_PASS\*           | SMTP Password                               | \<none\> |
+| SMTP_PORT\*           | SMTP Port                                   | \<none\> |
+| SMTP_TLS              | Use TLS when talking to SMTP server         | true     |
+| SMTP_USER\*           | SMTP Username                               | \<none\> |
+| SENDER\*              | Emails are sent from this address           | \<none\> |
+| UAA_CLIENT_ID\*       | The UAA client ID                           | \<none\> |
+| UAA_CLIENT_SECRET\*   | The UAA client secret                       | \<none\> |
+| UAA_HOST\*            | The UAA Host                                | \<none\> |
+| VERIFY_SSL            | Verifies SSL                                | true     |
+| TEST_MODE             | Run in test mode                            | false    |
+| GOBBLE_MIGRATIONS_DIR | Location of the gobble migrations directory | \<none\> |
 
 \* required
 
