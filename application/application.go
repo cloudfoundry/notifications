@@ -44,7 +44,7 @@ func (app Application) PrintConfiguration() {
 }
 
 func (app Application) ConfigureSMTP() {
-    if !app.env.TestMode {
+    if app.env.TestMode {
         return
     }
 
