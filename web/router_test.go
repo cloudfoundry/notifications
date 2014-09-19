@@ -87,6 +87,9 @@ var _ = Describe("Router", func() {
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UpdateSpecificUserPreferences{}))
         Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
         Expect(s.Middleware[1]).To(BeAssignableToTypeOf(middleware.CORS{}))
+
+        authenticator := s.Middleware[2].(middleware.Authenticator)
+        Expect(authenticator.Scopes).To(Equal([]string{"notification_preferences.admin"}))
     })
 
     It("routes OPTIONS /user_preferences", func() {

@@ -39,7 +39,9 @@ func NewRouter(mother MotherInterface) Router {
     notificationsWriteAuthenticator := mother.Authenticator([]string{"notifications.write"})
     notificationPreferencesReadAuthenticator := mother.Authenticator([]string{"notification_preferences.read"})
     notificationPreferencesWriteAuthenticator := mother.Authenticator([]string{"notification_preferences.write"})
+    notificationPreferencesAdminAuthenticator := mother.Authenticator([]string{"notification_preferences.admin"})
     emailsWriteAuthenticator := mother.Authenticator([]string{"emails.write"})
+
     cors := mother.CORS()
 
     return Router{
@@ -52,7 +54,7 @@ func NewRouter(mother MotherInterface) Router {
             "OPTIONS /user_preferences":      stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),
             "GET /user_preferences":          stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, cors, notificationPreferencesReadAuthenticator),
             "PATCH /user_preferences":        stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging, cors, notificationPreferencesWriteAuthenticator),
-            "PATCH /user_preferences/{guid}": stack.NewStack(handlers.NewUpdateSpecificUserPreferences(preferenceUpdater, errorWriter)).Use(logging, cors),
+            "PATCH /user_preferences/{guid}": stack.NewStack(handlers.NewUpdateSpecificUserPreferences(preferenceUpdater, errorWriter)).Use(logging, cors, notificationPreferencesAdminAuthenticator),
         },
     }
 }
