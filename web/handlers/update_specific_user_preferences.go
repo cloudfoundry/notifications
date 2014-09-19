@@ -59,7 +59,7 @@ func (handler UpdateSpecificUserPreferences) Execute(w http.ResponseWriter, req 
     }
     transaction.Commit()
 
-    w.WriteHeader(http.StatusOK)
+    w.WriteHeader(http.StatusNoContent)
 }
 
 func (handler UpdateSpecificUserPreferences) parseGUID(path string) string {

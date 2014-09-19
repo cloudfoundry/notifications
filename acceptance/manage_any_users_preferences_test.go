@@ -236,7 +236,7 @@ func (t ManageArbitraryUsersPreferences) UnsubscribeFromNotification(notificatio
     }
 
     // Confirm the request response looks correct
-    Expect(response.StatusCode).To(Equal(http.StatusOK))
+    Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 
 }
 
