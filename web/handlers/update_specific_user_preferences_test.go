@@ -7,13 +7,13 @@ import (
     "net/http"
     "net/http/httptest"
 
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/params"
     "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/dgrijalva/jwt-go"
-    "github.com/pivotal-cf/notifications/config"
     "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
