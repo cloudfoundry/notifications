@@ -13,7 +13,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/web/params"
     "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/dgrijalva/jwt-go"
-    "github.com/pivotal-cf/notifications-ui/config"
+    "github.com/pivotal-cf/notifications/config"
     "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
