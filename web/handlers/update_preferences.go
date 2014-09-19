@@ -43,9 +43,14 @@ func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Reques
         panic(err)
     }
 
-    preferences, err := handler.ParsePreferences(body)
+    builder, err := handler.ParsePreferences(body)
     if err != nil {
         handler.errorWriter.Write(w, params.ParseError{})
+        return
+    }
+    preferences, err := builder.ToPreferences()
+    if err != nil {
+        handler.errorWriter.Write(w, params.ValidationError{})
         return
     }
 
@@ -68,11 +73,11 @@ func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Reques
     w.WriteHeader(http.StatusNoContent)
 }
 
-func (handler UpdatePreferences) ParsePreferences(body []byte) ([]models.Preference, error) {
+func (handler UpdatePreferences) ParsePreferences(body []byte) (services.PreferencesBuilder, error) {
     builder := services.NewPreferencesBuilder()
     err := json.Unmarshal(body, &builder)
     if err != nil {
-        return []models.Preference{}, err
+        return builder, err
     }
-    return builder.ToPreferences()
+    return builder, nil
 }

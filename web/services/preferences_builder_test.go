@@ -133,7 +133,7 @@ var _ = Describe("NotificationsPreferences", func() {
             builder = services.NewPreferencesBuilder()
         })
 
-        It("returns a slice of buildererences from the populated map", func() {
+        It("returns a slice of preferences from the populated map", func() {
             builder.Add(models.Preference{
                 ClientID: "raptors",
                 KindID:   "door-open",
@@ -174,7 +174,6 @@ var _ = Describe("NotificationsPreferences", func() {
         })
 
         Context("invalid preferences", func() {
-
             var badBuilder services.PreferencesBuilder
 
             BeforeEach(func() {

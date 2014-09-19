@@ -169,7 +169,31 @@ var _ = Describe("UpdatePreferences", func() {
                 handler.Execute(writer, request, fakeDBConn, context)
 
                 Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
+                Expect(fakeDBConn.BeginWasCalled).To(BeFalse())
+                Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
+                Expect(fakeDBConn.RollbackWasCalled).To(BeFalse())
+            })
 
+            It("delegates validation errors to the error writer", func() {
+                requestBody, err := json.Marshal(map[string]map[string]map[string]interface{}{
+                    "client-id": {
+                        "kind-id": {
+                            "email": "wrong",
+                        },
+                    },
+                })
+                if err != nil {
+                    panic(err)
+                }
+
+                request, err = http.NewRequest("PATCH", "/user_preferences", bytes.NewBuffer(requestBody))
+                if err != nil {
+                    panic(err)
+                }
+
+                handler.Execute(writer, request, fakeDBConn, context)
+
+                Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
                 Expect(fakeDBConn.BeginWasCalled).To(BeFalse())
                 Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
                 Expect(fakeDBConn.RollbackWasCalled).To(BeFalse())
