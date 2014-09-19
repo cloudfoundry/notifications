@@ -82,6 +82,13 @@ var _ = Describe("Router", func() {
         Expect(authenticator.Scopes).To(Equal([]string{"notification_preferences.write"}))
     })
 
+    It("routes PATCH /user_preferences/{guid}", func() {
+        s := router.Routes().Get("PATCH /user_preferences/{guid}").GetHandler().(stack.Stack)
+        Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UpdateSpecificUserPreferences{}))
+        Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+        Expect(s.Middleware[1]).To(BeAssignableToTypeOf(middleware.CORS{}))
+    })
+
     It("routes OPTIONS /user_preferences", func() {
         s := router.Routes().Get("OPTIONS /user_preferences").GetHandler().(stack.Stack)
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.OptionsPreferences{}))

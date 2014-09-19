@@ -23,7 +23,7 @@ var _ = Describe("Preferences Endpoint", func() {
         TruncateTables()
     })
 
-    It("user unsubscribes from a notification", func() {
+    It("client unsubscribes a user from a notification", func() {
         // Boot Fake SMTP Server
         smtpServer := servers.NewSMTP()
         smtpServer.Boot()
@@ -46,29 +46,29 @@ var _ = Describe("Preferences Endpoint", func() {
             panic(err)
         }
 
+        userGUID := "user-123"
         // Retrieve User UAA token
-        userToken, err := uaaClient.Exchange("user-123-code")
+        userToken, err := uaaClient.Exchange(userGUID + "-code")
         if err != nil {
             panic(err)
         }
 
-        test := ManageUserPreferences{}
+        //GRAB USER GUID FROM USER TOKEN
+
+        test := ManageArbitraryUsersPreferences{}
+
         test.RegisterClientNotifications(notificationsServer, clientToken)
         test.SendNotificationToUser(notificationsServer, clientToken, smtpServer)
         test.RetrieveUserPreferences(notificationsServer, userToken)
-        test.UnsubscribeFromNotification(notificationsServer, userToken)
+        test.UnsubscribeFromNotification(notificationsServer, clientToken, userGUID)
         test.ConfirmUserUnsubscribed(notificationsServer, userToken)
-        test.ConfirmsUnsubscribedNotificationsAreNotReceived(notificationsServer, clientToken, smtpServer)
-        test.ResubscribeToNotification(notificationsServer, userToken)
-        test.ConfirmUserResubscribed(notificationsServer, userToken)
     })
-
 })
 
-type ManageUserPreferences struct{}
+type ManageArbitraryUsersPreferences struct{}
 
 // Make request to /registation
-func (t ManageUserPreferences) RegisterClientNotifications(notificationsServer servers.Notifications, clientToken uaa.Token) {
+func (t ManageArbitraryUsersPreferences) RegisterClientNotifications(notificationsServer servers.Notifications, clientToken uaa.Token) {
     body, err := json.Marshal(map[string]interface{}{
         "source_description": "Notifications Sender",
         "kinds": []map[string]string{
@@ -108,7 +108,7 @@ func (t ManageUserPreferences) RegisterClientNotifications(notificationsServer s
 }
 
 // Make request to /users/:guid
-func (t ManageUserPreferences) SendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
+func (t ManageArbitraryUsersPreferences) SendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
     body, err := json.Marshal(map[string]string{
         "kind_id": "unsubscribe-acceptance-test",
         "html":    "<p>this is an acceptance test</p>",
@@ -168,8 +168,7 @@ func (t ManageUserPreferences) SendNotificationToUser(notificationsServer server
     Expect(data).To(ContainElement("<p>this is an acceptance test</p>"))
 }
 
-// Make a GET request to /user_preferences
-func (t ManageUserPreferences) RetrieveUserPreferences(notificationsServer servers.Notifications, userToken uaa.Token) {
+func (t ManageArbitraryUsersPreferences) RetrieveUserPreferences(notificationsServer servers.Notifications, userToken uaa.Token) {
     request, err := http.NewRequest("GET", notificationsServer.UserPreferencesPath(), nil)
     if err != nil {
         panic(err)
@@ -211,8 +210,7 @@ func (t ManageUserPreferences) RetrieveUserPreferences(notificationsServer serve
     }))
 }
 
-// Make a PATCH request to /user_preferences
-func (t ManageUserPreferences) UnsubscribeFromNotification(notificationsServer servers.Notifications, userToken uaa.Token) {
+func (t ManageArbitraryUsersPreferences) UnsubscribeFromNotification(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string) {
     builder := services.NewPreferencesBuilder()
     builder.Add(models.Preference{
         ClientID: "notifications-sender",
@@ -225,23 +223,24 @@ func (t ManageUserPreferences) UnsubscribeFromNotification(notificationsServer s
         panic(err)
     }
 
-    request, err := http.NewRequest("PATCH", notificationsServer.UserPreferencesPath(), bytes.NewBuffer(body))
+    request, err := http.NewRequest("PATCH", notificationsServer.SpecificUserPreferencesPath(userGUID), bytes.NewBuffer(body))
     if err != nil {
         panic(err)
     }
 
-    request.Header.Set("Authorization", "Bearer "+userToken.Access)
+    request.Header.Set("Authorization", "Bearer "+clientToken.Access)
 
     response, err := http.DefaultClient.Do(request)
     if err != nil {
         panic(err)
     }
 
-    Expect(response.StatusCode).To(Equal(http.StatusNoContent))
+    // Confirm the request response looks correct
+    Expect(response.StatusCode).To(Equal(http.StatusOK))
+
 }
 
-// Make a GET request to /user_preferences
-func (t ManageUserPreferences) ConfirmUserUnsubscribed(notificationsServer servers.Notifications, userToken uaa.Token) {
+func (t ManageArbitraryUsersPreferences) ConfirmUserUnsubscribed(notificationsServer servers.Notifications, userToken uaa.Token) {
     request, err := http.NewRequest("GET", notificationsServer.UserPreferencesPath(), nil)
     if err != nil {
         panic(err)
@@ -278,129 +277,6 @@ func (t ManageUserPreferences) ConfirmUserUnsubscribed(notificationsServer serve
     node = prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]
     Expect(node).To(Equal(map[string]interface{}{
         "email":              false,
-        "kind_description":   "Unsubscribe Acceptance Test",
-        "source_description": "Notifications Sender",
-    }))
-}
-
-// Make request to /users/:guid
-func (t ManageUserPreferences) ConfirmsUnsubscribedNotificationsAreNotReceived(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
-    smtpServer.Reset() //clears deliveries
-
-    body, err := json.Marshal(map[string]string{
-        "kind_id": "unsubscribe-acceptance-test",
-        "html":    "<p>this is an acceptance test</p>",
-        "subject": "my-special-subject",
-    })
-    if err != nil {
-        panic(err)
-    }
-
-    request, err := http.NewRequest("POST", notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
-    if err != nil {
-        panic(err)
-    }
-
-    request.Header.Set("Authorization", "Bearer "+clientToken.Access)
-
-    response, err := http.DefaultClient.Do(request)
-    if err != nil {
-        panic(err)
-    }
-
-    body, err = ioutil.ReadAll(response.Body)
-    if err != nil {
-        panic(err)
-    }
-
-    // Confirm the request response looks correct
-    Expect(response.StatusCode).To(Equal(http.StatusOK))
-
-    responseJSON := []map[string]string{}
-    err = json.Unmarshal(body, &responseJSON)
-    if err != nil {
-        panic(err)
-    }
-
-    Expect(len(responseJSON)).To(Equal(1))
-    responseItem := responseJSON[0]
-    Expect(responseItem["status"]).To(Equal("queued"))
-    Expect(responseItem["recipient"]).To(Equal("user-123"))
-    Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
-
-    // Confirm the email message was never delivered
-    Consistently(func() int {
-        return len(smtpServer.Deliveries)
-    }, 5*time.Second).Should(Equal(0))
-}
-
-// Make PATCH request to /user_preferences
-func (t ManageUserPreferences) ResubscribeToNotification(notificationsServer servers.Notifications, userToken uaa.Token) {
-    builder := services.NewPreferencesBuilder()
-    builder.Add(models.Preference{
-        ClientID: "notifications-sender",
-        KindID:   "unsubscribe-acceptance-test",
-        Email:    true,
-    })
-
-    body, err := json.Marshal(builder)
-    if err != nil {
-        panic(err)
-    }
-
-    request, err := http.NewRequest("PATCH", notificationsServer.UserPreferencesPath(), bytes.NewBuffer(body))
-    if err != nil {
-        panic(err)
-    }
-
-    request.Header.Set("Authorization", "Bearer "+userToken.Access)
-
-    response, err := http.DefaultClient.Do(request)
-    if err != nil {
-        panic(err)
-    }
-
-    Expect(response.StatusCode).To(Equal(http.StatusNoContent))
-}
-
-// Make a GET request to /user_preferences
-func (t ManageUserPreferences) ConfirmUserResubscribed(notificationsServer servers.Notifications, userToken uaa.Token) {
-    request, err := http.NewRequest("GET", notificationsServer.UserPreferencesPath(), nil)
-    if err != nil {
-        panic(err)
-    }
-
-    request.Header.Set("Authorization", "Bearer "+userToken.Access)
-
-    response, err := http.DefaultClient.Do(request)
-    if err != nil {
-        panic(err)
-    }
-
-    body, err := ioutil.ReadAll(response.Body)
-    if err != nil {
-        panic(err)
-    }
-
-    // Confirm the request response looks correct
-    Expect(response.StatusCode).To(Equal(http.StatusOK))
-
-    prefsResponseJSON := services.PreferencesBuilder{}
-    err = json.Unmarshal(body, &prefsResponseJSON)
-    if err != nil {
-        panic(err)
-    }
-
-    node := prefsResponseJSON["notifications-sender"]["acceptance-test"]
-    Expect(node).To(Equal(map[string]interface{}{
-        "email":              true,
-        "kind_description":   "Acceptance Test",
-        "source_description": "Notifications Sender",
-    }))
-
-    node = prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]
-    Expect(node).To(Equal(map[string]interface{}{
-        "email":              true,
         "kind_description":   "Unsubscribe Acceptance Test",
         "source_description": "Notifications Sender",
     }))

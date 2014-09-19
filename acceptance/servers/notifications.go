@@ -80,3 +80,7 @@ func (s Notifications) RegistrationPath() string {
 func (s Notifications) UserPreferencesPath() string {
     return "http://localhost:" + s.env.Port + "/user_preferences"
 }
+
+func (s Notifications) SpecificUserPreferencesPath(userGUID string) string {
+    return "http://localhost:" + s.env.Port + "/user_preferences/" + userGUID
+}
