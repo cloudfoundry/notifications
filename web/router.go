@@ -46,15 +46,16 @@ func NewRouter(mother MotherInterface) Router {
 
     return Router{
         stacks: map[string]stack.Stack{
-            "GET /info":                      stack.NewStack(handlers.NewGetInfo()).Use(logging),
-            "POST /users/{guid}":             stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, mother)).Use(logging, notificationsWriteAuthenticator),
-            "POST /spaces/{guid}":            stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, mother)).Use(logging, notificationsWriteAuthenticator),
-            "POST /emails":                   stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailRecipe)).Use(logging, emailsWriteAuthenticator),
-            "PUT /registration":              stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter)).Use(logging, notificationsWriteAuthenticator),
-            "OPTIONS /user_preferences":      stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),
-            "GET /user_preferences":          stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, cors, notificationPreferencesReadAuthenticator),
-            "PATCH /user_preferences":        stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging, cors, notificationPreferencesWriteAuthenticator),
-            "PATCH /user_preferences/{guid}": stack.NewStack(handlers.NewUpdateSpecificUserPreferences(preferenceUpdater, errorWriter)).Use(logging, cors, notificationPreferencesAdminAuthenticator),
+            "GET /info":                        stack.NewStack(handlers.NewGetInfo()).Use(logging),
+            "POST /users/{guid}":               stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, mother)).Use(logging, notificationsWriteAuthenticator),
+            "POST /spaces/{guid}":              stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, mother)).Use(logging, notificationsWriteAuthenticator),
+            "POST /emails":                     stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailRecipe)).Use(logging, emailsWriteAuthenticator),
+            "PUT /registration":                stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter)).Use(logging, notificationsWriteAuthenticator),
+            "OPTIONS /user_preferences":        stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),
+            "OPTIONS /user_preferences/{guid}": stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),
+            "GET /user_preferences":            stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, cors, notificationPreferencesReadAuthenticator),
+            "PATCH /user_preferences":          stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging, cors, notificationPreferencesWriteAuthenticator),
+            "PATCH /user_preferences/{guid}":   stack.NewStack(handlers.NewUpdateSpecificUserPreferences(preferenceUpdater, errorWriter)).Use(logging, cors, notificationPreferencesAdminAuthenticator),
         },
     }
 }
