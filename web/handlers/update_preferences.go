@@ -50,7 +50,7 @@ func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Reques
     }
     preferences, err := builder.ToPreferences()
     if err != nil {
-        handler.errorWriter.Write(w, params.ValidationError{})
+        handler.errorWriter.Write(w, params.ValidationError([]string{err.Error()}))
         return
     }
 
