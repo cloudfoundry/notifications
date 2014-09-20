@@ -166,8 +166,10 @@ func (server *SMTPServer) RespondToEHLO(output *bufio.Writer) {
     output.WriteString("250-localhost Hello\n")
     if server.SupportsTLS {
         output.WriteString("250-STARTTLS\n")
+        output.WriteString("250 AUTH PLAIN LOGIN\r\n")
+    } else {
+        output.WriteString("250 AUTH LOGIN\r\n")
     }
-    output.WriteString("250 AUTH PLAIN LOGIN\r\n")
     output.Flush()
 }
 

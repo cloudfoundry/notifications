@@ -189,7 +189,6 @@ var _ = Describe("Mail", func() {
             })
 
             It("communicates over TLS", func() {
-
                 msg := mail.Message{
                     From:    "me@example.com",
                     To:      "you@example.com",
@@ -211,6 +210,44 @@ var _ = Describe("Mail", func() {
                 Expect(delivery.Recipient).To(Equal("you@example.com"))
                 Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
                 Expect(delivery.UsedTLS).To(BeTrue())
+            })
+        })
+
+        Context("when configured to not use TLS", func() {
+            var smtpTLS string
+
+            BeforeEach(func() {
+                smtpTLS = os.Getenv("SMTP_TLS")
+                os.Setenv("SMTP_TLS", "false")
+                mailServer.SupportsTLS = false
+            })
+
+            AfterEach(func() {
+                os.Setenv("SMTP_TLS", smtpTLS)
+            })
+
+            It("does not authenticate", func() {
+                msg := mail.Message{
+                    From:    "me@example.com",
+                    To:      "you@example.com",
+                    Subject: "Urgent! Read now!",
+                    Body:    "This email is the most important thing you will read all day!",
+                }
+
+                err := client.Send(msg)
+                if err != nil {
+                    panic(err)
+                }
+
+                Eventually(func() int {
+                    return len(mailServer.Deliveries)
+                }).Should(Equal(1))
+                delivery := mailServer.Deliveries[0]
+
+                Expect(delivery.Sender).To(Equal("me@example.com"))
+                Expect(delivery.Recipient).To(Equal("you@example.com"))
+                Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
+                Expect(delivery.UsedTLS).To(BeFalse())
             })
         })
     })
@@ -261,6 +298,7 @@ var _ = Describe("Mail", func() {
             var err error
 
             mailServer = NewSMTPServer("user", "pass")
+            mailServer.SupportsTLS = true
             serverURL := mailServer.URL.String()
             client, err = mail.NewClient("user", "pass", serverURL, logger)
             if err != nil {
@@ -284,7 +322,7 @@ var _ = Describe("Mail", func() {
             Expect(params).To(Equal("PLAIN LOGIN"))
 
             ok, params = client.Extension("STARTTLS")
-            Expect(ok).To(BeFalse())
+            Expect(ok).To(BeTrue())
             Expect(params).To(Equal(""))
         })
     })

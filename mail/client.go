@@ -53,7 +53,6 @@ func NewClient(user, pass, url string, logger *log.Logger) (*Client, error) {
 }
 
 func (c *Client) Connect() error {
-
     env := config.NewEnvironment()
     if env.TestMode {
         return nil
@@ -108,14 +107,17 @@ func (c *Client) Send(msg Message) error {
         return err
     }
 
-    err = c.StartTLS()
-    if err != nil {
-        return err
-    }
+    if env.SMTPTLS {
+        err = c.StartTLS()
+        if err != nil {
+            return err
+        }
 
-    err = c.Auth()
-    if err != nil {
-        return err
+        err = c.Auth()
+        if err != nil {
+            panic(err)
+            return err
+        }
     }
 
     err = c.client.Mail(msg.From)
@@ -155,16 +157,13 @@ func (c *Client) Extension(name string) (bool, string) {
 }
 
 func (c *Client) StartTLS() error {
-    env := config.NewEnvironment()
-    if env.SMTPTLS {
-        if ok, _ := c.Extension("STARTTLS"); ok {
-            err := c.client.StartTLS(&tls.Config{
-                ServerName:         c.Host,
-                InsecureSkipVerify: c.Insecure,
-            })
-            if err != nil {
-                return err
-            }
+    if ok, _ := c.Extension("STARTTLS"); ok {
+        err := c.client.StartTLS(&tls.Config{
+            ServerName:         c.Host,
+            InsecureSkipVerify: c.Insecure,
+        })
+        if err != nil {
+            return err
         }
     }
 
