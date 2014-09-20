@@ -9,6 +9,14 @@ import (
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
+type UAA string
+
+type UAAScopesError string
+
+func (err UAAScopesError) Error() string {
+    return string(err)
+}
+
 type CCDownError string
 
 func (err CCDownError) Error() string {

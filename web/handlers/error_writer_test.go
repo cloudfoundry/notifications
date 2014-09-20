@@ -24,6 +24,21 @@ var _ = Describe("ErrorWriter", func() {
         recorder = httptest.NewRecorder()
     })
 
+    It("returns a 422 when a client tries to register a critical notification without critical_notifications.write scope", func() {
+        writer.Write(recorder, postal.UAAScopesError("UAA Scopes Error: Client does not have authority to register critical notifications."))
+
+        unprocessableEntity := 422
+        Expect(recorder.Code).To(Equal(unprocessableEntity))
+
+        body := make(map[string]interface{})
+        err := json.Unmarshal(recorder.Body.Bytes(), &body)
+        if err != nil {
+            panic(err)
+        }
+
+        Expect(body["errors"]).To(ContainElement("UAA Scopes Error: Client does not have authority to register critical notifications."))
+    })
+
     It("returns a 502 when CloudController fails to respond", func() {
         writer.Write(recorder, postal.CCDownError("Bad things happened!"))
 

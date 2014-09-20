@@ -11,6 +11,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/params"
@@ -66,7 +67,7 @@ var _ = Describe("RegisterNotifications", func() {
         tokenClaims := map[string]interface{}{
             "client_id": "raptors",
             "exp":       int64(3404281214),
-            "scope":     []string{"notifications.write"},
+            "scope":     []string{"notifications.write", "critical_notifications.write"},
         }
         rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
         request.Header.Set("Authorization", "Bearer "+rawToken)
@@ -137,6 +138,59 @@ var _ = Describe("RegisterNotifications", func() {
         })
 
         Context("failure cases", func() {
+            It("rejects entire request and returns 404 error if notification is critical without scope", func() {
+                requestBody, err := json.Marshal(map[string]interface{}{
+                    "source_description": "Raptor Containment Unit",
+                    "kinds": []map[string]interface{}{
+                        {
+                            "id":          "perimeter_breach",
+                            "description": "Perimeter Breach",
+                            "critical":    true,
+                        },
+                        {
+                            "id":          "feeding_time",
+                            "description": "Feeding Time",
+                            "critical":    true,
+                        },
+                    },
+                })
+                if err != nil {
+                    panic(err)
+                }
+
+                request, err = http.NewRequest("PUT", "/registration", bytes.NewBuffer(requestBody))
+                if err != nil {
+                    panic(err)
+                }
+                tokenHeader := map[string]interface{}{
+                    "alg": "FAST",
+                }
+                tokenClaims := map[string]interface{}{
+                    "client_id": "raptors",
+                    "exp":       int64(3404281214),
+                    "scope":     []string{"notifications.write"},
+                }
+                rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+                request.Header.Set("Authorization", "Bearer "+rawToken)
+
+                token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+                    return []byte(config.UAAPublicKey), nil
+                })
+                if err != nil {
+                    panic(err)
+                }
+
+                context = stack.NewContext()
+                context.Set("token", token)
+
+                handler.Execute(writer, request, fakeConn, context)
+                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(postal.UAAScopesError("waaaaat")))
+
+                Expect(fakeConn.BeginWasCalled).To(BeTrue())
+                Expect(fakeConn.CommitWasCalled).To(BeFalse())
+                Expect(fakeConn.RollbackWasCalled).To(BeTrue())
+            })
+
             It("delegates parsing errors to the ErrorWriter", func() {
                 var err error
                 request, err = http.NewRequest("PUT", "/registration", strings.NewReader("this is not valid JSON"))

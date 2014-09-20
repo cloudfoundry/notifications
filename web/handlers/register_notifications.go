@@ -5,6 +5,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/params"
     "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/dgrijalva/jwt-go"
@@ -55,8 +56,20 @@ func (handler RegisterNotifications) Execute(w http.ResponseWriter, req *http.Re
         Description: parameters.SourceDescription,
     }
 
+    hasCriticalWrite := false
+    for _, scope := range token.Claims["scope"].([]interface{}) {
+        if scope.(string) == "critical_notifications.write" {
+            hasCriticalWrite = true
+        }
+    }
+
     kinds := []models.Kind{}
     for _, kind := range parameters.Kinds {
+        if kind.Critical && !hasCriticalWrite {
+            transaction.Rollback()
+            handler.errorWriter.Write(w, postal.UAAScopesError("UAA Scopes Error: Client does not have authority to register critical notifications."))
+            return
+        }
         kind.ClientID = client.ID
         kinds = append(kinds, kind)
     }
