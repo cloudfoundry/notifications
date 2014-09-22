@@ -66,11 +66,11 @@ func (mother Mother) NotificationFinder() services.NotificationFinder {
 }
 
 func (mother Mother) Mailer() postal.Mailer {
-    return postal.NewMailer(mother.Queue(), uuid.NewV4, mother.UnsubscribesRepo())
+    return postal.NewMailer(mother.Queue(), uuid.NewV4, mother.UnsubscribesRepo(), mother.KindsRepo())
 }
 
 func (mother Mother) Repos() (models.ClientsRepo, models.KindsRepo) {
-    return models.NewClientsRepo(), models.NewKindsRepo()
+    return models.NewClientsRepo(), mother.KindsRepo()
 }
 
 func (mother Mother) Logging() stack.Middleware {
@@ -95,7 +95,11 @@ func (mother Mother) PreferencesFinder() *services.PreferencesFinder {
 }
 
 func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
-    return services.NewPreferenceUpdater(mother.UnsubscribesRepo(), models.NewKindsRepo())
+    return services.NewPreferenceUpdater(mother.UnsubscribesRepo(), mother.KindsRepo())
+}
+
+func (mother Mother) KindsRepo() models.KindsRepo {
+    return models.NewKindsRepo()
 }
 
 func (mother Mother) UnsubscribesRepo() models.UnsubscribesRepo {
