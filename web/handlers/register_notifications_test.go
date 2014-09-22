@@ -186,9 +186,9 @@ var _ = Describe("RegisterNotifications", func() {
                 handler.Execute(writer, request, fakeConn, context)
                 Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(postal.UAAScopesError("waaaaat")))
 
-                Expect(fakeConn.BeginWasCalled).To(BeTrue())
+                Expect(fakeConn.BeginWasCalled).To(BeFalse())
                 Expect(fakeConn.CommitWasCalled).To(BeFalse())
-                Expect(fakeConn.RollbackWasCalled).To(BeTrue())
+                Expect(fakeConn.RollbackWasCalled).To(BeFalse())
             })
 
             It("delegates parsing errors to the ErrorWriter", func() {
