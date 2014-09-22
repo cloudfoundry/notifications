@@ -39,7 +39,6 @@ var _ = Describe("UAA Recipe", func() {
     var fakeReceiptsRepo fakes.FakeReceiptsRepo
     var conn *fakes.FakeDBConn
     var fakeUnsubscribesRepo *fakes.FakeUnsubscribesRepo
-    var fakeKindsRepo *fakes.FakeKindsRepo
 
     BeforeEach(func() {
         clientID = "mister-client"
@@ -101,7 +100,7 @@ var _ = Describe("UAA Recipe", func() {
         fs = NewFakeFileSystem(env)
 
         queue = fakes.NewFakeQueue()
-        mailer = postal.NewMailer(queue, fakes.FakeGuidGenerator, fakeUnsubscribesRepo, fakeKindsRepo)
+        mailer = postal.NewMailer(queue, fakes.FakeGuidGenerator)
 
         tokenLoader = postal.NewTokenLoader(&fakeUAA)
         userLoader = postal.NewUserLoader(&fakeUAA, logger, fakeCC)

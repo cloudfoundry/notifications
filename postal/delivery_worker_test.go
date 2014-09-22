@@ -27,6 +27,7 @@ var _ = Describe("DeliveryWorker", func() {
     var delivery postal.Delivery
     var queue *fakes.FakeQueue
     var unsubscribesRepo *fakes.FakeUnsubscribesRepo
+    var kindsRepo *fakes.FakeKindsRepo
     var conn *fakes.FakeDBConn
 
     BeforeEach(func() {
@@ -36,9 +37,10 @@ var _ = Describe("DeliveryWorker", func() {
         mailClient = fakes.FakeMailClient{}
         queue = fakes.NewFakeQueue()
         unsubscribesRepo = fakes.NewFakeUnsubscribesRepo()
+        kindsRepo = fakes.NewFakeKindsRepo()
         conn = &fakes.FakeDBConn{}
 
-        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, unsubscribesRepo)
+        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, unsubscribesRepo, kindsRepo)
 
         os.Setenv("SENDER", "from@email.com")
 
@@ -209,10 +211,51 @@ var _ = Describe("DeliveryWorker", func() {
                 }
             })
 
-            It("does not send the email", func() {
-                worker.Deliver(&job)
+            Context("and the notification is not registered", func() {
+                It("does not send the email", func() {
+                    worker.Deliver(&job)
 
-                Expect(len(mailClient.Messages)).To(Equal(0))
+                    Expect(len(mailClient.Messages)).To(Equal(0))
+                })
+            })
+
+            Context("and the notification is registered as not critical", func() {
+                BeforeEach(func() {
+                    _, err := kindsRepo.Create(conn, models.Kind{
+                        ID:       "some-kind",
+                        ClientID: "some-client",
+                        Critical: false,
+                    })
+
+                    if err != nil {
+                        panic(err)
+                    }
+                })
+                It("does not send the email", func() {
+                    worker.Deliver(&job)
+
+                    Expect(len(mailClient.Messages)).To(Equal(0))
+                })
+            })
+
+            Context("and the notification is registered as critical", func() {
+                BeforeEach(func() {
+                    _, err := kindsRepo.Create(conn, models.Kind{
+                        ID:       "some-kind",
+                        ClientID: "some-client",
+                        Critical: true,
+                    })
+
+                    if err != nil {
+                        panic(err)
+                    }
+                })
+
+                It("does send the email", func() {
+                    worker.Deliver(&job)
+
+                    Expect(len(mailClient.Messages)).To(Equal(1))
+                })
             })
         })
 

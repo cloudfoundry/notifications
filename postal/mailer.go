@@ -11,18 +11,14 @@ type MailerInterface interface {
 }
 
 type Mailer struct {
-    queue            gobble.QueueInterface
-    guidGenerator    GUIDGenerationFunc
-    unsubscribesRepo models.UnsubscribesRepoInterface
-    kindsRepo        models.KindsRepoInterface
+    queue         gobble.QueueInterface
+    guidGenerator GUIDGenerationFunc
 }
 
-func NewMailer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc, unsubscribesRepo models.UnsubscribesRepoInterface, kindsRepo models.KindsRepoInterface) Mailer {
+func NewMailer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc) Mailer {
     return Mailer{
-        queue:            queue,
-        guidGenerator:    guidGenerator,
-        unsubscribesRepo: unsubscribesRepo,
-        kindsRepo:        kindsRepo,
+        queue:         queue,
+        guidGenerator: guidGenerator,
     }
 }
 
@@ -39,24 +35,21 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates Template
         }
         messageID := guid.String()
 
-        _, err = mailer.unsubscribesRepo.Find(conn, clientID, options.KindID, userGUID)
-        if (err == models.ErrRecordNotFound{}) || mailer.isCritical(conn, mailer.kindsRepo, options.KindID, clientID) {
-            job := gobble.NewJob(Delivery{
-                User:         user,
-                Options:      options,
-                UserGUID:     userGUID,
-                Space:        space,
-                Organization: organization,
-                ClientID:     clientID,
-                Templates:    templates,
-                MessageID:    messageID,
-            })
+        job := gobble.NewJob(Delivery{
+            User:         user,
+            Options:      options,
+            UserGUID:     userGUID,
+            Space:        space,
+            Organization: organization,
+            ClientID:     clientID,
+            Templates:    templates,
+            MessageID:    messageID,
+        })
 
-            _, err = mailer.queue.Enqueue(job)
-            if err != nil {
-                transaction.Rollback()
-                return []Response{}
-            }
+        _, err = mailer.queue.Enqueue(job)
+        if err != nil {
+            transaction.Rollback()
+            return []Response{}
         }
 
         emailAddress := ""
@@ -74,14 +67,4 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates Template
 
     transaction.Commit()
     return responses
-}
-
-func (mailer Mailer) isCritical(conn models.ConnectionInterface, kindsRepo models.KindsRepoInterface, kindID, clientID string) bool {
-
-    kind, err := kindsRepo.Find(conn, kindID, clientID)
-    if (err == models.ErrRecordNotFound{}) {
-        return false
-    }
-
-    return kind.Critical
 }

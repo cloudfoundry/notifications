@@ -66,7 +66,7 @@ func (mother Mother) NotificationFinder() services.NotificationFinder {
 }
 
 func (mother Mother) Mailer() postal.Mailer {
-    return postal.NewMailer(mother.Queue(), uuid.NewV4, mother.UnsubscribesRepo(), mother.KindsRepo())
+    return postal.NewMailer(mother.Queue(), uuid.NewV4)
 }
 
 func (mother Mother) Repos() (models.ClientsRepo, models.KindsRepo) {

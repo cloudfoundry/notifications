@@ -29,14 +29,17 @@ type DeliveryWorker struct {
     logger           *log.Logger
     mailClient       mail.ClientInterface
     unsubscribesRepo models.UnsubscribesRepoInterface
+    kindsRepo        models.KindsRepoInterface
     gobble.Worker
 }
 
-func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface, unsubscribesRepo models.UnsubscribesRepoInterface) DeliveryWorker {
+func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
+    unsubscribesRepo models.UnsubscribesRepoInterface, kindsRepo models.KindsRepoInterface) DeliveryWorker {
     worker := DeliveryWorker{
         logger:           logger,
         mailClient:       mailClient,
         unsubscribesRepo: unsubscribesRepo,
+        kindsRepo:        kindsRepo,
     }
     worker.Worker = gobble.NewWorker(id, queue, worker.Deliver)
 
@@ -77,7 +80,12 @@ func (worker DeliveryWorker) Retry(job *gobble.Job) {
 }
 
 func (worker DeliveryWorker) ShouldDeliver(delivery Delivery) bool {
-    _, err := worker.unsubscribesRepo.Find(models.Database().Connection(), delivery.ClientID, delivery.Options.KindID, delivery.UserGUID)
+    conn := models.Database().Connection()
+    if worker.isCritical(conn, delivery.Options.KindID, delivery.ClientID) {
+        return true
+    }
+
+    _, err := worker.unsubscribesRepo.Find(conn, delivery.ClientID, delivery.Options.KindID, delivery.UserGUID)
     if err != nil {
         if (err == models.ErrRecordNotFound{}) {
             return len(delivery.User.Emails) > 0 && strings.Contains(delivery.User.Emails[0], "@")
@@ -85,6 +93,15 @@ func (worker DeliveryWorker) ShouldDeliver(delivery Delivery) bool {
         return false
     }
     return false
+}
+
+func (worker DeliveryWorker) isCritical(conn models.ConnectionInterface, kindID, clientID string) bool {
+    kind, err := worker.kindsRepo.Find(conn, kindID, clientID)
+    if (err == models.ErrRecordNotFound{}) {
+        return false
+    }
+
+    return kind.Critical
 }
 
 func (worker DeliveryWorker) Pack(delivery Delivery) (MessageContext, mail.Message) {

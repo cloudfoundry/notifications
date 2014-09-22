@@ -5,7 +5,6 @@ import (
     "errors"
     "log"
 
-    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -19,30 +18,18 @@ var _ = Describe("Mailer", func() {
     var logger *log.Logger
     var buffer *bytes.Buffer
     var queue *fakes.FakeQueue
-    var unsubscribesRepo *fakes.FakeUnsubscribesRepo
-    var kindsRepo *fakes.FakeKindsRepo
     var conn *fakes.FakeDBConn
 
     BeforeEach(func() {
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
         queue = fakes.NewFakeQueue()
-        unsubscribesRepo = fakes.NewFakeUnsubscribesRepo()
-        kindsRepo = fakes.NewFakeKindsRepo()
         conn = &fakes.FakeDBConn{}
-        mailer = postal.NewMailer(queue, fakes.FakeGuidGenerator, unsubscribesRepo, kindsRepo)
+        mailer = postal.NewMailer(queue, fakes.FakeGuidGenerator)
     })
 
     Describe("Deliver", func() {
         It("returns the correct types of responses for users", func() {
-            _, err := unsubscribesRepo.Create(conn, models.Unsubscribe{
-                UserID:   "user-2",
-                ClientID: "the-client",
-                KindID:   "the-kind",
-            })
-            if err != nil {
-                panic(err)
-            }
 
             users := map[string]uaa.User{
                 "user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
@@ -119,54 +106,8 @@ var _ = Describe("Mailer", func() {
             }
         })
 
-        Context("when the user is unsubscribed from a non-critical notification", func() {
-            It("does not deliver the notification", func() {
-                _, err := unsubscribesRepo.Create(conn, models.Unsubscribe{
-                    UserID:   "user-123",
-                    ClientID: "the-client",
-                    KindID:   "the-kind",
-                })
-                if err != nil {
-                    panic(err)
-                }
-
-                users := map[string]uaa.User{
-                    "user-123": {ID: "user-123", Emails: []string{"user-123@example.com"}},
-                }
-                mailer.Deliver(conn, postal.Templates{}, users, postal.Options{KindID: "the-kind"}, "the-space", "the-org", "the-client")
-
-                Consistently(queue.Reserve("me")).ShouldNot(Receive())
-            })
-        })
-
-        Context("when the user is unsubscribed from a critical notification", func() {
-            It("does deliver the notification", func() {
-                _, err := unsubscribesRepo.Create(conn, models.Unsubscribe{
-                    UserID:   "user-123",
-                    ClientID: "the-client",
-                    KindID:   "the-kind",
-                })
-                if err != nil {
-                    panic(err)
-                }
-
-                kindsRepo.Create(conn, models.Kind{
-                    ID:       "the-kind",
-                    ClientID: "the-client",
-                    Critical: true,
-                })
-
-                users := map[string]uaa.User{
-                    "user-123": {ID: "user-123", Emails: []string{"user-123@example.com"}},
-                }
-                mailer.Deliver(conn, postal.Templates{}, users, postal.Options{KindID: "the-kind"}, "the-space", "the-org", "the-client")
-                Eventually(queue.Reserve("me")).Should(Receive())
-
-            })
-        })
-
         Context("using a transaction", func() {
-            It("commits the transaction when every goes well", func() {
+            It("commits the transaction when everything goes well", func() {
                 users := map[string]uaa.User{
                     "user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
                     "user-2": {},
