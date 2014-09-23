@@ -53,6 +53,7 @@ var _ = Describe("Preferences Endpoint", func() {
         }
 
         test := ManageUsersOwnPreferences{}
+
         test.RegisterClientNotifications(notificationsServer, clientToken)
         test.SendNotificationToUser(notificationsServer, clientToken, smtpServer)
         test.RetrieveUserPreferences(notificationsServer, userToken)

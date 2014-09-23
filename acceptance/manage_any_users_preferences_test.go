@@ -47,21 +47,14 @@ var _ = Describe("Preferences Endpoint", func() {
         }
 
         userGUID := "user-123"
-        // Retrieve User UAA token
-        userToken, err := uaaClient.Exchange(userGUID + "-code")
-        if err != nil {
-            panic(err)
-        }
-
-        //GRAB USER GUID FROM USER TOKEN
 
         test := ManageArbitraryUsersPreferences{}
 
         test.RegisterClientNotifications(notificationsServer, clientToken)
         test.SendNotificationToUser(notificationsServer, clientToken, smtpServer)
-        test.RetrieveUserPreferences(notificationsServer, userToken)
+        test.RetrieveUserPreferences(notificationsServer, clientToken, userGUID)
         test.UnsubscribeFromNotification(notificationsServer, clientToken, userGUID)
-        test.ConfirmUserUnsubscribed(notificationsServer, userToken)
+        test.ConfirmUserUnsubscribed(notificationsServer, clientToken, userGUID)
     })
 })
 
@@ -168,13 +161,14 @@ func (t ManageArbitraryUsersPreferences) SendNotificationToUser(notificationsSer
     Expect(data).To(ContainElement("<p>this is an acceptance test</p>"))
 }
 
-func (t ManageArbitraryUsersPreferences) RetrieveUserPreferences(notificationsServer servers.Notifications, userToken uaa.Token) {
-    request, err := http.NewRequest("GET", notificationsServer.UserPreferencesPath(), nil)
+func (t ManageArbitraryUsersPreferences) RetrieveUserPreferences(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string) {
+
+    request, err := http.NewRequest("GET", notificationsServer.SpecificUserPreferencesPath(userGUID), nil)
     if err != nil {
         panic(err)
     }
 
-    request.Header.Set("Authorization", "Bearer "+userToken.Access)
+    request.Header.Set("Authorization", "Bearer "+clientToken.Access)
 
     response, err := http.DefaultClient.Do(request)
     if err != nil {
@@ -240,13 +234,13 @@ func (t ManageArbitraryUsersPreferences) UnsubscribeFromNotification(notificatio
 
 }
 
-func (t ManageArbitraryUsersPreferences) ConfirmUserUnsubscribed(notificationsServer servers.Notifications, userToken uaa.Token) {
-    request, err := http.NewRequest("GET", notificationsServer.UserPreferencesPath(), nil)
+func (t ManageArbitraryUsersPreferences) ConfirmUserUnsubscribed(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string) {
+    request, err := http.NewRequest("GET", notificationsServer.SpecificUserPreferencesPath(userGUID), nil)
     if err != nil {
         panic(err)
     }
 
-    request.Header.Set("Authorization", "Bearer "+userToken.Access)
+    request.Header.Set("Authorization", "Bearer "+clientToken.Access)
 
     response, err := http.DefaultClient.Do(request)
     if err != nil {
