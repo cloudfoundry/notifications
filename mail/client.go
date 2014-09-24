@@ -7,6 +7,7 @@ import (
     "log"
     "net"
     "net/smtp"
+    "strings"
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -187,7 +188,8 @@ func (c *Client) Data(msg Message) error {
         return err
     }
 
-    _, err = fmt.Fprintf(wc, msg.Data())
+    data := strings.Replace(string(msg.Data()), "%", "%%", -1)
+    _, err = fmt.Fprintf(wc, data)
     if err != nil {
         return err
     }

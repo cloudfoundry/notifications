@@ -92,7 +92,7 @@ func (t SendNotificationToUser) RegisterClientNotification(notificationsServer s
 func (t SendNotificationToUser) SendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
     body, err := json.Marshal(map[string]string{
         "kind_id": "acceptance-test",
-        "html":    "<p>this is an acceptance test</p>",
+        "html":    "<p>this is an acceptance%40test</p>",
         "subject": "my-special-subject",
     })
     if err != nil {
@@ -146,5 +146,5 @@ func (t SendNotificationToUser) SendNotificationToUser(notificationsServer serve
     Expect(data).To(ContainElement("X-CF-Notification-ID: " + responseItem["notification_id"]))
     Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
     Expect(data).To(ContainElement(`        <p>The following "Acceptance Test" notification was sent to you directly by the "Notifications Sender" component of Cloud Foundry:</p>`))
-    Expect(data).To(ContainElement("<p>this is an acceptance test</p>"))
+    Expect(data).To(ContainElement("<p>this is an acceptance%40test</p>"))
 }

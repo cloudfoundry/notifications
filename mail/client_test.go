@@ -111,7 +111,7 @@ var _ = Describe("Mail", func() {
                 From:    "me@example.com",
                 To:      "you@example.com",
                 Subject: "Urgent! Read now!",
-                Body:    "This email is the most important thing you will read all day!",
+                Body:    "This email is the most important thing you will read all day%40!",
             }
 
             err := client.Send(msg)
