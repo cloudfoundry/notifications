@@ -138,6 +138,20 @@ var _ = Describe("ErrorWriter", func() {
         Expect(body["errors"]).To(ContainElement("another"))
     })
 
+    It("returns a 422 when trying to send a critical notification without correct scope", func() {
+        writer.Write(recorder, postal.NewCriticalNotificationError("raptors"))
+
+        Expect(recorder.Code).To(Equal(422))
+
+        body := make(map[string]interface{})
+        err := json.Unmarshal(recorder.Body.Bytes(), &body)
+        if err != nil {
+            panic(err)
+        }
+
+        Expect(body["errors"]).To(ContainElement("Insufficient privileges to send notification raptors"))
+    })
+
     It("returns a 409 when there is a duplicate record", func() {
         writer.Write(recorder, models.ErrDuplicateRecord{})
 

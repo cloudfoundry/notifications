@@ -37,6 +37,8 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
         writer.write(w, http.StatusBadRequest, []string{err.Error()})
     case params.ValidationError:
         writer.write(w, 422, err.(params.ValidationError).Errors())
+    case postal.CriticalNotificationError:
+        writer.write(w, 422, []string{err.Error()})
     case models.ErrDuplicateRecord:
         writer.write(w, http.StatusConflict, []string{err.Error()})
     case models.ErrRecordNotFound:

@@ -33,6 +33,8 @@ var _ = Describe("Notify", func() {
             var fakeDBConn *fakes.FakeDBConn
             var fakeRecipe *fakes.FakeMailRecipe
             var context stack.Context
+            var tokenHeader map[string]interface{}
+            var tokenClaims map[string]interface{}
 
             BeforeEach(func() {
                 client = models.Client{
@@ -43,6 +45,7 @@ var _ = Describe("Notify", func() {
                     ID:          "test_email",
                     Description: "Instance Down",
                     ClientID:    "mister-client",
+                    Critical:    true,
                 }
                 fakeFinder = fakes.NewFakeFinder()
                 fakeFinder.Clients["mister-client"] = client
@@ -61,13 +64,13 @@ var _ = Describe("Notify", func() {
                     panic(err)
                 }
 
-                tokenHeader := map[string]interface{}{
+                tokenHeader = map[string]interface{}{
                     "alg": "FAST",
                 }
-                tokenClaims := map[string]interface{}{
+                tokenClaims = map[string]interface{}{
                     "client_id": "mister-client",
                     "exp":       int64(3404281214),
-                    "scope":     []string{"notifications.write"},
+                    "scope":     []string{"notifications.write", "critical_notifications.write"},
                 }
                 rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
 
@@ -208,6 +211,22 @@ var _ = Describe("Notify", func() {
                         _, err := handler.Execute(fakeDBConn, request, context, postal.UserGUID("user-123"), fakeRecipe)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
+                    })
+                })
+
+                Context("when trying to send a critical notification without the correct scope", func() {
+                    It("returns an error", func() {
+                        tokenClaims["scope"] = []interface{}{"notifications.write"}
+                        rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
+                        token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+                            return []byte(config.UAAPublicKey), nil
+                        })
+
+                        context.Set("token", token)
+
+                        _, err = handler.Execute(fakeDBConn, request, context, postal.UserGUID("user-123"), fakeRecipe)
+
+                        Expect(err).To(BeAssignableToTypeOf(postal.NewCriticalNotificationError("test_email")))
                     })
                 })
             })

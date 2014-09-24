@@ -83,3 +83,15 @@ func CCErrorFor(err error) error {
     }
     return err
 }
+
+type CriticalNotificationError struct {
+    kindID string
+}
+
+func NewCriticalNotificationError(kindID string) CriticalNotificationError {
+    return CriticalNotificationError{kindID: kindID}
+}
+
+func (err CriticalNotificationError) Error() string {
+    return "Insufficient privileges to send notification " + err.kindID
+}

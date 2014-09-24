@@ -47,9 +47,14 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 
     token := context.Get("token").(*jwt.Token)
     clientID := token.Claims["client_id"].(string)
+
     client, kind, err := handler.finder.ClientAndKind(clientID, parameters.KindID)
     if err != nil {
         return []byte{}, err
+    }
+
+    if kind.Critical && !handler.hasCriticalNotificationsWriteScope(token.Claims["scope"]) {
+        return []byte{}, postal.NewCriticalNotificationError(kind.ID)
     }
 
     err = handler.registrar.Register(connection, client, []models.Kind{kind})
@@ -72,4 +77,13 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
     output = mailRecipe.Trim(output)
 
     return output, nil
+}
+
+func (handler Notify) hasCriticalNotificationsWriteScope(elements interface{}) bool {
+    for _, elem := range elements.([]interface{}) {
+        if elem.(string) == "critical_notifications.write" {
+            return true
+        }
+    }
+    return false
 }
