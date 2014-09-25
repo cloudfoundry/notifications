@@ -4,6 +4,7 @@ import (
     "errors"
     "net/http"
     "net/url"
+    "time"
 
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
@@ -16,25 +17,46 @@ import (
 var _ = Describe("TokenLoader", func() {
     var tokenLoader postal.TokenLoader
     var fakeUAA fakes.FakeUAAClient
-
-    BeforeEach(func() {
-        fakeUAA = fakes.FakeUAAClient{
-            ClientToken: uaa.Token{
-                Access: "the-client-token",
-            },
-        }
-
-        tokenLoader = postal.NewTokenLoader(&fakeUAA)
-    })
+    var clientToken string
+    var tokenHeader map[string]interface{}
+    var tokenClaims map[string]interface{}
 
     Describe("Load", func() {
+        BeforeEach(func() {
+            tokenHeader = map[string]interface{}{
+                "alg": "FAST",
+            }
+
+            tokenClaims = map[string]interface{}{
+                "client_id": "mister-client",
+                "exp":       time.Now().Add(5 * time.Minute).Unix(),
+                "scope":     []string{"notifications.write"},
+            }
+
+            clientToken = fakes.BuildToken(tokenHeader, tokenClaims)
+
+            fakeUAA = fakes.FakeUAAClient{
+                ClientToken: uaa.Token{
+                    Access:  clientToken,
+                    Refresh: "fake-refresh",
+                },
+            }
+
+            tokenLoader = postal.NewTokenLoader(&fakeUAA)
+
+        })
+
+        AfterEach(func() {
+            postal.ResetLoader()
+        })
+
         It("returns the client token from UAA", func() {
             token, err := tokenLoader.Load()
             if err != nil {
                 panic(err)
             }
 
-            Expect(token).To(Equal("the-client-token"))
+            Expect(token).To(Equal(clientToken))
         })
 
         It("assigns the access token on the uaa client", func() {
@@ -43,7 +65,50 @@ var _ = Describe("TokenLoader", func() {
                 panic(err)
             }
 
-            Expect(fakeUAA.AccessToken).To(Equal("the-client-token"))
+            Expect(fakeUAA.AccessToken).To(Equal(clientToken))
+        })
+
+        Context("When the current client token is not expired", func() {
+            It("Does not ask UAA for a new token", func() {
+                token, err := tokenLoader.Load()
+                if err != nil {
+                    panic(err)
+                }
+                Expect(token).To(Equal(clientToken))
+
+                fakeUAA.ClientToken.Access = "the-wrong-token"
+
+                token, err = tokenLoader.Load()
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(token).To(Equal(clientToken))
+            })
+        })
+
+        Context("When the current client token is expired", func() {
+            It("Does ask UAA for a new token", func() {
+                tokenClaims["exp"] = time.Now().Add(-5 * time.Minute).Unix()
+                expiredToken := fakes.BuildToken(tokenHeader, tokenClaims)
+                fakeUAA.ClientToken.Access = expiredToken
+
+                token, err := tokenLoader.Load()
+                if err != nil {
+                    panic(err)
+                }
+                Expect(token).To(Equal(expiredToken))
+
+                fakeUAA.ClientToken.Access = "the-correct-token"
+
+                token, err = tokenLoader.Load()
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(token).To(Equal("the-correct-token"))
+
+            })
         })
 
         Context("error handling", func() {

@@ -35,6 +35,11 @@ func (token Token) IsPresent() bool {
 
 // Determines if the token has expired
 func (token Token) IsExpired() (bool, error) {
+    return token.ExpiresBefore(time.Duration(0))
+}
+
+// Determines if the token expires by the current time plus the time buffer
+func (token Token) ExpiresBefore(timeBuffer time.Duration) (bool, error) {
     parts := strings.Split(token.Access, ".")
     decodedToken, err := jwt.DecodeSegment(parts[1])
     if err != nil {
@@ -47,8 +52,9 @@ func (token Token) IsExpired() (bool, error) {
         return false, JSONParseError
     }
 
-    unixTime := parsedJson["exp"].(float64)
-    expirationTime := time.Unix(int64(unixTime), 0)
+    tokenExpiration := parsedJson["exp"].(float64)
 
-    return expirationTime.Before(time.Now()), nil
+    bufferedExpiration := time.Unix(int64(tokenExpiration), 0).Add(timeBuffer)
+
+    return bufferedExpiration.Before(time.Now()), nil
 }

@@ -1,6 +1,8 @@
 package uaa_test
 
 import (
+    "time"
+
     "github.com/dgrijalva/jwt-go"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -59,7 +61,7 @@ var _ = Describe("Token", func() {
                 header := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
                 body := "bad!token!body"
                 token.Access = header + "." + body
-                _, err := token.IsExpired()
+                _, err := token.ExpiresBefore(time.Duration(0))
                 Expect(err).To(Equal(uaa.TokenDecodeError))
             })
 
@@ -67,9 +69,54 @@ var _ = Describe("Token", func() {
                 header := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
                 body := jwt.EncodeSegment([]byte("bad-json"))
                 token.Access = header + "." + body
-                _, err := token.IsExpired()
+                _, err := token.ExpiresBefore(time.Duration(0))
                 Expect(err).To(Equal(uaa.JSONParseError))
             })
         })
+    })
+
+    Describe("ExpiresBefore", func() {
+        var token uaa.Token
+
+        Context("when the token does not expire until the specified time", func() {
+            It("returns false", func() {
+                header := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
+                body := jwt.EncodeSegment([]byte(`{"exp":915152461}`))
+                token.Access = header + "." + body
+                expired, err := token.ExpiresBefore(time.Duration(876000 * time.Hour))
+                Expect(err).To(BeNil())
+                Expect(expired).To(BeFalse())
+            })
+        })
+
+        Context("when the token does expire before the specified time", func() {
+            It("returns true", func() {
+                header := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
+                body := jwt.EncodeSegment([]byte(`{"exp":915152461}`))
+                token.Access = header + "." + body
+                expired, err := token.ExpiresBefore(time.Duration(0))
+                Expect(err).To(BeNil())
+                Expect(expired).To(BeTrue())
+            })
+        })
+
+        Context("handling errors", func() {
+            It("returns a TokenDecodeError when the token cannot be decoded", func() {
+                header := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
+                body := "bad!token!body"
+                token.Access = header + "." + body
+                _, err := token.ExpiresBefore(time.Duration(0))
+                Expect(err).To(Equal(uaa.TokenDecodeError))
+            })
+
+            It("returns a JSONParseError when the json cannot be parsed", func() {
+                header := jwt.EncodeSegment([]byte(`{"alg":"RS256"}`))
+                body := jwt.EncodeSegment([]byte("bad-json"))
+                token.Access = header + "." + body
+                _, err := token.ExpiresBefore(time.Duration(0))
+                Expect(err).To(Equal(uaa.JSONParseError))
+            })
+        })
+
     })
 })

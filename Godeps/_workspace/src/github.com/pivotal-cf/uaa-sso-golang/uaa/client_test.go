@@ -5,6 +5,7 @@ import (
     "fmt"
     "net/http"
     "net/http/httptest"
+    "reflect"
     "strings"
 
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -147,7 +148,7 @@ var _ = Describe("Client", func() {
 
             Expect(httpClient1).ToNot(BeNil())
             Expect(httpClient1).To(BeAssignableToTypeOf(&http.Client{}))
-            Expect(httpClient1).To(Equal(httpClient2))
+            Expect(reflect.ValueOf(httpClient1).Pointer()).To(Equal(reflect.ValueOf(httpClient2).Pointer()))
         })
     })
 })
