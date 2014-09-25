@@ -59,12 +59,12 @@ var _ = Describe("UserLoader", func() {
                 },
                 UsersByID: map[string]uaa.User{
                     "user-123": uaa.User{
-                        ID:     "user-123",
                         Emails: []string{"user-123@example.com"},
+                        ID:     "user-123",
                     },
                     "user-456": uaa.User{
-                        ID:     "user-456",
                         Emails: []string{"user-456@example.com"},
+                        ID:     "user-456",
                     },
                 },
             }
@@ -83,8 +83,8 @@ var _ = Describe("UserLoader", func() {
                 Expect(len(users)).To(Equal(2))
 
                 user123 := users["user-123"]
-                Expect(user123.ID).To(Equal("user-123"))
                 Expect(user123.Emails[0]).To(Equal("user-123@example.com"))
+                Expect(user123.ID).To(Equal("user-123"))
 
                 user789, ok := users["user-789"]
                 Expect(ok).To(BeTrue())

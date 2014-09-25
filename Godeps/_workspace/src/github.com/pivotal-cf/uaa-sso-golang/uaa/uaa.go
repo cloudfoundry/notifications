@@ -52,6 +52,7 @@ type UAAInterface interface {
     RefreshInterface
     UserByIDInterface
     UsersByIDsInterface
+    UsersEmailsByIDsInterface
 }
 
 type AuthorizeURLInterface interface {
@@ -81,28 +82,30 @@ type UAA struct {
     AccessToken    string
     VerifySSL      bool
 
-    ExchangeCommand       func(UAA, string) (Token, error)
-    RefreshCommand        func(UAA, string) (Token, error)
-    GetClientTokenCommand func(UAA) (Token, error)
-    UserByIDCommand       func(UAA, string) (User, error)
-    GetTokenKeyCommand    func(UAA) (string, error)
-    UsersByIDsCommand     func(UAA, ...string) ([]User, error)
+    ExchangeCommand         func(UAA, string) (Token, error)
+    RefreshCommand          func(UAA, string) (Token, error)
+    GetClientTokenCommand   func(UAA) (Token, error)
+    UserByIDCommand         func(UAA, string) (User, error)
+    GetTokenKeyCommand      func(UAA) (string, error)
+    UsersByIDsCommand       func(UAA, ...string) ([]User, error)
+    UsersEmailsByIDsCommand func(UAA, ...string) ([]User, error)
 }
 
 func NewUAA(loginURL, uaaURL, clientID, clientSecret, token string) UAA {
     return UAA{
-        loginURL:              loginURL,
-        uaaURL:                uaaURL,
-        ClientID:              clientID,
-        ClientSecret:          clientSecret,
-        AccessToken:           token,
-        VerifySSL:             true,
-        ExchangeCommand:       Exchange,
-        GetClientTokenCommand: GetClientToken,
-        GetTokenKeyCommand:    GetTokenKey,
-        RefreshCommand:        Refresh,
-        UserByIDCommand:       UserByID,
-        UsersByIDsCommand:     UsersByIDs,
+        loginURL:                loginURL,
+        uaaURL:                  uaaURL,
+        ClientID:                clientID,
+        ClientSecret:            clientSecret,
+        AccessToken:             token,
+        VerifySSL:               true,
+        ExchangeCommand:         Exchange,
+        GetClientTokenCommand:   GetClientToken,
+        GetTokenKeyCommand:      GetTokenKey,
+        RefreshCommand:          Refresh,
+        UserByIDCommand:         UserByID,
+        UsersByIDsCommand:       UsersByIDs,
+        UsersEmailsByIDsCommand: UsersEmailsByIDs,
     }
 }
 
@@ -158,4 +161,8 @@ func (u UAA) GetTokenKey() (string, error) {
 
 func (u UAA) UsersByIDs(ids ...string) ([]User, error) {
     return u.UsersByIDsCommand(u, ids...)
+}
+
+func (u UAA) UsersEmailsByIDs(ids ...string) ([]User, error) {
+    return u.UsersEmailsByIDsCommand(u, ids...)
 }

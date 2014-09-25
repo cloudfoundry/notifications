@@ -18,7 +18,7 @@ func (fake FakeUAAClient) GetClientToken() (uaa.Token, error) {
     return fake.ClientToken, fake.ClientTokenError
 }
 
-func (fake FakeUAAClient) UsersByIDs(ids ...string) ([]uaa.User, error) {
+func (fake FakeUAAClient) UsersEmailsByIDs(ids ...string) ([]uaa.User, error) {
     users := []uaa.User{}
     for _, id := range ids {
         if user, ok := fake.UsersByID[id]; ok {

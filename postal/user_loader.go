@@ -42,7 +42,7 @@ func (loader UserLoader) Load(guid TypedGUID, token string) (map[string]uaa.User
         guids = append(guids, ccUser.Guid)
     }
 
-    usersByIDs, err := loader.uaaClient.UsersByIDs(guids...)
+    usersByIDs, err := loader.uaaClient.UsersEmailsByIDs(guids...)
     if err != nil {
         err = UAAErrorFor(err)
         return users, err

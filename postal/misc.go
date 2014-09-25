@@ -82,7 +82,7 @@ type GUIDGenerationFunc func() (*uuid.UUID, error)
 type UAAInterface interface {
     uaa.GetClientTokenInterface
     uaa.SetTokenInterface
-    uaa.UsersByIDsInterface
+    uaa.UsersEmailsByIDsInterface
 }
 
 type HTML struct {
