@@ -8,9 +8,10 @@ const (
 )
 
 type Templates struct {
-    Subject string
-    Text    string
-    HTML    string
+    Subject  string
+    Text     string
+    HTML     string
+    UserGUID string
 }
 
 type TemplateLoaderInterface interface {

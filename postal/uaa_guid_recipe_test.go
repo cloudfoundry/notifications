@@ -31,7 +31,7 @@ var _ = Describe("UAA Recipe", func() {
     var userLoader postal.UserLoader
     var spaceLoader postal.SpaceLoader
     var templateLoader postal.TemplateLoader
-    var mailer postal.Mailer
+    var mailer *fakes.FakeMailer
     var fs FakeFileSystem
     var env config.Environment
     var queue *fakes.FakeQueue
@@ -100,7 +100,7 @@ var _ = Describe("UAA Recipe", func() {
         fs = NewFakeFileSystem(env)
 
         queue = fakes.NewFakeQueue()
-        mailer = postal.NewMailer(queue, fakes.FakeGuidGenerator)
+        mailer = fakes.NewFakeMailer()
 
         tokenLoader = postal.NewTokenLoader(&fakeUAA)
         userLoader = postal.NewUserLoader(&fakeUAA, logger, fakeCC)
@@ -203,28 +203,71 @@ var _ = Describe("UAA Recipe", func() {
                     Expect(lines).To(ContainElement("CloudController user guid: user-456"))
                 })
 
-                It("returns necessary info in the response for the sent mail", func() {
-                    uaaRecipe = postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, &fakeReceiptsRepo)
-                    responses, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                FIt("calls mailer.Deliver with the correct arguments", func() {
+                    _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
                     if err != nil {
                         panic(err)
                     }
 
-                    Expect(len(responses)).To(Equal(2))
-                    Expect(responses).To(ContainElement(postal.Response{
-                        Recipient:      "user-123",
-                        Status:         "queued",
-                        NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-                        Email:          "user-123@example.com",
-                    }))
+                    user123 := uaa.User{
+                        ID:     "user-123",
+                        Emails: []string{"user-123@example.com"},
+                    }
 
-                    Expect(responses).To(ContainElement(postal.Response{
-                        Recipient:      "user-456",
-                        Status:         "queued",
-                        NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-                        Email:          "user-456@example.com",
-                    }))
+                    user456 := uaa.User{
+                        ID:     "user-456",
+                        Emails: []string{"user-456@example.com"},
+                    }
+
+                    users := map[string]uaa.User{"user-123": user123, "user-456": user456}
+
+                    template123 := postal.Templates{
+                        Subject:  "default-missing-subject",
+                        Text:     "default-space-text",
+                        HTML:     "default-space-html",
+                        UserGUID: "user-123",
+                    }
+
+                    template456 := postal.Templates{
+                        Subject:  "default-missing-subject",
+                        Text:     "default-space-text",
+                        HTML:     "default-space-html",
+                        UserGUID: "user-456",
+                    }
+
+                    templates := map[string]postal.Templates{"user-123": template123, "user-456": template456}
+
+                    Expect(mailer.DeliverArguments).To(ContainElement(conn))
+                    Expect(mailer.DeliverArguments).To(ContainElement(templates))
+                    Expect(mailer.DeliverArguments).To(ContainElement(users))
+                    Expect(mailer.DeliverArguments).To(ContainElement(options))
+                    Expect(mailer.DeliverArguments).To(ContainElement("pivotaltracker"))
+                    Expect(mailer.DeliverArguments).To(ContainElement("production"))
+                    Expect(mailer.DeliverArguments).To(ContainElement(clientID))
                 })
+
+                //It("returns necessary info in the response for the sent mail", func() {
+                //uaaRecipe = postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, &fakeReceiptsRepo)
+                //responses, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                //if err != nil {
+                //panic(err)
+                //}
+
+                //Expect(len(responses)).To(Equal(2))
+                //Expect(responses).To(ContainElement(postal.Response{
+                //Recipient:      "user-123",
+                //Status:         "queued",
+                //NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
+                //Email:          "user-123@example.com",
+                //}))
+
+                //Expect(responses).To(ContainElement(postal.Response{
+                //Recipient:      "user-456",
+                //Status:         "queued",
+                //NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
+                //Email:          "user-456@example.com",
+                //}))
+                //})
             })
         })
     })

@@ -14,12 +14,12 @@ type UAARecipe struct {
     userLoader     UserLoader
     spaceLoader    SpaceLoader
     templateLoader TemplateLoader
-    mailer         Mailer
+    mailer         MailerInterface
     receiptsRepo   models.ReceiptsRepoInterface
 }
 
 func NewUAARecipe(tokenLoader TokenLoader, userLoader UserLoader, spaceLoader SpaceLoader,
-    templateLoader TemplateLoader, mailer Mailer, receiptsRepo models.ReceiptsRepoInterface) UAARecipe {
+    templateLoader TemplateLoader, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UAARecipe {
     return UAARecipe{
         tokenLoader:    tokenLoader,
         userLoader:     userLoader,
