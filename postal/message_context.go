@@ -19,6 +19,7 @@ type MessageContext struct {
     SubjectTemplate   string
     KindDescription   string
     SourceDescription string
+    UserGUID          string
     ClientID          string
     MessageID         string
     Space             string
@@ -26,7 +27,7 @@ type MessageContext struct {
 }
 
 func NewMessageContext(email string, options Options, env config.Environment, space, organization,
-    clientID string, messageID string, templates Templates) MessageContext {
+    clientID string, messageID string, userGUID string, templates Templates) MessageContext {
 
     var kindDescription string
     if options.KindDescription == "" {
@@ -55,6 +56,7 @@ func NewMessageContext(email string, options Options, env config.Environment, sp
         SubjectTemplate:   templates.Subject,
         KindDescription:   kindDescription,
         SourceDescription: sourceDescription,
+        UserGUID:          userGUID,
         ClientID:          clientID,
         MessageID:         messageID,
         Space:             space,

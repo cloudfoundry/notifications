@@ -12,6 +12,7 @@ const (
     RecipientsFieldName   = "recipient"
     EmailTextTemplateName = "email_body.text"
     EmailHTMLTemplateName = "email_body.html"
+    EmptyIDForNonUser     = ""
 )
 
 type MailRecipeInterface interface {
@@ -34,7 +35,7 @@ func NewEmailRecipe(mailer MailerInterface, templateLoader TemplateLoaderInterfa
 func (recipe EmailRecipe) Dispatch(clientID string, guid TypedGUID,
     options Options, conn models.ConnectionInterface) ([]Response, error) {
 
-    users := map[string]uaa.User{"no-guid-yet": uaa.User{Emails: []string{options.To}}}
+    users := map[string]uaa.User{EmptyIDForNonUser: uaa.User{Emails: []string{options.To}}}
     space := ""
     organization := ""
 

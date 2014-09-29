@@ -203,7 +203,7 @@ var _ = Describe("UAA Recipe", func() {
                     Expect(lines).To(ContainElement("CloudController user guid: user-456"))
                 })
 
-                FIt("calls mailer.Deliver with the correct arguments", func() {
+                It("calls mailer.Deliver with the correct arguments", func() {
                     _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
                     if err != nil {
                         panic(err)
@@ -221,21 +221,11 @@ var _ = Describe("UAA Recipe", func() {
 
                     users := map[string]uaa.User{"user-123": user123, "user-456": user456}
 
-                    template123 := postal.Templates{
-                        Subject:  "default-missing-subject",
-                        Text:     "default-space-text",
-                        HTML:     "default-space-html",
-                        UserGUID: "user-123",
+                    templates := postal.Templates{
+                        Subject: "default-missing-subject",
+                        Text:    "default-space-text",
+                        HTML:    "default-space-html",
                     }
-
-                    template456 := postal.Templates{
-                        Subject:  "default-missing-subject",
-                        Text:     "default-space-text",
-                        HTML:     "default-space-html",
-                        UserGUID: "user-456",
-                    }
-
-                    templates := map[string]postal.Templates{"user-123": template123, "user-456": template456}
 
                     Expect(mailer.DeliverArguments).To(ContainElement(conn))
                     Expect(mailer.DeliverArguments).To(ContainElement(templates))
@@ -245,29 +235,6 @@ var _ = Describe("UAA Recipe", func() {
                     Expect(mailer.DeliverArguments).To(ContainElement("production"))
                     Expect(mailer.DeliverArguments).To(ContainElement(clientID))
                 })
-
-                //It("returns necessary info in the response for the sent mail", func() {
-                //uaaRecipe = postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, &fakeReceiptsRepo)
-                //responses, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
-                //if err != nil {
-                //panic(err)
-                //}
-
-                //Expect(len(responses)).To(Equal(2))
-                //Expect(responses).To(ContainElement(postal.Response{
-                //Recipient:      "user-123",
-                //Status:         "queued",
-                //NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-                //Email:          "user-123@example.com",
-                //}))
-
-                //Expect(responses).To(ContainElement(postal.Response{
-                //Recipient:      "user-456",
-                //Status:         "queued",
-                //NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-                //Email:          "user-456@example.com",
-                //}))
-                //})
             })
         })
     })

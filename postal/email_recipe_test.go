@@ -48,7 +48,7 @@ var _ = Describe("Recipes", func() {
             It("Calls Deliver on it's mailer with proper arguments", func() {
                 emailRecipe.Dispatch(clientID, emailID, options, fakeDBConn)
 
-                users := map[string]uaa.User{"no-guid-yet": uaa.User{Emails: []string{options.To}}}
+                users := map[string]uaa.User{"": uaa.User{Emails: []string{options.To}}}
 
                 Expect(len(fakeMailer.DeliverArguments)).To(Equal(7))
 

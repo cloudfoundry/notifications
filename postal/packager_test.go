@@ -30,10 +30,11 @@ var _ = Describe("Packager", func() {
             ClientID:        "3&3",
             MessageID:       "4'4",
             Text:            "User <supplied> \"banana\" text",
+            UserGUID:        "user-123",
             HTMLComponents:  html,
             HTML:            html.BodyContent,
-            TextTemplate:    "Banana preamble {{.Text}} {{.ClientID}} {{.MessageID}}",
-            HTMLTemplate:    "Banana preamble {{.HTML}} {{.Text}} {{.ClientID}} {{.MessageID}}",
+            TextTemplate:    "Banana preamble {{.Text}} {{.ClientID}} {{.MessageID}} {{.UserGUID}}",
+            HTMLTemplate:    "Banana preamble {{.HTML}} {{.Text}} {{.ClientID}} {{.MessageID}} {{.UserGUID}}",
             SubjectTemplate: "The Subject: {{.Subject}}",
         }
         packager = postal.NewPackager()
@@ -52,7 +53,7 @@ This is a multi-part message in MIME format...
 --our-content-boundary
 Content-type: text/plain
 
-Banana preamble User <supplied> "banana" text 3&3 4'4
+Banana preamble User <supplied> "banana" text 3&3 4'4 user-123
 --our-content-boundary
 Content-Type: text/html
 Content-Disposition: inline
@@ -62,7 +63,7 @@ Content-Transfer-Encoding: quoted-printable
 <head><title>The title</title></head>
 <html>
     <body class="bananaBody">
-        Banana preamble <p>user supplied banana html</p> User &lt;supplied&gt; &#34;banana&#34; text 3&amp;3 4&#39;4
+        Banana preamble <p>user supplied banana html</p> User &lt;supplied&gt; &#34;banana&#34; text 3&amp;3 4&#39;4 user-123
     </body>
 </html>
 --our-content-boundary--`
@@ -86,7 +87,7 @@ This is a multi-part message in MIME format...
 --our-content-boundary
 Content-type: text/plain
 
-Banana preamble User <supplied> "banana" text 3&3 4'4
+Banana preamble User <supplied> "banana" text 3&3 4'4 user-123
 --our-content-boundary--`
                 Expect(body).To(Equal(emailBody))
             })
@@ -114,7 +115,7 @@ Content-Transfer-Encoding: quoted-printable
 <head><title>The title</title></head>
 <html>
     <body class="bananaBody">
-        Banana preamble <p>user supplied banana html</p>  3&amp;3 4&#39;4
+        Banana preamble <p>user supplied banana html</p>  3&amp;3 4&#39;4 user-123
     </body>
 </html>
 --our-content-boundary--`

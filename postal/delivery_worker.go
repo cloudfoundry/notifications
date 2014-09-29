@@ -57,7 +57,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
     }
 
     if worker.ShouldDeliver(delivery) {
-        _, message := worker.Pack(delivery)
+        message := worker.pack(delivery)
         status := worker.SendMail(message)
         if status != StatusDelivered {
             worker.Retry(job)
@@ -104,9 +104,9 @@ func (worker DeliveryWorker) isCritical(conn models.ConnectionInterface, kindID,
     return kind.Critical
 }
 
-func (worker DeliveryWorker) Pack(delivery Delivery) (MessageContext, mail.Message) {
+func (worker DeliveryWorker) pack(delivery Delivery) mail.Message {
     env := config.NewEnvironment()
-    context := NewMessageContext(delivery.User.Emails[0], delivery.Options, env, delivery.Space, delivery.Organization, delivery.ClientID, delivery.MessageID, delivery.Templates)
+    context := NewMessageContext(delivery.User.Emails[0], delivery.Options, env, delivery.Space, delivery.Organization, delivery.ClientID, delivery.MessageID, delivery.UserGUID, delivery.Templates)
     packager := NewPackager()
 
     message, err := packager.Pack(context)
@@ -114,7 +114,7 @@ func (worker DeliveryWorker) Pack(delivery Delivery) (MessageContext, mail.Messa
         panic(err)
     }
 
-    return context, message
+    return message
 }
 
 func (worker DeliveryWorker) SendMail(message mail.Message) string {
