@@ -107,6 +107,7 @@ The templates are [go templates](http://golang.org/pkg/text/template/).  The tem
 | SourceDescription | Pulled from json posted to endpoint under: source_description, falls back to ClientID if not set |
 | ClientID          | The access token of the user requesting the email be sent                                        |
 | MessageID         | Unique id for the email being sent                                                               |
+| UserGUID          | Unique id for the user the email is sent to                                                      |
 | Organization      | The name of the organization of the space (used for emails to spaces)                            |
 | Space             | The name of the space (used for emails to spaces)                                                |
 
