@@ -1,8 +1,6 @@
 package services_test
 
 import (
-    "database/sql"
-
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/services"
 
@@ -25,7 +23,7 @@ var _ = Describe("NotificationsPreferences", func() {
                 Email:             true,
                 KindDescription:   "kind description",
                 SourceDescription: "client description",
-                Count:             sql.NullInt64{Int64: 3, Valid: true},
+                Count:             3,
             })
 
             node := builder["client"]["kind"]
@@ -123,7 +121,6 @@ var _ = Describe("NotificationsPreferences", func() {
                 Email:             true,
                 KindDescription:   "",
                 SourceDescription: "",
-                Count:             sql.NullInt64{Int64: 10, Valid: false},
             })
 
             node := builder["client"]["kind"]
@@ -146,19 +143,19 @@ var _ = Describe("NotificationsPreferences", func() {
                 ClientID: "raptors",
                 KindID:   "door-open",
                 Email:    true,
-                Count:    sql.NullInt64{Int64: 3, Valid: true},
+                Count:    3,
             })
             builder.Add(models.Preference{
                 ClientID: "raptors",
                 KindID:   "feeding-time",
                 Email:    false,
-                Count:    sql.NullInt64{Int64: 6, Valid: true},
+                Count:    6,
             })
             builder.Add(models.Preference{
                 ClientID: "dogs",
                 KindID:   "barking",
                 Email:    true,
-                Count:    sql.NullInt64{Int64: 9, Valid: true},
+                Count:    9,
             })
 
             preferences, err := builder.ToPreferences()

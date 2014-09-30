@@ -202,12 +202,14 @@ func (t ManageArbitraryUsersPreferences) RetrieveUserPreferences(notificationsSe
     Expect(node["count"]).To(Equal(float64(1)))
 }
 
+// Make a PATCH request to /user_preferences/:userGUID
 func (t ManageArbitraryUsersPreferences) UnsubscribeFromNotification(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string) {
     builder := services.NewPreferencesBuilder()
     builder.Add(models.Preference{
         ClientID: "notifications-sender",
         KindID:   "unsubscribe-acceptance-test",
         Email:    false,
+        Count:    123,
     })
 
     body, err := json.Marshal(builder)

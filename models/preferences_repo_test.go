@@ -1,8 +1,6 @@
 package models_test
 
 import (
-    "database/sql"
-
     "github.com/cloudfoundry-incubator/notifications/models"
 
     . "github.com/onsi/ginkgo"
@@ -142,7 +140,7 @@ var _ = Describe("PreferencesRepo", func() {
                     Email:             false,
                     KindDescription:   "sleepy description",
                     SourceDescription: "raptors description",
-                    Count:             sql.NullInt64{Int64: 402, Valid: true},
+                    Count:             402,
                 }))
 
                 Expect(results).To(ContainElement(models.Preference{
@@ -151,7 +149,7 @@ var _ = Describe("PreferencesRepo", func() {
                     Email:             true,
                     KindDescription:   "dead description",
                     SourceDescription: "raptors description",
-                    Count:             sql.NullInt64{Int64: 525, Valid: true},
+                    Count:             525,
                 }))
 
                 Expect(results).To(ContainElement(models.Preference{
@@ -160,7 +158,7 @@ var _ = Describe("PreferencesRepo", func() {
                     Email:             true,
                     KindDescription:   "orange description",
                     SourceDescription: "raptors description",
-                    Count:             sql.NullInt64{Int64: 0, Valid: false},
+                    Count:             0,
                 }))
 
             })

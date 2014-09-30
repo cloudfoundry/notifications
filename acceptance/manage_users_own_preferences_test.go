@@ -218,6 +218,7 @@ func (t ManageUsersOwnPreferences) UnsubscribeFromNotification(notificationsServ
         ClientID: "notifications-sender",
         KindID:   "unsubscribe-acceptance-test",
         Email:    false,
+        Count:    23,
     })
 
     body, err := json.Marshal(builder)
@@ -339,6 +340,7 @@ func (t ManageUsersOwnPreferences) ResubscribeToNotification(notificationsServer
         ClientID: "notifications-sender",
         KindID:   "unsubscribe-acceptance-test",
         Email:    true,
+        Count:    -23,
     })
 
     body, err := json.Marshal(builder)

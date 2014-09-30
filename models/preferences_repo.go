@@ -14,7 +14,7 @@ func NewPreferencesRepo() PreferencesRepo {
 
 func (repo PreferencesRepo) FindNonCriticalPreferences(conn ConnectionInterface, userGUID string) ([]Preference, error) {
     preferences := []Preference{}
-    sql := `SELECT kinds.id as kind_id, kinds.client_id as client_id, kinds.description as kind_description, clients.description as source_description, receipts.count as count
+    sql := `SELECT kinds.id as kind_id, kinds.client_id as client_id, kinds.description as kind_description, clients.description as source_description, IFNULL(receipts.count, 0) as count
             FROM kinds
             LEFT OUTER JOIN receipts ON kinds.id = receipts.kind_id
             LEFT OUTER JOIN clients ON clients.id = kinds.client_id
