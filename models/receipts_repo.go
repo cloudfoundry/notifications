@@ -19,7 +19,9 @@ func NewReceiptsRepo() ReceiptsRepo {
 
 func (repo ReceiptsRepo) Create(conn ConnectionInterface, receipt Receipt) (Receipt, error) {
     receipt.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
-    receipt.Count = 1
+    if receipt.Count == 0 {
+        receipt.Count = 1
+    }
     err := conn.Insert(&receipt)
     if err != nil {
         if strings.Contains(err.Error(), "Duplicate entry") {

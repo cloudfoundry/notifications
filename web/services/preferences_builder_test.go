@@ -1,6 +1,8 @@
 package services_test
 
 import (
+    "database/sql"
+
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/services"
 
@@ -23,10 +25,12 @@ var _ = Describe("NotificationsPreferences", func() {
                 Email:             true,
                 KindDescription:   "kind description",
                 SourceDescription: "client description",
+                Count:             sql.NullInt64{Int64: 3, Valid: true},
             })
 
             node := builder["client"]["kind"]
             Expect(node).To(Equal(map[string]interface{}{
+                "count":              3,
                 "email":              true,
                 "kind_description":   "kind description",
                 "source_description": "client description",
@@ -51,6 +55,7 @@ var _ = Describe("NotificationsPreferences", func() {
 
             node := builder["client"]["kind"]
             Expect(node).To(Equal(map[string]interface{}{
+                "count":              0,
                 "email":              true,
                 "kind_description":   "kind description",
                 "source_description": "client description",
@@ -58,6 +63,7 @@ var _ = Describe("NotificationsPreferences", func() {
 
             node = builder["client"]["new_kind"]
             Expect(node).To(Equal(map[string]interface{}{
+                "count":              0,
                 "email":              true,
                 "kind_description":   "new kind description",
                 "source_description": "client description",
@@ -110,13 +116,14 @@ var _ = Describe("NotificationsPreferences", func() {
             Expect(builder["client2"]["kind2"]["email"]).To(Equal(true))
         })
 
-        It("uses the fallback values for descriptions, when there are none", func() {
+        It("uses the fallback values for descriptions and counts, when there are none", func() {
             builder.Add(models.Preference{
                 ClientID:          "client",
                 KindID:            "kind",
                 Email:             true,
                 KindDescription:   "",
                 SourceDescription: "",
+                Count:             sql.NullInt64{Int64: 10, Valid: false},
             })
 
             node := builder["client"]["kind"]
@@ -124,6 +131,7 @@ var _ = Describe("NotificationsPreferences", func() {
                 "email":              true,
                 "kind_description":   "kind",
                 "source_description": "client",
+                "count":              0,
             }))
         })
     })
@@ -138,16 +146,19 @@ var _ = Describe("NotificationsPreferences", func() {
                 ClientID: "raptors",
                 KindID:   "door-open",
                 Email:    true,
+                Count:    sql.NullInt64{Int64: 3, Valid: true},
             })
             builder.Add(models.Preference{
                 ClientID: "raptors",
                 KindID:   "feeding-time",
                 Email:    false,
+                Count:    sql.NullInt64{Int64: 6, Valid: true},
             })
             builder.Add(models.Preference{
                 ClientID: "dogs",
                 KindID:   "barking",
                 Email:    true,
+                Count:    sql.NullInt64{Int64: 9, Valid: true},
             })
 
             preferences, err := builder.ToPreferences()

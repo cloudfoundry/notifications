@@ -21,7 +21,14 @@ func (pref PreferencesBuilder) Add(preference models.Preference) {
         preference.SourceDescription = preference.ClientID
     }
 
+    count := int(preference.Count.Int64)
+
+    if !preference.Count.Valid {
+        count = 0
+    }
+
     data := map[string]interface{}{
+        "count":              count,
         "email":              preference.Email,
         "kind_description":   preference.KindDescription,
         "source_description": preference.SourceDescription,

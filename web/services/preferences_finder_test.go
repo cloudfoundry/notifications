@@ -1,6 +1,7 @@
 package services_test
 
 import (
+    "database/sql"
     "errors"
 
     "github.com/cloudfoundry-incubator/notifications/models"
@@ -24,6 +25,7 @@ var _ = Describe("PreferencesFinder", func() {
                 KindID:            "non-critical-kind",
                 KindDescription:   "non critical kind description",
                 Email:             true,
+                Count:             sql.NullInt64{Int64: 3, Valid: true},
             },
             {
                 ClientID:          "raptors",
@@ -31,6 +33,7 @@ var _ = Describe("PreferencesFinder", func() {
                 KindID:            "other-kind",
                 KindDescription:   "other kind description",
                 Email:             false,
+                Count:             sql.NullInt64{Int64: 10, Valid: true},
             },
         }
 
@@ -40,16 +43,16 @@ var _ = Describe("PreferencesFinder", func() {
 
     Describe("Find", func() {
         It("returns the set of notifications that are not critical", func() {
-            result := services.NewPreferencesBuilder()
-            result.Add(preferences[0])
-            result.Add(preferences[1])
+            expectedResult := services.NewPreferencesBuilder()
+            expectedResult.Add(preferences[0])
+            expectedResult.Add(preferences[1])
 
-            preferences, err := finder.Find("correct-user")
+            resultPreferences, err := finder.Find("correct-user")
             if err != nil {
                 panic(err)
             }
 
-            Expect(preferences).To(Equal(result))
+            Expect(resultPreferences).To(Equal(expectedResult))
         })
 
         Context("when the preferences repo returns an error", func() {

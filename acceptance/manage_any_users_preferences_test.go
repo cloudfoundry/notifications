@@ -190,18 +190,16 @@ func (t ManageArbitraryUsersPreferences) RetrieveUserPreferences(notificationsSe
     }
 
     node := prefsResponseJSON["notifications-sender"]["acceptance-test"]
-    Expect(node).To(Equal(map[string]interface{}{
-        "email":              true,
-        "kind_description":   "Acceptance Test",
-        "source_description": "Notifications Sender",
-    }))
+    Expect(node["email"]).To(Equal(true))
+    Expect(node["kind_description"]).To(Equal("Acceptance Test"))
+    Expect(node["source_description"]).To(Equal("Notifications Sender"))
+    Expect(node["count"]).To(Equal(float64(0)))
 
     node = prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]
-    Expect(node).To(Equal(map[string]interface{}{
-        "email":              true,
-        "kind_description":   "Unsubscribe Acceptance Test",
-        "source_description": "Notifications Sender",
-    }))
+    Expect(node["email"]).To(Equal(true))
+    Expect(node["kind_description"]).To(Equal("Unsubscribe Acceptance Test"))
+    Expect(node["source_description"]).To(Equal("Notifications Sender"))
+    Expect(node["count"]).To(Equal(float64(1)))
 }
 
 func (t ManageArbitraryUsersPreferences) UnsubscribeFromNotification(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string) {
@@ -262,16 +260,14 @@ func (t ManageArbitraryUsersPreferences) ConfirmUserUnsubscribed(notificationsSe
     }
 
     node := prefsResponseJSON["notifications-sender"]["acceptance-test"]
-    Expect(node).To(Equal(map[string]interface{}{
-        "email":              true,
-        "kind_description":   "Acceptance Test",
-        "source_description": "Notifications Sender",
-    }))
+    Expect(node["email"]).To(Equal(true))
+    Expect(node["kind_description"]).To(Equal("Acceptance Test"))
+    Expect(node["source_description"]).To(Equal("Notifications Sender"))
+    Expect(node["count"]).To(Equal(float64(0)))
 
     node = prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]
-    Expect(node).To(Equal(map[string]interface{}{
-        "email":              false,
-        "kind_description":   "Unsubscribe Acceptance Test",
-        "source_description": "Notifications Sender",
-    }))
+    Expect(node["email"]).To(Equal(false))
+    Expect(node["kind_description"]).To(Equal("Unsubscribe Acceptance Test"))
+    Expect(node["source_description"]).To(Equal("Notifications Sender"))
+    Expect(node["count"]).To(Equal(float64(1)))
 }

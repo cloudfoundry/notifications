@@ -1,6 +1,8 @@
 package models_test
 
 import (
+    "database/sql"
+
     "github.com/cloudfoundry-incubator/notifications/models"
 
     . "github.com/onsi/ginkgo"
@@ -90,24 +92,28 @@ var _ = Describe("PreferencesRepo", func() {
                     ClientID: "raptors",
                     KindID:   "sleepy",
                     UserGUID: "correct-user",
+                    Count:    402,
                 }
 
                 secondNonCriticalReceipt := models.Receipt{
                     ClientID: "raptors",
                     KindID:   "dead",
                     UserGUID: "correct-user",
+                    Count:    525,
                 }
 
                 criticalReceipt := models.Receipt{
                     ClientID: "raptors",
                     KindID:   "hungry",
                     UserGUID: "correct-user",
+                    Count:    89,
                 }
 
                 otherUserReceipt := models.Receipt{
                     ClientID: "raptors",
                     KindID:   "fast",
                     UserGUID: "other-user",
+                    Count:    83,
                 }
 
                 receipts.Create(conn, nonCriticalReceipt)
@@ -136,6 +142,7 @@ var _ = Describe("PreferencesRepo", func() {
                     Email:             false,
                     KindDescription:   "sleepy description",
                     SourceDescription: "raptors description",
+                    Count:             sql.NullInt64{Int64: 402, Valid: true},
                 }))
 
                 Expect(results).To(ContainElement(models.Preference{
@@ -144,6 +151,7 @@ var _ = Describe("PreferencesRepo", func() {
                     Email:             true,
                     KindDescription:   "dead description",
                     SourceDescription: "raptors description",
+                    Count:             sql.NullInt64{Int64: 525, Valid: true},
                 }))
 
                 Expect(results).To(ContainElement(models.Preference{
@@ -152,15 +160,9 @@ var _ = Describe("PreferencesRepo", func() {
                     Email:             true,
                     KindDescription:   "orange description",
                     SourceDescription: "raptors description",
+                    Count:             sql.NullInt64{Int64: 0, Valid: false},
                 }))
 
-                Expect(results).To(ContainElement(models.Preference{
-                    ClientID:          "raptors",
-                    KindID:            "orange",
-                    Email:             true,
-                    KindDescription:   "orange description",
-                    SourceDescription: "raptors description",
-                }))
             })
 
         })

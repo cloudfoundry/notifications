@@ -75,7 +75,10 @@ var _ = Describe("GetPreferencesForUser", func() {
                 panic(err)
             }
 
-            Expect(parsed).To(Equal(builder))
+            Expect(parsed["raptorClient"]["hungry-kind"]["count"]).To(Equal(float64(0)))
+            Expect(parsed["raptorClient"]["hungry-kind"]["email"]).To(Equal(false))
+            Expect(parsed["starWarsClient"]["vader-kind"]["count"]).To(Equal(float64(0)))
+            Expect(parsed["starWarsClient"]["vader-kind"]["email"]).To(Equal(true))
         })
 
         Context("when there is a database error", func() {
