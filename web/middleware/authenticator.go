@@ -21,8 +21,7 @@ func NewAuthenticator(scopes []string, publicKey string) Authenticator {
 }
 
 func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) bool {
-    authHeader := req.Header.Get("Authorization")
-    rawToken := strings.TrimPrefix(authHeader, "Bearer ")
+    rawToken := ware.getToken(req)
 
     if rawToken == "" {
         return ware.Error(w, http.StatusUnauthorized, "Authorization header is invalid: missing")
@@ -66,4 +65,18 @@ func (ware Authenticator) HasScope(elements interface{}, key string) bool {
         }
     }
     return false
+}
+
+func (ware Authenticator) getToken(req *http.Request) string {
+    authHeader := req.Header.Get("Authorization")
+    parts := strings.Split(authHeader, " ")
+    if len(parts) != 2 {
+        return ""
+    }
+
+    if strings.ToLower(parts[0]) != "bearer" {
+        return ""
+    }
+
+    return parts[1]
 }

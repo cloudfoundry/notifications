@@ -87,6 +87,25 @@ var _ = Describe("Authenticator", func() {
 
             Expect(*(contextToken.(*jwt.Token))).To(Equal(*token))
         })
+
+        Context("When the prefix to the token has different capitalization", func() {
+            It("still sets the token", func() {
+                request.Header.Set("Authorization", "bearer "+rawToken)
+                ware.ServeHTTP(writer, request, context)
+
+                contextToken := context.Get("token")
+                Expect(contextToken).NotTo(BeNil())
+
+                token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+                    return []byte(config.UAAPublicKey), nil
+                })
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(*(contextToken.(*jwt.Token))).To(Equal(*token))
+            })
+        })
     })
 
     Context("when the request uses an expired auth token", func() {
