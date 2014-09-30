@@ -37,8 +37,7 @@ var _ = Describe("TokenLoader", func() {
 
             fakeUAA = fakes.FakeUAAClient{
                 ClientToken: uaa.Token{
-                    Access:  clientToken,
-                    Refresh: "fake-refresh",
+                    Access: clientToken,
                 },
             }
 

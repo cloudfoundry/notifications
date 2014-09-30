@@ -6,6 +6,7 @@ import (
     "testing"
 
     "github.com/cloudfoundry-incubator/notifications/metrics"
+    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
 
     . "github.com/onsi/ginkgo"
@@ -24,3 +25,7 @@ func TestPostalSuite(t *testing.T) {
 
     metrics.Logger = metricsLogger
 }
+
+var _ = BeforeEach(func() {
+    postal.ResetLoader()
+})

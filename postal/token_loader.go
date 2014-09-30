@@ -49,5 +49,5 @@ func (loader TokenLoader) expired() bool {
 }
 
 func (loader TokenLoader) newTokenRequired() bool {
-    return !token.IsPresent() || loader.expired()
+    return token.Access == "" || loader.expired()
 }
