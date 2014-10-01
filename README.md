@@ -60,6 +60,8 @@ Both endpoints expect a json body to be posted with following keys:
 
 \*\* either text or html have to be set, not both
 
+[Further API Documentation](github.com/cloudfoundry-incubator/notifications/blob/master/API.md)
+
 ## Configuring Email Templates
 The default templates are located in **./templates**. The templates directory should look similar to this:
 
