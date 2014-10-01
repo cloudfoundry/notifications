@@ -6,10 +6,10 @@ import (
     "github.com/cloudfoundry-incubator/notifications/models"
 )
 
-type PreferencesBuilder map[string]map[string]map[string]interface{}
+type PreferencesBuilder map[string]map[string]map[string]map[string]interface{}
 
 func NewPreferencesBuilder() PreferencesBuilder {
-    return map[string]map[string]map[string]interface{}{}
+    return map[string]map[string]map[string]map[string]interface{}{}
 }
 
 func (pref PreferencesBuilder) Add(preference models.Preference) {
@@ -28,10 +28,15 @@ func (pref PreferencesBuilder) Add(preference models.Preference) {
         "source_description": preference.SourceDescription,
     }
 
-    if clientMap, ok := pref[preference.ClientID]; ok {
+    if clientMap, ok := pref["clients"][preference.ClientID]; ok {
         clientMap[preference.KindID] = data
     } else {
-        pref[preference.ClientID] = map[string]map[string]interface{}{
+
+        if _, ok := pref["clients"]; !ok {
+            pref["clients"] = map[string]map[string]map[string]interface{}{}
+        }
+
+        pref["clients"][preference.ClientID] = map[string]map[string]interface{}{
             preference.KindID: data,
         }
     }
@@ -39,7 +44,7 @@ func (pref PreferencesBuilder) Add(preference models.Preference) {
 
 func (pref PreferencesBuilder) ToPreferences() ([]models.Preference, error) {
     preferences := []models.Preference{}
-    for clientID, kinds := range pref {
+    for clientID, kinds := range pref["clients"] {
         if len(kinds) == 0 {
             return preferences, errors.New("Missing kinds")
         }

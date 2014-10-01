@@ -175,10 +175,12 @@ var _ = Describe("UpdatePreferences", func() {
             })
 
             It("delegates validation errors to the error writer", func() {
-                requestBody, err := json.Marshal(map[string]map[string]map[string]interface{}{
-                    "client-id": {
-                        "kind-id": {
-                            "email": "wrong",
+                requestBody, err := json.Marshal(map[string]map[string]map[string]map[string]interface{}{
+                    "clients": {
+                        "client-id": {
+                            "kind-id": {
+                                "email": "wrong",
+                            },
                         },
                     },
                 })

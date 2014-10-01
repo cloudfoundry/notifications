@@ -91,10 +91,10 @@ var _ = Describe("GetPreferences", func() {
             panic(err)
         }
 
-        Expect(parsed["raptorClient"]["hungry-kind"]["email"]).To(Equal(false))
-        Expect(parsed["raptorClient"]["hungry-kind"]["count"]).To(Equal(float64(0)))
-        Expect(parsed["starWarsClient"]["vader-kind"]["email"]).To(Equal(true))
-        Expect(parsed["starWarsClient"]["vader-kind"]["count"]).To(Equal(float64(0)))
+        Expect(parsed["clients"]["raptorClient"]["hungry-kind"]["email"]).To(Equal(false))
+        Expect(parsed["clients"]["raptorClient"]["hungry-kind"]["count"]).To(Equal(float64(0)))
+        Expect(parsed["clients"]["starWarsClient"]["vader-kind"]["email"]).To(Equal(true))
+        Expect(parsed["clients"]["starWarsClient"]["vader-kind"]["count"]).To(Equal(float64(0)))
     })
 
     Context("when there is a database error", func() {

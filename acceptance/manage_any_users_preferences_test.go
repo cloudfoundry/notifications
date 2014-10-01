@@ -189,13 +189,13 @@ func (t ManageArbitraryUsersPreferences) RetrieveUserPreferences(notificationsSe
         panic(err)
     }
 
-    node := prefsResponseJSON["notifications-sender"]["acceptance-test"]
+    node := prefsResponseJSON["clients"]["notifications-sender"]["acceptance-test"]
     Expect(node["email"]).To(Equal(true))
     Expect(node["kind_description"]).To(Equal("Acceptance Test"))
     Expect(node["source_description"]).To(Equal("Notifications Sender"))
     Expect(node["count"]).To(Equal(float64(0)))
 
-    node = prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]
+    node = prefsResponseJSON["clients"]["notifications-sender"]["unsubscribe-acceptance-test"]
     Expect(node["email"]).To(Equal(true))
     Expect(node["kind_description"]).To(Equal("Unsubscribe Acceptance Test"))
     Expect(node["source_description"]).To(Equal("Notifications Sender"))
@@ -261,13 +261,13 @@ func (t ManageArbitraryUsersPreferences) ConfirmUserUnsubscribed(notificationsSe
         panic(err)
     }
 
-    node := prefsResponseJSON["notifications-sender"]["acceptance-test"]
+    node := prefsResponseJSON["clients"]["notifications-sender"]["acceptance-test"]
     Expect(node["email"]).To(Equal(true))
     Expect(node["kind_description"]).To(Equal("Acceptance Test"))
     Expect(node["source_description"]).To(Equal("Notifications Sender"))
     Expect(node["count"]).To(Equal(float64(0)))
 
-    node = prefsResponseJSON["notifications-sender"]["unsubscribe-acceptance-test"]
+    node = prefsResponseJSON["clients"]["notifications-sender"]["unsubscribe-acceptance-test"]
     Expect(node["email"]).To(Equal(false))
     Expect(node["kind_description"]).To(Equal("Unsubscribe Acceptance Test"))
     Expect(node["source_description"]).To(Equal("Notifications Sender"))

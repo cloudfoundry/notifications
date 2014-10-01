@@ -18,15 +18,15 @@ var _ = Describe("NotificationsPreferences", func() {
 
         It("adds new preferences", func() {
             builder.Add(models.Preference{
-                ClientID:          "client",
-                KindID:            "kind",
+                ClientID:          "clientID",
+                KindID:            "kindID",
                 Email:             true,
                 KindDescription:   "kind description",
                 SourceDescription: "client description",
                 Count:             3,
             })
 
-            node := builder["client"]["kind"]
+            node := builder["clients"]["clientID"]["kindID"]
             Expect(node).To(Equal(map[string]interface{}{
                 "count":              3,
                 "email":              true,
@@ -37,53 +37,53 @@ var _ = Describe("NotificationsPreferences", func() {
 
         It("adds new preferences to an old client", func() {
             builder.Add(models.Preference{
-                ClientID:          "client",
-                KindID:            "kind",
+                ClientID:          "clientID",
+                KindID:            "kindID",
                 Email:             true,
                 KindDescription:   "kind description",
-                SourceDescription: "client description",
+                SourceDescription: "clientID description",
             })
             builder.Add(models.Preference{
-                ClientID:          "client",
+                ClientID:          "clientID",
                 KindID:            "new_kind",
                 Email:             true,
                 KindDescription:   "new kind description",
-                SourceDescription: "client description",
+                SourceDescription: "clientID description",
             })
 
-            node := builder["client"]["kind"]
+            node := builder["clients"]["clientID"]["kindID"]
             Expect(node).To(Equal(map[string]interface{}{
                 "count":              0,
                 "email":              true,
                 "kind_description":   "kind description",
-                "source_description": "client description",
+                "source_description": "clientID description",
             }))
 
-            node = builder["client"]["new_kind"]
+            node = builder["clients"]["clientID"]["new_kind"]
             Expect(node).To(Equal(map[string]interface{}{
                 "count":              0,
                 "email":              true,
                 "kind_description":   "new kind description",
-                "source_description": "client description",
+                "source_description": "clientID description",
             }))
         })
 
         It("changes the value of an email", func() {
             builder.Add(models.Preference{
-                ClientID: "client",
-                KindID:   "kind",
+                ClientID: "clientID",
+                KindID:   "kindID",
                 Email:    true,
             })
 
-            Expect(builder["client"]["kind"]["email"]).To(Equal(true))
+            Expect(builder["clients"]["clientID"]["kindID"]["email"]).To(Equal(true))
 
             builder.Add(models.Preference{
-                ClientID: "client",
-                KindID:   "kind",
+                ClientID: "clientID",
+                KindID:   "kindID",
                 Email:    false,
             })
 
-            Expect(builder["client"]["kind"]["email"]).To(Equal(false))
+            Expect(builder["clients"]["clientID"]["kindID"]["email"]).To(Equal(false))
         })
 
         It("can have multiple clients", func() {
@@ -108,26 +108,26 @@ var _ = Describe("NotificationsPreferences", func() {
                 Email:    true,
             })
 
-            Expect(builder["client1"]["kind1"]["email"]).To(Equal(true))
-            Expect(builder["client1"]["kind2"]["email"]).To(Equal(true))
-            Expect(builder["client2"]["kind1"]["email"]).To(Equal(true))
-            Expect(builder["client2"]["kind2"]["email"]).To(Equal(true))
+            Expect(builder["clients"]["client1"]["kind1"]["email"]).To(Equal(true))
+            Expect(builder["clients"]["client1"]["kind2"]["email"]).To(Equal(true))
+            Expect(builder["clients"]["client2"]["kind1"]["email"]).To(Equal(true))
+            Expect(builder["clients"]["client2"]["kind2"]["email"]).To(Equal(true))
         })
 
         It("uses the fallback values for descriptions and counts, when there are none", func() {
             builder.Add(models.Preference{
-                ClientID:          "client",
-                KindID:            "kind",
+                ClientID:          "raptors",
+                KindID:            "hungry",
                 Email:             true,
                 KindDescription:   "",
                 SourceDescription: "",
             })
 
-            node := builder["client"]["kind"]
+            node := builder["clients"]["raptors"]["hungry"]
             Expect(node).To(Equal(map[string]interface{}{
                 "email":              true,
-                "kind_description":   "kind",
-                "source_description": "client",
+                "kind_description":   "hungry",
+                "source_description": "raptors",
                 "count":              0,
             }))
         })
@@ -196,7 +196,7 @@ var _ = Describe("NotificationsPreferences", func() {
                     Email:    false,
                 })
 
-                delete(badBuilder["electric-fence"], "zap")
+                delete(badBuilder["clients"]["electric-fence"], "zap")
 
                 _, err := badBuilder.ToPreferences()
 
@@ -211,7 +211,7 @@ var _ = Describe("NotificationsPreferences", func() {
                     Email:    false,
                 })
 
-                delete(badBuilder["TRex"]["glass-of-water"], "email")
+                delete(badBuilder["clients"]["TRex"]["glass-of-water"], "email")
 
                 _, err := badBuilder.ToPreferences()
 
@@ -225,7 +225,7 @@ var _ = Describe("NotificationsPreferences", func() {
                     Email:    true,
                 })
 
-                badBuilder["raptors"]["feeding-time"]["email"] = "RUNNNNNNNNNNNNNNNN!"
+                badBuilder["clients"]["raptors"]["feeding-time"]["email"] = "RUNNNNNNNNNNNNNNNN!"
 
                 _, err := badBuilder.ToPreferences()
 
