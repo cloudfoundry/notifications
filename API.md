@@ -394,26 +394,28 @@ Date: Tue, 30 Sep 2014 23:19:11 GMT
 X-Cf-Requestid: 92cffe86-16fe-41a8-4b80-b10987b11060
 
 {
-	"login-service": {
-		"effa96de-2349-423a-b5e4-b1e84712a714": {
-			"count": 8,
-			"email": true,
-			"kind_description": "Forgot Password",
-			"source_description": "Login Service"
-		}
-	},
-	"MySQL Service": {
-		"6236f606-627d-4079-b0bd-f0b7e8d3d2a9": {
-			"count": 1,
-			"email": false,
-			"kind_description": "Downtime Notification",
-			"source_description": "Galactic Empire Datastore"
+	"clients" : {
+		"login-service": {
+			"effa96de-2349-423a-b5e4-b1e84712a714": {
+				"count": 8,
+				"email": true,
+				"kind_description": "Forgot Password",
+				"source_description": "Login Service"
+			}
 		},
-		"fb89e98a-a1f5-47e5-9e2d-d95940b32d3d": {
-			"count": 18,
-			"email": true,
-			"kind_description": "Provision Notification",
-			"source_description": "Galactic Empire Datastore"
+		"MySQL Service": {
+			"6236f606-627d-4079-b0bd-f0b7e8d3d2a9": {
+				"count": 1,
+				"email": false,
+				"kind_description": "Downtime Notification",
+				"source_description": "Galactic Empire Datastore"
+			},
+			"fb89e98a-a1f5-47e5-9e2d-d95940b32d3d": {
+				"count": 18,
+				"email": true,
+				"kind_description": "Provision Notification",
+				"source_description": "Galactic Empire Datastore"
+			}
 		}
 	}
 }
@@ -471,7 +473,7 @@ GET /user_preferences
 ```
 $ curl -i -X GET \
   -H "Authorization: Bearer <USER-TOKEN>" \
-  -d '{"login-service":{"effa96de-2349-423a-b5e4-b1e84712a714":{"email":true}}}'
+  -d '{"clients": {"login-service":{"effa96de-2349-423a-b5e4-b1e84712a714":{"email":true}}}}'
   http://notifications.example.com/user_preferences
   
 HTTP/1.1 204 No Content
@@ -579,26 +581,28 @@ Date: Tue, 30 Sep 2014 23:19:11 GMT
 X-Cf-Requestid: 92cffe86-16fe-41a8-4b80-b10987b11060
 
 {
-	"login-service": {
-		"effa96de-2349-423a-b5e4-b1e84712a714": {
-			"count": 8,
-			"email": true,
-			"kind_description": "Forgot Password",
-			"source_description": "Login Service"
-		}
-	},
-	"mysql-service": {
-		"6236f606-627d-4079-b0bd-f0b7e8d3d2a9": {
-			"count": 1,
-			"email": false,
-			"kind_description": "Downtime Notification",
-			"source_description": "Galactic Empire Datastore"
+	"clients": {
+		"login-service": {
+			"effa96de-2349-423a-b5e4-b1e84712a714": {
+				"count": 8,
+				"email": true,
+				"kind_description": "Forgot Password",
+				"source_description": "Login Service"
+			}
 		},
-		"fb89e98a-a1f5-47e5-9e2d-d95940b32d3d": {
-			"count": 18,
-			"email": true,
-			"kind_description": "Provision Notification",
-			"source_description": "Galactic Empire Datastore"
+		"mysql-service": {
+			"6236f606-627d-4079-b0bd-f0b7e8d3d2a9": {
+				"count": 1,
+				"email": false,
+				"kind_description": "Downtime Notification",
+				"source_description": "Galactic Empire Datastore"
+			},
+			"fb89e98a-a1f5-47e5-9e2d-d95940b32d3d": {
+				"count": 18,
+				"email": true,
+				"kind_description": "Provision Notification",
+				"source_description": "Galactic Empire Datastore"
+			}
 		}
 	}
 }
@@ -638,7 +642,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 ```
 Authorization: bearer <CLIENT-TOKEN>	
 ```
-\* The cleint token requires `notification_preferences.admin` scope.
+\* The client token requires `notification_preferences.admin` scope.
 
 ###### Route
 ```
@@ -656,7 +660,7 @@ GET /user_preferences/user-guid
 ```
 $ curl -i -X GET \
   -H "Authorization: Bearer <USER-TOKEN>" \
-  -d '{"login-service":{"effa96de-2349-423a-b5e4-b1e84712a714":{"email":true}}}'
+  -d '{"clients": {"login-service":{"effa96de-2349-423a-b5e4-b1e84712a714":{"email":true}}}}'
   http://notifications.example.com/user_preferences/user-guid
   
 HTTP/1.1 204 No Content
