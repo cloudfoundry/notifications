@@ -18,7 +18,7 @@
 
 ## System Status
 
-<a href="#get-info"></a>
+<a href="get-info"></a>
 #### Check service status
 
 ##### Request
@@ -57,7 +57,7 @@ X-Cf-Requestid: 2cf01258-ccff-41e9-6d82-41a4441af4af
 
 ## Sending Notifications
 
-<a href="#post-users-guid"></a>
+<a href="post-users-guid"></a>
 #### Send a notification to a user
 
 ##### Request 
@@ -123,7 +123,7 @@ X-Cf-Requestid: 5c9bca88-280e-41d1-6e80-26a2a97adf4a
 | status          | Current delivery status of notification   |
 
 ----
-<a href="#post-spaces-guid"></a>
+<a href="post-spaces-guid"></a>
 #### Send a notification to a space
 
 ##### Request 
@@ -194,7 +194,7 @@ X-Cf-Requestid: 4dcfc91c-9cf6-4a51-497a-8ae506ce37f5
 | status          | Current delivery status of notification   |
 
 ----
-<a href="#post-emails"></a>
+<a href="post-emails"></a>
 #### Send a notification to an email address
 
 ##### Request 
@@ -259,7 +259,7 @@ X-Cf-Requestid: eb7ee46c-2142-4a74-5b73-e4971eea511a
 
 ## Registering Notifications
 
-<a href="#put-registration"></a>
+<a href="put-registration"></a>
 #### Registering client notifications
 
 ##### Request 
@@ -315,7 +315,7 @@ X-Cf-Requestid: f39e22a4-6693-4a6d-6b27-006aecc924d4
 
 ## Managing User Preferences
 
-<a href="#options-user-preferences"></a>
+<a href="options-user-preferences"></a>
 #### Retrieve Options for /user_preferences endpoints
 
 ##### Request 
@@ -361,7 +361,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 | \<none\> |             |
 
 ----
-<a href="#get-user-preferences"></a>
+<a href="get-user-preferences"></a>
 #### Retrieve user preferences with a user token
 
 ##### Request
@@ -444,7 +444,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 | source_description | A human-friendly description of the sending client              |
 
 ----
-<a href="#patch-user-preferences"></a>
+<a href="patch-user-preferences"></a>
 #### Update user preferences with a user token
 
 ##### Request
@@ -500,7 +500,7 @@ Access-Control-Allow-Origin: *
 The above headers constitute a CORS contract. They indicate that the GET and PATCH endpoints for the `/user_preferences` path support the specified headers from any origin.
 
 ----
-<a href="#options-user-preferences-guid"></a>
+<a href="options-user-preferences-guid"></a>
 #### Retrieve Options for /user_preferences/{user-guid} endpoints
 
 ##### Request 
@@ -546,7 +546,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 | \<none\> |             |
 
 ----
-<a href="#get-user-preferences-guid"></a>
+<a href="get-user-preferences-guid"></a>
 #### Retrieve user preferences with a client token
 
 ##### Request
@@ -629,7 +629,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 | source_description | A human-friendly description of the sending client              |
 
 ----
-<a href="#patch-user-preferences-guid"></a>
+<a href="patch-user-preferences-guid"></a>
 #### Update user preferences with a client token
 
 ##### Request
@@ -638,7 +638,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 ```
 Authorization: bearer <CLIENT-TOKEN>	
 ```
-\* The cleint token requires `notification_preferences.admin` scope.
+\* The client token requires `notification_preferences.admin` scope.
 
 ###### Route
 ```
