@@ -1,19 +1,18 @@
 #! /usr/bin/env bash
 set -e
 
-export CC_HOST=https://api.example.com
-export DATABASE_URL=travis@127.0.0.1:3306/notifications_test
-export ENCRYPTION_KEY=sixteenbytes!!!!
-export GOBBLE_MIGRATIONS_DIR=$ROOT_PATH/gobble/migrations
 export HTTP_LOGGING_ENABLED=true
-export ROOT_PATH=$TRAVIS_BUILD_DIR
-export SENDER=no-reply@notifications.example.com
 export SMTP_HOST=smtp.example.com
 export SMTP_PASS=password
 export SMTP_PORT=587
-export SMTP_TLS=false
 export SMTP_USER=user
+export SMTP_TLS=false
 export UAA_CLIENT_ID=notifications
 export UAA_CLIENT_SECRET=secret
 export UAA_HOST=http://uaa.example.com
+export SENDER=no-reply@notifications.example.com
+export CC_HOST=https://api.example.com
+export ROOT_PATH=$TRAVIS_BUILD_DIR
+export DATABASE_URL=travis@127.0.0.1:3306/notifications_test
 export VCAP_APPLICATION='{"instance_index":0}'
+export GOBBLE_MIGRATIONS_DIR=$ROOT_PATH/gobble/migrations
