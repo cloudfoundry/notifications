@@ -31,6 +31,7 @@ func (msg Message) Data() string {
     if err != nil {
         panic(err)
     }
+
     err = tmpl.Execute(buf, msg)
     if err != nil {
         panic(err)
