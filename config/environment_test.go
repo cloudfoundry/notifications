@@ -29,6 +29,7 @@ var _ = Describe("Environment", func() {
         "UAA_HOST",
         "VCAP_APPLICATION",
         "VERIFY_SSL",
+        "ENCRYPTION_KEY",
     }
 
     BeforeEach(func() {
@@ -333,6 +334,37 @@ var _ = Describe("Environment", func() {
             os.Setenv("CORS_ORIGIN", "banana")
             env := config.NewEnvironment()
             Expect(env.CORSOrigin).To(Equal("banana"))
+        })
+    })
+
+    Describe("EncryptionKey", func() {
+        It("sets the EncryptionKey if it is valid", func() {
+            os.Setenv("ENCRYPTION_KEY", "sixteenBytes!!!!")
+
+            env := config.NewEnvironment()
+            Expect(env.EncryptionKey).To(Equal("sixteenBytes!!!!"))
+        })
+
+        It("panics if it is not 16 bytes", func() {
+            os.Setenv("ENCRYPTION_KEY", "tooSmall")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).To(Panic())
+
+            os.Setenv("ENCRYPTION_KEY", "muchTooLarge!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).To(Panic())
+        })
+
+        It("panics if it is not set", func() {
+            os.Setenv("ENCRYPTION_KEY", "")
+
+            Expect(func() {
+                config.NewEnvironment()
+            }).To(Panic())
         })
     })
 })

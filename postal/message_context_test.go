@@ -5,6 +5,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -18,6 +19,7 @@ var _ = Describe("MessageContext", func() {
         var env config.Environment
         var options postal.Options
         var html postal.HTML
+        var cryptographer *fakes.FakeCryptoClient
 
         BeforeEach(func() {
             email = "bounce@example.com"
@@ -40,12 +42,17 @@ var _ = Describe("MessageContext", func() {
                 SourceDescription: "the source description",
                 Text:              "user supplied email text",
                 HTML:              html,
-                KindID:            "the-kind",
+                KindID:            "the-kind-id",
+            }
+
+            cryptographer = &fakes.FakeCryptoClient{
+                EncryptedResult: "the-encoded-result",
             }
         })
 
         It("returns the appropriate MessageContext when all options are specified", func() {
-            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-ID", "message-id", "the-user", templates)
+            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-id",
+                "message-id", "the-user", templates, cryptographer)
 
             Expect(context.From).To(Equal(env.Sender))
             Expect(context.ReplyTo).To(Equal(options.ReplyTo))
@@ -60,24 +67,26 @@ var _ = Describe("MessageContext", func() {
             Expect(context.KindDescription).To(Equal(options.KindDescription))
             Expect(context.SourceDescription).To(Equal(options.SourceDescription))
             Expect(context.UserGUID).To(Equal("the-user"))
-            Expect(context.ClientID).To(Equal("the-client-ID"))
+            Expect(context.ClientID).To(Equal("the-client-id"))
             Expect(context.MessageID).To(Equal("message-id"))
             Expect(context.Space).To(Equal("the-space"))
             Expect(context.Organization).To(Equal("the-org"))
+            Expect(context.UnsubscribeID).To(Equal("the-encoded-result"))
+            Expect(cryptographer.EncryptArgument).To(Equal("the-user|the-client-id|the-kind-id"))
         })
 
         It("falls back to Kind if KindDescription is missing", func() {
             options.KindDescription = ""
-            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-ID", "random-id", "the-user", templates)
+            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-id", "random-id", "the-user", templates, cryptographer)
 
-            Expect(context.KindDescription).To(Equal("the-kind"))
+            Expect(context.KindDescription).To(Equal("the-kind-id"))
         })
 
         It("falls back to clientID when SourceDescription is missing", func() {
             options.SourceDescription = ""
-            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-ID", "my-message-id", "the-user", templates)
+            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-id", "my-message-id", "the-user", templates, cryptographer)
 
-            Expect(context.SourceDescription).To(Equal("the-client-ID"))
+            Expect(context.SourceDescription).To(Equal("the-client-id"))
         })
     })
 
@@ -86,6 +95,7 @@ var _ = Describe("MessageContext", func() {
         var email string
         var env config.Environment
         var options postal.Options
+        var cryptographer *fakes.FakeCryptoClient
 
         BeforeEach(func() {
             email = "bounce@example.com"
@@ -107,10 +117,14 @@ var _ = Describe("MessageContext", func() {
                 HTML:              postal.HTML{BodyContent: "user & supplied html"},
                 KindID:            "the & kind",
             }
+
+            cryptographer = &fakes.FakeCryptoClient{
+                EncryptedResult: "the-encrypted-result",
+            }
         })
 
         It("html escapes various fields on the message context", func() {
-            context := postal.NewMessageContext(email, options, env, "the<space", "the>org", "the\"client ID", "some>id", "the-user", templates)
+            context := postal.NewMessageContext(email, options, env, "the<space", "the>org", "the\"client id", "some>id", "the-user", templates, cryptographer)
             context.Escape()
 
             Expect(context.From).To(Equal(html.EscapeString(env.Sender)))
@@ -125,7 +139,7 @@ var _ = Describe("MessageContext", func() {
             Expect(context.KindDescription).To(Equal("the &amp; kind description"))
             Expect(context.SourceDescription).To(Equal("the &amp; source description"))
             Expect(context.UserGUID).To(Equal("the-user"))
-            Expect(context.ClientID).To(Equal("the&#34;client ID"))
+            Expect(context.ClientID).To(Equal("the&#34;client id"))
             Expect(context.MessageID).To(Equal("some&gt;id"))
             Expect(context.Space).To(Equal("the&lt;space"))
             Expect(context.Organization).To(Equal("the&gt;org"))

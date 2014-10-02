@@ -39,6 +39,11 @@ func (app Application) PrintConfiguration() {
     for i := 0; i < v.NumField(); i++ {
         fieldType := t.Field(i)
         fieldValue := v.Field(i)
+
+        if fieldType.Name == "EncryptionKey" {
+            fieldValue = reflect.ValueOf("****************")
+        }
+
         logger.Printf("  %-16s -> %+v", fieldType.Name, fieldValue.Interface())
     }
 }

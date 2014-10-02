@@ -29,6 +29,7 @@ type Environment struct {
     UAAClientSecret  string `env:"UAA_CLIENT_SECRET"  env-required:"true"`
     UAAHost          string `env:"UAA_HOST"           env-required:"true"`
     VerifySSL        bool   `env:"VERIFY_SSL"         env-default:"true"`
+    EncryptionKey    string `env:"ENCRYPTION_KEY"     env-required:"true"`
     VCAPApplication  struct {
         InstanceIndex int `json:"instance_index"`
     }   `env:"VCAP_APPLICATION" env-required:"true"`
@@ -41,6 +42,7 @@ func NewEnvironment() Environment {
         panic(err)
     }
     env.parseDatabaseURL()
+    env.validateEncryptionKey()
 
     return env
 }
@@ -59,4 +61,13 @@ func (env *Environment) parseDatabaseURL() {
 
     password, _ := parsedURL.User.Password()
     env.DatabaseURL = fmt.Sprintf("%s:%s@%s(%s)%s?parseTime=true", parsedURL.User.Username(), password, parsedURL.Scheme, parsedURL.Host, parsedURL.Path)
+}
+
+func (env *Environment) validateEncryptionKey() {
+
+    keyBytes := []byte(env.EncryptionKey)
+
+    if len(keyBytes) != 16 {
+        panic(errors.New("The ENCRYPTION_KEY needs to be 16 bytes in length"))
+    }
 }

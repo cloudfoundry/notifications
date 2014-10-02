@@ -7,6 +7,7 @@ import (
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/cryptography"
     "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/metrics"
@@ -106,7 +107,14 @@ func (worker DeliveryWorker) isCritical(conn models.ConnectionInterface, kindID,
 
 func (worker DeliveryWorker) pack(delivery Delivery) mail.Message {
     env := config.NewEnvironment()
-    context := NewMessageContext(delivery.User.Emails[0], delivery.Options, env, delivery.Space, delivery.Organization, delivery.ClientID, delivery.MessageID, delivery.UserGUID, delivery.Templates)
+    cryptoClient, err := cryptography.NewURLCryptoClient(env.EncryptionKey)
+    if err != nil {
+        panic(err)
+    }
+
+    context := NewMessageContext(delivery.User.Emails[0], delivery.Options, env, delivery.Space,
+        delivery.Organization, delivery.ClientID, delivery.MessageID, delivery.UserGUID,
+        delivery.Templates, cryptoClient)
     packager := NewPackager()
 
     message, err := packager.Pack(context)

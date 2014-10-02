@@ -4,6 +4,7 @@ import (
     "html"
 
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/cryptography"
 )
 
 type MessageContext struct {
@@ -24,10 +25,11 @@ type MessageContext struct {
     MessageID         string
     Space             string
     Organization      string
+    UnsubscribeID     string
 }
 
 func NewMessageContext(email string, options Options, env config.Environment, space, organization,
-    clientID string, messageID string, userGUID string, templates Templates) MessageContext {
+    clientID string, messageID string, userGUID string, templates Templates, cryptoClient cryptography.CryptoInterface) MessageContext {
 
     var kindDescription string
     if options.KindDescription == "" {
@@ -43,7 +45,7 @@ func NewMessageContext(email string, options Options, env config.Environment, sp
         sourceDescription = options.SourceDescription
     }
 
-    return MessageContext{
+    messageContext := MessageContext{
         From:              env.Sender,
         ReplyTo:           options.ReplyTo,
         To:                email,
@@ -62,6 +64,13 @@ func NewMessageContext(email string, options Options, env config.Environment, sp
         Space:             space,
         Organization:      organization,
     }
+
+    var err error
+    messageContext.UnsubscribeID, err = cryptoClient.Encrypt(userGUID + "|" + clientID + "|" + options.KindID)
+    if err != nil {
+        panic(err)
+    }
+    return messageContext
 }
 
 func (context *MessageContext) Escape() {
