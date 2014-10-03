@@ -24,6 +24,8 @@ var _ = Describe("GetPreferencesForUser", func() {
     var errorWriter *fakes.FakeErrorWriter
     var builder services.PreferencesBuilder
     var context stack.Context
+    var TRUE = true
+    var FALSE = false
 
     BeforeEach(func() {
         errorWriter = &fakes.FakeErrorWriter{}
@@ -75,10 +77,10 @@ var _ = Describe("GetPreferencesForUser", func() {
                 panic(err)
             }
 
-            Expect(parsed["clients"]["raptorClient"]["hungry-kind"]["count"]).To(Equal(float64(0)))
-            Expect(parsed["clients"]["raptorClient"]["hungry-kind"]["email"]).To(Equal(false))
-            Expect(parsed["clients"]["starWarsClient"]["vader-kind"]["count"]).To(Equal(float64(0)))
-            Expect(parsed["clients"]["starWarsClient"]["vader-kind"]["email"]).To(Equal(true))
+            Expect(parsed.Clients["raptorClient"]["hungry-kind"].Count).To(Equal(0))
+            Expect(parsed.Clients["raptorClient"]["hungry-kind"].Email).To(Equal(&FALSE))
+            Expect(parsed.Clients["starWarsClient"]["vader-kind"].Count).To(Equal(0))
+            Expect(parsed.Clients["starWarsClient"]["vader-kind"].Email).To(Equal(&TRUE))
         })
 
         Context("when there is a database error", func() {

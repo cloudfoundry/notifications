@@ -49,8 +49,9 @@ var _ = Describe("UpdatePreferences", func() {
                 KindID:   "barking",
                 Email:    false,
             })
+            builder.GlobalUnsubscribe = true
 
-            body, err := json.MarshalIndent(builder, "", "  ")
+            body, err := json.Marshal(builder)
             if err != nil {
                 panic(err)
             }
@@ -86,7 +87,7 @@ var _ = Describe("UpdatePreferences", func() {
 
         It("Passes The Correct Arguments to PreferenceUpdater Execute", func() {
             handler.Execute(writer, request, fakeDBConn, context)
-            Expect(len(updater.ExecuteArguments)).To(Equal(2))
+            Expect(len(updater.ExecuteArguments)).To(Equal(3))
 
             preferencesArguments := updater.ExecuteArguments[0]
 
@@ -106,7 +107,8 @@ var _ = Describe("UpdatePreferences", func() {
                 Email:    false,
             }))
 
-            Expect(updater.ExecuteArguments[1]).To(Equal("correct-user"))
+            Expect(updater.ExecuteArguments[1]).To(BeTrue())
+            Expect(updater.ExecuteArguments[2]).To(Equal("correct-user"))
         })
 
         It("Returns a 204 status code when the Preference object does not error", func() {
@@ -156,7 +158,7 @@ var _ = Describe("UpdatePreferences", func() {
             })
 
             It("delegates parse errors to the ErrorWriter", func() {
-                requestBody, err := json.Marshal(map[string]interface{}{"raptors": "RAWR"})
+                requestBody, err := json.Marshal([]string{})
                 if err != nil {
                     panic(err)
                 }
@@ -178,9 +180,7 @@ var _ = Describe("UpdatePreferences", func() {
                 requestBody, err := json.Marshal(map[string]map[string]map[string]map[string]interface{}{
                     "clients": {
                         "client-id": {
-                            "kind-id": {
-                                "email": "wrong",
-                            },
+                            "kind-id": {},
                         },
                     },
                 })

@@ -10,6 +10,8 @@ import (
 
 var _ = Describe("NotificationsPreferences", func() {
     var builder services.PreferencesBuilder
+    var TRUE = true
+    var FALSE = false
 
     Describe("Add", func() {
         BeforeEach(func() {
@@ -26,12 +28,12 @@ var _ = Describe("NotificationsPreferences", func() {
                 Count:             3,
             })
 
-            node := builder["clients"]["clientID"]["kindID"]
-            Expect(node).To(Equal(map[string]interface{}{
-                "count":              3,
-                "email":              true,
-                "kind_description":   "kind description",
-                "source_description": "client description",
+            node := builder.Clients["clientID"]["kindID"]
+            Expect(node).To(Equal(services.Kind{
+                Count:             3,
+                Email:             &TRUE,
+                KindDescription:   "kind description",
+                SourceDescription: "client description",
             }))
         })
 
@@ -51,20 +53,20 @@ var _ = Describe("NotificationsPreferences", func() {
                 SourceDescription: "clientID description",
             })
 
-            node := builder["clients"]["clientID"]["kindID"]
-            Expect(node).To(Equal(map[string]interface{}{
-                "count":              0,
-                "email":              true,
-                "kind_description":   "kind description",
-                "source_description": "clientID description",
+            node := builder.Clients["clientID"]["kindID"]
+            Expect(node).To(Equal(services.Kind{
+                Count:             0,
+                Email:             &TRUE,
+                KindDescription:   "kind description",
+                SourceDescription: "clientID description",
             }))
 
-            node = builder["clients"]["clientID"]["new_kind"]
-            Expect(node).To(Equal(map[string]interface{}{
-                "count":              0,
-                "email":              true,
-                "kind_description":   "new kind description",
-                "source_description": "clientID description",
+            node = builder.Clients["clientID"]["new_kind"]
+            Expect(node).To(Equal(services.Kind{
+                Count:             0,
+                Email:             &TRUE,
+                KindDescription:   "new kind description",
+                SourceDescription: "clientID description",
             }))
         })
 
@@ -75,7 +77,7 @@ var _ = Describe("NotificationsPreferences", func() {
                 Email:    true,
             })
 
-            Expect(builder["clients"]["clientID"]["kindID"]["email"]).To(Equal(true))
+            Expect(builder.Clients["clientID"]["kindID"].Email).To(Equal(&TRUE))
 
             builder.Add(models.Preference{
                 ClientID: "clientID",
@@ -83,7 +85,7 @@ var _ = Describe("NotificationsPreferences", func() {
                 Email:    false,
             })
 
-            Expect(builder["clients"]["clientID"]["kindID"]["email"]).To(Equal(false))
+            Expect(builder.Clients["clientID"]["kindID"].Email).To(Equal(&FALSE))
         })
 
         It("can have multiple clients", func() {
@@ -108,10 +110,10 @@ var _ = Describe("NotificationsPreferences", func() {
                 Email:    true,
             })
 
-            Expect(builder["clients"]["client1"]["kind1"]["email"]).To(Equal(true))
-            Expect(builder["clients"]["client1"]["kind2"]["email"]).To(Equal(true))
-            Expect(builder["clients"]["client2"]["kind1"]["email"]).To(Equal(true))
-            Expect(builder["clients"]["client2"]["kind2"]["email"]).To(Equal(true))
+            Expect(builder.Clients["client1"]["kind1"].Email).To(Equal(&TRUE))
+            Expect(builder.Clients["client1"]["kind2"].Email).To(Equal(&TRUE))
+            Expect(builder.Clients["client2"]["kind1"].Email).To(Equal(&TRUE))
+            Expect(builder.Clients["client2"]["kind2"].Email).To(Equal(&TRUE))
         })
 
         It("uses the fallback values for descriptions and counts, when there are none", func() {
@@ -123,12 +125,12 @@ var _ = Describe("NotificationsPreferences", func() {
                 SourceDescription: "",
             })
 
-            node := builder["clients"]["raptors"]["hungry"]
-            Expect(node).To(Equal(map[string]interface{}{
-                "email":              true,
-                "kind_description":   "hungry",
-                "source_description": "raptors",
-                "count":              0,
+            node := builder.Clients["raptors"]["hungry"]
+            Expect(node).To(Equal(services.Kind{
+                Email:             &TRUE,
+                KindDescription:   "hungry",
+                SourceDescription: "raptors",
+                Count:             0,
             }))
         })
     })
@@ -196,7 +198,7 @@ var _ = Describe("NotificationsPreferences", func() {
                     Email:    false,
                 })
 
-                delete(badBuilder["clients"]["electric-fence"], "zap")
+                delete(badBuilder.Clients["electric-fence"], "zap")
 
                 _, err := badBuilder.ToPreferences()
 
@@ -211,21 +213,9 @@ var _ = Describe("NotificationsPreferences", func() {
                     Email:    false,
                 })
 
-                delete(badBuilder["clients"]["TRex"]["glass-of-water"], "email")
-
-                _, err := badBuilder.ToPreferences()
-
-                Expect(err).ToNot(BeNil())
-            })
-
-            It("returns an error when the email data map for emails cannot be coerced to a bool", func() {
-                badBuilder.Add(models.Preference{
-                    ClientID: "raptors",
-                    KindID:   "feeding-time",
-                    Email:    true,
-                })
-
-                badBuilder["clients"]["raptors"]["feeding-time"]["email"] = "RUNNNNNNNNNNNNNNNN!"
+                kind := badBuilder.Clients["TRex"]["glass-of-water"]
+                kind.Email = nil
+                badBuilder.Clients["TRex"]["glass-of-water"] = kind
 
                 _, err := badBuilder.ToPreferences()
 

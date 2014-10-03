@@ -91,11 +91,11 @@ func (mother Mother) Registrar() services.Registrar {
 }
 
 func (mother Mother) PreferencesFinder() *services.PreferencesFinder {
-    return services.NewPreferencesFinder(models.NewPreferencesRepo())
+    return services.NewPreferencesFinder(models.NewPreferencesRepo(), mother.GlobalUnsubscribesRepo())
 }
 
 func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
-    return services.NewPreferenceUpdater(mother.UnsubscribesRepo(), mother.KindsRepo())
+    return services.NewPreferenceUpdater(mother.GlobalUnsubscribesRepo(), mother.UnsubscribesRepo(), mother.KindsRepo())
 }
 
 func (mother Mother) KindsRepo() models.KindsRepo {
@@ -104,6 +104,10 @@ func (mother Mother) KindsRepo() models.KindsRepo {
 
 func (mother Mother) UnsubscribesRepo() models.UnsubscribesRepo {
     return models.NewUnsubscribesRepo()
+}
+
+func (mother Mother) GlobalUnsubscribesRepo() models.GlobalUnsubscribesRepo {
+    return models.NewGlobalUnsubscribesRepo()
 }
 
 func (mother Mother) CORS() middleware.CORS {

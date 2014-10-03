@@ -13,18 +13,19 @@ NONE="\033[0m"
 
 source $DIR/env/$ENVIRONMENT
 
-$DIR/unit
-EXIT_CODE=$?
+function run() {
+  set +e
+  ginkgo -randomizeAllSpecs=true -randomizeSuites=true -succinct=true $@
+  EXIT_CODE=$?
+  set -e
+}
+
+run -slowSpecThreshold=20 ./acceptance
 
 if [[ $EXIT_CODE = 0 ]]; then
-    $DIR/acceptance
-    EXIT_CODE=$?
-fi
-
-if [[ $EXIT_CODE = 0 ]]; then
-    STATE="${GREEN}TEST SUITE PASS${NONE}"
+    STATE="${GREEN}ACCEPTANCE SUITE PASS${NONE}"
 else
-    STATE="${RED}TEST SUITE FAIL${NONE}"
+    STATE="${RED}ACCEPTANCE SUITE FAIL${NONE}"
 fi
 
 echo

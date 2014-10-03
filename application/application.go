@@ -118,7 +118,7 @@ func (app Application) StartWorkers() {
             panic(err)
         }
         mailClient.Insecure = !app.env.VerifySSL
-        worker := postal.NewDeliveryWorker(i+1, app.mother.Logger(), mailClient, app.mother.Queue(), app.mother.UnsubscribesRepo(), app.mother.KindsRepo())
+        worker := postal.NewDeliveryWorker(i+1, app.mother.Logger(), mailClient, app.mother.Queue(), app.mother.GlobalUnsubscribesRepo(), app.mother.UnsubscribesRepo(), app.mother.KindsRepo())
         worker.Work()
     }
 }

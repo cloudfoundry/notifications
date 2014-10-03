@@ -27,20 +27,24 @@ type Delivery struct {
 }
 
 type DeliveryWorker struct {
-    logger           *log.Logger
-    mailClient       mail.ClientInterface
-    unsubscribesRepo models.UnsubscribesRepoInterface
-    kindsRepo        models.KindsRepoInterface
+    logger                 *log.Logger
+    mailClient             mail.ClientInterface
+    globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface
+    unsubscribesRepo       models.UnsubscribesRepoInterface
+    kindsRepo              models.KindsRepoInterface
     gobble.Worker
 }
 
 func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
-    unsubscribesRepo models.UnsubscribesRepoInterface, kindsRepo models.KindsRepoInterface) DeliveryWorker {
+    globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface, unsubscribesRepo models.UnsubscribesRepoInterface,
+    kindsRepo models.KindsRepoInterface) DeliveryWorker {
+
     worker := DeliveryWorker{
-        logger:           logger,
-        mailClient:       mailClient,
-        unsubscribesRepo: unsubscribesRepo,
-        kindsRepo:        kindsRepo,
+        logger:                 logger,
+        mailClient:             mailClient,
+        globalUnsubscribesRepo: globalUnsubscribesRepo,
+        unsubscribesRepo:       unsubscribesRepo,
+        kindsRepo:              kindsRepo,
     }
     worker.Worker = gobble.NewWorker(id, queue, worker.Deliver)
 
@@ -86,7 +90,12 @@ func (worker DeliveryWorker) ShouldDeliver(delivery Delivery) bool {
         return true
     }
 
-    _, err := worker.unsubscribesRepo.Find(conn, delivery.ClientID, delivery.Options.KindID, delivery.UserGUID)
+    globallyUnsubscribed, err := worker.globalUnsubscribesRepo.Get(conn, delivery.UserGUID)
+    if err != nil || globallyUnsubscribed {
+        return false
+    }
+
+    _, err = worker.unsubscribesRepo.Find(conn, delivery.ClientID, delivery.Options.KindID, delivery.UserGUID)
     if err != nil {
         if (err == models.ErrRecordNotFound{}) {
             return len(delivery.User.Emails) > 0 && strings.Contains(delivery.User.Emails[0], "@")

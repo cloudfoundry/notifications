@@ -33,7 +33,6 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
         var errorWriter *fakes.FakeErrorWriter
 
         BeforeEach(func() {
-
             fakeDBConn = &fakes.FakeDBConn{}
             builder := services.NewPreferencesBuilder()
             builder.Add(models.Preference{
@@ -51,7 +50,9 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
                 KindID:   "barking",
                 Email:    false,
             })
-            body, err := json.MarshalIndent(builder, "", "  ")
+            builder.GlobalUnsubscribe = true
+
+            body, err := json.Marshal(builder)
             if err != nil {
                 panic(err)
             }
@@ -86,9 +87,8 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
         })
 
         It("Passes the correct arguments to PreferenceUpdater Execute", func() {
-
             handler.Execute(writer, request, fakeDBConn, context)
-            Expect(len(updater.ExecuteArguments)).To(Equal(2))
+            Expect(len(updater.ExecuteArguments)).To(Equal(3))
 
             preferencesArguments := updater.ExecuteArguments[0]
 
@@ -108,7 +108,8 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
                 Email:    false,
             }))
 
-            Expect(updater.ExecuteArguments[1]).To(Equal(userGUID))
+            Expect(updater.ExecuteArguments[1]).To(BeTrue())
+            Expect(updater.ExecuteArguments[2]).To(Equal(userGUID))
         })
 
         It("Returns a 204 status code when the Preference object does not error", func() {

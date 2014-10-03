@@ -56,7 +56,7 @@ func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Reques
 
     transaction := connection.Transaction()
     transaction.Begin()
-    err = handler.preferenceUpdater.Execute(transaction, preferences, userID)
+    err = handler.preferenceUpdater.Execute(transaction, preferences, builder.GlobalUnsubscribe, userID)
     if err != nil {
         transaction.Rollback()
 

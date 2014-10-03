@@ -7,22 +7,29 @@ import (
 )
 
 type PreferenceUpdaterInterface interface {
-    Execute(models.ConnectionInterface, []models.Preference, string) error
+    Execute(models.ConnectionInterface, []models.Preference, bool, string) error
 }
 
 type PreferenceUpdater struct {
-    unsubscribesRepo models.UnsubscribesRepoInterface
-    kindsRepo        models.KindsRepoInterface
+    globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface
+    unsubscribesRepo       models.UnsubscribesRepoInterface
+    kindsRepo              models.KindsRepoInterface
 }
 
-func NewPreferenceUpdater(unsubscribesRepo models.UnsubscribesRepoInterface, kindsRepo models.KindsRepoInterface) PreferenceUpdater {
+func NewPreferenceUpdater(globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface, unsubscribesRepo models.UnsubscribesRepoInterface, kindsRepo models.KindsRepoInterface) PreferenceUpdater {
     return PreferenceUpdater{
-        unsubscribesRepo: unsubscribesRepo,
-        kindsRepo:        kindsRepo,
+        globalUnsubscribesRepo: globalUnsubscribesRepo,
+        unsubscribesRepo:       unsubscribesRepo,
+        kindsRepo:              kindsRepo,
     }
 }
 
-func (updater PreferenceUpdater) Execute(conn models.ConnectionInterface, preferences []models.Preference, userID string) error {
+func (updater PreferenceUpdater) Execute(conn models.ConnectionInterface, preferences []models.Preference, globalUnsubscribe bool, userID string) error {
+    err := updater.globalUnsubscribesRepo.Set(conn, userID, globalUnsubscribe)
+    if err != nil {
+        panic(err)
+    }
+
     for _, preference := range preferences {
 
         kind, err := updater.kindsRepo.Find(conn, preference.KindID, preference.ClientID)

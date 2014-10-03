@@ -27,8 +27,10 @@ var _ = Describe("DeliveryWorker", func() {
     var delivery postal.Delivery
     var queue *fakes.FakeQueue
     var unsubscribesRepo *fakes.FakeUnsubscribesRepo
+    var globalUnsubscribesRepo *fakes.GlobalUnsubscribesRepo
     var kindsRepo *fakes.FakeKindsRepo
     var conn *fakes.FakeDBConn
+    var userGUID string
 
     BeforeEach(func() {
         buffer = bytes.NewBuffer([]byte{})
@@ -37,10 +39,12 @@ var _ = Describe("DeliveryWorker", func() {
         mailClient = fakes.FakeMailClient{}
         queue = fakes.NewFakeQueue()
         unsubscribesRepo = fakes.NewFakeUnsubscribesRepo()
+        globalUnsubscribesRepo = fakes.NewGlobalUnsubscribesRepo()
         kindsRepo = fakes.NewFakeKindsRepo()
         conn = &fakes.FakeDBConn{}
+        userGUID = "user-123"
 
-        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, unsubscribesRepo, kindsRepo)
+        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo)
 
         os.Setenv("SENDER", "from@email.com")
 
@@ -49,7 +53,7 @@ var _ = Describe("DeliveryWorker", func() {
                 Emails: []string{"fake-user@example.com"},
             },
             ClientID: "some-client",
-            UserGUID: "user-123",
+            UserGUID: userGUID,
             Options: postal.Options{
                 Subject: "the subject",
                 Text:    "body content",
@@ -199,10 +203,24 @@ var _ = Describe("DeliveryWorker", func() {
             })
         })
 
-        Context("when receipient has unsubscribed", func() {
+        Context("when recipient has globally unsubscribed", func() {
+            BeforeEach(func() {
+                err := globalUnsubscribesRepo.Set(conn, userGUID, true)
+                if err != nil {
+                    panic(err)
+                }
+            })
+
+            It("does not send any non-critical notifications", func() {
+                worker.Deliver(&job)
+                Expect(len(mailClient.Messages)).To(Equal(0))
+            })
+        })
+
+        Context("when recipient has unsubscribed", func() {
             BeforeEach(func() {
                 _, err := unsubscribesRepo.Create(conn, models.Unsubscribe{
-                    UserID:   "user-123",
+                    UserID:   userGUID,
                     ClientID: "some-client",
                     KindID:   "some-kind",
                 })

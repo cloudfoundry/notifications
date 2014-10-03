@@ -24,6 +24,8 @@ var _ = Describe("Preferences Endpoint", func() {
     })
 
     It("user unsubscribes from a notification", func() {
+        userGUID := "user-123"
+
         // Boot Fake SMTP Server
         smtpServer := servers.NewSMTP()
         smtpServer.Boot()
@@ -55,13 +57,23 @@ var _ = Describe("Preferences Endpoint", func() {
         test := ManageUsersOwnPreferences{}
 
         test.RegisterClientNotifications(notificationsServer, clientToken)
-        test.SendNotificationToUser(notificationsServer, clientToken, smtpServer)
+        test.SendNotificationToUser(notificationsServer, clientToken, userGUID, smtpServer)
         test.RetrieveUserPreferences(notificationsServer, userToken)
+
+        // Notification Unsubscribe
         test.UnsubscribeFromNotification(notificationsServer, userToken)
         test.ConfirmUserUnsubscribed(notificationsServer, userToken)
-        test.ConfirmsUnsubscribedNotificationsAreNotReceived(notificationsServer, clientToken, smtpServer)
+        test.ConfirmsUnsubscribedNotificationsAreNotReceived(notificationsServer, clientToken, userGUID, smtpServer)
         test.ResubscribeToNotification(notificationsServer, userToken)
         test.ConfirmUserResubscribed(notificationsServer, userToken)
+
+        // Global Unsubscribe
+        test.GlobalUnsubscribe(notificationsServer, userToken)
+        test.ConfirmGlobalUnsubscribe(notificationsServer, userToken)
+        test.ConfirmUserDoesNotReceiveNotificationsGlobal(notificationsServer, clientToken, userGUID, smtpServer)
+        test.UndoGlobalUnsubscribe(notificationsServer, userToken)
+        test.ReConfirmUserUnsubscribed(notificationsServer, userToken)
+        test.ConfirmUserReceivesNotificationsGlobal(notificationsServer, clientToken, userGUID, smtpServer)
     })
 
 })
@@ -109,7 +121,7 @@ func (t ManageUsersOwnPreferences) RegisterClientNotifications(notificationsServ
 }
 
 // Make request to /users/:guid
-func (t ManageUsersOwnPreferences) SendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
+func (t ManageUsersOwnPreferences) SendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string, smtpServer *servers.SMTP) {
     body, err := json.Marshal(map[string]string{
         "kind_id": "unsubscribe-acceptance-test",
         "html":    "<p>this is an acceptance test</p>",
@@ -119,7 +131,7 @@ func (t ManageUsersOwnPreferences) SendNotificationToUser(notificationsServer se
         panic(err)
     }
 
-    request, err := http.NewRequest("POST", notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
+    request, err := http.NewRequest("POST", notificationsServer.UsersPath(userGUID), bytes.NewBuffer(body))
     if err != nil {
         panic(err)
     }
@@ -148,7 +160,7 @@ func (t ManageUsersOwnPreferences) SendNotificationToUser(notificationsServer se
     Expect(len(responseJSON)).To(Equal(1))
     responseItem := responseJSON[0]
     Expect(responseItem["status"]).To(Equal("queued"))
-    Expect(responseItem["recipient"]).To(Equal("user-123"))
+    Expect(responseItem["recipient"]).To(Equal(userGUID))
     Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
 
     // Confirm the email message was delivered correctly
@@ -197,17 +209,17 @@ func (t ManageUsersOwnPreferences) RetrieveUserPreferences(notificationsServer s
         panic(err)
     }
 
-    node := prefsResponseJSON["clients"]["notifications-sender"]["acceptance-test"]
-    Expect(node["email"]).To(Equal(true))
-    Expect(node["kind_description"]).To(Equal("Acceptance Test"))
-    Expect(node["source_description"]).To(Equal("Notifications Sender"))
-    Expect(node["count"]).To(Equal(float64(0)))
+    node := prefsResponseJSON.Clients["notifications-sender"]["acceptance-test"]
+    Expect(node.Email).To(Equal(&TRUE))
+    Expect(node.KindDescription).To(Equal("Acceptance Test"))
+    Expect(node.SourceDescription).To(Equal("Notifications Sender"))
+    Expect(node.Count).To(Equal(0))
 
-    node = prefsResponseJSON["clients"]["notifications-sender"]["unsubscribe-acceptance-test"]
-    Expect(node["email"]).To(Equal(true))
-    Expect(node["kind_description"]).To(Equal("Unsubscribe Acceptance Test"))
-    Expect(node["source_description"]).To(Equal("Notifications Sender"))
-    Expect(node["count"]).To(Equal(float64(1)))
+    node = prefsResponseJSON.Clients["notifications-sender"]["unsubscribe-acceptance-test"]
+    Expect(node.Email).To(Equal(&TRUE))
+    Expect(node.KindDescription).To(Equal("Unsubscribe Acceptance Test"))
+    Expect(node.SourceDescription).To(Equal("Notifications Sender"))
+    Expect(node.Count).To(Equal(1))
 
 }
 
@@ -269,21 +281,21 @@ func (t ManageUsersOwnPreferences) ConfirmUserUnsubscribed(notificationsServer s
         panic(err)
     }
 
-    node := prefsResponseJSON["clients"]["notifications-sender"]["acceptance-test"]
-    Expect(node["email"]).To(Equal(true))
-    Expect(node["kind_description"]).To(Equal("Acceptance Test"))
-    Expect(node["source_description"]).To(Equal("Notifications Sender"))
-    Expect(node["count"]).To(Equal(float64(0)))
+    node := prefsResponseJSON.Clients["notifications-sender"]["acceptance-test"]
+    Expect(node.Email).To(Equal(&TRUE))
+    Expect(node.KindDescription).To(Equal("Acceptance Test"))
+    Expect(node.SourceDescription).To(Equal("Notifications Sender"))
+    Expect(node.Count).To(Equal(0))
 
-    node = prefsResponseJSON["clients"]["notifications-sender"]["unsubscribe-acceptance-test"]
-    Expect(node["email"]).To(Equal(false))
-    Expect(node["kind_description"]).To(Equal("Unsubscribe Acceptance Test"))
-    Expect(node["source_description"]).To(Equal("Notifications Sender"))
-    Expect(node["count"]).To(Equal(float64(1)))
+    node = prefsResponseJSON.Clients["notifications-sender"]["unsubscribe-acceptance-test"]
+    Expect(node.Email).To(Equal(&FALSE))
+    Expect(node.KindDescription).To(Equal("Unsubscribe Acceptance Test"))
+    Expect(node.SourceDescription).To(Equal("Notifications Sender"))
+    Expect(node.Count).To(Equal(1))
 }
 
 // Make request to /users/:guid
-func (t ManageUsersOwnPreferences) ConfirmsUnsubscribedNotificationsAreNotReceived(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
+func (t ManageUsersOwnPreferences) ConfirmsUnsubscribedNotificationsAreNotReceived(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string, smtpServer *servers.SMTP) {
     smtpServer.Reset() //clears deliveries
 
     body, err := json.Marshal(map[string]string{
@@ -295,7 +307,7 @@ func (t ManageUsersOwnPreferences) ConfirmsUnsubscribedNotificationsAreNotReceiv
         panic(err)
     }
 
-    request, err := http.NewRequest("POST", notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
+    request, err := http.NewRequest("POST", notificationsServer.UsersPath(userGUID), bytes.NewBuffer(body))
     if err != nil {
         panic(err)
     }
@@ -324,7 +336,7 @@ func (t ManageUsersOwnPreferences) ConfirmsUnsubscribedNotificationsAreNotReceiv
     Expect(len(responseJSON)).To(Equal(1))
     responseItem := responseJSON[0]
     Expect(responseItem["status"]).To(Equal("queued"))
-    Expect(responseItem["recipient"]).To(Equal("user-123"))
+    Expect(responseItem["recipient"]).To(Equal(userGUID))
     Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
 
     // Confirm the email message was never delivered
@@ -391,16 +403,239 @@ func (t ManageUsersOwnPreferences) ConfirmUserResubscribed(notificationsServer s
         panic(err)
     }
 
-    node := prefsResponseJSON["clients"]["notifications-sender"]["acceptance-test"]
-    Expect(node["email"]).To(Equal(true))
-    Expect(node["kind_description"]).To(Equal("Acceptance Test"))
-    Expect(node["source_description"]).To(Equal("Notifications Sender"))
-    Expect(node["count"]).To(Equal(float64(0)))
+    node := prefsResponseJSON.Clients["notifications-sender"]["acceptance-test"]
+    Expect(node.Email).To(Equal(&TRUE))
+    Expect(node.KindDescription).To(Equal("Acceptance Test"))
+    Expect(node.SourceDescription).To(Equal("Notifications Sender"))
+    Expect(node.Count).To(Equal(0))
 
-    node = prefsResponseJSON["clients"]["notifications-sender"]["unsubscribe-acceptance-test"]
-    Expect(node["email"]).To(Equal(true))
-    Expect(node["kind_description"]).To(Equal("Unsubscribe Acceptance Test"))
-    Expect(node["source_description"]).To(Equal("Notifications Sender"))
-    Expect(node["count"]).To(Equal(float64(2)))
+    node = prefsResponseJSON.Clients["notifications-sender"]["unsubscribe-acceptance-test"]
+    Expect(node.Email).To(Equal(&TRUE))
+    Expect(node.KindDescription).To(Equal("Unsubscribe Acceptance Test"))
+    Expect(node.SourceDescription).To(Equal("Notifications Sender"))
+    Expect(node.Count).To(Equal(2))
+}
 
+func (t ManageUsersOwnPreferences) GlobalUnsubscribe(notificationsServer servers.Notifications, userToken uaa.Token) {
+    requestBodyPayload := map[string]interface{}{
+        "global_unsubscribe": true,
+        "clients":            map[string]interface{}{},
+    }
+
+    body, err := json.Marshal(requestBodyPayload)
+    if err != nil {
+        panic(err)
+    }
+
+    request, err := http.NewRequest("PATCH", notificationsServer.UserPreferencesPath(), bytes.NewBuffer(body))
+    if err != nil {
+        panic(err)
+    }
+
+    request.Header.Set("Authorization", "Bearer "+userToken.Access)
+
+    response, err := http.DefaultClient.Do(request)
+    if err != nil {
+        panic(err)
+    }
+
+    body, err = ioutil.ReadAll(response.Body)
+    if err != nil {
+        panic(err)
+    }
+
+    // Confirm the request response looks correct
+    Expect(response.StatusCode).To(Equal(http.StatusNoContent))
+}
+
+func (t ManageUsersOwnPreferences) ConfirmGlobalUnsubscribe(notificationsServer servers.Notifications, userToken uaa.Token) {
+    request, err := http.NewRequest("GET", notificationsServer.UserPreferencesPath(), nil)
+    if err != nil {
+        panic(err)
+    }
+
+    request.Header.Set("Authorization", "Bearer "+userToken.Access)
+
+    response, err := http.DefaultClient.Do(request)
+    if err != nil {
+        panic(err)
+    }
+
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        panic(err)
+    }
+
+    // Confirm the request response looks correct
+    Expect(response.StatusCode).To(Equal(http.StatusOK))
+
+    prefsResponseJSON := services.PreferencesBuilder{}
+    err = json.Unmarshal(body, &prefsResponseJSON)
+    if err != nil {
+        panic(err)
+    }
+
+    Expect(prefsResponseJSON.GlobalUnsubscribe).To(BeTrue())
+}
+
+func (t ManageUsersOwnPreferences) ConfirmUserDoesNotReceiveNotificationsGlobal(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string, smtpServer *servers.SMTP) {
+    smtpServer.Reset()
+
+    body, err := json.Marshal(map[string]string{
+        "kind_id": "acceptance-test",
+        "html":    "<p>this is an acceptance test</p>",
+        "subject": "my-special-subject",
+    })
+    if err != nil {
+        panic(err)
+    }
+
+    request, err := http.NewRequest("POST", notificationsServer.UsersPath(userGUID), bytes.NewBuffer(body))
+    if err != nil {
+        panic(err)
+    }
+
+    request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+
+    response, err := http.DefaultClient.Do(request)
+    if err != nil {
+        panic(err)
+    }
+
+    // Confirm the request response looks correct
+    Expect(response.StatusCode).To(Equal(http.StatusOK))
+
+    body, err = ioutil.ReadAll(response.Body)
+    if err != nil {
+        panic(err)
+    }
+
+    responseJSON := []map[string]string{}
+    err = json.Unmarshal(body, &responseJSON)
+    if err != nil {
+        panic(err)
+    }
+
+    Expect(len(responseJSON)).To(Equal(1))
+    responseItem := responseJSON[0]
+    Expect(responseItem["status"]).To(Equal("queued"))
+    Expect(responseItem["recipient"]).To(Equal(userGUID))
+    Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
+
+    // Confirm the email message never gets delivered
+    Consistently(func() int {
+        return len(smtpServer.Deliveries)
+    }, 5*time.Second).Should(Equal(0))
+}
+
+func (t ManageUsersOwnPreferences) UndoGlobalUnsubscribe(notificationsServer servers.Notifications, userToken uaa.Token) {
+    requestBodyPayload := map[string]interface{}{
+        "global_unsubscribe": false,
+        "clients":            map[string]interface{}{},
+    }
+
+    body, err := json.Marshal(requestBodyPayload)
+    if err != nil {
+        panic(err)
+    }
+
+    request, err := http.NewRequest("PATCH", notificationsServer.UserPreferencesPath(), bytes.NewBuffer(body))
+    if err != nil {
+        panic(err)
+    }
+
+    request.Header.Set("Authorization", "Bearer "+userToken.Access)
+
+    response, err := http.DefaultClient.Do(request)
+    if err != nil {
+        panic(err)
+    }
+
+    body, err = ioutil.ReadAll(response.Body)
+    if err != nil {
+        panic(err)
+    }
+
+    // Confirm the request response looks correct
+    Expect(response.StatusCode).To(Equal(http.StatusNoContent))
+}
+
+func (t ManageUsersOwnPreferences) ReConfirmUserUnsubscribed(notificationsServer servers.Notifications, userToken uaa.Token) {
+    request, err := http.NewRequest("GET", notificationsServer.UserPreferencesPath(), nil)
+    if err != nil {
+        panic(err)
+    }
+
+    request.Header.Set("Authorization", "Bearer "+userToken.Access)
+
+    response, err := http.DefaultClient.Do(request)
+    if err != nil {
+        panic(err)
+    }
+
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        panic(err)
+    }
+
+    // Confirm the request response looks correct
+    Expect(response.StatusCode).To(Equal(http.StatusOK))
+
+    prefsResponseJSON := services.PreferencesBuilder{}
+    err = json.Unmarshal(body, &prefsResponseJSON)
+    if err != nil {
+        panic(err)
+    }
+
+    Expect(prefsResponseJSON.GlobalUnsubscribe).To(BeFalse())
+}
+
+func (t ManageUsersOwnPreferences) ConfirmUserReceivesNotificationsGlobal(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string, smtpServer *servers.SMTP) {
+    smtpServer.Reset()
+
+    body, err := json.Marshal(map[string]string{
+        "kind_id": "acceptance-test",
+        "html":    "<p>this is an acceptance test</p>",
+        "subject": "my-special-subject",
+    })
+    if err != nil {
+        panic(err)
+    }
+
+    request, err := http.NewRequest("POST", notificationsServer.UsersPath(userGUID), bytes.NewBuffer(body))
+    if err != nil {
+        panic(err)
+    }
+
+    request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+
+    response, err := http.DefaultClient.Do(request)
+    if err != nil {
+        panic(err)
+    }
+
+    // Confirm the request response looks correct
+    Expect(response.StatusCode).To(Equal(http.StatusOK))
+
+    body, err = ioutil.ReadAll(response.Body)
+    if err != nil {
+        panic(err)
+    }
+
+    responseJSON := []map[string]string{}
+    err = json.Unmarshal(body, &responseJSON)
+    if err != nil {
+        panic(err)
+    }
+
+    Expect(len(responseJSON)).To(Equal(1))
+    responseItem := responseJSON[0]
+    Expect(responseItem["status"]).To(Equal("queued"))
+    Expect(responseItem["recipient"]).To(Equal(userGUID))
+    Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
+
+    // Confirm the email message gets delivered
+    Eventually(func() int {
+        return len(smtpServer.Deliveries)
+    }, 5*time.Second).Should(Equal(1))
 }

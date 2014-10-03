@@ -14,6 +14,11 @@ import (
     . "github.com/onsi/gomega"
 )
 
+var (
+    TRUE  = true
+    FALSE = false
+)
+
 var GUIDRegex = regexp.MustCompile(`[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}`)
 
 func TestAcceptanceSuite(t *testing.T) {

@@ -1,0 +1,38 @@
+#! /usr/bin/env bash
+set -e
+
+DIR=$(dirname $0)
+
+if [[ -z "$ENVIRONMENT" ]]; then
+    ENVIRONMENT=test
+fi
+
+GREEN="\033[0;32m"
+RED="\033[0;31m"
+NONE="\033[0m"
+
+source $DIR/env/$ENVIRONMENT
+
+function run() {
+  set +e
+  ginkgo -randomizeAllSpecs=true -randomizeSuites=true -succinct=true $@
+  EXIT_CODE=$?
+  set -e
+}
+
+if [[ -z "$1" ]]; then
+    run -r -skipPackage=acceptance ./
+else
+    run $@
+fi
+
+if [[ $EXIT_CODE = 0 ]]; then
+    STATE="${GREEN}UNIT SUITE PASS${NONE}"
+else
+    STATE="${RED}UNIT SUITE FAIL${NONE}"
+fi
+
+echo
+echo -e $STATE
+
+exit $EXIT_CODE

@@ -6,10 +6,25 @@ import (
     "github.com/cloudfoundry-incubator/notifications/models"
 )
 
-type PreferencesBuilder map[string]map[string]map[string]map[string]interface{}
+type Kind struct {
+    Count             int
+    Email             *bool
+    KindDescription   string
+    SourceDescription string
+}
+
+type ClientMap map[string]Kind
+type ClientsMap map[string]ClientMap
+
+type PreferencesBuilder struct {
+    GlobalUnsubscribe bool       `json:"global_unsubscribe"`
+    Clients           ClientsMap `json:"clients"`
+}
 
 func NewPreferencesBuilder() PreferencesBuilder {
-    return map[string]map[string]map[string]map[string]interface{}{}
+    return PreferencesBuilder{
+        Clients: ClientsMap{},
+    }
 }
 
 func (pref PreferencesBuilder) Add(preference models.Preference) {
@@ -21,22 +36,17 @@ func (pref PreferencesBuilder) Add(preference models.Preference) {
         preference.SourceDescription = preference.ClientID
     }
 
-    data := map[string]interface{}{
-        "count":              preference.Count,
-        "email":              preference.Email,
-        "kind_description":   preference.KindDescription,
-        "source_description": preference.SourceDescription,
+    data := Kind{
+        Count:             preference.Count,
+        Email:             &preference.Email,
+        KindDescription:   preference.KindDescription,
+        SourceDescription: preference.SourceDescription,
     }
 
-    if clientMap, ok := pref["clients"][preference.ClientID]; ok {
+    if clientMap, ok := pref.Clients[preference.ClientID]; ok {
         clientMap[preference.KindID] = data
     } else {
-
-        if _, ok := pref["clients"]; !ok {
-            pref["clients"] = map[string]map[string]map[string]interface{}{}
-        }
-
-        pref["clients"][preference.ClientID] = map[string]map[string]interface{}{
+        pref.Clients[preference.ClientID] = ClientMap{
             preference.KindID: data,
         }
     }
@@ -44,27 +54,21 @@ func (pref PreferencesBuilder) Add(preference models.Preference) {
 
 func (pref PreferencesBuilder) ToPreferences() ([]models.Preference, error) {
     preferences := []models.Preference{}
-    for clientID, kinds := range pref["clients"] {
+    for clientID, kinds := range pref.Clients {
         if len(kinds) == 0 {
             return preferences, errors.New("Missing kinds")
         }
 
         for kindID, kind := range kinds {
 
-            email, ok := kind["email"]
-            if !ok {
+            if kind.Email == nil {
                 return preferences, errors.New("Missing the email field")
-            }
-
-            shouldEmail, ok := email.(bool)
-            if !ok {
-                return preferences, errors.New("Email field cannot be coerced to bool")
             }
 
             preferences = append(preferences, models.Preference{
                 ClientID: clientID,
                 KindID:   kindID,
-                Email:    shouldEmail,
+                Email:    *kind.Email,
             })
         }
     }

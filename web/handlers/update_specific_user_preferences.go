@@ -30,7 +30,6 @@ func (handler UpdateSpecificUserPreferences) ServeHTTP(w http.ResponseWriter, re
 }
 
 func (handler UpdateSpecificUserPreferences) Execute(w http.ResponseWriter, req *http.Request, conn models.ConnectionInterface, context stack.Context) {
-
     userGUID := handler.parseGUID(req.URL.Path)
 
     body, err := ioutil.ReadAll(req.Body)
@@ -38,14 +37,19 @@ func (handler UpdateSpecificUserPreferences) Execute(w http.ResponseWriter, req 
         panic(err)
     }
 
-    preferences, err := handler.ParsePreferences(body)
+    builder, err := handler.ParsePreferences(body)
+    if err != nil {
+        panic(err)
+    }
+
+    preferences, err := builder.ToPreferences()
     if err != nil {
         panic(err)
     }
 
     transaction := conn.Transaction()
     transaction.Begin()
-    err = handler.preferenceUpdater.Execute(transaction, preferences, userGUID)
+    err = handler.preferenceUpdater.Execute(transaction, preferences, builder.GlobalUnsubscribe, userGUID)
     if err != nil {
         transaction.Rollback()
 
@@ -69,11 +73,11 @@ func (handler UpdateSpecificUserPreferences) parseGUID(path string) string {
     return regex.FindStringSubmatch(path)[1]
 }
 
-func (handler UpdateSpecificUserPreferences) ParsePreferences(body []byte) ([]models.Preference, error) {
+func (handler UpdateSpecificUserPreferences) ParsePreferences(body []byte) (services.PreferencesBuilder, error) {
     builder := services.NewPreferencesBuilder()
     err := json.Unmarshal(body, &builder)
     if err != nil {
-        return []models.Preference{}, err
+        return builder, err
     }
-    return builder.ToPreferences()
+    return builder, nil
 }
