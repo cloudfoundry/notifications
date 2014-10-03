@@ -16,7 +16,9 @@ properties:
 
 ### Client Configurations
 #### Send Notifications
-Notifications requires specific client configurations for sending messages to individual users, users in a specific space and arbitrary email addresses. To send non-critical notifications, notifdications.write scope is required. Sending critical notifications requires critical_notifications.write scope. To send notifications to an arbitrary email address requires emails.write scope. 
+The following client configurations are needed for sending messages to individual users, users in a specific space and arbitrary email addresses. 
+
+To send non-critical notifications, notifications.write scope is required. Sending critical notifications requires critical_notifications.write scope. To send notifications to an arbitrary email address requires emails.write scope.
 
 ```yaml
 notifications-client-name:
@@ -28,7 +30,7 @@ notifications-client-name:
 ```
 
 #### View and Edit User Preferences
-To view and edit a user's preferences for receiving non-critical notifications, a client will need to be configured with notification_preferences.read scope and notification_preferences.write scope. To log in requires openid scope and set authorized_grant_types to authorization_code, refresh_token. 
+To view and edit a user's preferences for receiving non-critical notifications, a client will need to be configured with notification_preferences.read scope and notification_preferences.write scope.
 
 A client with notification_preferences.admin scope has the ability to retrieve an arbitrary user's preferences.
 
