@@ -3,6 +3,7 @@
 A notifications component that parts of CF can use to send email to end users
 
 ## UAA Client
+Notifications itself needs the following UAA client in order to retrieve arbitrary users' email addresses and check the members of  arbitrary spaces:
 
 ```yaml
 properties:
