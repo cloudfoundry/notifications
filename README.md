@@ -14,6 +14,36 @@ properties:
         authorized-grant-types: client_credentials
 ```
 
+### Client Configurations
+#### Send Notifications
+Notifications requires specific client configurations for sending messages to individual users, users in a specific space and arbitrary email addresses. To send non-critical notifications, notifdications.write scope is required. Sending critical notifications requires critical_notifications.write scope. To send notifications to an arbitrary email address requires emails.write scope. 
+
+```yaml
+notifications-client-name:
+  scope: uaa.none
+  resource_ids: none
+  authorized_grant_types: client_credentials
+  authorities: notifications.write critical_notifications.write emails.write
+  autoapprove:
+```
+
+#### View and Edit User Preferences
+To view and edit a user's preferences for receiving non-critical notifications, a client will need to be configured with notification_preferences.read scope and notification_preferences.write scope. To log in requires openid scope and set authorized_grant_types to authorization_code, refresh_token. 
+
+A client with notification_preferences.admin scope has the ability to retrieve an arbitrary user's preferences.
+
+```yaml
+notifications-client-name:
+  scope: notification_preferences.read notification_preferences.write openid
+  resource_ids: none
+  authorized_grant_types: authorization_code client_credentials refresh_token
+  redirect_uri: http://example.com/sessions/create
+  authorities: notification_preferences.admin
+  autoapprove: 
+```
+
+If you are unfamiliar with UAA consult the [UAA token overview](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-Tokens.md).
+
 ##Configuring Environment Variables
 
 | Variable              | Description                                 | Default  |
