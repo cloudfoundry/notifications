@@ -185,7 +185,7 @@ This override only applies to requests that match both the clientId and the kind
 #### UnsubscribeID
 
 AES Encryption is used to encrypt a token value for unsubscribing a user from a 
-notification. The format of the token is the `user_guid|client_id|kind_id`.
+notification. The format of the token is the `user_guid|client_id|kind_id`. The key used to instantiate a cipher is a 16 byte MD5 sum of the text given to the `ENCRYPTION_KEY` environment variable.
 
 Encrypting:
 

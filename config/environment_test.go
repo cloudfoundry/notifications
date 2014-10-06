@@ -1,6 +1,7 @@
 package config_test
 
 import (
+    "crypto/md5"
     "os"
 
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -339,24 +340,12 @@ var _ = Describe("Environment", func() {
 
     Describe("EncryptionKey", func() {
         It("sets the EncryptionKey if it is valid", func() {
-            os.Setenv("ENCRYPTION_KEY", "sixteenBytes!!!!")
+            key := "this is a very very secret secret!!"
+            os.Setenv("ENCRYPTION_KEY", key)
 
             env := config.NewEnvironment()
-            Expect(env.EncryptionKey).To(Equal("sixteenBytes!!!!"))
-        })
-
-        It("panics if it is not 16 bytes", func() {
-            os.Setenv("ENCRYPTION_KEY", "tooSmall")
-
-            Expect(func() {
-                config.NewEnvironment()
-            }).To(Panic())
-
-            os.Setenv("ENCRYPTION_KEY", "muchTooLarge!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-            Expect(func() {
-                config.NewEnvironment()
-            }).To(Panic())
+            sum := md5.Sum([]byte(key))
+            Expect(env.EncryptionKey).To(Equal(string(sum[:])))
         })
 
         It("panics if it is not set", func() {

@@ -1,6 +1,7 @@
 package config
 
 import (
+    "crypto/md5"
     "errors"
     "fmt"
     "net/url"
@@ -64,10 +65,7 @@ func (env *Environment) parseDatabaseURL() {
 }
 
 func (env *Environment) validateEncryptionKey() {
-
-    keyBytes := []byte(env.EncryptionKey)
-
-    if len(keyBytes) != 16 {
-        panic(errors.New("The ENCRYPTION_KEY needs to be 16 bytes in length"))
-    }
+    key := []byte(env.EncryptionKey)
+    sum := md5.Sum(key)
+    env.EncryptionKey = string(sum[:])
 }
