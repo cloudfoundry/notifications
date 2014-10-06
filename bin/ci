@@ -4,7 +4,7 @@ set -e
 DIR=$(dirname $0)
 
 if [[ -z "$ENVIRONMENT" ]]; then
-    ENVIRONMENT=ci
+    export ENVIRONMENT=ci
 fi
 
 source $DIR/test
