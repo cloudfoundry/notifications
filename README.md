@@ -145,6 +145,7 @@ The templates are [go templates](http://golang.org/pkg/text/template/).  The tem
 | UserGUID          | Unique id for the user the email is sent to                                                      |
 | Organization      | The name of the organization of the space (used for emails to spaces)                            |
 | Space             | The name of the space (used for emails to spaces)                                                |
+| UnsubscribeID     | The id for unsubscribing a user from a notification. See [here](#unsubscribe-id) for details     |
 
 ##### Example: Overriding space_body.text
 To override the plain text template in the email body, write the following in `./templates/overrides/space_body.text`:
@@ -179,6 +180,28 @@ So to override the user_body.text template the file name would be:
 	banana.damage.user_body.text
 	
 This override only applies to requests that match both the clientId and the kind.  This has the most precedence and overrides all other overrides.
+
+<a name="unsubscribe-id"></a>
+#### UnsubscribeID
+
+AES Encryption is used to encrypt a token value for unsubscribing a user from a 
+notification. The format of the token is the `user_guid|client_id|kind_id`.
+
+Encrypting:
+
+1. Concatenate user GUID, client ID, and kind ID into a single string, delimited by a `|` character.
+1. Base64 encode the concatenated string.
+1. Encrypt the encoded text using AES cipher in CFB mode.
+1. Base64 encode the cipher text.
+
+Decrypting:
+
+1. Base64 decode the unsubscribe token.
+1. Decrypt the decoded text using AES cipher in CFB mode.
+1. Base64 decode the decrypted text.
+1. Split the text at the `|` characters.
+
+
 
 ### Development
 
