@@ -4,8 +4,8 @@ import (
     "html"
 
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/postal"
-    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"

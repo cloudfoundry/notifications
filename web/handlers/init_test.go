@@ -6,10 +6,10 @@ import (
     "net/http"
     "testing"
 
+    "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
-    "github.com/cloudfoundry-incubator/notifications/test_helpers/fakes"
     "github.com/ryanmoran/stack"
 
     . "github.com/onsi/ginkgo"
