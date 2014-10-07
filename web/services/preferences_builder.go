@@ -7,10 +7,10 @@ import (
 )
 
 type Kind struct {
-    Count             int
-    Email             *bool
-    KindDescription   string
-    SourceDescription string
+    Count             int    `json:"count"`
+    Email             *bool  `json:"email"`
+    KindDescription   string `json:"kind_description"`
+    SourceDescription string `json:"source_description"`
 }
 
 type ClientMap map[string]Kind

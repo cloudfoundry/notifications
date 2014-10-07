@@ -24,8 +24,6 @@ var _ = Describe("GetPreferencesForUser", func() {
     var errorWriter *fakes.FakeErrorWriter
     var builder services.PreferencesBuilder
     var context stack.Context
-    var TRUE = true
-    var FALSE = false
 
     BeforeEach(func() {
         errorWriter = &fakes.FakeErrorWriter{}
@@ -71,16 +69,7 @@ var _ = Describe("GetPreferencesForUser", func() {
 
             Expect(writer.Code).To(Equal(http.StatusOK))
 
-            parsed := services.PreferencesBuilder{}
-            err := json.Unmarshal(writer.Body.Bytes(), &parsed)
-            if err != nil {
-                panic(err)
-            }
-
-            Expect(parsed.Clients["raptorClient"]["hungry-kind"].Count).To(Equal(0))
-            Expect(parsed.Clients["raptorClient"]["hungry-kind"].Email).To(Equal(&FALSE))
-            Expect(parsed.Clients["starWarsClient"]["vader-kind"].Count).To(Equal(0))
-            Expect(parsed.Clients["starWarsClient"]["vader-kind"].Email).To(Equal(&TRUE))
+            Expect(string(writer.Body.Bytes())).To(Equal(`{"global_unsubscribe":false,"clients":{"raptorClient":{"hungry-kind":{"count":0,"email":false,"kind_description":"hungry-kind","source_description":"raptorClient"}},"starWarsClient":{"vader-kind":{"count":0,"email":true,"kind_description":"vader-kind","source_description":"starWarsClient"}}}}`))
         })
 
         Context("when there is a database error", func() {
