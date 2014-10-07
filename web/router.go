@@ -19,7 +19,7 @@ type MotherInterface interface {
     PreferenceUpdater() services.PreferenceUpdater
     Logging() stack.Middleware
     ErrorWriter() handlers.ErrorWriter
-    Authenticator([]string) middleware.Authenticator
+    Authenticator(...string) middleware.Authenticator
     CORS() middleware.CORS
     handlers.RecipeBuilderInterface
 }
@@ -36,11 +36,11 @@ func NewRouter(mother MotherInterface) Router {
     preferenceUpdater := mother.PreferenceUpdater()
     logging := mother.Logging()
     errorWriter := mother.ErrorWriter()
-    notificationsWriteAuthenticator := mother.Authenticator([]string{"notifications.write"})
-    notificationPreferencesReadAuthenticator := mother.Authenticator([]string{"notification_preferences.read"})
-    notificationPreferencesWriteAuthenticator := mother.Authenticator([]string{"notification_preferences.write"})
-    notificationPreferencesAdminAuthenticator := mother.Authenticator([]string{"notification_preferences.admin"})
-    emailsWriteAuthenticator := mother.Authenticator([]string{"emails.write"})
+    notificationsWriteAuthenticator := mother.Authenticator("notifications.write")
+    notificationPreferencesReadAuthenticator := mother.Authenticator("notification_preferences.read")
+    notificationPreferencesWriteAuthenticator := mother.Authenticator("notification_preferences.write")
+    notificationPreferencesAdminAuthenticator := mother.Authenticator("notification_preferences.admin")
+    emailsWriteAuthenticator := mother.Authenticator("emails.write")
 
     cors := mother.CORS()
 

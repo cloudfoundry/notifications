@@ -13,7 +13,7 @@ type Authenticator struct {
     UAAPublicKey string
 }
 
-func NewAuthenticator(scopes []string, publicKey string) Authenticator {
+func NewAuthenticator(publicKey string, scopes ...string) Authenticator {
     return Authenticator{
         Scopes:       scopes,
         UAAPublicKey: publicKey,

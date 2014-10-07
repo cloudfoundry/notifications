@@ -81,8 +81,8 @@ func (mother Mother) ErrorWriter() handlers.ErrorWriter {
     return handlers.NewErrorWriter()
 }
 
-func (mother Mother) Authenticator(scopes []string) middleware.Authenticator {
-    return middleware.NewAuthenticator(scopes, config.UAAPublicKey)
+func (mother Mother) Authenticator(scopes ...string) middleware.Authenticator {
+    return middleware.NewAuthenticator(config.UAAPublicKey, scopes...)
 }
 
 func (mother Mother) Registrar() services.Registrar {
