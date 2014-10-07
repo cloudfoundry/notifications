@@ -12,18 +12,18 @@ var _ = Describe("Unsubscribes", func() {
 
     Describe("Contains", func() {
         BeforeEach(func() {
-            unsubscribes = models.Unsubscribes{
-                models.Unsubscribe{
+            unsubscribes = models.Unsubscribes([]models.Unsubscribe{
+                {
                     ClientID: "client-id",
                     KindID:   "kind-id",
                     UserID:   "user-id",
                 },
-                models.Unsubscribe{
+                {
                     ClientID: "client-id",
                     KindID:   "other-kind-id",
                     UserID:   "user-id",
                 },
-            }
+            })
         })
 
         Context("when the unsubscribe is in the set", func() {

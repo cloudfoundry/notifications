@@ -116,7 +116,6 @@ func (c *Client) Send(msg Message) error {
 
         err = c.Auth()
         if err != nil {
-            panic(err)
             return err
         }
     }
