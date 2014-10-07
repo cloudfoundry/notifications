@@ -163,6 +163,8 @@ func (t SendNotificationsToSpace) SendNotificationsToSpace(notificationsServer s
     Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
     Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["user-456"]["notification_id"]))
     Expect(data).To(ContainElement("Subject: CF Notification: space-subject"))
-    Expect(data).To(ContainElement(`The following "Space Test" notification was sent to you by the "Notifications Sender" component of Cloud Foundry because you are a member of the "notifications-service" space in the "notifications-service" organization:`))
+    Expect(data).To(ContainElement(`The following "Space Test" notification was sent to you by the "Notifications Sender"`))
+    Expect(data).To(ContainElement(`component of Cloud Foundry because you are a member of the "notifications-service" space`))
+    Expect(data).To(ContainElement(`in the "notifications-service" organization:`))
     Expect(data).To(ContainElement("this is a space test"))
 }

@@ -55,7 +55,7 @@ type SendNotificationToEmail struct{}
 func (t SendNotificationToEmail) SendNotificationToEmail(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
     body, err := json.Marshal(map[string]string{
         "kind_id": "acceptance-test",
-        "html":    "<p>this is an acceptance test</p>",
+        "html":    "<header>this is an acceptance test</header>",
         "subject": "my-special-subject",
         "to":      "John User <user@example.com>",
     })
@@ -109,6 +109,5 @@ func (t SendNotificationToEmail) SendNotificationToEmail(notificationsServer ser
     Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
     Expect(data).To(ContainElement("X-CF-Notification-ID: " + responseItem["notification_id"]))
     Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
-    Expect(data).To(ContainElement("        the template"))
-    Expect(data).To(ContainElement("<p>this is an acceptance test</p>"))
+    Expect(data).To(ContainElement("<header>this is an acceptance test</header>"))
 }

@@ -1,1 +1,11 @@
+Hello {{.To}},
+
+The following "{{.Subject}}" notification was sent to you directly by the "{{.SourceDescription}}"
+component of Cloud Foundry:
+
 {{.Text}}
+
+This message was sent from {{.From}} and can be replied to at {{.ReplyTo}}. The
+notification can be identified with the {{.MessageID}} identifier and was sent
+with the {{.ClientID}} UAA client. The notification can be unsubscribed from
+using the "{{.UnsubscribeID}}" unsubscribe token.
