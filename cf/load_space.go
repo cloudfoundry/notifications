@@ -1,6 +1,11 @@
 package cf
 
-import "encoding/json"
+import (
+    "encoding/json"
+    "time"
+
+    "github.com/cloudfoundry-incubator/notifications/metrics"
+)
 
 type CloudControllerSpace struct {
     Guid             string
@@ -11,21 +16,30 @@ type CloudControllerSpace struct {
 type CloudControllerSpaceResponse struct {
     Metadata struct {
         Guid string `json:"guid"`
-    }   `json:"metadata"`
+    } `json:"metadata"`
     Entity struct {
         Name             string `json:"name"`
         OrganizationGuid string `json:"organization_guid"`
-    }   `json:"entity"`
+    } `json:"entity"`
 }
 
 func (cc CloudController) LoadSpace(spaceGuid, token string) (CloudControllerSpace, error) {
     client := NewCloudControllerClient(cc.Host)
     space := CloudControllerSpace{}
 
+    then := time.Now()
+
     code, body, err := client.MakeRequest("GET", cc.SpacePath(spaceGuid), token, nil)
     if err != nil {
         return space, err
     }
+
+    duration := time.Now().Sub(then)
+
+    metrics.NewMetric("histogram", map[string]interface{}{
+        "name":  "notifications.external-requests.cc.space",
+        "value": duration.Seconds(),
+    }).Log()
 
     if code > 399 {
         return space, NewFailure(code, string(body))

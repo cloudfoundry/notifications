@@ -2,8 +2,10 @@ package postal
 
 import (
     "log"
+    "time"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
+    "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
@@ -42,7 +44,7 @@ func (loader UserLoader) Load(guid TypedGUID, token string) (map[string]uaa.User
         guids = append(guids, ccUser.Guid)
     }
 
-    usersByIDs, err := loader.uaaClient.UsersEmailsByIDs(guids...)
+    usersByIDs, err := loader.fetchUsersByIDs(guids)
     if err != nil {
         err = UAAErrorFor(err)
         return users, err
@@ -59,4 +61,19 @@ func (loader UserLoader) Load(guid TypedGUID, token string) (map[string]uaa.User
     }
 
     return users, nil
+}
+
+func (loader UserLoader) fetchUsersByIDs(guids []string) ([]uaa.User, error) {
+    then := time.Now()
+
+    usersByIDs, err := loader.uaaClient.UsersEmailsByIDs(guids...)
+
+    duration := time.Now().Sub(then)
+
+    metrics.NewMetric("histogram", map[string]interface{}{
+        "name":  "notifications.external-requests.uaa.users-email",
+        "value": duration.Seconds(),
+    }).Log()
+
+    return usersByIDs, err
 }

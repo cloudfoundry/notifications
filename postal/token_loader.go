@@ -4,6 +4,7 @@ import (
     "sync"
     "time"
 
+    "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
@@ -27,14 +28,14 @@ func (loader TokenLoader) Load() (string, error) {
     defer mutex.Unlock()
 
     if loader.newTokenRequired() {
-
-        token, err = loader.uaaClient.GetClientToken()
+        token, err = loader.getNewClientToken()
         if err != nil {
             err = UAAErrorFor(err)
             return "", err
         }
     }
     loader.uaaClient.SetToken(token.Access)
+
     return token.Access, nil
 }
 
@@ -44,10 +45,29 @@ func ResetLoader() {
 
 func (loader TokenLoader) expired() bool {
     toleratedRequestTime := time.Duration(30 * time.Second)
-    expired, _ := token.ExpiresBefore(time.Duration(toleratedRequestTime))
+    expired, err := token.ExpiresBefore(time.Duration(toleratedRequestTime))
+    if err != nil {
+        return true
+    }
+
     return expired
 }
 
 func (loader TokenLoader) newTokenRequired() bool {
     return token.Access == "" || loader.expired()
+}
+
+func (loader TokenLoader) getNewClientToken() (uaa.Token, error) {
+    then := time.Now()
+
+    token, err := loader.uaaClient.GetClientToken()
+
+    duration := time.Now().Sub(then)
+
+    metrics.NewMetric("histogram", map[string]interface{}{
+        "name":  "notifications.external-requests.uaa.client-token",
+        "value": duration.Seconds(),
+    }).Log()
+
+    return token, err
 }

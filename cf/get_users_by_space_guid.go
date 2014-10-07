@@ -3,6 +3,9 @@ package cf
 import (
     "encoding/json"
     "fmt"
+    "time"
+
+    "github.com/cloudfoundry-incubator/notifications/metrics"
 )
 
 type CloudControllerUser struct {
@@ -21,10 +24,19 @@ func (cc CloudController) GetUsersBySpaceGuid(guid, token string) ([]CloudContro
     users := make([]CloudControllerUser, 0)
     client := NewCloudControllerClient(cc.Host)
 
+    then := time.Now()
+
     code, body, err := client.MakeRequest("GET", cc.UsersBySpaceGuidPath(guid), token, nil)
     if err != nil {
         return users, err
     }
+
+    duration := time.Now().Sub(then)
+
+    metrics.NewMetric("histogram", map[string]interface{}{
+        "name":  "notifications.external-requests.cc.users-by-space-guid",
+        "value": duration.Seconds(),
+    }).Log()
 
     if code > 399 {
         return users, NewFailure(code, string(body))

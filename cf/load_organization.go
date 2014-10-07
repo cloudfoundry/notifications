@@ -3,6 +3,9 @@ package cf
 import (
     "encoding/json"
     "fmt"
+    "time"
+
+    "github.com/cloudfoundry-incubator/notifications/metrics"
 )
 
 type CloudControllerOrganization struct {
@@ -13,20 +16,29 @@ type CloudControllerOrganization struct {
 type CloudControllerOrganizationResponse struct {
     Metadata struct {
         Guid string `json:"guid"`
-    }   `json:"metadata"`
+    } `json:"metadata"`
     Entity struct {
         Name string `json:"name"`
-    }   `json:"entity"`
+    } `json:"entity"`
 }
 
 func (cc CloudController) LoadOrganization(guid, token string) (CloudControllerOrganization, error) {
     client := NewCloudControllerClient(cc.Host)
     org := CloudControllerOrganization{}
 
+    then := time.Now()
+
     code, body, err := client.MakeRequest("GET", cc.OrganizationPath(guid), token, nil)
     if err != nil {
         return org, err
     }
+
+    duration := time.Now().Sub(then)
+
+    metrics.NewMetric("histogram", map[string]interface{}{
+        "name":  "notifications.external-requests.cc.organization",
+        "value": duration.Seconds(),
+    }).Log()
 
     if code > 399 {
         return org, NewFailure(code, string(body))

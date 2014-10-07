@@ -60,13 +60,13 @@ func NewCloudControllerClient(host string) CloudControllerClient {
 }
 
 func (client CloudControllerClient) MakeRequest(method, path, token string, body io.Reader) (int, []byte, error) {
-    httpClient := GetClient()
     request, err := http.NewRequest(method, client.Host+path, body)
     if err != nil {
         return 0, []byte{}, err
     }
     request.Header.Set("Authorization", "Bearer "+token)
 
+    httpClient := GetClient()
     response, err := httpClient.Do(request)
     if err != nil {
         return 0, []byte{}, err
