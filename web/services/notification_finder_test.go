@@ -35,8 +35,9 @@ var _ = Describe("Finder", func() {
                 CreatedAt: time.Now(),
             }
             kindsRepo.Kinds[breach.ID+breach.ClientID] = breach
+            fakeDatabase := fakes.NewDatabase()
 
-            finder = services.NewNotificationFinder(clientsRepo, kindsRepo)
+            finder = services.NewNotificationFinder(clientsRepo, kindsRepo, fakeDatabase)
         })
 
         It("retrieves clients and kinds from the database", func() {

@@ -100,7 +100,7 @@ var _ = Describe("CloudController", func() {
         })
 
         It("returns a list of users for the given space guid", func() {
-            cloudController := cf.NewCloudController(CCServer.URL)
+            cloudController := cf.NewCloudController(CCServer.URL, false)
             users, err := cloudController.GetUsersBySpaceGuid(testSpaceGuid, testUAAToken)
             if err != nil {
                 panic(err)
@@ -118,7 +118,7 @@ var _ = Describe("CloudController", func() {
         })
 
         It("returns an error when the Cloud Controller returns a 400, or 500 status code", func() {
-            cloudController := cf.NewCloudController(CCServer.URL)
+            cloudController := cf.NewCloudController(CCServer.URL, false)
             _, err := cloudController.GetUsersBySpaceGuid(testSpaceGuid, "bad-token")
 
             Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))

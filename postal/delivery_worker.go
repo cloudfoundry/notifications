@@ -32,12 +32,13 @@ type DeliveryWorker struct {
     globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface
     unsubscribesRepo       models.UnsubscribesRepoInterface
     kindsRepo              models.KindsRepoInterface
+    database               models.DatabaseInterface
     gobble.Worker
 }
 
 func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
     globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface, unsubscribesRepo models.UnsubscribesRepoInterface,
-    kindsRepo models.KindsRepoInterface) DeliveryWorker {
+    kindsRepo models.KindsRepoInterface, database models.DatabaseInterface) DeliveryWorker {
 
     worker := DeliveryWorker{
         logger:                 logger,
@@ -45,6 +46,7 @@ func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterfa
         globalUnsubscribesRepo: globalUnsubscribesRepo,
         unsubscribesRepo:       unsubscribesRepo,
         kindsRepo:              kindsRepo,
+        database:               database,
     }
     worker.Worker = gobble.NewWorker(id, queue, worker.Deliver)
 
@@ -85,7 +87,7 @@ func (worker DeliveryWorker) Retry(job *gobble.Job) {
 }
 
 func (worker DeliveryWorker) ShouldDeliver(delivery Delivery) bool {
-    conn := models.Database().Connection()
+    conn := worker.database.Connection()
     if worker.isCritical(conn, delivery.Options.KindID, delivery.ClientID) {
         return true
     }

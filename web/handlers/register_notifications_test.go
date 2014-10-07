@@ -37,7 +37,8 @@ var _ = Describe("RegisterNotifications", func() {
         fakeConn = &fakes.FakeDBConn{}
         fakeErrorWriter = &fakes.FakeErrorWriter{}
         registrar = fakes.NewFakeRegistrar()
-        handler = handlers.NewRegisterNotifications(registrar, fakeErrorWriter)
+        fakeDatabase := fakes.NewDatabase()
+        handler = handlers.NewRegisterNotifications(registrar, fakeErrorWriter, fakeDatabase)
         writer = httptest.NewRecorder()
         requestBody, err := json.Marshal(map[string]interface{}{
             "source_description": "Raptor Containment Unit",

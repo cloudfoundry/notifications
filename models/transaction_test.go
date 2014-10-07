@@ -1,6 +1,7 @@
 package models_test
 
 import (
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
 
     . "github.com/onsi/ginkgo"
@@ -9,10 +10,14 @@ import (
 
 var _ = Describe("Transaction", func() {
     var transaction models.TransactionInterface
+    var conn models.ConnectionInterface
 
     BeforeEach(func() {
         TruncateTables()
-        transaction = models.Database().Connection().Transaction()
+        env := config.NewEnvironment()
+        db := models.NewDatabase(env.DatabaseURL)
+        conn = db.Connection()
+        transaction = conn.Transaction()
     })
 
     Describe("Begin/Commit", func() {
@@ -36,7 +41,7 @@ var _ = Describe("Transaction", func() {
                 panic(err)
             }
 
-            client, err := repo.Find(models.Database().Connection(), "my-client")
+            client, err := repo.Find(conn, "my-client")
             if err != nil {
                 panic(err)
             }
@@ -67,7 +72,7 @@ var _ = Describe("Transaction", func() {
                 panic(err)
             }
 
-            _, err = repo.Find(models.Database().Connection(), "my-client")
+            _, err = repo.Find(conn, "my-client")
             Expect(err).To(BeAssignableToTypeOf(models.ErrRecordNotFound{}))
         })
     })

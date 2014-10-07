@@ -1,6 +1,7 @@
 package models_test
 
 import (
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
 
     . "github.com/onsi/ginkgo"
@@ -14,8 +15,10 @@ var _ = Describe("GlobalUnsubscribesRepo", func() {
     Describe("Set/Get", func() {
         BeforeEach(func() {
             TruncateTables()
+            env := config.NewEnvironment()
+            db := models.NewDatabase(env.DatabaseURL)
+            conn = db.Connection().(*models.Connection)
             repo = models.NewGlobalUnsubscribesRepo()
-            conn = models.Database().Connection()
         })
 
         It("sets the global unsubscribe field for a user, allowing it to be retrieved later", func() {

@@ -5,7 +5,6 @@ import (
 
     "sync"
 
-    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/coopernurse/gorp"
 
     _ "github.com/go-sql-driver/mysql"
@@ -18,15 +17,19 @@ type DB struct {
     connection *Connection
 }
 
-func Database() *DB {
+type DatabaseInterface interface {
+    Connection() ConnectionInterface
+    TraceOn(string, gorp.GorpLogger)
+}
+
+func NewDatabase(databaseURL string) *DB {
     if _database != nil {
         return _database
     }
 
     mutex.Lock()
     defer mutex.Unlock()
-    env := config.NewEnvironment()
-    db, err := sql.Open("mysql", env.DatabaseURL)
+    db, err := sql.Open("mysql", databaseURL)
     if err != nil {
         panic(err)
     }
@@ -69,6 +72,10 @@ func (database DB) migrate() {
 
 }
 
-func (database *DB) Connection() *Connection {
+func (database *DB) Connection() ConnectionInterface {
     return database.connection
+}
+
+func (database *DB) TraceOn(prefix string, logger gorp.GorpLogger) {
+    database.connection.TraceOn(prefix, logger)
 }

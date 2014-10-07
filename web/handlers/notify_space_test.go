@@ -5,6 +5,7 @@ import (
     "net/http"
     "net/http/httptest"
 
+    "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/ryanmoran/stack"
@@ -32,7 +33,8 @@ var _ = Describe("NotifySpace", func() {
             context = stack.NewContext()
 
             fakeNotify = &FakeNotify{}
-            handler = handlers.NewNotifySpace(fakeNotify, nil, nil)
+            fakeDatabase := fakes.NewDatabase()
+            handler = handlers.NewNotifySpace(fakeNotify, nil, nil, fakeDatabase)
         })
 
         Context("when the notify.Execute returns a successful response", func() {

@@ -7,24 +7,20 @@ import (
     "io"
     "net/http"
     "sync"
-
-    "github.com/cloudfoundry-incubator/notifications/config"
 )
 
 var _client *http.Client
 var mutex sync.Mutex
 
-func GetClient() *http.Client {
+func GetClient(ccClient CloudControllerClient) *http.Client {
     mutex.Lock()
     defer mutex.Unlock()
 
     if _client == nil {
-        env := config.NewEnvironment()
-
         _client = &http.Client{
             Transport: &http.Transport{
                 TLSClientConfig: &tls.Config{
-                    InsecureSkipVerify: !env.VerifySSL,
+                    InsecureSkipVerify: ccClient.skipVerifySSL,
                 },
             },
         }
@@ -34,7 +30,7 @@ func GetClient() *http.Client {
 }
 
 type CloudController struct {
-    Host string
+    client CloudControllerClient
 }
 
 type CloudControllerInterface interface {
@@ -43,30 +39,32 @@ type CloudControllerInterface interface {
     LoadOrganization(string, string) (CloudControllerOrganization, error)
 }
 
-func NewCloudController(host string) CloudController {
+func NewCloudController(host string, skipVerifySSL bool) CloudController {
     return CloudController{
-        Host: host,
+        client: NewCloudControllerClient(host, skipVerifySSL),
     }
 }
 
 type CloudControllerClient struct {
-    Host string
+    host          string
+    skipVerifySSL bool
 }
 
-func NewCloudControllerClient(host string) CloudControllerClient {
+func NewCloudControllerClient(host string, skipVerifySSL bool) CloudControllerClient {
     return CloudControllerClient{
-        Host: host,
+        host:          host,
+        skipVerifySSL: skipVerifySSL,
     }
 }
 
 func (client CloudControllerClient) MakeRequest(method, path, token string, body io.Reader) (int, []byte, error) {
-    request, err := http.NewRequest(method, client.Host+path, body)
+    request, err := http.NewRequest(method, client.host+path, body)
     if err != nil {
         return 0, []byte{}, err
     }
     request.Header.Set("Authorization", "Bearer "+token)
 
-    httpClient := GetClient()
+    httpClient := GetClient(client)
     response, err := httpClient.Do(request)
     if err != nil {
         return 0, []byte{}, err

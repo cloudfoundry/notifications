@@ -25,9 +25,10 @@ var _ = Describe("NotifyEmail", func() {
             errorWriter = &fakes.FakeErrorWriter{}
             writer = httptest.NewRecorder()
             context = stack.NewContext()
+            database := fakes.NewDatabase()
 
             fakeNotify = &FakeNotify{}
-            handler = handlers.NewNotifyEmail(fakeNotify, errorWriter, nil)
+            handler = handlers.NewNotifyEmail(fakeNotify, errorWriter, nil, database)
         })
 
         Context("when notify.Execute returns a proper response", func() {

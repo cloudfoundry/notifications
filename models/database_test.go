@@ -1,6 +1,7 @@
 package models_test
 
 import (
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
 
     . "github.com/onsi/ginkgo"
@@ -8,31 +9,35 @@ import (
 )
 
 var _ = Describe("Database", func() {
+    var env config.Environment
     var db *models.DB
+    var connection *models.Connection
 
     BeforeEach(func() {
-        db = models.Database()
+        env = config.NewEnvironment()
+        db = models.NewDatabase(env.DatabaseURL)
+        connection = db.Connection().(*models.Connection)
     })
 
     It("returns a connection to the database", func() {
-        err := db.Connection().Db.Ping()
+        err := connection.Db.Ping()
         Expect(err).To(BeNil())
 
-        _, err = db.Connection().Db.Query("SHOW TABLES")
+        _, err = connection.Db.Query("SHOW TABLES")
         Expect(err).To(BeNil())
     })
 
     It("returns a single connection only", func() {
-        db2 := models.Database()
+        db2 := models.NewDatabase(env.DatabaseURL)
 
         Expect(db).To(Equal(db2))
     })
 
     It("has the correct tables", func() {
-        err := db.Connection().Db.Ping()
+        err := connection.Db.Ping()
         Expect(err).To(BeNil())
 
-        rows, err := db.Connection().Db.Query("SHOW TABLES")
+        rows, err := connection.Db.Query("SHOW TABLES")
         Expect(err).To(BeNil())
 
         tables := []string{}

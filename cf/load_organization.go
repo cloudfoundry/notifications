@@ -23,12 +23,11 @@ type CloudControllerOrganizationResponse struct {
 }
 
 func (cc CloudController) LoadOrganization(guid, token string) (CloudControllerOrganization, error) {
-    client := NewCloudControllerClient(cc.Host)
     org := CloudControllerOrganization{}
 
     then := time.Now()
 
-    code, body, err := client.MakeRequest("GET", cc.OrganizationPath(guid), token, nil)
+    code, body, err := cc.client.MakeRequest("GET", cc.OrganizationPath(guid), token, nil)
     if err != nil {
         return org, err
     }

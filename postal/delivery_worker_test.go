@@ -29,7 +29,8 @@ var _ = Describe("DeliveryWorker", func() {
     var unsubscribesRepo *fakes.FakeUnsubscribesRepo
     var globalUnsubscribesRepo *fakes.GlobalUnsubscribesRepo
     var kindsRepo *fakes.FakeKindsRepo
-    var conn *fakes.FakeDBConn
+    var database *fakes.Database
+    var conn models.ConnectionInterface
     var userGUID string
 
     BeforeEach(func() {
@@ -41,10 +42,11 @@ var _ = Describe("DeliveryWorker", func() {
         unsubscribesRepo = fakes.NewFakeUnsubscribesRepo()
         globalUnsubscribesRepo = fakes.NewGlobalUnsubscribesRepo()
         kindsRepo = fakes.NewFakeKindsRepo()
-        conn = &fakes.FakeDBConn{}
+        database = fakes.NewDatabase()
+        conn = database.Connection()
         userGUID = "user-123"
 
-        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo)
+        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo, database)
 
         os.Setenv("SENDER", "from@email.com")
 

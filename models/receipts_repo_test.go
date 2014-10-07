@@ -3,6 +3,7 @@ package models_test
 import (
     "time"
 
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
 
     . "github.com/onsi/ginkgo"
@@ -16,7 +17,11 @@ var _ = Describe("Receipts Repo", func() {
     BeforeEach(func() {
         TruncateTables()
         repo = models.NewReceiptsRepo()
-        conn = models.Database().Connection()
+
+        env := config.NewEnvironment()
+        db := models.NewDatabase(env.DatabaseURL)
+        conn = db.Connection().(*models.Connection)
+
     })
 
     Describe("Create", func() {

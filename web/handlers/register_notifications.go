@@ -15,17 +15,19 @@ import (
 type RegisterNotifications struct {
     registrar   services.RegistrarInterface
     errorWriter ErrorWriterInterface
+    database    models.DatabaseInterface
 }
 
-func NewRegisterNotifications(registrar services.RegistrarInterface, errorWriter ErrorWriterInterface) RegisterNotifications {
+func NewRegisterNotifications(registrar services.RegistrarInterface, errorWriter ErrorWriterInterface, database models.DatabaseInterface) RegisterNotifications {
     return RegisterNotifications{
         registrar:   registrar,
         errorWriter: errorWriter,
+        database:    database,
     }
 }
 
 func (handler RegisterNotifications) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-    handler.Execute(w, req, models.Database().Connection(), context)
+    handler.Execute(w, req, handler.database.Connection(), context)
 
     metrics.NewMetric("counter", map[string]interface{}{
         "name": "notifications.web.registration",

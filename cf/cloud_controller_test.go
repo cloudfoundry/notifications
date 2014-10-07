@@ -12,8 +12,9 @@ import (
 
 var _ = Describe("GetClient", func() {
     It("Gets the global http Client", func() {
-        client1 := cf.GetClient()
-        client2 := cf.GetClient()
+        ccClient := cf.NewCloudControllerClient("http://api.example.com", false)
+        client1 := cf.GetClient(ccClient)
+        client2 := cf.GetClient(ccClient)
 
         Expect(client1).To(BeAssignableToTypeOf(&http.Client{}))
         Expect(client1).ToNot(BeNil())

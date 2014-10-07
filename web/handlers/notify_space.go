@@ -14,22 +14,24 @@ type NotifySpace struct {
     errorWriter   ErrorWriterInterface
     notify        NotifyInterface
     recipeBuilder RecipeBuilderInterface
+    database      models.DatabaseInterface
 }
 
 type RecipeBuilderInterface interface {
     NewUAARecipe() postal.UAARecipe
 }
 
-func NewNotifySpace(notify NotifyInterface, errorWriter ErrorWriterInterface, recipeBuilder RecipeBuilderInterface) NotifySpace {
+func NewNotifySpace(notify NotifyInterface, errorWriter ErrorWriterInterface, recipeBuilder RecipeBuilderInterface, database models.DatabaseInterface) NotifySpace {
     return NotifySpace{
         errorWriter:   errorWriter,
         notify:        notify,
         recipeBuilder: recipeBuilder,
+        database:      database,
     }
 }
 
 func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-    connection := models.Database().Connection()
+    connection := handler.database.Connection()
     err := handler.Execute(w, req, connection, context, handler.recipeBuilder.NewUAARecipe())
     if err != nil {
         handler.errorWriter.Write(w, err)

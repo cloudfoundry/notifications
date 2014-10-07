@@ -3,7 +3,7 @@ package mail_test
 import (
     "bytes"
     "log"
-    "os"
+    "net"
     "strings"
     "time"
 
@@ -18,35 +18,49 @@ var _ = Describe("Mail", func() {
     var client *mail.Client
     var logger *log.Logger
     var buffer *bytes.Buffer
+    var config mail.Config
 
     BeforeEach(func() {
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
+        config = mail.Config{
+            User:          "user",
+            Pass:          "pass",
+            Host:          "0.0.0.0",
+            Port:          "3000",
+            TestMode:      false,
+            SkipVerifySSL: true,
+            DisableTLS:    false,
+        }
     })
 
-    Context("NewClient", func() {
+    Describe("NewClient", func() {
         It("defaults the ConnectTimeout to 15 seconds", func() {
-            client, err := mail.NewClient("user", "pass", "0.0.0.0:3000", logger)
+            client, err := mail.NewClient(config, logger)
             if err != nil {
                 panic(err)
             }
 
-            Expect(client.ConnectTimeout).To(Equal(15 * time.Second))
+            Expect(client.ConnectTimeout()).To(Equal(15 * time.Second))
         })
     })
 
     Describe("Send", func() {
         Context("when in Testmode", func() {
             var msg mail.Message
-            var testMode string
 
             BeforeEach(func() {
                 var err error
 
                 mailServer = NewSMTPServer("user", "pass")
                 mailServer.SupportsTLS = true
-                serverURL := mailServer.URL.String()
-                client, err = mail.NewClient("user", "pass", serverURL, logger)
+                config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
+                if err != nil {
+                    panic(err)
+                }
+
+                config.TestMode = true
+                client, err = mail.NewClient(config, logger)
                 if err != nil {
                     panic(err)
                 }
@@ -57,13 +71,6 @@ var _ = Describe("Mail", func() {
                     Subject: "Urgent! Read now!",
                     Body:    "This email is the most important thing you will read all day!",
                 }
-
-                testMode = os.Getenv("TEST_MODE")
-                os.Setenv("TEST_MODE", "true")
-            })
-
-            AfterEach(func() {
-                os.Setenv("TEST_MODE", testMode)
             })
 
             It("does not connect to the smtp server", func() {
@@ -99,8 +106,11 @@ var _ = Describe("Mail", func() {
 
             mailServer = NewSMTPServer("user", "pass")
             mailServer.SupportsTLS = true
-            serverURL := mailServer.URL.String()
-            client, err = mail.NewClient("user", "pass", serverURL, logger)
+            config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
+            if err != nil {
+                panic(err)
+            }
+            client, err = mail.NewClient(config, logger)
             if err != nil {
                 panic(err)
             }
@@ -127,7 +137,7 @@ var _ = Describe("Mail", func() {
             Expect(delivery.Sender).To(Equal("me@example.com"))
             Expect(delivery.Recipient).To(Equal("you@example.com"))
             Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
-            Expect(delivery.UsedTLS).To(BeFalse())
+            Expect(delivery.UsedTLS).To(BeTrue())
         })
 
         It("can make multiple requests", func() {
@@ -176,16 +186,14 @@ var _ = Describe("Mail", func() {
         })
 
         Context("when configured to use TLS", func() {
-            var smtpTLS string
-
             BeforeEach(func() {
-                smtpTLS = os.Getenv("SMTP_TLS")
-                os.Setenv("SMTP_TLS", "true")
-                client.Insecure = true
-            })
+                var err error
 
-            AfterEach(func() {
-                os.Setenv("SMTP_TLS", smtpTLS)
+                config.SkipVerifySSL = true
+                client, err = mail.NewClient(config, logger)
+                if err != nil {
+                    panic(err)
+                }
             })
 
             It("communicates over TLS", func() {
@@ -214,16 +222,15 @@ var _ = Describe("Mail", func() {
         })
 
         Context("when configured to not use TLS", func() {
-            var smtpTLS string
-
             BeforeEach(func() {
-                smtpTLS = os.Getenv("SMTP_TLS")
-                os.Setenv("SMTP_TLS", "false")
-                mailServer.SupportsTLS = false
-            })
+                var err error
 
-            AfterEach(func() {
-                os.Setenv("SMTP_TLS", smtpTLS)
+                mailServer.SupportsTLS = false
+                config.DisableTLS = true
+                client, err = mail.NewClient(config, logger)
+                if err != nil {
+                    panic(err)
+                }
             })
 
             It("does not authenticate", func() {
@@ -254,18 +261,14 @@ var _ = Describe("Mail", func() {
 
     Describe("Connect", func() {
         Context("when in test mode", func() {
-            BeforeEach(func() {
-                os.Setenv("TEST_MODE", "TRUE")
-            })
-
-            AfterEach(func() {
-                os.Setenv("TEST_MODE", "FALSE")
-            })
-
             It("does not connect to the smtp server", func() {
-
-                serverURL := "fakewebsiteoninternet.com:587"
-                client, err := mail.NewClient("user", "pass", serverURL, logger)
+                var err error
+                config.Host, config.Port, err = net.SplitHostPort("fakewebsiteoninternet.com:587")
+                if err != nil {
+                    panic(err)
+                }
+                config.TestMode = true
+                client, err := mail.NewClient(config, logger)
                 if err != nil {
                     panic(err)
                 }
@@ -279,13 +282,17 @@ var _ = Describe("Mail", func() {
             mailServer = NewSMTPServer("user", "pass")
             mailServer.ConnectWait = 5 * time.Second
 
-            serverURL := mailServer.URL.String()
-            client, err := mail.NewClient("user", "pass", serverURL, logger)
+            var err error
+            config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
+            if err != nil {
+                panic(err)
+            }
+            config.ConnectTimeout = 100 * time.Millisecond
+            client, err := mail.NewClient(config, logger)
             if err != nil {
                 panic(err)
             }
 
-            client.ConnectTimeout = 100 * time.Millisecond
             err = client.Connect()
 
             Expect(err).ToNot(BeNil())
@@ -299,8 +306,11 @@ var _ = Describe("Mail", func() {
 
             mailServer = NewSMTPServer("user", "pass")
             mailServer.SupportsTLS = true
-            serverURL := mailServer.URL.String()
-            client, err = mail.NewClient("user", "pass", serverURL, logger)
+            config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
+            if err != nil {
+                panic(err)
+            }
+            client, err = mail.NewClient(config, logger)
             if err != nil {
                 panic(err)
             }

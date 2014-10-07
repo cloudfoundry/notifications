@@ -50,7 +50,7 @@ var _ = Describe("LoadSpace", func() {
 
     BeforeEach(func() {
         CCServer = httptest.NewServer(SpacesEndpoint)
-        cc = cf.NewCloudController(CCServer.URL)
+        cc = cf.NewCloudController(CCServer.URL, false)
     })
 
     AfterEach(func() {

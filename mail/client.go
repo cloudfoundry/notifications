@@ -9,18 +9,22 @@ import (
     "net/smtp"
     "strings"
     "time"
-
-    "github.com/cloudfoundry-incubator/notifications/config"
 )
 
 type Client struct {
+    config Config
+    client *smtp.Client
+    logger *log.Logger
+}
+
+type Config struct {
     Host           string
     Port           string
-    user           string
-    pass           string
-    client         *smtp.Client
-    logger         *log.Logger
-    Insecure       bool
+    User           string
+    Pass           string
+    TestMode       bool
+    SkipVerifySSL  bool
+    DisableTLS     bool
     ConnectTimeout time.Duration
 }
 
@@ -34,28 +38,21 @@ type connection struct {
     err    error
 }
 
-func NewClient(user, pass, url string, logger *log.Logger) (*Client, error) {
+func NewClient(config Config, logger *log.Logger) (*Client, error) {
     client := &Client{
-        user:   user,
-        pass:   pass,
+        config: config,
         logger: logger,
     }
 
-    host, port, err := net.SplitHostPort(url)
-    if err != nil {
-        return client, err
+    if client.config.ConnectTimeout == 0 {
+        client.config.ConnectTimeout = 15 * time.Second
     }
-
-    client.Host = host
-    client.Port = port
-    client.ConnectTimeout = 15 * time.Second
 
     return client, nil
 }
 
 func (c *Client) Connect() error {
-    env := config.NewEnvironment()
-    if env.TestMode {
+    if c.config.TestMode {
         return nil
     }
 
@@ -70,7 +67,7 @@ func (c *Client) Connect() error {
         }
 
         c.client = connection.client
-    case <-time.After(c.ConnectTimeout):
+    case <-time.After(c.config.ConnectTimeout):
         return errors.New("dial tcp: i/o timeout")
     }
 
@@ -81,7 +78,7 @@ func (c *Client) connect() chan connection {
     channel := make(chan connection)
 
     go func() {
-        client, err := smtp.Dial(net.JoinHostPort(c.Host, c.Port))
+        client, err := smtp.Dial(net.JoinHostPort(c.config.Host, c.config.Port))
         channel <- connection{
             client: client,
             err:    err,
@@ -92,8 +89,7 @@ func (c *Client) connect() chan connection {
 }
 
 func (c *Client) Send(msg Message) error {
-    env := config.NewEnvironment()
-    if env.TestMode {
+    if c.config.TestMode {
         c.logger.Println("TEST_MODE is true, emails not being sent")
         return nil
     }
@@ -108,7 +104,7 @@ func (c *Client) Send(msg Message) error {
         return err
     }
 
-    if env.SMTPTLS {
+    if !c.config.DisableTLS {
         err = c.StartTLS()
         if err != nil {
             return err
@@ -159,8 +155,8 @@ func (c *Client) Extension(name string) (bool, string) {
 func (c *Client) StartTLS() error {
     if ok, _ := c.Extension("STARTTLS"); ok {
         err := c.client.StartTLS(&tls.Config{
-            ServerName:         c.Host,
-            InsecureSkipVerify: c.Insecure,
+            ServerName:         c.config.Host,
+            InsecureSkipVerify: c.config.SkipVerifySSL,
         })
         if err != nil {
             return err
@@ -172,7 +168,7 @@ func (c *Client) StartTLS() error {
 
 func (c *Client) Auth() error {
     if ok, _ := c.Extension("AUTH"); ok {
-        err := c.client.Auth(smtp.PlainAuth("", c.user, c.pass, c.Host))
+        err := c.client.Auth(smtp.PlainAuth("", c.config.User, c.config.Pass, c.config.Host))
         if err != nil {
             return err
         }

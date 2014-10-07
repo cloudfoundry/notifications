@@ -58,6 +58,7 @@ func Teardown(env config.Environment) {
 }
 
 func TruncateTables() {
-    models.Database().Connection().TruncateTables()
+    env := config.NewEnvironment()
+    models.NewDatabase(env.DatabaseURL).Connection().(*models.Connection).TruncateTables()
     gobble.Database().Connection.TruncateTables()
 }

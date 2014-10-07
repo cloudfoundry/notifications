@@ -22,11 +22,10 @@ type CloudControllerUsersResponse struct {
 
 func (cc CloudController) GetUsersBySpaceGuid(guid, token string) ([]CloudControllerUser, error) {
     users := make([]CloudControllerUser, 0)
-    client := NewCloudControllerClient(cc.Host)
 
     then := time.Now()
 
-    code, body, err := client.MakeRequest("GET", cc.UsersBySpaceGuidPath(guid), token, nil)
+    code, body, err := cc.client.MakeRequest("GET", cc.UsersBySpaceGuidPath(guid), token, nil)
     if err != nil {
         return users, err
     }

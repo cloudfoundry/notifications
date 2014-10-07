@@ -15,17 +15,19 @@ import (
 type UpdateSpecificUserPreferences struct {
     preferenceUpdater services.PreferenceUpdaterInterface
     errorWriter       ErrorWriterInterface
+    database          models.DatabaseInterface
 }
 
-func NewUpdateSpecificUserPreferences(preferenceUpdater services.PreferenceUpdaterInterface, errorWriter ErrorWriterInterface) UpdateSpecificUserPreferences {
+func NewUpdateSpecificUserPreferences(preferenceUpdater services.PreferenceUpdaterInterface, errorWriter ErrorWriterInterface, database models.DatabaseInterface) UpdateSpecificUserPreferences {
     return UpdateSpecificUserPreferences{
         preferenceUpdater: preferenceUpdater,
         errorWriter:       errorWriter,
+        database:          database,
     }
 }
 
 func (handler UpdateSpecificUserPreferences) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-    connection := models.Database().Connection()
+    connection := handler.database.Connection()
     handler.Execute(w, req, connection, context)
 }
 

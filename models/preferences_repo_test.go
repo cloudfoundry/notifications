@@ -1,6 +1,7 @@
 package models_test
 
 import (
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
 
     . "github.com/onsi/ginkgo"
@@ -17,7 +18,11 @@ var _ = Describe("PreferencesRepo", func() {
 
     BeforeEach(func() {
         TruncateTables()
-        conn = models.Database().Connection()
+
+        env := config.NewEnvironment()
+        db := models.NewDatabase(env.DatabaseURL)
+        conn = db.Connection().(*models.Connection)
+
         kinds = models.NewKindsRepo()
         clients = models.NewClientsRepo()
         receipts = models.NewReceiptsRepo()

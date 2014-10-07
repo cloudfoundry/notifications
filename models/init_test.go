@@ -3,6 +3,7 @@ package models_test
 import (
     "testing"
 
+    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
 
     . "github.com/onsi/ginkgo"
@@ -15,7 +16,10 @@ func TestModelsSuite(t *testing.T) {
 }
 
 func TruncateTables() {
-    err := models.Database().Connection().TruncateTables()
+    env := config.NewEnvironment()
+    db := models.NewDatabase(env.DatabaseURL)
+    connection := db.Connection().(*models.Connection)
+    err := connection.TruncateTables()
     if err != nil {
         panic(err)
     }

@@ -7,6 +7,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/gobble"
+    "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -44,7 +45,7 @@ func (mother Mother) NewUAARecipe() postal.UAARecipe {
     env := config.NewEnvironment()
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
     uaaClient.VerifySSL = env.VerifySSL
-    cloudController := cf.NewCloudController(env.CCHost)
+    cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
     tokenLoader := postal.NewTokenLoader(&uaaClient)
     userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
@@ -62,11 +63,30 @@ func (mother Mother) EmailRecipe() postal.MailRecipeInterface {
 
 func (mother Mother) NotificationFinder() services.NotificationFinder {
     clientsRepo, kindsRepo := mother.Repos()
-    return services.NewNotificationFinder(clientsRepo, kindsRepo)
+    return services.NewNotificationFinder(clientsRepo, kindsRepo, mother.Database())
 }
 
 func (mother Mother) Mailer() postal.Mailer {
     return postal.NewMailer(mother.Queue(), uuid.NewV4)
+}
+
+func (mother Mother) MailClient() *mail.Client {
+    env := config.NewEnvironment()
+    mailConfig := mail.Config{
+        User:          env.SMTPUser,
+        Pass:          env.SMTPPass,
+        Host:          env.SMTPHost,
+        Port:          env.SMTPPort,
+        TestMode:      env.TestMode,
+        SkipVerifySSL: env.VerifySSL,
+        DisableTLS:    env.SMTPTLS,
+    }
+    client, err := mail.NewClient(mailConfig, mother.Logger())
+    if err != nil {
+        panic(err)
+    }
+
+    return client
 }
 
 func (mother Mother) Repos() (models.ClientsRepo, models.KindsRepo) {
@@ -90,8 +110,13 @@ func (mother Mother) Registrar() services.Registrar {
     return services.NewRegistrar(clientsRepo, kindsRepo)
 }
 
+func (mother Mother) Database() models.DatabaseInterface {
+    env := config.NewEnvironment()
+    return models.NewDatabase(env.DatabaseURL)
+}
+
 func (mother Mother) PreferencesFinder() *services.PreferencesFinder {
-    return services.NewPreferencesFinder(models.NewPreferencesRepo(), mother.GlobalUnsubscribesRepo())
+    return services.NewPreferencesFinder(models.NewPreferencesRepo(), mother.GlobalUnsubscribesRepo(), mother.Database())
 }
 
 func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {

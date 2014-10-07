@@ -34,7 +34,8 @@ var _ = Describe("NotifyUser", func() {
             context = stack.NewContext()
 
             fakeNotify = &FakeNotify{}
-            handler = handlers.NewNotifyUser(fakeNotify, errorWriter, nil)
+            fakeDatabase := fakes.NewDatabase()
+            handler = handlers.NewNotifyUser(fakeNotify, errorWriter, nil, fakeDatabase)
         })
 
         Context("when notify.Execute returns a successful response", func() {

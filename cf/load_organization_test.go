@@ -50,7 +50,7 @@ var _ = Describe("LoadOrganization", func() {
 
     BeforeEach(func() {
         CCServer = httptest.NewServer(OrganizationsEndpoint)
-        cc = cf.NewCloudController(CCServer.URL)
+        cc = cf.NewCloudController(CCServer.URL, false)
     })
 
     AfterEach(func() {

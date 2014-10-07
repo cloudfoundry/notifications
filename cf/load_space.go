@@ -24,12 +24,11 @@ type CloudControllerSpaceResponse struct {
 }
 
 func (cc CloudController) LoadSpace(spaceGuid, token string) (CloudControllerSpace, error) {
-    client := NewCloudControllerClient(cc.Host)
     space := CloudControllerSpace{}
 
     then := time.Now()
 
-    code, body, err := client.MakeRequest("GET", cc.SpacePath(spaceGuid), token, nil)
+    code, body, err := cc.client.MakeRequest("GET", cc.SpacePath(spaceGuid), token, nil)
     if err != nil {
         return space, err
     }

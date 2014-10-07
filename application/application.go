@@ -3,14 +3,11 @@ package application
 import (
     "errors"
     "log"
-    "net"
     "reflect"
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/gobble"
-    "github.com/cloudfoundry-incubator/notifications/mail"
-    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -53,12 +50,8 @@ func (app Application) ConfigureSMTP() {
         return
     }
 
-    mailClient, err := mail.NewClient(app.env.SMTPUser, app.env.SMTPPass, net.JoinHostPort(app.env.SMTPHost, app.env.SMTPPort), app.mother.Logger())
-    if err != nil {
-        panic(err)
-    }
-
-    err = mailClient.Connect()
+    mailClient := app.mother.MailClient()
+    err := mailClient.Connect()
     if err != nil {
         panic(err)
     }
@@ -95,13 +88,13 @@ func (app Application) RetrieveUAAPublicKey() {
 }
 
 func (app Application) Migrate() {
-    models.Database()
+    app.mother.Database()
     gobble.Database()
 }
 
 func (app Application) EnableDBLogging() {
     if app.env.DBLoggingEnabled {
-        models.Database().Connection().TraceOn("[DB]", app.mother.Logger())
+        app.mother.Database().TraceOn("[DB]", app.mother.Logger())
     }
 }
 
@@ -113,12 +106,7 @@ func (app Application) UnlockJobs() {
 
 func (app Application) StartWorkers() {
     for i := 0; i < WorkerCount; i++ {
-        mailClient, err := mail.NewClient(app.env.SMTPUser, app.env.SMTPPass, net.JoinHostPort(app.env.SMTPHost, app.env.SMTPPort), app.mother.Logger())
-        if err != nil {
-            panic(err)
-        }
-        mailClient.Insecure = !app.env.VerifySSL
-        worker := postal.NewDeliveryWorker(i+1, app.mother.Logger(), mailClient, app.mother.Queue(), app.mother.GlobalUnsubscribesRepo(), app.mother.UnsubscribesRepo(), app.mother.KindsRepo())
+        worker := postal.NewDeliveryWorker(i+1, app.mother.Logger(), app.mother.MailClient(), app.mother.Queue(), app.mother.GlobalUnsubscribesRepo(), app.mother.UnsubscribesRepo(), app.mother.KindsRepo(), app.mother.Database())
         worker.Work()
     }
 }

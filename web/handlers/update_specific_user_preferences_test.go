@@ -82,7 +82,8 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
 
             updater = fakes.NewFakePreferenceUpdater()
             errorWriter = fakes.NewFakeErrorWriter()
-            handler = handlers.NewUpdateSpecificUserPreferences(updater, errorWriter)
+            fakeDatabase := fakes.NewDatabase()
+            handler = handlers.NewUpdateSpecificUserPreferences(updater, errorWriter, fakeDatabase)
             writer = httptest.NewRecorder()
         })
 

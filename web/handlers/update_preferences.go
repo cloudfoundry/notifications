@@ -16,17 +16,19 @@ import (
 type UpdatePreferences struct {
     preferenceUpdater services.PreferenceUpdaterInterface
     errorWriter       ErrorWriterInterface
+    database          models.DatabaseInterface
 }
 
-func NewUpdatePreferences(preferenceUpdater services.PreferenceUpdaterInterface, errorWriter ErrorWriterInterface) UpdatePreferences {
+func NewUpdatePreferences(preferenceUpdater services.PreferenceUpdaterInterface, errorWriter ErrorWriterInterface, database models.DatabaseInterface) UpdatePreferences {
     return UpdatePreferences{
         preferenceUpdater: preferenceUpdater,
         errorWriter:       errorWriter,
+        database:          database,
     }
 }
 
 func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-    connection := models.Database().Connection()
+    connection := handler.database.Connection()
     handler.Execute(w, req, connection, context)
 
     metrics.NewMetric("counter", map[string]interface{}{
