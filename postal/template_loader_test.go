@@ -54,7 +54,7 @@ var _ = Describe("TemplateLoader", func() {
     BeforeEach(func() {
         env = config.NewEnvironment()
         fs = NewFakeFileSystem(env)
-        loader = postal.NewTemplateLoader(&fs)
+        loader = postal.NewTemplateLoader(&fs, env.RootPath)
         kind = "maximumBananaDamage"
         clientID = "DirkVonPiel"
     })

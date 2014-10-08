@@ -2,8 +2,8 @@ package postal_test
 
 import (
     "bytes"
+    "crypto/md5"
     "log"
-    "os"
     "strings"
     "time"
 
@@ -45,10 +45,11 @@ var _ = Describe("DeliveryWorker", func() {
         database = fakes.NewDatabase()
         conn = database.Connection()
         userGUID = "user-123"
+        sender := "from@email.com"
+        sum := md5.Sum([]byte("banana's are so very tasty"))
+        encryptionKey := string(sum[:])
 
-        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo, database)
-
-        os.Setenv("SENDER", "from@email.com")
+        worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo, database, sender, encryptionKey)
 
         delivery = postal.Delivery{
             User: uaa.User{

@@ -50,7 +50,7 @@ func (mother Mother) NewUAARecipe() postal.UAARecipe {
     tokenLoader := postal.NewTokenLoader(&uaaClient)
     userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
     spaceLoader := postal.NewSpaceLoader(cloudController)
-    templateLoader := postal.NewTemplateLoader(postal.NewFileSystem())
+    templateLoader := postal.NewTemplateLoader(postal.NewFileSystem(), env.RootPath)
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
@@ -58,7 +58,8 @@ func (mother Mother) NewUAARecipe() postal.UAARecipe {
 }
 
 func (mother Mother) EmailRecipe() postal.MailRecipeInterface {
-    return postal.NewEmailRecipe(mother.Mailer(), postal.NewTemplateLoader(postal.NewFileSystem()))
+    env := config.NewEnvironment()
+    return postal.NewEmailRecipe(mother.Mailer(), postal.NewTemplateLoader(postal.NewFileSystem(), env.RootPath))
 }
 
 func (mother Mother) NotificationFinder() services.NotificationFinder {

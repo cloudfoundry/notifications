@@ -6,7 +6,6 @@ import (
     "strings"
     "time"
 
-    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/cryptography"
     "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
@@ -33,12 +32,14 @@ type DeliveryWorker struct {
     unsubscribesRepo       models.UnsubscribesRepoInterface
     kindsRepo              models.KindsRepoInterface
     database               models.DatabaseInterface
+    sender                 string
+    encryptionKey          string
     gobble.Worker
 }
 
 func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
     globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface, unsubscribesRepo models.UnsubscribesRepoInterface,
-    kindsRepo models.KindsRepoInterface, database models.DatabaseInterface) DeliveryWorker {
+    kindsRepo models.KindsRepoInterface, database models.DatabaseInterface, sender, encryptionKey string) DeliveryWorker {
 
     worker := DeliveryWorker{
         logger:                 logger,
@@ -47,6 +48,8 @@ func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterfa
         unsubscribesRepo:       unsubscribesRepo,
         kindsRepo:              kindsRepo,
         database:               database,
+        sender:                 sender,
+        encryptionKey:          encryptionKey,
     }
     worker.Worker = gobble.NewWorker(id, queue, worker.Deliver)
 
@@ -117,13 +120,12 @@ func (worker DeliveryWorker) isCritical(conn models.ConnectionInterface, kindID,
 }
 
 func (worker DeliveryWorker) pack(delivery Delivery) mail.Message {
-    env := config.NewEnvironment()
-    cryptoClient, err := cryptography.NewURLCryptoClient(env.EncryptionKey)
+    cryptoClient, err := cryptography.NewURLCryptoClient(worker.encryptionKey)
     if err != nil {
         panic(err)
     }
 
-    context := NewMessageContext(delivery.User.Emails[0], delivery.Options, env, delivery.Space,
+    context := NewMessageContext(delivery.User.Emails[0], delivery.Options, worker.sender, delivery.Space,
         delivery.Organization, delivery.ClientID, delivery.MessageID, delivery.UserGUID,
         delivery.Templates, cryptoClient)
     packager := NewPackager()

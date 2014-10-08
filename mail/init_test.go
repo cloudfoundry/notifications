@@ -80,6 +80,7 @@ type SMTPServer struct {
     Listener        *net.TCPListener
     SupportsTLS     bool
     ConnectWait     time.Duration
+    halt            chan bool
 }
 
 type Delivery struct {
@@ -106,6 +107,7 @@ func NewSMTPServer(user, pass string) *SMTPServer {
     server := SMTPServer{
         URL:      *listenerURL,
         Listener: listener,
+        halt:     make(chan bool),
     }
     server.Run()
     return &server
@@ -114,19 +116,38 @@ func NewSMTPServer(user, pass string) *SMTPServer {
 func (server *SMTPServer) Run() {
     go func() {
         for {
-            connection, err := server.Listener.AcceptTCP()
-            if err != nil {
-                panic(err)
+            select {
+            case <-server.halt:
+                return
+            case connection := <-server.Accept():
+                go server.Respond(connection)
             }
-
-            <-time.After(server.ConnectWait)
-
-            server.Respond(connection)
         }
     }()
 }
 
+func (server *SMTPServer) Accept() chan *net.TCPConn {
+    connectionChan := make(chan *net.TCPConn)
+
+    go func() {
+        connection, err := server.Listener.AcceptTCP()
+        if err != nil {
+            return
+        }
+        connectionChan <- connection
+    }()
+
+    return connectionChan
+}
+
+func (server *SMTPServer) Close() {
+    server.halt <- true
+    server.Listener.Close()
+}
+
 func (server *SMTPServer) Respond(conn net.Conn) {
+    <-time.After(server.ConnectWait)
+
     input := bufio.NewReader(conn)
     output := bufio.NewWriter(conn)
     server.Broadcast(output)
@@ -186,6 +207,7 @@ func (server *SMTPServer) RespondToStartTLS(conn net.Conn, input *bufio.Reader, 
     config := tls.Config{Certificates: []tls.Certificate{cert}}
     config.Rand = rand.Reader
     tlsConn := tls.Server(conn, &config)
+
     return tlsConn, bufio.NewReader(tlsConn), bufio.NewWriter(tlsConn)
 }
 

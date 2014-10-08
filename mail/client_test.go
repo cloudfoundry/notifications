@@ -21,21 +21,34 @@ var _ = Describe("Mail", func() {
     var config mail.Config
 
     BeforeEach(func() {
+        var err error
+
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
+        mailServer = NewSMTPServer("user", "pass")
+
         config = mail.Config{
             User:          "user",
             Pass:          "pass",
-            Host:          "0.0.0.0",
-            Port:          "3000",
             TestMode:      false,
             SkipVerifySSL: true,
             DisableTLS:    false,
         }
+
+        config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
+        if err != nil {
+            panic(err)
+        }
+    })
+
+    AfterEach(func() {
+        mailServer.Close()
     })
 
     Describe("NewClient", func() {
         It("defaults the ConnectTimeout to 15 seconds", func() {
+            config.ConnectTimeout = 0
+
             client, err := mail.NewClient(config, logger)
             if err != nil {
                 panic(err)
@@ -52,7 +65,6 @@ var _ = Describe("Mail", func() {
             BeforeEach(func() {
                 var err error
 
-                mailServer = NewSMTPServer("user", "pass")
                 mailServer.SupportsTLS = true
                 config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
                 if err != nil {
@@ -104,7 +116,6 @@ var _ = Describe("Mail", func() {
         BeforeEach(func() {
             var err error
 
-            mailServer = NewSMTPServer("user", "pass")
             mailServer.SupportsTLS = true
             config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
             if err != nil {
@@ -182,7 +193,6 @@ var _ = Describe("Mail", func() {
             Expect(delivery.Sender).To(Equal("first@example.com"))
             Expect(delivery.Recipient).To(Equal("second@example.com"))
             Expect(delivery.Data).To(Equal(strings.Split(secondMsg.Data(), "\n")))
-
         })
 
         Context("when configured to use TLS", func() {
@@ -279,7 +289,6 @@ var _ = Describe("Mail", func() {
         })
 
         It("returns an error if it cannot connect within the given timeout duration", func() {
-            mailServer = NewSMTPServer("user", "pass")
             mailServer.ConnectWait = 5 * time.Second
 
             var err error
@@ -304,7 +313,6 @@ var _ = Describe("Mail", func() {
         BeforeEach(func() {
             var err error
 
-            mailServer = NewSMTPServer("user", "pass")
             mailServer.SupportsTLS = true
             config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
             if err != nil {

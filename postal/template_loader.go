@@ -1,7 +1,5 @@
 package postal
 
-import "github.com/cloudfoundry-incubator/notifications/config"
-
 const (
     SubjectMissingTemplateName  = "subject.missing"
     SubjectProvidedTemplateName = "subject.provided"
@@ -19,14 +17,16 @@ type TemplateLoaderInterface interface {
 }
 
 type TemplateLoader struct {
-    fs       FileSystemInterface
-    ClientID string
-    Kind     string
+    fs            FileSystemInterface
+    ClientID      string
+    Kind          string
+    TemplatesPath string
 }
 
-func NewTemplateLoader(fs FileSystemInterface) TemplateLoader {
+func NewTemplateLoader(fs FileSystemInterface, rootPath string) TemplateLoader {
     return TemplateLoader{
-        fs: fs,
+        fs:            fs,
+        TemplatesPath: rootPath + "/templates",
     }
 }
 
@@ -83,22 +83,20 @@ func (loader TemplateLoader) loadSubject(subject string) (string, error) {
 }
 
 func (loader TemplateLoader) LoadTemplate(filename string) (string, error) {
-    env := config.NewEnvironment()
-
-    clientKindOverridePath := env.RootPath + "/templates/overrides/" + loader.ClientID + "." + loader.Kind + "." + filename
+    clientKindOverridePath := loader.TemplatesPath + "/overrides/" + loader.ClientID + "." + loader.Kind + "." + filename
     if loader.fs.Exists(clientKindOverridePath) {
         return loader.fs.Read(clientKindOverridePath)
     }
 
-    clientOverridePath := env.RootPath + "/templates/overrides/" + loader.ClientID + "." + filename
+    clientOverridePath := loader.TemplatesPath + "/overrides/" + loader.ClientID + "." + filename
     if loader.fs.Exists(clientOverridePath) {
         return loader.fs.Read(clientOverridePath)
     }
 
-    overRidePath := env.RootPath + "/templates/overrides/" + filename
+    overRidePath := loader.TemplatesPath + "/overrides/" + filename
     if loader.fs.Exists(overRidePath) {
         return loader.fs.Read(overRidePath)
     }
 
-    return loader.fs.Read(env.RootPath + "/templates/" + filename)
+    return loader.fs.Read(loader.TemplatesPath + "/" + filename)
 }

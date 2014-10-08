@@ -51,7 +51,7 @@ var _ = Describe("MessageContext", func() {
         })
 
         It("returns the appropriate MessageContext when all options are specified", func() {
-            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-id",
+            context := postal.NewMessageContext(email, options, env.Sender, "the-space", "the-org", "the-client-id",
                 "message-id", "the-user", templates, cryptographer)
 
             Expect(context.From).To(Equal(env.Sender))
@@ -77,14 +77,14 @@ var _ = Describe("MessageContext", func() {
 
         It("falls back to Kind if KindDescription is missing", func() {
             options.KindDescription = ""
-            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-id", "random-id", "the-user", templates, cryptographer)
+            context := postal.NewMessageContext(email, options, env.Sender, "the-space", "the-org", "the-client-id", "random-id", "the-user", templates, cryptographer)
 
             Expect(context.KindDescription).To(Equal("the-kind-id"))
         })
 
         It("falls back to clientID when SourceDescription is missing", func() {
             options.SourceDescription = ""
-            context := postal.NewMessageContext(email, options, env, "the-space", "the-org", "the-client-id", "my-message-id", "the-user", templates, cryptographer)
+            context := postal.NewMessageContext(email, options, env.Sender, "the-space", "the-org", "the-client-id", "my-message-id", "the-user", templates, cryptographer)
 
             Expect(context.SourceDescription).To(Equal("the-client-id"))
         })
@@ -124,7 +124,7 @@ var _ = Describe("MessageContext", func() {
         })
 
         It("html escapes various fields on the message context", func() {
-            context := postal.NewMessageContext(email, options, env, "the<space", "the>org", "the\"client id", "some>id", "the-user", templates, cryptographer)
+            context := postal.NewMessageContext(email, options, env.Sender, "the<space", "the>org", "the\"client id", "some>id", "the-user", templates, cryptographer)
             context.Escape()
 
             Expect(context.From).To(Equal(html.EscapeString(env.Sender)))

@@ -105,7 +105,7 @@ var _ = Describe("UAA Recipe", func() {
         tokenLoader = postal.NewTokenLoader(&fakeUAA)
         userLoader = postal.NewUserLoader(&fakeUAA, logger, fakeCC)
         spaceLoader = postal.NewSpaceLoader(fakeCC)
-        templateLoader = postal.NewTemplateLoader(&fs)
+        templateLoader = postal.NewTemplateLoader(&fs, env.RootPath)
 
         uaaRecipe = postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, &fakeReceiptsRepo)
     })

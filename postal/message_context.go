@@ -3,7 +3,6 @@ package postal
 import (
     "html"
 
-    "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/cryptography"
 )
 
@@ -28,7 +27,7 @@ type MessageContext struct {
     UnsubscribeID     string
 }
 
-func NewMessageContext(email string, options Options, env config.Environment, space, organization,
+func NewMessageContext(email string, options Options, sender string, space, organization,
     clientID string, messageID string, userGUID string, templates Templates, cryptoClient cryptography.CryptoInterface) MessageContext {
 
     var kindDescription string
@@ -46,7 +45,7 @@ func NewMessageContext(email string, options Options, env config.Environment, sp
     }
 
     messageContext := MessageContext{
-        From:              env.Sender,
+        From:              sender,
         ReplyTo:           options.ReplyTo,
         To:                email,
         Subject:           options.Subject,
