@@ -74,13 +74,14 @@ func (mother Mother) Mailer() postal.Mailer {
 func (mother Mother) MailClient() *mail.Client {
     env := config.NewEnvironment()
     mailConfig := mail.Config{
-        User:          env.SMTPUser,
-        Pass:          env.SMTPPass,
-        Host:          env.SMTPHost,
-        Port:          env.SMTPPort,
-        TestMode:      env.TestMode,
-        SkipVerifySSL: env.VerifySSL,
-        DisableTLS:    !env.SMTPTLS,
+        User:           env.SMTPUser,
+        Pass:           env.SMTPPass,
+        Host:           env.SMTPHost,
+        Port:           env.SMTPPort,
+        TestMode:       env.TestMode,
+        SkipVerifySSL:  env.VerifySSL,
+        DisableTLS:     !env.SMTPTLS,
+        LoggingEnabled: env.SMTPLoggingEnabled,
     }
     client, err := mail.NewClient(mailConfig, mother.Logger())
     if err != nil {

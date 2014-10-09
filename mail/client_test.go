@@ -2,6 +2,7 @@ package mail_test
 
 import (
     "bytes"
+    "errors"
     "log"
     "net"
     "strings"
@@ -39,6 +40,11 @@ var _ = Describe("Mail", func() {
         if err != nil {
             panic(err)
         }
+
+        client, err = mail.NewClient(config, logger)
+        if err != nil {
+            panic(err)
+        }
     })
 
     AfterEach(func() {
@@ -47,9 +53,11 @@ var _ = Describe("Mail", func() {
 
     Describe("NewClient", func() {
         It("defaults the ConnectTimeout to 15 seconds", func() {
+            var err error
+
             config.ConnectTimeout = 0
 
-            client, err := mail.NewClient(config, logger)
+            client, err = mail.NewClient(config, logger)
             if err != nil {
                 panic(err)
             }
@@ -273,12 +281,13 @@ var _ = Describe("Mail", func() {
         Context("when in test mode", func() {
             It("does not connect to the smtp server", func() {
                 var err error
+
                 config.Host, config.Port, err = net.SplitHostPort("fakewebsiteoninternet.com:587")
                 if err != nil {
                     panic(err)
                 }
                 config.TestMode = true
-                client, err := mail.NewClient(config, logger)
+                client, err = mail.NewClient(config, logger)
                 if err != nil {
                     panic(err)
                 }
@@ -289,15 +298,17 @@ var _ = Describe("Mail", func() {
         })
 
         It("returns an error if it cannot connect within the given timeout duration", func() {
-            mailServer.ConnectWait = 5 * time.Second
-
             var err error
+
+            mailServer.ConnectWait = 5 * time.Second
+            config.ConnectTimeout = 100 * time.Millisecond
+
             config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
             if err != nil {
                 panic(err)
             }
-            config.ConnectTimeout = 100 * time.Millisecond
-            client, err := mail.NewClient(config, logger)
+
+            client, err = mail.NewClient(config, logger)
             if err != nil {
                 panic(err)
             }
@@ -309,7 +320,7 @@ var _ = Describe("Mail", func() {
         })
     })
 
-    Context("Extension", func() {
+    Describe("Extension", func() {
         BeforeEach(func() {
             var err error
 
@@ -342,6 +353,52 @@ var _ = Describe("Mail", func() {
             ok, params = client.Extension("STARTTLS")
             Expect(ok).To(BeTrue())
             Expect(params).To(Equal(""))
+        })
+    })
+
+    Describe("Error", func() {
+        Context("when configured to log", func() {
+            BeforeEach(func() {
+                var err error
+
+                config.LoggingEnabled = true
+                client, err = mail.NewClient(config, logger)
+                if err != nil {
+                    panic(err)
+                }
+            })
+
+            It("logs the error and returns it", func() {
+                err := errors.New("BOOM!")
+
+                otherErr := client.Error(err)
+
+                Expect(otherErr).To(Equal(err))
+
+                Expect(buffer.String()).To(ContainSubstring("SMTP Error: BOOM!"))
+            })
+        })
+
+        Context("when not configured to log", func() {
+            BeforeEach(func() {
+                var err error
+
+                config.LoggingEnabled = false
+                client, err = mail.NewClient(config, logger)
+                if err != nil {
+                    panic(err)
+                }
+            })
+
+            It("does not log the error but returns it", func() {
+                err := errors.New("BOOM!")
+
+                otherErr := client.Error(err)
+
+                Expect(otherErr).To(Equal(err))
+
+                Expect(buffer.String()).ToNot(ContainSubstring("SMTP Error: BOOM!"))
+            })
         })
     })
 })

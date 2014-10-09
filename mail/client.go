@@ -26,6 +26,7 @@ type Config struct {
     SkipVerifySSL  bool
     DisableTLS     bool
     ConnectTimeout time.Duration
+    LoggingEnabled bool
 }
 
 type ClientInterface interface {
@@ -88,6 +89,13 @@ func (c *Client) connect() chan connection {
     return channel
 }
 
+func (c *Client) Error(err error) error {
+    if c.config.LoggingEnabled == true {
+        c.logger.Printf("SMTP Error: %s", err.Error())
+    }
+    return err
+}
+
 func (c *Client) Send(msg Message) error {
     if c.config.TestMode {
         c.logger.Println("TEST_MODE is true, emails not being sent")
@@ -96,44 +104,44 @@ func (c *Client) Send(msg Message) error {
 
     err := c.Connect()
     if err != nil {
-        return err
+        return c.Error(err)
     }
 
     err = c.Hello()
     if err != nil {
-        return err
+        return c.Error(err)
     }
 
     if !c.config.DisableTLS {
         err = c.StartTLS()
         if err != nil {
-            return err
+            return c.Error(err)
         }
 
         err = c.Auth()
         if err != nil {
-            return err
+            return c.Error(err)
         }
     }
 
     err = c.client.Mail(msg.From)
     if err != nil {
-        return err
+        return c.Error(err)
     }
 
     err = c.client.Rcpt(msg.To)
     if err != nil {
-        return err
+        return c.Error(err)
     }
 
     err = c.Data(msg)
     if err != nil {
-        return err
+        return c.Error(err)
     }
 
     err = c.Quit()
     if err != nil {
-        return err
+        return c.Error(err)
     }
 
     return nil

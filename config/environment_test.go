@@ -31,6 +31,7 @@ var _ = Describe("Environment", func() {
         "VCAP_APPLICATION",
         "VERIFY_SSL",
         "ENCRYPTION_KEY",
+        "SMTP_LOGGING_ENABLED",
     }
 
     BeforeEach(func() {
@@ -193,6 +194,22 @@ var _ = Describe("Environment", func() {
             Expect(func() {
                 config.NewEnvironment()
             }).To(Panic())
+        })
+    })
+
+    Describe("SMTP logging", func() {
+        It("loads the SMTP_LOGGING_ENABLED variable when it is present", func() {
+            os.Setenv("SMTP_LOGGING_ENABLED", "true")
+
+            env := config.NewEnvironment()
+            Expect(env.SMTPLoggingEnabled).To(BeTrue())
+        })
+
+        It("defaults the SMTP_LOGGING_ENABLED variable to false when it is not set", func() {
+            os.Setenv("SMTP_LOGGING_ENABLED", "")
+
+            env := config.NewEnvironment()
+            Expect(env.SMTPLoggingEnabled).To(BeFalse())
         })
     })
 
