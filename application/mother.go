@@ -80,7 +80,7 @@ func (mother Mother) MailClient() *mail.Client {
         Port:          env.SMTPPort,
         TestMode:      env.TestMode,
         SkipVerifySSL: env.VerifySSL,
-        DisableTLS:    env.SMTPTLS,
+        DisableTLS:    !env.SMTPTLS,
     }
     client, err := mail.NewClient(mailConfig, mother.Logger())
     if err != nil {

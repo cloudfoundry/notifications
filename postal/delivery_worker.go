@@ -79,6 +79,10 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
                 "name": "notifications.worker.delivered",
             }).Log()
         }
+    } else {
+        metrics.NewMetric("counter", map[string]interface{}{
+            "name": "notifications.worker.unsubscribed",
+        }).Log()
     }
 }
 
