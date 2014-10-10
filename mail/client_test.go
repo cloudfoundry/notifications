@@ -115,7 +115,7 @@ var _ = Describe("Mail", func() {
                     panic(err)
                 }
 
-                Expect(line).To(Equal("TEST_MODE is true, emails not being sent\n"))
+                Expect(line).To(Equal("TEST_MODE is enabled, emails not being sent\n"))
             })
         })
     })
@@ -357,7 +357,19 @@ var _ = Describe("Mail", func() {
     })
 
     Describe("Error", func() {
-        Context("when configured to log", func() {
+        It("logs the error and returns it", func() {
+            err := errors.New("BOOM!")
+
+            otherErr := client.Error(err)
+
+            Expect(otherErr).To(Equal(err))
+
+            Expect(buffer.String()).To(ContainSubstring("SMTP Error: BOOM!"))
+        })
+    })
+
+    Describe("Log", func() {
+        Context("when the client is configured to log", func() {
             BeforeEach(func() {
                 var err error
 
@@ -368,18 +380,14 @@ var _ = Describe("Mail", func() {
                 }
             })
 
-            It("logs the error and returns it", func() {
-                err := errors.New("BOOM!")
+            It("writes to the logger", func() {
+                client.Log("banana %s", "panic")
 
-                otherErr := client.Error(err)
-
-                Expect(otherErr).To(Equal(err))
-
-                Expect(buffer.String()).To(ContainSubstring("SMTP Error: BOOM!"))
+                Expect(buffer.String()).To(ContainSubstring("banana panic"))
             })
         })
 
-        Context("when not configured to log", func() {
+        Context("when the client is not configured to log", func() {
             BeforeEach(func() {
                 var err error
 
@@ -390,14 +398,10 @@ var _ = Describe("Mail", func() {
                 }
             })
 
-            It("does not log the error but returns it", func() {
-                err := errors.New("BOOM!")
+            It("does not write to the logger", func() {
+                client.Log("banana %s", "panic")
 
-                otherErr := client.Error(err)
-
-                Expect(otherErr).To(Equal(err))
-
-                Expect(buffer.String()).ToNot(ContainSubstring("SMTP Error: BOOM!"))
+                Expect(buffer.String()).NotTo(ContainSubstring("banana panic"))
             })
         })
     })

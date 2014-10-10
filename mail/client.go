@@ -53,22 +53,27 @@ func NewClient(config Config, logger *log.Logger) (*Client, error) {
 }
 
 func (c *Client) Connect() error {
+    c.Log("Connecting...")
     if c.config.TestMode {
+        c.Log("Test Mode enabled, not connected")
         return nil
     }
 
     if c.client != nil {
+        c.Log("Already connected.")
         return nil
     }
 
     select {
     case connection := <-c.connect():
+        c.Log("Connected")
         if connection.err != nil {
             return connection.err
         }
 
         c.client = connection.client
     case <-time.After(c.config.ConnectTimeout):
+        c.Log("Timed out after %v", c.config.ConnectTimeout)
         return errors.New("dial tcp: i/o timeout")
     }
 
@@ -89,16 +94,9 @@ func (c *Client) connect() chan connection {
     return channel
 }
 
-func (c *Client) Error(err error) error {
-    if c.config.LoggingEnabled == true {
-        c.logger.Printf("SMTP Error: %s", err.Error())
-    }
-    return err
-}
-
 func (c *Client) Send(msg Message) error {
     if c.config.TestMode {
-        c.logger.Println("TEST_MODE is true, emails not being sent")
+        c.logger.Println("TEST_MODE is enabled, emails not being sent")
         return nil
     }
 
@@ -107,42 +105,54 @@ func (c *Client) Send(msg Message) error {
         return c.Error(err)
     }
 
+    c.Log("Initiating hello...")
     err = c.Hello()
     if err != nil {
         return c.Error(err)
     }
+    c.Log("Hello complete.")
 
     if !c.config.DisableTLS {
+        c.Log("Starting TLS...")
         err = c.StartTLS()
         if err != nil {
             return c.Error(err)
         }
+        c.Log("TLS connection opened.")
 
+        c.Log("Starting authentication...")
         err = c.Auth()
         if err != nil {
             return c.Error(err)
         }
+        c.Log("Authenticated.")
     }
 
+    c.Log("Sending mail from: %s", msg.From)
     err = c.client.Mail(msg.From)
     if err != nil {
         return c.Error(err)
     }
 
+    c.Log("Sending mail to: %s", msg.To)
     err = c.client.Rcpt(msg.To)
     if err != nil {
         return c.Error(err)
     }
 
+    c.Log("Sending mail data...")
     err = c.Data(msg)
     if err != nil {
         return c.Error(err)
     }
+    c.Log("Mail data sent.")
 
+    c.Log("Quitting...")
     err = c.Quit()
     if err != nil {
         return c.Error(err)
     }
+    c.Log("Goodbye.")
 
     return nil
 }
@@ -214,4 +224,15 @@ func (c *Client) Quit() error {
     c.client = nil
 
     return nil
+}
+
+func (c *Client) Error(err error) error {
+    c.logger.Printf("SMTP Error: %s", err.Error())
+    return err
+}
+
+func (c *Client) Log(format string, arguments ...interface{}) {
+    if c.config.LoggingEnabled {
+        c.logger.Printf("[SMTP] "+format, arguments...)
+    }
 }
