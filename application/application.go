@@ -41,7 +41,7 @@ func (app Application) PrintConfiguration() {
             fieldValue = reflect.ValueOf("****************")
         }
 
-        logger.Printf("  %-16s -> %+v", fieldType.Name, fieldValue.Interface())
+        logger.Printf("  %-18s -> %+v", fieldType.Name, fieldValue.Interface())
     }
 }
 
