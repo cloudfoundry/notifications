@@ -7,6 +7,7 @@ script: bin/ci
 install:
   - export PATH=$HOME/gopath/bin:$PATH
   - go get code.google.com/p/go.tools/cmd/cover
+  - go get code.google.com/p/go.tools/cmd/vet
   - go get github.com/tools/godep
   - go get github.com/onsi/ginkgo/ginkgo
   - godep restore
