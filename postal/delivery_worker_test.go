@@ -4,6 +4,7 @@ import (
     "bytes"
     "crypto/md5"
     "errors"
+    "fmt"
     "log"
     "strings"
     "time"
@@ -178,8 +179,11 @@ var _ = Describe("DeliveryWorker", func() {
                 It("sets the retry duration using an exponential backoff algorithm", func() {
                     mailClient.ConnectError = errors.New("BOOM!")
                     worker.Deliver(&job)
+                    layout := "Jan 2, 2006 at 3:04pm (MST)"
+                    retryString := fmt.Sprintf("Message failed to send, retrying at: %s", job.ActiveAt.Format(layout))
 
                     Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 10*time.Second))
+                    Expect(buffer.String()).To(ContainSubstring(retryString))
                     Expect(job.RetryCount).To(Equal(1))
 
                     worker.Deliver(&job)

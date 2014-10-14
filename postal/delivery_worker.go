@@ -91,6 +91,8 @@ func (worker DeliveryWorker) Retry(job *gobble.Job) {
     if job.RetryCount < 10 {
         duration := time.Duration(int64(math.Pow(2, float64(job.RetryCount))))
         job.Retry(duration * time.Minute)
+        layout := "Jan 2, 2006 at 3:04pm (MST)"
+        worker.logger.Printf("Message failed to send, retrying at: %s", job.ActiveAt.Format(layout))
     }
 }
 
