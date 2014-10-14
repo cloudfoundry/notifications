@@ -12,13 +12,25 @@ RED="\033[0;31m"
 NONE="\033[0m"
 
 source $DIR/env/$ENVIRONMENT
-
-$DIR/unit
-EXIT_CODE=$?
+EXIT_CODE=0
 
 if [[ $EXIT_CODE = 0 ]]; then
+    $DIR/unit
+    EXIT_CODE=$?
+fi
+
+if [[ $EXIT_CODE = 0 ]]; then
+    echo
     $DIR/acceptance
     EXIT_CODE=$?
+fi
+
+if [[ $EXIT_CODE = 0 ]]; then
+    echo
+    pushd $DIR/.. > /dev/null 2>&1
+        go vet ./...
+        EXIT_CODE=$?
+    popd > /dev/null 2>&1
 fi
 
 if [[ $EXIT_CODE = 0 ]]; then
