@@ -3,6 +3,7 @@ package postal
 import (
     "encoding/json"
 
+    "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
@@ -36,8 +37,6 @@ func (recipe EmailRecipe) Dispatch(clientID string, guid TypedGUID,
     options Options, conn models.ConnectionInterface) ([]Response, error) {
 
     users := map[string]uaa.User{EmptyIDForNonUser: uaa.User{Emails: []string{options.To}}}
-    space := ""
-    organization := ""
 
     subjectTemplate := recipe.determineSubjectTemplate(options.Subject)
     templates, err := recipe.templateLoader.LoadNamedTemplates(subjectTemplate, EmailTextTemplateName, EmailHTMLTemplateName)
@@ -46,7 +45,7 @@ func (recipe EmailRecipe) Dispatch(clientID string, guid TypedGUID,
         return []Response{}, TemplateLoadError("An email template could not be loaded")
     }
 
-    return recipe.mailer.Deliver(conn, templates, users, options, space, organization, clientID), nil
+    return recipe.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID), nil
 }
 
 func (recipe EmailRecipe) Trim(responses []byte) []byte {

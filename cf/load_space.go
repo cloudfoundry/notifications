@@ -8,19 +8,19 @@ import (
 )
 
 type CloudControllerSpace struct {
-    Guid             string
+    GUID             string
     Name             string
-    OrganizationGuid string
+    OrganizationGUID string
 }
 
 type CloudControllerSpaceResponse struct {
     Metadata struct {
-        Guid string `json:"guid"`
-    } `json:"metadata"`
+        GUID string `json:"guid"`
+    }   `json:"metadata"`
     Entity struct {
         Name             string `json:"name"`
-        OrganizationGuid string `json:"organization_guid"`
-    } `json:"entity"`
+        OrganizationGUID string `json:"organization_guid"`
+    }   `json:"entity"`
 }
 
 func (cc CloudController) LoadSpace(spaceGuid, token string) (CloudControllerSpace, error) {
@@ -49,9 +49,9 @@ func (cc CloudController) LoadSpace(spaceGuid, token string) (CloudControllerSpa
     if err != nil {
         return space, err
     }
-    space.Guid = spaceResponse.Metadata.Guid
+    space.GUID = spaceResponse.Metadata.GUID
     space.Name = spaceResponse.Entity.Name
-    space.OrganizationGuid = spaceResponse.Entity.OrganizationGuid
+    space.OrganizationGUID = spaceResponse.Entity.OrganizationGUID
 
     return space, nil
 }

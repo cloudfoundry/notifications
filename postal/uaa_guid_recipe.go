@@ -20,6 +20,7 @@ type UAARecipe struct {
 
 func NewUAARecipe(tokenLoader TokenLoader, userLoader UserLoader, spaceLoader SpaceLoader,
     templateLoader TemplateLoader, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UAARecipe {
+
     return UAARecipe{
         tokenLoader:    tokenLoader,
         userLoader:     userLoader,

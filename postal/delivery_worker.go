@@ -6,6 +6,7 @@ import (
     "strings"
     "time"
 
+    "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/cryptography"
     "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
@@ -18,8 +19,8 @@ type Delivery struct {
     User         uaa.User
     Options      Options
     UserGUID     string
-    Space        string
-    Organization string
+    Space        cf.CloudControllerSpace
+    Organization cf.CloudControllerOrganization
     ClientID     string
     Templates    Templates
     MessageID    string
@@ -129,9 +130,7 @@ func (worker DeliveryWorker) pack(delivery Delivery) mail.Message {
         panic(err)
     }
 
-    context := NewMessageContext(delivery.User.Emails[0], delivery.Options, worker.sender, delivery.Space,
-        delivery.Organization, delivery.ClientID, delivery.MessageID, delivery.UserGUID,
-        delivery.Templates, cryptoClient)
+    context := NewMessageContext(delivery, worker.sender, cryptoClient)
     packager := NewPackager()
 
     message, err := packager.Pack(context)

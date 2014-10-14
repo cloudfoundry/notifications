@@ -1,60 +1,76 @@
 package postal_test
 
 import (
-    "html"
-
-    "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 )
 
 var _ = Describe("MessageContext", func() {
+    var templates postal.Templates
+    var email, sender string
+    var options postal.Options
+    var html postal.HTML
+    var delivery postal.Delivery
+    var cryptographer *fakes.FakeCryptoClient
+
+    BeforeEach(func() {
+        email = "bounce@example.com"
+        sender = "no-reply@notifications.example.com"
+
+        templates = postal.Templates{
+            Text:    "the plainText email < template",
+            HTML:    "the html <h1> email < template</h1>",
+            Subject: "the subject < template",
+        }
+
+        html = postal.HTML{
+            BodyContent: "user supplied html",
+        }
+
+        options = postal.Options{
+            ReplyTo:           "awesomeness",
+            Subject:           "the subject",
+            KindDescription:   "the kind description",
+            SourceDescription: "the source description",
+            Text:              "user supplied email text",
+            HTML:              html,
+            KindID:            "the-kind-id",
+        }
+
+        delivery = postal.Delivery{
+            Options:   options,
+            Templates: templates,
+            UserGUID:  "the-user",
+            ClientID:  "the-client-id",
+            MessageID: "message-id",
+            Space: cf.CloudControllerSpace{
+                GUID: "my-lovely-guid",
+                Name: "the-space",
+            },
+            Organization: cf.CloudControllerOrganization{
+                GUID: "my-super-lovely-guid",
+                Name: "the-org",
+            },
+            User: uaa.User{
+                Emails: []string{email},
+            },
+        }
+
+        cryptographer = &fakes.FakeCryptoClient{
+            EncryptedResult: "the-encoded-result",
+        }
+    })
 
     Describe("NewMessageContext", func() {
-        var templates postal.Templates
-        var email string
-        var env config.Environment
-        var options postal.Options
-        var html postal.HTML
-        var cryptographer *fakes.FakeCryptoClient
-
-        BeforeEach(func() {
-            email = "bounce@example.com"
-            env = config.NewEnvironment()
-
-            templates = postal.Templates{
-                Text:    "the plainText email template",
-                HTML:    "the html email template",
-                Subject: "the subject template",
-            }
-
-            html = postal.HTML{
-                BodyContent: "user supplied html",
-            }
-
-            options = postal.Options{
-                ReplyTo:           "awesomeness",
-                Subject:           "the subject",
-                KindDescription:   "the kind description",
-                SourceDescription: "the source description",
-                Text:              "user supplied email text",
-                HTML:              html,
-                KindID:            "the-kind-id",
-            }
-
-            cryptographer = &fakes.FakeCryptoClient{
-                EncryptedResult: "the-encoded-result",
-            }
-        })
-
         It("returns the appropriate MessageContext when all options are specified", func() {
-            context := postal.NewMessageContext(email, options, env.Sender, "the-space", "the-org", "the-client-id",
-                "message-id", "the-user", templates, cryptographer)
+            context := postal.NewMessageContext(delivery, sender, cryptographer)
 
-            Expect(context.From).To(Equal(env.Sender))
+            Expect(context.From).To(Equal(sender))
             Expect(context.ReplyTo).To(Equal(options.ReplyTo))
             Expect(context.To).To(Equal(email))
             Expect(context.Subject).To(Equal(options.Subject))
@@ -70,44 +86,30 @@ var _ = Describe("MessageContext", func() {
             Expect(context.ClientID).To(Equal("the-client-id"))
             Expect(context.MessageID).To(Equal("message-id"))
             Expect(context.Space).To(Equal("the-space"))
+            Expect(context.SpaceGUID).To(Equal("my-lovely-guid"))
             Expect(context.Organization).To(Equal("the-org"))
+            Expect(context.OrganizationGUID).To(Equal("my-super-lovely-guid"))
             Expect(context.UnsubscribeID).To(Equal("the-encoded-result"))
             Expect(cryptographer.EncryptArgument).To(Equal("the-user|the-client-id|the-kind-id"))
         })
 
         It("falls back to Kind if KindDescription is missing", func() {
-            options.KindDescription = ""
-            context := postal.NewMessageContext(email, options, env.Sender, "the-space", "the-org", "the-client-id", "random-id", "the-user", templates, cryptographer)
+            delivery.Options.KindDescription = ""
+            context := postal.NewMessageContext(delivery, sender, cryptographer)
 
             Expect(context.KindDescription).To(Equal("the-kind-id"))
         })
 
         It("falls back to clientID when SourceDescription is missing", func() {
-            options.SourceDescription = ""
-            context := postal.NewMessageContext(email, options, env.Sender, "the-space", "the-org", "the-client-id", "my-message-id", "the-user", templates, cryptographer)
+            delivery.Options.SourceDescription = ""
+            context := postal.NewMessageContext(delivery, sender, cryptographer)
 
             Expect(context.SourceDescription).To(Equal("the-client-id"))
         })
     })
 
     Describe("Escape", func() {
-        var templates postal.Templates
-        var email string
-        var env config.Environment
-        var options postal.Options
-        var cryptographer *fakes.FakeCryptoClient
-
         BeforeEach(func() {
-            email = "bounce@example.com"
-
-            env = config.NewEnvironment()
-
-            templates = postal.Templates{
-                Text:    "the plainText email < template",
-                HTML:    "the html <h1> email < template</h1>",
-                Subject: "the subject < template",
-            }
-
             options = postal.Options{
                 ReplyTo:           "awesomeness",
                 Subject:           "the & subject",
@@ -118,16 +120,18 @@ var _ = Describe("MessageContext", func() {
                 KindID:            "the & kind",
             }
 
-            cryptographer = &fakes.FakeCryptoClient{
-                EncryptedResult: "the-encrypted-result",
-            }
+            delivery.Options = options
+            delivery.ClientID = "the\"client id"
+            delivery.MessageID = "some>id"
+            delivery.Space.Name = "the<space"
+            delivery.Organization.Name = "the>org"
         })
 
         It("html escapes various fields on the message context", func() {
-            context := postal.NewMessageContext(email, options, env.Sender, "the<space", "the>org", "the\"client id", "some>id", "the-user", templates, cryptographer)
+            context := postal.NewMessageContext(delivery, sender, cryptographer)
             context.Escape()
 
-            Expect(context.From).To(Equal(html.EscapeString(env.Sender)))
+            Expect(context.From).To(Equal("no-reply@notifications.example.com"))
             Expect(context.ReplyTo).To(Equal("awesomeness"))
             Expect(context.To).To(Equal("bounce@example.com"))
             Expect(context.Subject).To(Equal("the &amp; subject"))

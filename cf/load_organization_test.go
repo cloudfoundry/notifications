@@ -64,7 +64,7 @@ var _ = Describe("LoadOrganization", func() {
             panic(err)
         }
 
-        Expect(org.Guid).To(Equal("org-guid"))
+        Expect(org.GUID).To(Equal("org-guid"))
         Expect(org.Name).To(Equal("Initech"))
     })
 

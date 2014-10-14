@@ -21,14 +21,14 @@ var _ = Describe("SpaceLoader", func() {
             fakeCC = fakes.NewFakeCloudController()
             fakeCC.Spaces = map[string]cf.CloudControllerSpace{
                 "space-001": cf.CloudControllerSpace{
-                    Guid:             "space-001",
+                    GUID:             "space-001",
                     Name:             "space-name",
-                    OrganizationGuid: "org-001",
+                    OrganizationGUID: "org-001",
                 },
             }
             fakeCC.Orgs = map[string]cf.CloudControllerOrganization{
                 "org-001": cf.CloudControllerOrganization{
-                    Guid: "org-001",
+                    GUID: "org-001",
                     Name: "org-name",
                 },
             }
@@ -42,8 +42,15 @@ var _ = Describe("SpaceLoader", func() {
                     panic(err)
                 }
 
-                Expect(space).To(Equal("space-name"))
-                Expect(org).To(Equal("org-name"))
+                Expect(space).To(Equal(cf.CloudControllerSpace{
+                    GUID:             "space-001",
+                    Name:             "space-name",
+                    OrganizationGUID: "org-001",
+                }))
+                Expect(org).To(Equal(cf.CloudControllerOrganization{
+                    GUID: "org-001",
+                    Name: "org-name",
+                }))
             })
 
             Context("when the space cannot be found", func() {
@@ -107,8 +114,8 @@ var _ = Describe("SpaceLoader", func() {
                     panic(err)
                 }
 
-                Expect(space).To(Equal(""))
-                Expect(org).To(Equal(""))
+                Expect(space).To(Equal(cf.CloudControllerSpace{}))
+                Expect(org).To(Equal(cf.CloudControllerOrganization{}))
                 Expect(err).To(BeNil())
             })
         })

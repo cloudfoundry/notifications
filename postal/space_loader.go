@@ -12,20 +12,24 @@ func NewSpaceLoader(cloudController cf.CloudControllerInterface) SpaceLoader {
     }
 }
 
-func (loader SpaceLoader) Load(guid TypedGUID, token string) (string, string, error) {
+func (loader SpaceLoader) Load(guid TypedGUID, token string) (cf.CloudControllerSpace, cf.CloudControllerOrganization, error) {
     if !guid.BelongsToSpace() {
-        return "", "", nil
+        return loader.Error(nil)
     }
 
     space, err := loader.cloudController.LoadSpace(guid.String(), token)
     if err != nil {
-        return "", "", CCErrorFor(err)
+        return loader.Error(CCErrorFor(err))
     }
 
-    org, err := loader.cloudController.LoadOrganization(space.OrganizationGuid, token)
+    org, err := loader.cloudController.LoadOrganization(space.OrganizationGUID, token)
     if err != nil {
-        return "", "", CCErrorFor(err)
+        return loader.Error(CCErrorFor(err))
     }
 
-    return space.Name, org.Name, nil
+    return space, org, nil
+}
+
+func (loader SpaceLoader) Error(err error) (cf.CloudControllerSpace, cf.CloudControllerOrganization, error) {
+    return cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, err
 }

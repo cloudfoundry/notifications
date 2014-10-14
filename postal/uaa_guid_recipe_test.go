@@ -53,8 +53,8 @@ var _ = Describe("UAA Recipe", func() {
         fakeCC.Spaces = map[string]cf.CloudControllerSpace{
             "space-001": cf.CloudControllerSpace{
                 Name:             "production",
-                Guid:             "space-001",
-                OrganizationGuid: "org-001",
+                GUID:             "space-001",
+                OrganizationGUID: "org-001",
             },
         }
 
@@ -231,8 +231,14 @@ var _ = Describe("UAA Recipe", func() {
                     Expect(mailer.DeliverArguments).To(ContainElement(templates))
                     Expect(mailer.DeliverArguments).To(ContainElement(users))
                     Expect(mailer.DeliverArguments).To(ContainElement(options))
-                    Expect(mailer.DeliverArguments).To(ContainElement("pivotaltracker"))
-                    Expect(mailer.DeliverArguments).To(ContainElement("production"))
+                    Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{
+                        Name: "pivotaltracker",
+                    }))
+                    Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{
+                        GUID:             "space-001",
+                        Name:             "production",
+                        OrganizationGUID: "org-001",
+                    }))
                     Expect(mailer.DeliverArguments).To(ContainElement(clientID))
                 })
             })

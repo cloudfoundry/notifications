@@ -148,7 +148,9 @@ The templates are [go templates](http://golang.org/pkg/text/template/).  The tem
 | MessageID         | Unique id for the email being sent                                                               |
 | UserGUID          | Unique id for the user the email is sent to                                                      |
 | Organization      | The name of the organization of the space (used for emails to spaces)                            |
+| OrganizationGUID  | The guid of the organization of the space (used for emails to spaces)                            |
 | Space             | The name of the space (used for emails to spaces)                                                |
+| SpaceGUID         | The guid of the space (used for emails to spaces)                                                |
 | UnsubscribeID     | The id for unsubscribing a user from a notification. See [here](#unsubscribe-id) for details     |
 
 ##### Example: Overriding space_body.text

@@ -9,17 +9,17 @@ import (
 )
 
 type CloudControllerOrganization struct {
-    Guid string
+    GUID string
     Name string
 }
 
 type CloudControllerOrganizationResponse struct {
     Metadata struct {
-        Guid string `json:"guid"`
-    } `json:"metadata"`
+        GUID string `json:"guid"`
+    }   `json:"metadata"`
     Entity struct {
         Name string `json:"name"`
-    } `json:"entity"`
+    }   `json:"entity"`
 }
 
 func (cc CloudController) LoadOrganization(guid, token string) (CloudControllerOrganization, error) {
@@ -48,7 +48,7 @@ func (cc CloudController) LoadOrganization(guid, token string) (CloudControllerO
     if err != nil {
         return org, err
     }
-    org.Guid = response.Metadata.Guid
+    org.GUID = response.Metadata.GUID
     org.Name = response.Entity.Name
 
     return org, nil

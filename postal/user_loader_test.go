@@ -42,8 +42,8 @@ var _ = Describe("UserLoader", func() {
             fakeCC.Spaces = map[string]cf.CloudControllerSpace{
                 "space-001": cf.CloudControllerSpace{
                     Name:             "production",
-                    Guid:             "space-001",
-                    OrganizationGuid: "org-001",
+                    GUID:             "space-001",
+                    OrganizationGUID: "org-001",
                 },
             }
 

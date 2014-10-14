@@ -5,6 +5,7 @@ import (
     "errors"
     "log"
 
+    "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -19,6 +20,8 @@ var _ = Describe("Mailer", func() {
     var buffer *bytes.Buffer
     var queue *fakes.FakeQueue
     var conn *fakes.FakeDBConn
+    var space cf.CloudControllerSpace
+    var org cf.CloudControllerOrganization
 
     BeforeEach(func() {
         buffer = bytes.NewBuffer([]byte{})
@@ -26,6 +29,8 @@ var _ = Describe("Mailer", func() {
         queue = fakes.NewFakeQueue()
         conn = &fakes.FakeDBConn{}
         mailer = postal.NewMailer(queue, fakes.FakeGuidGenerator)
+        space = cf.CloudControllerSpace{Name: "the-space"}
+        org = cf.CloudControllerOrganization{Name: "the-org"}
     })
 
     Describe("Deliver", func() {
@@ -37,7 +42,7 @@ var _ = Describe("Mailer", func() {
                 "user-3": {ID: "user-3"},
                 "user-4": {ID: "user-4", Emails: []string{"user-4"}},
             }
-            responses := mailer.Deliver(conn, postal.Templates{}, users, postal.Options{KindID: "the-kind"}, "the-space", "the-org", "the-client")
+            responses := mailer.Deliver(conn, postal.Templates{}, users, postal.Options{KindID: "the-kind"}, space, org, "the-client")
 
             Expect(len(responses)).To(Equal(4))
             Expect(responses).To(ContainElement(postal.Response{
@@ -76,7 +81,7 @@ var _ = Describe("Mailer", func() {
                 "user-3": {ID: "user-3"},
                 "user-4": {ID: "user-4", Emails: []string{"user-4"}},
             }
-            mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, "the-space", "the-org", "the-client")
+            mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client")
 
             for userGUID, user := range users {
                 job := <-queue.Reserve("me")
@@ -97,8 +102,8 @@ var _ = Describe("Mailer", func() {
                         KindID:            "",
                     },
                     UserGUID:     userGUID,
-                    Space:        "the-space",
-                    Organization: "the-org",
+                    Space:        space,
+                    Organization: org,
                     ClientID:     "the-client",
                     Templates:    postal.Templates{Subject: "", Text: "", HTML: ""},
                     MessageID:    "deadbeef-aabb-ccdd-eeff-001122334455",
@@ -114,7 +119,7 @@ var _ = Describe("Mailer", func() {
                     "user-3": {ID: "user-3"},
                     "user-4": {ID: "user-4", Emails: []string{"user-4"}},
                 }
-                mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, "the-space", "the-org", "the-client")
+                mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client")
 
                 Expect(conn.BeginWasCalled).To(BeTrue())
                 Expect(conn.CommitWasCalled).To(BeTrue())
@@ -127,7 +132,7 @@ var _ = Describe("Mailer", func() {
                 users := map[string]uaa.User{
                     "user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
                 }
-                mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, "the-space", "the-org", "the-client")
+                mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client")
 
                 Expect(conn.BeginWasCalled).To(BeTrue())
                 Expect(conn.CommitWasCalled).To(BeFalse())

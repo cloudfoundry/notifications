@@ -23,12 +23,15 @@ type MessageContext struct {
     ClientID          string
     MessageID         string
     Space             string
+    SpaceGUID         string
     Organization      string
+    OrganizationGUID  string
     UnsubscribeID     string
 }
 
-func NewMessageContext(email string, options Options, sender string, space, organization,
-    clientID string, messageID string, userGUID string, templates Templates, cryptoClient cryptography.CryptoInterface) MessageContext {
+func NewMessageContext(delivery Delivery, sender string, cryptoClient cryptography.CryptoInterface) MessageContext {
+    options := delivery.Options
+    templates := delivery.Templates
 
     var kindDescription string
     if options.KindDescription == "" {
@@ -39,7 +42,7 @@ func NewMessageContext(email string, options Options, sender string, space, orga
 
     var sourceDescription string
     if options.SourceDescription == "" {
-        sourceDescription = clientID
+        sourceDescription = delivery.ClientID
     } else {
         sourceDescription = options.SourceDescription
     }
@@ -47,7 +50,7 @@ func NewMessageContext(email string, options Options, sender string, space, orga
     messageContext := MessageContext{
         From:              sender,
         ReplyTo:           options.ReplyTo,
-        To:                email,
+        To:                delivery.User.Emails[0],
         Subject:           options.Subject,
         Text:              options.Text,
         HTML:              options.HTML.BodyContent,
@@ -57,15 +60,17 @@ func NewMessageContext(email string, options Options, sender string, space, orga
         SubjectTemplate:   templates.Subject,
         KindDescription:   kindDescription,
         SourceDescription: sourceDescription,
-        UserGUID:          userGUID,
-        ClientID:          clientID,
-        MessageID:         messageID,
-        Space:             space,
-        Organization:      organization,
+        UserGUID:          delivery.UserGUID,
+        ClientID:          delivery.ClientID,
+        MessageID:         delivery.MessageID,
+        Space:             delivery.Space.Name,
+        SpaceGUID:         delivery.Space.GUID,
+        Organization:      delivery.Organization.Name,
+        OrganizationGUID:  delivery.Organization.GUID,
     }
 
     var err error
-    messageContext.UnsubscribeID, err = cryptoClient.Encrypt(userGUID + "|" + clientID + "|" + options.KindID)
+    messageContext.UnsubscribeID, err = cryptoClient.Encrypt(delivery.UserGUID + "|" + delivery.ClientID + "|" + options.KindID)
     if err != nil {
         panic(err)
     }

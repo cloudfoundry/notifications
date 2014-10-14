@@ -63,9 +63,9 @@ var _ = Describe("LoadSpace", func() {
             panic(err)
         }
 
-        Expect(space.Guid).To(Equal("space-guid"))
+        Expect(space.GUID).To(Equal("space-guid"))
         Expect(space.Name).To(Equal("duh space"))
-        Expect(space.OrganizationGuid).To(Equal("first-rate"))
+        Expect(space.OrganizationGUID).To(Equal("first-rate"))
     })
 
     It("returns a Failure instance when the space cannot be found", func() {

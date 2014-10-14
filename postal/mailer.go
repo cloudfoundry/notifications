@@ -1,13 +1,14 @@
 package postal
 
 import (
+    "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
 type MailerInterface interface {
-    Deliver(models.ConnectionInterface, Templates, map[string]uaa.User, Options, string, string, string) []Response
+    Deliver(models.ConnectionInterface, Templates, map[string]uaa.User, Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string) []Response
 }
 
 type Mailer struct {
@@ -23,7 +24,8 @@ func NewMailer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc) Ma
 }
 
 func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates Templates, users map[string]uaa.User,
-    options Options, space, organization, clientID string) []Response {
+    options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID string) []Response {
+
     responses := []Response{}
     transaction := conn.Transaction()
 

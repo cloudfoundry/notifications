@@ -3,6 +3,7 @@ package postal_test
 import (
     "encoding/json"
 
+    "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -56,7 +57,8 @@ var _ = Describe("Recipes", func() {
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(fakeTemplateLoader.Templates))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(users))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(options))
-                Expect(fakeMailer.DeliverArguments).To(ContainElement(""))
+                Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{}))
+                Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{}))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(clientID))
             })
         })
