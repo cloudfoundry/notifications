@@ -74,7 +74,7 @@ func (c *Client) Connect() error {
         c.client = connection.client
     case <-time.After(c.config.ConnectTimeout):
         c.Log("Timed out after %v", c.config.ConnectTimeout)
-        return errors.New("dial tcp: i/o timeout")
+        return errors.New("server timeout")
     }
 
     return nil

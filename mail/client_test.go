@@ -316,7 +316,7 @@ var _ = Describe("Mail", func() {
             err = client.Connect()
 
             Expect(err).ToNot(BeNil())
-            Expect(err.Error()).To(ContainSubstring("timeout"))
+            Expect(err.Error()).To(ContainSubstring("server timeout"))
         })
     })
 

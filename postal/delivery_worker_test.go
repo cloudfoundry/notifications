@@ -3,6 +3,7 @@ package postal_test
 import (
     "bytes"
     "crypto/md5"
+    "errors"
     "log"
     "strings"
     "time"
@@ -112,8 +113,7 @@ var _ = Describe("DeliveryWorker", func() {
 
         It("logs the email address of the recipient", func() {
             worker.Deliver(&job)
-
-            Expect(buffer.String()).To(ContainSubstring("Sending email to fake-user@example.com"))
+            Expect(buffer.String()).To(ContainSubstring("Attempting to deliver message to fake-user@example.com"))
         })
 
         It("logs the message envelope", func() {
@@ -149,60 +149,79 @@ var _ = Describe("DeliveryWorker", func() {
 
         Context("when the delivery fails to be sent", func() {
             It("marks the job for retry", func() {
-                mailClient.ErrorOnSend = true
-
+                mailClient.SendError = errors.New("my awesome error")
                 worker.Deliver(&job)
-
                 Expect(len(mailClient.Messages)).To(Equal(0))
                 Expect(job.ShouldRetry).To(BeTrue())
             })
 
-            It("sets the retry duration using an exponential backoff algorithm", func() {
-                mailClient.ErrorOnConnect = true
-
+            It("logs an SMTP send error", func() {
+                mailClient.SendError = errors.New("BOOM!")
                 worker.Deliver(&job)
-                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 10*time.Second))
-                Expect(job.RetryCount).To(Equal(1))
+                Expect(buffer.String()).To(ContainSubstring("Failed to deliver message due to SMTP error: BOOM!"))
+            })
 
-                worker.Deliver(&job)
-                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(2*time.Minute), 10*time.Second))
-                Expect(job.RetryCount).To(Equal(2))
+            Context("and the error is a connect error", func() {
+                It("logs an SMTP timeout error", func() {
+                    mailClient.ConnectError = errors.New("server timeout")
+                    worker.Deliver(&job)
+                    Expect(buffer.String()).To(ContainSubstring("Error Establishing SMTP Connection: server timeout"))
+                })
 
-                worker.Deliver(&job)
-                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(4*time.Minute), 10*time.Second))
-                Expect(job.RetryCount).To(Equal(3))
+                It("logs other connect errors", func() {
+                    mailClient.ConnectError = errors.New("BOOM!")
+                    worker.Deliver(&job)
+                    Expect(buffer.String()).ToNot(ContainSubstring("server timeout"))
+                    Expect(buffer.String()).To(ContainSubstring("Error Establishing SMTP Connection: BOOM!"))
+                })
 
-                worker.Deliver(&job)
-                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(8*time.Minute), 10*time.Second))
-                Expect(job.RetryCount).To(Equal(4))
+                It("sets the retry duration using an exponential backoff algorithm", func() {
+                    mailClient.ConnectError = errors.New("BOOM!")
+                    worker.Deliver(&job)
 
-                worker.Deliver(&job)
-                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(16*time.Minute), 10*time.Second))
-                Expect(job.RetryCount).To(Equal(5))
+                    Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 10*time.Second))
+                    Expect(job.RetryCount).To(Equal(1))
 
-                worker.Deliver(&job)
-                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(32*time.Minute), 10*time.Second))
-                Expect(job.RetryCount).To(Equal(6))
+                    worker.Deliver(&job)
+                    Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(2*time.Minute), 10*time.Second))
+                    Expect(job.RetryCount).To(Equal(2))
 
-                worker.Deliver(&job)
-                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(64*time.Minute), 10*time.Second))
-                Expect(job.RetryCount).To(Equal(7))
+                    worker.Deliver(&job)
+                    Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(4*time.Minute), 10*time.Second))
+                    Expect(job.RetryCount).To(Equal(3))
 
-                worker.Deliver(&job)
-                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(128*time.Minute), 10*time.Second))
-                Expect(job.RetryCount).To(Equal(8))
+                    worker.Deliver(&job)
+                    Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(8*time.Minute), 10*time.Second))
+                    Expect(job.RetryCount).To(Equal(4))
 
-                worker.Deliver(&job)
-                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(256*time.Minute), 10*time.Second))
-                Expect(job.RetryCount).To(Equal(9))
+                    worker.Deliver(&job)
+                    Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(16*time.Minute), 10*time.Second))
+                    Expect(job.RetryCount).To(Equal(5))
 
-                worker.Deliver(&job)
-                Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(512*time.Minute), 10*time.Second))
-                Expect(job.RetryCount).To(Equal(10))
+                    worker.Deliver(&job)
+                    Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(32*time.Minute), 10*time.Second))
+                    Expect(job.RetryCount).To(Equal(6))
 
-                job.ShouldRetry = false
-                worker.Deliver(&job)
-                Expect(job.ShouldRetry).To(BeFalse())
+                    worker.Deliver(&job)
+                    Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(64*time.Minute), 10*time.Second))
+                    Expect(job.RetryCount).To(Equal(7))
+
+                    worker.Deliver(&job)
+                    Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(128*time.Minute), 10*time.Second))
+                    Expect(job.RetryCount).To(Equal(8))
+
+                    worker.Deliver(&job)
+                    Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(256*time.Minute), 10*time.Second))
+                    Expect(job.RetryCount).To(Equal(9))
+
+                    worker.Deliver(&job)
+                    Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(512*time.Minute), 10*time.Second))
+                    Expect(job.RetryCount).To(Equal(10))
+
+                    job.ShouldRetry = false
+                    worker.Deliver(&job)
+                    Expect(job.ShouldRetry).To(BeFalse())
+                })
             })
         })
 
@@ -212,10 +231,14 @@ var _ = Describe("DeliveryWorker", func() {
                 if err != nil {
                     panic(err)
                 }
+                worker.Deliver(&job)
+            })
+
+            It("logs that the user has unsubscribed from this notification", func() {
+                Expect(buffer.String()).To(ContainSubstring("Not delivering because fake-user@example.com has unsubscribed"))
             })
 
             It("does not send any non-critical notifications", func() {
-                worker.Deliver(&job)
                 Expect(len(mailClient.Messages)).To(Equal(0))
             })
         })
@@ -230,6 +253,11 @@ var _ = Describe("DeliveryWorker", func() {
                 if err != nil {
                     panic(err)
                 }
+            })
+
+            It("logs that the user has unsubscribed from this notification", func() {
+                worker.Deliver(&job)
+                Expect(buffer.String()).To(ContainSubstring("Not delivering because fake-user@example.com has unsubscribed"))
             })
 
             Context("and the notification is not registered", func() {

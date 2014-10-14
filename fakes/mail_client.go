@@ -1,22 +1,15 @@
 package fakes
 
-import (
-    "errors"
-
-    "github.com/cloudfoundry-incubator/notifications/mail"
-)
+import "github.com/cloudfoundry-incubator/notifications/mail"
 
 type FakeMailClient struct {
-    Messages       []mail.Message
-    ErrorOnSend    bool
-    ErrorOnConnect bool
+    Messages     []mail.Message
+    SendError    error
+    ConnectError error
 }
 
 func (fake *FakeMailClient) Connect() error {
-    if fake.ErrorOnConnect {
-        return errors.New("BOOM!")
-    }
-    return nil
+    return fake.ConnectError
 }
 
 func (fake *FakeMailClient) Send(msg mail.Message) error {
@@ -25,8 +18,8 @@ func (fake *FakeMailClient) Send(msg mail.Message) error {
         return err
     }
 
-    if fake.ErrorOnSend {
-        return errors.New("BOOM!")
+    if fake.SendError != nil {
+        return fake.SendError
     }
 
     fake.Messages = append(fake.Messages, msg)

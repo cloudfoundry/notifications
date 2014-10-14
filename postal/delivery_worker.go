@@ -102,6 +102,7 @@ func (worker DeliveryWorker) ShouldDeliver(delivery Delivery) bool {
 
     globallyUnsubscribed, err := worker.globalUnsubscribesRepo.Get(conn, delivery.UserGUID)
     if err != nil || globallyUnsubscribed {
+        worker.logger.Printf("Not delivering because %s has unsubscribed", delivery.User.Emails[0])
         return false
     }
 
@@ -110,6 +111,7 @@ func (worker DeliveryWorker) ShouldDeliver(delivery Delivery) bool {
         if (err == models.ErrRecordNotFound{}) {
             return len(delivery.User.Emails) > 0 && strings.Contains(delivery.User.Emails[0], "@")
         }
+        worker.logger.Printf("Not delivering because %s has unsubscribed", delivery.User.Emails[0])
         return false
     }
     return false
@@ -142,15 +144,16 @@ func (worker DeliveryWorker) pack(delivery Delivery) mail.Message {
 }
 
 func (worker DeliveryWorker) SendMail(message mail.Message) string {
-    worker.logger.Printf("Sending email to %s", message.To)
-
     err := worker.mailClient.Connect()
     if err != nil {
+        worker.logger.Printf("Error Establishing SMTP Connection: %s", err.Error())
         return StatusUnavailable
     }
 
+    worker.logger.Printf("Attempting to deliver message to %s", message.To)
     err = worker.mailClient.Send(message)
     if err != nil {
+        worker.logger.Printf("Failed to deliver message due to SMTP error: %s", err.Error())
         return StatusFailed
     }
 
