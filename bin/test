@@ -14,25 +14,24 @@ NONE="\033[0m"
 source $DIR/env/$ENVIRONMENT
 EXIT_CODE=0
 
-#if [[ $EXIT_CODE = 0 ]]; then
-    #$DIR/unit
-    #EXIT_CODE=$?
-#fi
+if [[ $EXIT_CODE = 0 ]]; then
+    $DIR/unit
+    EXIT_CODE=$?
+fi
 
-#if [[ $EXIT_CODE = 0 ]]; then
-    #echo
-    #$DIR/acceptance
-    #EXIT_CODE=$?
-#fi
+if [[ $EXIT_CODE = 0 ]]; then
+    echo
+    $DIR/acceptance
+    EXIT_CODE=$?
+fi
 
 if [[ $EXIT_CODE = 0 ]]; then
     echo
     pushd $DIR/.. > /dev/null 2>&1
-        output=`find . -path ./Godeps -prune -o -type d -d 1 -print | xargs go tool vet`
-        if [[ -z $output ]]; then
-            echo $output
-            EXIT_CODE=187
-        fi
+        set +e
+        find . -path ./Godeps -prune -o -type f -print | grep "\.go$" | xargs go tool vet
+        EXIT_CODE=$?
+        set -e
     popd > /dev/null 2>&1
 fi
 
