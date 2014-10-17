@@ -368,7 +368,7 @@ var _ = Describe("Mail", func() {
         })
     })
 
-    Describe("Log", func() {
+    Describe("PrintLog", func() {
         Context("when the client is configured to log", func() {
             BeforeEach(func() {
                 var err error
@@ -381,7 +381,7 @@ var _ = Describe("Mail", func() {
             })
 
             It("writes to the logger", func() {
-                client.Log("banana %s", "panic")
+                client.PrintLog("banana %s", "panic")
 
                 Expect(buffer.String()).To(ContainSubstring("banana panic"))
             })
@@ -399,7 +399,7 @@ var _ = Describe("Mail", func() {
             })
 
             It("does not write to the logger", func() {
-                client.Log("banana %s", "panic")
+                client.PrintLog("banana %s", "panic")
 
                 Expect(buffer.String()).NotTo(ContainSubstring("banana panic"))
             })

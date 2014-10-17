@@ -53,27 +53,27 @@ func NewClient(config Config, logger *log.Logger) (*Client, error) {
 }
 
 func (c *Client) Connect() error {
-    c.Log("Connecting...")
+    c.PrintLog("Connecting...")
     if c.config.TestMode {
-        c.Log("Test Mode enabled, not connected")
+        c.PrintLog("Test Mode enabled, not connected")
         return nil
     }
 
     if c.client != nil {
-        c.Log("Already connected.")
+        c.PrintLog("Already connected.")
         return nil
     }
 
     select {
     case connection := <-c.connect():
-        c.Log("Connected")
+        c.PrintLog("Connected")
         if connection.err != nil {
             return connection.err
         }
 
         c.client = connection.client
     case <-time.After(c.config.ConnectTimeout):
-        c.Log("Timed out after %+v", c.config.ConnectTimeout)
+        c.PrintLog("Timed out after %+v", c.config.ConnectTimeout)
         return errors.New("server timeout")
     }
 
@@ -105,54 +105,54 @@ func (c *Client) Send(msg Message) error {
         return c.Error(err)
     }
 
-    c.Log("Initiating hello...")
+    c.PrintLog("Initiating hello...")
     err = c.Hello()
     if err != nil {
         return c.Error(err)
     }
-    c.Log("Hello complete.")
+    c.PrintLog("Hello complete.")
 
     if !c.config.DisableTLS {
-        c.Log("Starting TLS...")
+        c.PrintLog("Starting TLS...")
         err = c.StartTLS()
         if err != nil {
             return c.Error(err)
         }
-        c.Log("TLS connection opened.")
+        c.PrintLog("TLS connection opened.")
 
-        c.Log("Starting authentication...")
+        c.PrintLog("Starting authentication...")
         err = c.Auth()
         if err != nil {
             return c.Error(err)
         }
-        c.Log("Authenticated.")
+        c.PrintLog("Authenticated.")
     }
 
-    c.Log("Sending mail from: %s", msg.From)
+    c.PrintLog("Sending mail from: %s", msg.From)
     err = c.client.Mail(msg.From)
     if err != nil {
         return c.Error(err)
     }
 
-    c.Log("Sending mail to: %s", msg.To)
+    c.PrintLog("Sending mail to: %s", msg.To)
     err = c.client.Rcpt(msg.To)
     if err != nil {
         return c.Error(err)
     }
 
-    c.Log("Sending mail data...")
+    c.PrintLog("Sending mail data...")
     err = c.Data(msg)
     if err != nil {
         return c.Error(err)
     }
-    c.Log("Mail data sent.")
+    c.PrintLog("Mail data sent.")
 
-    c.Log("Quitting...")
+    c.PrintLog("Quitting...")
     err = c.Quit()
     if err != nil {
         return c.Error(err)
     }
-    c.Log("Goodbye.")
+    c.PrintLog("Goodbye.")
 
     return nil
 }
@@ -231,7 +231,7 @@ func (c *Client) Error(err error) error {
     return err
 }
 
-func (c *Client) Log(format string, arguments ...interface{}) {
+func (c *Client) PrintLog(format string, arguments ...interface{}) {
     if c.config.LoggingEnabled {
         c.logger.Printf("[SMTP] "+format, arguments...)
     }
