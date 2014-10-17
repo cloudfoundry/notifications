@@ -2,3 +2,4 @@
 applications:
   - name: notifications
     command: bin/notifications
+    memory: 64M
