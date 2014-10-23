@@ -125,6 +125,11 @@ func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
     return services.NewPreferenceUpdater(mother.GlobalUnsubscribesRepo(), mother.UnsubscribesRepo(), mother.KindsRepo())
 }
 
+func (mother Mother) TemplateFinder() services.TemplateFinder {
+    env := config.NewEnvironment()
+    return services.NewTemplateFinder(mother.TemplatesRepo(), env.RootPath)
+}
+
 func (mother Mother) KindsRepo() models.KindsRepo {
     return models.NewKindsRepo()
 }
@@ -135,6 +140,10 @@ func (mother Mother) UnsubscribesRepo() models.UnsubscribesRepo {
 
 func (mother Mother) GlobalUnsubscribesRepo() models.GlobalUnsubscribesRepo {
     return models.NewGlobalUnsubscribesRepo()
+}
+
+func (mother Mother) TemplatesRepo() models.TemplatesRepo {
+    return models.NewTemplatesRepo()
 }
 
 func (mother Mother) CORS() middleware.CORS {

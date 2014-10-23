@@ -18,6 +18,7 @@ type MotherInterface interface {
     NotificationFinder() services.NotificationFinder
     PreferencesFinder() *services.PreferencesFinder
     PreferenceUpdater() services.PreferenceUpdater
+    TemplateFinder() services.TemplateFinder
     Database() models.DatabaseInterface
     Logging() stack.Middleware
     ErrorWriter() handlers.ErrorWriter
@@ -36,6 +37,7 @@ func NewRouter(mother MotherInterface) Router {
     notify := handlers.NewNotify(mother.NotificationFinder(), registrar)
     preferencesFinder := mother.PreferencesFinder()
     preferenceUpdater := mother.PreferenceUpdater()
+    templateFinder := mother.TemplateFinder()
     logging := mother.Logging()
     errorWriter := mother.ErrorWriter()
     notificationsWriteAuthenticator := mother.Authenticator("notifications.write")
@@ -60,6 +62,7 @@ func NewRouter(mother MotherInterface) Router {
             "GET /user_preferences/{guid}":     stack.NewStack(handlers.NewGetPreferencesForUser(preferencesFinder, errorWriter)).Use(logging, cors, notificationPreferencesAdminAuthenticator),
             "PATCH /user_preferences":          stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter, database)).Use(logging, cors, notificationPreferencesWriteAuthenticator),
             "PATCH /user_preferences/{guid}":   stack.NewStack(handlers.NewUpdateSpecificUserPreferences(preferenceUpdater, errorWriter, database)).Use(logging, cors, notificationPreferencesAdminAuthenticator),
+            "GET /templates/{templateName}":    stack.NewStack(handlers.NewGetTemplates(templateFinder)).Use(logging),
         },
     }
 }

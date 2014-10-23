@@ -1,8 +1,8 @@
 package middleware
 
 import (
-    "net/http"
     "github.com/ryanmoran/stack"
+    "net/http"
 )
 
 type CORS struct {
