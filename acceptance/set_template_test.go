@@ -3,6 +3,7 @@ package acceptance
 import (
     "bytes"
     "encoding/json"
+    "fmt"
     "io/ioutil"
     "net/http"
 
@@ -45,15 +46,17 @@ var _ = Describe("Templates PUT Endpoint", func() {
         }
 
         test := SetTemplates{}
-        test.SetDefaultTemplate(notificationsServer, clientToken)
-        test.GetOverriddenDefaultTemplate(notificationsServer, clientToken)
+        text := "rulebook"
+        html := "<p>follow the rules</p>"
+        test.SetDefaultSpaceTemplate(notificationsServer, clientToken, text, html)
+        test.GetOverriddenDefaultTemplate(notificationsServer, clientToken, text, html)
     })
 })
 
 type SetTemplates struct{}
 
-func (t SetTemplates) SetDefaultTemplate(notificationsServer servers.Notifications, clientToken uaa.Token) {
-    jsonBody := []byte(`{"text":"rulebook", "html":"<p>follow the rules</p>"}`)
+func (t SetTemplates) SetDefaultSpaceTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, text, html string) {
+    jsonBody := []byte(fmt.Sprintf(`{"text":"%s", "html":"%s"}`, text, html))
     request, err := http.NewRequest("PUT", notificationsServer.SpaceTemplatePath(), bytes.NewBuffer(jsonBody))
     if err != nil {
         panic(err)
@@ -70,7 +73,7 @@ func (t SetTemplates) SetDefaultTemplate(notificationsServer servers.Notificatio
     Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 }
 
-func (t SetTemplates) GetOverriddenDefaultTemplate(notificationsServer servers.Notifications, clientToken uaa.Token) {
+func (t SetTemplates) GetOverriddenDefaultTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, text, html string) {
     request, err := http.NewRequest("GET", notificationsServer.SpaceTemplatePath(), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
@@ -98,7 +101,7 @@ func (t SetTemplates) GetOverriddenDefaultTemplate(notificationsServer servers.N
         panic(err)
     }
 
-    Expect(responseJSON.Text).To(Equal("rulebook"))
-    Expect(responseJSON.HTML).To(Equal("<p>follow the rules</p>"))
+    Expect(responseJSON.Text).To(Equal(text))
+    Expect(responseJSON.HTML).To(Equal(html))
     Expect(responseJSON.Overridden).To(BeTrue())
 }
