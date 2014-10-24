@@ -61,6 +61,10 @@ func (conn FakeDBConn) Update(list ...interface{}) (int64, error) {
     return 0, nil
 }
 
+func (conn FakeDBConn) SelectInt(query string, list ...interface{}) (int64, error) {
+    return 0, nil
+}
+
 func (conn *FakeDBConn) Transaction() models.TransactionInterface {
     return conn
 }

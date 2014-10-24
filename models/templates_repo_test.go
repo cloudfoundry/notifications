@@ -11,6 +11,7 @@ import (
 var _ = Describe("TemplatesRepo", func() {
     var repo models.TemplatesRepo
     var conn models.ConnectionInterface
+    var template models.Template
 
     BeforeEach(func() {
         TruncateTables()
@@ -19,14 +20,14 @@ var _ = Describe("TemplatesRepo", func() {
         db := models.NewDatabase(env.DatabaseURL)
         conn = db.Connection()
 
-        template := &models.Template{
+        template = models.Template{
             Name:       "raptor_template",
             Text:       "run and hide",
             HTML:       "<h1>containment unit breached!</h1>",
             Overridden: true,
         }
 
-        conn.Insert(template)
+        conn.Insert(&template)
     })
 
     Context("#Find", func() {
@@ -49,6 +50,60 @@ var _ = Describe("TemplatesRepo", func() {
                 Expect(sillyTemplate).To(Equal(models.Template{}))
                 Expect(err).To(HaveOccurred())
                 Expect(err).To(MatchError(models.ErrRecordNotFound{}))
+            })
+        })
+    })
+
+    Context("#Upsert", func() {
+        Context("no error occurs", func() {
+            var newTemplate models.Template
+            var checkingTemplate models.Template
+
+            BeforeEach(func() {
+                newTemplate = models.Template{
+                    Name:       "silly_template.user_body",
+                    Text:       "omg",
+                    HTML:       "<h1>OMG</h1>",
+                    Overridden: true,
+                }
+            })
+
+            It("inserts a template into the database", func() {
+                var err error
+
+                _, err = repo.Upsert(conn, newTemplate)
+                count, err := conn.SelectInt("SELECT count(*) FROM `templates`")
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(count).To(Equal(int64(2)))
+                err = conn.SelectOne(&checkingTemplate, "SELECT * FROM `templates` WHERE name=?", newTemplate.Name)
+                if err != nil {
+                    panic(err)
+                }
+                Expect(checkingTemplate.Text).To(Equal("omg"))
+                Expect(checkingTemplate.HTML).To(Equal("<h1>OMG</h1>"))
+            })
+
+            It("updates a template currently in the database", func() {
+                template.Text = "new text"
+                _, err := repo.Upsert(conn, template)
+                Expect(err).ToNot(HaveOccurred())
+
+                count, err := conn.SelectInt("SELECT count(*) FROM `templates`")
+                if err != nil {
+                    panic(err)
+                }
+                Expect(count).To(Equal(int64(1)))
+
+                err = conn.SelectOne(&checkingTemplate, "SELECT * FROM `templates` WHERE name=?", template.Name)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(checkingTemplate.Text).To(Equal("new text"))
+                Expect(checkingTemplate.HTML).To(Equal("<h1>containment unit breached!</h1>"))
             })
         })
     })

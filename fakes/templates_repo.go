@@ -3,8 +3,9 @@ package fakes
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type FakeTemplatesRepo struct {
-    Templates map[string]models.Template
-    FindError error
+    Templates   map[string]models.Template
+    FindError   error
+    UpsertError error
 }
 
 func NewFakeTemplatesRepo() *FakeTemplatesRepo {
@@ -19,4 +20,9 @@ func (fake FakeTemplatesRepo) Find(conn models.ConnectionInterface, templateName
         return template, fake.FindError
     }
     return models.Template{}, fake.FindError
+}
+
+func (fake FakeTemplatesRepo) Upsert(conn models.ConnectionInterface, template models.Template) (models.Template, error) {
+    fake.Templates[template.Name] = template
+    return template, fake.UpsertError
 }

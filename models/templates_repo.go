@@ -4,6 +4,7 @@ import "database/sql"
 
 type TemplatesRepoInterface interface {
     Find(ConnectionInterface, string) (Template, error)
+    Upsert(ConnectionInterface, Template) (Template, error)
 }
 
 type TemplatesRepo struct{}
@@ -22,4 +23,17 @@ func (repo TemplatesRepo) Find(conn ConnectionInterface, templateName string) (T
         return template, err
     }
     return template, nil
+}
+
+func (repo TemplatesRepo) Upsert(conn ConnectionInterface, template Template) (Template, error) {
+    var err error
+    _, err = repo.Find(conn, template.Name)
+    if err != nil {
+        if (err == ErrRecordNotFound{}) {
+            err = conn.Insert(&template)
+        }
+    }
+    _, err = conn.Update(&template)
+
+    return template, err
 }

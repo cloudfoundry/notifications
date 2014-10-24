@@ -10,9 +10,10 @@ import (
     "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
+    "github.com/ryanmoran/stack"
+
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
-    "github.com/ryanmoran/stack"
 )
 
 var _ = Describe("GetTemplates", func() {
@@ -41,7 +42,7 @@ var _ = Describe("GetTemplates", func() {
                 }
             })
 
-            It("Calls Execute on its finder with appropriate arguments", func() {
+            It("Calls find on its finder with appropriate arguments", func() {
                 handler.ServeHTTP(writer, request, context)
                 Expect(finder.TemplateName).To(Equal("myTemplateName.user_body"))
             })
@@ -64,6 +65,7 @@ var _ = Describe("GetTemplates", func() {
         Context("With improper template name", func() {
             BeforeEach(func() {
                 writer = httptest.NewRecorder()
+                finder = fakes.NewFakeTemplateFinder(models.Template{})
                 handler = handlers.NewGetTemplates(finder)
 
                 finder.FindError = models.ErrRecordNotFound{}

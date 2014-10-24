@@ -58,6 +58,10 @@ func (transaction *Transaction) Select(holder interface{}, query string, args ..
     return transaction.txn.Select(holder, query, args...)
 }
 
+func (transaction *Transaction) SelectInt(query string, args ...interface{}) (int64, error) {
+    return transaction.txn.SelectInt(query, args...)
+}
+
 func (transaction *Transaction) SelectOne(holder interface{}, query string, args ...interface{}) error {
     return transaction.txn.SelectOne(holder, query, args...)
 }

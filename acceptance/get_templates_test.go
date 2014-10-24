@@ -28,7 +28,7 @@ var _ = Describe("Templates GET Endpoint", func() {
         database.Connection().Insert(templateData)
     })
 
-    It("User can get body templates", func() {
+    It("allows a user to get body templates", func() {
         // Boot Fake SMTP Server
         smtpServer := servers.NewSMTP()
         smtpServer.Boot()

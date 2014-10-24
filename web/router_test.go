@@ -121,4 +121,9 @@ var _ = Describe("Router", func() {
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetTemplates{}))
     })
 
+    It("routes PUT /templates/{templateName}", func() {
+        s := router.Routes().Get("PUT /templates/{templateName}").GetHandler().(stack.Stack)
+        Expect(s.Handler).To(BeAssignableToTypeOf(handlers.SetTemplates{}))
+    })
+
 })

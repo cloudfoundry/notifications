@@ -130,6 +130,10 @@ func (mother Mother) TemplateFinder() services.TemplateFinder {
     return services.NewTemplateFinder(mother.TemplatesRepo(), env.RootPath, mother.Database())
 }
 
+func (mother Mother) TemplateUpdater() services.TemplateUpdater {
+    return services.NewTemplateUpdater(mother.TemplatesRepo(), mother.Database())
+}
+
 func (mother Mother) KindsRepo() models.KindsRepo {
     return models.NewKindsRepo()
 }
