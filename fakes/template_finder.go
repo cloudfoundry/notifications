@@ -5,7 +5,6 @@ import "github.com/cloudfoundry-incubator/notifications/models"
 type FakeTemplateFinder struct {
     TemplateName     string
     TemplateResponse models.Template
-    NotificationType string
     FindError        error
 }
 
@@ -15,8 +14,7 @@ func NewFakeTemplateFinder(templateResponse models.Template) *FakeTemplateFinder
     }
 }
 
-func (fake *FakeTemplateFinder) Find(notificationType, templateName string) (models.Template, error) {
+func (fake *FakeTemplateFinder) Find(templateName string) (models.Template, error) {
     fake.TemplateName = templateName
-    fake.NotificationType = notificationType
     return fake.TemplateResponse, fake.FindError
 }

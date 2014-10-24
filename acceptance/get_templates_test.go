@@ -19,6 +19,13 @@ var _ = Describe("Templates GET Endpoint", func() {
 
     BeforeEach(func() {
         TruncateTables()
+
+        env := config.NewEnvironment()
+        database := models.NewDatabase(env.DatabaseURL)
+
+        templateData := &models.Template{Name: "overridden-client.user_body",
+            Text: "Text Template", HTML: "<p>HTML Template</p>", Overridden: true}
+        database.Connection().Insert(templateData)
     })
 
     It("User can get body templates", func() {
@@ -37,6 +44,7 @@ var _ = Describe("Templates GET Endpoint", func() {
         defer notificationsServer.Close()
 
         // Retrieve Client UAA token
+        overriddenClientID := "overridden-client"
         clientID := "notifications-sender"
         env := config.NewEnvironment()
         uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
@@ -51,6 +59,7 @@ var _ = Describe("Templates GET Endpoint", func() {
         test.GetSpaceTemplates(notificationsServer, clientToken)
         test.GetUserTemplatesForClient(notificationsServer, clientToken, clientID)
         test.GetUserTemplatesForClientAndKind(notificationsServer, clientToken, clientID, kindID)
+        test.GetUserTemplatesForOverriddenClient(notificationsServer, clientToken, overriddenClientID)
     })
 })
 
@@ -112,8 +121,7 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
     using the "{{.UnsubscribeID}}" unsubscribe token.</p>
 `))
 
-    Expect(responseJSON.Overridden).To(Equal(false))
-
+    Expect(responseJSON.Overridden).To(BeFalse())
 }
 
 func (t GetTemplates) GetUserTemplates(notificationsServer servers.Notifications, clientToken uaa.Token) {
@@ -170,8 +178,67 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
     using the "{{.UnsubscribeID}}" unsubscribe token.</p>
 `))
 
-    Expect(responseJSON.Overridden).To(Equal(false))
+    Expect(responseJSON.Overridden).To(BeFalse())
+}
 
+func (t GetTemplates) GetUserTemplatesForOverriddenClient(notificationsServer servers.Notifications, clientToken uaa.Token, clientID string) {
+    request, err := http.NewRequest("GET", notificationsServer.UserTemplateForClientPath(clientID), bytes.NewBuffer([]byte{}))
+    if err != nil {
+        panic(err)
+    }
+
+    request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+
+    response, err := http.DefaultClient.Do(request)
+    if err != nil {
+        panic(err)
+    }
+
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        panic(err)
+    }
+
+    // Confirm response status code looks ok
+    Expect(response.StatusCode).To(Equal(http.StatusOK))
+
+    // Confirm we got the correct template info
+    responseJSON := models.Template{}
+    err = json.Unmarshal(body, &responseJSON)
+    if err != nil {
+        panic(err)
+    }
+
+    Expect(responseJSON.Text).To(Equal("Text Template"))
+
+    Expect(responseJSON.HTML).To(Equal("<p>HTML Template</p>"))
+
+    Expect(responseJSON.Overridden).To(BeTrue())
+
+    request, err = http.NewRequest("GET", notificationsServer.UserTemplatePath(), bytes.NewBuffer([]byte{}))
+    if err != nil {
+        panic(err)
+    }
+
+    request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+
+    response, err = http.DefaultClient.Do(request)
+    if err != nil {
+        panic(err)
+    }
+
+    body, err = ioutil.ReadAll(response.Body)
+    if err != nil {
+        panic(err)
+    }
+
+    responseJSON = models.Template{}
+    err = json.Unmarshal(body, &responseJSON)
+    if err != nil {
+        panic(err)
+    }
+
+    Expect(responseJSON.Overridden).To(BeFalse())
 }
 
 func (t GetTemplates) GetUserTemplatesForClient(notificationsServer servers.Notifications, clientToken uaa.Token, clientID string) {
@@ -228,8 +295,7 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
     using the "{{.UnsubscribeID}}" unsubscribe token.</p>
 `))
 
-    Expect(responseJSON.Overridden).To(Equal(false))
-
+    Expect(responseJSON.Overridden).To(BeFalse())
 }
 
 func (t GetTemplates) GetUserTemplatesForClientAndKind(notificationsServer servers.Notifications, clientToken uaa.Token, clientID, kindID string) {
@@ -286,6 +352,5 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
     using the "{{.UnsubscribeID}}" unsubscribe token.</p>
 `))
 
-    Expect(responseJSON.Overridden).To(Equal(false))
-
+    Expect(responseJSON.Overridden).To(BeFalse())
 }

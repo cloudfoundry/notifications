@@ -60,6 +60,8 @@ var _ = Describe("Database", func() {
         Expect(tables).To(ContainElement("kinds"))
         Expect(tables).To(ContainElement("receipts"))
         Expect(tables).To(ContainElement("unsubscribes"))
+        Expect(tables).To(ContainElement("global_unsubscribes"))
+        Expect(tables).To(ContainElement("templates"))
     })
 
     Describe("Connection", func() {

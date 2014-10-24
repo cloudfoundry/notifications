@@ -1,8 +1,9 @@
 package models
 
 type Template struct {
-    Name       string
-    Text       string `json:"text"`
-    HTML       string `json:"html"`
-    Overridden bool   `json:"overridden"`
+    Primary    int    `db:"primary"`
+    Name       string `db:"name"`
+    Text       string `db:"text"`
+    HTML       string `db:"html"`
+    Overridden bool   `db:"overridden"`
 }

@@ -127,7 +127,7 @@ func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
 
 func (mother Mother) TemplateFinder() services.TemplateFinder {
     env := config.NewEnvironment()
-    return services.NewTemplateFinder(mother.TemplatesRepo(), env.RootPath)
+    return services.NewTemplateFinder(mother.TemplatesRepo(), env.RootPath, mother.Database())
 }
 
 func (mother Mother) KindsRepo() models.KindsRepo {

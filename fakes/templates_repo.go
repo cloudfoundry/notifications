@@ -13,7 +13,7 @@ func NewFakeTemplatesRepo() *FakeTemplatesRepo {
     }
 }
 
-func (fake FakeTemplatesRepo) Find(templateName string) (models.Template, error) {
+func (fake FakeTemplatesRepo) Find(conn models.ConnectionInterface, templateName string) (models.Template, error) {
     template, ok := fake.Templates[templateName]
     if ok {
         return template, fake.FindError

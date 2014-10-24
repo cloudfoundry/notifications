@@ -3,6 +3,7 @@ package services
 import (
     "fmt"
     "io/ioutil"
+    "strings"
 
     "github.com/cloudfoundry-incubator/notifications/models"
 )
@@ -13,26 +14,40 @@ const UserBody = "user_body"
 type TemplateFinder struct {
     TemplatesRepo models.TemplatesRepoInterface
     RootPath      string
+    database      models.DatabaseInterface
 }
 
 type TemplateFinderInterface interface {
-    Find(string, string) (models.Template, error)
+    Find(string) (models.Template, error)
 }
 
-func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, rootPath string) TemplateFinder {
+func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, rootPath string, database models.DatabaseInterface) TemplateFinder {
     return TemplateFinder{
         TemplatesRepo: templatesRepo,
         RootPath:      rootPath,
+        database:      database,
     }
 }
 
-func (finder TemplateFinder) Find(notificationType, templateName string) (models.Template, error) {
-    template, err := finder.TemplatesRepo.Find(templateName)
+func (finder TemplateFinder) Find(templateName string) (models.Template, error) {
+    var template models.Template
+    var err error
+    notificationType := parseNotificationType(templateName)
+    client := parseClientType(templateName)
+    templatesToSearchFor := []string{templateName, client + "." + notificationType, notificationType}
+    connection := finder.database.Connection()
+
+    for _, templateName := range templatesToSearchFor {
+        template, err = finder.TemplatesRepo.Find(connection, templateName)
+        if (template != models.Template{}) {
+            break
+        }
+    }
 
     if (err == models.ErrRecordNotFound{}) {
         if notificationType == SpaceBody {
             return finder.DefaultTemplate(SpaceBody)
-        } else {
+        } else if notificationType == UserBody {
             return finder.DefaultTemplate(UserBody)
         }
     }
@@ -56,4 +71,22 @@ func (finder TemplateFinder) DefaultTemplate(notificationType string) (models.Te
     html := string(bytes)
 
     return models.Template{Text: text, HTML: html}, nil
+}
+
+func parseClientType(templateName string) string {
+    theSplit := strings.Split(templateName, ".")
+    if len(theSplit) == 3 || len(theSplit) == 2 {
+        return theSplit[0]
+    } else {
+        return ""
+    }
+}
+
+func parseNotificationType(templateName string) string {
+    if strings.HasSuffix(templateName, UserBody) {
+        return UserBody
+    } else if strings.HasSuffix(templateName, SpaceBody) {
+        return SpaceBody
+    }
+    return ""
 }

@@ -167,7 +167,6 @@ var _ = Describe("PreferencesRepo", func() {
                 }))
 
             })
-
         })
     })
 })

@@ -44,7 +44,6 @@ var _ = Describe("GetTemplates", func() {
             It("Calls Execute on its finder with appropriate arguments", func() {
                 handler.ServeHTTP(writer, request, context)
                 Expect(finder.TemplateName).To(Equal("myTemplateName.user_body"))
-                Expect(finder.NotificationType).To(Equal("user_body"))
             })
 
             It("writes out the finder's response", func() {
@@ -67,6 +66,7 @@ var _ = Describe("GetTemplates", func() {
                 writer = httptest.NewRecorder()
                 handler = handlers.NewGetTemplates(finder)
 
+                finder.FindError = models.ErrRecordNotFound{}
                 var err error
                 request, err = http.NewRequest("GET", "/templates/myTemplateName", bytes.NewBuffer([]byte{}))
                 if err != nil {
@@ -103,6 +103,5 @@ var _ = Describe("GetTemplates", func() {
 
             })
         })
-
     })
 })
