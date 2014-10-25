@@ -24,7 +24,7 @@ var _ = Describe("Finder", func() {
 
         Context("when the finder returns a template", func() {
             Context("when the override does not exist", func() {
-                It("returns the default template space template", func() {
+                It("returns the default space template", func() {
                     fakeTemplatesRepo.FindError = models.ErrRecordNotFound{}
 
                     template, err := finder.Find("login.fp.space_body")
@@ -81,6 +81,39 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
 
 <p>The following "{{.KindDescription}}" notification was sent to you directly by the
     "{{.SourceDescription}}" component of Cloud Foundry:</p>
+
+{{.HTML}}
+
+<p>This message was sent from {{.From}} and can be replied to at {{.ReplyTo}}. The
+    notification can be identified with the {{.MessageID}} identifier and was sent
+    with the {{.ClientID}} UAA client. The notification can be unsubscribed from
+    using the "{{.UnsubscribeID}}" unsubscribe token.</p>
+`))
+                })
+
+                It("returns the default email template", func() {
+                    fakeTemplatesRepo.FindError = models.ErrRecordNotFound{}
+
+                    template, err := finder.Find("login.fp.email_body")
+                    Expect(err).ToNot(HaveOccurred())
+                    Expect(template.Overridden).To(BeFalse())
+                    Expect(template.Text).To(Equal(`Hello {{.To}},
+
+The following "{{.Subject}}" notification was sent to you directly by the "{{.SourceDescription}}"
+component of Cloud Foundry:
+
+{{.Text}}
+
+This message was sent from {{.From}} and can be replied to at {{.ReplyTo}}. The
+notification can be identified with the {{.MessageID}} identifier and was sent
+with the {{.ClientID}} UAA client. The notification can be unsubscribed from
+using the "{{.UnsubscribeID}}" unsubscribe token.
+`))
+
+                    Expect(template.HTML).To(Equal(`<p>Hello {{.To}},</p>
+
+<p>The following "{{.Subject}}" notification was sent to you directly by the "{{.SourceDescription}}"
+    component of Cloud Foundry:</p>
 
 {{.HTML}}
 

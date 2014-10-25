@@ -57,6 +57,7 @@ var _ = Describe("Templates GET Endpoint", func() {
         test := GetTemplates{}
         test.GetUserTemplates(notificationsServer, clientToken)
         test.GetSpaceTemplates(notificationsServer, clientToken)
+        test.GetEmailTemplates(notificationsServer, clientToken)
         test.GetUserTemplatesForClient(notificationsServer, clientToken, clientID)
         test.GetUserTemplatesForClientAndKind(notificationsServer, clientToken, clientID, kindID)
         test.GetUserTemplatesForOverriddenClient(notificationsServer, clientToken, overriddenClientID)
@@ -169,6 +170,63 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
 
 <p>The following "{{.KindDescription}}" notification was sent to you directly by the
     "{{.SourceDescription}}" component of Cloud Foundry:</p>
+
+{{.HTML}}
+
+<p>This message was sent from {{.From}} and can be replied to at {{.ReplyTo}}. The
+    notification can be identified with the {{.MessageID}} identifier and was sent
+    with the {{.ClientID}} UAA client. The notification can be unsubscribed from
+    using the "{{.UnsubscribeID}}" unsubscribe token.</p>
+`))
+
+    Expect(responseJSON.Overridden).To(BeFalse())
+}
+
+func (t GetTemplates) GetEmailTemplates(notificationsServer servers.Notifications, clientToken uaa.Token) {
+    request, err := http.NewRequest("GET", notificationsServer.EmailTemplatePath(), bytes.NewBuffer([]byte{}))
+    if err != nil {
+        panic(err)
+    }
+
+    request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+
+    response, err := http.DefaultClient.Do(request)
+    if err != nil {
+        panic(err)
+    }
+
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        panic(err)
+    }
+
+    // Confirm response status code looks ok
+    Expect(response.StatusCode).To(Equal(http.StatusOK))
+
+    // Confirm we got the correct template info
+    responseJSON := models.Template{}
+    err = json.Unmarshal(body, &responseJSON)
+    if err != nil {
+        panic(err)
+    }
+
+    Expect(responseJSON.Text).To(Equal(`Hello {{.To}},
+
+The following "{{.Subject}}" notification was sent to you directly by the "{{.SourceDescription}}"
+component of Cloud Foundry:
+
+{{.Text}}
+
+This message was sent from {{.From}} and can be replied to at {{.ReplyTo}}. The
+notification can be identified with the {{.MessageID}} identifier and was sent
+with the {{.ClientID}} UAA client. The notification can be unsubscribed from
+using the "{{.UnsubscribeID}}" unsubscribe token.
+`))
+
+    Expect(responseJSON.HTML).To(Equal(`<p>Hello {{.To}},</p>
+
+<p>The following "{{.Subject}}" notification was sent to you directly by the "{{.SourceDescription}}"
+    component of Cloud Foundry:</p>
 
 {{.HTML}}
 

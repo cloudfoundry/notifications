@@ -8,8 +8,11 @@ import (
     "github.com/cloudfoundry-incubator/notifications/models"
 )
 
-const SpaceBody = "space_body"
-const UserBody = "user_body"
+const (
+    SpaceBody = "space_body"
+    UserBody  = "user_body"
+    EmailBody = "email_body"
+)
 
 type TemplateFinder struct {
     TemplatesRepo models.TemplatesRepoInterface
@@ -45,10 +48,13 @@ func (finder TemplateFinder) Find(templateName string) (models.Template, error) 
     }
 
     if (err == models.ErrRecordNotFound{}) {
-        if notificationType == SpaceBody {
+        switch notificationType {
+        case SpaceBody:
             return finder.DefaultTemplate(SpaceBody)
-        } else if notificationType == UserBody {
+        case UserBody:
             return finder.DefaultTemplate(UserBody)
+        case EmailBody:
+            return finder.DefaultTemplate(EmailBody)
         }
     }
 
@@ -87,6 +93,8 @@ func parseNotificationType(templateName string) string {
         return UserBody
     } else if strings.HasSuffix(templateName, SpaceBody) {
         return SpaceBody
+    } else if strings.HasSuffix(templateName, EmailBody) {
+        return EmailBody
     }
     return ""
 }

@@ -93,6 +93,10 @@ func (s Notifications) UserTemplatePath() string {
     return "http://localhost:" + s.env.Port + "/templates/user_body"
 }
 
+func (s Notifications) EmailTemplatePath() string {
+    return "http://localhost:" + s.env.Port + "/templates/email_body"
+}
+
 func (s Notifications) UserTemplateForClientPath(clientID string) string {
     return "http://localhost:" + s.env.Port + "/templates/" + clientID + ".user_body"
 }
