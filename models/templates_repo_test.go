@@ -31,7 +31,7 @@ var _ = Describe("TemplatesRepo", func() {
     })
 
     Context("#Find", func() {
-        Context("no error occurs", func() {
+        Context("the template is in the database", func() {
             It("returns the template when it is found", func() {
                 raptorTemplate, err := repo.Find(conn, "raptor_template")
 
@@ -43,8 +43,8 @@ var _ = Describe("TemplatesRepo", func() {
             })
         })
 
-        Context("an error occurs", func() {
-            It("returns a record not found error and no template when the template is not in the DB", func() {
+        Context("the template is not in the database", func() {
+            It("returns a record not found error", func() {
                 sillyTemplate, err := repo.Find(conn, "silly_template")
 
                 Expect(sillyTemplate).To(Equal(models.Template{}))
@@ -54,56 +54,67 @@ var _ = Describe("TemplatesRepo", func() {
         })
     })
 
-    Context("#Upsert", func() {
-        Context("no error occurs", func() {
-            var newTemplate models.Template
-            var checkingTemplate models.Template
+    Describe("#Upsert", func() {
+        It("inserts a template into the database", func() {
+            newTemplate := models.Template{
+                Name:       "silly_template.user_body",
+                Text:       "omg",
+                HTML:       "<h1>OMG</h1>",
+                Overridden: true,
+            }
 
-            BeforeEach(func() {
-                newTemplate = models.Template{
-                    Name:       "silly_template.user_body",
-                    Text:       "omg",
-                    HTML:       "<h1>OMG</h1>",
-                    Overridden: true,
-                }
-            })
+            _, err := repo.Upsert(conn, newTemplate)
+            Expect(err).ToNot(HaveOccurred())
 
-            It("inserts a template into the database", func() {
-                var err error
+            foundTemplate, err := repo.Find(conn, newTemplate.Name)
+            if err != nil {
+                panic(err)
+            }
 
-                _, err = repo.Upsert(conn, newTemplate)
-                count, err := conn.SelectInt("SELECT count(*) FROM `templates`")
+            Expect(foundTemplate.Text).To(Equal(newTemplate.Text))
+            Expect(foundTemplate.HTML).To(Equal(newTemplate.HTML))
+        })
+
+        It("updates a template currently in the database", func() {
+            template.Text = "new text"
+            _, err := repo.Upsert(conn, template)
+            Expect(err).ToNot(HaveOccurred())
+
+            foundTemplate, err := repo.Find(conn, template.Name)
+            if err != nil {
+                panic(err)
+            }
+
+            Expect(foundTemplate.Text).To(Equal(template.Text))
+            Expect(foundTemplate.HTML).To(Equal(template.HTML))
+        })
+    })
+
+    Describe("#Destroy", func() {
+        Context("the template exists in the database", func() {
+            It("deletes the template", func() {
+                _, err := repo.Find(conn, template.Name)
                 if err != nil {
                     panic(err)
                 }
 
-                Expect(count).To(Equal(int64(2)))
-                err = conn.SelectOne(&checkingTemplate, "SELECT * FROM `templates` WHERE name=?", newTemplate.Name)
-                if err != nil {
-                    panic(err)
-                }
-                Expect(checkingTemplate.Text).To(Equal("omg"))
-                Expect(checkingTemplate.HTML).To(Equal("<h1>OMG</h1>"))
-            })
-
-            It("updates a template currently in the database", func() {
-                template.Text = "new text"
-                _, err := repo.Upsert(conn, template)
+                err = repo.Destroy(conn, template.Name)
                 Expect(err).ToNot(HaveOccurred())
 
-                count, err := conn.SelectInt("SELECT count(*) FROM `templates`")
-                if err != nil {
-                    panic(err)
-                }
-                Expect(count).To(Equal(int64(1)))
+                _, err = repo.Find(conn, template.Name)
+                Expect(err).To(Equal(models.ErrRecordNotFound{}))
 
-                err = conn.SelectOne(&checkingTemplate, "SELECT * FROM `templates` WHERE name=?", template.Name)
-                if err != nil {
-                    panic(err)
-                }
+            })
+        })
 
-                Expect(checkingTemplate.Text).To(Equal("new text"))
-                Expect(checkingTemplate.HTML).To(Equal("<h1>containment unit breached!</h1>"))
+        Context("the template does not exist in the database", func() {
+            It("does not return an error", func() {
+                err := repo.Destroy(conn, "knockknock")
+                Expect(err).ToNot(HaveOccurred())
+
+                _, err = repo.Find(conn, "knockknock")
+                Expect(err).To(Equal(models.ErrRecordNotFound{}))
+
             })
         })
     })

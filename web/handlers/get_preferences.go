@@ -28,8 +28,7 @@ func (handler GetPreferences) ServeHTTP(w http.ResponseWriter, req *http.Request
 
     parsed, err := handler.PreferencesFinder.Find(userID)
     if err != nil {
-        errorWriter := NewErrorWriter()
-        errorWriter.Write(w, err)
+        handler.ErrorWriter.Write(w, err)
         return
     }
 

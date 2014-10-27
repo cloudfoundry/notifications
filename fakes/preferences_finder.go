@@ -1,14 +1,10 @@
 package fakes
 
-import (
-    "errors"
-
-    "github.com/cloudfoundry-incubator/notifications/web/services"
-)
+import "github.com/cloudfoundry-incubator/notifications/web/services"
 
 type FakePreferencesFinder struct {
     ReturnValue services.PreferencesBuilder
-    FindErrors  bool
+    FindError   error
     UserGUID    string
 }
 
@@ -20,8 +16,5 @@ func NewFakePreferencesFinder(returnValue services.PreferencesBuilder) *FakePref
 
 func (fake *FakePreferencesFinder) Find(userGUID string) (services.PreferencesBuilder, error) {
     fake.UserGUID = userGUID
-    if fake.FindErrors {
-        return fake.ReturnValue, errors.New("Meltdown")
-    }
-    return fake.ReturnValue, nil
+    return fake.ReturnValue, fake.FindError
 }

@@ -126,4 +126,8 @@ var _ = Describe("Router", func() {
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.SetTemplates{}))
     })
 
+    It("routes DELETE /templates/{templateName}", func() {
+        s := router.Routes().Get("DELETE /templates/{templateName}").GetHandler().(stack.Stack)
+        Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UnsetTemplates{}))
+    })
 })

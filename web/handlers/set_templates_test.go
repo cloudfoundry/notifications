@@ -22,11 +22,13 @@ var _ = Describe("SetTemplates", func() {
     var request *http.Request
     var context stack.Context
     var updater *fakes.FakeTemplateUpdater
+    var fakeErrorWriter *fakes.FakeErrorWriter
 
     Describe("ServeHTTP", func() {
         BeforeEach(func() {
             updater = fakes.NewFakeTemplateUpdater()
-            handler = handlers.NewSetTemplates(updater)
+            fakeErrorWriter = fakes.NewFakeErrorWriter()
+            handler = handlers.NewSetTemplates(updater, fakeErrorWriter)
             writer = httptest.NewRecorder()
             body := []byte(`{"text": "{{turkey}}", "html": "<p>{{turkey}} gobble</p>"}`)
             request, err = http.NewRequest("PUT", "/templates/myTemplateName.user_body", bytes.NewBuffer(body))

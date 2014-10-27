@@ -22,10 +22,11 @@ var _ = Describe("GetTemplates", func() {
     var writer *httptest.ResponseRecorder
     var context stack.Context
     var finder *fakes.FakeTemplateFinder
+    var fakeErrorWriter *fakes.FakeErrorWriter
 
     Describe("ServeHTTP", func() {
 
-        Context("With a proper template name", func() {
+        Context("When the finder does not error", func() {
             BeforeEach(func() {
                 finder = fakes.NewFakeTemplateFinder(models.Template{
                     Text: "the template {{variable}}",
@@ -33,7 +34,8 @@ var _ = Describe("GetTemplates", func() {
                 })
 
                 writer = httptest.NewRecorder()
-                handler = handlers.NewGetTemplates(finder)
+                fakeErrorWriter = fakes.NewFakeErrorWriter()
+                handler = handlers.NewGetTemplates(finder, fakeErrorWriter)
 
                 var err error
                 request, err = http.NewRequest("GET", "/templates/myTemplateName.user_body", bytes.NewBuffer([]byte{}))
@@ -62,26 +64,6 @@ var _ = Describe("GetTemplates", func() {
             })
         })
 
-        Context("With improper template name", func() {
-            BeforeEach(func() {
-                writer = httptest.NewRecorder()
-                finder = fakes.NewFakeTemplateFinder(models.Template{})
-                handler = handlers.NewGetTemplates(finder)
-
-                finder.FindError = models.ErrRecordNotFound{}
-                var err error
-                request, err = http.NewRequest("GET", "/templates/myTemplateName", bytes.NewBuffer([]byte{}))
-                if err != nil {
-                    panic(err)
-                }
-            })
-
-            It("returns a 404 when the file name does not end with user_body or space_body", func() {
-                handler.ServeHTTP(writer, request, context)
-                Expect(writer.Code).To(Equal(http.StatusNotFound))
-            })
-        })
-
         Context("When the finder errors", func() {
             BeforeEach(func() {
                 writer = httptest.NewRecorder()
@@ -89,7 +71,8 @@ var _ = Describe("GetTemplates", func() {
                     Text: "the template {{variable}}",
                     HTML: "<p> the template {{variable}} </p>",
                 })
-                handler = handlers.NewGetTemplates(finder)
+                fakeErrorWriter = fakes.NewFakeErrorWriter()
+                handler = handlers.NewGetTemplates(finder, fakeErrorWriter)
                 finder.FindError = errors.New("BOOM!")
 
                 var err error
@@ -99,10 +82,9 @@ var _ = Describe("GetTemplates", func() {
                 }
             })
 
-            It("returns a 500", func() {
+            It("writes the error to the errorWriter", func() {
                 handler.ServeHTTP(writer, request, context)
-                Expect(writer.Code).To(Equal(http.StatusInternalServerError))
-
+                Expect(fakeErrorWriter.Error).To(Equal(errors.New("BOOM!")))
             })
         })
     })

@@ -5,17 +5,20 @@ import (
     "net/http"
     "strings"
 
-    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/ryanmoran/stack"
 )
 
 type GetTemplates struct {
-    Finder services.TemplateFinderInterface
+    Finder      services.TemplateFinderInterface
+    ErrorWriter ErrorWriterInterface
 }
 
-func NewGetTemplates(templateFinder services.TemplateFinderInterface) GetTemplates {
-    return GetTemplates{Finder: templateFinder}
+func NewGetTemplates(templateFinder services.TemplateFinderInterface, errorWriter ErrorWriterInterface) GetTemplates {
+    return GetTemplates{
+        Finder:      templateFinder,
+        ErrorWriter: errorWriter,
+    }
 }
 
 func (handler GetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
@@ -23,12 +26,7 @@ func (handler GetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, 
 
     template, err := handler.Finder.Find(templateName)
     if err != nil {
-        if (err == models.ErrRecordNotFound{}) {
-            w.WriteHeader(http.StatusNotFound)
-            w.Write([]byte("Could not find template. Did you specify a notification type?"))
-        } else {
-            w.WriteHeader(http.StatusInternalServerError)
-        }
+        handler.ErrorWriter.Write(w, err)
         return
     }
 

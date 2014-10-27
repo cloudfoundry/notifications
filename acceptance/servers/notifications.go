@@ -85,22 +85,6 @@ func (s Notifications) SpecificUserPreferencesPath(userGUID string) string {
     return "http://localhost:" + s.env.Port + "/user_preferences/" + userGUID
 }
 
-func (s Notifications) SpaceTemplatePath() string {
-    return "http://localhost:" + s.env.Port + "/templates/space_body"
-}
-
-func (s Notifications) UserTemplatePath() string {
-    return "http://localhost:" + s.env.Port + "/templates/user_body"
-}
-
-func (s Notifications) EmailTemplatePath() string {
-    return "http://localhost:" + s.env.Port + "/templates/email_body"
-}
-
-func (s Notifications) UserTemplateForClientPath(clientID string) string {
-    return "http://localhost:" + s.env.Port + "/templates/" + clientID + ".user_body"
-}
-
-func (s Notifications) UserTemplateForClientAndKindPath(clientID, kindID string) string {
-    return "http://localhost:" + s.env.Port + "/templates/" + clientID + "." + kindID + ".user_body"
+func (s Notifications) TemplatePath(templateName string) string {
+    return "http://localhost:" + s.env.Port + "/templates/" + templateName
 }

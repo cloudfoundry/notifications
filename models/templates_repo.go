@@ -1,10 +1,14 @@
 package models
 
-import "database/sql"
+import (
+    "database/sql"
+    "time"
+)
 
 type TemplatesRepoInterface interface {
     Find(ConnectionInterface, string) (Template, error)
     Upsert(ConnectionInterface, Template) (Template, error)
+    Destroy(ConnectionInterface, string) error
 }
 
 type TemplatesRepo struct{}
@@ -26,14 +30,42 @@ func (repo TemplatesRepo) Find(conn ConnectionInterface, templateName string) (T
 }
 
 func (repo TemplatesRepo) Upsert(conn ConnectionInterface, template Template) (Template, error) {
-    var err error
-    _, err = repo.Find(conn, template.Name)
+    existingTemplate, err := repo.Find(conn, template.Name)
+    template.Primary = existingTemplate.Primary
+    template.CreatedAt = existingTemplate.CreatedAt
+
     if err != nil {
         if (err == ErrRecordNotFound{}) {
-            err = conn.Insert(&template)
+            return repo.Create(conn, template)
         }
+        return Template{}, err
     }
     _, err = conn.Update(&template)
+    if err != nil {
+        return Template{}, err
+    }
+    return template, nil
+}
 
-    return template, err
+func (repo TemplatesRepo) Create(conn ConnectionInterface, template Template) (Template, error) {
+    template.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
+    err := conn.Insert(&template)
+    if err != nil {
+        return Template{}, err
+    }
+    return template, nil
+}
+
+func (repo TemplatesRepo) Destroy(conn ConnectionInterface, templateName string) error {
+    template, err := repo.Find(conn, templateName)
+    if err != nil {
+        if (err == ErrRecordNotFound{}) {
+            return nil
+        }
+        return err
+    }
+
+    _, err = conn.Delete(&template)
+
+    return err
 }

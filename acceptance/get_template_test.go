@@ -67,7 +67,7 @@ var _ = Describe("Templates GET Endpoint", func() {
 type GetTemplates struct{}
 
 func (t GetTemplates) GetSpaceTemplates(notificationsServer servers.Notifications, clientToken uaa.Token) {
-    request, err := http.NewRequest("GET", notificationsServer.SpaceTemplatePath(), bytes.NewBuffer([]byte{}))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath("space_body"), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }
@@ -126,7 +126,7 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
 }
 
 func (t GetTemplates) GetUserTemplates(notificationsServer servers.Notifications, clientToken uaa.Token) {
-    request, err := http.NewRequest("GET", notificationsServer.UserTemplatePath(), bytes.NewBuffer([]byte{}))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath("user_body"), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }
@@ -183,7 +183,7 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
 }
 
 func (t GetTemplates) GetEmailTemplates(notificationsServer servers.Notifications, clientToken uaa.Token) {
-    request, err := http.NewRequest("GET", notificationsServer.EmailTemplatePath(), bytes.NewBuffer([]byte{}))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath("email_body"), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }
@@ -240,7 +240,7 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
 }
 
 func (t GetTemplates) GetUserTemplatesForOverriddenClient(notificationsServer servers.Notifications, clientToken uaa.Token, clientID string) {
-    request, err := http.NewRequest("GET", notificationsServer.UserTemplateForClientPath(clientID), bytes.NewBuffer([]byte{}))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(clientID+".user_body"), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }
@@ -273,7 +273,7 @@ func (t GetTemplates) GetUserTemplatesForOverriddenClient(notificationsServer se
 
     Expect(responseJSON.Overridden).To(BeTrue())
 
-    request, err = http.NewRequest("GET", notificationsServer.UserTemplatePath(), bytes.NewBuffer([]byte{}))
+    request, err = http.NewRequest("GET", notificationsServer.TemplatePath("user_body"), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }
@@ -300,7 +300,7 @@ func (t GetTemplates) GetUserTemplatesForOverriddenClient(notificationsServer se
 }
 
 func (t GetTemplates) GetUserTemplatesForClient(notificationsServer servers.Notifications, clientToken uaa.Token, clientID string) {
-    request, err := http.NewRequest("GET", notificationsServer.UserTemplateForClientPath(clientID), bytes.NewBuffer([]byte{}))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(clientID+".user_body"), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }
@@ -357,7 +357,7 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
 }
 
 func (t GetTemplates) GetUserTemplatesForClientAndKind(notificationsServer servers.Notifications, clientToken uaa.Token, clientID, kindID string) {
-    request, err := http.NewRequest("GET", notificationsServer.UserTemplateForClientAndKindPath(clientID, kindID), bytes.NewBuffer([]byte{}))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(clientID+"."+kindID+".user_body"), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }

@@ -1,8 +1,6 @@
 package services
 
 import (
-    "fmt"
-    "io/ioutil"
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/models"
@@ -14,9 +12,15 @@ const (
     EmailBody = "email_body"
 )
 
+type FileSystemInterface interface {
+    Exists(string) bool
+    Read(string) (string, error)
+}
+
 type TemplateFinder struct {
     TemplatesRepo models.TemplatesRepoInterface
     RootPath      string
+    fileSystem    FileSystemInterface
     database      models.DatabaseInterface
 }
 
@@ -24,11 +28,12 @@ type TemplateFinderInterface interface {
     Find(string) (models.Template, error)
 }
 
-func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, rootPath string, database models.DatabaseInterface) TemplateFinder {
+func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, rootPath string, database models.DatabaseInterface, fileSystem FileSystemInterface) TemplateFinder {
     return TemplateFinder{
         TemplatesRepo: templatesRepo,
         RootPath:      rootPath,
         database:      database,
+        fileSystem:    fileSystem,
     }
 }
 
@@ -48,14 +53,7 @@ func (finder TemplateFinder) Find(templateName string) (models.Template, error) 
     }
 
     if (err == models.ErrRecordNotFound{}) {
-        switch notificationType {
-        case SpaceBody:
-            return finder.DefaultTemplate(SpaceBody)
-        case UserBody:
-            return finder.DefaultTemplate(UserBody)
-        case EmailBody:
-            return finder.DefaultTemplate(EmailBody)
-        }
+        return finder.DefaultTemplate(notificationType)
     }
 
     return template, err
@@ -63,18 +61,16 @@ func (finder TemplateFinder) Find(templateName string) (models.Template, error) 
 
 func (finder TemplateFinder) DefaultTemplate(notificationType string) (models.Template, error) {
     textPath := finder.RootPath + "/templates/" + notificationType + ".text"
-    bytes, err := ioutil.ReadFile(textPath)
+    text, err := finder.fileSystem.Read(textPath)
     if err != nil {
-        return models.Template{}, fmt.Errorf("Could not read text file")
+        return models.Template{}, models.ErrRecordNotFound{}
     }
-    text := string(bytes)
 
     htmlPath := finder.RootPath + "/templates/" + notificationType + ".html"
-    bytes, err = ioutil.ReadFile(htmlPath)
+    html, err := finder.fileSystem.Read(htmlPath)
     if err != nil {
-        return models.Template{}, fmt.Errorf("Could not read html file")
+        return models.Template{}, models.ErrRecordNotFound{}
     }
-    html := string(bytes)
 
     return models.Template{Text: text, HTML: html}, nil
 }

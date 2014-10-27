@@ -57,9 +57,13 @@ func (mother Mother) NewUAARecipe() postal.UAARecipe {
     return postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, receiptsRepo)
 }
 
+func (mother Mother) FileSystem() services.FileSystemInterface {
+    return postal.NewFileSystem()
+}
+
 func (mother Mother) EmailRecipe() postal.MailRecipeInterface {
     env := config.NewEnvironment()
-    return postal.NewEmailRecipe(mother.Mailer(), postal.NewTemplateLoader(postal.NewFileSystem(), env.RootPath))
+    return postal.NewEmailRecipe(mother.Mailer(), postal.NewTemplateLoader(mother.FileSystem(), env.RootPath))
 }
 
 func (mother Mother) NotificationFinder() services.NotificationFinder {
@@ -125,13 +129,15 @@ func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
     return services.NewPreferenceUpdater(mother.GlobalUnsubscribesRepo(), mother.UnsubscribesRepo(), mother.KindsRepo())
 }
 
-func (mother Mother) TemplateFinder() services.TemplateFinder {
+func (mother Mother) TemplateServiceObjects() (services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter) {
     env := config.NewEnvironment()
-    return services.NewTemplateFinder(mother.TemplatesRepo(), env.RootPath, mother.Database())
-}
+    database := mother.Database()
+    repo := mother.TemplatesRepo()
+    fileSystem := mother.FileSystem()
 
-func (mother Mother) TemplateUpdater() services.TemplateUpdater {
-    return services.NewTemplateUpdater(mother.TemplatesRepo(), mother.Database())
+    return services.NewTemplateFinder(repo, env.RootPath, database, fileSystem),
+        services.NewTemplateUpdater(repo, database),
+        services.NewTemplateDeleter(repo, database)
 }
 
 func (mother Mother) KindsRepo() models.KindsRepo {

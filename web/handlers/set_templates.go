@@ -12,12 +12,14 @@ import (
 )
 
 type SetTemplates struct {
-    updater services.TemplateUpdaterInterface
+    updater     services.TemplateUpdaterInterface
+    ErrorWriter ErrorWriterInterface
 }
 
-func NewSetTemplates(updater services.TemplateUpdaterInterface) SetTemplates {
+func NewSetTemplates(updater services.TemplateUpdaterInterface, errorWriter ErrorWriterInterface) SetTemplates {
     return SetTemplates{
-        updater: updater,
+        updater:     updater,
+        ErrorWriter: errorWriter,
     }
 }
 

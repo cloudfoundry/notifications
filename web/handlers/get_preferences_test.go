@@ -3,6 +3,7 @@ package handlers_test
 import (
     "bytes"
     "encoding/json"
+    "errors"
     "net/http"
     "net/http/httptest"
 
@@ -101,13 +102,11 @@ var _ = Describe("GetPreferences", func() {
         Expect(parsed.Clients["starWarsClient"]["vader-kind"].Count).To(Equal(0))
     })
 
-    Context("when there is a database error", func() {
-        It("panics", func() {
-            preferencesFinder.FindErrors = true
-
-            Expect(func() {
-                handler.ServeHTTP(writer, request, context)
-            }).To(Panic())
+    Context("when there is an error returned from the finder", func() {
+        It("writes the error to the error writer", func() {
+            preferencesFinder.FindError = errors.New("boom!")
+            handler.ServeHTTP(writer, request, context)
+            Expect(errorWriter.Error).To(Equal(preferencesFinder.FindError))
         })
     })
 })

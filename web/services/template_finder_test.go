@@ -11,15 +11,49 @@ import (
     . "github.com/onsi/gomega"
 )
 
+type FakeFileSystem struct {
+    Files map[string]string
+}
+
+func NewFakeFileSystem(env config.Environment) FakeFileSystem {
+    return FakeFileSystem{
+        Files: map[string]string{
+            env.RootPath + "/templates/space_body.text":  "default-space-text",
+            env.RootPath + "/templates/space_body.html":  "default-space-html",
+            env.RootPath + "/templates/subject.missing":  "default-missing-subject",
+            env.RootPath + "/templates/subject.provided": "default-provided-subject",
+            env.RootPath + "/templates/user_body.text":   "default-user-text",
+            env.RootPath + "/templates/user_body.html":   "default-user-html",
+            env.RootPath + "/templates/email_body.html":  "email-body-html",
+            env.RootPath + "/templates/email_body.text":  "email-body-text",
+        },
+    }
+}
+
+func (fs FakeFileSystem) Exists(path string) bool {
+    _, ok := fs.Files[path]
+    return ok
+}
+
+func (fs FakeFileSystem) Read(path string) (string, error) {
+    if file, ok := fs.Files[path]; ok {
+        return file, nil
+    }
+    return "", errors.New("File does not exist")
+}
+
 var _ = Describe("Finder", func() {
     var finder services.TemplateFinder
     var fakeTemplatesRepo *fakes.FakeTemplatesRepo
+    var fakeFileSystem FakeFileSystem
 
     Describe("#Find", func() {
         BeforeEach(func() {
             env := config.NewEnvironment()
             fakeTemplatesRepo = fakes.NewFakeTemplatesRepo()
-            finder = services.NewTemplateFinder(fakeTemplatesRepo, env.RootPath, fakes.NewDatabase())
+            fakeFileSystem = NewFakeFileSystem(env)
+
+            finder = services.NewTemplateFinder(fakeTemplatesRepo, env.RootPath, fakes.NewDatabase(), fakeFileSystem)
         })
 
         Context("when the finder returns a template", func() {
@@ -30,32 +64,8 @@ var _ = Describe("Finder", func() {
                     template, err := finder.Find("login.fp.space_body")
                     Expect(err).ToNot(HaveOccurred())
                     Expect(template.Overridden).To(BeFalse())
-                    Expect(template.Text).To(Equal(`Hello {{.To}},
-
-The following "{{.KindDescription}}" notification was sent to you by the "{{.SourceDescription}}"
-component of Cloud Foundry because you are a member of the "{{.Space}}" space
-in the "{{.Organization}}" organization:
-
-{{.Text}}
-
-This message was sent from {{.From}} and can be replied to at {{.ReplyTo}}. The
-notification can be identified with the {{.MessageID}} identifier and was sent
-with the {{.ClientID}} UAA client. The notification can be unsubscribed from
-using the "{{.UnsubscribeID}}" unsubscribe token.
-`))
-                    Expect(template.HTML).To(Equal(`<p>Hello {{.To}},</p>
-
-<p>The following "{{.KindDescription}}" notification was sent to you by the "{{.SourceDescription}}"
-    component of Cloud Foundry because you are a member of the "{{.Space}}" space
-    in the "{{.Organization}}" organization:</p>
-
-{{.HTML}}
-
-<p>This message was sent from {{.From}} and can be replied to at {{.ReplyTo}}. The
-    notification can be identified with the {{.MessageID}} identifier and was sent
-    with the {{.ClientID}} UAA client. The notification can be unsubscribed from
-    using the "{{.UnsubscribeID}}" unsubscribe token.</p>
-`))
+                    Expect(template.Text).To(Equal("default-space-text"))
+                    Expect(template.HTML).To(Equal("default-space-html"))
                 })
 
                 It("returns the default user template", func() {
@@ -64,31 +74,8 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
                     template, err := finder.Find("login.fp.user_body")
                     Expect(err).ToNot(HaveOccurred())
                     Expect(template.Overridden).To(BeFalse())
-                    Expect(template.Text).To(Equal(`Hello {{.To}},
-
-The following "{{.KindDescription}}" notification was sent to you directly by the
-"{{.SourceDescription}}" component of Cloud Foundry:
-
-{{.Text}}
-
-This message was sent from {{.From}} and can be replied to at {{.ReplyTo}}. The
-notification can be identified with the {{.MessageID}} identifier and was sent
-with the {{.ClientID}} UAA client. The notification can be unsubscribed from
-using the "{{.UnsubscribeID}}" unsubscribe token.
-`))
-
-                    Expect(template.HTML).To(Equal(`<p>Hello {{.To}},</p>
-
-<p>The following "{{.KindDescription}}" notification was sent to you directly by the
-    "{{.SourceDescription}}" component of Cloud Foundry:</p>
-
-{{.HTML}}
-
-<p>This message was sent from {{.From}} and can be replied to at {{.ReplyTo}}. The
-    notification can be identified with the {{.MessageID}} identifier and was sent
-    with the {{.ClientID}} UAA client. The notification can be unsubscribed from
-    using the "{{.UnsubscribeID}}" unsubscribe token.</p>
-`))
+                    Expect(template.Text).To(Equal("default-user-text"))
+                    Expect(template.HTML).To(Equal("default-user-html"))
                 })
 
                 It("returns the default email template", func() {
@@ -97,31 +84,8 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
                     template, err := finder.Find("login.fp.email_body")
                     Expect(err).ToNot(HaveOccurred())
                     Expect(template.Overridden).To(BeFalse())
-                    Expect(template.Text).To(Equal(`Hello {{.To}},
-
-The following "{{.Subject}}" notification was sent to you directly by the "{{.SourceDescription}}"
-component of Cloud Foundry:
-
-{{.Text}}
-
-This message was sent from {{.From}} and can be replied to at {{.ReplyTo}}. The
-notification can be identified with the {{.MessageID}} identifier and was sent
-with the {{.ClientID}} UAA client. The notification can be unsubscribed from
-using the "{{.UnsubscribeID}}" unsubscribe token.
-`))
-
-                    Expect(template.HTML).To(Equal(`<p>Hello {{.To}},</p>
-
-<p>The following "{{.Subject}}" notification was sent to you directly by the "{{.SourceDescription}}"
-    component of Cloud Foundry:</p>
-
-{{.HTML}}
-
-<p>This message was sent from {{.From}} and can be replied to at {{.ReplyTo}}. The
-    notification can be identified with the {{.MessageID}} identifier and was sent
-    with the {{.ClientID}} UAA client. The notification can be unsubscribed from
-    using the "{{.UnsubscribeID}}" unsubscribe token.</p>
-`))
+                    Expect(template.Text).To(Equal("email-body-text"))
+                    Expect(template.HTML).To(Equal("email-body-html"))
                 })
             })
 
@@ -167,7 +131,7 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
                     })
                 })
 
-                Context("when the client override does not exist, but the notification type does", func() {
+                Context("when the client override does not exist", func() {
                     var expectedTemplate models.Template
 
                     BeforeEach(func() {
@@ -194,15 +158,6 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
                 fakeTemplatesRepo.FindError = errors.New("some-error")
                 _, err := finder.Find("missing_template_file")
                 Expect(err.Error()).To(Equal("some-error"))
-            })
-        })
-
-        Context("when something wacky is requested", func() {
-            It("returns an error", func() {
-                fakeTemplatesRepo.FindError = models.ErrRecordNotFound{}
-                _, err := finder.Find("...")
-                Expect(err).To(HaveOccurred())
-                Expect(err).To(MatchError(models.ErrRecordNotFound{}))
             })
         })
     })
