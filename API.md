@@ -17,8 +17,8 @@
 	- [Update user preferences with a client token](#patch-user-preferences-guid)
 - Managing Templates
     - [Retrieve Templates](#get-template)
-    - [PUT](#put-template)
-    - [DELETE](#delete-template)
+    - [Set Templates](#set-template)
+    - [Delete Templates](#delete-template)
 
 
 ## System Status
@@ -264,7 +264,7 @@ X-Cf-Requestid: eb7ee46c-2142-4a74-5b73-e4971eea511a
 
 ## Registering Notifications
 
-<a href="#put-registration"></a>
+<a name="put-registration"></a>
 #### Registering client notifications
 
 ##### Request 
@@ -553,7 +553,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 | \<none\> |             |
 
 ----
-<a href="#get-user-preferences-guid"></a>
+<a name="get-user-preferences-guid"></a>
 #### Retrieve user preferences with a client token
 
 ##### Request
@@ -695,7 +695,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 
 ## Managing Templates
 
-<a href="#get-template"></a>
+<a name="get-template"></a>
 
 ### Retrieve Templates
 
@@ -748,7 +748,7 @@ X-Cf-Requestid: 5d19a080-2c88-4fe6-5eb5-42f9bda2d073
 | html        | The template used for the HTML portion of the notification      |
 | overridden  | True if this template is overridden                             |
 
-
+<a name="set-template"></a>
 ### Set Templates
 
 This endpoint is used to change the templates attached to particular kinds of notifications.
@@ -802,6 +802,7 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 | -------- | ----------- |
 | \<none\> |             |
 
+<a name="delete-template"></a>
 ### Delete Templates
 
 This endpoint is used to delete an override template attached to a particular kind of notifications.
