@@ -48,6 +48,26 @@ var _ = Describe("SetTemplates", func() {
             Expect(writer.Code).To(Equal(http.StatusNoContent))
         })
 
+        It("can set a template with an empty text field", func() {
+            body := []byte(`{"html": "<p>gobble</p>", "text": ""}`)
+            request, err = http.NewRequest("PUT", "/templates/myTemplateName.user_body", bytes.NewBuffer(body))
+            if err != nil {
+                panic(err)
+            }
+            handler.ServeHTTP(writer, request, context)
+            Expect(writer.Code).To(Equal(http.StatusNoContent))
+        })
+
+        It("can set a template with an empty html field", func() {
+            body := []byte(`{"html": "", "text": "gobble"}`)
+            request, err = http.NewRequest("PUT", "/templates/myTemplateName.user_body", bytes.NewBuffer(body))
+            if err != nil {
+                panic(err)
+            }
+            handler.ServeHTTP(writer, request, context)
+            Expect(writer.Code).To(Equal(http.StatusNoContent))
+        })
+
         Context("when an errors occurs", func() {
             It("Writes a 422 when the request is missing the text field", func() {
                 body := []byte(`{"html": "<p>gobble</p>"}`)

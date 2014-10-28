@@ -25,6 +25,7 @@ func NewSetTemplates(updater services.TemplateUpdaterInterface, errorWriter Erro
 
 func (handler SetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
     var template models.Template
+
     templateName := strings.Split(req.URL.String(), "/templates/")[1]
 
     respBody, err := ioutil.ReadAll(req.Body)
@@ -32,14 +33,20 @@ func (handler SetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, 
         panic(err)
     }
 
-    err = json.Unmarshal(respBody, &template)
+    valid, err := handler.requestIsValid(respBody)
     if err != nil {
         w.WriteHeader(http.StatusBadRequest)
         return
     }
 
-    if template.Text == "" || template.HTML == "" {
+    if !valid {
         w.WriteHeader(422)
+        return
+    }
+
+    err = json.Unmarshal(respBody, &template)
+    if err != nil {
+        w.WriteHeader(http.StatusBadRequest)
         return
     }
 
@@ -52,4 +59,18 @@ func (handler SetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, 
     }
 
     w.WriteHeader(http.StatusNoContent)
+}
+
+func (handler SetTemplates) requestIsValid(body []byte) (bool, error) {
+    var templateMap map[string]string
+
+    err := json.Unmarshal(body, &templateMap)
+    if err != nil {
+        return false, err
+    }
+
+    _, textExists := templateMap["text"]
+    _, htmlExists := templateMap["html"]
+
+    return (textExists && htmlExists), nil
 }
