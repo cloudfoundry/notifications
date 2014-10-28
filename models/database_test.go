@@ -1,6 +1,8 @@
 package models_test
 
 import (
+    "path"
+
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
 
@@ -15,7 +17,8 @@ var _ = Describe("Database", func() {
 
     BeforeEach(func() {
         env = config.NewEnvironment()
-        db = models.NewDatabase(env.DatabaseURL)
+        migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
+        db = models.NewDatabase(env.DatabaseURL, migrationsPath)
         connection = db.Connection().(*models.Connection)
     })
 
@@ -28,7 +31,8 @@ var _ = Describe("Database", func() {
     })
 
     It("returns a single connection only", func() {
-        db2 := models.NewDatabase(env.DatabaseURL)
+        migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
+        db2 := models.NewDatabase(env.DatabaseURL, migrationsPath)
 
         Expect(db).To(Equal(db2))
     })

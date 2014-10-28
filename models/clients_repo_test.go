@@ -1,6 +1,7 @@
 package models_test
 
 import (
+    "path"
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -18,7 +19,8 @@ var _ = Describe("ClientsRepo", func() {
         TruncateTables()
         repo = models.NewClientsRepo()
         env := config.NewEnvironment()
-        conn = models.NewDatabase(env.DatabaseURL).Connection()
+        migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
+        conn = models.NewDatabase(env.DatabaseURL, migrationsPath).Connection()
     })
 
     Describe("Create", func() {

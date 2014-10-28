@@ -3,6 +3,7 @@ package acceptance
 import (
     "os"
     "os/exec"
+    "path"
     "regexp"
     "testing"
 
@@ -59,6 +60,7 @@ func Teardown(env config.Environment) {
 
 func TruncateTables() {
     env := config.NewEnvironment()
-    models.NewDatabase(env.DatabaseURL).Connection().(*models.Connection).TruncateTables()
+    migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
+    models.NewDatabase(env.DatabaseURL, migrationsPath).Connection().(*models.Connection).TruncateTables()
     gobble.Database().Connection.TruncateTables()
 }

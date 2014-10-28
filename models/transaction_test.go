@@ -1,6 +1,8 @@
 package models_test
 
 import (
+    "path"
+
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
 
@@ -15,7 +17,8 @@ var _ = Describe("Transaction", func() {
     BeforeEach(func() {
         TruncateTables()
         env := config.NewEnvironment()
-        db := models.NewDatabase(env.DatabaseURL)
+        migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
+        db := models.NewDatabase(env.DatabaseURL, migrationsPath)
         conn = db.Connection()
         transaction = conn.Transaction()
     })

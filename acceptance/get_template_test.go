@@ -5,6 +5,7 @@ import (
     "encoding/json"
     "io/ioutil"
     "net/http"
+    "path"
 
     "github.com/cloudfoundry-incubator/notifications/acceptance/servers"
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -21,7 +22,8 @@ var _ = Describe("Templates GET Endpoint", func() {
         TruncateTables()
 
         env := config.NewEnvironment()
-        database := models.NewDatabase(env.DatabaseURL)
+        migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
+        database := models.NewDatabase(env.DatabaseURL, migrationsPath)
 
         templateData := &models.Template{Name: "overridden-client.user_body",
             Text: "Text Template", HTML: "<p>HTML Template</p>", Overridden: true}

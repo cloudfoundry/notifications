@@ -18,6 +18,7 @@ type Environment struct {
     DBLoggingEnabled   bool   `env:"DB_LOGGING_ENABLED"`
     DatabaseURL        string `env:"DATABASE_URL"         env-required:"true"`
     EncryptionKey      string `env:"ENCRYPTION_KEY"       env-required:"true"`
+    ModelMigrationsDir string `env:"MODEL_MIGRATIONS_DIRECTORY"  env-required:"true"`
     Port               string `env:"PORT"                 env-default:"3000"`
     RootPath           string `env:"ROOT_PATH"`
     SMTPHost           string `env:"SMTP_HOST"            env-required:"true"`

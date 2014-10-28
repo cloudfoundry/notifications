@@ -16,6 +16,7 @@ var _ = Describe("Environment", func() {
         "CC_HOST",
         "CORS_ORIGIN",
         "DATABASE_URL",
+        "MODEL_MIGRATIONS_DIRECTORY",
         "DB_LOGGING_ENABLED",
         "PORT",
         "ROOT_PATH",
@@ -75,6 +76,21 @@ var _ = Describe("Environment", func() {
                     config.NewEnvironment()
                 }).To(Panic())
             })
+        })
+    })
+
+    Describe("Notifications Migrations Path", func() {
+        It("loads the value when it is set", func() {
+            os.Setenv("MODEL_MIGRATIONS_DIRECTORY", "migrations")
+            env := config.NewEnvironment()
+            Expect(env.ModelMigrationsDir).To(Equal("migrations"))
+        })
+
+        It("panics when the value is not set", func() {
+            os.Setenv("MODEL_MIGRATIONS_DIRECTORY", "")
+            Expect(func() {
+                config.NewEnvironment()
+            }).To(Panic())
         })
     })
 

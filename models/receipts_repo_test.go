@@ -1,6 +1,7 @@
 package models_test
 
 import (
+    "path"
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -19,7 +20,8 @@ var _ = Describe("Receipts Repo", func() {
         repo = models.NewReceiptsRepo()
 
         env := config.NewEnvironment()
-        db := models.NewDatabase(env.DatabaseURL)
+        migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
+        db := models.NewDatabase(env.DatabaseURL, migrationsPath)
         conn = db.Connection().(*models.Connection)
 
     })

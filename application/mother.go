@@ -3,6 +3,7 @@ package application
 import (
     "log"
     "os"
+    "path"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -118,7 +119,8 @@ func (mother Mother) Registrar() services.Registrar {
 
 func (mother Mother) Database() models.DatabaseInterface {
     env := config.NewEnvironment()
-    return models.NewDatabase(env.DatabaseURL)
+    migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
+    return models.NewDatabase(env.DatabaseURL, migrationsPath)
 }
 
 func (mother Mother) PreferencesFinder() *services.PreferencesFinder {
