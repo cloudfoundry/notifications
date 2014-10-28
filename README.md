@@ -187,7 +187,7 @@ So to override the user_body.text template the file name would be:
 	
 This override only applies to requests that match both the clientId and the kind.  This has the most precedence and overrides all other overrides.
 
-[Further Template API Documentation](/API.md/get_template)
+[Further Template API Documentation](/API.md#get_template)
 
 <a name="unsubscribe-id"></a>
 #### UnsubscribeID
