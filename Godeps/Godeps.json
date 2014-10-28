@@ -31,8 +31,8 @@
 		},
 		{
 			"ImportPath": "github.com/coopernurse/gorp",
-			"Comment": "v1.5",
-			"Rev": "242be3eec6e4d545d0eca24b5dc71236b71ac656"
+			"Comment": "v1.7",
+			"Rev": "5d19ebd22fdcf3b9fb1c8cbfcf1d4e78e102f1e0"
 		},
 		{
 			"ImportPath": "github.com/dgrijalva/jwt-go",
@@ -82,6 +82,10 @@
 		{
 			"ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",
 			"Rev": "dab783f5d682dab0dc39e6d445331df9a3f1d91c"
+		},
+		{
+			"ImportPath": "github.com/rubenv/sql-migrate",
+			"Rev": "09d124bf5f0e0fcee64b3f2571350de142724c26"
 		},
 		{
 			"ImportPath": "github.com/ryanmoran/stack",
