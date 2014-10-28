@@ -72,6 +72,7 @@ func (t SendOverriddenNotificationToUser) OverrideClientUserTemplate(notificatio
     // Confirm response status code is a 204
     Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 }
+
 func (t SendOverriddenNotificationToUser) SendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token,
     smtpServer *servers.SMTP, text, html string) {
 

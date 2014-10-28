@@ -6,12 +6,6 @@ import (
     "github.com/cloudfoundry-incubator/notifications/models"
 )
 
-const (
-    SpaceBody = "space_body"
-    UserBody  = "user_body"
-    EmailBody = "email_body"
-)
-
 type FileSystemInterface interface {
     Exists(string) bool
     Read(string) (string, error)
@@ -40,8 +34,8 @@ func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, rootPath str
 func (finder TemplateFinder) Find(templateName string) (models.Template, error) {
     var template models.Template
     var err error
-    notificationType := parseNotificationType(templateName)
-    client := parseClientType(templateName)
+
+    client, notificationType := parseTemplateName(templateName)
     templatesToSearchFor := []string{templateName, client + "." + notificationType, notificationType}
     connection := finder.database.Connection()
 
@@ -75,22 +69,22 @@ func (finder TemplateFinder) DefaultTemplate(notificationType string) (models.Te
     return models.Template{Text: text, HTML: html}, nil
 }
 
-func parseClientType(templateName string) string {
-    theSplit := strings.Split(templateName, ".")
-    if len(theSplit) == 3 || len(theSplit) == 2 {
-        return theSplit[0]
-    } else {
-        return ""
-    }
-}
+func parseTemplateName(templateName string) (string, string) {
+    client := ""
+    notificationType := ""
 
-func parseNotificationType(templateName string) string {
-    if strings.HasSuffix(templateName, UserBody) {
-        return UserBody
-    } else if strings.HasSuffix(templateName, SpaceBody) {
-        return SpaceBody
-    } else if strings.HasSuffix(templateName, EmailBody) {
-        return EmailBody
+    items := strings.Split(templateName, ".")
+    numberOfItems := len(items)
+
+    switch numberOfItems {
+    case 3:
+        client = items[0]
+        notificationType = items[2]
+    case 2:
+        client = items[0]
+        notificationType = items[1]
+    case 1:
+        notificationType = items[0]
     }
-    return ""
+    return client, notificationType
 }

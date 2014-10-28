@@ -153,7 +153,7 @@ var _ = Describe("Finder", func() {
             })
         })
 
-        Context("when the finder returns an error", func() {
+        Context("the finder has an error", func() {
             It("propagates the error", func() {
                 fakeTemplatesRepo.FindError = errors.New("some-error")
                 _, err := finder.Find("missing_template_file")
