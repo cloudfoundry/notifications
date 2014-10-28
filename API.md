@@ -15,6 +15,11 @@
 	- [Retrieve options for /user_preferences/{user-guid} endpoints](#options-user-preferences-guid)
 	- [Retrieve user preferences with a client token](#get-user-preferences-guid)
 	- [Update user preferences with a client token](#patch-user-preferences-guid)
+- Managing Templates
+    - [Retrieve Templates](#get-template)
+    - [PUT](#put-template)
+    - [DELETE](#delete-template)
+
 
 ## System Status
 
@@ -687,3 +692,164 @@ Access-Control-Allow-Methods: GET, PATCH
 Access-Control-Allow-Origin: *
 ```
 The above headers constitute a CORS contract. They indicate that the GET and PATCH endpoints for the `/user_preferences/user-guid` path support the specified headers from any origin.
+
+## Managing Templates
+
+<a href="#get-template"></a>
+
+### Retrieve Templates
+
+This endpoint is used to retrieve the templates that are stored using the template filename as a parameter for the request.
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>	
+```
+\* The client token does not require any scopes at this time.
+
+###### Route
+```
+GET /templates/{template-filename}
+```
+
+###### CURL example
+```
+$ curl -i -X GET \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/templates/template-filename
+  
+HTTP/1.1 200 OK
+Connection: close
+Content-Length: 1126
+Content-Type: text/plain; charset=utf-8
+Date: Mon, 27 Oct 2014 23:52:31 GMT
+X-Cf-Requestid: 5d19a080-2c88-4fe6-5eb5-42f9bda2d073
+
+{
+	"text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client",
+	"html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>",
+	"overridden":false
+}
+ ```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields      | Description                                                     |
+| ----------- | --------------------------------------------------------------- |
+| text        | The template used for the text portion of the notification      |
+| html        | The template used for the HTML portion of the notification      |
+| overridden  | True if this template is overridden                             |
+
+
+### Set Templates
+
+This endpoint is used to change the templates attached to particular kinds of notifications.
+
+
+##### Request 
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>	
+```
+\* The client does not require any scopes at this time
+
+###### Route
+```
+PUT /templates/{template-filename}
+```
+###### Params
+
+| Key      | Description                                                     |
+| -------- | --------------------------------------------------------------- |
+| text*    | The template used for the text portion of the notification      |
+| html*    | The template used for the HTML portion of the notification      |
+
+\* required
+
+###### CURL example
+```
+$ curl -i -X PUT \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  -d '{"text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>",}' \
+  http://notifications.example.com/templates/template-filename
+
+204 No Content
+Connection: close
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 28 Oct 2014 00:18:48 GMT
+X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
+```
+
+##### Response
+
+###### Status
+```
+204 No Content
+```
+
+###### Body
+| Fields   | Description |
+| -------- | ----------- |
+| \<none\> |             |
+
+### Delete Templates
+
+This endpoint is used to delete an override template attached to a particular kind of notifications.
+
+
+##### Request 
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>	
+```
+\* The client does not require any scopes at this time
+
+###### Route
+```
+DELETE /templates/{template-filename}
+```
+###### Params
+
+| Key                   | Description                                                     |
+| --------------------- | --------------------------------------------------------------- |
+| template-filename*    | The template used for the text portion of the notification      |
+
+\* required
+
+###### CURL example
+```
+$ curl -X DELETE \
+  http://notifications.example.com/templates/template-filename 
+
+204 No Content
+Connection: close
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 28 Oct 2014 00:18:48 GMT
+X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
+```
+
+##### Response
+
+###### Status
+```
+204 No Content
+```
+
+###### Body
+| Fields   | Description |
+| -------- | ----------- |
+| \<none\> |             |
+
+

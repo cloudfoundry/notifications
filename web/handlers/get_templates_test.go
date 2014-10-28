@@ -53,14 +53,17 @@ var _ = Describe("GetTemplates", func() {
                 handler.ServeHTTP(writer, request, context)
                 Expect(writer.Code).To(Equal(http.StatusOK))
 
-                var template models.Template
+                var template map[string]interface{}
+
                 err := json.Unmarshal(writer.Body.Bytes(), &template)
                 if err != nil {
                     panic(err)
                 }
 
-                Expect(template.HTML).To(Equal("<p> the template {{variable}} </p>"))
-                Expect(template.Text).To(Equal("the template {{variable}}"))
+                Expect(len(template)).To(Equal(3))
+                Expect(template["html"].(string)).To(Equal("<p> the template {{variable}} </p>"))
+                Expect(template["text"].(string)).To(Equal("the template {{variable}}"))
+                Expect(template["overridden"].(bool)).To(Equal(false))
             })
         })
 
