@@ -4,7 +4,9 @@ A MySQL-Driver for Go's [database/sql](http://golang.org/pkg/database/sql) packa
 
 ![Go-MySQL-Driver logo](https://raw.github.com/wiki/go-sql-driver/mysql/gomysql_m.png "Golang Gopher holding the MySQL Dolphin")
 
-**Version 1.1** (November 02, 2013)
+**Latest stable Release:** [Version 1.2 (June 03, 2014)](https://github.com/go-sql-driver/mysql/releases)
+
+[![Build Status](https://travis-ci.org/go-sql-driver/mysql.png?branch=master)](https://travis-ci.org/go-sql-driver/mysql)
 
 ---------------------------------------
   * [Features](#features)
@@ -38,8 +40,8 @@ A MySQL-Driver for Go's [database/sql](http://golang.org/pkg/database/sql) packa
   * Optional `time.Time` parsing
 
 ## Requirements
-  * Go 1.1 or higher (use [v1.0](https://github.com/go-sql-driver/mysql/tags) for Go 1.0.x)
-  * MySQL (Version 4.1 or higher), MariaDB or Percona Server
+  * Go 1.1 or higher
+  * MySQL (4.1+), MariaDB, Percona Server, Google CloudSQL or Sphinx (2.2.3+)
 
 ---------------------------------------
 
@@ -107,11 +109,13 @@ For Unix domain sockets the address is the absolute path to the MySQL-Server-soc
 #### Parameters
 *Parameters are case-sensitive!*
 
+Notice that any of `true`, `TRUE`, `True` or `1` is accepted to stand for a true boolean value. Not surprisingly, false can be specified as any of: `false`, `FALSE`, `False` or `0`.
+
 ##### `allowAllFiles`
 
 ```
 Type:           bool
-Valid Values:   true, false 
+Valid Values:   true, false
 Default:        false
 ```
 
@@ -122,10 +126,10 @@ Default:        false
 
 ```
 Type:           bool
-Valid Values:   true, false 
+Valid Values:   true, false
 Default:        false
 ```
-`allowAllFiles=true` allows the usage of the insecure old password method. This should be avoided, but is necessary in some cases. See also [the old_passwords wiki page](https://github.com/go-sql-driver/mysql/wiki/old_passwords).
+`allowOldPasswords=true` allows the usage of the insecure old password method. This should be avoided, but is necessary in some cases. See also [the old_passwords wiki page](https://github.com/go-sql-driver/mysql/wiki/old_passwords).
 
 ##### `charset`
 
@@ -135,14 +139,28 @@ Valid Values:   <name>
 Default:        none
 ```
 
-Sets the charset used for client-server interaction (`"SET NAMES <value>"`). If multiple charsets are set (separated by a comma), the following charset is used if setting the charset failes. This enables support for `utf8mb4` ([introduced in MySQL 5.5.3](http://dev.mysql.com/doc/refman/5.5/en/charset-unicode-utf8mb4.html)) with fallback to `utf8` for older servers (`charset=utf8mb4,utf8`).
+Sets the charset used for client-server interaction (`"SET NAMES <value>"`). If multiple charsets are set (separated by a comma), the following charset is used if setting the charset failes. This enables for example support for `utf8mb4` ([introduced in MySQL 5.5.3](http://dev.mysql.com/doc/refman/5.5/en/charset-unicode-utf8mb4.html)) with fallback to `utf8` for older servers (`charset=utf8mb4,utf8`).
 
+Usage of the `charset` parameter is discouraged because it issues additional queries to the server.
+Unless you need the fallback behavior, please use `collation` instead.
+
+##### `collation`
+
+```
+Type:           string
+Valid Values:   <name>
+Default:        utf8_general_ci
+```
+
+Sets the collation used for client-server interaction on connection. In contrast to `charset`, `collation` does not issue additional queries. If the specified collation is unavailable on the target server, the connection will fail.
+
+A list of valid charsets for a server is retrievable with `SHOW COLLATION`.
 
 ##### `clientFoundRows`
 
 ```
 Type:           bool
-Valid Values:   true, false 
+Valid Values:   true, false
 Default:        false
 ```
 
@@ -166,7 +184,7 @@ Please keep in mind, that param values must be [url.QueryEscape](http://golang.o
 
 ```
 Type:           bool
-Valid Values:   true, false 
+Valid Values:   true, false
 Default:        false
 ```
 
@@ -177,11 +195,13 @@ Default:        false
 
 ```
 Type:           bool
-Valid Values:   true, false 
+Valid Values:   true, false
 Default:        false
 ```
 
-`strict=true` enables strict mode. MySQL warnings are treated as errors.
+`strict=true` enables the strict mode in which MySQL warnings are treated as errors.
+
+By default MySQL also treats notes as warnings. Use [`sql_notes=false`](http://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_sql_notes) to ignore notes. See the [examples](#examples) for an DSN example.
 
 
 ##### `timeout`
@@ -198,7 +218,7 @@ Default:        OS default
 
 ```
 Type:           bool / string
-Valid Values:   true, false, skip-verify, <name> 
+Valid Values:   true, false, skip-verify, <name>
 Default:        false
 ```
 
@@ -228,9 +248,14 @@ root:pw@unix(/tmp/mysql.sock)/myDatabase?loc=Local
 user:password@tcp(localhost:5555)/dbname?tls=skip-verify&autocommit=true
 ```
 
+Use the [strict mode](#strict) but ignore notes:
+```
+user:password@/dbname?strict=true&sql_notes=false
+```
+
 TCP via IPv6:
 ```
-user:password@tcp([de:ad:be:ef::ca:fe]:80)/dbname?timeout=90s
+user:password@tcp([de:ad:be:ef::ca:fe]:80)/dbname?timeout=90s&collation=utf8mb4_unicode_ci
 ```
 
 TCP on a remote host, e.g. Amazon RDS:
@@ -238,9 +263,14 @@ TCP on a remote host, e.g. Amazon RDS:
 id:password@tcp(your-amazonaws-uri.com:3306)/dbname
 ```
 
+Google Cloud SQL on App Engine:
+```
+user@cloudsql(project-id:instance-name)/dbname
+```
+
 TCP using default port (3306) on localhost:
 ```
-user:password@tcp/dbname&charset=utf8mb4,utf8&sys_var=esc%40ped
+user:password@tcp/dbname?charset=utf8mb4,utf8&sys_var=esc%40ped
 ```
 
 Use the default protocol (tcp) and host (localhost:3306):
@@ -277,7 +307,11 @@ Alternatively you can use the [`NullTime`](http://godoc.org/github.com/go-sql-dr
 
 
 ### Unicode support
-Since version 1.1 Go-MySQL-Driver automatically uses the collation `utf8_general_ci` by default. Adding `&charset=utf8` (alias for `SET NAMES utf8`) to the DSN is not necessary anymore in most cases.
+Since version 1.1 Go-MySQL-Driver automatically uses the collation `utf8_general_ci` by default.
+
+Other collations / charsets can be set using the [`collation`](#collation) DSN parameter.
+
+Version 1.0 of the driver recommended adding `&charset=utf8` (alias for `SET NAMES utf8`) to the DSN to enable proper UTF-8 support. This is not necessary anymore. The [`collation`](#collation) parameter should be preferred to set another collation / charset than the default.
 
 See http://dev.mysql.com/doc/refman/5.7/en/charset-unicode.html for more details on MySQL's Unicode support.
 
@@ -288,7 +322,7 @@ To run the driver tests you may need to adjust the configuration. See the [Testi
 Go-MySQL-Driver is not feature-complete yet. Your help is very appreciated.
 If you want to contribute, you can work on an [open issue](https://github.com/go-sql-driver/mysql/issues?state=open) or review a [pull request](https://github.com/go-sql-driver/mysql/pulls).
 
-See the [Contributing Guidelines](https://github.com/go-sql-driver/mysql/blob/master/CHANGELOG.md) for details.
+See the [Contribution Guidelines](https://github.com/go-sql-driver/mysql/blob/master/CONTRIBUTING.md) for details.
 
 ---------------------------------------
 

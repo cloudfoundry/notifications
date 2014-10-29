@@ -18,7 +18,7 @@ import (
 )
 
 type mysqlConn struct {
-	buf              *buffer
+	buf              buffer
 	netConn          net.Conn
 	affectedRows     uint64
 	insertId         uint64
@@ -39,14 +39,15 @@ type config struct {
 	dbname            string
 	params            map[string]string
 	loc               *time.Location
-	timeout           time.Duration
 	tls               *tls.Config
+	timeout           time.Duration
+	collation         uint8
 	allowAllFiles     bool
 	allowOldPasswords bool
 	clientFoundRows   bool
 }
 
-// Handles parameters set in DSN
+// Handles parameters set in DSN after the connection is established
 func (mc *mysqlConn) handleParams() (err error) {
 	for param, val := range mc.cfg.params {
 		switch param {
@@ -99,7 +100,7 @@ func (mc *mysqlConn) handleParams() (err error) {
 
 func (mc *mysqlConn) Begin() (driver.Tx, error) {
 	if mc.netConn == nil {
-		errLog.Print(errInvalidConn)
+		errLog.Print(ErrInvalidConn)
 		return nil, driver.ErrBadConn
 	}
 	err := mc.exec("START TRANSACTION")
@@ -113,20 +114,24 @@ func (mc *mysqlConn) Begin() (driver.Tx, error) {
 func (mc *mysqlConn) Close() (err error) {
 	// Makes Close idempotent
 	if mc.netConn != nil {
-		mc.writeCommandPacket(comQuit)
-		mc.netConn.Close()
+		err = mc.writeCommandPacket(comQuit)
+		if err == nil {
+			err = mc.netConn.Close()
+		} else {
+			mc.netConn.Close()
+		}
 		mc.netConn = nil
 	}
 
 	mc.cfg = nil
-	mc.buf = nil
+	mc.buf.rd = nil
 
 	return
 }
 
 func (mc *mysqlConn) Prepare(query string) (driver.Stmt, error) {
 	if mc.netConn == nil {
-		errLog.Print(errInvalidConn)
+		errLog.Print(ErrInvalidConn)
 		return nil, driver.ErrBadConn
 	}
 	// Send command
@@ -158,7 +163,7 @@ func (mc *mysqlConn) Prepare(query string) (driver.Stmt, error) {
 
 func (mc *mysqlConn) Exec(query string, args []driver.Value) (driver.Result, error) {
 	if mc.netConn == nil {
-		errLog.Print(errInvalidConn)
+		errLog.Print(ErrInvalidConn)
 		return nil, driver.ErrBadConn
 	}
 	if len(args) == 0 { // no args, fastpath
@@ -203,7 +208,7 @@ func (mc *mysqlConn) exec(query string) error {
 
 func (mc *mysqlConn) Query(query string, args []driver.Value) (driver.Rows, error) {
 	if mc.netConn == nil {
-		errLog.Print(errInvalidConn)
+		errLog.Print(ErrInvalidConn)
 		return nil, driver.ErrBadConn
 	}
 	if len(args) == 0 { // no args, fastpath

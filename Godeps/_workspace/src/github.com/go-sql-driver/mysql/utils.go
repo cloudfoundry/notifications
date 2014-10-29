@@ -16,23 +16,20 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 )
 
 var (
-	errLog            *log.Logger            // Error Logger
 	tlsConfigRegister map[string]*tls.Config // Register for custom tls.Configs
 
 	errInvalidDSNUnescaped = errors.New("Invalid DSN: Did you forget to escape a param value?")
 	errInvalidDSNAddr      = errors.New("Invalid DSN: Network Address not terminated (missing closing brace)")
+	errInvalidDSNNoSlash   = errors.New("Invalid DSN: Missing the slash separating the database name")
 )
 
 func init() {
-	errLog = log.New(os.Stderr, "[MySQL] ", log.Ldate|log.Ltime|log.Lshortfile)
 	tlsConfigRegister = make(map[string]*tls.Config)
 }
 
@@ -75,14 +72,20 @@ func DeregisterTLSConfig(key string) {
 
 // parseDSN parses the DSN string to a config
 func parseDSN(dsn string) (cfg *config, err error) {
-	cfg = new(config)
+	// New config with some default values
+	cfg = &config{
+		loc:       time.UTC,
+		collation: defaultCollation,
+	}
 
 	// TODO: use strings.IndexByte when we can depend on Go 1.2
 
 	// [user[:password]@][net[(addr)]]/dbname[?param1=value1&paramN=valueN]
 	// Find the last '/' (since the password or the net addr might contain a '/')
+	foundSlash := false
 	for i := len(dsn) - 1; i >= 0; i-- {
 		if dsn[i] == '/' {
+			foundSlash = true
 			var j, k int
 
 			// left part is empty if i <= 0
@@ -109,7 +112,7 @@ func parseDSN(dsn string) (cfg *config, err error) {
 				// Find the first '(' in dsn[j+1:i]
 				for k = j + 1; k < i; k++ {
 					if dsn[k] == '(' {
-						// dsn[i-1] must be == ')' if an adress is specified
+						// dsn[i-1] must be == ')' if an address is specified
 						if dsn[i-1] != ')' {
 							if strings.ContainsRune(dsn[k+1:i], ')') {
 								return nil, errInvalidDSNUnescaped
@@ -139,12 +142,16 @@ func parseDSN(dsn string) (cfg *config, err error) {
 		}
 	}
 
+	if !foundSlash && len(dsn) > 0 {
+		return nil, errInvalidDSNNoSlash
+	}
+
 	// Set default network if empty
 	if cfg.net == "" {
 		cfg.net = "tcp"
 	}
 
-	// Set default adress if empty
+	// Set default address if empty
 	if cfg.addr == "" {
 		switch cfg.net {
 		case "tcp":
@@ -155,11 +162,6 @@ func parseDSN(dsn string) (cfg *config, err error) {
 			return nil, errors.New("Default addr for network '" + cfg.net + "' unknown")
 		}
 
-	}
-
-	// Set default location if empty
-	if cfg.loc == nil {
-		cfg.loc = time.UTC
 	}
 
 	return
@@ -185,6 +187,14 @@ func parseDSNParams(cfg *config, params string) (err error) {
 				return fmt.Errorf("Invalid Bool value: %s", value)
 			}
 
+		// Use old authentication mode (pre MySQL 4.1)
+		case "allowOldPasswords":
+			var isBool bool
+			cfg.allowOldPasswords, isBool = readBool(value)
+			if !isBool {
+				return fmt.Errorf("Invalid Bool value: %s", value)
+			}
+
 		// Switch "rowsAffected" mode
 		case "clientFoundRows":
 			var isBool bool
@@ -193,13 +203,18 @@ func parseDSNParams(cfg *config, params string) (err error) {
 				return fmt.Errorf("Invalid Bool value: %s", value)
 			}
 
-		// Use old authentication mode (pre MySQL 4.1)
-		case "allowOldPasswords":
-			var isBool bool
-			cfg.allowOldPasswords, isBool = readBool(value)
-			if !isBool {
-				return fmt.Errorf("Invalid Bool value: %s", value)
+		// Collation
+		case "collation":
+			collation, ok := collations[value]
+			if !ok {
+				// Note possibility for false negatives:
+				// could be triggered  although the collation is valid if the
+				// collations map does not contain entries the server supports.
+				err = errors.New("unknown collation")
+				return
 			}
+			cfg.collation = collation
+			break
 
 		// Time Location
 		case "loc":
@@ -500,55 +515,84 @@ func parseBinaryDateTime(num uint64, data []byte, loc *time.Location) (driver.Va
 	return nil, fmt.Errorf("Invalid DATETIME-packet length %d", num)
 }
 
-func formatBinaryDate(num uint64, data []byte) (driver.Value, error) {
-	switch num {
-	case 0:
-		return []byte("0000-00-00"), nil
-	case 4:
-		return []byte(fmt.Sprintf(
-			"%04d-%02d-%02d",
-			binary.LittleEndian.Uint16(data[:2]),
-			data[2],
-			data[3],
-		)), nil
-	}
-	return nil, fmt.Errorf("Invalid DATE-packet length %d", num)
-}
+// zeroDateTime is used in formatBinaryDateTime to avoid an allocation
+// if the DATE or DATETIME has the zero value.
+// It must never be changed.
+// The current behavior depends on database/sql copying the result.
+var zeroDateTime = []byte("0000-00-00 00:00:00")
 
-func formatBinaryDateTime(num uint64, data []byte) (driver.Value, error) {
-	switch num {
-	case 0:
-		return []byte("0000-00-00 00:00:00"), nil
-	case 4:
-		return []byte(fmt.Sprintf(
-			"%04d-%02d-%02d 00:00:00",
-			binary.LittleEndian.Uint16(data[:2]),
-			data[2],
-			data[3],
-		)), nil
-	case 7:
-		return []byte(fmt.Sprintf(
-			"%04d-%02d-%02d %02d:%02d:%02d",
-			binary.LittleEndian.Uint16(data[:2]),
-			data[2],
-			data[3],
-			data[4],
-			data[5],
-			data[6],
-		)), nil
-	case 11:
-		return []byte(fmt.Sprintf(
-			"%04d-%02d-%02d %02d:%02d:%02d.%06d",
-			binary.LittleEndian.Uint16(data[:2]),
-			data[2],
-			data[3],
-			data[4],
-			data[5],
-			data[6],
-			binary.LittleEndian.Uint32(data[7:11]),
-		)), nil
+func formatBinaryDateTime(src []byte, withTime bool) (driver.Value, error) {
+	if len(src) == 0 {
+		if withTime {
+			return zeroDateTime, nil
+		}
+		return zeroDateTime[:10], nil
 	}
-	return nil, fmt.Errorf("Invalid DATETIME-packet length %d", num)
+	var dst []byte
+	if withTime {
+		if len(src) == 11 {
+			dst = []byte("0000-00-00 00:00:00.000000")
+		} else {
+			dst = []byte("0000-00-00 00:00:00")
+		}
+	} else {
+		dst = []byte("0000-00-00")
+	}
+	switch len(src) {
+	case 11:
+		microsecs := binary.LittleEndian.Uint32(src[7:11])
+		tmp32 := microsecs / 10
+		dst[25] += byte(microsecs - 10*tmp32)
+		tmp32, microsecs = tmp32/10, tmp32
+		dst[24] += byte(microsecs - 10*tmp32)
+		tmp32, microsecs = tmp32/10, tmp32
+		dst[23] += byte(microsecs - 10*tmp32)
+		tmp32, microsecs = tmp32/10, tmp32
+		dst[22] += byte(microsecs - 10*tmp32)
+		tmp32, microsecs = tmp32/10, tmp32
+		dst[21] += byte(microsecs - 10*tmp32)
+		dst[20] += byte(microsecs / 10)
+		fallthrough
+	case 7:
+		second := src[6]
+		tmp := second / 10
+		dst[18] += second - 10*tmp
+		dst[17] += tmp
+		minute := src[5]
+		tmp = minute / 10
+		dst[15] += minute - 10*tmp
+		dst[14] += tmp
+		hour := src[4]
+		tmp = hour / 10
+		dst[12] += hour - 10*tmp
+		dst[11] += tmp
+		fallthrough
+	case 4:
+		day := src[3]
+		tmp := day / 10
+		dst[9] += day - 10*tmp
+		dst[8] += tmp
+		month := src[2]
+		tmp = month / 10
+		dst[6] += month - 10*tmp
+		dst[5] += tmp
+		year := binary.LittleEndian.Uint16(src[:2])
+		tmp16 := year / 10
+		dst[3] += byte(year - 10*tmp16)
+		tmp16, year = tmp16/10, tmp16
+		dst[2] += byte(year - 10*tmp16)
+		tmp16, year = tmp16/10, tmp16
+		dst[1] += byte(year - 10*tmp16)
+		dst[0] += byte(tmp16)
+		return dst, nil
+	}
+	var t string
+	if withTime {
+		t = "DATETIME"
+	} else {
+		t = "DATE"
+	}
+	return nil, fmt.Errorf("invalid %s-packet length %d", t, len(src))
 }
 
 /******************************************************************************
@@ -603,7 +647,7 @@ func stringToInt(b []byte) int {
 // returns the string read as a bytes slice, wheter the value is NULL,
 // the number of bytes read and an error, in case the string is longer than
 // the input slice
-func readLengthEnodedString(b []byte) ([]byte, bool, int, error) {
+func readLengthEncodedString(b []byte) ([]byte, bool, int, error) {
 	// Get length
 	num, isNull, n := readLengthEncodedInteger(b)
 	if num < 1 {
@@ -621,7 +665,7 @@ func readLengthEnodedString(b []byte) ([]byte, bool, int, error) {
 
 // returns the number of bytes skipped and an error, in case the string is
 // longer than the input slice
-func skipLengthEnodedString(b []byte) (int, error) {
+func skipLengthEncodedString(b []byte) (int, error) {
 	// Get length
 	num, _, n := readLengthEncodedInteger(b)
 	if num < 1 {
@@ -657,7 +701,7 @@ func readLengthEncodedInteger(b []byte) (uint64, bool, int) {
 	case 0xfe:
 		return uint64(b[1]) | uint64(b[2])<<8 | uint64(b[3])<<16 |
 				uint64(b[4])<<24 | uint64(b[5])<<32 | uint64(b[6])<<40 |
-				uint64(b[7])<<48 | uint64(b[8])<<54,
+				uint64(b[7])<<48 | uint64(b[8])<<56,
 			false, 9
 	}
 
@@ -677,5 +721,6 @@ func appendLengthEncodedInteger(b []byte, n uint64) []byte {
 	case n <= 0xffffff:
 		return append(b, 0xfd, byte(n), byte(n>>8), byte(n>>16))
 	}
-	return b
+	return append(b, 0xfe, byte(n), byte(n>>8), byte(n>>16), byte(n>>24),
+		byte(n>>32), byte(n>>40), byte(n>>48), byte(n>>56))
 }

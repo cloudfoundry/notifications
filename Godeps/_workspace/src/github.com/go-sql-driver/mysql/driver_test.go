@@ -19,11 +19,18 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
 
 var (
+	user      string
+	pass      string
+	prot      string
+	addr      string
+	dbname    string
 	dsn       string
 	netAddr   string
 	available bool
@@ -41,17 +48,18 @@ var (
 
 // See https://github.com/go-sql-driver/mysql/wiki/Testing
 func init() {
+	// get environment variables
 	env := func(key, defaultValue string) string {
 		if value := os.Getenv(key); value != "" {
 			return value
 		}
 		return defaultValue
 	}
-	user := env("MYSQL_TEST_USER", "root")
-	pass := env("MYSQL_TEST_PASS", "")
-	prot := env("MYSQL_TEST_PROT", "tcp")
-	addr := env("MYSQL_TEST_ADDR", "localhost:3306")
-	dbname := env("MYSQL_TEST_DBNAME", "gotest")
+	user = env("MYSQL_TEST_USER", "root")
+	pass = env("MYSQL_TEST_PASS", "")
+	prot = env("MYSQL_TEST_PROT", "tcp")
+	addr = env("MYSQL_TEST_ADDR", "localhost:3306")
+	dbname = env("MYSQL_TEST_DBNAME", "gotest")
 	netAddr = fmt.Sprintf("%s(%s)", prot, addr)
 	dsn = fmt.Sprintf("%s:%s@%s/%s?timeout=30s&strict=true", user, pass, netAddr, dbname)
 	c, err := net.Dial(prot, addr)
@@ -825,7 +833,7 @@ func TestStrict(t *testing.T) {
 func TestTLS(t *testing.T) {
 	tlsTest := func(dbt *DBTest) {
 		if err := dbt.db.Ping(); err != nil {
-			if err == errNoTLS {
+			if err == ErrNoTLS {
 				dbt.Skip("Server does not support TLS")
 			} else {
 				dbt.Fatalf("Error on Ping: %s", err.Error())
@@ -934,6 +942,44 @@ func TestFailingCharset(t *testing.T) {
 			t.Fatalf("Connection must not succeed without a valid charset")
 		}
 	})
+}
+
+func TestCollation(t *testing.T) {
+	if !available {
+		t.Skipf("MySQL-Server not running on %s", netAddr)
+	}
+
+	defaultCollation := "utf8_general_ci"
+	testCollations := []string{
+		"",               // do not set
+		defaultCollation, // driver default
+		"latin1_general_ci",
+		"binary",
+		"utf8_unicode_ci",
+		"utf8mb4_general_ci",
+	}
+
+	for _, collation := range testCollations {
+		var expected, tdsn string
+		if collation != "" {
+			tdsn = dsn + "&collation=" + collation
+			expected = collation
+		} else {
+			tdsn = dsn
+			expected = defaultCollation
+		}
+
+		runTests(t, tdsn, func(dbt *DBTest) {
+			var got string
+			if err := dbt.db.QueryRow("SELECT @@collation_connection").Scan(&got); err != nil {
+				dbt.Fatal(err)
+			}
+
+			if got != expected {
+				dbt.Fatalf("Expected connection collation %s but got %s", expected, got)
+			}
+		})
+	}
 }
 
 func TestRawBytesResultExceedsBuffer(t *testing.T) {
@@ -1208,6 +1254,30 @@ func TestStmtMultiRows(t *testing.T) {
 	})
 }
 
+// Regression test for
+// * more than 32 NULL parameters (issue 209)
+// * more parameters than fit into the buffer (issue 201)
+func TestPreparedManyCols(t *testing.T) {
+	const numParams = defaultBufSize
+	runTests(t, dsn, func(dbt *DBTest) {
+		query := "SELECT ?" + strings.Repeat(",?", numParams-1)
+		stmt, err := dbt.db.Prepare(query)
+		if err != nil {
+			dbt.Fatal(err)
+		}
+		defer stmt.Close()
+		// create more parameters than fit into the buffer
+		// which will take nil-values
+		params := make([]interface{}, numParams)
+		rows, err := stmt.Query(params...)
+		if err != nil {
+			stmt.Close()
+			dbt.Fatal(err)
+		}
+		defer rows.Close()
+	})
+}
+
 func TestConcurrent(t *testing.T) {
 	if enabled, _ := readBool(os.Getenv("MYSQL_TEST_CONCURRENT")); !enabled {
 		t.Skip("MYSQL_TEST_CONCURRENT env var not set")
@@ -1220,40 +1290,81 @@ func TestConcurrent(t *testing.T) {
 			dbt.Fatalf("%s", err.Error())
 		}
 		dbt.Logf("Testing up to %d concurrent connections \r\n", max)
-		canStop := false
-		c := make(chan struct{}, max)
+
+		var remaining, succeeded int32 = int32(max), 0
+
+		var wg sync.WaitGroup
+		wg.Add(max)
+
+		var fatalError string
+		var once sync.Once
+		fatalf := func(s string, vals ...interface{}) {
+			once.Do(func() {
+				fatalError = fmt.Sprintf(s, vals...)
+			})
+		}
+
 		for i := 0; i < max; i++ {
 			go func(id int) {
+				defer wg.Done()
+
 				tx, err := dbt.db.Begin()
+				atomic.AddInt32(&remaining, -1)
+
 				if err != nil {
-					canStop = true
-					if err.Error() == "Error 1040: Too many connections" {
-						max--
+					if err.Error() != "Error 1040: Too many connections" {
+						fatalf("Error on Conn %d: %s", id, err.Error())
+					}
+					return
+				}
+
+				// keep the connection busy until all connections are open
+				for remaining > 0 {
+					if _, err = tx.Exec("DO 1"); err != nil {
+						fatalf("Error on Conn %d: %s", id, err.Error())
 						return
-					} else {
-						dbt.Fatalf("Error on Con %d: %s", id, err.Error())
 					}
 				}
-				c <- struct{}{}
-				for !canStop {
-					_, err = tx.Exec("SELECT 1")
-					if err != nil {
-						canStop = true
-						dbt.Fatalf("Error on Con %d: %s", id, err.Error())
-					}
+
+				if err = tx.Commit(); err != nil {
+					fatalf("Error on Conn %d: %s", id, err.Error())
+					return
 				}
-				err = tx.Commit()
-				if err != nil {
-					canStop = true
-					dbt.Fatalf("Error on Con %d: %s", id, err.Error())
-				}
+
+				// everything went fine with this connection
+				atomic.AddInt32(&succeeded, 1)
 			}(i)
 		}
-		for i := 0; i < max; i++ {
-			<-c
-		}
-		canStop = true
 
-		dbt.Logf("Reached %d concurrent connections \r\n", max)
+		// wait until all conections are open
+		wg.Wait()
+
+		if fatalError != "" {
+			dbt.Fatal(fatalError)
+		}
+
+		dbt.Logf("Reached %d concurrent connections\r\n", succeeded)
 	})
+}
+
+// Tests custom dial functions
+func TestCustomDial(t *testing.T) {
+	if !available {
+		t.Skipf("MySQL-Server not running on %s", netAddr)
+	}
+
+	// our custom dial function which justs wraps net.Dial here
+	RegisterDial("mydial", func(addr string) (net.Conn, error) {
+		return net.Dial(prot, addr)
+	})
+
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@mydial(%s)/%s?timeout=30s&strict=true", user, pass, addr, dbname))
+	if err != nil {
+		t.Fatalf("Error connecting: %s", err.Error())
+	}
+	defer db.Close()
+
+	if _, err = db.Exec("DO 1"); err != nil {
+		t.Fatalf("Connection failed: %s", err.Error())
+	}
 }
