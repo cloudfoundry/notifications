@@ -30,9 +30,8 @@ var _ = Describe("UAA Recipe", func() {
     var tokenLoader postal.TokenLoader
     var userLoader postal.UserLoader
     var spaceLoader postal.SpaceLoader
-    var templateLoader postal.TemplateLoader
+    var fakeTemplatesLoader *fakes.FakeTemplatesLoader
     var mailer *fakes.FakeMailer
-    var fs FakeFileSystem
     var env config.Environment
     var queue *fakes.FakeQueue
     var clientID string
@@ -97,7 +96,6 @@ var _ = Describe("UAA Recipe", func() {
         logger = log.New(buffer, "", 0)
         mailClient = fakes.FakeMailClient{}
         env = config.NewEnvironment()
-        fs = NewFakeFileSystem(env)
 
         queue = fakes.NewFakeQueue()
         mailer = fakes.NewFakeMailer()
@@ -105,9 +103,9 @@ var _ = Describe("UAA Recipe", func() {
         tokenLoader = postal.NewTokenLoader(&fakeUAA)
         userLoader = postal.NewUserLoader(&fakeUAA, logger, fakeCC)
         spaceLoader = postal.NewSpaceLoader(fakeCC)
-        templateLoader = postal.NewTemplateLoader(&fs, env.RootPath)
+        fakeTemplatesLoader = &fakes.FakeTemplatesLoader{}
 
-        uaaRecipe = postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, &fakeReceiptsRepo)
+        uaaRecipe = postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, fakeTemplatesLoader, mailer, &fakeReceiptsRepo)
     })
 
     Describe("Dispatch", func() {
@@ -161,7 +159,7 @@ var _ = Describe("UAA Recipe", func() {
 
                 Context("when a template cannot be loaded", func() {
                     It("returns a TemplateLoadError", func() {
-                        delete(fs.Files, env.RootPath+"/templates/user_body.text")
+                        fakeTemplatesLoader.LoadError = errors.New("BOOM!")
 
                         _, err := uaaRecipe.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
 
@@ -204,6 +202,14 @@ var _ = Describe("UAA Recipe", func() {
                 })
 
                 It("calls mailer.Deliver with the correct arguments", func() {
+                    templates := postal.Templates{
+                        Subject: "default-missing-subject",
+                        Text:    "default-space-text",
+                        HTML:    "default-space-html",
+                    }
+
+                    fakeTemplatesLoader.Templates = templates
+
                     _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
                     if err != nil {
                         panic(err)
@@ -220,12 +226,6 @@ var _ = Describe("UAA Recipe", func() {
                     }
 
                     users := map[string]uaa.User{"user-123": user123, "user-456": user456}
-
-                    templates := postal.Templates{
-                        Subject: "default-missing-subject",
-                        Text:    "default-space-text",
-                        HTML:    "default-space-html",
-                    }
 
                     Expect(mailer.DeliverArguments).To(ContainElement(conn))
                     Expect(mailer.DeliverArguments).To(ContainElement(templates))

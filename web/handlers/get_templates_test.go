@@ -25,17 +25,20 @@ var _ = Describe("GetTemplates", func() {
     var fakeErrorWriter *fakes.FakeErrorWriter
 
     Describe("ServeHTTP", func() {
+        BeforeEach(func() {
+            finder = fakes.NewFakeTemplateFinder()
+
+            finder.Templates["myTemplateName.user_body"] = models.Template{
+                Text: "the template {{variable}}",
+                HTML: "<p> the template {{variable}} </p>",
+            }
+            writer = httptest.NewRecorder()
+            fakeErrorWriter = fakes.NewFakeErrorWriter()
+            handler = handlers.NewGetTemplates(finder, fakeErrorWriter)
+        })
 
         Context("When the finder does not error", func() {
             BeforeEach(func() {
-                finder = fakes.NewFakeTemplateFinder(models.Template{
-                    Text: "the template {{variable}}",
-                    HTML: "<p> the template {{variable}} </p>",
-                })
-
-                writer = httptest.NewRecorder()
-                fakeErrorWriter = fakes.NewFakeErrorWriter()
-                handler = handlers.NewGetTemplates(finder, fakeErrorWriter)
 
                 var err error
                 request, err = http.NewRequest("GET", "/templates/myTemplateName.user_body", bytes.NewBuffer([]byte{}))
@@ -69,13 +72,6 @@ var _ = Describe("GetTemplates", func() {
 
         Context("When the finder errors", func() {
             BeforeEach(func() {
-                writer = httptest.NewRecorder()
-                finder = fakes.NewFakeTemplateFinder(models.Template{
-                    Text: "the template {{variable}}",
-                    HTML: "<p> the template {{variable}} </p>",
-                })
-                fakeErrorWriter = fakes.NewFakeErrorWriter()
-                handler = handlers.NewGetTemplates(finder, fakeErrorWriter)
                 finder.FindError = errors.New("BOOM!")
 
                 var err error

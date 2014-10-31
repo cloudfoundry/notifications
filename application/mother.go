@@ -44,6 +44,7 @@ func (mother *Mother) Queue() *gobble.Queue {
 
 func (mother Mother) NewUAARecipe() postal.UAARecipe {
     env := config.NewEnvironment()
+    finder := mother.TemplateFinder()
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
     uaaClient.VerifySSL = env.VerifySSL
     cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
@@ -51,11 +52,11 @@ func (mother Mother) NewUAARecipe() postal.UAARecipe {
     tokenLoader := postal.NewTokenLoader(&uaaClient)
     userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
     spaceLoader := postal.NewSpaceLoader(cloudController)
-    templateLoader := postal.NewTemplateLoader(postal.NewFileSystem(), env.RootPath)
+    templatesLoader := postal.NewTemplatesLoader(finder)
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templateLoader, mailer, receiptsRepo)
+    return postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templatesLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) FileSystem() services.FileSystemInterface {
@@ -63,8 +64,7 @@ func (mother Mother) FileSystem() services.FileSystemInterface {
 }
 
 func (mother Mother) EmailRecipe() postal.MailRecipeInterface {
-    env := config.NewEnvironment()
-    return postal.NewEmailRecipe(mother.Mailer(), postal.NewTemplateLoader(mother.FileSystem(), env.RootPath))
+    return postal.NewEmailRecipe(mother.Mailer(), postal.NewTemplatesLoader(mother.TemplateFinder()))
 }
 
 func (mother Mother) NotificationFinder() services.NotificationFinder {
@@ -129,6 +129,15 @@ func (mother Mother) PreferencesFinder() *services.PreferencesFinder {
 
 func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
     return services.NewPreferenceUpdater(mother.GlobalUnsubscribesRepo(), mother.UnsubscribesRepo(), mother.KindsRepo())
+}
+
+func (mother Mother) TemplateFinder() services.TemplateFinder {
+    env := config.NewEnvironment()
+    database := mother.Database()
+    repo := mother.TemplatesRepo()
+    fileSystem := mother.FileSystem()
+
+    return services.NewTemplateFinder(repo, env.RootPath, database, fileSystem)
 }
 
 func (mother Mother) TemplateServiceObjects() (services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter) {

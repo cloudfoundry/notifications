@@ -3,18 +3,18 @@ package fakes
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type FakeTemplateFinder struct {
-    TemplateName     string
-    TemplateResponse models.Template
-    FindError        error
+    TemplateName string
+    FindError    error
+    Templates    map[string]models.Template
 }
 
-func NewFakeTemplateFinder(templateResponse models.Template) *FakeTemplateFinder {
+func NewFakeTemplateFinder() *FakeTemplateFinder {
     return &FakeTemplateFinder{
-        TemplateResponse: templateResponse,
+        Templates: map[string]models.Template{},
     }
 }
 
 func (fake *FakeTemplateFinder) Find(templateName string) (models.Template, error) {
     fake.TemplateName = templateName
-    return fake.TemplateResponse, fake.FindError
+    return fake.Templates[templateName], fake.FindError
 }

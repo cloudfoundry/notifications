@@ -87,6 +87,26 @@ var _ = Describe("Finder", func() {
                     Expect(template.Text).To(Equal("email-body-text"))
                     Expect(template.HTML).To(Equal("email-body-html"))
                 })
+
+                It("returns the default subject missing template", func() {
+                    fakeTemplatesRepo.FindError = models.ErrRecordNotFound{}
+
+                    template, err := finder.Find("login.fp.subject.missing")
+                    Expect(err).ToNot(HaveOccurred())
+                    Expect(template.Overridden).To(BeFalse())
+                    Expect(template.Text).To(Equal("default-missing-subject"))
+
+                })
+
+                It("returns the default subject provided template", func() {
+                    fakeTemplatesRepo.FindError = models.ErrRecordNotFound{}
+
+                    template, err := finder.Find("login.fp.subject.provided")
+                    Expect(err).ToNot(HaveOccurred())
+                    Expect(template.Overridden).To(BeFalse())
+                    Expect(template.Text).To(Equal("default-provided-subject"))
+
+                })
             })
 
             Context("when the override exists in the database", func() {

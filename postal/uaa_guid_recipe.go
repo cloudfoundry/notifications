@@ -3,31 +3,31 @@ package postal
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 const (
-    SpaceTextTemplateName = "space_body.text"
-    SpaceHTMLTemplateName = "space_body.html"
-    UserTextTemplateName  = "user_body.text"
-    UserHTMLTemplateName  = "user_body.html"
+    UserContentSuffix     = "user_body"
+    SpaceContentSuffix    = "space_body"
+    SubjectProvidedSuffix = "subject.provided"
+    SubjectMissingSuffix  = "subject.missing"
 )
 
 type UAARecipe struct {
-    tokenLoader    TokenLoader
-    userLoader     UserLoader
-    spaceLoader    SpaceLoader
-    templateLoader TemplateLoader
-    mailer         MailerInterface
-    receiptsRepo   models.ReceiptsRepoInterface
+    tokenLoader     TokenLoader
+    userLoader      UserLoader
+    spaceLoader     SpaceLoader
+    templatesLoader TemplatesLoaderInterface
+    mailer          MailerInterface
+    receiptsRepo    models.ReceiptsRepoInterface
 }
 
 func NewUAARecipe(tokenLoader TokenLoader, userLoader UserLoader, spaceLoader SpaceLoader,
-    templateLoader TemplateLoader, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UAARecipe {
+    templatesLoader TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UAARecipe {
 
     return UAARecipe{
-        tokenLoader:    tokenLoader,
-        userLoader:     userLoader,
-        spaceLoader:    spaceLoader,
-        templateLoader: templateLoader,
-        mailer:         mailer,
-        receiptsRepo:   receiptsRepo,
+        tokenLoader:     tokenLoader,
+        userLoader:      userLoader,
+        spaceLoader:     spaceLoader,
+        templatesLoader: templatesLoader,
+        mailer:          mailer,
+        receiptsRepo:    receiptsRepo,
     }
 }
 
@@ -49,11 +49,10 @@ func (recipe UAARecipe) Dispatch(clientID string, guid TypedGUID, options Option
         return responses, err
     }
 
-    subjectTemplate := recipe.subjectTemplate(options.Subject)
-    textTemplate := recipe.textTemplate(guid)
-    htmlTemplate := recipe.htmlTemplate(guid)
+    subjectSuffix := recipe.subjectSuffix(options.Subject)
+    contentSuffix := recipe.contentSuffix(guid)
 
-    templates, err := recipe.templateLoader.LoadNamedTemplatesWithClientAndKind(subjectTemplate, textTemplate, htmlTemplate, clientID, options.KindID)
+    templates, err := recipe.templatesLoader.LoadTemplates(subjectSuffix, contentSuffix, clientID, options.KindID)
     if err != nil {
         return responses, TemplateLoadError("An email template could not be loaded")
     }
@@ -78,23 +77,16 @@ func (recipe UAARecipe) Trim(responses []byte) []byte {
     return t.TrimFields(responses, EmailFieldName)
 }
 
-func (recipe UAARecipe) subjectTemplate(subject string) string {
+func (recipe UAARecipe) subjectSuffix(subject string) string {
     if subject == "" {
-        return SubjectMissingTemplateName
+        return SubjectMissingSuffix
     }
-    return SubjectProvidedTemplateName
+    return SubjectProvidedSuffix
 }
 
-func (recipe UAARecipe) textTemplate(guid TypedGUID) string {
+func (recipe UAARecipe) contentSuffix(guid TypedGUID) string {
     if guid.BelongsToSpace() {
-        return SpaceTextTemplateName
+        return SpaceContentSuffix
     }
-    return UserTextTemplateName
-}
-
-func (recipe UAARecipe) htmlTemplate(guid TypedGUID) string {
-    if guid.BelongsToSpace() {
-        return SpaceHTMLTemplateName
-    }
-    return UserHTMLTemplateName
+    return UserContentSuffix
 }

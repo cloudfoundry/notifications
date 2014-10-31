@@ -22,12 +22,12 @@ var _ = Describe("Recipes", func() {
             var options postal.Options
             var clientID string
             var emailID postal.EmailID
-            var fakeTemplateLoader fakes.FakeTemplateLoader
+            var fakeTemplatesLoader fakes.FakeTemplatesLoader
 
             BeforeEach(func() {
                 fakeMailer = fakes.NewFakeMailer()
-                fakeTemplateLoader = fakes.FakeTemplateLoader{}
-                emailRecipe = postal.NewEmailRecipe(fakeMailer, &fakeTemplateLoader)
+                fakeTemplatesLoader = fakes.FakeTemplatesLoader{}
+                emailRecipe = postal.NewEmailRecipe(fakeMailer, &fakeTemplatesLoader)
 
                 clientID = "raptors-123"
                 emailID = postal.NewEmailID()
@@ -39,7 +39,7 @@ var _ = Describe("Recipes", func() {
 
                 fakeDBConn = &fakes.FakeDBConn{}
 
-                fakeTemplateLoader.Templates = postal.Templates{
+                fakeTemplatesLoader.Templates = postal.Templates{
                     Subject: "the subject",
                     Text:    "the text",
                     HTML:    "email template",
@@ -54,7 +54,7 @@ var _ = Describe("Recipes", func() {
                 Expect(len(fakeMailer.DeliverArguments)).To(Equal(7))
 
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(fakeDBConn))
-                Expect(fakeMailer.DeliverArguments).To(ContainElement(fakeTemplateLoader.Templates))
+                Expect(fakeMailer.DeliverArguments).To(ContainElement(fakeTemplatesLoader.Templates))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(users))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(options))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{}))

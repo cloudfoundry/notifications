@@ -9,11 +9,10 @@ import (
 )
 
 const (
-    EmailFieldName        = "email"
-    RecipientsFieldName   = "recipient"
-    EmailTextTemplateName = "email_body.text"
-    EmailHTMLTemplateName = "email_body.html"
-    EmptyIDForNonUser     = ""
+    EmailFieldName      = "email"
+    RecipientsFieldName = "recipient"
+    EmptyIDForNonUser   = ""
+    EmailSuffix         = "email_body"
 )
 
 type MailRecipeInterface interface {
@@ -22,14 +21,14 @@ type MailRecipeInterface interface {
 }
 
 type EmailRecipe struct {
-    mailer         MailerInterface
-    templateLoader TemplateLoaderInterface
+    mailer          MailerInterface
+    templatesLoader TemplatesLoaderInterface
 }
 
-func NewEmailRecipe(mailer MailerInterface, templateLoader TemplateLoaderInterface) EmailRecipe {
+func NewEmailRecipe(mailer MailerInterface, templatesLoader TemplatesLoaderInterface) EmailRecipe {
     return EmailRecipe{
-        mailer:         mailer,
-        templateLoader: templateLoader,
+        mailer:          mailer,
+        templatesLoader: templatesLoader,
     }
 }
 
@@ -38,8 +37,9 @@ func (recipe EmailRecipe) Dispatch(clientID string, guid TypedGUID,
 
     users := map[string]uaa.User{EmptyIDForNonUser: uaa.User{Emails: []string{options.To}}}
 
-    subjectTemplate := recipe.determineSubjectTemplate(options.Subject)
-    templates, err := recipe.templateLoader.LoadNamedTemplates(subjectTemplate, EmailTextTemplateName, EmailHTMLTemplateName)
+    subjectSuffix := recipe.subjectSuffix(options.Subject)
+
+    templates, err := recipe.templatesLoader.LoadTemplates(subjectSuffix, EmailSuffix, clientID, options.KindID)
 
     if err != nil {
         return []Response{}, TemplateLoadError("An email template could not be loaded")
@@ -80,4 +80,11 @@ func (t Trimmer) TrimFields(responses []byte, field string) []byte {
     }
 
     return responses
+}
+
+func (recipe EmailRecipe) subjectSuffix(subject string) string {
+    if subject == "" {
+        return SubjectMissingSuffix
+    }
+    return SubjectProvidedSuffix
 }

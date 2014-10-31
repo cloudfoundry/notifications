@@ -22,7 +22,7 @@ var _ = Describe("Send a notification to user with overridden template", func() 
         TruncateTables()
     })
 
-    XIt("send a notification to user", func() {
+    It("send a notification to user", func() {
         // Boot Fake SMTP Server
         smtpServer := servers.NewSMTP()
         smtpServer.Boot()
@@ -45,18 +45,18 @@ var _ = Describe("Send a notification to user with overridden template", func() 
             panic(err)
         }
 
-        text := "text"
-        html := "<p>html</p>"
+        textTemplate := "text"
+        htmlTemplate := "<p>html</p>"
         t := SendOverriddenNotificationToUser{}
-        t.OverrideClientUserTemplate(notificationsServer, clientToken, text, html)
-        t.SendNotificationToUser(notificationsServer, clientToken, smtpServer, text, html)
+        t.OverrideClientUserTemplate(notificationsServer, clientToken, textTemplate, htmlTemplate)
+        t.SendNotificationToUser(notificationsServer, clientToken, smtpServer, textTemplate, htmlTemplate)
     })
 })
 
 type SendOverriddenNotificationToUser struct{}
 
-func (t SendOverriddenNotificationToUser) OverrideClientUserTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, text, html string) {
-    jsonBody := []byte(fmt.Sprintf(`{"text":"%s", "html":"%s"}`, text, html))
+func (t SendOverriddenNotificationToUser) OverrideClientUserTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, textTemplate, htmlTemplate string) {
+    jsonBody := []byte(fmt.Sprintf(`{"text":"%s", "html":"%s"}`, textTemplate, htmlTemplate))
     request, err := http.NewRequest("PUT", notificationsServer.TemplatePath("notifications-sender.user_body"), bytes.NewBuffer(jsonBody))
     if err != nil {
         panic(err)
@@ -79,6 +79,7 @@ func (t SendOverriddenNotificationToUser) SendNotificationToUser(notificationsSe
     body, err := json.Marshal(map[string]string{
         "kind_id": "acceptance-test",
         "html":    "<p>this is an acceptance%40test</p>",
+        "text":    "the acceptance text",
         "subject": "my-special-subject",
     })
     if err != nil {
@@ -128,6 +129,7 @@ func (t SendOverriddenNotificationToUser) SendNotificationToUser(notificationsSe
     Expect(delivery.Recipients).To(Equal([]string{"user-123@example.com"}))
 
     data := strings.Split(string(delivery.Data), "\n")
+
     Expect(data).To(ContainElement(text))
-    Expect(data).To(ContainElement(html))
+    Expect(data).To(ContainElement("        <p>html</p>"))
 }

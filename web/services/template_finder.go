@@ -33,10 +33,12 @@ func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, rootPath str
 
 func (finder TemplateFinder) Find(templateName string) (models.Template, error) {
     var template models.Template
+    var templatesToSearchFor []string
     var err error
 
-    client, notificationType := parseTemplateName(templateName)
-    templatesToSearchFor := []string{templateName, client + "." + notificationType, notificationType}
+    client, notificationType, parsingSubjectTemplate := parseTemplateName(templateName)
+    templatesToSearchFor = []string{templateName, client + "." + notificationType, notificationType}
+
     connection := finder.database.Connection()
 
     for _, templateName := range templatesToSearchFor {
@@ -47,7 +49,11 @@ func (finder TemplateFinder) Find(templateName string) (models.Template, error) 
     }
 
     if (err == models.ErrRecordNotFound{}) {
-        return finder.DefaultTemplate(notificationType)
+        if parsingSubjectTemplate {
+            return finder.DefaultSubjectTemplate(notificationType)
+        } else {
+            return finder.DefaultTemplate(notificationType)
+        }
     }
 
     return template, err
@@ -69,7 +75,17 @@ func (finder TemplateFinder) DefaultTemplate(notificationType string) (models.Te
     return models.Template{Text: text, HTML: html}, nil
 }
 
-func parseTemplateName(templateName string) (string, string) {
+func (finder TemplateFinder) DefaultSubjectTemplate(notificationType string) (models.Template, error) {
+    textPath := finder.RootPath + "/templates/" + notificationType
+    text, err := finder.fileSystem.Read(textPath)
+    if err != nil {
+        return models.Template{}, models.ErrRecordNotFound{}
+    }
+    return models.Template{Text: text, HTML: ""}, nil
+}
+
+func parseTemplateName(templateName string) (string, string, bool) {
+    parsingSubjectTemplate := false
     client := ""
     notificationType := ""
 
@@ -77,6 +93,10 @@ func parseTemplateName(templateName string) (string, string) {
     numberOfItems := len(items)
 
     switch numberOfItems {
+    case 4:
+        parsingSubjectTemplate = true
+        client = items[0]
+        notificationType = items[2] + "." + items[3]
     case 3:
         client = items[0]
         notificationType = items[2]
@@ -86,5 +106,5 @@ func parseTemplateName(templateName string) (string, string) {
     case 1:
         notificationType = items[0]
     }
-    return client, notificationType
+    return client, notificationType, parsingSubjectTemplate
 }
