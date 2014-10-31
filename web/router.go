@@ -45,6 +45,7 @@ func NewRouter(mother MotherInterface) Router {
     notificationPreferencesWriteAuthenticator := mother.Authenticator("notification_preferences.write")
     notificationPreferencesAdminAuthenticator := mother.Authenticator("notification_preferences.admin")
     emailsWriteAuthenticator := mother.Authenticator("emails.write")
+    notificationsTemplateAdminAuthenticator := mother.Authenticator("notification_templates.admin")
     database := mother.Database()
 
     cors := mother.CORS()
@@ -62,8 +63,8 @@ func NewRouter(mother MotherInterface) Router {
             "GET /user_preferences/{guid}":     stack.NewStack(handlers.NewGetPreferencesForUser(preferencesFinder, errorWriter)).Use(logging, cors, notificationPreferencesAdminAuthenticator),
             "PATCH /user_preferences":          stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter, database)).Use(logging, cors, notificationPreferencesWriteAuthenticator),
             "PATCH /user_preferences/{guid}":   stack.NewStack(handlers.NewUpdateSpecificUserPreferences(preferenceUpdater, errorWriter, database)).Use(logging, cors, notificationPreferencesAdminAuthenticator),
-            "GET /templates/{templateName}":    stack.NewStack(handlers.NewGetTemplates(templateFinder, errorWriter)).Use(logging),
-            "PUT /templates/{templateName}":    stack.NewStack(handlers.NewSetTemplates(templateUpdater, errorWriter)).Use(logging),
+            "GET /templates/{templateName}":    stack.NewStack(handlers.NewGetTemplates(templateFinder, errorWriter)).Use(logging, notificationsTemplateAdminAuthenticator),
+            "PUT /templates/{templateName}":    stack.NewStack(handlers.NewSetTemplates(templateUpdater, errorWriter)).Use(logging, notificationsTemplateAdminAuthenticator),
             "DELETE /templates/{templateName}": stack.NewStack(handlers.NewUnsetTemplates(templateDeleter, errorWriter)).Use(logging),
         },
     }

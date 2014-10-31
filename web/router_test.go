@@ -119,11 +119,19 @@ var _ = Describe("Router", func() {
     It("routes GET /templates/{templateName}", func() {
         s := router.Routes().Get("GET /templates/{templateName}").GetHandler().(stack.Stack)
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetTemplates{}))
+        Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+
+        authenticator := s.Middleware[1].(middleware.Authenticator)
+        Expect(authenticator.Scopes).To(Equal([]string{"notification_templates.admin"}))
     })
 
     It("routes PUT /templates/{templateName}", func() {
         s := router.Routes().Get("PUT /templates/{templateName}").GetHandler().(stack.Stack)
         Expect(s.Handler).To(BeAssignableToTypeOf(handlers.SetTemplates{}))
+        Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+
+        authenticator := s.Middleware[1].(middleware.Authenticator)
+        Expect(authenticator.Scopes).To(Equal([]string{"notification_templates.admin"}))
     })
 
     It("routes DELETE /templates/{templateName}", func() {
