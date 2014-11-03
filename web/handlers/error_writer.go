@@ -33,6 +33,8 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
         writer.write(w, http.StatusBadGateway, []string{err.Error()})
     case postal.TemplateLoadError:
         writer.write(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
+    case params.TemplateUpdateError:
+        writer.write(w, http.StatusInternalServerError, []string{err.Error()})
     case params.ParseError:
         writer.write(w, http.StatusBadRequest, []string{err.Error()})
     case params.ValidationError:

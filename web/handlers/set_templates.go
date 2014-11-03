@@ -1,12 +1,10 @@
 package handlers
 
 import (
-    "encoding/json"
-    "io/ioutil"
     "net/http"
     "strings"
 
-    "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/web/params"
     "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/ryanmoran/stack"
 )
@@ -24,53 +22,25 @@ func NewSetTemplates(updater services.TemplateUpdaterInterface, errorWriter Erro
 }
 
 func (handler SetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-    var template models.Template
-
     templateName := strings.Split(req.URL.String(), "/templates/")[1]
 
-    respBody, err := ioutil.ReadAll(req.Body)
+    templateParams, err := params.NewTemplate(templateName, req.Body)
     if err != nil {
-        panic(err)
-    }
-
-    valid, err := handler.requestIsValid(respBody)
-    if err != nil {
-        w.WriteHeader(http.StatusBadRequest)
+        handler.ErrorWriter.Write(w, err)
         return
     }
 
-    if !valid {
-        w.WriteHeader(422)
+    err = templateParams.Validate()
+    if err != nil {
+        handler.ErrorWriter.Write(w, err)
         return
     }
 
-    err = json.Unmarshal(respBody, &template)
+    err = handler.updater.Update(templateParams.ToModel())
     if err != nil {
-        w.WriteHeader(http.StatusBadRequest)
-        return
-    }
-
-    template.Name = templateName
-    template.Overridden = true
-    err = handler.updater.Update(template)
-    if err != nil {
-        w.WriteHeader(http.StatusInternalServerError)
+        handler.ErrorWriter.Write(w, params.TemplateUpdateError{})
         return
     }
 
     w.WriteHeader(http.StatusNoContent)
-}
-
-func (handler SetTemplates) requestIsValid(body []byte) (bool, error) {
-    var templateMap map[string]string
-
-    err := json.Unmarshal(body, &templateMap)
-    if err != nil {
-        return false, err
-    }
-
-    _, textExists := templateMap["text"]
-    _, htmlExists := templateMap["html"]
-
-    return (textExists && htmlExists), nil
 }
