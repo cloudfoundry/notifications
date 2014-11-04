@@ -49,6 +49,11 @@ var _ = Describe("UAA Recipe", func() {
             cf.CloudControllerUser{Guid: "user-456"},
         }
 
+        fakeCC.UsersByOrganizationGuid["org-001"] = []cf.CloudControllerUser{
+            cf.CloudControllerUser{Guid: "user-123"},
+            cf.CloudControllerUser{Guid: "user-456"},
+        }
+
         fakeCC.Spaces = map[string]cf.CloudControllerSpace{
             "space-001": cf.CloudControllerSpace{
                 Name:             "production",
@@ -59,6 +64,7 @@ var _ = Describe("UAA Recipe", func() {
 
         fakeCC.Orgs = map[string]cf.CloudControllerOrganization{
             "org-001": cf.CloudControllerOrganization{
+                GUID: "org-001",
                 Name: "pivotaltracker",
             },
         }
@@ -201,7 +207,7 @@ var _ = Describe("UAA Recipe", func() {
                     Expect(lines).To(ContainElement("CloudController user guid: user-456"))
                 })
 
-                It("calls mailer.Deliver with the correct arguments", func() {
+                It("calls mailer.Deliver with the correct arguments for a space", func() {
                     templates := postal.Templates{
                         Subject: "default-missing-subject",
                         Text:    "default-space-text",
@@ -227,17 +233,57 @@ var _ = Describe("UAA Recipe", func() {
 
                     users := map[string]uaa.User{"user-123": user123, "user-456": user456}
 
+                    Expect(fakeTemplatesLoader.ContentSuffix).To(Equal("space_body"))
                     Expect(mailer.DeliverArguments).To(ContainElement(conn))
                     Expect(mailer.DeliverArguments).To(ContainElement(templates))
                     Expect(mailer.DeliverArguments).To(ContainElement(users))
                     Expect(mailer.DeliverArguments).To(ContainElement(options))
                     Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{
+                        GUID: "org-001",
                         Name: "pivotaltracker",
                     }))
                     Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{
                         GUID:             "space-001",
                         Name:             "production",
                         OrganizationGUID: "org-001",
+                    }))
+                    Expect(mailer.DeliverArguments).To(ContainElement(clientID))
+                })
+
+                It("calls mailer.Deliver with the correct arguments for an organization", func() {
+                    templates := postal.Templates{
+                        Subject: "default-missing-subject",
+                        Text:    "default-org-text",
+                        HTML:    "default-org-html",
+                    }
+
+                    fakeTemplatesLoader.Templates = templates
+
+                    _, err := uaaRecipe.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                    if err != nil {
+                        panic(err)
+                    }
+
+                    user123 := uaa.User{
+                        ID:     "user-123",
+                        Emails: []string{"user-123@example.com"},
+                    }
+
+                    user456 := uaa.User{
+                        ID:     "user-456",
+                        Emails: []string{"user-456@example.com"},
+                    }
+
+                    users := map[string]uaa.User{"user-123": user123, "user-456": user456}
+
+                    Expect(fakeTemplatesLoader.ContentSuffix).To(Equal("organization_body"))
+                    Expect(mailer.DeliverArguments).To(ContainElement(conn))
+                    Expect(mailer.DeliverArguments).To(ContainElement(templates))
+                    Expect(mailer.DeliverArguments).To(ContainElement(users))
+                    Expect(mailer.DeliverArguments).To(ContainElement(options))
+                    Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{
+                        GUID: "org-001",
+                        Name: "pivotaltracker",
                     }))
                     Expect(mailer.DeliverArguments).To(ContainElement(clientID))
                 })
