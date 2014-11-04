@@ -19,7 +19,7 @@ var _ = Describe("NotifySpace", func() {
         var handler handlers.NotifySpace
         var writer *httptest.ResponseRecorder
         var request *http.Request
-        var fakeNotify *FakeNotify
+        var fakeNotify *fakes.FakeNotify
         var context stack.Context
 
         BeforeEach(func() {
@@ -32,7 +32,7 @@ var _ = Describe("NotifySpace", func() {
             }
             context = stack.NewContext()
 
-            fakeNotify = &FakeNotify{}
+            fakeNotify = &fakes.FakeNotify{}
             fakeDatabase := fakes.NewDatabase()
             handler = handlers.NewNotifySpace(fakeNotify, nil, nil, fakeDatabase)
         })

@@ -20,7 +20,7 @@ var _ = Describe("NotifyUser", func() {
         var writer *httptest.ResponseRecorder
         var request *http.Request
         var errorWriter *fakes.FakeErrorWriter
-        var fakeNotify *FakeNotify
+        var fakeNotify *fakes.FakeNotify
         var context stack.Context
 
         BeforeEach(func() {
@@ -33,7 +33,7 @@ var _ = Describe("NotifyUser", func() {
             }
             context = stack.NewContext()
 
-            fakeNotify = &FakeNotify{}
+            fakeNotify = &fakes.FakeNotify{}
             fakeDatabase := fakes.NewDatabase()
             handler = handlers.NewNotifyUser(fakeNotify, errorWriter, nil, fakeDatabase)
         })

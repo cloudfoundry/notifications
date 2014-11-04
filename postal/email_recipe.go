@@ -14,7 +14,7 @@ const (
     EmptyIDForNonUser   = ""
 )
 
-type MailRecipeInterface interface {
+type RecipeInterface interface {
     Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error)
     Trim([]byte) []byte
 }

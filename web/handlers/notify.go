@@ -13,7 +13,7 @@ import (
 )
 
 type NotifyInterface interface {
-    Execute(models.ConnectionInterface, *http.Request, stack.Context, postal.TypedGUID, postal.MailRecipeInterface) ([]byte, error)
+    Execute(models.ConnectionInterface, *http.Request, stack.Context, postal.TypedGUID, postal.RecipeInterface) ([]byte, error)
 }
 
 type Notify struct {
@@ -29,7 +29,7 @@ func NewNotify(finder services.NotificationFinderInterface, registrar services.R
 }
 
 func (handler Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
-    guid postal.TypedGUID, mailRecipe postal.MailRecipeInterface) ([]byte, error) {
+    guid postal.TypedGUID, recipe postal.RecipeInterface) ([]byte, error) {
     parameters, err := params.NewNotify(req.Body)
     if err != nil {
         return []byte{}, err
@@ -64,7 +64,7 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 
     var responses []postal.Response
 
-    responses, err = mailRecipe.Dispatch(clientID, guid, parameters.ToOptions(client, kind), connection)
+    responses, err = recipe.Dispatch(clientID, guid, parameters.ToOptions(client, kind), connection)
     if err != nil {
         return []byte{}, err
     }
@@ -74,7 +74,7 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
         panic(err)
     }
 
-    output = mailRecipe.Trim(output)
+    output = recipe.Trim(output)
 
     return output, nil
 }

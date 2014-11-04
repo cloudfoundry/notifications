@@ -42,7 +42,7 @@ func (mother *Mother) Queue() *gobble.Queue {
     return mother.queue
 }
 
-func (mother Mother) NewUAARecipe() postal.UAARecipe {
+func (mother Mother) UAARecipe() postal.UAARecipe {
     env := config.NewEnvironment()
     finder := mother.TemplateFinder()
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
@@ -63,7 +63,7 @@ func (mother Mother) FileSystem() services.FileSystemInterface {
     return postal.NewFileSystem()
 }
 
-func (mother Mother) EmailRecipe() postal.MailRecipeInterface {
+func (mother Mother) EmailRecipe() postal.EmailRecipe {
     return postal.NewEmailRecipe(mother.Mailer(), postal.NewTemplatesLoader(mother.TemplateFinder()))
 }
 

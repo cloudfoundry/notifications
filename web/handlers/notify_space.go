@@ -11,28 +11,24 @@ import (
 )
 
 type NotifySpace struct {
-    errorWriter   ErrorWriterInterface
-    notify        NotifyInterface
-    recipeBuilder RecipeBuilderInterface
-    database      models.DatabaseInterface
+    errorWriter ErrorWriterInterface
+    notify      NotifyInterface
+    recipe      postal.RecipeInterface
+    database    models.DatabaseInterface
 }
 
-type RecipeBuilderInterface interface {
-    NewUAARecipe() postal.UAARecipe
-}
-
-func NewNotifySpace(notify NotifyInterface, errorWriter ErrorWriterInterface, recipeBuilder RecipeBuilderInterface, database models.DatabaseInterface) NotifySpace {
+func NewNotifySpace(notify NotifyInterface, errorWriter ErrorWriterInterface, recipe postal.RecipeInterface, database models.DatabaseInterface) NotifySpace {
     return NotifySpace{
-        errorWriter:   errorWriter,
-        notify:        notify,
-        recipeBuilder: recipeBuilder,
-        database:      database,
+        errorWriter: errorWriter,
+        notify:      notify,
+        recipe:      recipe,
+        database:    database,
     }
 }
 
 func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
     connection := handler.database.Connection()
-    err := handler.Execute(w, req, connection, context, handler.recipeBuilder.NewUAARecipe())
+    err := handler.Execute(w, req, connection, context, handler.recipe)
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
@@ -44,7 +40,7 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request, c
 }
 
 func (handler NotifySpace) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface,
-    context stack.Context, recipe postal.UAARecipe) error {
+    context stack.Context, recipe postal.RecipeInterface) error {
 
     spaceGUID := postal.SpaceGUID(strings.TrimPrefix(req.URL.Path, "/spaces/"))
 

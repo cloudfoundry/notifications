@@ -14,7 +14,8 @@ import (
 
 type MotherInterface interface {
     Registrar() services.Registrar
-    EmailRecipe() postal.MailRecipeInterface
+    EmailRecipe() postal.EmailRecipe
+    UAARecipe() postal.UAARecipe
     NotificationFinder() services.NotificationFinder
     PreferencesFinder() *services.PreferencesFinder
     PreferenceUpdater() services.PreferenceUpdater
@@ -24,7 +25,6 @@ type MotherInterface interface {
     ErrorWriter() handlers.ErrorWriter
     Authenticator(...string) middleware.Authenticator
     CORS() middleware.CORS
-    handlers.RecipeBuilderInterface
 }
 
 type Router struct {
@@ -34,6 +34,7 @@ type Router struct {
 func NewRouter(mother MotherInterface) Router {
     registrar := mother.Registrar()
     emailRecipe := mother.EmailRecipe()
+    uaaRecipe := mother.UAARecipe()
     notify := handlers.NewNotify(mother.NotificationFinder(), registrar)
     preferencesFinder := mother.PreferencesFinder()
     preferenceUpdater := mother.PreferenceUpdater()
@@ -53,9 +54,9 @@ func NewRouter(mother MotherInterface) Router {
     return Router{
         stacks: map[string]stack.Stack{
             "GET /info":                        stack.NewStack(handlers.NewGetInfo()).Use(logging),
-            "POST /users/{guid}":               stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, mother, database)).Use(logging, notificationsWriteAuthenticator),
-            "POST /spaces/{guid}":              stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, mother, database)).Use(logging, notificationsWriteAuthenticator),
-            "POST /organizations/{guid}":       stack.NewStack(handlers.NewNotifyOrganization(notify, errorWriter, mother, database)).Use(logging, notificationsWriteAuthenticator),
+            "POST /users/{guid}":               stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, uaaRecipe, database)).Use(logging, notificationsWriteAuthenticator),
+            "POST /spaces/{guid}":              stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, uaaRecipe, database)).Use(logging, notificationsWriteAuthenticator),
+            "POST /organizations/{guid}":       stack.NewStack(handlers.NewNotifyOrganization(notify, errorWriter, uaaRecipe, database)).Use(logging, notificationsWriteAuthenticator),
             "POST /emails":                     stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailRecipe, database)).Use(logging, emailsWriteAuthenticator),
             "PUT /registration":                stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter, database)).Use(logging, notificationsWriteAuthenticator),
             "OPTIONS /user_preferences":        stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),

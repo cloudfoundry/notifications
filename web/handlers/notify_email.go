@@ -12,11 +12,11 @@ import (
 type NotifyEmail struct {
     errorWriter ErrorWriterInterface
     notify      NotifyInterface
-    recipe      postal.MailRecipeInterface
+    recipe      postal.RecipeInterface
     database    models.DatabaseInterface
 }
 
-func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, recipe postal.MailRecipeInterface, database models.DatabaseInterface) NotifyEmail {
+func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, recipe postal.RecipeInterface, database models.DatabaseInterface) NotifyEmail {
     return NotifyEmail{
         errorWriter: errorWriter,
         notify:      notify,
