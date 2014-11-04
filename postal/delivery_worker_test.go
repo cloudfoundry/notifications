@@ -117,19 +117,11 @@ var _ = Describe("DeliveryWorker", func() {
             Expect(buffer.String()).To(ContainSubstring("Attempting to deliver message to fake-user@example.com"))
         })
 
-        It("logs the message envelope", func() {
+        It("logs successful delivery", func() {
             worker.Deliver(&job)
 
-            data := []string{
-                "From: from@email.com",
-                "To: fake-user@example.com",
-                "Subject: the subject",
-                `body content`,
-            }
             results := strings.Split(buffer.String(), "\n")
-            for _, item := range data {
-                Expect(results).To(ContainElement(item))
-            }
+            Expect(results).To(ContainElement("Message was successfully sent to fake-user@example.com"))
         })
 
         It("ensures message delivery", func() {

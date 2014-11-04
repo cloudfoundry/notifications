@@ -30,7 +30,7 @@ func (fake *FakeUnsubscribesRepo) Upsert(conn models.ConnectionInterface, unsubs
 func (fake *FakeUnsubscribesRepo) Find(conn models.ConnectionInterface, clientID string, kindID string, userID string) (models.Unsubscribe, error) {
     key := clientID + kindID + userID
     if unsubscribe, ok := fake.Unsubscribes[key]; ok {
-        return unsubscribe, models.ErrDuplicateRecord{}
+        return unsubscribe, nil
     }
     return models.Unsubscribe{}, models.ErrRecordNotFound{}
 }

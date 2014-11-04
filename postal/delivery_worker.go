@@ -113,9 +113,12 @@ func (worker DeliveryWorker) ShouldDeliver(delivery Delivery) bool {
         if (err == models.ErrRecordNotFound{}) {
             return len(delivery.User.Emails) > 0 && strings.Contains(delivery.User.Emails[0], "@")
         }
-        worker.logger.Printf("Not delivering because %s has unsubscribed", delivery.User.Emails[0])
+
+        worker.logger.Printf("Not delivering because: %+v", err)
         return false
     }
+
+    worker.logger.Printf("Not delivering because %s has unsubscribed", delivery.User.Emails[0])
     return false
 }
 
@@ -159,7 +162,7 @@ func (worker DeliveryWorker) SendMail(message mail.Message) string {
         return StatusFailed
     }
 
-    worker.logger.Print(message.Data())
+    worker.logger.Printf("Message was successfully sent to %s", message.To)
 
     return StatusDelivered
 }
