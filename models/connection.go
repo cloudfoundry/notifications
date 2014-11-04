@@ -10,7 +10,6 @@ type ConnectionInterface interface {
     Delete(...interface{}) (int64, error)
     Insert(...interface{}) error
     Select(interface{}, string, ...interface{}) ([]interface{}, error)
-    SelectInt(string, ...interface{}) (int64, error)
     SelectOne(interface{}, string, ...interface{}) error
     Update(...interface{}) (int64, error)
     Exec(string, ...interface{}) (sql.Result, error)

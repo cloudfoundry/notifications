@@ -23,7 +23,6 @@ var _ = Describe("Receipts Repo", func() {
         migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
         db := models.NewDatabase(env.DatabaseURL, migrationsPath)
         conn = db.Connection().(*models.Connection)
-
     })
 
     Describe("Create", func() {
