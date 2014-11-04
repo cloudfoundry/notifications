@@ -23,6 +23,7 @@ type Response struct {
 
 type TypedGUID interface {
     BelongsToSpace() bool
+    BelongsToOrganization() bool
     IsTypeEmail() bool
     String() string
 }
@@ -34,6 +35,10 @@ func NewEmailID() EmailID {
 }
 
 func (guid EmailID) BelongsToSpace() bool {
+    return false
+}
+
+func (guid EmailID) BelongsToOrganization() bool {
     return false
 }
 
@@ -49,6 +54,10 @@ type SpaceGUID string
 
 func (guid SpaceGUID) BelongsToSpace() bool {
     return true
+}
+
+func (guid SpaceGUID) BelongsToOrganization() bool {
+    return false
 }
 
 func (guid SpaceGUID) IsTypeEmail() bool {
@@ -69,11 +78,37 @@ func (guid UserGUID) BelongsToSpace() bool {
     return false
 }
 
+func (guid UserGUID) BelongsToOrganization() bool {
+    return false
+}
+
 func (guid UserGUID) IsTypeEmail() bool {
     return false
 }
 
 func (guid UserGUID) String() string {
+    return string(guid)
+}
+
+type OrganizationGUID string
+
+func NewOrganizationGUID() OrganizationGUID {
+    return OrganizationGUID("")
+}
+
+func (guid OrganizationGUID) BelongsToSpace() bool {
+    return false
+}
+
+func (guid OrganizationGUID) BelongsToOrganization() bool {
+    return true
+}
+
+func (guid OrganizationGUID) IsTypeEmail() bool {
+    return false
+}
+
+func (guid OrganizationGUID) String() string {
     return string(guid)
 }
 

@@ -11,9 +11,9 @@ import (
     . "github.com/onsi/gomega"
 )
 
-var _ = Describe("SpaceLoader", func() {
+var _ = Describe("SpaceAndOrgLoader", func() {
     Describe("Load", func() {
-        var loader postal.SpaceLoader
+        var loader postal.SpaceAndOrgLoader
         var token string
         var fakeCC *fakes.FakeCloudController
 
@@ -30,9 +30,12 @@ var _ = Describe("SpaceLoader", func() {
                 "org-001": cf.CloudControllerOrganization{
                     GUID: "org-001",
                     Name: "org-name",
+                }, "org-123": cf.CloudControllerOrganization{
+                    GUID: "org-123",
+                    Name: "org-piggies",
                 },
             }
-            loader = postal.NewSpaceLoader(fakeCC)
+            loader = postal.NewSpaceAndOrgLoader(fakeCC)
         })
 
         Context("when GUID represents a space", func() {
@@ -72,7 +75,7 @@ var _ = Describe("SpaceLoader", func() {
                 })
             })
 
-            Context("when LoadSpace returns any other type of error", func() {
+            Context("when Load returns any other type of error", func() {
                 It("returns a CCDownError when the error is cf.Failure", func() {
                     failure := cf.NewFailure(401, "BOOM!")
                     fakeCC.LoadSpaceError = failure
@@ -89,7 +92,7 @@ var _ = Describe("SpaceLoader", func() {
                 })
             })
 
-            Context("when LoadOrganization returns any other type of error", func() {
+            Context("when Load returns any other type of error", func() {
                 It("returns a CCDownError", func() {
                     failure := cf.NewFailure(401, "BOOM!")
                     fakeCC.LoadOrganizationError = failure
@@ -104,6 +107,21 @@ var _ = Describe("SpaceLoader", func() {
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
+            })
+        })
+
+        Context("when GUID represents an org", func() {
+            It("returns the name of the org and an empty value for space", func() {
+                space, org, err := loader.Load(postal.OrganizationGUID("org-123"), token)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(space).To(Equal(cf.CloudControllerSpace{}))
+                Expect(org).To(Equal(cf.CloudControllerOrganization{
+                    GUID: "org-123",
+                    Name: "org-piggies",
+                }))
             })
         })
 

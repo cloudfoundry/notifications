@@ -39,6 +39,13 @@ var _ = Describe("UserLoader", func() {
                 cf.CloudControllerUser{Guid: "user-789"},
             }
 
+            fakeCC.UsersByOrganizationGuid["org-001"] = []cf.CloudControllerUser{
+                cf.CloudControllerUser{Guid: "user-123"},
+                cf.CloudControllerUser{Guid: "user-456"},
+                cf.CloudControllerUser{Guid: "user-789"},
+                cf.CloudControllerUser{Guid: "user-999"},
+            }
+
             fakeCC.Spaces = map[string]cf.CloudControllerSpace{
                 "space-001": cf.CloudControllerSpace{
                     Name:             "production",
@@ -66,6 +73,10 @@ var _ = Describe("UserLoader", func() {
                         Emails: []string{"user-456@example.com"},
                         ID:     "user-456",
                     },
+                    "user-999": uaa.User{
+                        Emails: []string{"user-999@example.com"},
+                        ID:     "user-999",
+                    },
                 },
             }
 
@@ -74,7 +85,7 @@ var _ = Describe("UserLoader", func() {
         })
 
         Context("UAA returns a collection of users", func() {
-            It("returns a map of users from GUID to uaa.User", func() {
+            It("returns a map of users from GUID to uaa.User using a space guid", func() {
                 users, err := loader.Load(postal.SpaceGUID("space-001"), token)
                 if err != nil {
                     panic(err)
@@ -89,6 +100,31 @@ var _ = Describe("UserLoader", func() {
                 user789, ok := users["user-789"]
                 Expect(ok).To(BeTrue())
                 Expect(user789).To(Equal(uaa.User{}))
+            })
+
+            It("returns a map of users from GUID to uaa.User using an organization guid", func() {
+                users, err := loader.Load(postal.OrganizationGUID("org-001"), token)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(len(users)).To(Equal(4))
+
+                user123 := users["user-123"]
+                Expect(user123.Emails[0]).To(Equal("user-123@example.com"))
+                Expect(user123.ID).To(Equal("user-123"))
+
+                user456 := users["user-456"]
+                Expect(user456.Emails[0]).To(Equal("user-456@example.com"))
+                Expect(user456.ID).To(Equal("user-456"))
+
+                user789, ok := users["user-789"]
+                Expect(ok).To(BeTrue())
+                Expect(user789).To(Equal(uaa.User{}))
+
+                user999 := users["user-999"]
+                Expect(user999.Emails[0]).To(Equal("user-999@example.com"))
+                Expect(user999.ID).To(Equal("user-999"))
             })
         })
 

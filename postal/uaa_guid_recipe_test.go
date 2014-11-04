@@ -29,7 +29,7 @@ var _ = Describe("UAA Recipe", func() {
     var options postal.Options
     var tokenLoader postal.TokenLoader
     var userLoader postal.UserLoader
-    var spaceLoader postal.SpaceLoader
+    var spaceAndOrgLoader postal.SpaceAndOrgLoader
     var fakeTemplatesLoader *fakes.FakeTemplatesLoader
     var mailer *fakes.FakeMailer
     var env config.Environment
@@ -102,10 +102,10 @@ var _ = Describe("UAA Recipe", func() {
 
         tokenLoader = postal.NewTokenLoader(&fakeUAA)
         userLoader = postal.NewUserLoader(&fakeUAA, logger, fakeCC)
-        spaceLoader = postal.NewSpaceLoader(fakeCC)
+        spaceAndOrgLoader = postal.NewSpaceAndOrgLoader(fakeCC)
         fakeTemplatesLoader = &fakes.FakeTemplatesLoader{}
 
-        uaaRecipe = postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, fakeTemplatesLoader, mailer, &fakeReceiptsRepo)
+        uaaRecipe = postal.NewUAARecipe(tokenLoader, userLoader, spaceAndOrgLoader, fakeTemplatesLoader, mailer, &fakeReceiptsRepo)
     })
 
     Describe("Dispatch", func() {

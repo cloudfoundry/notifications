@@ -32,11 +32,14 @@ func (loader UserLoader) Load(guid TypedGUID, token string) (map[string]uaa.User
 
     if guid.BelongsToSpace() {
         ccUsers, err = loader.cloudController.GetUsersBySpaceGuid(guid.String(), token)
-        if err != nil {
-            return users, CCDownError("Cloud Controller is unavailable")
-        }
+    } else if guid.BelongsToOrganization() {
+        ccUsers, err = loader.cloudController.GetUsersByOrgGuid(guid.String(), token)
     } else {
         ccUsers = []cf.CloudControllerUser{{Guid: guid.String()}}
+    }
+
+    if err != nil {
+        return users, CCDownError("Cloud Controller is unavailable")
     }
 
     for _, ccUser := range ccUsers {

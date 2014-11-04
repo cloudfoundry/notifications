@@ -3,31 +3,32 @@ package postal
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 const (
-    UserContentSuffix     = "user_body"
-    SpaceContentSuffix    = "space_body"
-    SubjectProvidedSuffix = "subject.provided"
-    SubjectMissingSuffix  = "subject.missing"
+    UserContentSuffix         = "user_body"
+    OrganizationContentSuffix = "organization_body"
+    SpaceContentSuffix        = "space_body"
+    SubjectProvidedSuffix     = "subject.provided"
+    SubjectMissingSuffix      = "subject.missing"
 )
 
 type UAARecipe struct {
-    tokenLoader     TokenLoader
-    userLoader      UserLoader
-    spaceLoader     SpaceLoader
-    templatesLoader TemplatesLoaderInterface
-    mailer          MailerInterface
-    receiptsRepo    models.ReceiptsRepoInterface
+    tokenLoader       TokenLoader
+    userLoader        UserLoader
+    spaceAndOrgLoader SpaceAndOrgLoader
+    templatesLoader   TemplatesLoaderInterface
+    mailer            MailerInterface
+    receiptsRepo      models.ReceiptsRepoInterface
 }
 
-func NewUAARecipe(tokenLoader TokenLoader, userLoader UserLoader, spaceLoader SpaceLoader,
+func NewUAARecipe(tokenLoader TokenLoader, userLoader UserLoader, spaceAndOrgLoader SpaceAndOrgLoader,
     templatesLoader TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UAARecipe {
 
     return UAARecipe{
-        tokenLoader:     tokenLoader,
-        userLoader:      userLoader,
-        spaceLoader:     spaceLoader,
-        templatesLoader: templatesLoader,
-        mailer:          mailer,
-        receiptsRepo:    receiptsRepo,
+        tokenLoader:       tokenLoader,
+        userLoader:        userLoader,
+        spaceAndOrgLoader: spaceAndOrgLoader,
+        templatesLoader:   templatesLoader,
+        mailer:            mailer,
+        receiptsRepo:      receiptsRepo,
     }
 }
 
@@ -39,7 +40,7 @@ func (recipe UAARecipe) Dispatch(clientID string, guid TypedGUID, options Option
         return responses, err
     }
 
-    space, organization, err := recipe.spaceLoader.Load(guid, token)
+    space, organization, err := recipe.spaceAndOrgLoader.Load(guid, token)
     if err != nil {
         return responses, err
     }
@@ -87,6 +88,8 @@ func (recipe UAARecipe) subjectSuffix(subject string) string {
 func (recipe UAARecipe) contentSuffix(guid TypedGUID) string {
     if guid.BelongsToSpace() {
         return SpaceContentSuffix
+    } else if guid.BelongsToOrganization() {
+        return OrganizationContentSuffix
     }
     return UserContentSuffix
 }

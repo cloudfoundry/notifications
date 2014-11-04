@@ -51,12 +51,12 @@ func (mother Mother) NewUAARecipe() postal.UAARecipe {
 
     tokenLoader := postal.NewTokenLoader(&uaaClient)
     userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
-    spaceLoader := postal.NewSpaceLoader(cloudController)
+    spaceAndOrgLoader := postal.NewSpaceAndOrgLoader(cloudController)
     templatesLoader := postal.NewTemplatesLoader(finder)
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewUAARecipe(tokenLoader, userLoader, spaceLoader, templatesLoader, mailer, receiptsRepo)
+    return postal.NewUAARecipe(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) FileSystem() services.FileSystemInterface {

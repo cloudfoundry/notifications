@@ -55,6 +55,7 @@ func NewRouter(mother MotherInterface) Router {
             "GET /info":                        stack.NewStack(handlers.NewGetInfo()).Use(logging),
             "POST /users/{guid}":               stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, mother, database)).Use(logging, notificationsWriteAuthenticator),
             "POST /spaces/{guid}":              stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, mother, database)).Use(logging, notificationsWriteAuthenticator),
+            "POST /organizations/{guid}":       stack.NewStack(handlers.NewNotifyOrganization(notify, errorWriter, mother, database)).Use(logging, notificationsWriteAuthenticator),
             "POST /emails":                     stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailRecipe, database)).Use(logging, emailsWriteAuthenticator),
             "PUT /registration":                stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter, database)).Use(logging, notificationsWriteAuthenticator),
             "OPTIONS /user_preferences":        stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),

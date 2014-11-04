@@ -35,6 +35,7 @@ type CloudController struct {
 
 type CloudControllerInterface interface {
     GetUsersBySpaceGuid(string, string) ([]CloudControllerUser, error)
+    GetUsersByOrgGuid(string, string) ([]CloudControllerUser, error)
     LoadSpace(string, string) (CloudControllerSpace, error)
     LoadOrganization(string, string) (CloudControllerOrganization, error)
 }

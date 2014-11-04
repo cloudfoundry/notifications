@@ -8,18 +8,21 @@ import (
 )
 
 type FakeCloudController struct {
-    CurrentToken             string
-    GetUsersBySpaceGuidError error
-    LoadSpaceError           error
-    LoadOrganizationError    error
-    UsersBySpaceGuid         map[string][]cf.CloudControllerUser
-    Spaces                   map[string]cf.CloudControllerSpace
-    Orgs                     map[string]cf.CloudControllerOrganization
+    CurrentToken                    string
+    GetUsersBySpaceGuidError        error
+    GetUsersByOrganizationGuidError error
+    LoadSpaceError                  error
+    LoadOrganizationError           error
+    UsersBySpaceGuid                map[string][]cf.CloudControllerUser
+    UsersByOrganizationGuid         map[string][]cf.CloudControllerUser
+    Spaces                          map[string]cf.CloudControllerSpace
+    Orgs                            map[string]cf.CloudControllerOrganization
 }
 
 func NewFakeCloudController() *FakeCloudController {
     return &FakeCloudController{
-        UsersBySpaceGuid: make(map[string][]cf.CloudControllerUser),
+        UsersBySpaceGuid:        make(map[string][]cf.CloudControllerUser),
+        UsersByOrganizationGuid: make(map[string][]cf.CloudControllerUser),
     }
 }
 
@@ -30,6 +33,16 @@ func (fake *FakeCloudController) GetUsersBySpaceGuid(guid, token string) ([]cf.C
         return users, fake.GetUsersBySpaceGuidError
     } else {
         return make([]cf.CloudControllerUser, 0), fake.GetUsersBySpaceGuidError
+    }
+}
+
+func (fake *FakeCloudController) GetUsersByOrgGuid(guid, token string) ([]cf.CloudControllerUser, error) {
+    fake.CurrentToken = token
+
+    if users, ok := fake.UsersByOrganizationGuid[guid]; ok {
+        return users, fake.GetUsersByOrganizationGuidError
+    } else {
+        return make([]cf.CloudControllerUser, 0), fake.GetUsersByOrganizationGuidError
     }
 }
 

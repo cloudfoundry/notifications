@@ -1,10 +1,6 @@
 package postal
 
-import (
-    "fmt"
-
-    "github.com/cloudfoundry-incubator/notifications/web/services"
-)
+import "github.com/cloudfoundry-incubator/notifications/web/services"
 
 const (
     SubjectMissingTemplateName  = "subject.missing"
@@ -41,7 +37,6 @@ func (loader TemplatesLoader) LoadTemplates(subjectSuffix, contentSuffix, client
     subjectPath := client + "." + kind + "." + subjectSuffix
     subjectTemplate, err := loader.finder.Find(subjectPath)
     if err != nil {
-        fmt.Printf("\n Mariana was right \n")
         return Templates{}, err
     }
 
