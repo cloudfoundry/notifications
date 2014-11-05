@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/cloudfoundry-incubator/notifications",
-	"GoVersion": "go1.2.1",
+	"GoVersion": "go1.2.2",
 	"Packages": [
 		"./..."
 	],
@@ -82,6 +82,10 @@
 		{
 			"ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",
 			"Rev": "dab783f5d682dab0dc39e6d445331df9a3f1d91c"
+		},
+		{
+			"ImportPath": "github.com/pivotal-golang/conceal",
+			"Rev": "11bfb27ff14f79cf70d5ce41f777d5c3ed93e53f"
 		},
 		{
 			"ImportPath": "github.com/rubenv/sql-migrate",
