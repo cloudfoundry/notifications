@@ -16,7 +16,7 @@ var _ = Describe("MessageContext", func() {
     var options postal.Options
     var html postal.HTML
     var delivery postal.Delivery
-    var cryptographer *fakes.FakeCryptoClient
+    var cloak *fakes.Cloak
 
     BeforeEach(func() {
         email = "bounce@example.com"
@@ -61,14 +61,14 @@ var _ = Describe("MessageContext", func() {
             },
         }
 
-        cryptographer = &fakes.FakeCryptoClient{
-            EncryptedResult: "the-encoded-result",
+        cloak = &fakes.Cloak{
+            EncryptedResult: []byte("the-encoded-result"),
         }
     })
 
     Describe("NewMessageContext", func() {
         It("returns the appropriate MessageContext when all options are specified", func() {
-            context := postal.NewMessageContext(delivery, sender, cryptographer)
+            context := postal.NewMessageContext(delivery, sender, cloak)
 
             Expect(context.From).To(Equal(sender))
             Expect(context.ReplyTo).To(Equal(options.ReplyTo))
@@ -90,19 +90,19 @@ var _ = Describe("MessageContext", func() {
             Expect(context.Organization).To(Equal("the-org"))
             Expect(context.OrganizationGUID).To(Equal("my-super-lovely-guid"))
             Expect(context.UnsubscribeID).To(Equal("the-encoded-result"))
-            Expect(cryptographer.EncryptArgument).To(Equal("the-user|the-client-id|the-kind-id"))
+            Expect(cloak.DataToEncrypt).To(Equal([]byte("the-user|the-client-id|the-kind-id")))
         })
 
         It("falls back to Kind if KindDescription is missing", func() {
             delivery.Options.KindDescription = ""
-            context := postal.NewMessageContext(delivery, sender, cryptographer)
+            context := postal.NewMessageContext(delivery, sender, cloak)
 
             Expect(context.KindDescription).To(Equal("the-kind-id"))
         })
 
         It("falls back to clientID when SourceDescription is missing", func() {
             delivery.Options.SourceDescription = ""
-            context := postal.NewMessageContext(delivery, sender, cryptographer)
+            context := postal.NewMessageContext(delivery, sender, cloak)
 
             Expect(context.SourceDescription).To(Equal("the-client-id"))
         })
@@ -128,7 +128,7 @@ var _ = Describe("MessageContext", func() {
         })
 
         It("html escapes various fields on the message context", func() {
-            context := postal.NewMessageContext(delivery, sender, cryptographer)
+            context := postal.NewMessageContext(delivery, sender, cloak)
             context.Escape()
 
             Expect(context.From).To(Equal("no-reply@notifications.example.com"))

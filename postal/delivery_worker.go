@@ -7,12 +7,12 @@ import (
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
-    "github.com/cloudfoundry-incubator/notifications/cryptography"
     "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
+    "github.com/pivotal-golang/conceal"
 )
 
 type Delivery struct {
@@ -132,12 +132,12 @@ func (worker DeliveryWorker) isCritical(conn models.ConnectionInterface, kindID,
 }
 
 func (worker DeliveryWorker) pack(delivery Delivery) mail.Message {
-    cryptoClient, err := cryptography.NewURLCryptoClient(worker.encryptionKey)
+    cloak, err := conceal.NewCloak([]byte(worker.encryptionKey))
     if err != nil {
         panic(err)
     }
 
-    context := NewMessageContext(delivery, worker.sender, cryptoClient)
+    context := NewMessageContext(delivery, worker.sender, cloak)
     packager := NewPackager()
 
     message, err := packager.Pack(context)

@@ -3,7 +3,7 @@ package postal
 import (
     "html"
 
-    "github.com/cloudfoundry-incubator/notifications/cryptography"
+    "github.com/pivotal-golang/conceal"
 )
 
 type MessageContext struct {
@@ -29,7 +29,7 @@ type MessageContext struct {
     UnsubscribeID     string
 }
 
-func NewMessageContext(delivery Delivery, sender string, cryptoClient cryptography.CryptoInterface) MessageContext {
+func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInterface) MessageContext {
     options := delivery.Options
     templates := delivery.Templates
 
@@ -69,11 +69,11 @@ func NewMessageContext(delivery Delivery, sender string, cryptoClient cryptograp
         OrganizationGUID:  delivery.Organization.GUID,
     }
 
-    var err error
-    messageContext.UnsubscribeID, err = cryptoClient.Encrypt(delivery.UserGUID + "|" + delivery.ClientID + "|" + options.KindID)
+    unsubscribeID, err := cloak.Veil([]byte(delivery.UserGUID + "|" + delivery.ClientID + "|" + options.KindID))
     if err != nil {
         panic(err)
     }
+    messageContext.UnsubscribeID = string(unsubscribeID)
     return messageContext
 }
 
