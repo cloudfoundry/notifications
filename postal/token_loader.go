@@ -15,6 +15,10 @@ type TokenLoader struct {
     uaaClient UAAInterface
 }
 
+type TokenLoaderInterface interface {
+    Load() (string, error)
+}
+
 func NewTokenLoader(uaaClient UAAInterface) TokenLoader {
     return TokenLoader{
         uaaClient: uaaClient,

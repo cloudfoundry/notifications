@@ -17,17 +17,17 @@ var _ = Describe("Recipes", func() {
         var emailRecipe postal.EmailRecipe
 
         Describe("DispatchMail", func() {
-            var fakeMailer *fakes.FakeMailer
+            var fakeMailer *fakes.Mailer
             var fakeDBConn *fakes.FakeDBConn
             var options postal.Options
             var clientID string
             var emailID postal.EmailID
-            var fakeTemplatesLoader fakes.FakeTemplatesLoader
+            var templatesLoader fakes.TemplatesLoader
 
             BeforeEach(func() {
-                fakeMailer = fakes.NewFakeMailer()
-                fakeTemplatesLoader = fakes.FakeTemplatesLoader{}
-                emailRecipe = postal.NewEmailRecipe(fakeMailer, &fakeTemplatesLoader)
+                fakeMailer = fakes.NewMailer()
+                templatesLoader = fakes.TemplatesLoader{}
+                emailRecipe = postal.NewEmailRecipe(fakeMailer, &templatesLoader)
 
                 clientID = "raptors-123"
                 emailID = postal.NewEmailID()
@@ -39,7 +39,7 @@ var _ = Describe("Recipes", func() {
 
                 fakeDBConn = &fakes.FakeDBConn{}
 
-                fakeTemplatesLoader.Templates = postal.Templates{
+                templatesLoader.Templates = postal.Templates{
                     Subject: "the subject",
                     Text:    "the text",
                     HTML:    "email template",
@@ -54,7 +54,7 @@ var _ = Describe("Recipes", func() {
                 Expect(len(fakeMailer.DeliverArguments)).To(Equal(7))
 
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(fakeDBConn))
-                Expect(fakeMailer.DeliverArguments).To(ContainElement(fakeTemplatesLoader.Templates))
+                Expect(fakeMailer.DeliverArguments).To(ContainElement(templatesLoader.Templates))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(users))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(options))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{}))

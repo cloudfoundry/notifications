@@ -7,16 +7,16 @@ import (
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
-type FakeMailer struct {
+type Mailer struct {
     DeliverArguments map[string]interface{}
     Responses        []postal.Response
 }
 
-func NewFakeMailer() *FakeMailer {
-    return &FakeMailer{}
+func NewMailer() *Mailer {
+    return &Mailer{}
 }
 
-func (fake *FakeMailer) Deliver(conn models.ConnectionInterface, template postal.Templates, users map[string]uaa.User, options postal.Options, space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client string) []postal.Response {
+func (fake *Mailer) Deliver(conn models.ConnectionInterface, template postal.Templates, users map[string]uaa.User, options postal.Options, space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client string) []postal.Response {
     fake.DeliverArguments = map[string]interface{}{
         "connection": conn,
         "template":   template,

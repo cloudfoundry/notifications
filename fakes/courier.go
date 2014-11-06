@@ -5,26 +5,26 @@ import (
     "github.com/cloudfoundry-incubator/notifications/postal"
 )
 
-type FakeCourier struct {
+type Courier struct {
     Error             error
     Responses         []postal.Response
     DispatchArguments []interface{}
-    TheMailer         *FakeMailer
+    TheMailer         *Mailer
 }
 
-func NewFakeCourier() *FakeCourier {
-    return &FakeCourier{
+func NewCourier() *Courier {
+    return &Courier{
         Responses:         make([]postal.Response, 0),
         DispatchArguments: make([]interface{}, 0),
-        TheMailer:         NewFakeMailer(),
+        TheMailer:         NewMailer(),
     }
 }
 
-func (fake *FakeCourier) Mailer() postal.MailerInterface {
+func (fake *Courier) Mailer() postal.MailerInterface {
     return fake.TheMailer
 }
 
-func (fake *FakeCourier) Dispatch(token string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]postal.Response, error) {
+func (fake *Courier) Dispatch(token string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]postal.Response, error) {
     fake.DispatchArguments = []interface{}{token, guid, options}
     return fake.Responses, fake.Error
 }

@@ -40,7 +40,7 @@ var _ = Describe("NotifySpace", func() {
         Context("when the notify.Execute returns a successful response", func() {
             It("returns the JSON representation of the response", func() {
                 fakeNotify.Response = []byte("whatever")
-                recipe := postal.UAARecipe{}
+                recipe := postal.SpaceRecipe{}
 
                 handler.Execute(writer, request, nil, context, recipe)
 
@@ -56,7 +56,7 @@ var _ = Describe("NotifySpace", func() {
         Context("when the notify.Execute returns an error", func() {
             It("propagates the error", func() {
                 fakeNotify.Error = errors.New("the error")
-                recipe := postal.UAARecipe{}
+                recipe := postal.SpaceRecipe{}
 
                 err := handler.Execute(writer, request, nil, context, recipe)
                 Expect(err).To(Equal(fakeNotify.Error))

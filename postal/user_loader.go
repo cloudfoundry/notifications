@@ -15,6 +15,10 @@ type UserLoader struct {
     cloudController cf.CloudControllerInterface
 }
 
+type UserLoaderInterface interface {
+    Load(TypedGUID, string) (map[string]uaa.User, error)
+}
+
 func NewUserLoader(uaaClient UAAInterface, logger *log.Logger, cloudController cf.CloudControllerInterface) UserLoader {
     return UserLoader{
         uaaClient:       uaaClient,

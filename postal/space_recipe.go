@@ -2,19 +2,19 @@ package postal
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-type UAARecipe struct {
-    tokenLoader       TokenLoader
-    userLoader        UserLoader
-    spaceAndOrgLoader SpaceAndOrgLoader
+type SpaceRecipe struct {
+    tokenLoader       TokenLoaderInterface
+    userLoader        UserLoaderInterface
+    spaceAndOrgLoader SpaceAndOrgLoaderInterface
     templatesLoader   TemplatesLoaderInterface
     mailer            MailerInterface
     receiptsRepo      models.ReceiptsRepoInterface
 }
 
-func NewUAARecipe(tokenLoader TokenLoader, userLoader UserLoader, spaceAndOrgLoader SpaceAndOrgLoader,
-    templatesLoader TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UAARecipe {
+func NewSpaceRecipe(tokenLoader TokenLoaderInterface, userLoader UserLoaderInterface, spaceAndOrgLoader SpaceAndOrgLoaderInterface,
+    templatesLoader TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) SpaceRecipe {
 
-    return UAARecipe{
+    return SpaceRecipe{
         tokenLoader:       tokenLoader,
         userLoader:        userLoader,
         spaceAndOrgLoader: spaceAndOrgLoader,
@@ -24,7 +24,7 @@ func NewUAARecipe(tokenLoader TokenLoader, userLoader UserLoader, spaceAndOrgLoa
     }
 }
 
-func (recipe UAARecipe) Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
+func (recipe SpaceRecipe) Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
     responses := []Response{}
 
     token, err := recipe.tokenLoader.Load()
@@ -65,19 +65,19 @@ func (recipe UAARecipe) Dispatch(clientID string, guid TypedGUID, options Option
     return responses, nil
 }
 
-func (recipe UAARecipe) Trim(responses []byte) []byte {
+func (recipe SpaceRecipe) Trim(responses []byte) []byte {
     t := Trimmer{}
     return t.TrimFields(responses, EmailFieldName)
 }
 
-func (recipe UAARecipe) subjectSuffix(subject string) string {
+func (recipe SpaceRecipe) subjectSuffix(subject string) string {
     if subject == "" {
         return models.SubjectMissingTemplateName
     }
     return models.SubjectProvidedTemplateName
 }
 
-func (recipe UAARecipe) contentSuffix(guid TypedGUID) string {
+func (recipe SpaceRecipe) contentSuffix(guid TypedGUID) string {
     if guid.BelongsToSpace() {
         return models.SpaceBodyTemplateName
     } else if guid.BelongsToOrganization() {

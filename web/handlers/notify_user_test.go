@@ -42,7 +42,7 @@ var _ = Describe("NotifyUser", func() {
             It("returns the JSON representation of the response", func() {
                 fakeNotify.Response = []byte("whut")
 
-                handler.Execute(writer, request, nil, context, postal.UAARecipe{})
+                handler.Execute(writer, request, nil, context, postal.UserRecipe{})
 
                 Expect(writer.Code).To(Equal(http.StatusOK))
                 body := string(writer.Body.Bytes())
@@ -58,7 +58,7 @@ var _ = Describe("NotifyUser", func() {
             It("propagates the error", func() {
                 fakeNotify.Error = errors.New("BOOM!")
 
-                err := handler.Execute(writer, request, nil, context, postal.UAARecipe{})
+                err := handler.Execute(writer, request, nil, context, postal.UserRecipe{})
 
                 Expect(err).To(Equal(fakeNotify.Error))
             })

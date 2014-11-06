@@ -28,7 +28,7 @@ var _ = Describe("DeliveryWorker", func() {
     var buffer *bytes.Buffer
     var delivery postal.Delivery
     var queue *fakes.FakeQueue
-    var unsubscribesRepo *fakes.FakeUnsubscribesRepo
+    var unsubscribesRepo *fakes.UnsubscribesRepo
     var globalUnsubscribesRepo *fakes.GlobalUnsubscribesRepo
     var kindsRepo *fakes.FakeKindsRepo
     var database *fakes.Database
@@ -41,7 +41,7 @@ var _ = Describe("DeliveryWorker", func() {
         logger = log.New(buffer, "", 0)
         mailClient = fakes.FakeMailClient{}
         queue = fakes.NewFakeQueue()
-        unsubscribesRepo = fakes.NewFakeUnsubscribesRepo()
+        unsubscribesRepo = fakes.NewUnsubscribesRepo()
         globalUnsubscribesRepo = fakes.NewGlobalUnsubscribesRepo()
         kindsRepo = fakes.NewFakeKindsRepo()
         database = fakes.NewDatabase()

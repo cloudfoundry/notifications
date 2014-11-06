@@ -6,6 +6,10 @@ type SpaceAndOrgLoader struct {
     cloudController cf.CloudControllerInterface
 }
 
+type SpaceAndOrgLoaderInterface interface {
+    Load(TypedGUID, string) (cf.CloudControllerSpace, cf.CloudControllerOrganization, error)
+}
+
 func NewSpaceAndOrgLoader(cloudController cf.CloudControllerInterface) SpaceAndOrgLoader {
     return SpaceAndOrgLoader{
         cloudController: cloudController,

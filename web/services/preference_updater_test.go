@@ -13,7 +13,7 @@ var _ = Describe("PreferenceUpdater", func() {
     Describe("Execute", func() {
         var doorOpen models.Unsubscribe
         var barking models.Unsubscribe
-        var fakeUnsubscribesRepo *fakes.FakeUnsubscribesRepo
+        var unsubscribesRepo *fakes.UnsubscribesRepo
         var fakeKindsRepo *fakes.FakeKindsRepo
         var fakeGlobalUnsubscribesRepo *fakes.GlobalUnsubscribesRepo
         var fakeDBConn *fakes.FakeDBConn
@@ -21,10 +21,10 @@ var _ = Describe("PreferenceUpdater", func() {
 
         BeforeEach(func() {
             fakeDBConn = &fakes.FakeDBConn{}
-            fakeUnsubscribesRepo = fakes.NewFakeUnsubscribesRepo()
+            unsubscribesRepo = fakes.NewUnsubscribesRepo()
             fakeKindsRepo = fakes.NewFakeKindsRepo()
             fakeGlobalUnsubscribesRepo = fakes.NewGlobalUnsubscribesRepo()
-            updater = services.NewPreferenceUpdater(fakeGlobalUnsubscribesRepo, fakeUnsubscribesRepo, fakeKindsRepo)
+            updater = services.NewPreferenceUpdater(fakeGlobalUnsubscribesRepo, unsubscribesRepo, fakeKindsRepo)
         })
 
         Context("when globally unsubscribing", func() {
@@ -91,13 +91,13 @@ var _ = Describe("PreferenceUpdater", func() {
                     },
                 }, false, "the-user")
 
-                Expect(len(fakeUnsubscribesRepo.Unsubscribes)).To(Equal(2))
-                Expect(fakeUnsubscribesRepo.Unsubscribes).To(ContainElement(doorOpen))
-                Expect(fakeUnsubscribesRepo.Unsubscribes).To(ContainElement(barking))
+                Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(2))
+                Expect(unsubscribesRepo.Unsubscribes).To(ContainElement(doorOpen))
+                Expect(unsubscribesRepo.Unsubscribes).To(ContainElement(barking))
             })
 
             It("does not insert duplicate unsubscribes", func() {
-                _, err := fakeUnsubscribesRepo.Create(fakeDBConn, models.Unsubscribe{
+                _, err := unsubscribesRepo.Create(fakeDBConn, models.Unsubscribe{
                     UserID:   "my-user",
                     ClientID: "raptors",
                     KindID:   "door-open",
@@ -105,7 +105,7 @@ var _ = Describe("PreferenceUpdater", func() {
                 if err != nil {
                     panic(err)
                 }
-                Expect(len(fakeUnsubscribesRepo.Unsubscribes)).To(Equal(1))
+                Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(1))
 
                 err = updater.Execute(fakeDBConn, []models.Preference{
                     {
@@ -116,7 +116,7 @@ var _ = Describe("PreferenceUpdater", func() {
                 }, false, "my-user")
 
                 Expect(err).To(BeNil())
-                Expect(len(fakeUnsubscribesRepo.Unsubscribes)).To(Equal(1))
+                Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(1))
             })
 
             It("Does not add resubscriptions to the unsubscribes Repo", func() {
@@ -128,11 +128,11 @@ var _ = Describe("PreferenceUpdater", func() {
                     },
                 }, false, "the-user")
 
-                Expect(len(fakeUnsubscribesRepo.Unsubscribes)).To(Equal(0))
+                Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(0))
             })
 
             It("removes unsubscribes when they are resubscribed", func() {
-                _, err := fakeUnsubscribesRepo.Create(fakeDBConn, models.Unsubscribe{
+                _, err := unsubscribesRepo.Create(fakeDBConn, models.Unsubscribe{
                     UserID:   "my-user",
                     ClientID: "raptors",
                     KindID:   "door-open",
@@ -140,7 +140,7 @@ var _ = Describe("PreferenceUpdater", func() {
                 if err != nil {
                     panic(err)
                 }
-                Expect(len(fakeUnsubscribesRepo.Unsubscribes)).To(Equal(1))
+                Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(1))
 
                 err = updater.Execute(fakeDBConn, []models.Preference{
                     {
@@ -151,7 +151,7 @@ var _ = Describe("PreferenceUpdater", func() {
                 }, false, "my-user")
 
                 Expect(err).To(BeNil())
-                Expect(len(fakeUnsubscribesRepo.Unsubscribes)).To(Equal(0))
+                Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(0))
             })
         })
 

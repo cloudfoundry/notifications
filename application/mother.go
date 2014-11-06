@@ -42,7 +42,23 @@ func (mother *Mother) Queue() *gobble.Queue {
     return mother.queue
 }
 
-func (mother Mother) UAARecipe() postal.UAARecipe {
+func (mother Mother) UserRecipe() postal.UserRecipe {
+    env := config.NewEnvironment()
+    finder := mother.TemplateFinder()
+    uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
+    uaaClient.VerifySSL = env.VerifySSL
+    cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
+
+    tokenLoader := postal.NewTokenLoader(&uaaClient)
+    userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
+    templatesLoader := postal.NewTemplatesLoader(finder)
+    mailer := mother.Mailer()
+    receiptsRepo := models.NewReceiptsRepo()
+
+    return postal.NewUserRecipe(tokenLoader, userLoader, templatesLoader, mailer, receiptsRepo)
+}
+
+func (mother Mother) SpaceRecipe() postal.SpaceRecipe {
     env := config.NewEnvironment()
     finder := mother.TemplateFinder()
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
@@ -56,7 +72,24 @@ func (mother Mother) UAARecipe() postal.UAARecipe {
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewUAARecipe(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
+    return postal.NewSpaceRecipe(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
+}
+
+func (mother Mother) OrganizationRecipe() postal.OrganizationRecipe {
+    env := config.NewEnvironment()
+    finder := mother.TemplateFinder()
+    uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
+    uaaClient.VerifySSL = env.VerifySSL
+    cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
+
+    tokenLoader := postal.NewTokenLoader(&uaaClient)
+    userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
+    spaceAndOrgLoader := postal.NewSpaceAndOrgLoader(cloudController)
+    templatesLoader := postal.NewTemplatesLoader(finder)
+    mailer := mother.Mailer()
+    receiptsRepo := models.NewReceiptsRepo()
+
+    return postal.NewOrganizationRecipe(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) FileSystem() services.FileSystemInterface {
