@@ -12,8 +12,8 @@ type FileSystemInterface interface {
 }
 
 type TemplateFinder struct {
-    TemplatesRepo models.TemplatesRepoInterface
-    RootPath      string
+    templatesRepo models.TemplatesRepoInterface
+    rootPath      string
     fileSystem    FileSystemInterface
     database      models.DatabaseInterface
 }
@@ -24,87 +24,110 @@ type TemplateFinderInterface interface {
 
 func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, rootPath string, database models.DatabaseInterface, fileSystem FileSystemInterface) TemplateFinder {
     return TemplateFinder{
-        TemplatesRepo: templatesRepo,
-        RootPath:      rootPath,
+        templatesRepo: templatesRepo,
+        rootPath:      rootPath,
         database:      database,
         fileSystem:    fileSystem,
     }
 }
 
 func (finder TemplateFinder) Find(templateName string) (models.Template, error) {
-    var template models.Template
-    var templatesToSearchFor []string
-    var err error
-
-    client, notificationType, parsingSubjectTemplate := parseTemplateName(templateName)
-    templatesToSearchFor = []string{templateName, client + "." + notificationType, notificationType}
-
-    connection := finder.database.Connection()
-
-    for _, templateName := range templatesToSearchFor {
-        template, err = finder.TemplatesRepo.Find(connection, templateName)
-        if (template != models.Template{}) {
-            break
-        }
+    templateNames := finder.templatesToSeachFor(templateName)
+    template, err := finder.search(finder.database.Connection(), templateName, templateNames)
+    if err != nil {
+        return models.Template{}, err
     }
 
-    if (err == models.ErrRecordNotFound{}) {
-        if parsingSubjectTemplate {
-            return finder.DefaultSubjectTemplate(notificationType)
-        } else {
-            return finder.DefaultTemplate(notificationType)
-        }
+    if template.Name == templateName {
+        template.Overridden = true
     }
 
     return template, err
 }
 
-func (finder TemplateFinder) DefaultTemplate(notificationType string) (models.Template, error) {
-    textPath := finder.RootPath + "/templates/" + notificationType + ".text"
-    text, err := finder.fileSystem.Read(textPath)
-    if err != nil {
-        return models.Template{}, models.ErrRecordNotFound{}
-    }
-
-    htmlPath := finder.RootPath + "/templates/" + notificationType + ".html"
-    html, err := finder.fileSystem.Read(htmlPath)
-    if err != nil {
-        return models.Template{}, models.ErrRecordNotFound{}
-    }
-
-    return models.Template{Text: text, HTML: html}, nil
-}
-
-func (finder TemplateFinder) DefaultSubjectTemplate(notificationType string) (models.Template, error) {
-    textPath := finder.RootPath + "/templates/" + notificationType
-    text, err := finder.fileSystem.Read(textPath)
-    if err != nil {
-        return models.Template{}, models.ErrRecordNotFound{}
-    }
-    return models.Template{Text: text, HTML: ""}, nil
-}
-
-func parseTemplateName(templateName string) (string, string, bool) {
-    parsingSubjectTemplate := false
-    client := ""
-    notificationType := ""
+func (finder TemplateFinder) templatesToSeachFor(templateName string) []string {
+    var client string
+    var notificationType string
 
     items := strings.Split(templateName, ".")
     numberOfItems := len(items)
 
     switch numberOfItems {
     case 4:
-        parsingSubjectTemplate = true
         client = items[0]
         notificationType = items[2] + "." + items[3]
     case 3:
         client = items[0]
-        notificationType = items[2]
+        if items[1] == "subject" {
+            notificationType = items[1] + "." + items[2]
+        } else {
+            notificationType = items[2]
+        }
     case 2:
         client = items[0]
         notificationType = items[1]
     case 1:
         notificationType = items[0]
     }
-    return client, notificationType, parsingSubjectTemplate
+
+    names := make([]string, 0)
+    if client != "" {
+        names = append(names, client+"."+notificationType)
+    }
+
+    names = append(names, notificationType)
+
+    return names
+}
+
+func (finder TemplateFinder) search(connection models.ConnectionInterface, name string, alternates []string) (models.Template, error) {
+    template, err := finder.templatesRepo.Find(connection, name)
+
+    if err != nil {
+        if (err == models.ErrRecordNotFound{}) {
+            if len(alternates) > 0 {
+                return finder.search(connection, alternates[0], alternates[1:])
+            } else {
+                return finder.findDefaultTemplate(name)
+            }
+        }
+        return models.Template{}, err
+    }
+
+    return template, nil
+}
+
+func (finder TemplateFinder) findDefaultTemplate(name string) (models.Template, error) {
+    if name == "subject.missing" || name == "subject.provided" {
+        return finder.defaultSubjectTemplate(name)
+    } else {
+        return finder.defaultTemplate(name)
+    }
+}
+
+func (finder TemplateFinder) defaultTemplate(name string) (models.Template, error) {
+    text, err := finder.readTemplate(name + ".text")
+    if err != nil {
+        return models.Template{}, err
+    }
+
+    html, err := finder.readTemplate(name + ".html")
+    if err != nil {
+        return models.Template{}, err
+    }
+
+    return models.Template{Text: text, HTML: html}, nil
+}
+
+func (finder TemplateFinder) defaultSubjectTemplate(name string) (models.Template, error) {
+    text, err := finder.readTemplate(name)
+    if err != nil {
+        return models.Template{}, err
+    }
+    return models.Template{Text: text, HTML: ""}, nil
+}
+
+func (finder TemplateFinder) readTemplate(name string) (string, error) {
+    path := finder.rootPath + "/templates/" + name
+    return finder.fileSystem.Read(path)
 }

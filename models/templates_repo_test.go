@@ -24,10 +24,9 @@ var _ = Describe("TemplatesRepo", func() {
         conn = db.Connection()
 
         template = models.Template{
-            Name:       "raptor_template",
-            Text:       "run and hide",
-            HTML:       "<h1>containment unit breached!</h1>",
-            Overridden: true,
+            Name: "raptor_template",
+            Text: "run and hide",
+            HTML: "<h1>containment unit breached!</h1>",
         }
 
         conn.Insert(&template)
@@ -42,7 +41,6 @@ var _ = Describe("TemplatesRepo", func() {
                 Expect(raptorTemplate.Name).To(Equal("raptor_template"))
                 Expect(raptorTemplate.Text).To(Equal("run and hide"))
                 Expect(raptorTemplate.HTML).To(Equal("<h1>containment unit breached!</h1>"))
-                Expect(raptorTemplate.Overridden).To(BeTrue())
             })
         })
 
@@ -60,10 +58,9 @@ var _ = Describe("TemplatesRepo", func() {
     Describe("#Upsert", func() {
         It("inserts a template into the database", func() {
             newTemplate := models.Template{
-                Name:       "silly_template.user_body",
-                Text:       "omg",
-                HTML:       "<h1>OMG</h1>",
-                Overridden: true,
+                Name: "silly_template.user_body",
+                Text: "omg",
+                HTML: "<h1>OMG</h1>",
             }
 
             _, err := repo.Upsert(conn, newTemplate)

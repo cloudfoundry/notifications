@@ -7,6 +7,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/web/services"
+
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 )
@@ -114,6 +115,7 @@ var _ = Describe("Finder", func() {
 
                 BeforeEach(func() {
                     expectedTemplate = models.Template{
+                        Name:       "authentication.new.user_body",
                         Text:       "authenticate new hungry raptors template",
                         HTML:       "<p>hungry raptors are newly authenticated template</p>",
                         Overridden: true,
@@ -136,9 +138,9 @@ var _ = Describe("Finder", func() {
 
                     BeforeEach(func() {
                         expectedTemplate = models.Template{
-                            Text:       "authentication template for hungry raptors",
-                            HTML:       "<h1>Wow you are authentic!</h1>",
-                            Overridden: true,
+                            Name: "authentication.user_body",
+                            Text: "authentication template for hungry raptors",
+                            HTML: "<h1>Wow you are authentic!</h1>",
                         }
                         fakeTemplatesRepo.Templates["authentication.user_body"] = expectedTemplate
                     })
@@ -146,7 +148,7 @@ var _ = Describe("Finder", func() {
                     It("returns the fallback override that exists", func() {
                         template, err := finder.Find("authentication.new.user_body")
                         Expect(err).ToNot(HaveOccurred())
-                        Expect(template.Overridden).To(BeTrue())
+                        Expect(template.Overridden).To(BeFalse())
                         Expect(template).To(Equal(expectedTemplate))
                     })
                 })
@@ -156,9 +158,9 @@ var _ = Describe("Finder", func() {
 
                     BeforeEach(func() {
                         expectedTemplate = models.Template{
-                            Text:       "special user template",
-                            HTML:       "<h1>Wow you are a special user!</h1>",
-                            Overridden: true,
+                            Name: "user_body",
+                            Text: "special user template",
+                            HTML: "<h1>Wow you are a special user!</h1>",
                         }
                         fakeTemplatesRepo.Templates["user_body"] = expectedTemplate
                     })
@@ -166,7 +168,7 @@ var _ = Describe("Finder", func() {
                     It("returns the fallback override that exists", func() {
                         template, err := finder.Find("authentication.new.user_body")
                         Expect(err).ToNot(HaveOccurred())
-                        Expect(template.Overridden).To(BeTrue())
+                        Expect(template.Overridden).To(BeFalse())
                         Expect(template).To(Equal(expectedTemplate))
                     })
                 })
@@ -176,7 +178,12 @@ var _ = Describe("Finder", func() {
         Context("the finder has an error", func() {
             It("propagates the error", func() {
                 fakeTemplatesRepo.FindError = errors.New("some-error")
-                _, err := finder.Find("missing_template_file")
+                fakeTemplatesRepo.Templates["user_body"] = models.Template{
+                    Name: "user_body",
+                    Text: "special user template",
+                    HTML: "<h1>Wow you are a special user!</h1>",
+                }
+                _, err := finder.Find("user_body")
                 Expect(err.Error()).To(Equal("some-error"))
             })
         })

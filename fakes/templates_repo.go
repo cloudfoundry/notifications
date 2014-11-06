@@ -21,7 +21,7 @@ func (fake FakeTemplatesRepo) Find(conn models.ConnectionInterface, templateName
     if ok {
         return template, fake.FindError
     }
-    return models.Template{}, fake.FindError
+    return models.Template{}, models.ErrRecordNotFound{}
 }
 
 func (fake FakeTemplatesRepo) Upsert(conn models.ConnectionInterface, template models.Template) (models.Template, error) {

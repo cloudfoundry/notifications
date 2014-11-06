@@ -7,6 +7,6 @@ type Template struct {
     Name       string    `db:"name"`
     Text       string    `db:"text"`
     HTML       string    `db:"html"`
-    Overridden bool      `db:"overridden"`
+    Overridden bool      `db:"-"`
     CreatedAt  time.Time `db:"created_at"`
 }
