@@ -25,8 +25,12 @@ var _ = Describe("Templates GET Endpoint", func() {
         migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
         database := models.NewDatabase(env.DatabaseURL, migrationsPath)
 
-        templateData := &models.Template{Name: "overridden-client.user_body",
-            Text: "Text Template", HTML: "<p>HTML Template</p>", Overridden: true}
+        templateData := &models.Template{
+            Name:       "overridden-client." + models.UserBodyTemplateName,
+            Text:       "Text Template",
+            HTML:       "<p>HTML Template</p>",
+            Overridden: true,
+        }
         database.Connection().Insert(templateData)
     })
 
@@ -69,7 +73,7 @@ var _ = Describe("Templates GET Endpoint", func() {
 type GetTemplates struct{}
 
 func (t GetTemplates) GetSpaceTemplates(notificationsServer servers.Notifications, clientToken uaa.Token) {
-    request, err := http.NewRequest("GET", notificationsServer.TemplatePath("space_body"), bytes.NewBuffer([]byte{}))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(models.SpaceBodyTemplateName), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }
@@ -128,7 +132,7 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
 }
 
 func (t GetTemplates) GetUserTemplates(notificationsServer servers.Notifications, clientToken uaa.Token) {
-    request, err := http.NewRequest("GET", notificationsServer.TemplatePath("user_body"), bytes.NewBuffer([]byte{}))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(models.UserBodyTemplateName), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }
@@ -185,7 +189,7 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
 }
 
 func (t GetTemplates) GetEmailTemplates(notificationsServer servers.Notifications, clientToken uaa.Token) {
-    request, err := http.NewRequest("GET", notificationsServer.TemplatePath("email_body"), bytes.NewBuffer([]byte{}))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(models.EmailBodyTemplateName), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }
@@ -242,7 +246,7 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
 }
 
 func (t GetTemplates) GetUserTemplatesForOverriddenClient(notificationsServer servers.Notifications, clientToken uaa.Token, clientID string) {
-    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(clientID+".user_body"), bytes.NewBuffer([]byte{}))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(clientID+"."+models.UserBodyTemplateName), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }
@@ -275,7 +279,7 @@ func (t GetTemplates) GetUserTemplatesForOverriddenClient(notificationsServer se
 
     Expect(responseJSON.Overridden).To(BeTrue())
 
-    request, err = http.NewRequest("GET", notificationsServer.TemplatePath("user_body"), bytes.NewBuffer([]byte{}))
+    request, err = http.NewRequest("GET", notificationsServer.TemplatePath(models.UserBodyTemplateName), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }
@@ -302,7 +306,7 @@ func (t GetTemplates) GetUserTemplatesForOverriddenClient(notificationsServer se
 }
 
 func (t GetTemplates) GetUserTemplatesForClient(notificationsServer servers.Notifications, clientToken uaa.Token, clientID string) {
-    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(clientID+".user_body"), bytes.NewBuffer([]byte{}))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(clientID+"."+models.UserBodyTemplateName), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }
@@ -359,7 +363,7 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
 }
 
 func (t GetTemplates) GetUserTemplatesForClientAndKind(notificationsServer servers.Notifications, clientToken uaa.Token, clientID, kindID string) {
-    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(clientID+"."+kindID+".user_body"), bytes.NewBuffer([]byte{}))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(clientID+"."+kindID+"."+models.UserBodyTemplateName), bytes.NewBuffer([]byte{}))
     if err != nil {
         panic(err)
     }

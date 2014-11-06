@@ -2,14 +2,6 @@ package postal
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-const (
-    UserContentSuffix         = "user_body"
-    OrganizationContentSuffix = "organization_body"
-    SpaceContentSuffix        = "space_body"
-    SubjectProvidedSuffix     = "subject.provided"
-    SubjectMissingSuffix      = "subject.missing"
-)
-
 type UAARecipe struct {
     tokenLoader       TokenLoader
     userLoader        UserLoader
@@ -80,16 +72,16 @@ func (recipe UAARecipe) Trim(responses []byte) []byte {
 
 func (recipe UAARecipe) subjectSuffix(subject string) string {
     if subject == "" {
-        return SubjectMissingSuffix
+        return models.SubjectMissingTemplateName
     }
-    return SubjectProvidedSuffix
+    return models.SubjectProvidedTemplateName
 }
 
 func (recipe UAARecipe) contentSuffix(guid TypedGUID) string {
     if guid.BelongsToSpace() {
-        return SpaceContentSuffix
+        return models.SpaceBodyTemplateName
     } else if guid.BelongsToOrganization() {
-        return OrganizationContentSuffix
+        return models.OrganizationBodyTemplateName
     }
-    return UserContentSuffix
+    return models.UserBodyTemplateName
 }

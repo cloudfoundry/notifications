@@ -19,14 +19,14 @@ type FakeFileSystem struct {
 func NewFakeFileSystem(env config.Environment) FakeFileSystem {
     return FakeFileSystem{
         Files: map[string]string{
-            env.RootPath + "/templates/space_body.text":  "default-space-text",
-            env.RootPath + "/templates/space_body.html":  "default-space-html",
-            env.RootPath + "/templates/subject.missing":  "default-missing-subject",
-            env.RootPath + "/templates/subject.provided": "default-provided-subject",
-            env.RootPath + "/templates/user_body.text":   "default-user-text",
-            env.RootPath + "/templates/user_body.html":   "default-user-html",
-            env.RootPath + "/templates/email_body.html":  "email-body-html",
-            env.RootPath + "/templates/email_body.text":  "email-body-text",
+            env.RootPath + "/templates/" + models.SpaceBodyTemplateName + ".text": "default-space-text",
+            env.RootPath + "/templates/" + models.SpaceBodyTemplateName + ".html": "default-space-html",
+            env.RootPath + "/templates/" + models.SubjectMissingTemplateName:      "default-missing-subject",
+            env.RootPath + "/templates/" + models.SubjectProvidedTemplateName:     "default-provided-subject",
+            env.RootPath + "/templates/" + models.UserBodyTemplateName + ".text":  "default-user-text",
+            env.RootPath + "/templates/" + models.UserBodyTemplateName + ".html":  "default-user-html",
+            env.RootPath + "/templates/" + models.EmailBodyTemplateName + ".html": "email-body-html",
+            env.RootPath + "/templates/" + models.EmailBodyTemplateName + ".text": "email-body-text",
         },
     }
 }
@@ -62,7 +62,7 @@ var _ = Describe("Finder", func() {
                 It("returns the default space template", func() {
                     fakeTemplatesRepo.FindError = models.ErrRecordNotFound{}
 
-                    template, err := finder.Find("login.fp.space_body")
+                    template, err := finder.Find("login.fp." + models.SpaceBodyTemplateName)
                     Expect(err).ToNot(HaveOccurred())
                     Expect(template.Overridden).To(BeFalse())
                     Expect(template.Text).To(Equal("default-space-text"))
@@ -72,7 +72,7 @@ var _ = Describe("Finder", func() {
                 It("returns the default user template", func() {
                     fakeTemplatesRepo.FindError = models.ErrRecordNotFound{}
 
-                    template, err := finder.Find("login.fp.user_body")
+                    template, err := finder.Find("login.fp." + models.UserBodyTemplateName)
                     Expect(err).ToNot(HaveOccurred())
                     Expect(template.Overridden).To(BeFalse())
                     Expect(template.Text).To(Equal("default-user-text"))
@@ -82,7 +82,7 @@ var _ = Describe("Finder", func() {
                 It("returns the default email template", func() {
                     fakeTemplatesRepo.FindError = models.ErrRecordNotFound{}
 
-                    template, err := finder.Find("login.fp.email_body")
+                    template, err := finder.Find("login.fp." + models.EmailBodyTemplateName)
                     Expect(err).ToNot(HaveOccurred())
                     Expect(template.Overridden).To(BeFalse())
                     Expect(template.Text).To(Equal("email-body-text"))
@@ -92,7 +92,7 @@ var _ = Describe("Finder", func() {
                 It("returns the default subject missing template", func() {
                     fakeTemplatesRepo.FindError = models.ErrRecordNotFound{}
 
-                    template, err := finder.Find("login.fp.subject.missing")
+                    template, err := finder.Find("login.fp." + models.SubjectMissingTemplateName)
                     Expect(err).ToNot(HaveOccurred())
                     Expect(template.Overridden).To(BeFalse())
                     Expect(template.Text).To(Equal("default-missing-subject"))
@@ -102,7 +102,7 @@ var _ = Describe("Finder", func() {
                 It("returns the default subject provided template", func() {
                     fakeTemplatesRepo.FindError = models.ErrRecordNotFound{}
 
-                    template, err := finder.Find("login.fp.subject.provided")
+                    template, err := finder.Find("login.fp." + models.SubjectProvidedTemplateName)
                     Expect(err).ToNot(HaveOccurred())
                     Expect(template.Overridden).To(BeFalse())
                     Expect(template.Text).To(Equal("default-provided-subject"))
@@ -115,16 +115,16 @@ var _ = Describe("Finder", func() {
 
                 BeforeEach(func() {
                     expectedTemplate = models.Template{
-                        Name:       "authentication.new.user_body",
+                        Name:       "authentication.new." + models.UserBodyTemplateName,
                         Text:       "authenticate new hungry raptors template",
                         HTML:       "<p>hungry raptors are newly authenticated template</p>",
                         Overridden: true,
                     }
-                    fakeTemplatesRepo.Templates["authentication.new.user_body"] = expectedTemplate
+                    fakeTemplatesRepo.Templates["authentication.new."+models.UserBodyTemplateName] = expectedTemplate
                 })
 
                 It("returns the requested override template", func() {
-                    template, err := finder.Find("authentication.new.user_body")
+                    template, err := finder.Find("authentication.new." + models.UserBodyTemplateName)
                     Expect(err).ToNot(HaveOccurred())
                     Expect(template.Overridden).To(BeTrue())
                     Expect(template).To(Equal(expectedTemplate))
@@ -138,15 +138,15 @@ var _ = Describe("Finder", func() {
 
                     BeforeEach(func() {
                         expectedTemplate = models.Template{
-                            Name: "authentication.user_body",
+                            Name: "authentication." + models.UserBodyTemplateName,
                             Text: "authentication template for hungry raptors",
                             HTML: "<h1>Wow you are authentic!</h1>",
                         }
-                        fakeTemplatesRepo.Templates["authentication.user_body"] = expectedTemplate
+                        fakeTemplatesRepo.Templates["authentication."+models.UserBodyTemplateName] = expectedTemplate
                     })
 
                     It("returns the fallback override that exists", func() {
-                        template, err := finder.Find("authentication.new.user_body")
+                        template, err := finder.Find("authentication.new." + models.UserBodyTemplateName)
                         Expect(err).ToNot(HaveOccurred())
                         Expect(template.Overridden).To(BeFalse())
                         Expect(template).To(Equal(expectedTemplate))
@@ -158,15 +158,15 @@ var _ = Describe("Finder", func() {
 
                     BeforeEach(func() {
                         expectedTemplate = models.Template{
-                            Name: "user_body",
+                            Name: models.UserBodyTemplateName,
                             Text: "special user template",
                             HTML: "<h1>Wow you are a special user!</h1>",
                         }
-                        fakeTemplatesRepo.Templates["user_body"] = expectedTemplate
+                        fakeTemplatesRepo.Templates[models.UserBodyTemplateName] = expectedTemplate
                     })
 
                     It("returns the fallback override that exists", func() {
-                        template, err := finder.Find("authentication.new.user_body")
+                        template, err := finder.Find("authentication.new." + models.UserBodyTemplateName)
                         Expect(err).ToNot(HaveOccurred())
                         Expect(template.Overridden).To(BeFalse())
                         Expect(template).To(Equal(expectedTemplate))
@@ -178,12 +178,12 @@ var _ = Describe("Finder", func() {
         Context("the finder has an error", func() {
             It("propagates the error", func() {
                 fakeTemplatesRepo.FindError = errors.New("some-error")
-                fakeTemplatesRepo.Templates["user_body"] = models.Template{
-                    Name: "user_body",
+                fakeTemplatesRepo.Templates[models.UserBodyTemplateName] = models.Template{
+                    Name: models.UserBodyTemplateName,
                     Text: "special user template",
                     HTML: "<h1>Wow you are a special user!</h1>",
                 }
-                _, err := finder.Find("user_body")
+                _, err := finder.Find(models.UserBodyTemplateName)
                 Expect(err.Error()).To(Equal("some-error"))
             })
         })

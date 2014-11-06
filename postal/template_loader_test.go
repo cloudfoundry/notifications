@@ -18,11 +18,11 @@ var _ = Describe("TemplateLoader", func() {
     BeforeEach(func() {
         finder = fakes.NewFakeTemplateFinder()
 
-        finder.Templates["raptors.hungry.subject.provided"] = models.Template{
+        finder.Templates["raptors.hungry."+models.SubjectProvidedTemplateName] = models.Template{
             Text: "Dinosaurs are coming",
         }
 
-        finder.Templates["raptors.hungry.user_body"] = models.Template{
+        finder.Templates["raptors.hungry."+models.UserBodyTemplateName] = models.Template{
             HTML: "<p>Can Raptors Open Doors?</p>",
             Text: "Yes they ca--",
         }
@@ -33,7 +33,7 @@ var _ = Describe("TemplateLoader", func() {
     Describe("LoadTemplates", func() {
 
         It("Returns templates using its finder", func() {
-            templates, err := loader.LoadTemplates("subject.provided", "user_body", "raptors", "hungry")
+            templates, err := loader.LoadTemplates(models.SubjectProvidedTemplateName, models.UserBodyTemplateName, "raptors", "hungry")
             Expect(err).ToNot(HaveOccurred())
             Expect(templates.HTML).To(Equal("<p>Can Raptors Open Doors?</p>"))
             Expect(templates.Text).To(Equal("Yes they ca--"))
@@ -43,7 +43,7 @@ var _ = Describe("TemplateLoader", func() {
         Context("The finder errors", func() {
             It("Propagates that error", func() {
                 finder.FindError = errors.New("Boom!")
-                _, err := loader.LoadTemplates("subject.provided", "user_body", "raptors", "hungry")
+                _, err := loader.LoadTemplates(models.SubjectProvidedTemplateName, models.UserBodyTemplateName, "raptors", "hungry")
                 Expect(err).To(HaveOccurred())
 
             })

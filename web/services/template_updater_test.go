@@ -19,7 +19,7 @@ var _ = Describe("Updater", func() {
         BeforeEach(func() {
             fakeTemplatesRepo = fakes.NewFakeTemplatesRepo()
             template = models.Template{
-                Name:       "gobble.user_body",
+                Name:       "gobble." + models.UserBodyTemplateName,
                 Text:       "gobble",
                 HTML:       "<p>gobble</p>",
                 Overridden: true,

@@ -32,7 +32,7 @@ var _ = Describe("SetTemplates", func() {
             handler = handlers.NewSetTemplates(updater, fakeErrorWriter)
             writer = httptest.NewRecorder()
             body := []byte(`{"text": "{{turkey}}", "html": "<p>{{turkey}} gobble</p>"}`)
-            request, err = http.NewRequest("PUT", "/templates/myTemplateName.user_body", bytes.NewBuffer(body))
+            request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
             if err != nil {
                 panic(err)
             }
@@ -41,7 +41,7 @@ var _ = Describe("SetTemplates", func() {
         It("calls set on its setter with appropriate arguments", func() {
             handler.ServeHTTP(writer, request, context)
             Expect(updater.UpdateArgument).To(Equal(models.Template{
-                Name:       "myTemplateName.user_body",
+                Name:       "myTemplateName." + models.UserBodyTemplateName,
                 Text:       "{{turkey}}",
                 HTML:       "<p>{{turkey}} gobble</p>",
                 Overridden: true,
@@ -51,7 +51,7 @@ var _ = Describe("SetTemplates", func() {
 
         It("can set a template with an empty text field", func() {
             body := []byte(`{"html": "<p>gobble</p>", "text": ""}`)
-            request, err = http.NewRequest("PUT", "/templates/myTemplateName.user_body", bytes.NewBuffer(body))
+            request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
             if err != nil {
                 panic(err)
             }
@@ -61,7 +61,7 @@ var _ = Describe("SetTemplates", func() {
 
         It("can set a template with an empty html field", func() {
             body := []byte(`{"html": "", "text": "gobble"}`)
-            request, err = http.NewRequest("PUT", "/templates/myTemplateName.user_body", bytes.NewBuffer(body))
+            request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
             if err != nil {
                 panic(err)
             }
@@ -72,7 +72,7 @@ var _ = Describe("SetTemplates", func() {
         Context("when an errors occurs", func() {
             It("Writes a validation error to the errorwriter when the request is missing the text field", func() {
                 body := []byte(`{"html": "<p>gobble</p>"}`)
-                request, err = http.NewRequest("PUT", "/templates/myTemplateName.user_body", bytes.NewBuffer(body))
+                request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
                 if err != nil {
                     panic(err)
                 }
@@ -84,7 +84,7 @@ var _ = Describe("SetTemplates", func() {
 
             It("Writes a validation error to the errorwriter when the request is missing the html field", func() {
                 body := []byte(`{"text": "gobble"}`)
-                request, err = http.NewRequest("PUT", "/templates/myTemplateName.user_body", bytes.NewBuffer(body))
+                request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
                 if err != nil {
                     panic(err)
                 }
@@ -96,7 +96,7 @@ var _ = Describe("SetTemplates", func() {
 
             It("writes a parse error for an invalid request", func() {
                 body := []byte(`{"text": forgot to close the curly brace`)
-                request, err = http.NewRequest("PUT", "/templates/myTemplateName.user_body", bytes.NewBuffer(body))
+                request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
                 if err != nil {
                     panic(err)
                 }
@@ -123,7 +123,7 @@ var _ = Describe("SetTemplates", func() {
                     }
                     handler.ServeHTTP(writer, request, context)
                     Expect(fakeErrorWriter.Error).To(Equal(params.ValidationError([]string{
-                        "Template has invalid suffix, must end with one of [user_body space_body email_body subject.missing subject.provided]",
+                        fmt.Sprintf("Template has invalid suffix, must end with one of %+v\n", models.TemplateNames),
                     })))
 
                 }

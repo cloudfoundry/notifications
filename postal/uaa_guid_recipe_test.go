@@ -10,6 +10,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/fakes"
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -233,7 +234,7 @@ var _ = Describe("UAA Recipe", func() {
 
                     users := map[string]uaa.User{"user-123": user123, "user-456": user456}
 
-                    Expect(fakeTemplatesLoader.ContentSuffix).To(Equal("space_body"))
+                    Expect(fakeTemplatesLoader.ContentSuffix).To(Equal(models.SpaceBodyTemplateName))
                     Expect(mailer.DeliverArguments).To(ContainElement(conn))
                     Expect(mailer.DeliverArguments).To(ContainElement(templates))
                     Expect(mailer.DeliverArguments).To(ContainElement(users))
@@ -276,7 +277,7 @@ var _ = Describe("UAA Recipe", func() {
 
                     users := map[string]uaa.User{"user-123": user123, "user-456": user456}
 
-                    Expect(fakeTemplatesLoader.ContentSuffix).To(Equal("organization_body"))
+                    Expect(fakeTemplatesLoader.ContentSuffix).To(Equal(models.OrganizationBodyTemplateName))
                     Expect(mailer.DeliverArguments).To(ContainElement(conn))
                     Expect(mailer.DeliverArguments).To(ContainElement(templates))
                     Expect(mailer.DeliverArguments).To(ContainElement(users))

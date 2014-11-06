@@ -12,7 +12,6 @@ const (
     EmailFieldName      = "email"
     RecipientsFieldName = "recipient"
     EmptyIDForNonUser   = ""
-    EmailSuffix         = "email_body"
 )
 
 type MailRecipeInterface interface {
@@ -39,7 +38,7 @@ func (recipe EmailRecipe) Dispatch(clientID string, guid TypedGUID,
 
     subjectSuffix := recipe.subjectSuffix(options.Subject)
 
-    templates, err := recipe.templatesLoader.LoadTemplates(subjectSuffix, EmailSuffix, clientID, options.KindID)
+    templates, err := recipe.templatesLoader.LoadTemplates(subjectSuffix, models.EmailBodyTemplateName, clientID, options.KindID)
 
     if err != nil {
         return []Response{}, TemplateLoadError("An email template could not be loaded")
@@ -84,7 +83,7 @@ func (t Trimmer) TrimFields(responses []byte, field string) []byte {
 
 func (recipe EmailRecipe) subjectSuffix(subject string) string {
     if subject == "" {
-        return SubjectMissingSuffix
+        return models.SubjectMissingTemplateName
     }
-    return SubjectProvidedSuffix
+    return models.SubjectProvidedTemplateName
 }

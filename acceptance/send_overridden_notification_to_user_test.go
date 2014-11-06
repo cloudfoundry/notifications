@@ -11,6 +11,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/acceptance/servers"
     "github.com/cloudfoundry-incubator/notifications/config"
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -57,7 +58,7 @@ type SendOverriddenNotificationToUser struct{}
 
 func (t SendOverriddenNotificationToUser) OverrideClientUserTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, textTemplate, htmlTemplate string) {
     jsonBody := []byte(fmt.Sprintf(`{"text":"%s", "html":"%s"}`, textTemplate, htmlTemplate))
-    request, err := http.NewRequest("PUT", notificationsServer.TemplatePath("notifications-sender.user_body"), bytes.NewBuffer(jsonBody))
+    request, err := http.NewRequest("PUT", notificationsServer.TemplatePath("notifications-sender."+models.UserBodyTemplateName), bytes.NewBuffer(jsonBody))
     if err != nil {
         panic(err)
     }

@@ -58,7 +58,7 @@ type DeleteTemplates struct{}
 
 func (t DeleteTemplates) SetTemplates(notificationsServer servers.Notifications, clientToken uaa.Token, text, html string) {
     jsonBody := []byte(fmt.Sprintf(`{"text":"%s", "html":"%s"}`, text, html))
-    request, err := http.NewRequest("PUT", notificationsServer.TemplatePath("space_body"), bytes.NewBuffer(jsonBody))
+    request, err := http.NewRequest("PUT", notificationsServer.TemplatePath(models.SpaceBodyTemplateName), bytes.NewBuffer(jsonBody))
     if err != nil {
         panic(err)
     }
@@ -75,7 +75,7 @@ func (t DeleteTemplates) SetTemplates(notificationsServer servers.Notifications,
 }
 
 func (t DeleteTemplates) DeleteTemplates(notificationsServer servers.Notifications, clientToken uaa.Token) {
-    request, err := http.NewRequest("DELETE", notificationsServer.TemplatePath("space_body"), bytes.NewBuffer([]byte(``)))
+    request, err := http.NewRequest("DELETE", notificationsServer.TemplatePath(models.SpaceBodyTemplateName), bytes.NewBuffer([]byte(``)))
     if err != nil {
         panic(err)
     }
@@ -91,7 +91,7 @@ func (t DeleteTemplates) DeleteTemplates(notificationsServer servers.Notificatio
 }
 
 func (t DeleteTemplates) GetTemplates(notificationsServer servers.Notifications, clientToken uaa.Token) {
-    request, err := http.NewRequest("GET", notificationsServer.TemplatePath("space_body"), bytes.NewBuffer([]byte(``)))
+    request, err := http.NewRequest("GET", notificationsServer.TemplatePath(models.SpaceBodyTemplateName), bytes.NewBuffer([]byte(``)))
     if err != nil {
         panic(err)
     }

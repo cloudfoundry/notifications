@@ -28,7 +28,7 @@ var _ = Describe("GetTemplates", func() {
         BeforeEach(func() {
             finder = fakes.NewFakeTemplateFinder()
 
-            finder.Templates["myTemplateName.user_body"] = models.Template{
+            finder.Templates["myTemplateName."+models.UserBodyTemplateName] = models.Template{
                 Text: "the template {{variable}}",
                 HTML: "<p> the template {{variable}} </p>",
             }
@@ -41,7 +41,7 @@ var _ = Describe("GetTemplates", func() {
             BeforeEach(func() {
 
                 var err error
-                request, err = http.NewRequest("GET", "/templates/myTemplateName.user_body", bytes.NewBuffer([]byte{}))
+                request, err = http.NewRequest("GET", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer([]byte{}))
                 if err != nil {
                     panic(err)
                 }
@@ -49,7 +49,7 @@ var _ = Describe("GetTemplates", func() {
 
             It("Calls find on its finder with appropriate arguments", func() {
                 handler.ServeHTTP(writer, request, context)
-                Expect(finder.TemplateName).To(Equal("myTemplateName.user_body"))
+                Expect(finder.TemplateName).To(Equal("myTemplateName." + models.UserBodyTemplateName))
             })
 
             It("writes out the finder's response", func() {
@@ -75,7 +75,7 @@ var _ = Describe("GetTemplates", func() {
                 finder.FindError = errors.New("BOOM!")
 
                 var err error
-                request, err = http.NewRequest("GET", "/templates/myTemplateName.user_body", bytes.NewBuffer([]byte{}))
+                request, err = http.NewRequest("GET", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer([]byte{}))
                 if err != nil {
                     panic(err)
                 }

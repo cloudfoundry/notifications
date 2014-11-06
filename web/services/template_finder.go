@@ -98,7 +98,7 @@ func (finder TemplateFinder) search(connection models.ConnectionInterface, name 
 }
 
 func (finder TemplateFinder) findDefaultTemplate(name string) (models.Template, error) {
-    if name == "subject.missing" || name == "subject.provided" {
+    if name == models.SubjectMissingTemplateName || name == models.SubjectProvidedTemplateName {
         return finder.defaultSubjectTemplate(name)
     } else {
         return finder.defaultTemplate(name)

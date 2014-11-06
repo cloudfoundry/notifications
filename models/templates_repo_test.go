@@ -58,7 +58,7 @@ var _ = Describe("TemplatesRepo", func() {
     Describe("#Upsert", func() {
         It("inserts a template into the database", func() {
             newTemplate := models.Template{
-                Name: "silly_template.user_body",
+                Name: "silly_template." + models.UserBodyTemplateName,
                 Text: "omg",
                 HTML: "<h1>OMG</h1>",
             }

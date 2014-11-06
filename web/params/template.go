@@ -10,8 +10,6 @@ import (
     "github.com/cloudfoundry-incubator/notifications/models"
 )
 
-var validEndings = [5]string{"user_body", "space_body", "email_body", "subject.missing", "subject.provided"}
-
 type Template struct {
     Name string `json:"name"`
     Text string `json:"text"`
@@ -58,14 +56,14 @@ func (template *Template) Validate() error {
     invalidSuffix := true
     name := template.Name
 
-    for _, validEnding := range validEndings {
+    for _, validEnding := range models.TemplateNames {
         if strings.HasSuffix(name, validEnding) {
             invalidSuffix = false
         }
     }
 
     if invalidSuffix {
-        return ValidationError([]string{fmt.Sprintf("Template has invalid suffix, must end with one of %v", validEndings)})
+        return ValidationError([]string{fmt.Sprintf("Template has invalid suffix, must end with one of %v\n", models.TemplateNames)})
     }
 
     return template.validateFormat(name)
