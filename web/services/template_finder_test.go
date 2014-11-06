@@ -187,5 +187,32 @@ var _ = Describe("Finder", func() {
                 Expect(err.Error()).To(Equal("some-error"))
             })
         })
+
+        Context("when the template name does not match a known format", func() {
+            It("returns a TemplateNotFound error", func() {
+                _, err := finder.Find("banana")
+                Expect(err).To(BeAssignableToTypeOf(services.TemplateNotFoundError("")))
+            })
+        })
+    })
+
+    Describe("#ParseTemplateName", func() {
+        It("parses the input template name, returning a list of possible template matches", func() {
+            table := map[string][]string{
+                "login.fp.user_body": []string{"login.fp.user_body", "login.user_body", "user_body"},
+                "login.user_body": []string{"login.user_body", "user_body"},
+                "user_body": []string{"user_body"},
+                "login.fp.subject.missing": []string{"login.fp.subject.missing", "login.subject.missing", "subject.missing"},
+                "login.subject.missing": []string{"login.subject.missing", "subject.missing"},
+                "subject.missing": []string{"subject.missing"},
+                "banana": []string{},
+                "login.fp.banana.user_body": []string{},
+            }
+
+            for input, output := range table {
+                names := finder.ParseTemplateName(input)
+                Expect(names).To(Equal(output))
+            }
+        })
     })
 })

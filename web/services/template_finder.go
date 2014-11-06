@@ -2,6 +2,7 @@ package services
 
 import (
     "strings"
+    "fmt"
 
     "github.com/cloudfoundry-incubator/notifications/models"
 )
@@ -22,6 +23,12 @@ type TemplateFinderInterface interface {
     Find(string) (models.Template, error)
 }
 
+type TemplateNotFoundError string
+
+func (err TemplateNotFoundError) Error() string {
+    return fmt.Sprintf("Template %q could not be found.", string(err))
+}
+
 func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, rootPath string, database models.DatabaseInterface, fileSystem FileSystemInterface) TemplateFinder {
     return TemplateFinder{
         templatesRepo: templatesRepo,
@@ -32,8 +39,11 @@ func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, rootPath str
 }
 
 func (finder TemplateFinder) Find(templateName string) (models.Template, error) {
-    templateNames := finder.templatesToSeachFor(templateName)
-    template, err := finder.search(finder.database.Connection(), templateName, templateNames)
+    names := finder.ParseTemplateName(templateName)
+    if len(names) == 0 {
+        return models.Template{}, TemplateNotFoundError(templateName)
+    }
+    template, err := finder.search(finder.database.Connection(), names[0], names[1:])
     if err != nil {
         return models.Template{}, err
     }
@@ -45,40 +55,35 @@ func (finder TemplateFinder) Find(templateName string) (models.Template, error) 
     return template, err
 }
 
-func (finder TemplateFinder) templatesToSeachFor(templateName string) []string {
-    var client string
-    var notificationType string
-
-    items := strings.Split(templateName, ".")
-    numberOfItems := len(items)
-
-    switch numberOfItems {
-    case 4:
-        client = items[0]
-        notificationType = items[2] + "." + items[3]
-    case 3:
-        client = items[0]
-        if items[1] == "subject" {
-            notificationType = items[1] + "." + items[2]
-        } else {
-            notificationType = items[2]
-        }
-    case 2:
-        client = items[0]
-        notificationType = items[1]
-    case 1:
-        notificationType = items[0]
-    }
-
+func (finder TemplateFinder) ParseTemplateName(name string) []string {
     names := make([]string, 0)
-    if client != "" {
-        names = append(names, client+"."+notificationType)
+
+    for _, suffix := range models.TemplateNames {
+        if strings.HasSuffix(name, suffix) {
+            prefix := strings.TrimSuffix(name,suffix)
+            prefix = strings.TrimSuffix(prefix, ".")
+            var parts []string
+            for _, part := range strings.Split(prefix, ".") {
+                if part != "" {
+                    parts = append(parts, part)
+                }
+            }
+            length := len(parts)
+            if length > 2 {
+                return names
+            }
+            for i := 0; i < length; i++ {
+                beginning := strings.Join(parts, ".")
+                names = append(names, beginning + "." + suffix)
+                parts = parts[:len(parts)-1]
+            }
+            names = append(names, suffix)
+            return names
+        }
     }
-
-    names = append(names, notificationType)
-
     return names
 }
+
 
 func (finder TemplateFinder) search(connection models.ConnectionInterface, name string, alternates []string) (models.Template, error) {
     template, err := finder.templatesRepo.Find(connection, name)
