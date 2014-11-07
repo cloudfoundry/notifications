@@ -3,24 +3,27 @@ package postal
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type SpaceStrategy struct {
-    tokenLoader       TokenLoaderInterface
-    userLoader        UserLoaderInterface
-    spaceAndOrgLoader SpaceAndOrgLoaderInterface
-    templatesLoader   TemplatesLoaderInterface
-    mailer            MailerInterface
-    receiptsRepo      models.ReceiptsRepoInterface
+    tokenLoader        TokenLoaderInterface
+    userLoader         UserLoaderInterface
+    spaceLoader        SpaceLoaderInterface
+    organizationLoader OrganizationLoaderInterface
+    templatesLoader    TemplatesLoaderInterface
+    mailer             MailerInterface
+    receiptsRepo       models.ReceiptsRepoInterface
 }
 
-func NewSpaceStrategy(tokenLoader TokenLoaderInterface, userLoader UserLoaderInterface, spaceAndOrgLoader SpaceAndOrgLoaderInterface,
-    templatesLoader TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) SpaceStrategy {
+func NewSpaceStrategy(tokenLoader TokenLoaderInterface, userLoader UserLoaderInterface, spaceLoader SpaceLoaderInterface,
+    organizationLoader OrganizationLoaderInterface, templatesLoader TemplatesLoaderInterface, mailer MailerInterface,
+    receiptsRepo models.ReceiptsRepoInterface) SpaceStrategy {
 
     return SpaceStrategy{
-        tokenLoader:       tokenLoader,
-        userLoader:        userLoader,
-        spaceAndOrgLoader: spaceAndOrgLoader,
-        templatesLoader:   templatesLoader,
-        mailer:            mailer,
-        receiptsRepo:      receiptsRepo,
+        tokenLoader:        tokenLoader,
+        userLoader:         userLoader,
+        spaceLoader:        spaceLoader,
+        organizationLoader: organizationLoader,
+        templatesLoader:    templatesLoader,
+        mailer:             mailer,
+        receiptsRepo:       receiptsRepo,
     }
 }
 
@@ -32,7 +35,12 @@ func (strategy SpaceStrategy) Dispatch(clientID string, guid TypedGUID, options 
         return responses, err
     }
 
-    space, organization, err := strategy.spaceAndOrgLoader.Load(guid, token)
+    space, err := strategy.spaceLoader.Load(guid.String(), token)
+    if err != nil {
+        return responses, err
+    }
+
+    organization, err := strategy.organizationLoader.Load(space.OrganizationGUID, token)
     if err != nil {
         return responses, err
     }

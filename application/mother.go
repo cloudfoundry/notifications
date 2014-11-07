@@ -67,12 +67,13 @@ func (mother Mother) SpaceStrategy() postal.SpaceStrategy {
 
     tokenLoader := postal.NewTokenLoader(&uaaClient)
     userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
-    spaceAndOrgLoader := postal.NewSpaceAndOrgLoader(cloudController)
+    spaceLoader := postal.NewSpaceLoader(cloudController)
+    organizationLoader := postal.NewOrganizationLoader(cloudController)
     templatesLoader := postal.NewTemplatesLoader(finder)
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewSpaceStrategy(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
+    return postal.NewSpaceStrategy(tokenLoader, userLoader, spaceLoader, organizationLoader, templatesLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) OrganizationStrategy() postal.OrganizationStrategy {
@@ -84,12 +85,12 @@ func (mother Mother) OrganizationStrategy() postal.OrganizationStrategy {
 
     tokenLoader := postal.NewTokenLoader(&uaaClient)
     userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
-    spaceAndOrgLoader := postal.NewSpaceAndOrgLoader(cloudController)
+    organizationLoader := postal.NewOrganizationLoader(cloudController)
     templatesLoader := postal.NewTemplatesLoader(finder)
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewOrganizationStrategy(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
+    return postal.NewOrganizationStrategy(tokenLoader, userLoader, organizationLoader, templatesLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) FileSystem() services.FileSystemInterface {

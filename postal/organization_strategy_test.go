@@ -19,7 +19,7 @@ var _ = Describe("Organization Strategy", func() {
     var options postal.Options
     var tokenLoader *fakes.TokenLoader
     var userLoader *fakes.UserLoader
-    var spaceAndOrgLoader *fakes.SpaceAndOrgLoader
+    var organizationLoader *fakes.OrganizationLoader
     var templatesLoader *fakes.TemplatesLoader
     var mailer *fakes.Mailer
     var clientID string
@@ -58,17 +58,15 @@ var _ = Describe("Organization Strategy", func() {
             },
         }
 
-        spaceAndOrgLoader = fakes.NewSpaceAndOrgLoader()
-        templatesLoader = &fakes.TemplatesLoader{}
+        templatesLoader = fakes.NewTemplatesLoader()
 
-        spaceAndOrgLoader.Space = cf.CloudControllerSpace{}
-
-        spaceAndOrgLoader.Organization = cf.CloudControllerOrganization{
+        organizationLoader = fakes.NewOrganizationLoader()
+        organizationLoader.Organization = cf.CloudControllerOrganization{
             Name: "my-org",
             GUID: "org-001",
         }
 
-        strategy = postal.NewOrganizationStrategy(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
+        strategy = postal.NewOrganizationStrategy(tokenLoader, userLoader, organizationLoader, templatesLoader, mailer, receiptsRepo)
     })
 
     Describe("Dispatch", func() {
@@ -144,9 +142,9 @@ var _ = Describe("Organization Strategy", func() {
                 })
             })
 
-            Context("when spaceAndOrgLoader fails to load an organization", func() {
+            Context("when organizationLoader fails to load an organization", func() {
                 It("returns the error", func() {
-                    spaceAndOrgLoader.LoadError = errors.New("BOOM!")
+                    organizationLoader.LoadError = errors.New("BOOM!")
                     _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-009"), options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))

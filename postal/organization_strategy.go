@@ -1,26 +1,29 @@
 package postal
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+    "github.com/cloudfoundry-incubator/notifications/cf"
+    "github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type OrganizationStrategy struct {
-    tokenLoader       TokenLoaderInterface
-    userLoader        UserLoaderInterface
-    spaceAndOrgLoader SpaceAndOrgLoaderInterface
-    templatesLoader   TemplatesLoaderInterface
-    mailer            MailerInterface
-    receiptsRepo      models.ReceiptsRepoInterface
+    tokenLoader        TokenLoaderInterface
+    userLoader         UserLoaderInterface
+    organizationLoader OrganizationLoaderInterface
+    templatesLoader    TemplatesLoaderInterface
+    mailer             MailerInterface
+    receiptsRepo       models.ReceiptsRepoInterface
 }
 
-func NewOrganizationStrategy(tokenLoader TokenLoaderInterface, userLoader UserLoaderInterface, spaceAndOrgLoader SpaceAndOrgLoaderInterface,
+func NewOrganizationStrategy(tokenLoader TokenLoaderInterface, userLoader UserLoaderInterface, organizationLoader OrganizationLoaderInterface,
     templatesLoader TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) OrganizationStrategy {
 
     return OrganizationStrategy{
-        tokenLoader:       tokenLoader,
-        userLoader:        userLoader,
-        spaceAndOrgLoader: spaceAndOrgLoader,
-        templatesLoader:   templatesLoader,
-        mailer:            mailer,
-        receiptsRepo:      receiptsRepo,
+        tokenLoader:        tokenLoader,
+        userLoader:         userLoader,
+        organizationLoader: organizationLoader,
+        templatesLoader:    templatesLoader,
+        mailer:             mailer,
+        receiptsRepo:       receiptsRepo,
     }
 }
 
@@ -32,7 +35,7 @@ func (strategy OrganizationStrategy) Dispatch(clientID string, guid TypedGUID, o
         return responses, err
     }
 
-    space, organization, err := strategy.spaceAndOrgLoader.Load(guid, token)
+    organization, err := strategy.organizationLoader.Load(guid.String(), token)
     if err != nil {
         return responses, err
     }
@@ -60,7 +63,7 @@ func (strategy OrganizationStrategy) Dispatch(clientID string, guid TypedGUID, o
         return responses, err
     }
 
-    responses = strategy.mailer.Deliver(conn, templates, users, options, space, organization, clientID)
+    responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, organization, clientID)
 
     return responses, nil
 }

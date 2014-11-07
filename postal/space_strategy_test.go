@@ -19,7 +19,8 @@ var _ = Describe("Space Strategy", func() {
     var options postal.Options
     var tokenLoader *fakes.TokenLoader
     var userLoader *fakes.UserLoader
-    var spaceAndOrgLoader *fakes.SpaceAndOrgLoader
+    var spaceLoader *fakes.SpaceLoader
+    var organizationLoader *fakes.OrganizationLoader
     var templatesLoader *fakes.TemplatesLoader
     var mailer *fakes.Mailer
     var clientID string
@@ -58,16 +59,22 @@ var _ = Describe("Space Strategy", func() {
             },
         }
 
-        spaceAndOrgLoader = fakes.NewSpaceAndOrgLoader()
-        templatesLoader = &fakes.TemplatesLoader{}
+        templatesLoader = fakes.NewTemplatesLoader()
 
-        spaceAndOrgLoader.Space = cf.CloudControllerSpace{
+        spaceLoader = fakes.NewSpaceLoader()
+        spaceLoader.Space = cf.CloudControllerSpace{
             Name:             "production",
             GUID:             "space-001",
             OrganizationGUID: "org-001",
         }
 
-        strategy = postal.NewSpaceStrategy(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
+        organizationLoader = fakes.NewOrganizationLoader()
+        organizationLoader.Organization = cf.CloudControllerOrganization{
+            Name: "the-org",
+            GUID: "org-001",
+        }
+
+        strategy = postal.NewSpaceStrategy(tokenLoader, userLoader, spaceLoader, organizationLoader, templatesLoader, mailer, receiptsRepo)
     })
 
     Describe("Dispatch", func() {
@@ -124,7 +131,10 @@ var _ = Describe("Space Strategy", func() {
                 Expect(mailer.DeliverArguments).To(ContainElement(templates))
                 Expect(mailer.DeliverArguments).To(ContainElement(users))
                 Expect(mailer.DeliverArguments).To(ContainElement(options))
-                Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{}))
+                Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{
+                    Name: "the-org",
+                    GUID: "org-001",
+                }))
                 Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{
                     GUID:             "space-001",
                     Name:             "production",
@@ -144,9 +154,9 @@ var _ = Describe("Space Strategy", func() {
                 })
             })
 
-            Context("when spaceAndOrgLoader fails to load a space", func() {
+            Context("when spaceLoader fails to load a space", func() {
                 It("returns an error", func() {
-                    spaceAndOrgLoader.LoadError = errors.New("BOOM!")
+                    spaceLoader.LoadError = errors.New("BOOM!")
                     _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-000"), options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
