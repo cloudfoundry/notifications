@@ -1,11 +1,11 @@
-package postal_test
+package utilities_test
 
 import (
     "errors"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/fakes"
-    "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/utilities"
 
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
@@ -13,7 +13,7 @@ import (
 
 var _ = Describe("OrganizationLoader", func() {
     Describe("Load", func() {
-        var loader postal.OrganizationLoader
+        var loader utilities.OrganizationLoader
         var token string
         var cc *fakes.CloudController
 
@@ -28,7 +28,7 @@ var _ = Describe("OrganizationLoader", func() {
                     Name: "org-piggies",
                 },
             }
-            loader = postal.NewOrganizationLoader(cc)
+            loader = utilities.NewOrganizationLoader(cc)
         })
 
         It("returns the org", func() {
@@ -47,7 +47,7 @@ var _ = Describe("OrganizationLoader", func() {
             It("returns an error object", func() {
                 _, err := loader.Load("org-doesnotexist", token)
 
-                Expect(err).To(BeAssignableToTypeOf(postal.CCNotFoundError("")))
+                Expect(err).To(BeAssignableToTypeOf(utilities.CCNotFoundError("")))
                 Expect(err.Error()).To(Equal(`CloudController Error: CloudController Failure (404): {"code":30003,"description":"The organization could not be found: org-doesnotexist","error_code":"CF-OrganizationNotFound"}`))
             })
         })
@@ -58,7 +58,7 @@ var _ = Describe("OrganizationLoader", func() {
                 cc.LoadOrganizationError = failure
                 _, err := loader.Load("org-001", token)
 
-                Expect(err).To(Equal(postal.CCDownError(failure.Error())))
+                Expect(err).To(Equal(utilities.CCDownError(failure.Error())))
             })
 
             It("returns the same error for all other cases", func() {

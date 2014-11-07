@@ -1,4 +1,4 @@
-package postal_test
+package utilities_test
 
 import (
     "bytes"
@@ -12,7 +12,7 @@ import (
     . "github.com/onsi/gomega"
 )
 
-func TestPostalSuite(t *testing.T) {
+func TestUtilitiesSuite(t *testing.T) {
     fakes.RegisterFastTokenSigningMethod()
 
     buffer := bytes.NewBuffer([]byte{})
@@ -20,7 +20,7 @@ func TestPostalSuite(t *testing.T) {
     metrics.Logger = log.New(buffer, "", 0)
 
     RegisterFailHandler(Fail)
-    RunSpecs(t, "Postal Suite")
+    RunSpecs(t, "Utilities Suite")
 
     metrics.Logger = metricsLogger
 }

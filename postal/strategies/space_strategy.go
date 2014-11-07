@@ -3,20 +3,21 @@ package strategies
 import (
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/utilities"
 )
 
 type SpaceStrategy struct {
-    tokenLoader        postal.TokenLoaderInterface
-    userLoader         postal.UserLoaderInterface
-    spaceLoader        postal.SpaceLoaderInterface
-    organizationLoader postal.OrganizationLoaderInterface
-    templatesLoader    postal.TemplatesLoaderInterface
+    tokenLoader        utilities.TokenLoaderInterface
+    userLoader         utilities.UserLoaderInterface
+    spaceLoader        utilities.SpaceLoaderInterface
+    organizationLoader utilities.OrganizationLoaderInterface
+    templatesLoader    utilities.TemplatesLoaderInterface
     mailer             MailerInterface
     receiptsRepo       models.ReceiptsRepoInterface
 }
 
-func NewSpaceStrategy(tokenLoader postal.TokenLoaderInterface, userLoader postal.UserLoaderInterface, spaceLoader postal.SpaceLoaderInterface,
-    organizationLoader postal.OrganizationLoaderInterface, templatesLoader postal.TemplatesLoaderInterface, mailer MailerInterface,
+func NewSpaceStrategy(tokenLoader utilities.TokenLoaderInterface, userLoader utilities.UserLoaderInterface, spaceLoader utilities.SpaceLoaderInterface,
+    organizationLoader utilities.OrganizationLoaderInterface, templatesLoader utilities.TemplatesLoaderInterface, mailer MailerInterface,
     receiptsRepo models.ReceiptsRepoInterface) SpaceStrategy {
 
     return SpaceStrategy{

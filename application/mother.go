@@ -12,6 +12,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/postal/strategies"
+    "github.com/cloudfoundry-incubator/notifications/postal/utilities"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/middleware"
     "github.com/cloudfoundry-incubator/notifications/web/services"
@@ -50,9 +51,9 @@ func (mother Mother) UserStrategy() strategies.UserStrategy {
     uaaClient.VerifySSL = env.VerifySSL
     cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-    tokenLoader := postal.NewTokenLoader(&uaaClient)
-    userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
-    templatesLoader := postal.NewTemplatesLoader(finder)
+    tokenLoader := utilities.NewTokenLoader(&uaaClient)
+    userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
+    templatesLoader := utilities.NewTemplatesLoader(finder)
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
@@ -66,11 +67,11 @@ func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
     uaaClient.VerifySSL = env.VerifySSL
     cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-    tokenLoader := postal.NewTokenLoader(&uaaClient)
-    userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
-    spaceLoader := postal.NewSpaceLoader(cloudController)
-    organizationLoader := postal.NewOrganizationLoader(cloudController)
-    templatesLoader := postal.NewTemplatesLoader(finder)
+    tokenLoader := utilities.NewTokenLoader(&uaaClient)
+    userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
+    spaceLoader := utilities.NewSpaceLoader(cloudController)
+    organizationLoader := utilities.NewOrganizationLoader(cloudController)
+    templatesLoader := utilities.NewTemplatesLoader(finder)
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
@@ -84,10 +85,10 @@ func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
     uaaClient.VerifySSL = env.VerifySSL
     cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-    tokenLoader := postal.NewTokenLoader(&uaaClient)
-    userLoader := postal.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
-    organizationLoader := postal.NewOrganizationLoader(cloudController)
-    templatesLoader := postal.NewTemplatesLoader(finder)
+    tokenLoader := utilities.NewTokenLoader(&uaaClient)
+    userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
+    organizationLoader := utilities.NewOrganizationLoader(cloudController)
+    templatesLoader := utilities.NewTemplatesLoader(finder)
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
@@ -99,7 +100,7 @@ func (mother Mother) FileSystem() services.FileSystemInterface {
 }
 
 func (mother Mother) EmailStrategy() strategies.EmailStrategy {
-    return strategies.NewEmailStrategy(mother.Mailer(), postal.NewTemplatesLoader(mother.TemplateFinder()))
+    return strategies.NewEmailStrategy(mother.Mailer(), utilities.NewTemplatesLoader(mother.TemplateFinder()))
 }
 
 func (mother Mother) NotificationFinder() services.NotificationFinder {

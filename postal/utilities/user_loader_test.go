@@ -1,4 +1,4 @@
-package postal_test
+package utilities_test
 
 import (
     "bytes"
@@ -7,6 +7,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/utilities"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -14,7 +15,7 @@ import (
 )
 
 var _ = Describe("UserLoader", func() {
-    var loader postal.UserLoader
+    var loader utilities.UserLoader
     var token string
     var uaaClient *fakes.UAAClient
     var cc *fakes.CloudController
@@ -80,7 +81,7 @@ var _ = Describe("UserLoader", func() {
             }
 
             logger := log.New(bytes.NewBufferString(""), "", 0)
-            loader = postal.NewUserLoader(uaaClient, logger, cc)
+            loader = utilities.NewUserLoader(uaaClient, logger, cc)
         })
 
         Context("UAA returns a collection of users", func() {
@@ -134,7 +135,7 @@ var _ = Describe("UserLoader", func() {
 
                     _, err := loader.Load(postal.UserGUID("user-123"), token)
 
-                    Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
+                    Expect(err).To(BeAssignableToTypeOf(utilities.UAADownError("")))
                 })
             })
 
@@ -144,7 +145,7 @@ var _ = Describe("UserLoader", func() {
 
                     _, err := loader.Load(postal.UserGUID("user-123"), token)
 
-                    Expect(err).To(BeAssignableToTypeOf(postal.UAAGenericError("")))
+                    Expect(err).To(BeAssignableToTypeOf(utilities.UAAGenericError("")))
                 })
             })
 
@@ -154,7 +155,7 @@ var _ = Describe("UserLoader", func() {
 
                     _, err := loader.Load(postal.UserGUID("user-123"), token)
 
-                    Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
+                    Expect(err).To(BeAssignableToTypeOf(utilities.UAADownError("")))
                 })
             })
         })

@@ -1,15 +1,12 @@
-package postal
+package utilities
 
-import "github.com/cloudfoundry-incubator/notifications/web/services"
-
-type Templates struct {
-    Subject string
-    Text    string
-    HTML    string
-}
+import (
+    "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/web/services"
+)
 
 type TemplatesLoaderInterface interface {
-    LoadTemplates(string, string, string, string) (Templates, error)
+    LoadTemplates(string, string, string, string) (postal.Templates, error)
 }
 
 type TemplatesLoader struct {
@@ -22,20 +19,20 @@ func NewTemplatesLoader(finder services.TemplateFinderInterface) TemplatesLoader
     }
 }
 
-func (loader TemplatesLoader) LoadTemplates(subjectSuffix, contentSuffix, client, kind string) (Templates, error) {
+func (loader TemplatesLoader) LoadTemplates(subjectSuffix, contentSuffix, client, kind string) (postal.Templates, error) {
     contentPath := client + "." + kind + "." + contentSuffix
     contentTemplate, err := loader.finder.Find(contentPath)
     if err != nil {
-        return Templates{}, err
+        return postal.Templates{}, err
     }
 
     subjectPath := client + "." + kind + "." + subjectSuffix
     subjectTemplate, err := loader.finder.Find(subjectPath)
     if err != nil {
-        return Templates{}, err
+        return postal.Templates{}, err
     }
 
-    templates := Templates{
+    templates := postal.Templates{
         Subject: subjectTemplate.Text,
         Text:    contentTemplate.Text,
         HTML:    contentTemplate.HTML,

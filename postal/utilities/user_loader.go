@@ -1,4 +1,4 @@
-package postal
+package utilities
 
 import (
     "log"
@@ -6,6 +6,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/metrics"
+    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
@@ -16,7 +17,7 @@ type UserLoader struct {
 }
 
 type UserLoaderInterface interface {
-    Load(TypedGUID, string) (map[string]uaa.User, error)
+    Load(postal.TypedGUID, string) (map[string]uaa.User, error)
 }
 
 func NewUserLoader(uaaClient UAAInterface, logger *log.Logger, cloudController cf.CloudControllerInterface) UserLoader {
@@ -27,7 +28,7 @@ func NewUserLoader(uaaClient UAAInterface, logger *log.Logger, cloudController c
     }
 }
 
-func (loader UserLoader) Load(guid TypedGUID, token string) (map[string]uaa.User, error) {
+func (loader UserLoader) Load(guid postal.TypedGUID, token string) (map[string]uaa.User, error) {
     users := make(map[string]uaa.User)
 
     var guids []string

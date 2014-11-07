@@ -6,6 +6,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/utilities"
     "github.com/cloudfoundry-incubator/notifications/web/params"
 )
 
@@ -23,13 +24,13 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
     switch err.(type) {
     case postal.UAAScopesError:
         writer.write(w, 422, []string{err.Error()})
-    case postal.CCDownError:
+    case utilities.CCDownError:
         writer.write(w, http.StatusBadGateway, []string{err.Error()})
-    case postal.CCNotFoundError:
+    case utilities.CCNotFoundError:
         writer.write(w, http.StatusNotFound, []string{err.Error()})
-    case postal.UAADownError:
+    case utilities.UAADownError:
         writer.write(w, http.StatusBadGateway, []string{err.Error()})
-    case postal.UAAGenericError:
+    case utilities.UAAGenericError:
         writer.write(w, http.StatusBadGateway, []string{err.Error()})
     case postal.TemplateLoadError:
         writer.write(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})

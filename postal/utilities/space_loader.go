@@ -1,4 +1,4 @@
-package postal
+package utilities
 
 import "github.com/cloudfoundry-incubator/notifications/cf"
 

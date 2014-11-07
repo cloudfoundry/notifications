@@ -1,18 +1,17 @@
-package postal_test
+package utilities_test
 
 import (
     "errors"
 
     "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/postal"
-
+    "github.com/cloudfoundry-incubator/notifications/postal/utilities"
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
 )
 
 var _ = Describe("TemplateLoader", func() {
-    var loader postal.TemplatesLoader
+    var loader utilities.TemplatesLoader
     var finder *fakes.TemplateFinder
 
     BeforeEach(func() {
@@ -27,7 +26,7 @@ var _ = Describe("TemplateLoader", func() {
             Text: "Yes they ca--",
         }
 
-        loader = postal.NewTemplatesLoader(finder)
+        loader = utilities.NewTemplatesLoader(finder)
     })
 
     Describe("LoadTemplates", func() {

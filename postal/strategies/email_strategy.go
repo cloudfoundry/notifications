@@ -6,6 +6,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/utilities"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
@@ -15,17 +16,12 @@ const (
     EmptyIDForNonUser   = ""
 )
 
-type StrategyInterface interface {
-    Dispatch(clientID string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]Response, error)
-    Trim([]byte) []byte
-}
-
 type EmailStrategy struct {
     mailer          MailerInterface
-    templatesLoader postal.TemplatesLoaderInterface
+    templatesLoader utilities.TemplatesLoaderInterface
 }
 
-func NewEmailStrategy(mailer MailerInterface, templatesLoader postal.TemplatesLoaderInterface) EmailStrategy {
+func NewEmailStrategy(mailer MailerInterface, templatesLoader utilities.TemplatesLoaderInterface) EmailStrategy {
     return EmailStrategy{
         mailer:          mailer,
         templatesLoader: templatesLoader,

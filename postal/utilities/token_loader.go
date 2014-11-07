@@ -1,4 +1,4 @@
-package postal
+package utilities
 
 import (
     "sync"

@@ -8,6 +8,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/utilities"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/params"
 
@@ -40,7 +41,7 @@ var _ = Describe("ErrorWriter", func() {
     })
 
     It("returns a 502 when CloudController fails to respond", func() {
-        writer.Write(recorder, postal.CCDownError("Bad things happened!"))
+        writer.Write(recorder, utilities.CCDownError("Bad things happened!"))
 
         Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 
@@ -54,7 +55,7 @@ var _ = Describe("ErrorWriter", func() {
     })
 
     It("returns a 502 when UAA fails to respond", func() {
-        writer.Write(recorder, postal.UAADownError("Whoops!"))
+        writer.Write(recorder, utilities.UAADownError("Whoops!"))
 
         Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 
@@ -68,7 +69,7 @@ var _ = Describe("ErrorWriter", func() {
     })
 
     It("returns a 502 when UAA fails for unknown reasons", func() {
-        writer.Write(recorder, postal.UAAGenericError("UAA Unknown Error: BOOM!"))
+        writer.Write(recorder, utilities.UAAGenericError("UAA Unknown Error: BOOM!"))
 
         Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 
@@ -110,7 +111,7 @@ var _ = Describe("ErrorWriter", func() {
     })
 
     It("returns a 404 when the space cannot be found", func() {
-        writer.Write(recorder, postal.CCNotFoundError("Organization could not be found"))
+        writer.Write(recorder, utilities.CCNotFoundError("Organization could not be found"))
 
         Expect(recorder.Code).To(Equal(http.StatusNotFound))
 

@@ -4,18 +4,19 @@ import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/utilities"
 )
 
 type UserStrategy struct {
-    tokenLoader     postal.TokenLoaderInterface
-    userLoader      postal.UserLoaderInterface
-    templatesLoader postal.TemplatesLoaderInterface
+    tokenLoader     utilities.TokenLoaderInterface
+    userLoader      utilities.UserLoaderInterface
+    templatesLoader utilities.TemplatesLoaderInterface
     mailer          MailerInterface
     receiptsRepo    models.ReceiptsRepoInterface
 }
 
-func NewUserStrategy(tokenLoader postal.TokenLoaderInterface, userLoader postal.UserLoaderInterface,
-    templatesLoader postal.TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UserStrategy {
+func NewUserStrategy(tokenLoader utilities.TokenLoaderInterface, userLoader utilities.UserLoaderInterface,
+    templatesLoader utilities.TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UserStrategy {
 
     return UserStrategy{
         tokenLoader:     tokenLoader,

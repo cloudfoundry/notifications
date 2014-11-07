@@ -1,9 +1,6 @@
 package postal
 
-import (
-    "github.com/nu7hatch/gouuid"
-    "github.com/pivotal-cf/uaa-sso-golang/uaa"
-)
+import "github.com/nu7hatch/gouuid"
 
 const (
     StatusUnavailable = "unavailable"
@@ -19,6 +16,12 @@ type TypedGUID interface {
     BelongsToOrganization() bool
     IsTypeEmail() bool
     String() string
+}
+
+type Templates struct {
+    Subject string
+    Text    string
+    HTML    string
 }
 
 type EmailID string
@@ -106,12 +109,6 @@ func (guid OrganizationGUID) String() string {
 }
 
 type GUIDGenerationFunc func() (*uuid.UUID, error)
-
-type UAAInterface interface {
-    uaa.GetClientTokenInterface
-    uaa.SetTokenInterface
-    uaa.UsersEmailsByIDsInterface
-}
 
 type HTML struct {
     BodyContent    string

@@ -1,4 +1,4 @@
-package postal_test
+package utilities_test
 
 import (
     "errors"
@@ -7,7 +7,7 @@ import (
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/fakes"
-    "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/utilities"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -15,7 +15,7 @@ import (
 )
 
 var _ = Describe("TokenLoader", func() {
-    var tokenLoader postal.TokenLoader
+    var tokenLoader utilities.TokenLoader
     var uaaClient *fakes.UAAClient
     var clientToken string
     var tokenHeader map[string]interface{}
@@ -38,11 +38,11 @@ var _ = Describe("TokenLoader", func() {
             uaaClient = fakes.NewUAAClient()
             uaaClient.ClientToken = uaa.Token{Access: clientToken}
 
-            tokenLoader = postal.NewTokenLoader(uaaClient)
+            tokenLoader = utilities.NewTokenLoader(uaaClient)
         })
 
         AfterEach(func() {
-            postal.ResetLoader()
+            utilities.ResetLoader()
         })
 
         It("returns the client token from UAA", func() {
@@ -112,7 +112,7 @@ var _ = Describe("TokenLoader", func() {
 
                 _, err := tokenLoader.Load()
 
-                Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
+                Expect(err).To(BeAssignableToTypeOf(utilities.UAADownError("")))
                 Expect(err.Error()).To(Equal("UAA is unavailable"))
             })
 
@@ -121,7 +121,7 @@ var _ = Describe("TokenLoader", func() {
 
                 _, err := tokenLoader.Load()
 
-                Expect(err).To(BeAssignableToTypeOf(postal.UAAGenericError("")))
+                Expect(err).To(BeAssignableToTypeOf(utilities.UAAGenericError("")))
                 Expect(err.Error()).To(Equal("UAA Unknown 404 error message: Not found"))
             })
 
@@ -131,7 +131,7 @@ var _ = Describe("TokenLoader", func() {
 
                 _, err := tokenLoader.Load()
 
-                Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
+                Expect(err).To(BeAssignableToTypeOf(utilities.UAADownError("")))
                 Expect(err.Error()).To(Equal(failure.Message()))
             })
 
@@ -140,7 +140,7 @@ var _ = Describe("TokenLoader", func() {
 
                 _, err := tokenLoader.Load()
 
-                Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
+                Expect(err).To(BeAssignableToTypeOf(utilities.UAADownError("")))
                 Expect(err.Error()).To(Equal("UAA is unavailable"))
             })
 
@@ -149,7 +149,7 @@ var _ = Describe("TokenLoader", func() {
 
                 _, err := tokenLoader.Load()
 
-                Expect(err).To(BeAssignableToTypeOf(postal.UAAGenericError("")))
+                Expect(err).To(BeAssignableToTypeOf(utilities.UAAGenericError("")))
                 Expect(err.Error()).To(Equal("UAA Unknown Error: BOOM!"))
             })
         })
