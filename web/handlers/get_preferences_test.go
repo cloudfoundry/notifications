@@ -23,7 +23,7 @@ var _ = Describe("GetPreferences", func() {
     var handler handlers.GetPreferences
     var writer *httptest.ResponseRecorder
     var request *http.Request
-    var preferencesFinder *fakes.FakePreferencesFinder
+    var preferencesFinder *fakes.PreferencesFinder
     var errorWriter *fakes.ErrorWriter
     var builder services.PreferencesBuilder
     var context stack.Context
@@ -74,7 +74,7 @@ var _ = Describe("GetPreferences", func() {
         })
         builder.GlobalUnsubscribe = true
 
-        preferencesFinder = fakes.NewFakePreferencesFinder(builder)
+        preferencesFinder = fakes.NewPreferencesFinder(builder)
         handler = handlers.NewGetPreferences(preferencesFinder, errorWriter)
     })
 

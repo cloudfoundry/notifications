@@ -2,7 +2,7 @@ package fakes
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-type FakeTemplatesRepo struct {
+type TemplatesRepo struct {
     Templates       map[string]models.Template
     FindError       error
     UpsertError     error
@@ -10,13 +10,13 @@ type FakeTemplatesRepo struct {
     DestroyError    error
 }
 
-func NewFakeTemplatesRepo() *FakeTemplatesRepo {
-    return &FakeTemplatesRepo{
+func NewTemplatesRepo() *TemplatesRepo {
+    return &TemplatesRepo{
         Templates: make(map[string]models.Template),
     }
 }
 
-func (fake FakeTemplatesRepo) Find(conn models.ConnectionInterface, templateName string) (models.Template, error) {
+func (fake TemplatesRepo) Find(conn models.ConnectionInterface, templateName string) (models.Template, error) {
     template, ok := fake.Templates[templateName]
     if ok {
         return template, fake.FindError
@@ -24,12 +24,12 @@ func (fake FakeTemplatesRepo) Find(conn models.ConnectionInterface, templateName
     return models.Template{}, models.ErrRecordNotFound{}
 }
 
-func (fake FakeTemplatesRepo) Upsert(conn models.ConnectionInterface, template models.Template) (models.Template, error) {
+func (fake TemplatesRepo) Upsert(conn models.ConnectionInterface, template models.Template) (models.Template, error) {
     fake.Templates[template.Name] = template
     return template, fake.UpsertError
 }
 
-func (fake *FakeTemplatesRepo) Destroy(conn models.ConnectionInterface, templateName string) error {
+func (fake *TemplatesRepo) Destroy(conn models.ConnectionInterface, templateName string) error {
     fake.DestroyArgument = templateName
     return fake.DestroyError
 }

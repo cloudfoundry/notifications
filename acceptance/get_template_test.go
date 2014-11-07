@@ -25,13 +25,13 @@ var _ = Describe("Templates GET Endpoint", func() {
         migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
         database := models.NewDatabase(env.DatabaseURL, migrationsPath)
 
-        templateData := &models.Template{
+        templateData := models.Template{
             Name:       "overridden-client." + models.UserBodyTemplateName,
             Text:       "Text Template",
             HTML:       "<p>HTML Template</p>",
             Overridden: true,
         }
-        database.Connection().Insert(templateData)
+        database.Connection().Insert(&templateData)
     })
 
     It("allows a user to get body templates", func() {

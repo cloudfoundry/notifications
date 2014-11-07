@@ -13,7 +13,7 @@ import (
 
 var _ = Describe("PreferencesFinder", func() {
     var finder *services.PreferencesFinder
-    var fakePreferencesRepo *fakes.FakePreferencesRepo
+    var preferencesRepo *fakes.PreferencesRepo
     var preferences []models.Preference
 
     BeforeEach(func() {
@@ -38,9 +38,9 @@ var _ = Describe("PreferencesFinder", func() {
 
         fakeGlobalUnsubscribesRepo := fakes.NewGlobalUnsubscribesRepo()
         fakeGlobalUnsubscribesRepo.Set(fakes.NewDBConn(), "correct-user", true)
-        fakePreferencesRepo = fakes.NewFakePreferencesRepo(preferences)
+        preferencesRepo = fakes.NewPreferencesRepo(preferences)
         fakeDatabase := fakes.NewDatabase()
-        finder = services.NewPreferencesFinder(fakePreferencesRepo, fakeGlobalUnsubscribesRepo, fakeDatabase)
+        finder = services.NewPreferencesFinder(preferencesRepo, fakeGlobalUnsubscribesRepo, fakeDatabase)
     })
 
     Describe("Find", func() {
@@ -60,10 +60,10 @@ var _ = Describe("PreferencesFinder", func() {
 
         Context("when the preferences repo returns an error", func() {
             It("should propagate the error", func() {
-                fakePreferencesRepo.FindError = errors.New("BOOM!")
+                preferencesRepo.FindError = errors.New("BOOM!")
                 _, err := finder.Find("correct-user")
 
-                Expect(err).To(Equal(fakePreferencesRepo.FindError))
+                Expect(err).To(Equal(preferencesRepo.FindError))
             })
         })
     })

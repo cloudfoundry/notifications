@@ -28,7 +28,7 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
         var request *http.Request
         var conn *fakes.DBConn
         var context stack.Context
-        var updater *fakes.FakePreferenceUpdater
+        var updater *fakes.PreferenceUpdater
         var userGUID string
         var errorWriter *fakes.ErrorWriter
 
@@ -80,7 +80,7 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
             context = stack.NewContext()
             context.Set("token", token)
 
-            updater = fakes.NewFakePreferenceUpdater()
+            updater = fakes.NewPreferenceUpdater()
             errorWriter = fakes.NewErrorWriter()
             fakeDatabase := fakes.NewDatabase()
             handler = handlers.NewUpdateSpecificUserPreferences(updater, errorWriter, fakeDatabase)

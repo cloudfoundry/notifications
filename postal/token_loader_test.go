@@ -16,7 +16,7 @@ import (
 
 var _ = Describe("TokenLoader", func() {
     var tokenLoader postal.TokenLoader
-    var fakeUAA fakes.FakeUAAClient
+    var uaaClient *fakes.UAAClient
     var clientToken string
     var tokenHeader map[string]interface{}
     var tokenClaims map[string]interface{}
@@ -35,14 +35,10 @@ var _ = Describe("TokenLoader", func() {
 
             clientToken = fakes.BuildToken(tokenHeader, tokenClaims)
 
-            fakeUAA = fakes.FakeUAAClient{
-                ClientToken: uaa.Token{
-                    Access: clientToken,
-                },
-            }
+            uaaClient = fakes.NewUAAClient()
+            uaaClient.ClientToken = uaa.Token{Access: clientToken}
 
-            tokenLoader = postal.NewTokenLoader(&fakeUAA)
-
+            tokenLoader = postal.NewTokenLoader(uaaClient)
         })
 
         AfterEach(func() {
@@ -64,7 +60,7 @@ var _ = Describe("TokenLoader", func() {
                 panic(err)
             }
 
-            Expect(fakeUAA.AccessToken).To(Equal(clientToken))
+            Expect(uaaClient.AccessToken).To(Equal(clientToken))
         })
 
         Context("When the current client token is not expired", func() {
@@ -75,7 +71,7 @@ var _ = Describe("TokenLoader", func() {
                 }
                 Expect(token).To(Equal(clientToken))
 
-                fakeUAA.ClientToken.Access = "the-wrong-token"
+                uaaClient.ClientToken.Access = "the-wrong-token"
 
                 token, err = tokenLoader.Load()
                 if err != nil {
@@ -90,7 +86,7 @@ var _ = Describe("TokenLoader", func() {
             It("Does ask UAA for a new token", func() {
                 tokenClaims["exp"] = time.Now().Add(-5 * time.Minute).Unix()
                 expiredToken := fakes.BuildToken(tokenHeader, tokenClaims)
-                fakeUAA.ClientToken.Access = expiredToken
+                uaaClient.ClientToken.Access = expiredToken
 
                 token, err := tokenLoader.Load()
                 if err != nil {
@@ -98,7 +94,7 @@ var _ = Describe("TokenLoader", func() {
                 }
                 Expect(token).To(Equal(expiredToken))
 
-                fakeUAA.ClientToken.Access = "the-correct-token"
+                uaaClient.ClientToken.Access = "the-correct-token"
 
                 token, err = tokenLoader.Load()
                 if err != nil {
@@ -112,7 +108,7 @@ var _ = Describe("TokenLoader", func() {
 
         Context("error handling", func() {
             It("identifies UAA being down, returning an error", func() {
-                fakeUAA.ClientTokenError = uaa.NewFailure(http.StatusNotFound, []byte("404 Not Found: Requested route ('uaa.10.244.0.34.xip.io') does not exist."))
+                uaaClient.ClientTokenError = uaa.NewFailure(http.StatusNotFound, []byte("404 Not Found: Requested route ('uaa.10.244.0.34.xip.io') does not exist."))
 
                 _, err := tokenLoader.Load()
 
@@ -121,7 +117,7 @@ var _ = Describe("TokenLoader", func() {
             })
 
             It("returns a generic error when UAA returns a 404 that does not indicate that it is down", func() {
-                fakeUAA.ClientTokenError = uaa.NewFailure(http.StatusNotFound, []byte("Not found"))
+                uaaClient.ClientTokenError = uaa.NewFailure(http.StatusNotFound, []byte("Not found"))
 
                 _, err := tokenLoader.Load()
 
@@ -131,7 +127,7 @@ var _ = Describe("TokenLoader", func() {
 
             It("handles non-404 UAAFailure errors", func() {
                 failure := uaa.NewFailure(http.StatusInternalServerError, []byte("Banana!"))
-                fakeUAA.ClientTokenError = failure
+                uaaClient.ClientTokenError = failure
 
                 _, err := tokenLoader.Load()
 
@@ -140,7 +136,7 @@ var _ = Describe("TokenLoader", func() {
             })
 
             It("returns an error when it cannot make a connection to UAA", func() {
-                fakeUAA.ClientTokenError = &url.Error{}
+                uaaClient.ClientTokenError = &url.Error{}
 
                 _, err := tokenLoader.Load()
 
@@ -149,7 +145,7 @@ var _ = Describe("TokenLoader", func() {
             })
 
             It("handles all other error cases", func() {
-                fakeUAA.ClientTokenError = errors.New("BOOM!")
+                uaaClient.ClientTokenError = errors.New("BOOM!")
 
                 _, err := tokenLoader.Load()
 

@@ -21,12 +21,12 @@ var _ = Describe("UnsetTemplates", func() {
     var writer *httptest.ResponseRecorder
     var request *http.Request
     var context stack.Context
-    var deleter *fakes.FakeTemplateDeleter
+    var deleter *fakes.TemplateDeleter
     var err error
 
     Describe("ServeHTTP", func() {
         BeforeEach(func() {
-            deleter = fakes.NewFakeTemplateDeleter()
+            deleter = fakes.NewTemplateDeleter()
             errorWriter = fakes.NewErrorWriter()
             handler = handlers.NewUnsetTemplates(deleter, errorWriter)
             writer = httptest.NewRecorder()

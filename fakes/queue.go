@@ -2,19 +2,19 @@ package fakes
 
 import "github.com/cloudfoundry-incubator/notifications/gobble"
 
-type FakeQueue struct {
+type Queue struct {
     jobs         chan gobble.Job
     pk           int
     EnqueueError error
 }
 
-func NewFakeQueue() *FakeQueue {
-    return &FakeQueue{
+func NewQueue() *Queue {
+    return &Queue{
         jobs: make(chan gobble.Job),
     }
 }
 
-func (fake *FakeQueue) Enqueue(job gobble.Job) (gobble.Job, error) {
+func (fake *Queue) Enqueue(job gobble.Job) (gobble.Job, error) {
     if fake.EnqueueError != nil {
         return job, fake.EnqueueError
     }
@@ -27,14 +27,14 @@ func (fake *FakeQueue) Enqueue(job gobble.Job) (gobble.Job, error) {
     return job, nil
 }
 
-func (fake *FakeQueue) Reserve(string) <-chan gobble.Job {
+func (fake *Queue) Reserve(string) <-chan gobble.Job {
     return fake.jobs
 }
 
-func (fake *FakeQueue) Dequeue(job gobble.Job) {
+func (fake *Queue) Dequeue(job gobble.Job) {
 }
 
-func (fake *FakeQueue) Requeue(job gobble.Job) {
+func (fake *Queue) Requeue(job gobble.Job) {
     go func(job gobble.Job) {
         fake.jobs <- job
     }(job)

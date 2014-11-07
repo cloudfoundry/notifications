@@ -25,7 +25,7 @@ var _ = Describe("UpdatePreferences", func() {
         var handler handlers.UpdatePreferences
         var writer *httptest.ResponseRecorder
         var request *http.Request
-        var updater *fakes.FakePreferenceUpdater
+        var updater *fakes.PreferenceUpdater
         var errorWriter *fakes.ErrorWriter
         var conn *fakes.DBConn
         var context stack.Context
@@ -80,7 +80,7 @@ var _ = Describe("UpdatePreferences", func() {
             context.Set("token", token)
 
             errorWriter = fakes.NewErrorWriter()
-            updater = fakes.NewFakePreferenceUpdater()
+            updater = fakes.NewPreferenceUpdater()
             fakeDatabase := fakes.NewDatabase()
             handler = handlers.NewUpdatePreferences(updater, errorWriter, fakeDatabase)
             writer = httptest.NewRecorder()

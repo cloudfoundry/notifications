@@ -2,16 +2,16 @@ package fakes
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-type FakePreferenceUpdater struct {
+type PreferenceUpdater struct {
     ExecuteArguments []interface{}
     ExecuteError     error
 }
 
-func NewFakePreferenceUpdater() *FakePreferenceUpdater {
-    return &FakePreferenceUpdater{}
+func NewPreferenceUpdater() *PreferenceUpdater {
+    return &PreferenceUpdater{}
 }
 
-func (fake *FakePreferenceUpdater) Execute(conn models.ConnectionInterface, preferences []models.Preference, globalUnsubscribe bool, userID string) error {
+func (fake *PreferenceUpdater) Execute(conn models.ConnectionInterface, preferences []models.Preference, globalUnsubscribe bool, userID string) error {
     fake.ExecuteArguments = append(fake.ExecuteArguments, preferences, globalUnsubscribe, userID)
     return fake.ExecuteError
 }

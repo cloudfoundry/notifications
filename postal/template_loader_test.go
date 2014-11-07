@@ -13,10 +13,10 @@ import (
 
 var _ = Describe("TemplateLoader", func() {
     var loader postal.TemplatesLoader
-    var finder *fakes.FakeTemplateFinder
+    var finder *fakes.TemplateFinder
 
     BeforeEach(func() {
-        finder = fakes.NewFakeTemplateFinder()
+        finder = fakes.NewTemplateFinder()
 
         finder.Templates["raptors.hungry."+models.SubjectProvidedTemplateName] = models.Template{
             Text: "Dinosaurs are coming",

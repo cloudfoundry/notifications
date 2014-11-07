@@ -20,7 +20,7 @@ var _ = Describe("NotifyUser", func() {
         var writer *httptest.ResponseRecorder
         var request *http.Request
         var errorWriter *fakes.ErrorWriter
-        var fakeNotify *fakes.FakeNotify
+        var notify *fakes.Notify
         var context stack.Context
 
         BeforeEach(func() {
@@ -33,14 +33,14 @@ var _ = Describe("NotifyUser", func() {
             }
             context = stack.NewContext()
 
-            fakeNotify = &fakes.FakeNotify{}
+            notify = fakes.NewNotify()
             fakeDatabase := fakes.NewDatabase()
-            handler = handlers.NewNotifyUser(fakeNotify, errorWriter, nil, fakeDatabase)
+            handler = handlers.NewNotifyUser(notify, errorWriter, nil, fakeDatabase)
         })
 
         Context("when notify.Execute returns a successful response", func() {
             It("returns the JSON representation of the response", func() {
-                fakeNotify.Response = []byte("whut")
+                notify.Response = []byte("whut")
 
                 handler.Execute(writer, request, nil, context, postal.UserRecipe{})
 
@@ -48,19 +48,19 @@ var _ = Describe("NotifyUser", func() {
                 body := string(writer.Body.Bytes())
                 Expect(body).To(Equal("whut"))
 
-                Expect(fakeNotify.GUID.String()).To(Equal("user-123"))
-                Expect(fakeNotify.GUID.BelongsToSpace()).To(BeFalse())
-                Expect(fakeNotify.GUID.IsTypeEmail()).To(BeFalse())
+                Expect(notify.GUID.String()).To(Equal("user-123"))
+                Expect(notify.GUID.BelongsToSpace()).To(BeFalse())
+                Expect(notify.GUID.IsTypeEmail()).To(BeFalse())
             })
         })
 
         Context("when notify.Execute returns an error", func() {
             It("propagates the error", func() {
-                fakeNotify.Error = errors.New("BOOM!")
+                notify.Error = errors.New("BOOM!")
 
                 err := handler.Execute(writer, request, nil, context, postal.UserRecipe{})
 
-                Expect(err).To(Equal(fakeNotify.Error))
+                Expect(err).To(Equal(notify.Error))
             })
         })
     })

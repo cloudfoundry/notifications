@@ -18,7 +18,7 @@ var _ = Describe("NotifyEmail", func() {
         var handler handlers.NotifyEmail
         var writer *httptest.ResponseRecorder
         var errorWriter *fakes.ErrorWriter
-        var fakeNotify *fakes.FakeNotify
+        var notify *fakes.Notify
         var context stack.Context
 
         BeforeEach(func() {
@@ -27,18 +27,18 @@ var _ = Describe("NotifyEmail", func() {
             context = stack.NewContext()
             database := fakes.NewDatabase()
 
-            fakeNotify = &fakes.FakeNotify{}
-            handler = handlers.NewNotifyEmail(fakeNotify, errorWriter, nil, database)
+            notify = fakes.NewNotify()
+            handler = handlers.NewNotifyEmail(notify, errorWriter, nil, database)
         })
 
         Context("when notify.Execute returns a proper response", func() {
             It("writes that response", func() {
-                fakeNotify.Response = []byte("whut")
+                notify.Response = []byte("whut")
 
                 handler.Execute(writer, nil, nil, context)
 
                 Expect(writer.Code).To(Equal(http.StatusOK))
-                Expect(fakeNotify.GUID.IsTypeEmail()).To(BeTrue())
+                Expect(notify.GUID.IsTypeEmail()).To(BeTrue())
 
                 body := string(writer.Body.Bytes())
                 Expect(body).To(Equal("whut"))
@@ -47,10 +47,10 @@ var _ = Describe("NotifyEmail", func() {
 
         Context("when notify.Execute errors", func() {
             It("propagates the error", func() {
-                fakeNotify.Error = errors.New("Blambo!")
+                notify.Error = errors.New("Blambo!")
                 err := handler.Execute(writer, nil, nil, context)
 
-                Expect(err).To(Equal(fakeNotify.Error))
+                Expect(err).To(Equal(notify.Error))
 
             })
         })

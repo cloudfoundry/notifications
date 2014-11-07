@@ -8,13 +8,17 @@ import (
     "github.com/ryanmoran/stack"
 )
 
-type FakeNotify struct {
+type Notify struct {
     Response []byte
     GUID     postal.TypedGUID
     Error    error
 }
 
-func (fake *FakeNotify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
+func NewNotify() *Notify {
+    return &Notify{}
+}
+
+func (fake *Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
     guid postal.TypedGUID, recipe postal.RecipeInterface) ([]byte, error) {
     fake.GUID = guid
 

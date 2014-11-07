@@ -22,12 +22,12 @@ var _ = Describe("SetTemplates", func() {
     var writer *httptest.ResponseRecorder
     var request *http.Request
     var context stack.Context
-    var updater *fakes.FakeTemplateUpdater
+    var updater *fakes.TemplateUpdater
     var errorWriter *fakes.ErrorWriter
 
     Describe("ServeHTTP", func() {
         BeforeEach(func() {
-            updater = fakes.NewFakeTemplateUpdater()
+            updater = fakes.NewTemplateUpdater()
             errorWriter = fakes.NewErrorWriter()
             handler = handlers.NewSetTemplates(updater, errorWriter)
             writer = httptest.NewRecorder()

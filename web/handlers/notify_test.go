@@ -25,7 +25,7 @@ var _ = Describe("Notify", func() {
         Context("When Emailing a user or a group", func() {
             var handler handlers.Notify
             var finder *fakes.Finder
-            var fakeRegistrar *fakes.FakeRegistrar
+            var registrar *fakes.Registrar
             var request *http.Request
             var rawToken string
             var client models.Client
@@ -51,7 +51,7 @@ var _ = Describe("Notify", func() {
                 finder.Clients["mister-client"] = client
                 finder.Kinds["test_email|mister-client"] = kind
 
-                fakeRegistrar = fakes.NewFakeRegistrar()
+                registrar = fakes.NewRegistrar()
 
                 body, err := json.Marshal(map[string]string{
                     "kind_id":  "test_email",
@@ -89,7 +89,7 @@ var _ = Describe("Notify", func() {
 
                 conn = fakes.NewDBConn()
 
-                handler = handlers.NewNotify(finder, fakeRegistrar)
+                handler = handlers.NewNotify(finder, registrar)
                 recipe = fakes.NewMailRecipe()
             })
 
@@ -141,7 +141,7 @@ var _ = Describe("Notify", func() {
                     panic(err)
                 }
 
-                Expect(fakeRegistrar.RegisterArguments).To(Equal([]interface{}{
+                Expect(registrar.RegisterArguments).To(Equal([]interface{}{
                     conn,
                     client,
                     []models.Kind{kind},
@@ -206,7 +206,7 @@ var _ = Describe("Notify", func() {
 
                 Context("when the registrar returns errors", func() {
                     It("returns the error", func() {
-                        fakeRegistrar.RegisterError = errors.New("BOOM!")
+                        registrar.RegisterError = errors.New("BOOM!")
 
                         _, err := handler.Execute(conn, request, context, postal.UserGUID("user-123"), recipe)
 

@@ -27,7 +27,7 @@ var _ = Describe("DeliveryWorker", func() {
     var logger *log.Logger
     var buffer *bytes.Buffer
     var delivery postal.Delivery
-    var queue *fakes.FakeQueue
+    var queue *fakes.Queue
     var unsubscribesRepo *fakes.UnsubscribesRepo
     var globalUnsubscribesRepo *fakes.GlobalUnsubscribesRepo
     var kindsRepo *fakes.KindsRepo
@@ -40,7 +40,7 @@ var _ = Describe("DeliveryWorker", func() {
         id = 1234
         logger = log.New(buffer, "", 0)
         mailClient = fakes.NewMailClient()
-        queue = fakes.NewFakeQueue()
+        queue = fakes.NewQueue()
         unsubscribesRepo = fakes.NewUnsubscribesRepo()
         globalUnsubscribesRepo = fakes.NewGlobalUnsubscribesRepo()
         kindsRepo = fakes.NewKindsRepo()

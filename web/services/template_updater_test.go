@@ -12,12 +12,12 @@ import (
 
 var _ = Describe("Updater", func() {
     Describe("#Update", func() {
-        var fakeTemplatesRepo *fakes.FakeTemplatesRepo
+        var templatesRepo *fakes.TemplatesRepo
         var template models.Template
         var updater services.TemplateUpdater
 
         BeforeEach(func() {
-            fakeTemplatesRepo = fakes.NewFakeTemplatesRepo()
+            templatesRepo = fakes.NewTemplatesRepo()
             template = models.Template{
                 Name:       "gobble." + models.UserBodyTemplateName,
                 Text:       "gobble",
@@ -25,20 +25,20 @@ var _ = Describe("Updater", func() {
                 Overridden: true,
             }
 
-            updater = services.NewTemplateUpdater(fakeTemplatesRepo, fakes.NewDatabase())
+            updater = services.NewTemplateUpdater(templatesRepo, fakes.NewDatabase())
         })
 
         It("Inserts templates into the templates repo", func() {
-            Expect(fakeTemplatesRepo.Templates).ToNot(ContainElement(template))
+            Expect(templatesRepo.Templates).ToNot(ContainElement(template))
             err := updater.Update(template)
             Expect(err).ToNot(HaveOccurred())
-            Expect(fakeTemplatesRepo.Templates).To(ContainElement(template))
+            Expect(templatesRepo.Templates).To(ContainElement(template))
         })
 
         It("propagates errors from repo", func() {
             expectedErr := errors.New("Boom!")
 
-            fakeTemplatesRepo.UpsertError = expectedErr
+            templatesRepo.UpsertError = expectedErr
             err := updater.Update(template)
 
             Expect(err).To(Equal(expectedErr))

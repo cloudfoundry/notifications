@@ -2,16 +2,16 @@ package fakes
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-type FakeTemplateUpdater struct {
+type TemplateUpdater struct {
     UpdateArgument models.Template
     UpdateError    error
 }
 
-func NewFakeTemplateUpdater() *FakeTemplateUpdater {
-    return &FakeTemplateUpdater{}
+func NewTemplateUpdater() *TemplateUpdater {
+    return &TemplateUpdater{}
 }
 
-func (fake *FakeTemplateUpdater) Update(template models.Template) error {
+func (fake *TemplateUpdater) Update(template models.Template) error {
     fake.UpdateArgument = template
     return fake.UpdateError
 }

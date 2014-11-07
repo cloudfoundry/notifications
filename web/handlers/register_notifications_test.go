@@ -28,7 +28,7 @@ var _ = Describe("RegisterNotifications", func() {
     var request *http.Request
     var errorWriter *fakes.ErrorWriter
     var conn *fakes.DBConn
-    var registrar *fakes.FakeRegistrar
+    var registrar *fakes.Registrar
     var client models.Client
     var kinds []models.Kind
     var context stack.Context
@@ -36,7 +36,7 @@ var _ = Describe("RegisterNotifications", func() {
     BeforeEach(func() {
         conn = fakes.NewDBConn()
         errorWriter = fakes.NewErrorWriter()
-        registrar = fakes.NewFakeRegistrar()
+        registrar = fakes.NewRegistrar()
         fakeDatabase := fakes.NewDatabase()
         handler = handlers.NewRegisterNotifications(registrar, errorWriter, fakeDatabase)
         writer = httptest.NewRecorder()

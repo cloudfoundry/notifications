@@ -16,7 +16,7 @@ import (
 var _ = Describe("UserLoader", func() {
     var loader postal.UserLoader
     var token string
-    var fakeUAAClient fakes.FakeUAAClient
+    var uaaClient *fakes.UAAClient
     var cc *fakes.CloudController
 
     Describe("Load", func() {
@@ -60,28 +60,27 @@ var _ = Describe("UserLoader", func() {
                 },
             }
 
-            fakeUAAClient = fakes.FakeUAAClient{
-                ClientToken: uaa.Token{
-                    Access: token,
+            uaaClient = fakes.NewUAAClient()
+            uaaClient.ClientToken = uaa.Token{
+                Access: token,
+            }
+            uaaClient.UsersByID = map[string]uaa.User{
+                "user-123": uaa.User{
+                    Emails: []string{"user-123@example.com"},
+                    ID:     "user-123",
                 },
-                UsersByID: map[string]uaa.User{
-                    "user-123": uaa.User{
-                        Emails: []string{"user-123@example.com"},
-                        ID:     "user-123",
-                    },
-                    "user-456": uaa.User{
-                        Emails: []string{"user-456@example.com"},
-                        ID:     "user-456",
-                    },
-                    "user-999": uaa.User{
-                        Emails: []string{"user-999@example.com"},
-                        ID:     "user-999",
-                    },
+                "user-456": uaa.User{
+                    Emails: []string{"user-456@example.com"},
+                    ID:     "user-456",
+                },
+                "user-999": uaa.User{
+                    Emails: []string{"user-999@example.com"},
+                    ID:     "user-999",
                 },
             }
 
             logger := log.New(bytes.NewBufferString(""), "", 0)
-            loader = postal.NewUserLoader(&fakeUAAClient, logger, cc)
+            loader = postal.NewUserLoader(uaaClient, logger, cc)
         })
 
         Context("UAA returns a collection of users", func() {
@@ -131,7 +130,7 @@ var _ = Describe("UserLoader", func() {
         Describe("UAA Error Responses", func() {
             Context("when UAA cannot be reached", func() {
                 It("returns a UAADownError", func() {
-                    fakeUAAClient.ErrorForUserByID = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
+                    uaaClient.ErrorForUserByID = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
 
                     _, err := loader.Load(postal.UserGUID("user-123"), token)
 
@@ -141,7 +140,7 @@ var _ = Describe("UserLoader", func() {
 
             Context("when UAA returns an unknown UAA 404 error", func() {
                 It("returns a UAAGenericError", func() {
-                    fakeUAAClient.ErrorForUserByID = uaa.NewFailure(404, []byte("Weird message we haven't seen"))
+                    uaaClient.ErrorForUserByID = uaa.NewFailure(404, []byte("Weird message we haven't seen"))
 
                     _, err := loader.Load(postal.UserGUID("user-123"), token)
 
@@ -151,7 +150,7 @@ var _ = Describe("UserLoader", func() {
 
             Context("when UAA returns an failure code that is not 404", func() {
                 It("returns a UAADownError", func() {
-                    fakeUAAClient.ErrorForUserByID = uaa.NewFailure(500, []byte("Doesn't matter"))
+                    uaaClient.ErrorForUserByID = uaa.NewFailure(500, []byte("Doesn't matter"))
 
                     _, err := loader.Load(postal.UserGUID("user-123"), token)
 

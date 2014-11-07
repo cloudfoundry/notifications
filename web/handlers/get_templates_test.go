@@ -21,12 +21,12 @@ var _ = Describe("GetTemplates", func() {
     var request *http.Request
     var writer *httptest.ResponseRecorder
     var context stack.Context
-    var finder *fakes.FakeTemplateFinder
+    var finder *fakes.TemplateFinder
     var errorWriter *fakes.ErrorWriter
 
     Describe("ServeHTTP", func() {
         BeforeEach(func() {
-            finder = fakes.NewFakeTemplateFinder()
+            finder = fakes.NewTemplateFinder()
 
             finder.Templates["myTemplateName."+models.UserBodyTemplateName] = models.Template{
                 Text: "the template {{variable}}",

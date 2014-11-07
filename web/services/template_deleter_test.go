@@ -12,11 +12,11 @@ import (
 
 var _ = Describe("Deleter", func() {
     var deleter services.TemplateDeleter
-    var fakeTemplatesRepo *fakes.FakeTemplatesRepo
+    var templatesRepo *fakes.TemplatesRepo
 
     BeforeEach(func() {
-        fakeTemplatesRepo = fakes.NewFakeTemplatesRepo()
-        deleter = services.NewTemplateDeleter(fakeTemplatesRepo, fakes.NewDatabase())
+        templatesRepo = fakes.NewTemplatesRepo()
+        deleter = services.NewTemplateDeleter(templatesRepo, fakes.NewDatabase())
     })
 
     Describe("#Delete", func() {
@@ -26,13 +26,13 @@ var _ = Describe("Deleter", func() {
                 panic(err)
             }
 
-            Expect(fakeTemplatesRepo.DestroyArgument).To(Equal("templateName"))
+            Expect(templatesRepo.DestroyArgument).To(Equal("templateName"))
         })
 
         It("returns an error if repo destroy returns an error", func() {
-            fakeTemplatesRepo.DestroyError = errors.New("Boom!!")
+            templatesRepo.DestroyError = errors.New("Boom!!")
             err := deleter.Delete("templateName")
-            Expect(err).To(Equal(fakeTemplatesRepo.DestroyError))
+            Expect(err).To(Equal(templatesRepo.DestroyError))
         })
     })
 })

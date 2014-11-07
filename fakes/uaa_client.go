@@ -2,7 +2,7 @@ package fakes
 
 import "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
-type FakeUAAClient struct {
+type UAAClient struct {
     ClientToken      uaa.Token
     ClientTokenError error
     UsersByID        map[string]uaa.User
@@ -10,15 +10,19 @@ type FakeUAAClient struct {
     AccessToken      string
 }
 
-func (fake *FakeUAAClient) SetToken(token string) {
+func NewUAAClient() *UAAClient {
+    return &UAAClient{}
+}
+
+func (fake *UAAClient) SetToken(token string) {
     fake.AccessToken = token
 }
 
-func (fake FakeUAAClient) GetClientToken() (uaa.Token, error) {
+func (fake UAAClient) GetClientToken() (uaa.Token, error) {
     return fake.ClientToken, fake.ClientTokenError
 }
 
-func (fake FakeUAAClient) UsersEmailsByIDs(ids ...string) ([]uaa.User, error) {
+func (fake UAAClient) UsersEmailsByIDs(ids ...string) ([]uaa.User, error) {
     users := []uaa.User{}
     for _, id := range ids {
         if user, ok := fake.UsersByID[id]; ok {
