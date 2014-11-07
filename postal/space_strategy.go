@@ -2,7 +2,7 @@ package postal
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-type SpaceRecipe struct {
+type SpaceStrategy struct {
     tokenLoader       TokenLoaderInterface
     userLoader        UserLoaderInterface
     spaceAndOrgLoader SpaceAndOrgLoaderInterface
@@ -11,10 +11,10 @@ type SpaceRecipe struct {
     receiptsRepo      models.ReceiptsRepoInterface
 }
 
-func NewSpaceRecipe(tokenLoader TokenLoaderInterface, userLoader UserLoaderInterface, spaceAndOrgLoader SpaceAndOrgLoaderInterface,
-    templatesLoader TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) SpaceRecipe {
+func NewSpaceStrategy(tokenLoader TokenLoaderInterface, userLoader UserLoaderInterface, spaceAndOrgLoader SpaceAndOrgLoaderInterface,
+    templatesLoader TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) SpaceStrategy {
 
-    return SpaceRecipe{
+    return SpaceStrategy{
         tokenLoader:       tokenLoader,
         userLoader:        userLoader,
         spaceAndOrgLoader: spaceAndOrgLoader,
@@ -24,28 +24,28 @@ func NewSpaceRecipe(tokenLoader TokenLoaderInterface, userLoader UserLoaderInter
     }
 }
 
-func (recipe SpaceRecipe) Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy SpaceStrategy) Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
     responses := []Response{}
 
-    token, err := recipe.tokenLoader.Load()
+    token, err := strategy.tokenLoader.Load()
     if err != nil {
         return responses, err
     }
 
-    space, organization, err := recipe.spaceAndOrgLoader.Load(guid, token)
+    space, organization, err := strategy.spaceAndOrgLoader.Load(guid, token)
     if err != nil {
         return responses, err
     }
 
-    users, err := recipe.userLoader.Load(guid, token)
+    users, err := strategy.userLoader.Load(guid, token)
     if err != nil {
         return responses, err
     }
 
-    subjectSuffix := recipe.subjectSuffix(options.Subject)
-    contentSuffix := recipe.contentSuffix(guid)
+    subjectSuffix := strategy.subjectSuffix(options.Subject)
+    contentSuffix := strategy.contentSuffix(guid)
 
-    templates, err := recipe.templatesLoader.LoadTemplates(subjectSuffix, contentSuffix, clientID, options.KindID)
+    templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, contentSuffix, clientID, options.KindID)
     if err != nil {
         return responses, TemplateLoadError("An email template could not be loaded")
     }
@@ -55,29 +55,29 @@ func (recipe SpaceRecipe) Dispatch(clientID string, guid TypedGUID, options Opti
         userGUIDs = append(userGUIDs, key)
     }
 
-    err = recipe.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)
+    err = strategy.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)
     if err != nil {
         return responses, err
     }
 
-    responses = recipe.mailer.Deliver(conn, templates, users, options, space, organization, clientID)
+    responses = strategy.mailer.Deliver(conn, templates, users, options, space, organization, clientID)
 
     return responses, nil
 }
 
-func (recipe SpaceRecipe) Trim(responses []byte) []byte {
+func (strategy SpaceStrategy) Trim(responses []byte) []byte {
     t := Trimmer{}
     return t.TrimFields(responses, EmailFieldName)
 }
 
-func (recipe SpaceRecipe) subjectSuffix(subject string) string {
+func (strategy SpaceStrategy) subjectSuffix(subject string) string {
     if subject == "" {
         return models.SubjectMissingTemplateName
     }
     return models.SubjectProvidedTemplateName
 }
 
-func (recipe SpaceRecipe) contentSuffix(guid TypedGUID) string {
+func (strategy SpaceStrategy) contentSuffix(guid TypedGUID) string {
     if guid.BelongsToSpace() {
         return models.SpaceBodyTemplateName
     } else if guid.BelongsToOrganization() {

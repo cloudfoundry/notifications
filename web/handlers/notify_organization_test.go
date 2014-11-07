@@ -40,9 +40,9 @@ var _ = Describe("NotifyOrganization", func() {
         Context("when the notify.Execute returns a successful response", func() {
             It("returns the JSON representation of the response", func() {
                 notify.Response = []byte("whatever")
-                recipe := postal.OrganizationRecipe{}
+                strategy := postal.OrganizationStrategy{}
 
-                handler.Execute(writer, request, nil, context, recipe)
+                handler.Execute(writer, request, nil, context, strategy)
 
                 Expect(writer.Code).To(Equal(http.StatusOK))
                 Expect(notify.GUID.String()).To(Equal("org-001"))
@@ -56,9 +56,9 @@ var _ = Describe("NotifyOrganization", func() {
         Context("when the notify.Execute returns an error", func() {
             It("propagates the error", func() {
                 notify.Error = errors.New("the error")
-                recipe := postal.OrganizationRecipe{}
+                strategy := postal.OrganizationStrategy{}
 
-                err := handler.Execute(writer, request, nil, context, recipe)
+                err := handler.Execute(writer, request, nil, context, strategy)
                 Expect(err).To(Equal(notify.Error))
             })
         })

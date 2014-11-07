@@ -13,8 +13,8 @@ import (
     . "github.com/onsi/gomega"
 )
 
-var _ = Describe("UAA Recipe", func() {
-    var uaaRecipe postal.UserRecipe
+var _ = Describe("UAA Strategy", func() {
+    var strategy postal.UserStrategy
     var options postal.Options
     var tokenLoader *fakes.TokenLoader
     var userLoader *fakes.UserLoader
@@ -47,7 +47,7 @@ var _ = Describe("UAA Recipe", func() {
             Emails: []string{"user-123@example.com"},
         }
         templatesLoader = &fakes.TemplatesLoader{}
-        uaaRecipe = postal.NewUserRecipe(tokenLoader, userLoader, templatesLoader, mailer, receiptsRepo)
+        strategy = postal.NewUserStrategy(tokenLoader, userLoader, templatesLoader, mailer, receiptsRepo)
     })
 
     Describe("Dispatch", func() {
@@ -64,7 +64,7 @@ var _ = Describe("UAA Recipe", func() {
         })
 
         It("records a receipt for the user", func() {
-            _, err := uaaRecipe.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+            _, err := strategy.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
             if err != nil {
                 panic(err)
             }
@@ -83,7 +83,7 @@ var _ = Describe("UAA Recipe", func() {
 
             templatesLoader.Templates = templates
 
-            _, err := uaaRecipe.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+            _, err := strategy.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
             if err != nil {
                 panic(err)
             }
@@ -110,7 +110,7 @@ var _ = Describe("UAA Recipe", func() {
                 It("returns the error", func() {
                     loadError := errors.New("BOOM!")
                     tokenLoader.LoadError = loadError
-                    _, err := uaaRecipe.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
 
                     Expect(err).To(Equal(loadError))
                 })
@@ -120,7 +120,7 @@ var _ = Describe("UAA Recipe", func() {
                 It("returns the error", func() {
                     loadError := errors.New("BOOM!")
                     userLoader.LoadError = loadError
-                    _, err := uaaRecipe.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
 
                     Expect(err).To(Equal(loadError))
                 })
@@ -130,7 +130,7 @@ var _ = Describe("UAA Recipe", func() {
                 It("returns a TemplateLoadError", func() {
                     templatesLoader.LoadError = errors.New("BOOM!")
 
-                    _, err := uaaRecipe.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
 
                     Expect(err).To(BeAssignableToTypeOf(postal.TemplateLoadError("")))
                 })
@@ -140,7 +140,7 @@ var _ = Describe("UAA Recipe", func() {
                 It("returns an error", func() {
                     receiptsRepo.CreateReceiptsError = true
 
-                    _, err := uaaRecipe.Dispatch(clientID, postal.UserGUID("space-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.UserGUID("space-001"), options, conn)
                     Expect(err).ToNot(BeNil())
                 })
             })
@@ -158,7 +158,7 @@ var _ = Describe("UAA Recipe", func() {
                     },
                 })
 
-                trimmedResponses := uaaRecipe.Trim(responses)
+                trimmedResponses := strategy.Trim(responses)
 
                 var result []map[string]string
                 err = json.Unmarshal(trimmedResponses, &result)

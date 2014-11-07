@@ -42,7 +42,7 @@ func (mother *Mother) Queue() *gobble.Queue {
     return mother.queue
 }
 
-func (mother Mother) UserRecipe() postal.UserRecipe {
+func (mother Mother) UserStrategy() postal.UserStrategy {
     env := config.NewEnvironment()
     finder := mother.TemplateFinder()
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
@@ -55,10 +55,10 @@ func (mother Mother) UserRecipe() postal.UserRecipe {
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewUserRecipe(tokenLoader, userLoader, templatesLoader, mailer, receiptsRepo)
+    return postal.NewUserStrategy(tokenLoader, userLoader, templatesLoader, mailer, receiptsRepo)
 }
 
-func (mother Mother) SpaceRecipe() postal.SpaceRecipe {
+func (mother Mother) SpaceStrategy() postal.SpaceStrategy {
     env := config.NewEnvironment()
     finder := mother.TemplateFinder()
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
@@ -72,10 +72,10 @@ func (mother Mother) SpaceRecipe() postal.SpaceRecipe {
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewSpaceRecipe(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
+    return postal.NewSpaceStrategy(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
 }
 
-func (mother Mother) OrganizationRecipe() postal.OrganizationRecipe {
+func (mother Mother) OrganizationStrategy() postal.OrganizationStrategy {
     env := config.NewEnvironment()
     finder := mother.TemplateFinder()
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
@@ -89,15 +89,15 @@ func (mother Mother) OrganizationRecipe() postal.OrganizationRecipe {
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewOrganizationRecipe(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
+    return postal.NewOrganizationStrategy(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) FileSystem() services.FileSystemInterface {
     return postal.NewFileSystem()
 }
 
-func (mother Mother) EmailRecipe() postal.EmailRecipe {
-    return postal.NewEmailRecipe(mother.Mailer(), postal.NewTemplatesLoader(mother.TemplateFinder()))
+func (mother Mother) EmailStrategy() postal.EmailStrategy {
+    return postal.NewEmailStrategy(mother.Mailer(), postal.NewTemplatesLoader(mother.TemplateFinder()))
 }
 
 func (mother Mother) NotificationFinder() services.NotificationFinder {

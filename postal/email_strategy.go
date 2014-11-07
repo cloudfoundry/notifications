@@ -14,45 +14,44 @@ const (
     EmptyIDForNonUser   = ""
 )
 
-type RecipeInterface interface {
+type StrategyInterface interface {
     Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error)
     Trim([]byte) []byte
 }
 
-type EmailRecipe struct {
+type EmailStrategy struct {
     mailer          MailerInterface
     templatesLoader TemplatesLoaderInterface
 }
 
-func NewEmailRecipe(mailer MailerInterface, templatesLoader TemplatesLoaderInterface) EmailRecipe {
-    return EmailRecipe{
+func NewEmailStrategy(mailer MailerInterface, templatesLoader TemplatesLoaderInterface) EmailStrategy {
+    return EmailStrategy{
         mailer:          mailer,
         templatesLoader: templatesLoader,
     }
 }
 
-func (recipe EmailRecipe) Dispatch(clientID string, guid TypedGUID,
-    options Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy EmailStrategy) Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
 
     users := map[string]uaa.User{EmptyIDForNonUser: uaa.User{Emails: []string{options.To}}}
 
-    subjectSuffix := recipe.subjectSuffix(options.Subject)
+    subjectSuffix := strategy.subjectSuffix(options.Subject)
 
-    templates, err := recipe.templatesLoader.LoadTemplates(subjectSuffix, models.EmailBodyTemplateName, clientID, options.KindID)
+    templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, models.EmailBodyTemplateName, clientID, options.KindID)
 
     if err != nil {
         return []Response{}, TemplateLoadError("An email template could not be loaded")
     }
 
-    return recipe.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID), nil
+    return strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID), nil
 }
 
-func (recipe EmailRecipe) Trim(responses []byte) []byte {
+func (strategy EmailStrategy) Trim(responses []byte) []byte {
     t := Trimmer{}
     return t.TrimFields(responses, RecipientsFieldName)
 }
 
-func (recipe EmailRecipe) determineSubjectTemplate(subject string) string {
+func (strategy EmailStrategy) determineSubjectTemplate(subject string) string {
     if subject == "" {
         return SubjectMissingTemplateName
     }
@@ -81,7 +80,7 @@ func (t Trimmer) TrimFields(responses []byte, field string) []byte {
     return responses
 }
 
-func (recipe EmailRecipe) subjectSuffix(subject string) string {
+func (strategy EmailStrategy) subjectSuffix(subject string) string {
     if subject == "" {
         return models.SubjectMissingTemplateName
     }

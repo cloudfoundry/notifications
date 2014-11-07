@@ -19,7 +19,7 @@ func NewNotify() *Notify {
 }
 
 func (fake *Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
-    guid postal.TypedGUID, recipe postal.RecipeInterface) ([]byte, error) {
+    guid postal.TypedGUID, strategy postal.StrategyInterface) ([]byte, error) {
     fake.GUID = guid
 
     return fake.Response, fake.Error

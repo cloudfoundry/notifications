@@ -12,15 +12,15 @@ import (
 type NotifyEmail struct {
     errorWriter ErrorWriterInterface
     notify      NotifyInterface
-    recipe      postal.RecipeInterface
+    strategy    postal.StrategyInterface
     database    models.DatabaseInterface
 }
 
-func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, recipe postal.RecipeInterface, database models.DatabaseInterface) NotifyEmail {
+func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, strategy postal.StrategyInterface, database models.DatabaseInterface) NotifyEmail {
     return NotifyEmail{
         errorWriter: errorWriter,
         notify:      notify,
-        recipe:      recipe,
+        strategy:    strategy,
         database:    database,
     }
 }
@@ -39,7 +39,7 @@ func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request, c
 }
 
 func (handler NotifyEmail) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) error {
-    output, err := handler.notify.Execute(connection, req, context, postal.NewEmailID(), handler.recipe)
+    output, err := handler.notify.Execute(connection, req, context, postal.NewEmailID(), handler.strategy)
     if err != nil {
         return err
     }

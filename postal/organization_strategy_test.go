@@ -13,8 +13,8 @@ import (
     . "github.com/onsi/gomega"
 )
 
-var _ = Describe("Organization Recipe", func() {
-    var uaaRecipe postal.OrganizationRecipe
+var _ = Describe("Organization Strategy", func() {
+    var strategy postal.OrganizationStrategy
     var options postal.Options
     var tokenLoader *fakes.TokenLoader
     var userLoader *fakes.UserLoader
@@ -67,7 +67,7 @@ var _ = Describe("Organization Recipe", func() {
             GUID: "org-001",
         }
 
-        uaaRecipe = postal.NewOrganizationRecipe(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
+        strategy = postal.NewOrganizationStrategy(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
     })
 
     Describe("Dispatch", func() {
@@ -83,7 +83,7 @@ var _ = Describe("Organization Recipe", func() {
             })
 
             It("records a receipt for each user", func() {
-                _, err := uaaRecipe.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
                 if err != nil {
                     panic(err)
                 }
@@ -102,7 +102,7 @@ var _ = Describe("Organization Recipe", func() {
 
                 templatesLoader.Templates = templates
 
-                _, err := uaaRecipe.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
                 if err != nil {
                     panic(err)
                 }
@@ -137,7 +137,7 @@ var _ = Describe("Organization Recipe", func() {
             Context("when token loader fails to return a token", func() {
                 It("returns an error", func() {
                     tokenLoader.LoadError = errors.New("BOOM!")
-                    _, err := uaaRecipe.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
@@ -146,7 +146,7 @@ var _ = Describe("Organization Recipe", func() {
             Context("when spaceAndOrgLoader fails to load an organization", func() {
                 It("returns the error", func() {
                     spaceAndOrgLoader.LoadError = errors.New("BOOM!")
-                    _, err := uaaRecipe.Dispatch(clientID, postal.OrganizationGUID("org-009"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-009"), options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
@@ -155,7 +155,7 @@ var _ = Describe("Organization Recipe", func() {
             Context("when userLoader fails to load users", func() {
                 It("returns the error", func() {
                     userLoader.LoadError = errors.New("BOOM!")
-                    _, err := uaaRecipe.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
@@ -165,7 +165,7 @@ var _ = Describe("Organization Recipe", func() {
                 It("returns the error", func() {
                     templatesLoader.LoadError = errors.New("BOOM!")
 
-                    _, err := uaaRecipe.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
 
                     Expect(err).To(BeAssignableToTypeOf(postal.TemplateLoadError("")))
                 })
@@ -175,7 +175,7 @@ var _ = Describe("Organization Recipe", func() {
                 It("returns an error", func() {
                     receiptsRepo.CreateReceiptsError = true
 
-                    _, err := uaaRecipe.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
                     Expect(err).ToNot(BeNil())
                 })
             })
@@ -193,7 +193,7 @@ var _ = Describe("Organization Recipe", func() {
                     },
                 })
 
-                trimmedResponses := uaaRecipe.Trim(responses)
+                trimmedResponses := strategy.Trim(responses)
 
                 var result []map[string]string
                 err = json.Unmarshal(trimmedResponses, &result)

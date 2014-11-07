@@ -13,22 +13,22 @@ import (
 type NotifyUser struct {
     errorWriter ErrorWriterInterface
     notify      NotifyInterface
-    recipe      postal.RecipeInterface
+    strategy    postal.StrategyInterface
     database    models.DatabaseInterface
 }
 
-func NewNotifyUser(notify NotifyInterface, errorWriter ErrorWriterInterface, recipe postal.RecipeInterface, database models.DatabaseInterface) NotifyUser {
+func NewNotifyUser(notify NotifyInterface, errorWriter ErrorWriterInterface, strategy postal.StrategyInterface, database models.DatabaseInterface) NotifyUser {
     return NotifyUser{
         errorWriter: errorWriter,
         notify:      notify,
-        recipe:      recipe,
+        strategy:    strategy,
         database:    database,
     }
 }
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
     connection := handler.database.Connection()
-    err := handler.Execute(w, req, connection, context, handler.recipe)
+    err := handler.Execute(w, req, connection, context, handler.strategy)
     if err != nil {
         handler.errorWriter.Write(w, err)
         return
@@ -40,10 +40,10 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 }
 
 func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request,
-    connection models.ConnectionInterface, context stack.Context, recipe postal.RecipeInterface) error {
+    connection models.ConnectionInterface, context stack.Context, strategy postal.StrategyInterface) error {
     userGUID := postal.UserGUID(strings.TrimPrefix(req.URL.Path, "/users/"))
 
-    output, err := handler.notify.Execute(connection, req, context, userGUID, recipe)
+    output, err := handler.notify.Execute(connection, req, context, userGUID, strategy)
     if err != nil {
         return err
     }

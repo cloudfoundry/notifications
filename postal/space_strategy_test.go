@@ -13,8 +13,8 @@ import (
     . "github.com/onsi/gomega"
 )
 
-var _ = Describe("Space Recipe", func() {
-    var uaaRecipe postal.SpaceRecipe
+var _ = Describe("Space Strategy", func() {
+    var strategy postal.SpaceStrategy
     var options postal.Options
     var tokenLoader *fakes.TokenLoader
     var userLoader *fakes.UserLoader
@@ -66,7 +66,7 @@ var _ = Describe("Space Recipe", func() {
             OrganizationGUID: "org-001",
         }
 
-        uaaRecipe = postal.NewSpaceRecipe(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
+        strategy = postal.NewSpaceStrategy(tokenLoader, userLoader, spaceAndOrgLoader, templatesLoader, mailer, receiptsRepo)
     })
 
     Describe("Dispatch", func() {
@@ -82,7 +82,7 @@ var _ = Describe("Space Recipe", func() {
             })
 
             It("records a receipt for each user", func() {
-                _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
                 if err != nil {
                     panic(err)
                 }
@@ -101,7 +101,7 @@ var _ = Describe("Space Recipe", func() {
 
                 templatesLoader.Templates = templates
 
-                _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
                 if err != nil {
                     panic(err)
                 }
@@ -137,7 +137,7 @@ var _ = Describe("Space Recipe", func() {
             Context("when token loader fails to return a token", func() {
                 It("returns an error", func() {
                     tokenLoader.LoadError = errors.New("BOOM!")
-                    _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
@@ -146,7 +146,7 @@ var _ = Describe("Space Recipe", func() {
             Context("when spaceAndOrgLoader fails to load a space", func() {
                 It("returns an error", func() {
                     spaceAndOrgLoader.LoadError = errors.New("BOOM!")
-                    _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-000"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-000"), options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
@@ -155,7 +155,7 @@ var _ = Describe("Space Recipe", func() {
             Context("when userLoader fails to load a user", func() {
                 It("returns the error", func() {
                     userLoader.LoadError = errors.New("BOOM!")
-                    _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-0000"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-0000"), options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
@@ -165,7 +165,7 @@ var _ = Describe("Space Recipe", func() {
                 It("returns the error", func() {
                     templatesLoader.LoadError = errors.New("BOOM!")
 
-                    _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("user-123"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.SpaceGUID("user-123"), options, conn)
 
                     Expect(err).To(BeAssignableToTypeOf(postal.TemplateLoadError("")))
                 })
@@ -175,7 +175,7 @@ var _ = Describe("Space Recipe", func() {
                 It("returns an error", func() {
                     receiptsRepo.CreateReceiptsError = true
 
-                    _, err := uaaRecipe.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
                     Expect(err).ToNot(BeNil())
                 })
             })
@@ -193,7 +193,7 @@ var _ = Describe("Space Recipe", func() {
                     },
                 })
 
-                trimmedResponses := uaaRecipe.Trim(responses)
+                trimmedResponses := strategy.Trim(responses)
 
                 var result []map[string]string
                 err = json.Unmarshal(trimmedResponses, &result)

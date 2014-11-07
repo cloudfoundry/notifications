@@ -13,7 +13,7 @@ const (
     SubjectMissingSuffix      = "subject.missing"
 )
 
-type UserRecipe struct {
+type UserStrategy struct {
     tokenLoader     TokenLoaderInterface
     userLoader      UserLoaderInterface
     templatesLoader TemplatesLoaderInterface
@@ -21,10 +21,10 @@ type UserRecipe struct {
     receiptsRepo    models.ReceiptsRepoInterface
 }
 
-func NewUserRecipe(tokenLoader TokenLoaderInterface, userLoader UserLoaderInterface,
-    templatesLoader TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UserRecipe {
+func NewUserStrategy(tokenLoader TokenLoaderInterface, userLoader UserLoaderInterface,
+    templatesLoader TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UserStrategy {
 
-    return UserRecipe{
+    return UserStrategy{
         tokenLoader:     tokenLoader,
         userLoader:      userLoader,
         templatesLoader: templatesLoader,
@@ -33,21 +33,21 @@ func NewUserRecipe(tokenLoader TokenLoaderInterface, userLoader UserLoaderInterf
     }
 }
 
-func (recipe UserRecipe) Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy UserStrategy) Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
     responses := []Response{}
 
-    token, err := recipe.tokenLoader.Load()
+    token, err := strategy.tokenLoader.Load()
     if err != nil {
         return responses, err
     }
 
-    users, err := recipe.userLoader.Load(guid, token)
+    users, err := strategy.userLoader.Load(guid, token)
     if err != nil {
         return responses, err
     }
 
-    subjectSuffix := recipe.subjectSuffix(options.Subject)
-    templates, err := recipe.templatesLoader.LoadTemplates(subjectSuffix, UserContentSuffix, clientID, options.KindID)
+    subjectSuffix := strategy.subjectSuffix(options.Subject)
+    templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, UserContentSuffix, clientID, options.KindID)
     if err != nil {
         return responses, TemplateLoadError("An email template could not be loaded")
     }
@@ -57,22 +57,22 @@ func (recipe UserRecipe) Dispatch(clientID string, guid TypedGUID, options Optio
         userGUIDs = append(userGUIDs, key)
     }
 
-    err = recipe.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)
+    err = strategy.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)
     if err != nil {
         return responses, err
     }
 
-    responses = recipe.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID)
+    responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID)
 
     return responses, nil
 }
 
-func (recipe UserRecipe) Trim(responses []byte) []byte {
+func (strategy UserStrategy) Trim(responses []byte) []byte {
     t := Trimmer{}
     return t.TrimFields(responses, EmailFieldName)
 }
 
-func (recipe UserRecipe) subjectSuffix(subject string) string {
+func (strategy UserStrategy) subjectSuffix(subject string) string {
     if subject == "" {
         return SubjectMissingSuffix
     }
