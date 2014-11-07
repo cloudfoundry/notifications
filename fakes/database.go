@@ -6,12 +6,12 @@ import (
 )
 
 type Database struct {
-    Conn *FakeDBConn
+    Conn *DBConn
 }
 
 func NewDatabase() *Database {
     return &Database{
-        Conn: &FakeDBConn{},
+        Conn: NewDBConn(),
     }
 }
 

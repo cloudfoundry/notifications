@@ -37,7 +37,7 @@ var _ = Describe("PreferencesFinder", func() {
         }
 
         fakeGlobalUnsubscribesRepo := fakes.NewGlobalUnsubscribesRepo()
-        fakeGlobalUnsubscribesRepo.Set(&fakes.FakeDBConn{}, "correct-user", true)
+        fakeGlobalUnsubscribesRepo.Set(fakes.NewDBConn(), "correct-user", true)
         fakePreferencesRepo = fakes.NewFakePreferencesRepo(preferences)
         fakeDatabase := fakes.NewDatabase()
         finder = services.NewPreferencesFinder(fakePreferencesRepo, fakeGlobalUnsubscribesRepo, fakeDatabase)

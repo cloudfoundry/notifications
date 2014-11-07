@@ -18,7 +18,7 @@ var _ = Describe("Recipes", func() {
 
         Describe("DispatchMail", func() {
             var fakeMailer *fakes.Mailer
-            var fakeDBConn *fakes.FakeDBConn
+            var conn *fakes.DBConn
             var options postal.Options
             var clientID string
             var emailID postal.EmailID
@@ -37,7 +37,7 @@ var _ = Describe("Recipes", func() {
                     To:   "dr@strangelove.com",
                 }
 
-                fakeDBConn = &fakes.FakeDBConn{}
+                conn = fakes.NewDBConn()
 
                 templatesLoader.Templates = postal.Templates{
                     Subject: "the subject",
@@ -47,13 +47,13 @@ var _ = Describe("Recipes", func() {
             })
 
             It("Calls Deliver on it's mailer with proper arguments", func() {
-                emailRecipe.Dispatch(clientID, emailID, options, fakeDBConn)
+                emailRecipe.Dispatch(clientID, emailID, options, conn)
 
                 users := map[string]uaa.User{"": uaa.User{Emails: []string{options.To}}}
 
                 Expect(len(fakeMailer.DeliverArguments)).To(Equal(7))
 
-                Expect(fakeMailer.DeliverArguments).To(ContainElement(fakeDBConn))
+                Expect(fakeMailer.DeliverArguments).To(ContainElement(conn))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(templatesLoader.Templates))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(users))
                 Expect(fakeMailer.DeliverArguments).To(ContainElement(options))

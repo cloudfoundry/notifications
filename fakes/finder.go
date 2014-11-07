@@ -2,19 +2,19 @@ package fakes
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-type FakeFinder struct {
+type Finder struct {
     Clients            map[string]models.Client
     Kinds              map[string]models.Kind
     ClientAndKindError error
 }
 
-func NewFakeFinder() *FakeFinder {
-    return &FakeFinder{
+func NewFinder() *Finder {
+    return &Finder{
         Clients: make(map[string]models.Client),
         Kinds:   make(map[string]models.Kind),
     }
 }
 
-func (finder *FakeFinder) ClientAndKind(clientID, kindID string) (models.Client, models.Kind, error) {
+func (finder *Finder) ClientAndKind(clientID, kindID string) (models.Client, models.Kind, error) {
     return finder.Clients[clientID], finder.Kinds[kindID+"|"+clientID], finder.ClientAndKindError
 }

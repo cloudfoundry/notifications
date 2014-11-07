@@ -2,14 +2,14 @@ package fakes
 
 import "net/http"
 
-type FakeErrorWriter struct {
+type ErrorWriter struct {
     Error error
 }
 
-func NewFakeErrorWriter() *FakeErrorWriter {
-    return &FakeErrorWriter{}
+func NewErrorWriter() *ErrorWriter {
+    return &ErrorWriter{}
 }
 
-func (writer *FakeErrorWriter) Write(w http.ResponseWriter, err error) {
+func (writer *ErrorWriter) Write(w http.ResponseWriter, err error) {
     writer.Error = err
 }

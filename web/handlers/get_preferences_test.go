@@ -24,14 +24,14 @@ var _ = Describe("GetPreferences", func() {
     var writer *httptest.ResponseRecorder
     var request *http.Request
     var preferencesFinder *fakes.FakePreferencesFinder
-    var errorWriter *fakes.FakeErrorWriter
+    var errorWriter *fakes.ErrorWriter
     var builder services.PreferencesBuilder
     var context stack.Context
     var TRUE = true
     var FALSE = false
 
     BeforeEach(func() {
-        errorWriter = &fakes.FakeErrorWriter{}
+        errorWriter = fakes.NewErrorWriter()
 
         writer = httptest.NewRecorder()
         body, err := json.Marshal(map[string]string{

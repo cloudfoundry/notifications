@@ -22,7 +22,7 @@ var _ = Describe("GetTemplates", func() {
     var writer *httptest.ResponseRecorder
     var context stack.Context
     var finder *fakes.FakeTemplateFinder
-    var fakeErrorWriter *fakes.FakeErrorWriter
+    var errorWriter *fakes.ErrorWriter
 
     Describe("ServeHTTP", func() {
         BeforeEach(func() {
@@ -33,8 +33,8 @@ var _ = Describe("GetTemplates", func() {
                 HTML: "<p> the template {{variable}} </p>",
             }
             writer = httptest.NewRecorder()
-            fakeErrorWriter = fakes.NewFakeErrorWriter()
-            handler = handlers.NewGetTemplates(finder, fakeErrorWriter)
+            errorWriter = fakes.NewErrorWriter()
+            handler = handlers.NewGetTemplates(finder, errorWriter)
         })
 
         Context("When the finder does not error", func() {
@@ -83,7 +83,7 @@ var _ = Describe("GetTemplates", func() {
 
             It("writes the error to the errorWriter", func() {
                 handler.ServeHTTP(writer, request, context)
-                Expect(fakeErrorWriter.Error).To(Equal(errors.New("BOOM!")))
+                Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
             })
         })
     })

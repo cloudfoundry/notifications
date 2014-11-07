@@ -23,11 +23,11 @@ var _ = Describe("Space Recipe", func() {
     var mailer *fakes.Mailer
     var clientID string
     var receiptsRepo *fakes.ReceiptsRepo
-    var conn *fakes.FakeDBConn
+    var conn *fakes.DBConn
 
     BeforeEach(func() {
         clientID = "mister-client"
-        conn = &fakes.FakeDBConn{}
+        conn = fakes.NewDBConn()
 
         tokenHeader := map[string]interface{}{
             "alg": "FAST",

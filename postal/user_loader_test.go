@@ -17,7 +17,7 @@ var _ = Describe("UserLoader", func() {
     var loader postal.UserLoader
     var token string
     var fakeUAAClient fakes.FakeUAAClient
-    var fakeCC *fakes.FakeCloudController
+    var cc *fakes.CloudController
 
     Describe("Load", func() {
         BeforeEach(func() {
@@ -33,20 +33,20 @@ var _ = Describe("UserLoader", func() {
 
             token = fakes.BuildToken(tokenHeader, tokenClaims)
 
-            fakeCC = fakes.NewFakeCloudController()
-            fakeCC.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
+            cc = fakes.NewCloudController()
+            cc.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
                 cf.CloudControllerUser{Guid: "user-123"},
                 cf.CloudControllerUser{Guid: "user-789"},
             }
 
-            fakeCC.UsersByOrganizationGuid["org-001"] = []cf.CloudControllerUser{
+            cc.UsersByOrganizationGuid["org-001"] = []cf.CloudControllerUser{
                 cf.CloudControllerUser{Guid: "user-123"},
                 cf.CloudControllerUser{Guid: "user-456"},
                 cf.CloudControllerUser{Guid: "user-789"},
                 cf.CloudControllerUser{Guid: "user-999"},
             }
 
-            fakeCC.Spaces = map[string]cf.CloudControllerSpace{
+            cc.Spaces = map[string]cf.CloudControllerSpace{
                 "space-001": cf.CloudControllerSpace{
                     Name:             "production",
                     GUID:             "space-001",
@@ -54,7 +54,7 @@ var _ = Describe("UserLoader", func() {
                 },
             }
 
-            fakeCC.Orgs = map[string]cf.CloudControllerOrganization{
+            cc.Orgs = map[string]cf.CloudControllerOrganization{
                 "org-001": cf.CloudControllerOrganization{
                     Name: "pivotaltracker",
                 },
@@ -81,7 +81,7 @@ var _ = Describe("UserLoader", func() {
             }
 
             logger := log.New(bytes.NewBufferString(""), "", 0)
-            loader = postal.NewUserLoader(&fakeUAAClient, logger, fakeCC)
+            loader = postal.NewUserLoader(&fakeUAAClient, logger, cc)
         })
 
         Context("UAA returns a collection of users", func() {

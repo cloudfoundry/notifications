@@ -12,49 +12,18 @@ import (
     . "github.com/onsi/gomega"
 )
 
-type FakeFileSystem struct {
-    Files map[string]string
-}
-
-func NewFakeFileSystem(env config.Environment) FakeFileSystem {
-    return FakeFileSystem{
-        Files: map[string]string{
-            env.RootPath + "/templates/" + models.SpaceBodyTemplateName + ".text": "default-space-text",
-            env.RootPath + "/templates/" + models.SpaceBodyTemplateName + ".html": "default-space-html",
-            env.RootPath + "/templates/" + models.SubjectMissingTemplateName:      "default-missing-subject",
-            env.RootPath + "/templates/" + models.SubjectProvidedTemplateName:     "default-provided-subject",
-            env.RootPath + "/templates/" + models.UserBodyTemplateName + ".text":  "default-user-text",
-            env.RootPath + "/templates/" + models.UserBodyTemplateName + ".html":  "default-user-html",
-            env.RootPath + "/templates/" + models.EmailBodyTemplateName + ".html": "email-body-html",
-            env.RootPath + "/templates/" + models.EmailBodyTemplateName + ".text": "email-body-text",
-        },
-    }
-}
-
-func (fs FakeFileSystem) Exists(path string) bool {
-    _, ok := fs.Files[path]
-    return ok
-}
-
-func (fs FakeFileSystem) Read(path string) (string, error) {
-    if file, ok := fs.Files[path]; ok {
-        return file, nil
-    }
-    return "", errors.New("File does not exist")
-}
-
 var _ = Describe("Finder", func() {
     var finder services.TemplateFinder
     var fakeTemplatesRepo *fakes.FakeTemplatesRepo
-    var fakeFileSystem FakeFileSystem
+    var fileSystem fakes.FileSystem
 
     Describe("#Find", func() {
         BeforeEach(func() {
             env := config.NewEnvironment()
             fakeTemplatesRepo = fakes.NewFakeTemplatesRepo()
-            fakeFileSystem = NewFakeFileSystem(env)
+            fileSystem = fakes.NewFileSystem(env.RootPath)
 
-            finder = services.NewTemplateFinder(fakeTemplatesRepo, env.RootPath, fakes.NewDatabase(), fakeFileSystem)
+            finder = services.NewTemplateFinder(fakeTemplatesRepo, env.RootPath, fakes.NewDatabase(), fileSystem)
         })
 
         Context("when the finder returns a template", func() {
@@ -199,13 +168,13 @@ var _ = Describe("Finder", func() {
     Describe("#ParseTemplateName", func() {
         It("parses the input template name, returning a list of possible template matches", func() {
             table := map[string][]string{
-                "login.fp.user_body": []string{"login.fp.user_body", "login.user_body", "user_body"},
-                "login.user_body": []string{"login.user_body", "user_body"},
-                "user_body": []string{"user_body"},
-                "login.fp.subject.missing": []string{"login.fp.subject.missing", "login.subject.missing", "subject.missing"},
-                "login.subject.missing": []string{"login.subject.missing", "subject.missing"},
-                "subject.missing": []string{"subject.missing"},
-                "banana": []string{},
+                "login.fp.user_body":        []string{"login.fp.user_body", "login.user_body", "user_body"},
+                "login.user_body":           []string{"login.user_body", "user_body"},
+                "user_body":                 []string{"user_body"},
+                "login.fp.subject.missing":  []string{"login.fp.subject.missing", "login.subject.missing", "subject.missing"},
+                "login.subject.missing":     []string{"login.subject.missing", "subject.missing"},
+                "subject.missing":           []string{"subject.missing"},
+                "banana":                    []string{},
                 "login.fp.banana.user_body": []string{},
             }
 

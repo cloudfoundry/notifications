@@ -21,7 +21,7 @@ import (
 )
 
 var _ = Describe("DeliveryWorker", func() {
-    var mailClient fakes.FakeMailClient
+    var mailClient fakes.MailClient
     var worker postal.DeliveryWorker
     var id int
     var logger *log.Logger
@@ -30,7 +30,7 @@ var _ = Describe("DeliveryWorker", func() {
     var queue *fakes.FakeQueue
     var unsubscribesRepo *fakes.UnsubscribesRepo
     var globalUnsubscribesRepo *fakes.GlobalUnsubscribesRepo
-    var kindsRepo *fakes.FakeKindsRepo
+    var kindsRepo *fakes.KindsRepo
     var database *fakes.Database
     var conn models.ConnectionInterface
     var userGUID string
@@ -39,11 +39,11 @@ var _ = Describe("DeliveryWorker", func() {
         buffer = bytes.NewBuffer([]byte{})
         id = 1234
         logger = log.New(buffer, "", 0)
-        mailClient = fakes.FakeMailClient{}
+        mailClient = fakes.NewMailClient()
         queue = fakes.NewFakeQueue()
         unsubscribesRepo = fakes.NewUnsubscribesRepo()
         globalUnsubscribesRepo = fakes.NewGlobalUnsubscribesRepo()
-        kindsRepo = fakes.NewFakeKindsRepo()
+        kindsRepo = fakes.NewKindsRepo()
         database = fakes.NewDatabase()
         conn = database.Connection()
         userGUID = "user-123"

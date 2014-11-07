@@ -14,34 +14,34 @@ var _ = Describe("PreferenceUpdater", func() {
         var doorOpen models.Unsubscribe
         var barking models.Unsubscribe
         var unsubscribesRepo *fakes.UnsubscribesRepo
-        var fakeKindsRepo *fakes.FakeKindsRepo
+        var kindsRepo *fakes.KindsRepo
         var fakeGlobalUnsubscribesRepo *fakes.GlobalUnsubscribesRepo
-        var fakeDBConn *fakes.FakeDBConn
+        var conn *fakes.DBConn
         var updater services.PreferenceUpdater
 
         BeforeEach(func() {
-            fakeDBConn = &fakes.FakeDBConn{}
+            conn = fakes.NewDBConn()
             unsubscribesRepo = fakes.NewUnsubscribesRepo()
-            fakeKindsRepo = fakes.NewFakeKindsRepo()
+            kindsRepo = fakes.NewKindsRepo()
             fakeGlobalUnsubscribesRepo = fakes.NewGlobalUnsubscribesRepo()
-            updater = services.NewPreferenceUpdater(fakeGlobalUnsubscribesRepo, unsubscribesRepo, fakeKindsRepo)
+            updater = services.NewPreferenceUpdater(fakeGlobalUnsubscribesRepo, unsubscribesRepo, kindsRepo)
         })
 
         Context("when globally unsubscribing", func() {
             It("inserts a record into the global unsubscribes repo", func() {
                 userGUID := "user-guid"
-                updater.Execute(fakeDBConn, []models.Preference{}, true, userGUID)
+                updater.Execute(conn, []models.Preference{}, true, userGUID)
 
-                globallyUnsubscribed, err := fakeGlobalUnsubscribesRepo.Get(fakeDBConn, userGUID)
+                globallyUnsubscribed, err := fakeGlobalUnsubscribesRepo.Get(conn, userGUID)
                 if err != nil {
                     panic(err)
                 }
 
                 Expect(globallyUnsubscribed).To(BeTrue())
 
-                updater.Execute(fakeDBConn, []models.Preference{}, false, userGUID)
+                updater.Execute(conn, []models.Preference{}, false, userGUID)
 
-                globallyUnsubscribed, err = fakeGlobalUnsubscribesRepo.Get(fakeDBConn, userGUID)
+                globallyUnsubscribed, err = fakeGlobalUnsubscribesRepo.Get(conn, userGUID)
                 if err != nil {
                     panic(err)
                 }
@@ -64,12 +64,12 @@ var _ = Describe("PreferenceUpdater", func() {
                     KindID:   "barking",
                 }
 
-                fakeKindsRepo.Create(fakeDBConn, models.Kind{
+                kindsRepo.Create(conn, models.Kind{
                     ID:       "door-open",
                     ClientID: "raptors",
                 })
 
-                fakeKindsRepo.Create(fakeDBConn, models.Kind{
+                kindsRepo.Create(conn, models.Kind{
                     ID:       "barking",
                     ClientID: "dogs",
                 })
@@ -77,7 +77,7 @@ var _ = Describe("PreferenceUpdater", func() {
             })
 
             It("Adds New Unsubscribes to the unsubscribes Repo", func() {
-                updater.Execute(fakeDBConn, []models.Preference{
+                updater.Execute(conn, []models.Preference{
                     {
                         ClientID: "raptors",
                         KindID:   "door-open",
@@ -97,7 +97,7 @@ var _ = Describe("PreferenceUpdater", func() {
             })
 
             It("does not insert duplicate unsubscribes", func() {
-                _, err := unsubscribesRepo.Create(fakeDBConn, models.Unsubscribe{
+                _, err := unsubscribesRepo.Create(conn, models.Unsubscribe{
                     UserID:   "my-user",
                     ClientID: "raptors",
                     KindID:   "door-open",
@@ -107,7 +107,7 @@ var _ = Describe("PreferenceUpdater", func() {
                 }
                 Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(1))
 
-                err = updater.Execute(fakeDBConn, []models.Preference{
+                err = updater.Execute(conn, []models.Preference{
                     {
                         ClientID: "raptors",
                         KindID:   "door-open",
@@ -120,7 +120,7 @@ var _ = Describe("PreferenceUpdater", func() {
             })
 
             It("Does not add resubscriptions to the unsubscribes Repo", func() {
-                updater.Execute(fakeDBConn, []models.Preference{
+                updater.Execute(conn, []models.Preference{
                     {
                         ClientID: "dogs",
                         KindID:   "barking",
@@ -132,7 +132,7 @@ var _ = Describe("PreferenceUpdater", func() {
             })
 
             It("removes unsubscribes when they are resubscribed", func() {
-                _, err := unsubscribesRepo.Create(fakeDBConn, models.Unsubscribe{
+                _, err := unsubscribesRepo.Create(conn, models.Unsubscribe{
                     UserID:   "my-user",
                     ClientID: "raptors",
                     KindID:   "door-open",
@@ -142,7 +142,7 @@ var _ = Describe("PreferenceUpdater", func() {
                 }
                 Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(1))
 
-                err = updater.Execute(fakeDBConn, []models.Preference{
+                err = updater.Execute(conn, []models.Preference{
                     {
                         ClientID: "raptors",
                         KindID:   "door-open",
@@ -170,12 +170,12 @@ var _ = Describe("PreferenceUpdater", func() {
                     KindID:   "boo",
                 }
 
-                fakeKindsRepo.Create(fakeDBConn, models.Kind{
+                kindsRepo.Create(conn, models.Kind{
                     ID:       "hungry",
                     ClientID: "raptors",
                 })
 
-                fakeKindsRepo.Create(fakeDBConn, models.Kind{
+                kindsRepo.Create(conn, models.Kind{
                     ID:       "boo",
                     ClientID: "missing-client",
                 })
@@ -183,7 +183,7 @@ var _ = Describe("PreferenceUpdater", func() {
             })
 
             It("should return a MissingKindOrClientError", func() {
-                err := updater.Execute(fakeDBConn, []models.Preference{hungry, boo}, false, "the-user")
+                err := updater.Execute(conn, []models.Preference{hungry, boo}, false, "the-user")
 
                 Expect(err).To(Equal(services.MissingKindOrClientError("The kind 'boo' cannot be found for client 'ghosts'")))
             })
@@ -204,7 +204,7 @@ var _ = Describe("PreferenceUpdater", func() {
                     KindID:   "dead",
                 }
 
-                fakeKindsRepo.Create(fakeDBConn, models.Kind{
+                kindsRepo.Create(conn, models.Kind{
                     ID:       "hungry",
                     ClientID: "raptors",
                 })
@@ -213,7 +213,7 @@ var _ = Describe("PreferenceUpdater", func() {
 
             It("should return a MissingKindOrClientError", func() {
 
-                err := updater.Execute(fakeDBConn, []models.Preference{hungry, dead}, false, "the-user")
+                err := updater.Execute(conn, []models.Preference{hungry, dead}, false, "the-user")
 
                 Expect(err).To(Equal(services.MissingKindOrClientError("The kind 'dead' cannot be found for client 'raptors'")))
             })
@@ -234,13 +234,13 @@ var _ = Describe("PreferenceUpdater", func() {
                     KindID:   "barking",
                 }
 
-                fakeKindsRepo.Create(fakeDBConn, models.Kind{
+                kindsRepo.Create(conn, models.Kind{
                     ClientID: "raptors",
                     ID:       "hungry",
                     Critical: true,
                 })
 
-                fakeKindsRepo.Create(fakeDBConn, models.Kind{
+                kindsRepo.Create(conn, models.Kind{
                     ClientID: "dogs",
                     ID:       "barking",
                 })
@@ -248,7 +248,7 @@ var _ = Describe("PreferenceUpdater", func() {
             })
 
             It("should return a CriticalKindError", func() {
-                err := updater.Execute(fakeDBConn, []models.Preference{barking, hungry}, false, "the-user")
+                err := updater.Execute(conn, []models.Preference{barking, hungry}, false, "the-user")
 
                 Expect(err).To(Equal(services.CriticalKindError("The kind 'hungry' for the 'raptors' client is critical and cannot be unsubscribed from")))
             })

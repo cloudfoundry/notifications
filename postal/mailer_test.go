@@ -19,7 +19,7 @@ var _ = Describe("Mailer", func() {
     var logger *log.Logger
     var buffer *bytes.Buffer
     var queue *fakes.FakeQueue
-    var conn *fakes.FakeDBConn
+    var conn *fakes.DBConn
     var space cf.CloudControllerSpace
     var org cf.CloudControllerOrganization
 
@@ -27,8 +27,8 @@ var _ = Describe("Mailer", func() {
         buffer = bytes.NewBuffer([]byte{})
         logger = log.New(buffer, "", 0)
         queue = fakes.NewFakeQueue()
-        conn = &fakes.FakeDBConn{}
-        mailer = postal.NewMailer(queue, fakes.FakeGuidGenerator)
+        conn = fakes.NewDBConn()
+        mailer = postal.NewMailer(queue, fakes.GUIDGenerator)
         space = cf.CloudControllerSpace{Name: "the-space"}
         org = cf.CloudControllerOrganization{Name: "the-org"}
     })

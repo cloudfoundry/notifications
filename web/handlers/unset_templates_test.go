@@ -17,7 +17,7 @@ import (
 
 var _ = Describe("UnsetTemplates", func() {
     var handler handlers.UnsetTemplates
-    var fakeErrorWriter *fakes.FakeErrorWriter
+    var errorWriter *fakes.ErrorWriter
     var writer *httptest.ResponseRecorder
     var request *http.Request
     var context stack.Context
@@ -27,8 +27,8 @@ var _ = Describe("UnsetTemplates", func() {
     Describe("ServeHTTP", func() {
         BeforeEach(func() {
             deleter = fakes.NewFakeTemplateDeleter()
-            fakeErrorWriter = fakes.NewFakeErrorWriter()
-            handler = handlers.NewUnsetTemplates(deleter, fakeErrorWriter)
+            errorWriter = fakes.NewErrorWriter()
+            handler = handlers.NewUnsetTemplates(deleter, errorWriter)
             writer = httptest.NewRecorder()
             request, err = http.NewRequest("DELETE", "/templates/login.forgot."+models.UserBodyTemplateName, bytes.NewBuffer([]byte{}))
             if err != nil {
@@ -46,7 +46,7 @@ var _ = Describe("UnsetTemplates", func() {
             It("writes the error to the errorWriter", func() {
                 deleter.DeleteError = errors.New("BOOM!")
                 handler.ServeHTTP(writer, request, context)
-                Expect(fakeErrorWriter.Error).To(Equal(deleter.DeleteError))
+                Expect(errorWriter.Error).To(Equal(deleter.DeleteError))
             })
         })
     })

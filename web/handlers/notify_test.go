@@ -24,14 +24,14 @@ var _ = Describe("Notify", func() {
     Describe("Execute", func() {
         Context("When Emailing a user or a group", func() {
             var handler handlers.Notify
-            var fakeFinder *fakes.FakeFinder
+            var finder *fakes.Finder
             var fakeRegistrar *fakes.FakeRegistrar
             var request *http.Request
             var rawToken string
             var client models.Client
             var kind models.Kind
-            var fakeDBConn *fakes.FakeDBConn
-            var fakeRecipe *fakes.FakeMailRecipe
+            var conn *fakes.DBConn
+            var recipe *fakes.MailRecipe
             var context stack.Context
             var tokenHeader map[string]interface{}
             var tokenClaims map[string]interface{}
@@ -47,9 +47,9 @@ var _ = Describe("Notify", func() {
                     ClientID:    "mister-client",
                     Critical:    true,
                 }
-                fakeFinder = fakes.NewFakeFinder()
-                fakeFinder.Clients["mister-client"] = client
-                fakeFinder.Kinds["test_email|mister-client"] = kind
+                finder = fakes.NewFinder()
+                finder.Clients["mister-client"] = client
+                finder.Kinds["test_email|mister-client"] = kind
 
                 fakeRegistrar = fakes.NewFakeRegistrar()
 
@@ -87,15 +87,15 @@ var _ = Describe("Notify", func() {
                 context = stack.NewContext()
                 context.Set("token", token)
 
-                fakeDBConn = &fakes.FakeDBConn{}
+                conn = fakes.NewDBConn()
 
-                handler = handlers.NewNotify(fakeFinder, fakeRegistrar)
-                fakeRecipe = &fakes.FakeMailRecipe{}
+                handler = handlers.NewNotify(finder, fakeRegistrar)
+                recipe = fakes.NewMailRecipe()
             })
 
             Describe("Responses", func() {
                 BeforeEach(func() {
-                    fakeRecipe.Responses = []postal.Response{
+                    recipe.Responses = []postal.Response{
                         {
                             Status:         "delivered",
                             Recipient:      "user-123",
@@ -105,22 +105,22 @@ var _ = Describe("Notify", func() {
                 })
 
                 It("trim is called on the recipe", func() {
-                    _, err := handler.Execute(fakeDBConn, request, context, postal.NewUserGUID(), fakeRecipe)
+                    _, err := handler.Execute(conn, request, context, postal.NewUserGUID(), recipe)
                     if err != nil {
                         panic(err)
                     }
 
-                    Expect(fakeRecipe.TrimCalled).To(Equal(true))
+                    Expect(recipe.TrimCalled).To(Equal(true))
                 })
             })
 
             It("delegates to the mailRecipe", func() {
-                _, err := handler.Execute(fakeDBConn, request, context, postal.SpaceGUID("space-001"), fakeRecipe)
+                _, err := handler.Execute(conn, request, context, postal.SpaceGUID("space-001"), recipe)
                 if err != nil {
                     panic(err)
                 }
 
-                Expect(fakeRecipe.DispatchArguments).To(Equal([]interface{}{
+                Expect(recipe.DispatchArguments).To(Equal([]interface{}{
                     "mister-client",
                     postal.SpaceGUID("space-001"),
                     postal.Options{
@@ -136,13 +136,13 @@ var _ = Describe("Notify", func() {
             })
 
             It("registers the client and kind", func() {
-                _, err := handler.Execute(fakeDBConn, request, context, postal.SpaceGUID("space-001"), fakeRecipe)
+                _, err := handler.Execute(conn, request, context, postal.SpaceGUID("space-001"), recipe)
                 if err != nil {
                     panic(err)
                 }
 
                 Expect(fakeRegistrar.RegisterArguments).To(Equal([]interface{}{
-                    fakeDBConn,
+                    conn,
                     client,
                     []models.Kind{kind},
                 }))
@@ -163,7 +163,7 @@ var _ = Describe("Notify", func() {
                         }
                         request.Header.Set("Authorization", "Bearer "+rawToken)
 
-                        _, err = handler.Execute(fakeDBConn, request, context, postal.SpaceGUID("space-001"), fakeRecipe)
+                        _, err = handler.Execute(conn, request, context, postal.SpaceGUID("space-001"), recipe)
 
                         Expect(err).ToNot(BeNil())
                         validationErr := err.(params.ValidationError)
@@ -178,7 +178,7 @@ var _ = Describe("Notify", func() {
                         }
                         request.Header.Set("Authorization", "Bearer "+rawToken)
 
-                        _, err = handler.Execute(fakeDBConn, request, context, postal.SpaceGUID("space-001"), fakeRecipe)
+                        _, err = handler.Execute(conn, request, context, postal.SpaceGUID("space-001"), recipe)
 
                         Expect(err).To(Equal(params.ParseError{}))
                     })
@@ -186,9 +186,9 @@ var _ = Describe("Notify", func() {
 
                 Context("when the recipe dispatch method returns errors", func() {
                     It("returns the error", func() {
-                        fakeRecipe.Error = errors.New("BOOM!")
+                        recipe.Error = errors.New("BOOM!")
 
-                        _, err := handler.Execute(fakeDBConn, request, context, postal.UserGUID("user-123"), fakeRecipe)
+                        _, err := handler.Execute(conn, request, context, postal.UserGUID("user-123"), recipe)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
                     })
@@ -196,9 +196,9 @@ var _ = Describe("Notify", func() {
 
                 Context("when the finder return errors", func() {
                     It("returns the error", func() {
-                        fakeFinder.ClientAndKindError = errors.New("BOOM!")
+                        finder.ClientAndKindError = errors.New("BOOM!")
 
-                        _, err := handler.Execute(fakeDBConn, request, context, postal.UserGUID("user-123"), fakeRecipe)
+                        _, err := handler.Execute(conn, request, context, postal.UserGUID("user-123"), recipe)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
                     })
@@ -208,7 +208,7 @@ var _ = Describe("Notify", func() {
                     It("returns the error", func() {
                         fakeRegistrar.RegisterError = errors.New("BOOM!")
 
-                        _, err := handler.Execute(fakeDBConn, request, context, postal.UserGUID("user-123"), fakeRecipe)
+                        _, err := handler.Execute(conn, request, context, postal.UserGUID("user-123"), recipe)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
                     })
@@ -224,7 +224,7 @@ var _ = Describe("Notify", func() {
 
                         context.Set("token", token)
 
-                        _, err = handler.Execute(fakeDBConn, request, context, postal.UserGUID("user-123"), fakeRecipe)
+                        _, err = handler.Execute(conn, request, context, postal.UserGUID("user-123"), recipe)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.NewCriticalNotificationError("test_email")))
                     })

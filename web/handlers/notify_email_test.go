@@ -17,12 +17,12 @@ var _ = Describe("NotifyEmail", func() {
     Describe("Execute", func() {
         var handler handlers.NotifyEmail
         var writer *httptest.ResponseRecorder
-        var errorWriter *fakes.FakeErrorWriter
+        var errorWriter *fakes.ErrorWriter
         var fakeNotify *fakes.FakeNotify
         var context stack.Context
 
         BeforeEach(func() {
-            errorWriter = &fakes.FakeErrorWriter{}
+            errorWriter = fakes.NewErrorWriter()
             writer = httptest.NewRecorder()
             context = stack.NewContext()
             database := fakes.NewDatabase()

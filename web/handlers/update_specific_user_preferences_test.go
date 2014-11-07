@@ -26,14 +26,14 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
         var handler handlers.UpdateSpecificUserPreferences
         var writer *httptest.ResponseRecorder
         var request *http.Request
-        var fakeDBConn *fakes.FakeDBConn
+        var conn *fakes.DBConn
         var context stack.Context
         var updater *fakes.FakePreferenceUpdater
         var userGUID string
-        var errorWriter *fakes.FakeErrorWriter
+        var errorWriter *fakes.ErrorWriter
 
         BeforeEach(func() {
-            fakeDBConn = &fakes.FakeDBConn{}
+            conn = fakes.NewDBConn()
             builder := services.NewPreferencesBuilder()
             builder.Add(models.Preference{
                 ClientID: "raptors",
@@ -81,14 +81,14 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
             context.Set("token", token)
 
             updater = fakes.NewFakePreferenceUpdater()
-            errorWriter = fakes.NewFakeErrorWriter()
+            errorWriter = fakes.NewErrorWriter()
             fakeDatabase := fakes.NewDatabase()
             handler = handlers.NewUpdateSpecificUserPreferences(updater, errorWriter, fakeDatabase)
             writer = httptest.NewRecorder()
         })
 
         It("Passes the correct arguments to PreferenceUpdater Execute", func() {
-            handler.Execute(writer, request, fakeDBConn, context)
+            handler.Execute(writer, request, conn, context)
             Expect(len(updater.ExecuteArguments)).To(Equal(3))
 
             preferencesArguments := updater.ExecuteArguments[0]
@@ -114,7 +114,7 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
         })
 
         It("Returns a 204 status code when the Preference object does not error", func() {
-            handler.Execute(writer, request, fakeDBConn, context)
+            handler.Execute(writer, request, conn, context)
 
             Expect(writer.Code).To(Equal(http.StatusNoContent))
         })
@@ -123,36 +123,36 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
             It("delegates MissingKindOrClientErrors as params.ValidationError to the ErrorWriter", func() {
                 updater.ExecuteError = services.MissingKindOrClientError("BOOM!")
 
-                handler.Execute(writer, request, fakeDBConn, context)
+                handler.Execute(writer, request, conn, context)
 
                 Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{"BOOM!"})))
 
-                Expect(fakeDBConn.BeginWasCalled).To(BeTrue())
-                Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
-                Expect(fakeDBConn.RollbackWasCalled).To(BeTrue())
+                Expect(conn.BeginWasCalled).To(BeTrue())
+                Expect(conn.CommitWasCalled).To(BeFalse())
+                Expect(conn.RollbackWasCalled).To(BeTrue())
             })
 
             It("delegates CriticalKindErrors as params.ValidationError to the ErrorWriter", func() {
                 updater.ExecuteError = services.CriticalKindError("BOOM!")
 
-                handler.Execute(writer, request, fakeDBConn, context)
+                handler.Execute(writer, request, conn, context)
 
                 Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{"BOOM!"})))
 
-                Expect(fakeDBConn.BeginWasCalled).To(BeTrue())
-                Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
-                Expect(fakeDBConn.RollbackWasCalled).To(BeTrue())
+                Expect(conn.BeginWasCalled).To(BeTrue())
+                Expect(conn.CommitWasCalled).To(BeFalse())
+                Expect(conn.RollbackWasCalled).To(BeTrue())
             })
             It("delegates other errors to the ErrorWriter", func() {
                 updater.ExecuteError = errors.New("BOOM!")
 
-                handler.Execute(writer, request, fakeDBConn, context)
+                handler.Execute(writer, request, conn, context)
 
                 Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
 
-                Expect(fakeDBConn.BeginWasCalled).To(BeTrue())
-                Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
-                Expect(fakeDBConn.RollbackWasCalled).To(BeTrue())
+                Expect(conn.BeginWasCalled).To(BeTrue())
+                Expect(conn.CommitWasCalled).To(BeFalse())
+                Expect(conn.RollbackWasCalled).To(BeTrue())
             })
 
         })

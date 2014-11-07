@@ -2,17 +2,21 @@ package fakes
 
 import "github.com/cloudfoundry-incubator/notifications/mail"
 
-type FakeMailClient struct {
+type MailClient struct {
     Messages     []mail.Message
     SendError    error
     ConnectError error
 }
 
-func (fake *FakeMailClient) Connect() error {
+func NewMailClient() MailClient {
+    return MailClient{}
+}
+
+func (fake *MailClient) Connect() error {
     return fake.ConnectError
 }
 
-func (fake *FakeMailClient) Send(msg mail.Message) error {
+func (fake *MailClient) Send(msg mail.Message) error {
     err := fake.Connect()
     if err != nil {
         return err

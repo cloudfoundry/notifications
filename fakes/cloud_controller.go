@@ -7,7 +7,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/cf"
 )
 
-type FakeCloudController struct {
+type CloudController struct {
     CurrentToken                    string
     GetUsersBySpaceGuidError        error
     GetUsersByOrganizationGuidError error
@@ -19,14 +19,14 @@ type FakeCloudController struct {
     Orgs                            map[string]cf.CloudControllerOrganization
 }
 
-func NewFakeCloudController() *FakeCloudController {
-    return &FakeCloudController{
+func NewCloudController() *CloudController {
+    return &CloudController{
         UsersBySpaceGuid:        make(map[string][]cf.CloudControllerUser),
         UsersByOrganizationGuid: make(map[string][]cf.CloudControllerUser),
     }
 }
 
-func (fake *FakeCloudController) GetUsersBySpaceGuid(guid, token string) ([]cf.CloudControllerUser, error) {
+func (fake *CloudController) GetUsersBySpaceGuid(guid, token string) ([]cf.CloudControllerUser, error) {
     fake.CurrentToken = token
 
     if users, ok := fake.UsersBySpaceGuid[guid]; ok {
@@ -36,7 +36,7 @@ func (fake *FakeCloudController) GetUsersBySpaceGuid(guid, token string) ([]cf.C
     }
 }
 
-func (fake *FakeCloudController) GetUsersByOrgGuid(guid, token string) ([]cf.CloudControllerUser, error) {
+func (fake *CloudController) GetUsersByOrgGuid(guid, token string) ([]cf.CloudControllerUser, error) {
     fake.CurrentToken = token
 
     if users, ok := fake.UsersByOrganizationGuid[guid]; ok {
@@ -46,7 +46,7 @@ func (fake *FakeCloudController) GetUsersByOrgGuid(guid, token string) ([]cf.Clo
     }
 }
 
-func (fake *FakeCloudController) LoadSpace(guid, token string) (cf.CloudControllerSpace, error) {
+func (fake *CloudController) LoadSpace(guid, token string) (cf.CloudControllerSpace, error) {
     if fake.LoadSpaceError != nil {
         return cf.CloudControllerSpace{}, fake.LoadSpaceError
     }
@@ -58,7 +58,7 @@ func (fake *FakeCloudController) LoadSpace(guid, token string) (cf.CloudControll
     }
 }
 
-func (fake *FakeCloudController) LoadOrganization(guid, token string) (cf.CloudControllerOrganization, error) {
+func (fake *CloudController) LoadOrganization(guid, token string) (cf.CloudControllerOrganization, error) {
     if fake.LoadOrganizationError != nil {
         return cf.CloudControllerOrganization{}, fake.LoadOrganizationError
     }

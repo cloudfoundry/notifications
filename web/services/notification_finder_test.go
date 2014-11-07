@@ -14,21 +14,21 @@ import (
 
 var _ = Describe("Finder", func() {
     var finder services.NotificationFinder
-    var clientsRepo *fakes.FakeClientsRepo
-    var kindsRepo *fakes.FakeKindsRepo
+    var clientsRepo *fakes.ClientsRepo
+    var kindsRepo *fakes.KindsRepo
     var raptors models.Client
     var breach models.Kind
 
     Describe("ClientAndKind", func() {
         BeforeEach(func() {
-            clientsRepo = fakes.NewFakeClientsRepo()
+            clientsRepo = fakes.NewClientsRepo()
             raptors = models.Client{
                 ID:        "raptors",
                 CreatedAt: time.Now(),
             }
             clientsRepo.Clients["raptors"] = raptors
 
-            kindsRepo = fakes.NewFakeKindsRepo()
+            kindsRepo = fakes.NewKindsRepo()
             breach = models.Kind{
                 ID:        "perimeter_breach",
                 ClientID:  "raptors",

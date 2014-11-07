@@ -19,13 +19,13 @@ var _ = Describe("NotifyUser", func() {
         var handler handlers.NotifyUser
         var writer *httptest.ResponseRecorder
         var request *http.Request
-        var errorWriter *fakes.FakeErrorWriter
+        var errorWriter *fakes.ErrorWriter
         var fakeNotify *fakes.FakeNotify
         var context stack.Context
 
         BeforeEach(func() {
             var err error
-            errorWriter = &fakes.FakeErrorWriter{}
+            errorWriter = fakes.NewErrorWriter()
             writer = httptest.NewRecorder()
             request, err = http.NewRequest("POST", "/users/user-123", nil)
             if err != nil {

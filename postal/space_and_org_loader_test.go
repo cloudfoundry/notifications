@@ -15,18 +15,18 @@ var _ = Describe("SpaceAndOrgLoader", func() {
     Describe("Load", func() {
         var loader postal.SpaceAndOrgLoader
         var token string
-        var fakeCC *fakes.FakeCloudController
+        var cc *fakes.CloudController
 
         BeforeEach(func() {
-            fakeCC = fakes.NewFakeCloudController()
-            fakeCC.Spaces = map[string]cf.CloudControllerSpace{
+            cc = fakes.NewCloudController()
+            cc.Spaces = map[string]cf.CloudControllerSpace{
                 "space-001": cf.CloudControllerSpace{
                     GUID:             "space-001",
                     Name:             "space-name",
                     OrganizationGUID: "org-001",
                 },
             }
-            fakeCC.Orgs = map[string]cf.CloudControllerOrganization{
+            cc.Orgs = map[string]cf.CloudControllerOrganization{
                 "org-001": cf.CloudControllerOrganization{
                     GUID: "org-001",
                     Name: "org-name",
@@ -35,7 +35,7 @@ var _ = Describe("SpaceAndOrgLoader", func() {
                     Name: "org-piggies",
                 },
             }
-            loader = postal.NewSpaceAndOrgLoader(fakeCC)
+            loader = postal.NewSpaceAndOrgLoader(cc)
         })
 
         Context("when GUID represents a space", func() {
@@ -67,7 +67,7 @@ var _ = Describe("SpaceAndOrgLoader", func() {
 
             Context("when the org cannot be found", func() {
                 It("returns an error object", func() {
-                    delete(fakeCC.Orgs, "org-001")
+                    delete(cc.Orgs, "org-001")
                     _, _, err := loader.Load(postal.SpaceGUID("space-001"), token)
 
                     Expect(err).To(BeAssignableToTypeOf(postal.CCNotFoundError("")))
@@ -78,14 +78,14 @@ var _ = Describe("SpaceAndOrgLoader", func() {
             Context("when Load returns any other type of error", func() {
                 It("returns a CCDownError when the error is cf.Failure", func() {
                     failure := cf.NewFailure(401, "BOOM!")
-                    fakeCC.LoadSpaceError = failure
+                    cc.LoadSpaceError = failure
                     _, _, err := loader.Load(postal.SpaceGUID("space-001"), token)
 
                     Expect(err).To(Equal(postal.CCDownError(failure.Error())))
                 })
 
                 It("returns the same error for all other cases", func() {
-                    fakeCC.LoadSpaceError = errors.New("BOOM!")
+                    cc.LoadSpaceError = errors.New("BOOM!")
                     _, _, err := loader.Load(postal.SpaceGUID("space-001"), token)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
@@ -95,14 +95,14 @@ var _ = Describe("SpaceAndOrgLoader", func() {
             Context("when Load returns any other type of error", func() {
                 It("returns a CCDownError", func() {
                     failure := cf.NewFailure(401, "BOOM!")
-                    fakeCC.LoadOrganizationError = failure
+                    cc.LoadOrganizationError = failure
                     _, _, err := loader.Load(postal.SpaceGUID("space-001"), token)
 
                     Expect(err).To(Equal(postal.CCDownError(failure.Error())))
                 })
 
                 It("returns the same error for all other cases", func() {
-                    fakeCC.LoadOrganizationError = errors.New("BOOM!")
+                    cc.LoadOrganizationError = errors.New("BOOM!")
                     _, _, err := loader.Load(postal.SpaceGUID("space-001"), token)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))

@@ -23,13 +23,13 @@ var _ = Describe("SetTemplates", func() {
     var request *http.Request
     var context stack.Context
     var updater *fakes.FakeTemplateUpdater
-    var fakeErrorWriter *fakes.FakeErrorWriter
+    var errorWriter *fakes.ErrorWriter
 
     Describe("ServeHTTP", func() {
         BeforeEach(func() {
             updater = fakes.NewFakeTemplateUpdater()
-            fakeErrorWriter = fakes.NewFakeErrorWriter()
-            handler = handlers.NewSetTemplates(updater, fakeErrorWriter)
+            errorWriter = fakes.NewErrorWriter()
+            handler = handlers.NewSetTemplates(updater, errorWriter)
             writer = httptest.NewRecorder()
             body := []byte(`{"text": "{{turkey}}", "html": "<p>{{turkey}} gobble</p>"}`)
             request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
@@ -77,7 +77,7 @@ var _ = Describe("SetTemplates", func() {
                     panic(err)
                 }
                 handler.ServeHTTP(writer, request, context)
-                Expect(fakeErrorWriter.Error).To(Equal(params.ValidationError([]string{
+                Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{
                     "Request is missing a required field",
                 })))
             })
@@ -89,7 +89,7 @@ var _ = Describe("SetTemplates", func() {
                     panic(err)
                 }
                 handler.ServeHTTP(writer, request, context)
-                Expect(fakeErrorWriter.Error).To(Equal(params.ValidationError([]string{
+                Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{
                     "Request is missing a required field",
                 })))
             })
@@ -101,13 +101,13 @@ var _ = Describe("SetTemplates", func() {
                     panic(err)
                 }
                 handler.ServeHTTP(writer, request, context)
-                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
+                Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
             })
 
             It("returns a 500 for all other error cases", func() {
                 updater.UpdateError = fmt.Errorf("my new error")
                 handler.ServeHTTP(writer, request, context)
-                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(params.TemplateUpdateError{}))
+                Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.TemplateUpdateError{}))
             })
         })
 
@@ -122,7 +122,7 @@ var _ = Describe("SetTemplates", func() {
                         panic(err)
                     }
                     handler.ServeHTTP(writer, request, context)
-                    Expect(fakeErrorWriter.Error).To(Equal(params.ValidationError([]string{
+                    Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{
                         fmt.Sprintf("Template has invalid suffix, must end with one of %+v\n", models.TemplateNames),
                     })))
 

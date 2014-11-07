@@ -26,19 +26,19 @@ var _ = Describe("RegisterNotifications", func() {
     var handler handlers.RegisterNotifications
     var writer *httptest.ResponseRecorder
     var request *http.Request
-    var fakeErrorWriter *fakes.FakeErrorWriter
-    var fakeConn *fakes.FakeDBConn
+    var errorWriter *fakes.ErrorWriter
+    var conn *fakes.DBConn
     var registrar *fakes.FakeRegistrar
     var client models.Client
     var kinds []models.Kind
     var context stack.Context
 
     BeforeEach(func() {
-        fakeConn = &fakes.FakeDBConn{}
-        fakeErrorWriter = &fakes.FakeErrorWriter{}
+        conn = fakes.NewDBConn()
+        errorWriter = fakes.NewErrorWriter()
         registrar = fakes.NewFakeRegistrar()
         fakeDatabase := fakes.NewDatabase()
-        handler = handlers.NewRegisterNotifications(registrar, fakeErrorWriter, fakeDatabase)
+        handler = handlers.NewRegisterNotifications(registrar, errorWriter, fakeDatabase)
         writer = httptest.NewRecorder()
         requestBody, err := json.Marshal(map[string]interface{}{
             "source_description": "Raptor Containment Unit",
@@ -101,23 +101,23 @@ var _ = Describe("RegisterNotifications", func() {
 
     Describe("Execute", func() {
         It("passes the correct arguments to Register", func() {
-            handler.Execute(writer, request, fakeConn, context)
+            handler.Execute(writer, request, conn, context)
 
-            Expect(registrar.RegisterArguments).To(Equal([]interface{}{fakeConn, client, kinds}))
+            Expect(registrar.RegisterArguments).To(Equal([]interface{}{conn, client, kinds}))
 
-            Expect(fakeConn.BeginWasCalled).To(BeTrue())
-            Expect(fakeConn.CommitWasCalled).To(BeTrue())
-            Expect(fakeConn.RollbackWasCalled).To(BeFalse())
+            Expect(conn.BeginWasCalled).To(BeTrue())
+            Expect(conn.CommitWasCalled).To(BeTrue())
+            Expect(conn.RollbackWasCalled).To(BeFalse())
         })
 
         It("passes the correct arguments to Prune", func() {
-            handler.Execute(writer, request, fakeConn, context)
+            handler.Execute(writer, request, conn, context)
 
-            Expect(registrar.PruneArguments).To(Equal([]interface{}{fakeConn, client, kinds}))
+            Expect(registrar.PruneArguments).To(Equal([]interface{}{conn, client, kinds}))
 
-            Expect(fakeConn.BeginWasCalled).To(BeTrue())
-            Expect(fakeConn.CommitWasCalled).To(BeTrue())
-            Expect(fakeConn.RollbackWasCalled).To(BeFalse())
+            Expect(conn.BeginWasCalled).To(BeTrue())
+            Expect(conn.CommitWasCalled).To(BeTrue())
+            Expect(conn.RollbackWasCalled).To(BeFalse())
         })
 
         It("does not trim kinds if they are not in the request", func() {
@@ -129,13 +129,13 @@ var _ = Describe("RegisterNotifications", func() {
             }
             request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
-            handler.Execute(writer, request, fakeConn, context)
+            handler.Execute(writer, request, conn, context)
 
             Expect(registrar.PruneArguments).To(BeNil())
 
-            Expect(fakeConn.BeginWasCalled).To(BeTrue())
-            Expect(fakeConn.CommitWasCalled).To(BeTrue())
-            Expect(fakeConn.RollbackWasCalled).To(BeFalse())
+            Expect(conn.BeginWasCalled).To(BeTrue())
+            Expect(conn.CommitWasCalled).To(BeTrue())
+            Expect(conn.RollbackWasCalled).To(BeFalse())
         })
 
         Context("failure cases", func() {
@@ -184,12 +184,12 @@ var _ = Describe("RegisterNotifications", func() {
                 context = stack.NewContext()
                 context.Set("token", token)
 
-                handler.Execute(writer, request, fakeConn, context)
-                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(postal.UAAScopesError("waaaaat")))
+                handler.Execute(writer, request, conn, context)
+                Expect(errorWriter.Error).To(BeAssignableToTypeOf(postal.UAAScopesError("waaaaat")))
 
-                Expect(fakeConn.BeginWasCalled).To(BeFalse())
-                Expect(fakeConn.CommitWasCalled).To(BeFalse())
-                Expect(fakeConn.RollbackWasCalled).To(BeFalse())
+                Expect(conn.BeginWasCalled).To(BeFalse())
+                Expect(conn.CommitWasCalled).To(BeFalse())
+                Expect(conn.RollbackWasCalled).To(BeFalse())
             })
 
             It("delegates parsing errors to the ErrorWriter", func() {
@@ -199,13 +199,13 @@ var _ = Describe("RegisterNotifications", func() {
                     panic(err)
                 }
 
-                handler.Execute(writer, request, fakeConn, context)
+                handler.Execute(writer, request, conn, context)
 
-                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
+                Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
 
-                Expect(fakeConn.BeginWasCalled).To(BeFalse())
-                Expect(fakeConn.CommitWasCalled).To(BeFalse())
-                Expect(fakeConn.RollbackWasCalled).To(BeFalse())
+                Expect(conn.BeginWasCalled).To(BeFalse())
+                Expect(conn.CommitWasCalled).To(BeFalse())
+                Expect(conn.RollbackWasCalled).To(BeFalse())
             })
 
             It("delegates validation errors to the ErrorWriter", func() {
@@ -218,37 +218,37 @@ var _ = Describe("RegisterNotifications", func() {
                     panic(err)
                 }
 
-                handler.Execute(writer, request, fakeConn, context)
+                handler.Execute(writer, request, conn, context)
 
-                Expect(fakeErrorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
+                Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
 
-                Expect(fakeConn.BeginWasCalled).To(BeFalse())
-                Expect(fakeConn.CommitWasCalled).To(BeFalse())
-                Expect(fakeConn.RollbackWasCalled).To(BeFalse())
+                Expect(conn.BeginWasCalled).To(BeFalse())
+                Expect(conn.CommitWasCalled).To(BeFalse())
+                Expect(conn.RollbackWasCalled).To(BeFalse())
             })
 
             It("delegates registrar register errors to the ErrorWriter", func() {
                 registrar.RegisterError = errors.New("BOOM!")
 
-                handler.Execute(writer, request, fakeConn, context)
+                handler.Execute(writer, request, conn, context)
 
-                Expect(fakeErrorWriter.Error).To(Equal(errors.New("BOOM!")))
+                Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
 
-                Expect(fakeConn.BeginWasCalled).To(BeTrue())
-                Expect(fakeConn.CommitWasCalled).To(BeFalse())
-                Expect(fakeConn.RollbackWasCalled).To(BeTrue())
+                Expect(conn.BeginWasCalled).To(BeTrue())
+                Expect(conn.CommitWasCalled).To(BeFalse())
+                Expect(conn.RollbackWasCalled).To(BeTrue())
             })
 
             It("delegates registrar prune errors to the ErrorWriter", func() {
                 registrar.PruneError = errors.New("BOOM!")
 
-                handler.Execute(writer, request, fakeConn, context)
+                handler.Execute(writer, request, conn, context)
 
-                Expect(fakeErrorWriter.Error).To(Equal(errors.New("BOOM!")))
+                Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
 
-                Expect(fakeConn.BeginWasCalled).To(BeTrue())
-                Expect(fakeConn.CommitWasCalled).To(BeFalse())
-                Expect(fakeConn.RollbackWasCalled).To(BeTrue())
+                Expect(conn.BeginWasCalled).To(BeTrue())
+                Expect(conn.CommitWasCalled).To(BeFalse())
+                Expect(conn.RollbackWasCalled).To(BeTrue())
             })
         })
     })

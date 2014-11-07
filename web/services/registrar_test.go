@@ -13,16 +13,16 @@ import (
 
 var _ = Describe("Registrar", func() {
     var registrar services.Registrar
-    var fakeClientsRepo *fakes.FakeClientsRepo
-    var fakeKindsRepo *fakes.FakeKindsRepo
-    var fakeDBConn *fakes.FakeDBConn
+    var clientsRepo *fakes.ClientsRepo
+    var kindsRepo *fakes.KindsRepo
+    var conn *fakes.DBConn
     var kinds []models.Kind
 
     BeforeEach(func() {
-        fakeClientsRepo = fakes.NewFakeClientsRepo()
-        fakeKindsRepo = fakes.NewFakeKindsRepo()
-        registrar = services.NewRegistrar(fakeClientsRepo, fakeKindsRepo)
-        fakeDBConn = &fakes.FakeDBConn{}
+        clientsRepo = fakes.NewClientsRepo()
+        kindsRepo = fakes.NewKindsRepo()
+        registrar = services.NewRegistrar(clientsRepo, kindsRepo)
+        conn = fakes.NewDBConn()
     })
 
     Describe("Register", func() {
@@ -48,22 +48,22 @@ var _ = Describe("Registrar", func() {
 
             kinds = []models.Kind{hungry, sleepy}
 
-            err := registrar.Register(fakeDBConn, client, kinds)
+            err := registrar.Register(conn, client, kinds)
             if err != nil {
                 panic(err)
             }
 
-            Expect(len(fakeClientsRepo.Clients)).To(Equal(1))
-            Expect(fakeClientsRepo.Clients["raptors"]).To(Equal(client))
+            Expect(len(clientsRepo.Clients)).To(Equal(1))
+            Expect(clientsRepo.Clients["raptors"]).To(Equal(client))
 
-            Expect(len(fakeKindsRepo.Kinds)).To(Equal(2))
-            kind, err := fakeKindsRepo.Find(fakeDBConn, "hungry", "raptors")
+            Expect(len(kindsRepo.Kinds)).To(Equal(2))
+            kind, err := kindsRepo.Find(conn, "hungry", "raptors")
             if err != nil {
                 panic(err)
             }
             Expect(kind).To(Equal(hungry))
 
-            kind, err = fakeKindsRepo.Find(fakeDBConn, "sleepy", "raptors")
+            kind, err = kindsRepo.Find(conn, "sleepy", "raptors")
             if err != nil {
                 panic(err)
             }
@@ -71,7 +71,7 @@ var _ = Describe("Registrar", func() {
         })
 
         It("idempotently updates the client and kinds", func() {
-            _, err := fakeClientsRepo.Create(fakeDBConn, models.Client{
+            _, err := clientsRepo.Create(conn, models.Client{
                 ID:          "raptors",
                 Description: "perimeter breech",
             })
@@ -79,7 +79,7 @@ var _ = Describe("Registrar", func() {
                 panic(err)
             }
 
-            _, err = fakeKindsRepo.Create(fakeDBConn, models.Kind{
+            _, err = kindsRepo.Create(conn, models.Kind{
                 ID:          "hungry",
                 Description: "these raptors are hungry",
                 Critical:    true,
@@ -89,7 +89,7 @@ var _ = Describe("Registrar", func() {
                 panic(err)
             }
 
-            _, err = fakeKindsRepo.Create(fakeDBConn, models.Kind{
+            _, err = kindsRepo.Create(conn, models.Kind{
                 ID:          "sleepy",
                 Description: "these raptors are zzzzzzzz",
                 Critical:    false,
@@ -120,22 +120,22 @@ var _ = Describe("Registrar", func() {
 
             kinds := []models.Kind{hungry, sleepy}
 
-            err = registrar.Register(fakeDBConn, client, kinds)
+            err = registrar.Register(conn, client, kinds)
             if err != nil {
                 panic(err)
             }
 
-            Expect(len(fakeClientsRepo.Clients)).To(Equal(1))
-            Expect(fakeClientsRepo.Clients["raptors"]).To(Equal(client))
+            Expect(len(clientsRepo.Clients)).To(Equal(1))
+            Expect(clientsRepo.Clients["raptors"]).To(Equal(client))
 
-            Expect(len(fakeKindsRepo.Kinds)).To(Equal(2))
-            kind, err := fakeKindsRepo.Find(fakeDBConn, "hungry", "raptors")
+            Expect(len(kindsRepo.Kinds)).To(Equal(2))
+            kind, err := kindsRepo.Find(conn, "hungry", "raptors")
             if err != nil {
                 panic(err)
             }
             Expect(kind).To(Equal(hungry))
 
-            kind, err = fakeKindsRepo.Find(fakeDBConn, "sleepy", "raptors")
+            kind, err = kindsRepo.Find(conn, "sleepy", "raptors")
             if err != nil {
                 panic(err)
             }
@@ -145,17 +145,17 @@ var _ = Describe("Registrar", func() {
 
         Context("error cases", func() {
             It("returns the errors from the clients repo", func() {
-                fakeClientsRepo.UpsertError = errors.New("BOOM!")
+                clientsRepo.UpsertError = errors.New("BOOM!")
 
-                err := registrar.Register(fakeDBConn, models.Client{}, []models.Kind{})
+                err := registrar.Register(conn, models.Client{}, []models.Kind{})
 
                 Expect(err).To(Equal(errors.New("BOOM!")))
             })
 
             It("returns the errors from the kinds repo", func() {
-                fakeKindsRepo.UpsertError = errors.New("BOOM!")
+                kindsRepo.UpsertError = errors.New("BOOM!")
 
-                err := registrar.Register(fakeDBConn, models.Client{}, []models.Kind{models.Kind{}})
+                err := registrar.Register(conn, models.Client{}, []models.Kind{models.Kind{}})
 
                 Expect(err).To(Equal(errors.New("BOOM!")))
             })
@@ -164,7 +164,7 @@ var _ = Describe("Registrar", func() {
 
     Describe("Prune", func() {
         It("Removes kinds from the database that are not passed in", func() {
-            client, err := fakeClientsRepo.Create(fakeDBConn, models.Client{
+            client, err := clientsRepo.Create(conn, models.Client{
                 ID:          "raptors",
                 Description: "perimeter breech",
             })
@@ -172,7 +172,7 @@ var _ = Describe("Registrar", func() {
                 panic(err)
             }
 
-            kind, err := fakeKindsRepo.Create(fakeDBConn, models.Kind{
+            kind, err := kindsRepo.Create(conn, models.Kind{
                 ID:          "hungry",
                 Description: "these raptors are hungry",
                 Critical:    true,
@@ -182,7 +182,7 @@ var _ = Describe("Registrar", func() {
                 panic(err)
             }
 
-            _, err = fakeKindsRepo.Create(fakeDBConn, models.Kind{
+            _, err = kindsRepo.Create(conn, models.Kind{
                 ID:          "sleepy",
                 Description: "these raptors are zzzzzzzz",
                 Critical:    false,
@@ -192,12 +192,12 @@ var _ = Describe("Registrar", func() {
                 panic(err)
             }
 
-            err = registrar.Prune(fakeDBConn, client, []models.Kind{kind})
+            err = registrar.Prune(conn, client, []models.Kind{kind})
             if err != nil {
                 panic(err)
             }
 
-            Expect(fakeKindsRepo.TrimArguments).To(Equal([]interface{}{client.ID, []string{"hungry"}}))
+            Expect(kindsRepo.TrimArguments).To(Equal([]interface{}{client.ID, []string{"hungry"}}))
         })
     })
 })

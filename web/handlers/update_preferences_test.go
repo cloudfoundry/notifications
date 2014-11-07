@@ -26,12 +26,12 @@ var _ = Describe("UpdatePreferences", func() {
         var writer *httptest.ResponseRecorder
         var request *http.Request
         var updater *fakes.FakePreferenceUpdater
-        var errorWriter *fakes.FakeErrorWriter
-        var fakeDBConn *fakes.FakeDBConn
+        var errorWriter *fakes.ErrorWriter
+        var conn *fakes.DBConn
         var context stack.Context
 
         BeforeEach(func() {
-            fakeDBConn = &fakes.FakeDBConn{}
+            conn = fakes.NewDBConn()
             builder := services.NewPreferencesBuilder()
 
             builder.Add(models.Preference{
@@ -79,7 +79,7 @@ var _ = Describe("UpdatePreferences", func() {
             context = stack.NewContext()
             context.Set("token", token)
 
-            errorWriter = fakes.NewFakeErrorWriter()
+            errorWriter = fakes.NewErrorWriter()
             updater = fakes.NewFakePreferenceUpdater()
             fakeDatabase := fakes.NewDatabase()
             handler = handlers.NewUpdatePreferences(updater, errorWriter, fakeDatabase)
@@ -87,7 +87,7 @@ var _ = Describe("UpdatePreferences", func() {
         })
 
         It("Passes The Correct Arguments to PreferenceUpdater Execute", func() {
-            handler.Execute(writer, request, fakeDBConn, context)
+            handler.Execute(writer, request, conn, context)
             Expect(len(updater.ExecuteArguments)).To(Equal(3))
 
             preferencesArguments := updater.ExecuteArguments[0]
@@ -113,7 +113,7 @@ var _ = Describe("UpdatePreferences", func() {
         })
 
         It("Returns a 204 status code when the Preference object does not error", func() {
-            handler.Execute(writer, request, fakeDBConn, context)
+            handler.Execute(writer, request, conn, context)
 
             Expect(writer.Code).To(Equal(http.StatusNoContent))
         })
@@ -124,37 +124,37 @@ var _ = Describe("UpdatePreferences", func() {
                 It("delegates MissingKindOrClientErrors as params.ValidationError to the ErrorWriter", func() {
                     updater.ExecuteError = services.MissingKindOrClientError("BOOM!")
 
-                    handler.Execute(writer, request, fakeDBConn, context)
+                    handler.Execute(writer, request, conn, context)
 
                     Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{"BOOM!"})))
 
-                    Expect(fakeDBConn.BeginWasCalled).To(BeTrue())
-                    Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
-                    Expect(fakeDBConn.RollbackWasCalled).To(BeTrue())
+                    Expect(conn.BeginWasCalled).To(BeTrue())
+                    Expect(conn.CommitWasCalled).To(BeFalse())
+                    Expect(conn.RollbackWasCalled).To(BeTrue())
                 })
 
                 It("delegates CriticalKindErrors as params.ValidationError to the ErrorWriter", func() {
                     updater.ExecuteError = services.CriticalKindError("BOOM!")
 
-                    handler.Execute(writer, request, fakeDBConn, context)
+                    handler.Execute(writer, request, conn, context)
 
                     Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{"BOOM!"})))
 
-                    Expect(fakeDBConn.BeginWasCalled).To(BeTrue())
-                    Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
-                    Expect(fakeDBConn.RollbackWasCalled).To(BeTrue())
+                    Expect(conn.BeginWasCalled).To(BeTrue())
+                    Expect(conn.CommitWasCalled).To(BeFalse())
+                    Expect(conn.RollbackWasCalled).To(BeTrue())
                 })
 
                 It("delegates other errors to the ErrorWriter", func() {
                     updater.ExecuteError = errors.New("BOOM!")
 
-                    handler.Execute(writer, request, fakeDBConn, context)
+                    handler.Execute(writer, request, conn, context)
 
                     Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
 
-                    Expect(fakeDBConn.BeginWasCalled).To(BeTrue())
-                    Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
-                    Expect(fakeDBConn.RollbackWasCalled).To(BeTrue())
+                    Expect(conn.BeginWasCalled).To(BeTrue())
+                    Expect(conn.CommitWasCalled).To(BeFalse())
+                    Expect(conn.RollbackWasCalled).To(BeTrue())
                 })
             })
 
@@ -169,12 +169,12 @@ var _ = Describe("UpdatePreferences", func() {
                     panic(err)
                 }
 
-                handler.Execute(writer, request, fakeDBConn, context)
+                handler.Execute(writer, request, conn, context)
 
                 Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
-                Expect(fakeDBConn.BeginWasCalled).To(BeFalse())
-                Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
-                Expect(fakeDBConn.RollbackWasCalled).To(BeFalse())
+                Expect(conn.BeginWasCalled).To(BeFalse())
+                Expect(conn.CommitWasCalled).To(BeFalse())
+                Expect(conn.RollbackWasCalled).To(BeFalse())
             })
 
             It("delegates validation errors to the error writer", func() {
@@ -194,12 +194,12 @@ var _ = Describe("UpdatePreferences", func() {
                     panic(err)
                 }
 
-                handler.Execute(writer, request, fakeDBConn, context)
+                handler.Execute(writer, request, conn, context)
 
                 Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
-                Expect(fakeDBConn.BeginWasCalled).To(BeFalse())
-                Expect(fakeDBConn.CommitWasCalled).To(BeFalse())
-                Expect(fakeDBConn.RollbackWasCalled).To(BeFalse())
+                Expect(conn.BeginWasCalled).To(BeFalse())
+                Expect(conn.CommitWasCalled).To(BeFalse())
+                Expect(conn.RollbackWasCalled).To(BeFalse())
             })
         })
     })
