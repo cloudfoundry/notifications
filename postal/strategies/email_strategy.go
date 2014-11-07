@@ -1,10 +1,11 @@
-package postal
+package strategies
 
 import (
     "encoding/json"
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
@@ -15,23 +16,23 @@ const (
 )
 
 type StrategyInterface interface {
-    Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error)
+    Dispatch(clientID string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]Response, error)
     Trim([]byte) []byte
 }
 
 type EmailStrategy struct {
     mailer          MailerInterface
-    templatesLoader TemplatesLoaderInterface
+    templatesLoader postal.TemplatesLoaderInterface
 }
 
-func NewEmailStrategy(mailer MailerInterface, templatesLoader TemplatesLoaderInterface) EmailStrategy {
+func NewEmailStrategy(mailer MailerInterface, templatesLoader postal.TemplatesLoaderInterface) EmailStrategy {
     return EmailStrategy{
         mailer:          mailer,
         templatesLoader: templatesLoader,
     }
 }
 
-func (strategy EmailStrategy) Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy EmailStrategy) Dispatch(clientID string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
     users := map[string]uaa.User{
         EmptyIDForNonUser: uaa.User{
             Emails: []string{options.To},
@@ -40,7 +41,7 @@ func (strategy EmailStrategy) Dispatch(clientID string, guid TypedGUID, options 
 
     templates, err := strategy.templatesLoader.LoadTemplates(strategy.subjectSuffix(options.Subject), models.EmailBodyTemplateName, clientID, options.KindID)
     if err != nil {
-        return []Response{}, TemplateLoadError("An email template could not be loaded")
+        return []Response{}, postal.TemplateLoadError("An email template could not be loaded")
     }
 
     return strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID), nil

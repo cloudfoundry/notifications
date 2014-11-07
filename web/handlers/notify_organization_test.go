@@ -6,7 +6,7 @@ import (
     "net/http/httptest"
 
     "github.com/cloudfoundry-incubator/notifications/fakes"
-    "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/ryanmoran/stack"
 
@@ -40,7 +40,7 @@ var _ = Describe("NotifyOrganization", func() {
         Context("when the notify.Execute returns a successful response", func() {
             It("returns the JSON representation of the response", func() {
                 notify.Response = []byte("whatever")
-                strategy := postal.OrganizationStrategy{}
+                strategy := strategies.OrganizationStrategy{}
 
                 handler.Execute(writer, request, nil, context, strategy)
 
@@ -56,7 +56,7 @@ var _ = Describe("NotifyOrganization", func() {
         Context("when the notify.Execute returns an error", func() {
             It("propagates the error", func() {
                 notify.Error = errors.New("the error")
-                strategy := postal.OrganizationStrategy{}
+                strategy := strategies.OrganizationStrategy{}
 
                 err := handler.Execute(writer, request, nil, context, strategy)
                 Expect(err).To(Equal(notify.Error))

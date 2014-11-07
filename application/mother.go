@@ -11,6 +11,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/mail"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/middleware"
     "github.com/cloudfoundry-incubator/notifications/web/services"
@@ -42,7 +43,7 @@ func (mother *Mother) Queue() *gobble.Queue {
     return mother.queue
 }
 
-func (mother Mother) UserStrategy() postal.UserStrategy {
+func (mother Mother) UserStrategy() strategies.UserStrategy {
     env := config.NewEnvironment()
     finder := mother.TemplateFinder()
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
@@ -55,10 +56,10 @@ func (mother Mother) UserStrategy() postal.UserStrategy {
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewUserStrategy(tokenLoader, userLoader, templatesLoader, mailer, receiptsRepo)
+    return strategies.NewUserStrategy(tokenLoader, userLoader, templatesLoader, mailer, receiptsRepo)
 }
 
-func (mother Mother) SpaceStrategy() postal.SpaceStrategy {
+func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
     env := config.NewEnvironment()
     finder := mother.TemplateFinder()
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
@@ -73,10 +74,10 @@ func (mother Mother) SpaceStrategy() postal.SpaceStrategy {
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewSpaceStrategy(tokenLoader, userLoader, spaceLoader, organizationLoader, templatesLoader, mailer, receiptsRepo)
+    return strategies.NewSpaceStrategy(tokenLoader, userLoader, spaceLoader, organizationLoader, templatesLoader, mailer, receiptsRepo)
 }
 
-func (mother Mother) OrganizationStrategy() postal.OrganizationStrategy {
+func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
     env := config.NewEnvironment()
     finder := mother.TemplateFinder()
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
@@ -90,15 +91,15 @@ func (mother Mother) OrganizationStrategy() postal.OrganizationStrategy {
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
 
-    return postal.NewOrganizationStrategy(tokenLoader, userLoader, organizationLoader, templatesLoader, mailer, receiptsRepo)
+    return strategies.NewOrganizationStrategy(tokenLoader, userLoader, organizationLoader, templatesLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) FileSystem() services.FileSystemInterface {
     return postal.NewFileSystem()
 }
 
-func (mother Mother) EmailStrategy() postal.EmailStrategy {
-    return postal.NewEmailStrategy(mother.Mailer(), postal.NewTemplatesLoader(mother.TemplateFinder()))
+func (mother Mother) EmailStrategy() strategies.EmailStrategy {
+    return strategies.NewEmailStrategy(mother.Mailer(), postal.NewTemplatesLoader(mother.TemplateFinder()))
 }
 
 func (mother Mother) NotificationFinder() services.NotificationFinder {
@@ -106,8 +107,8 @@ func (mother Mother) NotificationFinder() services.NotificationFinder {
     return services.NewNotificationFinder(clientsRepo, kindsRepo, mother.Database())
 }
 
-func (mother Mother) Mailer() postal.Mailer {
-    return postal.NewMailer(mother.Queue(), uuid.NewV4)
+func (mother Mother) Mailer() strategies.Mailer {
+    return strategies.NewMailer(mother.Queue(), uuid.NewV4)
 }
 
 func (mother Mother) MailClient() *mail.Client {

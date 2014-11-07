@@ -1,20 +1,21 @@
-package postal
+package strategies
 
 import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/postal"
 )
 
 type UserStrategy struct {
-    tokenLoader     TokenLoaderInterface
-    userLoader      UserLoaderInterface
-    templatesLoader TemplatesLoaderInterface
+    tokenLoader     postal.TokenLoaderInterface
+    userLoader      postal.UserLoaderInterface
+    templatesLoader postal.TemplatesLoaderInterface
     mailer          MailerInterface
     receiptsRepo    models.ReceiptsRepoInterface
 }
 
-func NewUserStrategy(tokenLoader TokenLoaderInterface, userLoader UserLoaderInterface,
-    templatesLoader TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UserStrategy {
+func NewUserStrategy(tokenLoader postal.TokenLoaderInterface, userLoader postal.UserLoaderInterface,
+    templatesLoader postal.TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UserStrategy {
 
     return UserStrategy{
         tokenLoader:     tokenLoader,
@@ -25,7 +26,7 @@ func NewUserStrategy(tokenLoader TokenLoaderInterface, userLoader UserLoaderInte
     }
 }
 
-func (strategy UserStrategy) Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy UserStrategy) Dispatch(clientID string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
     responses := []Response{}
 
     token, err := strategy.tokenLoader.Load()
@@ -41,7 +42,7 @@ func (strategy UserStrategy) Dispatch(clientID string, guid TypedGUID, options O
     subjectSuffix := strategy.subjectSuffix(options.Subject)
     templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, models.UserBodyTemplateName, clientID, options.KindID)
     if err != nil {
-        return responses, TemplateLoadError("An email template could not be loaded")
+        return responses, postal.TemplateLoadError("An email template could not be loaded")
     }
 
     var userGUIDs []string

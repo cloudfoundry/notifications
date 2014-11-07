@@ -11,6 +11,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/params"
     "github.com/dgrijalva/jwt-go"
@@ -95,7 +96,7 @@ var _ = Describe("Notify", func() {
 
             Describe("Responses", func() {
                 BeforeEach(func() {
-                    strategy.Responses = []postal.Response{
+                    strategy.Responses = []strategies.Response{
                         {
                             Status:         "delivered",
                             Recipient:      "user-123",

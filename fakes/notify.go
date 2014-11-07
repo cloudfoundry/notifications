@@ -5,6 +5,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
     "github.com/ryanmoran/stack"
 )
 
@@ -19,7 +20,7 @@ func NewNotify() *Notify {
 }
 
 func (fake *Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
-    guid postal.TypedGUID, strategy postal.StrategyInterface) ([]byte, error) {
+    guid postal.TypedGUID, strategy strategies.StrategyInterface) ([]byte, error) {
     fake.GUID = guid
 
     return fake.Response, fake.Error

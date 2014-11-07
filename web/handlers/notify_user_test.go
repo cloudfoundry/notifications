@@ -6,7 +6,7 @@ import (
     "net/http/httptest"
 
     "github.com/cloudfoundry-incubator/notifications/fakes"
-    "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/ryanmoran/stack"
 
@@ -42,7 +42,7 @@ var _ = Describe("NotifyUser", func() {
             It("returns the JSON representation of the response", func() {
                 notify.Response = []byte("whut")
 
-                handler.Execute(writer, request, nil, context, postal.UserStrategy{})
+                handler.Execute(writer, request, nil, context, strategies.UserStrategy{})
 
                 Expect(writer.Code).To(Equal(http.StatusOK))
                 body := string(writer.Body.Bytes())
@@ -58,7 +58,7 @@ var _ = Describe("NotifyUser", func() {
             It("propagates the error", func() {
                 notify.Error = errors.New("BOOM!")
 
-                err := handler.Execute(writer, request, nil, context, postal.UserStrategy{})
+                err := handler.Execute(writer, request, nil, context, strategies.UserStrategy{})
 
                 Expect(err).To(Equal(notify.Error))
             })

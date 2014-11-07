@@ -1,4 +1,4 @@
-package postal_test
+package strategies_test
 
 import (
     "bytes"
@@ -8,6 +8,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -15,7 +16,7 @@ import (
 )
 
 var _ = Describe("Mailer", func() {
-    var mailer postal.Mailer
+    var mailer strategies.Mailer
     var logger *log.Logger
     var buffer *bytes.Buffer
     var queue *fakes.Queue
@@ -28,7 +29,7 @@ var _ = Describe("Mailer", func() {
         logger = log.New(buffer, "", 0)
         queue = fakes.NewQueue()
         conn = fakes.NewDBConn()
-        mailer = postal.NewMailer(queue, fakes.GUIDGenerator)
+        mailer = strategies.NewMailer(queue, fakes.GUIDGenerator)
         space = cf.CloudControllerSpace{Name: "the-space"}
         org = cf.CloudControllerOrganization{Name: "the-org"}
     })
@@ -45,28 +46,28 @@ var _ = Describe("Mailer", func() {
             responses := mailer.Deliver(conn, postal.Templates{}, users, postal.Options{KindID: "the-kind"}, space, org, "the-client")
 
             Expect(len(responses)).To(Equal(4))
-            Expect(responses).To(ContainElement(postal.Response{
+            Expect(responses).To(ContainElement(strategies.Response{
                 Status:         "queued",
                 Recipient:      "user-1",
                 NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
                 Email:          "user-1@example.com",
             }))
 
-            Expect(responses).To(ContainElement(postal.Response{
+            Expect(responses).To(ContainElement(strategies.Response{
                 Status:         "queued",
                 Recipient:      "user-2",
                 NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
                 Email:          "",
             }))
 
-            Expect(responses).To(ContainElement(postal.Response{
+            Expect(responses).To(ContainElement(strategies.Response{
                 Status:         "queued",
                 Recipient:      "user-3",
                 NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
                 Email:          "",
             }))
 
-            Expect(responses).To(ContainElement(postal.Response{
+            Expect(responses).To(ContainElement(strategies.Response{
                 Status:         "queued",
                 Recipient:      "user-4",
                 NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",

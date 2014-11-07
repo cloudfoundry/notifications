@@ -1,30 +1,31 @@
-package postal
+package strategies
 
 import (
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/gobble"
     "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
 type MailerInterface interface {
-    Deliver(models.ConnectionInterface, Templates, map[string]uaa.User, Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string) []Response
+    Deliver(models.ConnectionInterface, postal.Templates, map[string]uaa.User, postal.Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string) []Response
 }
 
 type Mailer struct {
     queue         gobble.QueueInterface
-    guidGenerator GUIDGenerationFunc
+    guidGenerator postal.GUIDGenerationFunc
 }
 
-func NewMailer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc) Mailer {
+func NewMailer(queue gobble.QueueInterface, guidGenerator postal.GUIDGenerationFunc) Mailer {
     return Mailer{
         queue:         queue,
         guidGenerator: guidGenerator,
     }
 }
 
-func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates Templates, users map[string]uaa.User,
-    options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID string) []Response {
+func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.Templates, users map[string]uaa.User,
+    options postal.Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID string) []Response {
 
     responses := []Response{}
     transaction := conn.Transaction()
@@ -37,7 +38,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates Template
         }
         messageID := guid.String()
 
-        job := gobble.NewJob(Delivery{
+        job := gobble.NewJob(postal.Delivery{
             User:         user,
             Options:      options,
             UserGUID:     userGUID,
@@ -60,7 +61,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates Template
         }
 
         responses = append(responses, Response{
-            Status:         StatusQueued,
+            Status:         postal.StatusQueued,
             Recipient:      userGUID,
             NotificationID: messageID,
             Email:          emailAddress,

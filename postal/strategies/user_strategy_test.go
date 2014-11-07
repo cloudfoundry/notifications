@@ -1,4 +1,4 @@
-package postal_test
+package strategies_test
 
 import (
     "encoding/json"
@@ -8,6 +8,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/fakes"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
     . "github.com/onsi/ginkgo"
@@ -15,7 +16,7 @@ import (
 )
 
 var _ = Describe("UAA Strategy", func() {
-    var strategy postal.UserStrategy
+    var strategy strategies.UserStrategy
     var options postal.Options
     var tokenLoader *fakes.TokenLoader
     var userLoader *fakes.UserLoader
@@ -48,7 +49,7 @@ var _ = Describe("UAA Strategy", func() {
             Emails: []string{"user-123@example.com"},
         }
         templatesLoader = &fakes.TemplatesLoader{}
-        strategy = postal.NewUserStrategy(tokenLoader, userLoader, templatesLoader, mailer, receiptsRepo)
+        strategy = strategies.NewUserStrategy(tokenLoader, userLoader, templatesLoader, mailer, receiptsRepo)
     })
 
     Describe("Dispatch", func() {
@@ -151,7 +152,7 @@ var _ = Describe("UAA Strategy", func() {
     Describe("Trim", func() {
         Describe("TrimFields", func() {
             It("trims the specified fields from the response object", func() {
-                responses, err := json.Marshal([]postal.Response{
+                responses, err := json.Marshal([]strategies.Response{
                     {
                         Status:         "delivered",
                         Recipient:      "user-123",

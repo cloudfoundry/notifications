@@ -14,13 +14,6 @@ const (
     StatusQueued      = "queued"
 )
 
-type Response struct {
-    Status         string `json:"status"`
-    Recipient      string `json:"recipient"`
-    NotificationID string `json:"notification_id"`
-    Email          string `json:"email"`
-}
-
 type TypedGUID interface {
     BelongsToSpace() bool
     BelongsToOrganization() bool

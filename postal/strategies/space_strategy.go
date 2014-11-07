@@ -1,19 +1,22 @@
-package postal
+package strategies
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+    "github.com/cloudfoundry-incubator/notifications/models"
+    "github.com/cloudfoundry-incubator/notifications/postal"
+)
 
 type SpaceStrategy struct {
-    tokenLoader        TokenLoaderInterface
-    userLoader         UserLoaderInterface
-    spaceLoader        SpaceLoaderInterface
-    organizationLoader OrganizationLoaderInterface
-    templatesLoader    TemplatesLoaderInterface
+    tokenLoader        postal.TokenLoaderInterface
+    userLoader         postal.UserLoaderInterface
+    spaceLoader        postal.SpaceLoaderInterface
+    organizationLoader postal.OrganizationLoaderInterface
+    templatesLoader    postal.TemplatesLoaderInterface
     mailer             MailerInterface
     receiptsRepo       models.ReceiptsRepoInterface
 }
 
-func NewSpaceStrategy(tokenLoader TokenLoaderInterface, userLoader UserLoaderInterface, spaceLoader SpaceLoaderInterface,
-    organizationLoader OrganizationLoaderInterface, templatesLoader TemplatesLoaderInterface, mailer MailerInterface,
+func NewSpaceStrategy(tokenLoader postal.TokenLoaderInterface, userLoader postal.UserLoaderInterface, spaceLoader postal.SpaceLoaderInterface,
+    organizationLoader postal.OrganizationLoaderInterface, templatesLoader postal.TemplatesLoaderInterface, mailer MailerInterface,
     receiptsRepo models.ReceiptsRepoInterface) SpaceStrategy {
 
     return SpaceStrategy{
@@ -27,7 +30,7 @@ func NewSpaceStrategy(tokenLoader TokenLoaderInterface, userLoader UserLoaderInt
     }
 }
 
-func (strategy SpaceStrategy) Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy SpaceStrategy) Dispatch(clientID string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
     responses := []Response{}
 
     token, err := strategy.tokenLoader.Load()
@@ -51,11 +54,9 @@ func (strategy SpaceStrategy) Dispatch(clientID string, guid TypedGUID, options 
     }
 
     subjectSuffix := strategy.subjectSuffix(options.Subject)
-    contentSuffix := strategy.contentSuffix(guid)
-
-    templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, contentSuffix, clientID, options.KindID)
+    templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, models.SpaceBodyTemplateName, clientID, options.KindID)
     if err != nil {
-        return responses, TemplateLoadError("An email template could not be loaded")
+        return responses, postal.TemplateLoadError("An email template could not be loaded")
     }
 
     var userGUIDs []string
@@ -83,13 +84,4 @@ func (strategy SpaceStrategy) subjectSuffix(subject string) string {
         return models.SubjectMissingTemplateName
     }
     return models.SubjectProvidedTemplateName
-}
-
-func (strategy SpaceStrategy) contentSuffix(guid TypedGUID) string {
-    if guid.BelongsToSpace() {
-        return models.SpaceBodyTemplateName
-    } else if guid.BelongsToOrganization() {
-        return models.OrganizationBodyTemplateName
-    }
-    return models.UserBodyTemplateName
 }

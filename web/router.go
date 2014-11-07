@@ -4,7 +4,7 @@ import (
     "strings"
 
     "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
     "github.com/cloudfoundry-incubator/notifications/web/handlers"
     "github.com/cloudfoundry-incubator/notifications/web/middleware"
     "github.com/cloudfoundry-incubator/notifications/web/services"
@@ -14,10 +14,10 @@ import (
 
 type MotherInterface interface {
     Registrar() services.Registrar
-    EmailStrategy() postal.EmailStrategy
-    UserStrategy() postal.UserStrategy
-    SpaceStrategy() postal.SpaceStrategy
-    OrganizationStrategy() postal.OrganizationStrategy
+    EmailStrategy() strategies.EmailStrategy
+    UserStrategy() strategies.UserStrategy
+    SpaceStrategy() strategies.SpaceStrategy
+    OrganizationStrategy() strategies.OrganizationStrategy
     NotificationFinder() services.NotificationFinder
     PreferencesFinder() *services.PreferencesFinder
     PreferenceUpdater() services.PreferenceUpdater

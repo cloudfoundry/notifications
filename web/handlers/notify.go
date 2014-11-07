@@ -6,6 +6,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
     "github.com/cloudfoundry-incubator/notifications/web/params"
     "github.com/cloudfoundry-incubator/notifications/web/services"
     "github.com/dgrijalva/jwt-go"
@@ -13,7 +14,7 @@ import (
 )
 
 type NotifyInterface interface {
-    Execute(models.ConnectionInterface, *http.Request, stack.Context, postal.TypedGUID, postal.StrategyInterface) ([]byte, error)
+    Execute(models.ConnectionInterface, *http.Request, stack.Context, postal.TypedGUID, strategies.StrategyInterface) ([]byte, error)
 }
 
 type Notify struct {
@@ -29,7 +30,7 @@ func NewNotify(finder services.NotificationFinderInterface, registrar services.R
 }
 
 func (handler Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
-    guid postal.TypedGUID, strategy postal.StrategyInterface) ([]byte, error) {
+    guid postal.TypedGUID, strategy strategies.StrategyInterface) ([]byte, error) {
     parameters, err := params.NewNotify(req.Body)
     if err != nil {
         return []byte{}, err
@@ -62,7 +63,7 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
         return []byte{}, err
     }
 
-    var responses []postal.Response
+    var responses []strategies.Response
 
     responses, err = strategy.Dispatch(clientID, guid, parameters.ToOptions(client, kind), connection)
     if err != nil {

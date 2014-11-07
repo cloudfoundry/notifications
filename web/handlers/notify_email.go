@@ -6,17 +6,18 @@ import (
     "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
     "github.com/ryanmoran/stack"
 )
 
 type NotifyEmail struct {
     errorWriter ErrorWriterInterface
     notify      NotifyInterface
-    strategy    postal.StrategyInterface
+    strategy    strategies.StrategyInterface
     database    models.DatabaseInterface
 }
 
-func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, strategy postal.StrategyInterface, database models.DatabaseInterface) NotifyEmail {
+func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, strategy strategies.StrategyInterface, database models.DatabaseInterface) NotifyEmail {
     return NotifyEmail{
         errorWriter: errorWriter,
         notify:      notify,

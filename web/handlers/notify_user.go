@@ -7,17 +7,18 @@ import (
     "github.com/cloudfoundry-incubator/notifications/metrics"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
+    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
     "github.com/ryanmoran/stack"
 )
 
 type NotifyUser struct {
     errorWriter ErrorWriterInterface
     notify      NotifyInterface
-    strategy    postal.StrategyInterface
+    strategy    strategies.StrategyInterface
     database    models.DatabaseInterface
 }
 
-func NewNotifyUser(notify NotifyInterface, errorWriter ErrorWriterInterface, strategy postal.StrategyInterface, database models.DatabaseInterface) NotifyUser {
+func NewNotifyUser(notify NotifyInterface, errorWriter ErrorWriterInterface, strategy strategies.StrategyInterface, database models.DatabaseInterface) NotifyUser {
     return NotifyUser{
         errorWriter: errorWriter,
         notify:      notify,
@@ -40,7 +41,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 }
 
 func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request,
-    connection models.ConnectionInterface, context stack.Context, strategy postal.StrategyInterface) error {
+    connection models.ConnectionInterface, context stack.Context, strategy strategies.StrategyInterface) error {
     userGUID := postal.UserGUID(strings.TrimPrefix(req.URL.Path, "/users/"))
 
     output, err := handler.notify.Execute(connection, req, context, userGUID, strategy)
