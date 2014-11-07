@@ -32,13 +32,13 @@ func NewEmailStrategy(mailer MailerInterface, templatesLoader TemplatesLoaderInt
 }
 
 func (strategy EmailStrategy) Dispatch(clientID string, guid TypedGUID, options Options, conn models.ConnectionInterface) ([]Response, error) {
+    users := map[string]uaa.User{
+        EmptyIDForNonUser: uaa.User{
+            Emails: []string{options.To},
+        },
+    }
 
-    users := map[string]uaa.User{EmptyIDForNonUser: uaa.User{Emails: []string{options.To}}}
-
-    subjectSuffix := strategy.subjectSuffix(options.Subject)
-
-    templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, models.EmailBodyTemplateName, clientID, options.KindID)
-
+    templates, err := strategy.templatesLoader.LoadTemplates(strategy.subjectSuffix(options.Subject), models.EmailBodyTemplateName, clientID, options.KindID)
     if err != nil {
         return []Response{}, TemplateLoadError("An email template could not be loaded")
     }
@@ -53,9 +53,9 @@ func (strategy EmailStrategy) Trim(responses []byte) []byte {
 
 func (strategy EmailStrategy) determineSubjectTemplate(subject string) string {
     if subject == "" {
-        return SubjectMissingTemplateName
+        return models.SubjectMissingTemplateName
     }
-    return SubjectProvidedTemplateName
+    return models.SubjectProvidedTemplateName
 }
 
 type Trimmer struct{}

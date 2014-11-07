@@ -72,16 +72,16 @@ func (strategy OrganizationStrategy) Trim(responses []byte) []byte {
 
 func (strategy OrganizationStrategy) subjectSuffix(subject string) string {
     if subject == "" {
-        return SubjectMissingSuffix
+        return models.SubjectMissingTemplateName
     }
-    return SubjectProvidedSuffix
+    return models.SubjectProvidedTemplateName
 }
 
 func (strategy OrganizationStrategy) contentSuffix(guid TypedGUID) string {
     if guid.BelongsToSpace() {
-        return SpaceContentSuffix
+        return models.SpaceBodyTemplateName
     } else if guid.BelongsToOrganization() {
-        return OrganizationContentSuffix
+        return models.OrganizationBodyTemplateName
     }
-    return UserContentSuffix
+    return models.UserBodyTemplateName
 }

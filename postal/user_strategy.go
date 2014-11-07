@@ -5,14 +5,6 @@ import (
     "github.com/cloudfoundry-incubator/notifications/models"
 )
 
-const (
-    UserContentSuffix         = "user_body"
-    OrganizationContentSuffix = "organization_body"
-    SpaceContentSuffix        = "space_body"
-    SubjectProvidedSuffix     = "subject.provided"
-    SubjectMissingSuffix      = "subject.missing"
-)
-
 type UserStrategy struct {
     tokenLoader     TokenLoaderInterface
     userLoader      UserLoaderInterface
@@ -47,7 +39,7 @@ func (strategy UserStrategy) Dispatch(clientID string, guid TypedGUID, options O
     }
 
     subjectSuffix := strategy.subjectSuffix(options.Subject)
-    templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, UserContentSuffix, clientID, options.KindID)
+    templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, models.UserBodyTemplateName, clientID, options.KindID)
     if err != nil {
         return responses, TemplateLoadError("An email template could not be loaded")
     }
@@ -74,7 +66,7 @@ func (strategy UserStrategy) Trim(responses []byte) []byte {
 
 func (strategy UserStrategy) subjectSuffix(subject string) string {
     if subject == "" {
-        return SubjectMissingSuffix
+        return models.SubjectMissingTemplateName
     }
-    return SubjectProvidedSuffix
+    return models.SubjectProvidedTemplateName
 }

@@ -2,11 +2,6 @@ package postal
 
 import "github.com/cloudfoundry-incubator/notifications/web/services"
 
-const (
-    SubjectMissingTemplateName  = "subject.missing"
-    SubjectProvidedTemplateName = "subject.provided"
-)
-
 type Templates struct {
     Subject string
     Text    string

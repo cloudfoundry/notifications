@@ -6,6 +6,7 @@ import (
 
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/fakes"
+    "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -118,7 +119,7 @@ var _ = Describe("Space Strategy", func() {
 
                 users := map[string]uaa.User{"user-123": user123, "user-456": user456}
 
-                Expect(templatesLoader.ContentSuffix).To(Equal("space_body"))
+                Expect(templatesLoader.ContentSuffix).To(Equal(models.SpaceBodyTemplateName))
                 Expect(mailer.DeliverArguments).To(ContainElement(conn))
                 Expect(mailer.DeliverArguments).To(ContainElement(templates))
                 Expect(mailer.DeliverArguments).To(ContainElement(users))

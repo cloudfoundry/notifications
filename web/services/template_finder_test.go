@@ -168,14 +168,14 @@ var _ = Describe("Finder", func() {
     Describe("#ParseTemplateName", func() {
         It("parses the input template name, returning a list of possible template matches", func() {
             table := map[string][]string{
-                "login.fp.user_body":        []string{"login.fp.user_body", "login.user_body", "user_body"},
-                "login.user_body":           []string{"login.user_body", "user_body"},
-                "user_body":                 []string{"user_body"},
-                "login.fp.subject.missing":  []string{"login.fp.subject.missing", "login.subject.missing", "subject.missing"},
-                "login.subject.missing":     []string{"login.subject.missing", "subject.missing"},
-                "subject.missing":           []string{"subject.missing"},
-                "banana":                    []string{},
-                "login.fp.banana.user_body": []string{},
+                "login.fp." + models.UserBodyTemplateName:        []string{"login.fp." + models.UserBodyTemplateName, "login." + models.UserBodyTemplateName, models.UserBodyTemplateName},
+                "login." + models.UserBodyTemplateName:           []string{"login." + models.UserBodyTemplateName, models.UserBodyTemplateName},
+                models.UserBodyTemplateName:                      []string{models.UserBodyTemplateName},
+                "login.fp." + models.SubjectMissingTemplateName:  []string{"login.fp." + models.SubjectMissingTemplateName, "login." + models.SubjectMissingTemplateName, models.SubjectMissingTemplateName},
+                "login." + models.SubjectMissingTemplateName:     []string{"login." + models.SubjectMissingTemplateName, models.SubjectMissingTemplateName},
+                models.SubjectMissingTemplateName:                []string{models.SubjectMissingTemplateName},
+                "login.fp.banana." + models.UserBodyTemplateName: []string{},
+                "banana": []string{},
             }
 
             for input, output := range table {
