@@ -37,7 +37,7 @@ func (cc CloudController) GetUsersByOrgGuid(guid, token string) ([]CloudControll
 
     for _, resource := range usersResponse.Resources {
         user := CloudControllerUser{
-            Guid: resource.Metadata.Guid,
+            GUID: resource.Metadata.GUID,
         }
         users = append(users, user)
     }

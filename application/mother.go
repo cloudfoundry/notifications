@@ -49,10 +49,9 @@ func (mother Mother) UserStrategy() strategies.UserStrategy {
     finder := mother.TemplateFinder()
     uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
     uaaClient.VerifySSL = env.VerifySSL
-    cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
     tokenLoader := utilities.NewTokenLoader(&uaaClient)
-    userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
+    userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
     templatesLoader := utilities.NewTemplatesLoader(finder)
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
@@ -68,14 +67,15 @@ func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
     cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
     tokenLoader := utilities.NewTokenLoader(&uaaClient)
-    userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
+    userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
     spaceLoader := utilities.NewSpaceLoader(cloudController)
     organizationLoader := utilities.NewOrganizationLoader(cloudController)
     templatesLoader := utilities.NewTemplatesLoader(finder)
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
+    findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController)
 
-    return strategies.NewSpaceStrategy(tokenLoader, userLoader, spaceLoader, organizationLoader, templatesLoader, mailer, receiptsRepo)
+    return strategies.NewSpaceStrategy(tokenLoader, userLoader, spaceLoader, organizationLoader, findsUserGUIDs, templatesLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
@@ -86,13 +86,14 @@ func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
     cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
     tokenLoader := utilities.NewTokenLoader(&uaaClient)
-    userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger(), cloudController)
+    userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
     organizationLoader := utilities.NewOrganizationLoader(cloudController)
     templatesLoader := utilities.NewTemplatesLoader(finder)
     mailer := mother.Mailer()
     receiptsRepo := models.NewReceiptsRepo()
+    findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController)
 
-    return strategies.NewOrganizationStrategy(tokenLoader, userLoader, organizationLoader, templatesLoader, mailer, receiptsRepo)
+    return strategies.NewOrganizationStrategy(tokenLoader, userLoader, organizationLoader, findsUserGUIDs, templatesLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) FileSystem() services.FileSystemInterface {

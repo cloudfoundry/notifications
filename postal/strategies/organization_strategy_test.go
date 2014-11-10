@@ -26,6 +26,8 @@ var _ = Describe("Organization Strategy", func() {
     var clientID string
     var receiptsRepo *fakes.ReceiptsRepo
     var conn *fakes.DBConn
+    var findsUserGUIDs *fakes.FindsUserGUIDs
+    var users map[string]uaa.User
 
     BeforeEach(func() {
         clientID = "mister-client"
@@ -47,8 +49,10 @@ var _ = Describe("Organization Strategy", func() {
 
         mailer = fakes.NewMailer()
 
-        userLoader = fakes.NewUserLoader()
-        userLoader.Users = map[string]uaa.User{
+        findsUserGUIDs = fakes.NewFindsUserGUIDs()
+        findsUserGUIDs.OrganizationGuids["org-001"] = []string{"user-123", "user-456"}
+
+        users = map[string]uaa.User{
             "user-123": uaa.User{
                 ID:     "user-123",
                 Emails: []string{"user-123@example.com"},
@@ -58,6 +62,8 @@ var _ = Describe("Organization Strategy", func() {
                 Emails: []string{"user-456@example.com"},
             },
         }
+        userLoader = fakes.NewUserLoader()
+        userLoader.Users = users
 
         templatesLoader = fakes.NewTemplatesLoader()
 
@@ -67,7 +73,7 @@ var _ = Describe("Organization Strategy", func() {
             GUID: "org-001",
         }
 
-        strategy = strategies.NewOrganizationStrategy(tokenLoader, userLoader, organizationLoader, templatesLoader, mailer, receiptsRepo)
+        strategy = strategies.NewOrganizationStrategy(tokenLoader, userLoader, organizationLoader, findsUserGUIDs, templatesLoader, mailer, receiptsRepo)
     })
 
     Describe("Dispatch", func() {
@@ -93,7 +99,7 @@ var _ = Describe("Organization Strategy", func() {
                 Expect(receiptsRepo.KindID).To(Equal(options.KindID))
             })
 
-            It("calls mailer.Deliver with the correct arguments for an organization", func() {
+            It("call mailer.Deliver with the correct arguments for an organization", func() {
                 templates := postal.Templates{
                     Subject: "default-missing-subject",
                     Text:    "default-organization-text",
@@ -107,18 +113,6 @@ var _ = Describe("Organization Strategy", func() {
                     panic(err)
                 }
 
-                user123 := uaa.User{
-                    ID:     "user-123",
-                    Emails: []string{"user-123@example.com"},
-                }
-
-                user456 := uaa.User{
-                    ID:     "user-456",
-                    Emails: []string{"user-456@example.com"},
-                }
-
-                users := map[string]uaa.User{"user-123": user123, "user-456": user456}
-
                 Expect(templatesLoader.ContentSuffix).To(Equal(models.OrganizationBodyTemplateName))
                 Expect(mailer.DeliverArguments).To(ContainElement(conn))
                 Expect(mailer.DeliverArguments).To(ContainElement(templates))
@@ -130,6 +124,7 @@ var _ = Describe("Organization Strategy", func() {
                 }))
                 Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{}))
                 Expect(mailer.DeliverArguments).To(ContainElement(clientID))
+                Expect(userLoader.LoadedGUIDs).To(Equal([]string{"user-123", "user-456"}))
             })
         })
 
@@ -174,6 +169,15 @@ var _ = Describe("Organization Strategy", func() {
             Context("when create receipts call returns an err", func() {
                 It("returns an error", func() {
                     receiptsRepo.CreateReceiptsError = true
+
+                    _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                    Expect(err).ToNot(BeNil())
+                })
+            })
+
+            Context("when finds user GUIDs returns an error", func() {
+                It("returns an error", func() {
+                    findsUserGUIDs.UserGUIDsBelongingToOrganizationError = errors.New("BOOM!")
 
                     _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
                     Expect(err).ToNot(BeNil())

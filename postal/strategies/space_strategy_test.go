@@ -27,6 +27,8 @@ var _ = Describe("Space Strategy", func() {
     var clientID string
     var receiptsRepo *fakes.ReceiptsRepo
     var conn *fakes.DBConn
+    var findsUserGUIDs *fakes.FindsUserGUIDs
+    var users map[string]uaa.User
 
     BeforeEach(func() {
         clientID = "mister-client"
@@ -48,8 +50,10 @@ var _ = Describe("Space Strategy", func() {
 
         mailer = fakes.NewMailer()
 
-        userLoader = fakes.NewUserLoader()
-        userLoader.Users = map[string]uaa.User{
+        findsUserGUIDs = fakes.NewFindsUserGUIDs()
+        findsUserGUIDs.SpaceGuids["space-001"] = []string{"user-123", "user-456"}
+
+        users = map[string]uaa.User{
             "user-123": uaa.User{
                 ID:     "user-123",
                 Emails: []string{"user-123@example.com"},
@@ -59,6 +63,9 @@ var _ = Describe("Space Strategy", func() {
                 Emails: []string{"user-456@example.com"},
             },
         }
+
+        userLoader = fakes.NewUserLoader()
+        userLoader.Users = users
 
         templatesLoader = fakes.NewTemplatesLoader()
 
@@ -75,7 +82,7 @@ var _ = Describe("Space Strategy", func() {
             GUID: "org-001",
         }
 
-        strategy = strategies.NewSpaceStrategy(tokenLoader, userLoader, spaceLoader, organizationLoader, templatesLoader, mailer, receiptsRepo)
+        strategy = strategies.NewSpaceStrategy(tokenLoader, userLoader, spaceLoader, organizationLoader, findsUserGUIDs, templatesLoader, mailer, receiptsRepo)
     })
 
     Describe("Dispatch", func() {
@@ -115,18 +122,6 @@ var _ = Describe("Space Strategy", func() {
                     panic(err)
                 }
 
-                user123 := uaa.User{
-                    ID:     "user-123",
-                    Emails: []string{"user-123@example.com"},
-                }
-
-                user456 := uaa.User{
-                    ID:     "user-456",
-                    Emails: []string{"user-456@example.com"},
-                }
-
-                users := map[string]uaa.User{"user-123": user123, "user-456": user456}
-
                 Expect(templatesLoader.ContentSuffix).To(Equal(models.SpaceBodyTemplateName))
                 Expect(mailer.DeliverArguments).To(ContainElement(conn))
                 Expect(mailer.DeliverArguments).To(ContainElement(templates))
@@ -142,6 +137,8 @@ var _ = Describe("Space Strategy", func() {
                     OrganizationGUID: "org-001",
                 }))
                 Expect(mailer.DeliverArguments).To(ContainElement(clientID))
+
+                Expect(userLoader.LoadedGUIDs).To(Equal([]string{"user-123", "user-456"}))
             })
         })
 
@@ -173,6 +170,15 @@ var _ = Describe("Space Strategy", func() {
                 })
             })
 
+            Context("when findsUserGUIDs returns an err", func() {
+                It("returns an error", func() {
+                    findsUserGUIDs.UserGUIDsBelongingToSpaceError = errors.New("BOOM!")
+
+                    _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                    Expect(err).To(Equal(findsUserGUIDs.UserGUIDsBelongingToSpaceError))
+                })
+            })
+
             Context("when a templateLoader fails to load templates", func() {
                 It("returns the error", func() {
                     templatesLoader.LoadError = errors.New("BOOM!")
@@ -191,6 +197,7 @@ var _ = Describe("Space Strategy", func() {
                     Expect(err).ToNot(BeNil())
                 })
             })
+
         })
     })
 

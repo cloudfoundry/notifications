@@ -4,9 +4,7 @@ import (
     "bytes"
     "log"
 
-    "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/fakes"
-    "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/postal/utilities"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -18,48 +16,18 @@ var _ = Describe("UserLoader", func() {
     var loader utilities.UserLoader
     var token string
     var uaaClient *fakes.UAAClient
-    var cc *fakes.CloudController
 
     Describe("Load", func() {
         BeforeEach(func() {
             tokenHeader := map[string]interface{}{
                 "alg": "FAST",
             }
-
             tokenClaims := map[string]interface{}{
                 "client_id": "mister-client",
                 "exp":       int64(3404281214),
                 "scope":     []string{"notifications.write"},
             }
-
             token = fakes.BuildToken(tokenHeader, tokenClaims)
-
-            cc = fakes.NewCloudController()
-            cc.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
-                cf.CloudControllerUser{Guid: "user-123"},
-                cf.CloudControllerUser{Guid: "user-789"},
-            }
-
-            cc.UsersByOrganizationGuid["org-001"] = []cf.CloudControllerUser{
-                cf.CloudControllerUser{Guid: "user-123"},
-                cf.CloudControllerUser{Guid: "user-456"},
-                cf.CloudControllerUser{Guid: "user-789"},
-                cf.CloudControllerUser{Guid: "user-999"},
-            }
-
-            cc.Spaces = map[string]cf.CloudControllerSpace{
-                "space-001": cf.CloudControllerSpace{
-                    Name:             "production",
-                    GUID:             "space-001",
-                    OrganizationGUID: "org-001",
-                },
-            }
-
-            cc.Orgs = map[string]cf.CloudControllerOrganization{
-                "org-001": cf.CloudControllerOrganization{
-                    Name: "pivotaltracker",
-                },
-            }
 
             uaaClient = fakes.NewUAAClient()
             uaaClient.ClientToken = uaa.Token{
@@ -81,16 +49,14 @@ var _ = Describe("UserLoader", func() {
             }
 
             logger := log.New(bytes.NewBufferString(""), "", 0)
-            loader = utilities.NewUserLoader(uaaClient, logger, cc)
+            loader = utilities.NewUserLoader(uaaClient, logger)
         })
 
         Context("UAA returns a collection of users", func() {
-            It("returns a map of users from GUID to uaa.User using a space guid", func() {
-                users, err := loader.Load(postal.SpaceGUID("space-001"), token)
-                if err != nil {
-                    panic(err)
-                }
+            It("returns a map of users from GUID to uaa.User using a list of user GUIDs", func() {
+                users, err := loader.Load([]string{"user-123", "user-789"}, token)
 
+                Expect(err).NotTo(HaveOccurred())
                 Expect(len(users)).To(Equal(2))
 
                 user123 := users["user-123"]
@@ -101,31 +67,6 @@ var _ = Describe("UserLoader", func() {
                 Expect(ok).To(BeTrue())
                 Expect(user789).To(Equal(uaa.User{}))
             })
-
-            It("returns a map of users from GUID to uaa.User using an organization guid", func() {
-                users, err := loader.Load(postal.OrganizationGUID("org-001"), token)
-                if err != nil {
-                    panic(err)
-                }
-
-                Expect(len(users)).To(Equal(4))
-
-                user123 := users["user-123"]
-                Expect(user123.Emails[0]).To(Equal("user-123@example.com"))
-                Expect(user123.ID).To(Equal("user-123"))
-
-                user456 := users["user-456"]
-                Expect(user456.Emails[0]).To(Equal("user-456@example.com"))
-                Expect(user456.ID).To(Equal("user-456"))
-
-                user789, ok := users["user-789"]
-                Expect(ok).To(BeTrue())
-                Expect(user789).To(Equal(uaa.User{}))
-
-                user999 := users["user-999"]
-                Expect(user999.Emails[0]).To(Equal("user-999@example.com"))
-                Expect(user999.ID).To(Equal("user-999"))
-            })
         })
 
         Describe("UAA Error Responses", func() {
@@ -133,7 +74,7 @@ var _ = Describe("UserLoader", func() {
                 It("returns a UAADownError", func() {
                     uaaClient.ErrorForUserByID = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
 
-                    _, err := loader.Load(postal.UserGUID("user-123"), token)
+                    _, err := loader.Load([]string{"user-123"}, token)
 
                     Expect(err).To(BeAssignableToTypeOf(utilities.UAADownError("")))
                 })
@@ -143,7 +84,7 @@ var _ = Describe("UserLoader", func() {
                 It("returns a UAAGenericError", func() {
                     uaaClient.ErrorForUserByID = uaa.NewFailure(404, []byte("Weird message we haven't seen"))
 
-                    _, err := loader.Load(postal.UserGUID("user-123"), token)
+                    _, err := loader.Load([]string{"user-123"}, token)
 
                     Expect(err).To(BeAssignableToTypeOf(utilities.UAAGenericError("")))
                 })
@@ -153,7 +94,7 @@ var _ = Describe("UserLoader", func() {
                 It("returns a UAADownError", func() {
                     uaaClient.ErrorForUserByID = uaa.NewFailure(500, []byte("Doesn't matter"))
 
-                    _, err := loader.Load(postal.UserGUID("user-123"), token)
+                    _, err := loader.Load([]string{"user-123"}, token)
 
                     Expect(err).To(BeAssignableToTypeOf(utilities.UAADownError("")))
                 })

@@ -11,20 +11,22 @@ type SpaceStrategy struct {
     userLoader         utilities.UserLoaderInterface
     spaceLoader        utilities.SpaceLoaderInterface
     organizationLoader utilities.OrganizationLoaderInterface
+    findsUserGUIDs     utilities.FindsUserGUIDsInterface
     templatesLoader    utilities.TemplatesLoaderInterface
     mailer             MailerInterface
     receiptsRepo       models.ReceiptsRepoInterface
 }
 
 func NewSpaceStrategy(tokenLoader utilities.TokenLoaderInterface, userLoader utilities.UserLoaderInterface, spaceLoader utilities.SpaceLoaderInterface,
-    organizationLoader utilities.OrganizationLoaderInterface, templatesLoader utilities.TemplatesLoaderInterface, mailer MailerInterface,
-    receiptsRepo models.ReceiptsRepoInterface) SpaceStrategy {
+    organizationLoader utilities.OrganizationLoaderInterface, findsUserGUIDs utilities.FindsUserGUIDsInterface, templatesLoader utilities.TemplatesLoaderInterface,
+    mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) SpaceStrategy {
 
     return SpaceStrategy{
         tokenLoader:        tokenLoader,
         userLoader:         userLoader,
         spaceLoader:        spaceLoader,
         organizationLoader: organizationLoader,
+        findsUserGUIDs:     findsUserGUIDs,
         templatesLoader:    templatesLoader,
         mailer:             mailer,
         receiptsRepo:       receiptsRepo,
@@ -49,7 +51,12 @@ func (strategy SpaceStrategy) Dispatch(clientID string, guid postal.TypedGUID, o
         return responses, err
     }
 
-    users, err := strategy.userLoader.Load(guid, token)
+    userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToSpace(guid.String(), token)
+    if err != nil {
+        return responses, err
+    }
+
+    users, err := strategy.userLoader.Load(userGUIDs, token)
     if err != nil {
         return responses, err
     }
@@ -58,11 +65,6 @@ func (strategy SpaceStrategy) Dispatch(clientID string, guid postal.TypedGUID, o
     templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, models.SpaceBodyTemplateName, clientID, options.KindID)
     if err != nil {
         return responses, postal.TemplateLoadError("An email template could not be loaded")
-    }
-
-    var userGUIDs []string
-    for key := range users {
-        userGUIDs = append(userGUIDs, key)
     }
 
     err = strategy.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)

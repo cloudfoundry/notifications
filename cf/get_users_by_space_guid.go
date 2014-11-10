@@ -9,13 +9,13 @@ import (
 )
 
 type CloudControllerUser struct {
-    Guid string `json:"guid"`
+    GUID string `json:"guid"`
 }
 
 type CloudControllerUsersResponse struct {
     Resources []struct {
         Metadata struct {
-            Guid string `json:"guid"`
+            GUID string `json:"guid"`
         } `json:"metadata"`
     } `json:"resources"`
 }
@@ -49,7 +49,7 @@ func (cc CloudController) GetUsersBySpaceGuid(guid, token string) ([]CloudContro
 
     for _, resource := range usersResponse.Resources {
         user := CloudControllerUser{
-            Guid: resource.Metadata.Guid,
+            GUID: resource.Metadata.GUID,
         }
         users = append(users, user)
     }

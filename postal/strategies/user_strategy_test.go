@@ -15,7 +15,7 @@ import (
     . "github.com/onsi/gomega"
 )
 
-var _ = Describe("UAA Strategy", func() {
+var _ = Describe("UserStrategy", func() {
     var strategy strategies.UserStrategy
     var options postal.Options
     var tokenLoader *fakes.TokenLoader
@@ -25,6 +25,7 @@ var _ = Describe("UAA Strategy", func() {
     var clientID string
     var receiptsRepo *fakes.ReceiptsRepo
     var conn *fakes.DBConn
+    var users map[string]uaa.User
 
     BeforeEach(func() {
         clientID = "mister-client"
@@ -41,14 +42,18 @@ var _ = Describe("UAA Strategy", func() {
         tokenLoader = fakes.NewTokenLoader()
         tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
 
+        users = map[string]uaa.User{
+            "user-123": uaa.User{
+                ID:     "user-123",
+                Emails: []string{"user-123@example.com"},
+            },
+        }
+
         receiptsRepo = fakes.NewReceiptsRepo()
         mailer = fakes.NewMailer()
         userLoader = fakes.NewUserLoader()
-        userLoader.Users["user-123"] = uaa.User{
-            ID:     "user-123",
-            Emails: []string{"user-123@example.com"},
-        }
-        templatesLoader = &fakes.TemplatesLoader{}
+        userLoader.Users = users
+        templatesLoader = fakes.NewTemplatesLoader()
         strategy = strategies.NewUserStrategy(tokenLoader, userLoader, templatesLoader, mailer, receiptsRepo)
     })
 
@@ -90,13 +95,6 @@ var _ = Describe("UAA Strategy", func() {
                 panic(err)
             }
 
-            user := uaa.User{
-                ID:     "user-123",
-                Emails: []string{"user-123@example.com"},
-            }
-
-            users := map[string]uaa.User{"user-123": user}
-
             Expect(templatesLoader.ContentSuffix).To(Equal(models.UserBodyTemplateName))
             Expect(mailer.DeliverArguments).To(ContainElement(conn))
             Expect(mailer.DeliverArguments).To(ContainElement(templates))
@@ -105,6 +103,8 @@ var _ = Describe("UAA Strategy", func() {
             Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{}))
             Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{}))
             Expect(mailer.DeliverArguments).To(ContainElement(clientID))
+
+            Expect(userLoader.LoadedGUIDs).To(Equal([]string{"user-123"}))
         })
 
         Context("failure cases", func() {

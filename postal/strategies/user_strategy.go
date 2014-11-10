@@ -35,7 +35,8 @@ func (strategy UserStrategy) Dispatch(clientID string, guid postal.TypedGUID, op
         return responses, err
     }
 
-    users, err := strategy.userLoader.Load(guid, token)
+    userGUIDs := []string{guid.String()}
+    users, err := strategy.userLoader.Load(userGUIDs, token)
     if err != nil {
         return responses, err
     }
@@ -44,11 +45,6 @@ func (strategy UserStrategy) Dispatch(clientID string, guid postal.TypedGUID, op
     templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, models.UserBodyTemplateName, clientID, options.KindID)
     if err != nil {
         return responses, postal.TemplateLoadError("An email template could not be loaded")
-    }
-
-    var userGUIDs []string
-    for key := range users {
-        userGUIDs = append(userGUIDs, key)
     }
 
     err = strategy.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)

@@ -11,9 +11,8 @@ import (
     . "github.com/onsi/gomega"
 )
 
-var testOrganizationGuid = "test-organization-guid"
-
 var _ = Describe("CloudController", func() {
+    var testOrganizationGuid = "test-organization-guid"
     var CCServer *httptest.Server
     var UsersEndpoint http.HandlerFunc
     var cloudController cf.CloudController
@@ -88,7 +87,7 @@ var _ = Describe("CloudController", func() {
             Expect(len(users)).To(Equal(1))
 
             Expect(users).To(ContainElement(cf.CloudControllerUser{
-                Guid: "user-123",
+                GUID: "user-123",
             }))
         })
 

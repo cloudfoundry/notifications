@@ -11,18 +11,20 @@ type OrganizationStrategy struct {
     tokenLoader        utilities.TokenLoaderInterface
     userLoader         utilities.UserLoaderInterface
     organizationLoader utilities.OrganizationLoaderInterface
+    findsUserGUIDs     utilities.FindsUserGUIDsInterface
     templatesLoader    utilities.TemplatesLoaderInterface
     mailer             MailerInterface
     receiptsRepo       models.ReceiptsRepoInterface
 }
 
 func NewOrganizationStrategy(tokenLoader utilities.TokenLoaderInterface, userLoader utilities.UserLoaderInterface, organizationLoader utilities.OrganizationLoaderInterface,
-    templatesLoader utilities.TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) OrganizationStrategy {
+    findsUserGUIDs utilities.FindsUserGUIDsInterface, templatesLoader utilities.TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) OrganizationStrategy {
 
     return OrganizationStrategy{
         tokenLoader:        tokenLoader,
         userLoader:         userLoader,
         organizationLoader: organizationLoader,
+        findsUserGUIDs:     findsUserGUIDs,
         templatesLoader:    templatesLoader,
         mailer:             mailer,
         receiptsRepo:       receiptsRepo,
@@ -42,7 +44,12 @@ func (strategy OrganizationStrategy) Dispatch(clientID string, guid postal.Typed
         return responses, err
     }
 
-    users, err := strategy.userLoader.Load(guid, token)
+    userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToOrganization(guid.String(), token)
+    if err != nil {
+        return responses, err
+    }
+
+    users, err := strategy.userLoader.Load(userGUIDs, token)
     if err != nil {
         return responses, err
     }
@@ -52,11 +59,6 @@ func (strategy OrganizationStrategy) Dispatch(clientID string, guid postal.Typed
     templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, models.OrganizationBodyTemplateName, clientID, options.KindID)
     if err != nil {
         return responses, postal.TemplateLoadError("An email template could not be loaded")
-    }
-
-    var userGUIDs []string
-    for key := range users {
-        userGUIDs = append(userGUIDs, key)
     }
 
     err = strategy.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)

@@ -109,11 +109,11 @@ var _ = Describe("CloudController", func() {
             Expect(len(users)).To(Equal(2))
 
             Expect(users).To(ContainElement(cf.CloudControllerUser{
-                Guid: "user-123",
+                GUID: "user-123",
             }))
 
             Expect(users).To(ContainElement(cf.CloudControllerUser{
-                Guid: "user-456",
+                GUID: "user-456",
             }))
         })
 
