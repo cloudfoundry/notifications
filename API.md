@@ -10,7 +10,7 @@
 - Registering Notifications
 	- [Registering client notifications](#put-registration)
 - Managing User Preferences
-	- [Retrieve options for /user_preferences endpoints](#options-user-preferences) 
+	- [Retrieve options for /user_preferences endpoints](#options-user-preferences)
 	- [Retrieve user preferences with a user token](#get-user-preferences)
 	- [Update user preferences with a user token](#patch-user-preferences)
 	- [Retrieve options for /user_preferences/{user-guid} endpoints](#options-user-preferences-guid)
@@ -66,7 +66,7 @@ X-Cf-Requestid: 2cf01258-ccff-41e9-6d82-41a4441af4af
 <a name="post-users-guid"></a>
 #### Send a notification to a user
 
-##### Request 
+##### Request
 
 ###### Headers
 ```
@@ -132,11 +132,11 @@ X-Cf-Requestid: 5c9bca88-280e-41d1-6e80-26a2a97adf4a
 <a name="post-spaces-guid"></a>
 #### Send a notification to a space
 
-##### Request 
+##### Request
 
 ###### Headers
 ```
-Authorization: bearer <CLIENT-TOKEN>	
+Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notifications.write` scope. Sending __critical__ notifications requires the `critical_notifications.write` scope.
 
@@ -203,11 +203,11 @@ X-Cf-Requestid: 4dcfc91c-9cf6-4a51-497a-8ae506ce37f5
 <a name="post-organizations-guid"></a>
 #### Send a notification to an organization
 
-##### Request 
+##### Request
 
 ###### Headers
 ```
-Authorization: bearer <CLIENT-TOKEN>	
+Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notifications.write` scope. Sending __critical__ notifications requires the `critical_notifications.write` scope.
 
@@ -273,11 +273,11 @@ X-Cf-Requestid: 3a564cd9-74c8-46f6-5d31-8a8b600fc43f
 <a name="post-emails"></a>
 #### Send a notification to an email address
 
-##### Request 
+##### Request
 
 ###### Headers
 ```
-Authorization: bearer <CLIENT-TOKEN>	
+Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `emails.write` scope
 
@@ -338,11 +338,11 @@ X-Cf-Requestid: eb7ee46c-2142-4a74-5b73-e4971eea511a
 <a name="put-registration"></a>
 #### Registering client notifications
 
-##### Request 
+##### Request
 
 ###### Headers
 ```
-Authorization: bearer <CLIENT-TOKEN>	
+Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notifications.write` scope. Registering __critical__ notifications requires the `critical_notifications.write` scope.
 
@@ -394,7 +394,7 @@ X-Cf-Requestid: f39e22a4-6693-4a6d-6b27-006aecc924d4
 <a name="options-user-preferences"></a>
 #### Retrieve Options for /user_preferences endpoints
 
-##### Request 
+##### Request
 
 ###### Route
 ```
@@ -444,7 +444,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 
 ###### Headers
 ```
-Authorization: bearer <USER-TOKEN>	
+Authorization: bearer <USER-TOKEN>
 ```
 \* The user token requires `notification_preferences.write` scope.
 
@@ -458,7 +458,7 @@ GET /user_preferences
 $ curl -i -X GET \
   -H "Authorization: Bearer <USER-TOKEN>" \
   http://notifications.example.com/user_preferences
-  
+
 HTTP/1.1 200 OK
 Access-Control-Allow-Headers: Accept, Authorization, Content-Type
 Access-Control-Allow-Methods: GET, PATCH
@@ -529,13 +529,13 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 
 ###### Headers
 ```
-Authorization: bearer <USER-TOKEN>	
+Authorization: bearer <USER-TOKEN>
 ```
 \* The user token requires `notification_preferences.write` scope.
 
 ###### Route
 ```
-GET /user_preferences
+PATCH /user_preferences
 ```
 
 ###### Params
@@ -547,11 +547,11 @@ GET /user_preferences
 
 ###### CURL example
 ```
-$ curl -i -X GET \
+$ curl -i -X PATCH \
   -H "Authorization: Bearer <USER-TOKEN>" \
   -d '{"clients": {"login-service":{"effa96de-2349-423a-b5e4-b1e84712a714":{"email":true}}}}'
   http://notifications.example.com/user_preferences
-  
+
 HTTP/1.1 204 No Content
 Access-Control-Allow-Headers: Accept, Authorization, Content-Type
 Access-Control-Allow-Methods: GET, PATCH
@@ -581,7 +581,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 <a name="options-user-preferences-guid"></a>
 #### Retrieve Options for /user_preferences/{user-guid} endpoints
 
-##### Request 
+##### Request
 
 ###### Route
 ```
@@ -631,7 +631,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 
 ###### Headers
 ```
-Authorization: bearer <CLIENT-TOKEN>	
+Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notification_preferences.admin` scope.
 
@@ -645,7 +645,7 @@ GET /user_preferences/{user-guid}
 $ curl -i -X GET \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   http://notifications.example.com/user_preferences/user-guid
-  
+
 HTTP/1.1 200 OK
 Access-Control-Allow-Headers: Accept, Authorization, Content-Type
 Access-Control-Allow-Methods: GET, PATCH
@@ -696,7 +696,7 @@ Access-Control-Allow-Headers: Accept, Authorization, Content-Type
 Access-Control-Allow-Methods: GET, PATCH
 Access-Control-Allow-Origin: *
 ```
-The above headers constitute a CORS contract. They indicate that the GET and PATCH endpoints for the `/user_preferences/{user-guid]` path support the specified headers from any origin.
+The above headers constitute a CORS contract. They indicate that the GET and PATCH endpoints for the `/user_preferences/{user-guid}` path support the specified headers from any origin.
 
 ###### Body
 | Fields             | Description                                                     |
@@ -716,13 +716,13 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 
 ###### Headers
 ```
-Authorization: bearer <CLIENT-TOKEN>	
+Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notification_preferences.admin` scope.
 
 ###### Route
 ```
-GET /user_preferences/user-guid
+PATCH /user_preferences/user-guid
 ```
 
 ###### Params
@@ -734,11 +734,11 @@ GET /user_preferences/user-guid
 
 ###### CURL example
 ```
-$ curl -i -X GET \
+$ curl -i -X PATCH \
   -H "Authorization: Bearer <USER-TOKEN>" \
   -d '{"clients": {"login-service":{"effa96de-2349-423a-b5e4-b1e84712a714":{"email":true}}}}'
   http://notifications.example.com/user_preferences/user-guid
-  
+
 HTTP/1.1 204 No Content
 Access-Control-Allow-Headers: Accept, Authorization, Content-Type
 Access-Control-Allow-Methods: GET, PATCH
@@ -776,7 +776,7 @@ This endpoint is used to retrieve the templates that are stored using the templa
 
 ###### Headers
 ```
-Authorization: bearer <CLIENT-TOKEN>	
+Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token does not require any scopes at this time.
 
@@ -790,7 +790,7 @@ GET /templates/{template-filename}
 $ curl -i -X GET \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   http://notifications.example.com/templates/template-filename
-  
+
 HTTP/1.1 200 OK
 Connection: close
 Content-Length: 1126
@@ -799,11 +799,11 @@ Date: Mon, 27 Oct 2014 23:52:31 GMT
 X-Cf-Requestid: 5d19a080-2c88-4fe6-5eb5-42f9bda2d073
 
 {
-	"text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client",
+	"text": "Message to: {{.To}}, sent from the {{.ClientID}} UAA Client",
 	"html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>",
-	"overridden":false
+	"overridden": false
 }
- ```
+```
 
 ##### Response
 
@@ -825,11 +825,11 @@ X-Cf-Requestid: 5d19a080-2c88-4fe6-5eb5-42f9bda2d073
 This endpoint is used to change the templates attached to particular kinds of notifications.
 
 
-##### Request 
+##### Request
 
 ###### Headers
 ```
-Authorization: bearer <CLIENT-TOKEN>	
+Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client does not require any scopes at this time
 
@@ -879,11 +879,11 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 This endpoint is used to delete an override template attached to a particular kind of notifications.
 
 
-##### Request 
+##### Request
 
 ###### Headers
 ```
-Authorization: bearer <CLIENT-TOKEN>	
+Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client does not require any scopes at this time
 
@@ -902,7 +902,7 @@ DELETE /templates/{template-filename}
 ###### CURL example
 ```
 $ curl -X DELETE \
-  http://notifications.example.com/templates/template-filename 
+  http://notifications.example.com/templates/template-filename
 
 204 No Content
 Connection: close
