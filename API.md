@@ -352,12 +352,19 @@ PUT /registration
 ```
 ###### Params
 
-| Key                | Description                                    |
-| ------------------ | ---------------------------------------------- |
+| Key                 | Description                                    |
+| ------------------- | ---------------------------------------------- |
 | source_description* | A description of the sender, to be displayed in messages to users instead of the raw "client_id" field (which is derived from UAA) |
-| kinds | A complete list of all notification kinds that this client plans on using.  If passed, the notifier will add and remote kinds from its internal datastore to match the provided list. |
-| id* | A simple machine readable string that identifies this type of notification.  It should be in the format /[0-9a-z_-.]+/i The notifier can use the ID to determine whether and how to notify a user. It’s recommended to use a GUID that doesn’t change for this field. |
-| description* | A description of the kind, to be displayed in messages to users instead of the raw “id” field |
+| kinds               | A complete list of all notification kinds that this client plans on using.  If passed, the notifier will add and remove kinds from its internal datastore to match the provided list. See table below for kinds fields |
+
+\* required
+
+###### Kinds
+
+| Key                       | Description |
+| ------------------------- | ----------- |
+| id*                       | A simple machine readable string that identifies this type of notification.  It should be in the format /[0-9a-z_-.]+/i The notifier can use the ID to determine whether and how to notify a user. It’s recommended to use a GUID that doesn’t change for this field. |
+| description*              | A description of the kind, to be displayed in messages to users instead of the raw “id” field |
 | critical (default: false) | A boolean describing whether this kind of notification is to be considered “critical”, usually meaning that it cannot be unsubscribed from.  Because critical notifications can be annoying to end-users, registering a critical notification kind requires the client to have an access token with the critical_notifications.write scope. |
 
 \* required
