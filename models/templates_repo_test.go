@@ -2,6 +2,7 @@ package models_test
 
 import (
     "path"
+    "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
     "github.com/cloudfoundry-incubator/notifications/models"
@@ -14,6 +15,7 @@ var _ = Describe("TemplatesRepo", func() {
     var repo models.TemplatesRepo
     var conn models.ConnectionInterface
     var template models.Template
+    var createdAt time.Time
 
     BeforeEach(func() {
         TruncateTables()
@@ -22,11 +24,13 @@ var _ = Describe("TemplatesRepo", func() {
         migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
         db := models.NewDatabase(env.DatabaseURL, migrationsPath)
         conn = db.Connection()
+        createdAt = time.Now().Add(-1 * time.Hour).Truncate(1 * time.Second).UTC()
 
         template = models.Template{
-            Name: "raptor_template",
-            Text: "run and hide",
-            HTML: "<h1>containment unit breached!</h1>",
+            Name:      "raptor_template",
+            Text:      "run and hide",
+            HTML:      "<h1>containment unit breached!</h1>",
+            CreatedAt: createdAt,
         }
 
         conn.Insert(&template)
@@ -58,9 +62,10 @@ var _ = Describe("TemplatesRepo", func() {
     Describe("#Upsert", func() {
         It("inserts a template into the database", func() {
             newTemplate := models.Template{
-                Name: "silly_template." + models.UserBodyTemplateName,
-                Text: "omg",
-                HTML: "<h1>OMG</h1>",
+                Name:      "silly_template." + models.UserBodyTemplateName,
+                Text:      "omg",
+                HTML:      "<h1>OMG</h1>",
+                CreatedAt: createdAt,
             }
 
             _, err := repo.Upsert(conn, newTemplate)
@@ -73,6 +78,8 @@ var _ = Describe("TemplatesRepo", func() {
 
             Expect(foundTemplate.Text).To(Equal(newTemplate.Text))
             Expect(foundTemplate.HTML).To(Equal(newTemplate.HTML))
+            Expect(foundTemplate.CreatedAt).To(Equal(createdAt))
+            Expect(foundTemplate.UpdatedAt).To(Equal(createdAt))
         })
 
         It("updates a template currently in the database", func() {
@@ -87,6 +94,9 @@ var _ = Describe("TemplatesRepo", func() {
 
             Expect(foundTemplate.Text).To(Equal(template.Text))
             Expect(foundTemplate.HTML).To(Equal(template.HTML))
+            Expect(foundTemplate.CreatedAt).To(Equal(createdAt))
+            Expect(foundTemplate.UpdatedAt).ToNot(Equal(createdAt))
+            Expect(foundTemplate.UpdatedAt).To(BeTemporally(">", createdAt))
         })
     })
 

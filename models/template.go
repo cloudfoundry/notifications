@@ -27,4 +27,5 @@ type Template struct {
     HTML       string    `db:"html"`
     Overridden bool      `db:"-"`
     CreatedAt  time.Time `db:"created_at"`
+    UpdatedAt  time.Time `db:"updated_at"`
 }
