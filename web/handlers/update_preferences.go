@@ -70,8 +70,8 @@ func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Reques
         }
         return
     }
-
     transaction.Commit()
+
     w.WriteHeader(http.StatusNoContent)
 }
 

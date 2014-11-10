@@ -80,7 +80,6 @@ func (handler RegisterNotifications) Execute(w http.ResponseWriter, req *http.Re
             return
         }
     }
-
     transaction.Commit()
 }
 

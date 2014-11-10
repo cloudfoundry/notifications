@@ -28,9 +28,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
     options postal.Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID string) []Response {
 
     responses := []Response{}
-    transaction := conn.Transaction()
-
-    transaction.Begin()
+    var jobs []gobble.Job
     for userGUID, user := range users {
         guid, err := mailer.guidGenerator()
         if err != nil {
@@ -38,7 +36,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
         }
         messageID := guid.String()
 
-        job := gobble.NewJob(postal.Delivery{
+        jobs = append(jobs, gobble.NewJob(postal.Delivery{
             User:         user,
             Options:      options,
             UserGUID:     userGUID,
@@ -47,13 +45,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
             ClientID:     clientID,
             Templates:    templates,
             MessageID:    messageID,
-        })
-
-        _, err = mailer.queue.Enqueue(job)
-        if err != nil {
-            transaction.Rollback()
-            return []Response{}
-        }
+        }))
 
         emailAddress := ""
         if len(user.Emails) > 0 {
@@ -68,6 +60,16 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
         })
     }
 
+    transaction := conn.Transaction()
+    transaction.Begin()
+    for _, job := range jobs {
+        _, err := mailer.queue.Enqueue(job)
+        if err != nil {
+            transaction.Rollback()
+            return []Response{}
+        }
+    }
     transaction.Commit()
+
     return responses
 }
