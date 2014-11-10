@@ -1,8 +1,6 @@
 package strategies
 
 import (
-    "encoding/json"
-
     "github.com/cloudfoundry-incubator/notifications/cf"
     "github.com/cloudfoundry-incubator/notifications/models"
     "github.com/cloudfoundry-incubator/notifications/postal"
@@ -53,28 +51,6 @@ func (strategy EmailStrategy) determineSubjectTemplate(subject string) string {
         return models.SubjectMissingTemplateName
     }
     return models.SubjectProvidedTemplateName
-}
-
-type Trimmer struct{}
-
-func (t Trimmer) TrimFields(responses []byte, field string) []byte {
-    var results []map[string]string
-
-    err := json.Unmarshal(responses, &results)
-    if err != nil {
-        panic(err)
-    }
-
-    for _, value := range results {
-        delete(value, field)
-    }
-
-    responses, err = json.Marshal(results)
-    if err != nil {
-        panic(err)
-    }
-
-    return responses
 }
 
 func (strategy EmailStrategy) subjectSuffix(subject string) string {

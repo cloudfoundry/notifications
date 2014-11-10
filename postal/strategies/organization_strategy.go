@@ -55,7 +55,6 @@ func (strategy OrganizationStrategy) Dispatch(clientID, guid string, options pos
     }
 
     subjectSuffix := strategy.subjectSuffix(options.Subject)
-
     templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, models.OrganizationBodyTemplateName, clientID, options.KindID)
     if err != nil {
         return responses, postal.TemplateLoadError("An email template could not be loaded")
