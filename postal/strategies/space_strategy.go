@@ -33,7 +33,7 @@ func NewSpaceStrategy(tokenLoader utilities.TokenLoaderInterface, userLoader uti
     }
 }
 
-func (strategy SpaceStrategy) Dispatch(clientID string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy SpaceStrategy) Dispatch(clientID, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
     responses := []Response{}
 
     token, err := strategy.tokenLoader.Load()
@@ -41,7 +41,7 @@ func (strategy SpaceStrategy) Dispatch(clientID string, guid postal.TypedGUID, o
         return responses, err
     }
 
-    space, err := strategy.spaceLoader.Load(guid.String(), token)
+    space, err := strategy.spaceLoader.Load(guid, token)
     if err != nil {
         return responses, err
     }
@@ -51,7 +51,7 @@ func (strategy SpaceStrategy) Dispatch(clientID string, guid postal.TypedGUID, o
         return responses, err
     }
 
-    userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToSpace(guid.String(), token)
+    userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToSpace(guid, token)
     if err != nil {
         return responses, err
     }

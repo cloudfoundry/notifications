@@ -89,7 +89,7 @@ var _ = Describe("Organization Strategy", func() {
             })
 
             It("records a receipt for each user", func() {
-                _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                _, err := strategy.Dispatch(clientID, "org-001", options, conn)
                 if err != nil {
                     panic(err)
                 }
@@ -108,7 +108,7 @@ var _ = Describe("Organization Strategy", func() {
 
                 templatesLoader.Templates = templates
 
-                _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                _, err := strategy.Dispatch(clientID, "org-001", options, conn)
                 if err != nil {
                     panic(err)
                 }
@@ -132,7 +132,7 @@ var _ = Describe("Organization Strategy", func() {
             Context("when token loader fails to return a token", func() {
                 It("returns an error", func() {
                     tokenLoader.LoadError = errors.New("BOOM!")
-                    _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "org-001", options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
@@ -141,7 +141,7 @@ var _ = Describe("Organization Strategy", func() {
             Context("when organizationLoader fails to load an organization", func() {
                 It("returns the error", func() {
                     organizationLoader.LoadError = errors.New("BOOM!")
-                    _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-009"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "org-009", options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
@@ -150,7 +150,7 @@ var _ = Describe("Organization Strategy", func() {
             Context("when userLoader fails to load users", func() {
                 It("returns the error", func() {
                     userLoader.LoadError = errors.New("BOOM!")
-                    _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "org-001", options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
@@ -160,7 +160,7 @@ var _ = Describe("Organization Strategy", func() {
                 It("returns the error", func() {
                     templatesLoader.LoadError = errors.New("BOOM!")
 
-                    _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "org-001", options, conn)
 
                     Expect(err).To(BeAssignableToTypeOf(postal.TemplateLoadError("")))
                 })
@@ -170,7 +170,7 @@ var _ = Describe("Organization Strategy", func() {
                 It("returns an error", func() {
                     receiptsRepo.CreateReceiptsError = true
 
-                    _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "org-001", options, conn)
                     Expect(err).ToNot(BeNil())
                 })
             })
@@ -179,7 +179,7 @@ var _ = Describe("Organization Strategy", func() {
                 It("returns an error", func() {
                     findsUserGUIDs.UserGUIDsBelongingToOrganizationError = errors.New("BOOM!")
 
-                    _, err := strategy.Dispatch(clientID, postal.OrganizationGUID("org-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "org-001", options, conn)
                     Expect(err).ToNot(BeNil())
                 })
             })

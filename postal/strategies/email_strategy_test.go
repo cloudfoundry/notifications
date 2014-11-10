@@ -21,7 +21,7 @@ var _ = Describe("EmailStrategy", func() {
         var conn *fakes.DBConn
         var options postal.Options
         var clientID string
-        var emailID postal.EmailID
+        var emailID string
         var templatesLoader fakes.TemplatesLoader
 
         BeforeEach(func() {
@@ -30,7 +30,7 @@ var _ = Describe("EmailStrategy", func() {
             emailStrategy = strategies.NewEmailStrategy(fakeMailer, &templatesLoader)
 
             clientID = "raptors-123"
-            emailID = postal.NewEmailID()
+            emailID = ""
 
             options = postal.Options{
                 Text: "email text",

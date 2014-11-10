@@ -98,7 +98,7 @@ var _ = Describe("Space Strategy", func() {
             })
 
             It("records a receipt for each user", func() {
-                _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                _, err := strategy.Dispatch(clientID, "space-001", options, conn)
                 if err != nil {
                     panic(err)
                 }
@@ -117,7 +117,7 @@ var _ = Describe("Space Strategy", func() {
 
                 templatesLoader.Templates = templates
 
-                _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                _, err := strategy.Dispatch(clientID, "space-001", options, conn)
                 if err != nil {
                     panic(err)
                 }
@@ -146,7 +146,7 @@ var _ = Describe("Space Strategy", func() {
             Context("when token loader fails to return a token", func() {
                 It("returns an error", func() {
                     tokenLoader.LoadError = errors.New("BOOM!")
-                    _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "space-001", options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
@@ -155,7 +155,7 @@ var _ = Describe("Space Strategy", func() {
             Context("when spaceLoader fails to load a space", func() {
                 It("returns an error", func() {
                     spaceLoader.LoadError = errors.New("BOOM!")
-                    _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-000"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "space-000", options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
@@ -164,7 +164,7 @@ var _ = Describe("Space Strategy", func() {
             Context("when userLoader fails to load a user", func() {
                 It("returns the error", func() {
                     userLoader.LoadError = errors.New("BOOM!")
-                    _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-0000"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "space-0000", options, conn)
 
                     Expect(err).To(Equal(errors.New("BOOM!")))
                 })
@@ -174,7 +174,7 @@ var _ = Describe("Space Strategy", func() {
                 It("returns an error", func() {
                     findsUserGUIDs.UserGUIDsBelongingToSpaceError = errors.New("BOOM!")
 
-                    _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "space-001", options, conn)
                     Expect(err).To(Equal(findsUserGUIDs.UserGUIDsBelongingToSpaceError))
                 })
             })
@@ -183,7 +183,7 @@ var _ = Describe("Space Strategy", func() {
                 It("returns the error", func() {
                     templatesLoader.LoadError = errors.New("BOOM!")
 
-                    _, err := strategy.Dispatch(clientID, postal.SpaceGUID("user-123"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "user-123", options, conn)
 
                     Expect(err).To(BeAssignableToTypeOf(postal.TemplateLoadError("")))
                 })
@@ -193,7 +193,7 @@ var _ = Describe("Space Strategy", func() {
                 It("returns an error", func() {
                     receiptsRepo.CreateReceiptsError = true
 
-                    _, err := strategy.Dispatch(clientID, postal.SpaceGUID("space-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "space-001", options, conn)
                     Expect(err).ToNot(BeNil())
                 })
             })

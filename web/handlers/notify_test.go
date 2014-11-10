@@ -123,7 +123,7 @@ var _ = Describe("Notify", func() {
 
                 Expect(strategy.DispatchArguments).To(Equal([]interface{}{
                     "mister-client",
-                    postal.SpaceGUID("space-001"),
+                    "space-001",
                     postal.Options{
                         ReplyTo:           "me@example.com",
                         Subject:           "Your instance is down",

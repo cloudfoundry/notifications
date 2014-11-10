@@ -28,7 +28,7 @@ func NewEmailStrategy(mailer MailerInterface, templatesLoader utilities.Template
     }
 }
 
-func (strategy EmailStrategy) Dispatch(clientID string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy EmailStrategy) Dispatch(clientID, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
     users := map[string]uaa.User{
         EmptyIDForNonUser: uaa.User{
             Emails: []string{options.To},

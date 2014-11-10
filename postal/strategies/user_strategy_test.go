@@ -71,7 +71,7 @@ var _ = Describe("UserStrategy", func() {
         })
 
         It("records a receipt for the user", func() {
-            _, err := strategy.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+            _, err := strategy.Dispatch(clientID, "user-123", options, conn)
             if err != nil {
                 panic(err)
             }
@@ -90,7 +90,7 @@ var _ = Describe("UserStrategy", func() {
 
             templatesLoader.Templates = templates
 
-            _, err := strategy.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+            _, err := strategy.Dispatch(clientID, "user-123", options, conn)
             if err != nil {
                 panic(err)
             }
@@ -112,7 +112,7 @@ var _ = Describe("UserStrategy", func() {
                 It("returns the error", func() {
                     loadError := errors.New("BOOM!")
                     tokenLoader.LoadError = loadError
-                    _, err := strategy.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "user-123", options, conn)
 
                     Expect(err).To(Equal(loadError))
                 })
@@ -122,7 +122,7 @@ var _ = Describe("UserStrategy", func() {
                 It("returns the error", func() {
                     loadError := errors.New("BOOM!")
                     userLoader.LoadError = loadError
-                    _, err := strategy.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "user-123", options, conn)
 
                     Expect(err).To(Equal(loadError))
                 })
@@ -132,7 +132,7 @@ var _ = Describe("UserStrategy", func() {
                 It("returns a TemplateLoadError", func() {
                     templatesLoader.LoadError = errors.New("BOOM!")
 
-                    _, err := strategy.Dispatch(clientID, postal.UserGUID("user-123"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "user-123", options, conn)
 
                     Expect(err).To(BeAssignableToTypeOf(postal.TemplateLoadError("")))
                 })
@@ -142,7 +142,7 @@ var _ = Describe("UserStrategy", func() {
                 It("returns an error", func() {
                     receiptsRepo.CreateReceiptsError = true
 
-                    _, err := strategy.Dispatch(clientID, postal.UserGUID("space-001"), options, conn)
+                    _, err := strategy.Dispatch(clientID, "user-123", options, conn)
                     Expect(err).ToNot(BeNil())
                 })
             })

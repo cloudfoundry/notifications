@@ -6,6 +6,6 @@ import (
 )
 
 type StrategyInterface interface {
-    Dispatch(clientID string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]Response, error)
+    Dispatch(clientID string, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error)
     Trim([]byte) []byte
 }

@@ -27,7 +27,7 @@ func NewUserStrategy(tokenLoader utilities.TokenLoaderInterface, userLoader util
     }
 }
 
-func (strategy UserStrategy) Dispatch(clientID string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy UserStrategy) Dispatch(clientID, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
     responses := []Response{}
 
     token, err := strategy.tokenLoader.Load()
@@ -35,7 +35,7 @@ func (strategy UserStrategy) Dispatch(clientID string, guid postal.TypedGUID, op
         return responses, err
     }
 
-    userGUIDs := []string{guid.String()}
+    userGUIDs := []string{guid}
     users, err := strategy.userLoader.Load(userGUIDs, token)
     if err != nil {
         return responses, err

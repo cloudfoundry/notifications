@@ -17,7 +17,7 @@ func NewMailStrategy() *MailStrategy {
     return &MailStrategy{}
 }
 
-func (fake *MailStrategy) Dispatch(clientID string, guid postal.TypedGUID,
+func (fake *MailStrategy) Dispatch(clientID string, guid string,
     options postal.Options, conn models.ConnectionInterface) ([]strategies.Response, error) {
 
     fake.DispatchArguments = []interface{}{clientID, guid, options}

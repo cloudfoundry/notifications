@@ -65,7 +65,7 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 
     var responses []strategies.Response
 
-    responses, err = strategy.Dispatch(clientID, guid, parameters.ToOptions(client, kind), connection)
+    responses, err = strategy.Dispatch(clientID, guid.String(), parameters.ToOptions(client, kind), connection)
     if err != nil {
         return []byte{}, err
     }

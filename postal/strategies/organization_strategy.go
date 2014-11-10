@@ -31,7 +31,7 @@ func NewOrganizationStrategy(tokenLoader utilities.TokenLoaderInterface, userLoa
     }
 }
 
-func (strategy OrganizationStrategy) Dispatch(clientID string, guid postal.TypedGUID, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy OrganizationStrategy) Dispatch(clientID, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
     responses := []Response{}
 
     token, err := strategy.tokenLoader.Load()
@@ -39,12 +39,12 @@ func (strategy OrganizationStrategy) Dispatch(clientID string, guid postal.Typed
         return responses, err
     }
 
-    organization, err := strategy.organizationLoader.Load(guid.String(), token)
+    organization, err := strategy.organizationLoader.Load(guid, token)
     if err != nil {
         return responses, err
     }
 
-    userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToOrganization(guid.String(), token)
+    userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToOrganization(guid, token)
     if err != nil {
         return responses, err
     }
