@@ -46,7 +46,6 @@ var _ = Describe("NotifySpace", func() {
 
                 Expect(writer.Code).To(Equal(http.StatusOK))
                 Expect(notify.GUID.String()).To(Equal("space-001"))
-                Expect(notify.GUID.BelongsToSpace()).To(BeTrue())
 
                 body := string(writer.Body.Bytes())
                 Expect(body).To(Equal("whatever"))

@@ -49,8 +49,6 @@ var _ = Describe("NotifyUser", func() {
                 Expect(body).To(Equal("whut"))
 
                 Expect(notify.GUID.String()).To(Equal("user-123"))
-                Expect(notify.GUID.BelongsToSpace()).To(BeFalse())
-                Expect(notify.GUID.IsTypeEmail()).To(BeFalse())
             })
         })
 

@@ -42,7 +42,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 
 func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request,
     connection models.ConnectionInterface, context stack.Context, strategy strategies.StrategyInterface) error {
-    userGUID := postal.UserGUID(strings.TrimPrefix(req.URL.Path, "/users/"))
+    userGUID := postal.UAAGUID(strings.TrimPrefix(req.URL.Path, "/users/"))
 
     output, err := handler.notify.Execute(connection, req, context, userGUID, strategy)
     if err != nil {

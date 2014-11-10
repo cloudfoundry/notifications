@@ -43,7 +43,7 @@ func (handler NotifyOrganization) ServeHTTP(w http.ResponseWriter, req *http.Req
 func (handler NotifyOrganization) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface,
     context stack.Context, strategy strategies.StrategyInterface) error {
 
-    organizationGUID := postal.OrganizationGUID(strings.TrimPrefix(req.URL.Path, "/organizations/"))
+    organizationGUID := postal.UAAGUID(strings.TrimPrefix(req.URL.Path, "/organizations/"))
 
     output, err := handler.notify.Execute(connection, req, context, organizationGUID, strategy)
     if err != nil {

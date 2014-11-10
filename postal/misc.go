@@ -12,8 +12,6 @@ const (
 )
 
 type TypedGUID interface {
-    BelongsToSpace() bool
-    BelongsToOrganization() bool
     IsTypeEmail() bool
     String() string
 }
@@ -26,18 +24,6 @@ type Templates struct {
 
 type EmailID string
 
-func NewEmailID() EmailID {
-    return EmailID("")
-}
-
-func (guid EmailID) BelongsToSpace() bool {
-    return false
-}
-
-func (guid EmailID) BelongsToOrganization() bool {
-    return false
-}
-
 func (guid EmailID) IsTypeEmail() bool {
     return true
 }
@@ -46,65 +32,13 @@ func (guid EmailID) String() string {
     return string(guid)
 }
 
-type SpaceGUID string
+type UAAGUID string
 
-func (guid SpaceGUID) BelongsToSpace() bool {
-    return true
-}
-
-func (guid SpaceGUID) BelongsToOrganization() bool {
+func (guid UAAGUID) IsTypeEmail() bool {
     return false
 }
 
-func (guid SpaceGUID) IsTypeEmail() bool {
-    return false
-}
-
-func (guid SpaceGUID) String() string {
-    return string(guid)
-}
-
-type UserGUID string
-
-func NewUserGUID() UserGUID {
-    return UserGUID("")
-}
-
-func (guid UserGUID) BelongsToSpace() bool {
-    return false
-}
-
-func (guid UserGUID) BelongsToOrganization() bool {
-    return false
-}
-
-func (guid UserGUID) IsTypeEmail() bool {
-    return false
-}
-
-func (guid UserGUID) String() string {
-    return string(guid)
-}
-
-type OrganizationGUID string
-
-func NewOrganizationGUID() OrganizationGUID {
-    return OrganizationGUID("")
-}
-
-func (guid OrganizationGUID) BelongsToSpace() bool {
-    return false
-}
-
-func (guid OrganizationGUID) BelongsToOrganization() bool {
-    return true
-}
-
-func (guid OrganizationGUID) IsTypeEmail() bool {
-    return false
-}
-
-func (guid OrganizationGUID) String() string {
+func (guid UAAGUID) String() string {
     return string(guid)
 }
 

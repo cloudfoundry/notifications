@@ -43,7 +43,7 @@ func (handler NotifySpace) ServeHTTP(w http.ResponseWriter, req *http.Request, c
 func (handler NotifySpace) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface,
     context stack.Context, strategy strategies.StrategyInterface) error {
 
-    spaceGUID := postal.SpaceGUID(strings.TrimPrefix(req.URL.Path, "/spaces/"))
+    spaceGUID := postal.UAAGUID(strings.TrimPrefix(req.URL.Path, "/spaces/"))
 
     output, err := handler.notify.Execute(connection, req, context, spaceGUID, strategy)
     if err != nil {

@@ -46,7 +46,6 @@ var _ = Describe("NotifyOrganization", func() {
 
                 Expect(writer.Code).To(Equal(http.StatusOK))
                 Expect(notify.GUID.String()).To(Equal("org-001"))
-                Expect(notify.GUID.BelongsToOrganization()).To(BeTrue())
 
                 body := string(writer.Body.Bytes())
                 Expect(body).To(Equal("whatever"))

@@ -106,7 +106,7 @@ var _ = Describe("Notify", func() {
                 })
 
                 It("trim is called on the strategy", func() {
-                    _, err := handler.Execute(conn, request, context, postal.NewUserGUID(), strategy)
+                    _, err := handler.Execute(conn, request, context, postal.UAAGUID(""), strategy)
                     if err != nil {
                         panic(err)
                     }
@@ -116,7 +116,7 @@ var _ = Describe("Notify", func() {
             })
 
             It("delegates to the mailStrategy", func() {
-                _, err := handler.Execute(conn, request, context, postal.SpaceGUID("space-001"), strategy)
+                _, err := handler.Execute(conn, request, context, postal.UAAGUID("space-001"), strategy)
                 if err != nil {
                     panic(err)
                 }
@@ -137,7 +137,7 @@ var _ = Describe("Notify", func() {
             })
 
             It("registers the client and kind", func() {
-                _, err := handler.Execute(conn, request, context, postal.SpaceGUID("space-001"), strategy)
+                _, err := handler.Execute(conn, request, context, postal.UAAGUID("space-001"), strategy)
                 if err != nil {
                     panic(err)
                 }
@@ -164,7 +164,7 @@ var _ = Describe("Notify", func() {
                         }
                         request.Header.Set("Authorization", "Bearer "+rawToken)
 
-                        _, err = handler.Execute(conn, request, context, postal.SpaceGUID("space-001"), strategy)
+                        _, err = handler.Execute(conn, request, context, postal.UAAGUID("space-001"), strategy)
 
                         Expect(err).ToNot(BeNil())
                         validationErr := err.(params.ValidationError)
@@ -179,7 +179,7 @@ var _ = Describe("Notify", func() {
                         }
                         request.Header.Set("Authorization", "Bearer "+rawToken)
 
-                        _, err = handler.Execute(conn, request, context, postal.SpaceGUID("space-001"), strategy)
+                        _, err = handler.Execute(conn, request, context, postal.UAAGUID("space-001"), strategy)
 
                         Expect(err).To(Equal(params.ParseError{}))
                     })
@@ -189,7 +189,7 @@ var _ = Describe("Notify", func() {
                     It("returns the error", func() {
                         strategy.Error = errors.New("BOOM!")
 
-                        _, err := handler.Execute(conn, request, context, postal.UserGUID("user-123"), strategy)
+                        _, err := handler.Execute(conn, request, context, postal.UAAGUID("user-123"), strategy)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
                     })
@@ -199,7 +199,7 @@ var _ = Describe("Notify", func() {
                     It("returns the error", func() {
                         finder.ClientAndKindError = errors.New("BOOM!")
 
-                        _, err := handler.Execute(conn, request, context, postal.UserGUID("user-123"), strategy)
+                        _, err := handler.Execute(conn, request, context, postal.UAAGUID("user-123"), strategy)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
                     })
@@ -209,7 +209,7 @@ var _ = Describe("Notify", func() {
                     It("returns the error", func() {
                         registrar.RegisterError = errors.New("BOOM!")
 
-                        _, err := handler.Execute(conn, request, context, postal.UserGUID("user-123"), strategy)
+                        _, err := handler.Execute(conn, request, context, postal.UAAGUID("user-123"), strategy)
 
                         Expect(err).To(Equal(errors.New("BOOM!")))
                     })
@@ -225,7 +225,7 @@ var _ = Describe("Notify", func() {
 
                         context.Set("token", token)
 
-                        _, err = handler.Execute(conn, request, context, postal.UserGUID("user-123"), strategy)
+                        _, err = handler.Execute(conn, request, context, postal.UAAGUID("user-123"), strategy)
 
                         Expect(err).To(BeAssignableToTypeOf(postal.NewCriticalNotificationError("test_email")))
                     })

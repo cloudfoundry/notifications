@@ -356,7 +356,7 @@ var _ = Describe("Notify", func() {
             var guid postal.TypedGUID
             var emailID postal.TypedGUID
             BeforeEach(func() {
-                guid = postal.UserGUID("the-user")
+                guid = postal.UAAGUID("the-user")
                 emailID = postal.EmailID("email@example.com")
             })
 
