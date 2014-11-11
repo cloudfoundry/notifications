@@ -8,21 +8,30 @@ import (
 )
 
 type CloudController struct {
-    CurrentToken                    string
-    GetUsersBySpaceGuidError        error
-    GetUsersByOrganizationGuidError error
-    LoadSpaceError                  error
-    LoadOrganizationError           error
-    UsersBySpaceGuid                map[string][]cf.CloudControllerUser
-    UsersByOrganizationGuid         map[string][]cf.CloudControllerUser
-    Spaces                          map[string]cf.CloudControllerSpace
-    Orgs                            map[string]cf.CloudControllerOrganization
+    CurrentToken                              string
+    GetUsersBySpaceGuidError                  error
+    GetUsersByOrganizationGuidError           error
+    GetManagersByOrganizationGuidError        error
+    GetAuditorsByOrganizationGuidError        error
+    GetBillingManagersByOrganizationGuidError error
+    LoadSpaceError                            error
+    LoadOrganizationError                     error
+    UsersBySpaceGuid                          map[string][]cf.CloudControllerUser
+    UsersByOrganizationGuid                   map[string][]cf.CloudControllerUser
+    ManagersByOrganization                    map[string][]cf.CloudControllerUser
+    AuditorsByOrganization                    map[string][]cf.CloudControllerUser
+    BillingManagersByOrganization             map[string][]cf.CloudControllerUser
+    Spaces                                    map[string]cf.CloudControllerSpace
+    Orgs                                      map[string]cf.CloudControllerOrganization
 }
 
 func NewCloudController() *CloudController {
     return &CloudController{
-        UsersBySpaceGuid:        make(map[string][]cf.CloudControllerUser),
-        UsersByOrganizationGuid: make(map[string][]cf.CloudControllerUser),
+        UsersBySpaceGuid:              make(map[string][]cf.CloudControllerUser),
+        UsersByOrganizationGuid:       make(map[string][]cf.CloudControllerUser),
+        ManagersByOrganization:        make(map[string][]cf.CloudControllerUser),
+        AuditorsByOrganization:        make(map[string][]cf.CloudControllerUser),
+        BillingManagersByOrganization: make(map[string][]cf.CloudControllerUser),
     }
 }
 
@@ -43,6 +52,36 @@ func (fake *CloudController) GetUsersByOrgGuid(guid, token string) ([]cf.CloudCo
         return users, fake.GetUsersByOrganizationGuidError
     } else {
         return make([]cf.CloudControllerUser, 0), fake.GetUsersByOrganizationGuidError
+    }
+}
+
+func (fake *CloudController) GetManagersByOrgGuid(guid, token string) ([]cf.CloudControllerUser, error) {
+    fake.CurrentToken = token
+
+    if users, ok := fake.ManagersByOrganization[guid]; ok {
+        return users, fake.GetManagersByOrganizationGuidError
+    } else {
+        return make([]cf.CloudControllerUser, 0), fake.GetManagersByOrganizationGuidError
+    }
+}
+
+func (fake *CloudController) GetAuditorsByOrgGuid(guid, token string) ([]cf.CloudControllerUser, error) {
+    fake.CurrentToken = token
+
+    if users, ok := fake.AuditorsByOrganization[guid]; ok {
+        return users, fake.GetAuditorsByOrganizationGuidError
+    } else {
+        return make([]cf.CloudControllerUser, 0), fake.GetAuditorsByOrganizationGuidError
+    }
+}
+
+func (fake *CloudController) GetBillingManagersByOrgGuid(guid, token string) ([]cf.CloudControllerUser, error) {
+    fake.CurrentToken = token
+
+    if users, ok := fake.BillingManagersByOrganization[guid]; ok {
+        return users, fake.GetBillingManagersByOrganizationGuidError
+    } else {
+        return make([]cf.CloudControllerUser, 0), fake.GetBillingManagersByOrganizationGuidError
     }
 }
 

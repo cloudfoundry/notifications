@@ -111,6 +111,7 @@ var UAAGetUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request
     if err != nil {
         panic(err)
     }
+
     filter := req.Form.Get("filter")
     filterParts := strings.Split(filter, " or ")
     queryRegexp := regexp.MustCompile(`Id eq "(.*)"`)
@@ -139,6 +140,31 @@ var UAAGetUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request
 })
 
 var UAAUsers = map[string]interface{}{
+    "user-111": map[string]interface{}{
+        "id": "user-111",
+        "meta": map[string]interface{}{
+            "version":      4,
+            "created":      "2014-07-16T21:00:09.021Z",
+            "lastModified": "2014-08-04T19:16:29.172Z",
+        },
+        "userName": "User111",
+        "name":     map[string]string{},
+        "emails": []map[string]string{
+            {"value": "user-111@example.com"},
+        },
+        "groups": []map[string]string{
+            {
+                "value":   "some-group-guid",
+                "display": "notifications.write",
+                "type":    "DIRECT",
+            },
+        },
+        "approvals": []interface{}{},
+        "active":    true,
+        "verified":  false,
+        "origin":    "uaa",
+        "schemas":   []string{"urn:scim:schemas:core:1.0"},
+    },
     "user-123": map[string]interface{}{
         "id": "user-123",
         "meta": map[string]interface{}{

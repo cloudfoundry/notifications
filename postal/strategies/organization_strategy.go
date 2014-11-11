@@ -44,7 +44,7 @@ func (strategy OrganizationStrategy) Dispatch(clientID, guid string, options pos
         return responses, err
     }
 
-    userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToOrganization(guid, token)
+    userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToOrganization(guid, options.Role, token)
     if err != nil {
         return responses, err
     }

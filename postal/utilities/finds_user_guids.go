@@ -8,7 +8,7 @@ type FindsUserGUIDs struct {
 
 type FindsUserGUIDsInterface interface {
     UserGUIDsBelongingToSpace(string, string) ([]string, error)
-    UserGUIDsBelongingToOrganization(string, string) ([]string, error)
+    UserGUIDsBelongingToOrganization(string, string, string) ([]string, error)
 }
 
 func NewFindsUserGUIDs(cloudController cf.CloudControllerInterface) FindsUserGUIDs {
@@ -32,10 +32,22 @@ func (finder FindsUserGUIDs) UserGUIDsBelongingToSpace(spaceGUID, token string) 
     return userGUIDs, nil
 }
 
-func (finder FindsUserGUIDs) UserGUIDsBelongingToOrganization(orgGUID, token string) ([]string, error) {
+func (finder FindsUserGUIDs) UserGUIDsBelongingToOrganization(orgGUID, role, token string) ([]string, error) {
     var userGUIDs []string
+    var users []cf.CloudControllerUser
+    var err error
 
-    users, err := finder.cloudController.GetUsersByOrgGuid(orgGUID, token)
+    switch role {
+    case "OrgManager":
+        users, err = finder.cloudController.GetManagersByOrgGuid(orgGUID, token)
+    case "OrgAuditor":
+        users, err = finder.cloudController.GetAuditorsByOrgGuid(orgGUID, token)
+    case "BillingManager":
+        users, err = finder.cloudController.GetBillingManagersByOrgGuid(orgGUID, token)
+    default:
+        users, err = finder.cloudController.GetUsersByOrgGuid(orgGUID, token)
+    }
+
     if err != nil {
         return userGUIDs, err
     }

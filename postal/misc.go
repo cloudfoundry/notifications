@@ -60,4 +60,5 @@ type Options struct {
     HTML              HTML
     KindID            string
     To                string
+    Role              string
 }

@@ -43,7 +43,7 @@ var _ = Describe("Notify", func() {
             }).NotTo(Panic())
         })
 
-        Describe("to parsing", func() {
+        Describe("to field parsing", func() {
             It("handles when a name is attached to the address", func() {
                 body := strings.NewReader(`{
                     "to": "The User <user@example.com>"
@@ -94,6 +94,33 @@ var _ = Describe("Notify", func() {
                 }
 
                 Expect(parameters.To).To(Equal(""))
+            })
+        })
+
+        Describe("role field parsing", func() {
+            It("sets the role field to empty if it is not specificed", func() {
+                body := strings.NewReader(`{}`)
+
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.Role).To(Equal(""))
+
+            })
+
+            It("sets the role field that is specified", func() {
+                body := strings.NewReader(`{
+                    "role": "the-role"
+                }`)
+
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                Expect(parameters.Role).To(Equal("the-role"))
             })
         })
 
@@ -476,8 +503,30 @@ var _ = Describe("Notify", func() {
                 Expect(len(parameters.Errors)).To(Equal(1))
                 Expect(parameters.Errors).To(ContainElement(`"kind_id" is improperly formatted`))
             })
-        })
 
+            It("role must be OrgManager, OrgAuditor, BillingManager, or not set", func() {
+                body := strings.NewReader(`{
+                    "kind_id": "the-kind",
+                    "text": "Contents of the email message"
+                }`)
+
+                parameters, err := params.NewNotify(body)
+                if err != nil {
+                    panic(err)
+                }
+
+                for _, role := range []string{"OrgManager", "OrgAuditor", "BillingManager", ""} {
+                    parameters.Role = role
+                    Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
+                    Expect(len(parameters.Errors)).To(Equal(0))
+                }
+
+                parameters.Role = "bad-role-name"
+                Expect(parameters.ValidateGUIDRequest()).To(BeFalse())
+                Expect(len(parameters.Errors)).To(Equal(1))
+                Expect(parameters.Errors).To(ContainElement(`"role" must be "OrgManager", "OrgAuditor", "BillingManager" or unset`))
+            })
+        })
     })
 
     Describe("ToOptions", func() {
@@ -487,7 +536,8 @@ var _ = Describe("Notify", func() {
                 "reply_to": "me@awesome.com",
                 "subject": "Summary of contents",
                 "text": "Contents of the email message",
-                "html": "<div>Some HTML</div>"
+                "html": "<div>Some HTML</div>",
+                "role": "OrgManager"
             }`)
 
             parameters, err := params.NewNotify(body)
@@ -513,6 +563,7 @@ var _ = Describe("Notify", func() {
                 Subject:           "Summary of contents",
                 Text:              "Contents of the email message",
                 HTML:              postal.HTML{BodyAttributes: "", BodyContent: "<div>Some HTML</div>"},
+                Role:              "OrgManager",
             }))
         })
     })

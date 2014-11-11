@@ -14,6 +14,8 @@ import (
 
 const InvalidEmail = "<>InvalidEmail<>"
 
+var validOrganizationRoles = []string{"OrgManager", "OrgAuditor", "BillingManager"}
+
 type ParseError struct{}
 
 func (err ParseError) Error() string {
@@ -41,6 +43,7 @@ type Notify struct {
     SourceDescription string
     Errors            []string
     To                string `json:"to"`
+    Role              string `json:"role"`
 }
 
 func NewNotify(body io.Reader) (Notify, error) {
@@ -98,6 +101,14 @@ func (notify *Notify) ValidateEmailRequest() bool {
 func (notify *Notify) ValidateGUIDRequest() bool {
     notify.Errors = []string{}
 
+    notify.checkKindIDField()
+    notify.checkTextHtmlFields()
+    notify.checkRoleField()
+
+    return len(notify.Errors) == 0
+}
+
+func (notify *Notify) checkKindIDField() {
     if notify.KindID == "" {
         notify.Errors = append(notify.Errors, `"kind_id" is a required field`)
     } else {
@@ -105,10 +116,17 @@ func (notify *Notify) ValidateGUIDRequest() bool {
             notify.Errors = append(notify.Errors, `"kind_id" is improperly formatted`)
         }
     }
+}
 
-    notify.checkTextHtmlFields()
-
-    return len(notify.Errors) == 0
+func (notify *Notify) checkRoleField() {
+    if notify.Role != "" {
+        for _, role := range validOrganizationRoles {
+            if notify.Role == role {
+                return
+            }
+        }
+        notify.Errors = append(notify.Errors, `"role" must be "OrgManager", "OrgAuditor", "BillingManager" or unset`)
+    }
 }
 
 func (notify *Notify) checkTextHtmlFields() {
@@ -139,6 +157,7 @@ func (notify *Notify) ToOptions(client models.Client, kind models.Kind) postal.O
         HTML:              notify.ParsedHTML,
         KindID:            notify.KindID,
         To:                notify.To,
+        Role:              notify.Role,
     }
 }
 

@@ -18,6 +18,6 @@ func (finder FindsUserGUIDs) UserGUIDsBelongingToSpace(spaceGUID, token string) 
     return finder.SpaceGuids[spaceGUID], finder.UserGUIDsBelongingToSpaceError
 }
 
-func (finder FindsUserGUIDs) UserGUIDsBelongingToOrganization(orgGUID, token string) ([]string, error) {
+func (finder FindsUserGUIDs) UserGUIDsBelongingToOrganization(orgGUID, role, token string) ([]string, error) {
     return finder.OrganizationGuids[orgGUID], finder.UserGUIDsBelongingToOrganizationError
 }
