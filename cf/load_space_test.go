@@ -1,25 +1,25 @@
 package cf_test
 
 import (
-    "net/http"
-    "net/http/httptest"
-    "strings"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 
-    "github.com/cloudfoundry-incubator/notifications/cf"
+	"github.com/cloudfoundry-incubator/notifications/cf"
 
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var SpacesEndpoint = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-    if req.URL.Path != "/v2/spaces/space-guid" {
-        w.WriteHeader(http.StatusNotFound)
-        w.Write([]byte(`{"code":40004,"description":"The app space could not be found: ` + strings.TrimPrefix(req.URL.Path, "/v2/spaces/") + `","error_code":"CF-SpaceNotFound"}`))
-        return
-    }
+	if req.URL.Path != "/v2/spaces/space-guid" {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"code":40004,"description":"The app space could not be found: ` + strings.TrimPrefix(req.URL.Path, "/v2/spaces/") + `","error_code":"CF-SpaceNotFound"}`))
+		return
+	}
 
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(`{
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{
        "metadata": {
           "guid": "space-guid",
           "url": "/v2/spaces/7e3b8b40-cced-4714-8d4a-2b6bddc10fda",
@@ -45,37 +45,37 @@ var SpacesEndpoint = http.HandlerFunc(func(w http.ResponseWriter, req *http.Requ
 })
 
 var _ = Describe("LoadSpace", func() {
-    var CCServer *httptest.Server
-    var cc cf.CloudController
+	var CCServer *httptest.Server
+	var cc cf.CloudController
 
-    BeforeEach(func() {
-        CCServer = httptest.NewServer(SpacesEndpoint)
-        cc = cf.NewCloudController(CCServer.URL, false)
-    })
+	BeforeEach(func() {
+		CCServer = httptest.NewServer(SpacesEndpoint)
+		cc = cf.NewCloudController(CCServer.URL, false)
+	})
 
-    AfterEach(func() {
-        CCServer.Close()
-    })
+	AfterEach(func() {
+		CCServer.Close()
+	})
 
-    It("loads the space from cloud controller", func() {
-        space, err := cc.LoadSpace("space-guid", "notification-token")
-        if err != nil {
-            panic(err)
-        }
+	It("loads the space from cloud controller", func() {
+		space, err := cc.LoadSpace("space-guid", "notification-token")
+		if err != nil {
+			panic(err)
+		}
 
-        Expect(space.GUID).To(Equal("space-guid"))
-        Expect(space.Name).To(Equal("duh space"))
-        Expect(space.OrganizationGUID).To(Equal("first-rate"))
-    })
+		Expect(space.GUID).To(Equal("space-guid"))
+		Expect(space.Name).To(Equal("duh space"))
+		Expect(space.OrganizationGUID).To(Equal("first-rate"))
+	})
 
-    It("returns a Failure instance when the space cannot be found", func() {
-        _, err := cc.LoadSpace("banana", "notification-token")
+	It("returns a Failure instance when the space cannot be found", func() {
+		_, err := cc.LoadSpace("banana", "notification-token")
 
-        Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
+		Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
 
-        failure := err.(cf.Failure)
-        Expect(failure.Code).To(Equal(http.StatusNotFound))
-        Expect(failure.Message).To(Equal(`{"code":40004,"description":"The app space could not be found: banana","error_code":"CF-SpaceNotFound"}`))
-        Expect(failure.Error()).To(Equal(`CloudController Failure (404): {"code":40004,"description":"The app space could not be found: banana","error_code":"CF-SpaceNotFound"}`))
-    })
+		failure := err.(cf.Failure)
+		Expect(failure.Code).To(Equal(http.StatusNotFound))
+		Expect(failure.Message).To(Equal(`{"code":40004,"description":"The app space could not be found: banana","error_code":"CF-SpaceNotFound"}`))
+		Expect(failure.Error()).To(Equal(`CloudController Failure (404): {"code":40004,"description":"The app space could not be found: banana","error_code":"CF-SpaceNotFound"}`))
+	})
 })

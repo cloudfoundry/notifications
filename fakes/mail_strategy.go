@@ -1,30 +1,30 @@
 package fakes
 
 import (
-    "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/postal"
-    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 )
 
 type MailStrategy struct {
-    DispatchArguments []interface{}
-    Responses         []strategies.Response
-    Error             error
-    TrimCalled        bool
+	DispatchArguments []interface{}
+	Responses         []strategies.Response
+	Error             error
+	TrimCalled        bool
 }
 
 func NewMailStrategy() *MailStrategy {
-    return &MailStrategy{}
+	return &MailStrategy{}
 }
 
 func (fake *MailStrategy) Dispatch(clientID string, guid string,
-    options postal.Options, conn models.ConnectionInterface) ([]strategies.Response, error) {
+	options postal.Options, conn models.ConnectionInterface) ([]strategies.Response, error) {
 
-    fake.DispatchArguments = []interface{}{clientID, guid, options}
-    return fake.Responses, fake.Error
+	fake.DispatchArguments = []interface{}{clientID, guid, options}
+	return fake.Responses, fake.Error
 }
 
 func (fake *MailStrategy) Trim(response []byte) []byte {
-    fake.TrimCalled = true
-    return response
+	fake.TrimCalled = true
+	return response
 }

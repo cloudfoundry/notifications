@@ -1,33 +1,33 @@
 package handlers
 
 import (
-    "net/http"
-    "strings"
+	"net/http"
+	"strings"
 
-    "github.com/cloudfoundry-incubator/notifications/web/services"
-    "github.com/ryanmoran/stack"
+	"github.com/cloudfoundry-incubator/notifications/web/services"
+	"github.com/ryanmoran/stack"
 )
 
 type UnsetTemplates struct {
-    deleter     services.TemplateDeleterInterface
-    errorWriter ErrorWriterInterface
+	deleter     services.TemplateDeleterInterface
+	errorWriter ErrorWriterInterface
 }
 
 func NewUnsetTemplates(deleter services.TemplateDeleterInterface, errorWriter ErrorWriterInterface) UnsetTemplates {
-    return UnsetTemplates{
-        deleter:     deleter,
-        errorWriter: errorWriter,
-    }
+	return UnsetTemplates{
+		deleter:     deleter,
+		errorWriter: errorWriter,
+	}
 }
 
 func (handler UnsetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, stack stack.Context) {
 
-    templateName := strings.Split(req.URL.Path, "/templates/")[1]
+	templateName := strings.Split(req.URL.Path, "/templates/")[1]
 
-    err := handler.deleter.Delete(templateName)
-    if err != nil {
-        handler.errorWriter.Write(w, err)
-    }
+	err := handler.deleter.Delete(templateName)
+	if err != nil {
+		handler.errorWriter.Write(w, err)
+	}
 
-    w.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusNoContent)
 }

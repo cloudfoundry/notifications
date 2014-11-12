@@ -1,126 +1,126 @@
 package utilities_test
 
 import (
-    "errors"
+	"errors"
 
-    "github.com/cloudfoundry-incubator/notifications/cf"
-    "github.com/cloudfoundry-incubator/notifications/fakes"
-    "github.com/cloudfoundry-incubator/notifications/postal/utilities"
+	"github.com/cloudfoundry-incubator/notifications/cf"
+	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("FindsUserGUIDs", func() {
-    var finder utilities.FindsUserGUIDs
-    var cc *fakes.CloudController
+	var finder utilities.FindsUserGUIDs
+	var cc *fakes.CloudController
 
-    BeforeEach(func() {
-        cc = fakes.NewCloudController()
-        finder = utilities.NewFindsUserGUIDs(cc)
-    })
+	BeforeEach(func() {
+		cc = fakes.NewCloudController()
+		finder = utilities.NewFindsUserGUIDs(cc)
+	})
 
-    Context("when looking for GUIDs belonging to a space", func() {
-        BeforeEach(func() {
-            cc.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
-                cf.CloudControllerUser{GUID: "user-123"},
-                cf.CloudControllerUser{GUID: "user-789"},
-            }
-        })
+	Context("when looking for GUIDs belonging to a space", func() {
+		BeforeEach(func() {
+			cc.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
+				cf.CloudControllerUser{GUID: "user-123"},
+				cf.CloudControllerUser{GUID: "user-789"},
+			}
+		})
 
-        It("returns the user GUIDs for the space", func() {
-            guids, err := finder.UserGUIDsBelongingToSpace("space-001", "token")
+		It("returns the user GUIDs for the space", func() {
+			guids, err := finder.UserGUIDsBelongingToSpace("space-001", "token")
 
-            Expect(guids).To(Equal([]string{"user-123", "user-789"}))
-            Expect(err).NotTo(HaveOccurred())
-        })
+			Expect(guids).To(Equal([]string{"user-123", "user-789"}))
+			Expect(err).NotTo(HaveOccurred())
+		})
 
-        Context("when CloudController causes an error", func() {
-            BeforeEach(func() {
-                cc.GetUsersBySpaceGuidError = errors.New("BOOM!")
-            })
+		Context("when CloudController causes an error", func() {
+			BeforeEach(func() {
+				cc.GetUsersBySpaceGuidError = errors.New("BOOM!")
+			})
 
-            It("returns the error", func() {
-                _, err := finder.UserGUIDsBelongingToSpace("space-001", "token")
+			It("returns the error", func() {
+				_, err := finder.UserGUIDsBelongingToSpace("space-001", "token")
 
-                Expect(err).To(Equal(cc.GetUsersBySpaceGuidError))
-            })
-        })
-    })
+				Expect(err).To(Equal(cc.GetUsersBySpaceGuidError))
+			})
+		})
+	})
 
-    Context("when looking for GUIDs belonging to an organization", func() {
-        BeforeEach(func() {
-            cc.UsersByOrganizationGuid["org-001"] = []cf.CloudControllerUser{
-                cf.CloudControllerUser{GUID: "user-456"},
-                cf.CloudControllerUser{GUID: "user-001"},
-            }
-        })
+	Context("when looking for GUIDs belonging to an organization", func() {
+		BeforeEach(func() {
+			cc.UsersByOrganizationGuid["org-001"] = []cf.CloudControllerUser{
+				cf.CloudControllerUser{GUID: "user-456"},
+				cf.CloudControllerUser{GUID: "user-001"},
+			}
+		})
 
-        It("returns the user GUIDs for the organization", func() {
-            guids, err := finder.UserGUIDsBelongingToOrganization("org-001", "", "token")
+		It("returns the user GUIDs for the organization", func() {
+			guids, err := finder.UserGUIDsBelongingToOrganization("org-001", "", "token")
 
-            Expect(guids).To(Equal([]string{"user-456", "user-001"}))
-            Expect(err).NotTo(HaveOccurred())
-        })
+			Expect(guids).To(Equal([]string{"user-456", "user-001"}))
+			Expect(err).NotTo(HaveOccurred())
+		})
 
-        Context("when CloudController causes an error", func() {
-            BeforeEach(func() {
-                cc.GetUsersByOrganizationGuidError = errors.New("BOOM!")
-            })
+		Context("when CloudController causes an error", func() {
+			BeforeEach(func() {
+				cc.GetUsersByOrganizationGuidError = errors.New("BOOM!")
+			})
 
-            It("returns the error", func() {
-                _, err := finder.UserGUIDsBelongingToOrganization("org-001", "", "token")
+			It("returns the error", func() {
+				_, err := finder.UserGUIDsBelongingToOrganization("org-001", "", "token")
 
-                Expect(err).To(Equal(cc.GetUsersByOrganizationGuidError))
-            })
-        })
+				Expect(err).To(Equal(cc.GetUsersByOrganizationGuidError))
+			})
+		})
 
-        Context("when the role is OrgManager", func() {
-            BeforeEach(func() {
-                cc.ManagersByOrganization["org-001"] = []cf.CloudControllerUser{
-                    cf.CloudControllerUser{GUID: "user-678"},
-                    cf.CloudControllerUser{GUID: "user-xxx"},
-                }
-            })
+		Context("when the role is OrgManager", func() {
+			BeforeEach(func() {
+				cc.ManagersByOrganization["org-001"] = []cf.CloudControllerUser{
+					cf.CloudControllerUser{GUID: "user-678"},
+					cf.CloudControllerUser{GUID: "user-xxx"},
+				}
+			})
 
-            It("returns the organization managers for the organization", func() {
-                guids, err := finder.UserGUIDsBelongingToOrganization("org-001", "OrgManager", "token")
+			It("returns the organization managers for the organization", func() {
+				guids, err := finder.UserGUIDsBelongingToOrganization("org-001", "OrgManager", "token")
 
-                Expect(guids).To(Equal([]string{"user-678", "user-xxx"}))
-                Expect(err).NotTo(HaveOccurred())
-            })
-        })
+				Expect(guids).To(Equal([]string{"user-678", "user-xxx"}))
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
 
-        Context("when the role is OrgAuditor", func() {
-            BeforeEach(func() {
-                cc.AuditorsByOrganization["org-001"] = []cf.CloudControllerUser{
-                    cf.CloudControllerUser{GUID: "user-abc"},
-                    cf.CloudControllerUser{GUID: "user-zzz"},
-                }
-            })
+		Context("when the role is OrgAuditor", func() {
+			BeforeEach(func() {
+				cc.AuditorsByOrganization["org-001"] = []cf.CloudControllerUser{
+					cf.CloudControllerUser{GUID: "user-abc"},
+					cf.CloudControllerUser{GUID: "user-zzz"},
+				}
+			})
 
-            It("returns the organization auditors for the organization", func() {
-                guids, err := finder.UserGUIDsBelongingToOrganization("org-001", "OrgAuditor", "token")
+			It("returns the organization auditors for the organization", func() {
+				guids, err := finder.UserGUIDsBelongingToOrganization("org-001", "OrgAuditor", "token")
 
-                Expect(guids).To(Equal([]string{"user-abc", "user-zzz"}))
-                Expect(err).NotTo(HaveOccurred())
-            })
-        })
+				Expect(guids).To(Equal([]string{"user-abc", "user-zzz"}))
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
 
-        Context("when the role is BillingManager", func() {
-            BeforeEach(func() {
-                cc.BillingManagersByOrganization["org-001"] = []cf.CloudControllerUser{
-                    cf.CloudControllerUser{GUID: "user-jkl"},
-                    cf.CloudControllerUser{GUID: "user-aaa"},
-                }
-            })
+		Context("when the role is BillingManager", func() {
+			BeforeEach(func() {
+				cc.BillingManagersByOrganization["org-001"] = []cf.CloudControllerUser{
+					cf.CloudControllerUser{GUID: "user-jkl"},
+					cf.CloudControllerUser{GUID: "user-aaa"},
+				}
+			})
 
-            It("returns the billing managers for the organization", func() {
-                guids, err := finder.UserGUIDsBelongingToOrganization("org-001", "BillingManager", "token")
+			It("returns the billing managers for the organization", func() {
+				guids, err := finder.UserGUIDsBelongingToOrganization("org-001", "BillingManager", "token")
 
-                Expect(guids).To(Equal([]string{"user-jkl", "user-aaa"}))
-                Expect(err).NotTo(HaveOccurred())
-            })
-        })
-    })
+				Expect(guids).To(Equal([]string{"user-jkl", "user-aaa"}))
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+	})
 })

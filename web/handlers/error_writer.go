@@ -1,64 +1,64 @@
 package handlers
 
 import (
-    "encoding/json"
-    "net/http"
+	"encoding/json"
+	"net/http"
 
-    "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/postal"
-    "github.com/cloudfoundry-incubator/notifications/postal/utilities"
-    "github.com/cloudfoundry-incubator/notifications/web/params"
+	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
+	"github.com/cloudfoundry-incubator/notifications/web/params"
 )
 
 type ErrorWriterInterface interface {
-    Write(http.ResponseWriter, error)
+	Write(http.ResponseWriter, error)
 }
 
 type ErrorWriter struct{}
 
 func NewErrorWriter() ErrorWriter {
-    return ErrorWriter{}
+	return ErrorWriter{}
 }
 
 func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
-    switch err.(type) {
-    case postal.UAAScopesError:
-        writer.write(w, 422, []string{err.Error()})
-    case utilities.CCDownError:
-        writer.write(w, http.StatusBadGateway, []string{err.Error()})
-    case utilities.CCNotFoundError:
-        writer.write(w, http.StatusNotFound, []string{err.Error()})
-    case utilities.UAADownError:
-        writer.write(w, http.StatusBadGateway, []string{err.Error()})
-    case utilities.UAAGenericError:
-        writer.write(w, http.StatusBadGateway, []string{err.Error()})
-    case postal.TemplateLoadError:
-        writer.write(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
-    case params.TemplateUpdateError:
-        writer.write(w, http.StatusInternalServerError, []string{err.Error()})
-    case params.ParseError:
-        writer.write(w, http.StatusBadRequest, []string{err.Error()})
-    case params.ValidationError:
-        writer.write(w, 422, err.(params.ValidationError).Errors())
-    case postal.CriticalNotificationError:
-        writer.write(w, 422, []string{err.Error()})
-    case models.ErrDuplicateRecord:
-        writer.write(w, http.StatusConflict, []string{err.Error()})
-    case models.ErrRecordNotFound:
-        writer.write(w, http.StatusNotFound, []string{err.Error()})
-    default:
-        panic(err)
-    }
+	switch err.(type) {
+	case postal.UAAScopesError:
+		writer.write(w, 422, []string{err.Error()})
+	case utilities.CCDownError:
+		writer.write(w, http.StatusBadGateway, []string{err.Error()})
+	case utilities.CCNotFoundError:
+		writer.write(w, http.StatusNotFound, []string{err.Error()})
+	case utilities.UAADownError:
+		writer.write(w, http.StatusBadGateway, []string{err.Error()})
+	case utilities.UAAGenericError:
+		writer.write(w, http.StatusBadGateway, []string{err.Error()})
+	case postal.TemplateLoadError:
+		writer.write(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
+	case params.TemplateUpdateError:
+		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
+	case params.ParseError:
+		writer.write(w, http.StatusBadRequest, []string{err.Error()})
+	case params.ValidationError:
+		writer.write(w, 422, err.(params.ValidationError).Errors())
+	case postal.CriticalNotificationError:
+		writer.write(w, 422, []string{err.Error()})
+	case models.ErrDuplicateRecord:
+		writer.write(w, http.StatusConflict, []string{err.Error()})
+	case models.ErrRecordNotFound:
+		writer.write(w, http.StatusNotFound, []string{err.Error()})
+	default:
+		panic(err)
+	}
 }
 
 func (writer ErrorWriter) write(w http.ResponseWriter, code int, errors []string) {
-    response, err := json.Marshal(map[string][]string{
-        "errors": errors,
-    })
-    if err != nil {
-        panic(err)
-    }
+	response, err := json.Marshal(map[string][]string{
+		"errors": errors,
+	})
+	if err != nil {
+		panic(err)
+	}
 
-    w.WriteHeader(code)
-    w.Write(response)
+	w.WriteHeader(code)
+	w.Write(response)
 }

@@ -3,13 +3,13 @@ package fakes
 import "net/http"
 
 type ErrorWriter struct {
-    Error error
+	Error error
 }
 
 func NewErrorWriter() *ErrorWriter {
-    return &ErrorWriter{}
+	return &ErrorWriter{}
 }
 
 func (writer *ErrorWriter) Write(w http.ResponseWriter, err error) {
-    writer.Error = err
+	writer.Error = err
 }

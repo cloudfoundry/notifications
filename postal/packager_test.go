@@ -1,53 +1,53 @@
 package postal_test
 
 import (
-    "github.com/cloudfoundry-incubator/notifications/mail"
-    "github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/mail"
+	"github.com/cloudfoundry-incubator/notifications/postal"
 
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Packager", func() {
-    var packager postal.Packager
-    var context postal.MessageContext
-    var client mail.Client
+	var packager postal.Packager
+	var context postal.MessageContext
+	var client mail.Client
 
-    BeforeEach(func() {
-        client = mail.Client{}
-        html := postal.HTML{
-            BodyContent:    "<p>user supplied banana html</p>",
-            BodyAttributes: "class=\"bananaBody\"",
-            Head:           "<title>The title</title>",
-            Doctype:        "<!DOCTYPE html>",
-        }
+	BeforeEach(func() {
+		client = mail.Client{}
+		html := postal.HTML{
+			BodyContent:    "<p>user supplied banana html</p>",
+			BodyAttributes: "class=\"bananaBody\"",
+			Head:           "<title>The title</title>",
+			Doctype:        "<!DOCTYPE html>",
+		}
 
-        context = postal.MessageContext{
-            From:            "banana man",
-            ReplyTo:         "awesomeness",
-            To:              "endless monkeys",
-            Subject:         "we will be eaten",
-            ClientID:        "3&3",
-            MessageID:       "4'4",
-            Text:            "User <supplied> \"banana\" text",
-            UserGUID:        "user-123",
-            HTMLComponents:  html,
-            HTML:            html.BodyContent,
-            TextTemplate:    "Banana preamble {{.Text}} {{.ClientID}} {{.MessageID}} {{.UserGUID}}",
-            HTMLTemplate:    "Banana preamble {{.HTML}} {{.Text}} {{.ClientID}} {{.MessageID}} {{.UserGUID}}",
-            SubjectTemplate: "The Subject: {{.Subject}}",
-        }
-        packager = postal.NewPackager()
-    })
+		context = postal.MessageContext{
+			From:            "banana man",
+			ReplyTo:         "awesomeness",
+			To:              "endless monkeys",
+			Subject:         "we will be eaten",
+			ClientID:        "3&3",
+			MessageID:       "4'4",
+			Text:            "User <supplied> \"banana\" text",
+			UserGUID:        "user-123",
+			HTMLComponents:  html,
+			HTML:            html.BodyContent,
+			TextTemplate:    "Banana preamble {{.Text}} {{.ClientID}} {{.MessageID}} {{.UserGUID}}",
+			HTMLTemplate:    "Banana preamble {{.HTML}} {{.Text}} {{.ClientID}} {{.MessageID}} {{.UserGUID}}",
+			SubjectTemplate: "The Subject: {{.Subject}}",
+		}
+		packager = postal.NewPackager()
+	})
 
-    Describe("CompileBody", func() {
-        It("returns the compiled email containing both the plaintext and html portions, escaping variables for the html portion only", func() {
-            body, err := packager.CompileBody(context)
-            if err != nil {
-                panic(err)
-            }
+	Describe("CompileBody", func() {
+		It("returns the compiled email containing both the plaintext and html portions, escaping variables for the html portion only", func() {
+			body, err := packager.CompileBody(context)
+			if err != nil {
+				panic(err)
+			}
 
-            emailBody := `
+			emailBody := `
 This is a multi-part message in MIME format...
 
 --our-content-boundary
@@ -68,20 +68,20 @@ Content-Transfer-Encoding: quoted-printable
 </html>
 --our-content-boundary--`
 
-            Expect(body).To(Equal(emailBody))
-        })
+			Expect(body).To(Equal(emailBody))
+		})
 
-        Context("when no html is set", func() {
-            It("only sends a plaintext of the email", func() {
-                context.HTML = ""
-                packager = postal.NewPackager()
+		Context("when no html is set", func() {
+			It("only sends a plaintext of the email", func() {
+				context.HTML = ""
+				packager = postal.NewPackager()
 
-                body, err := packager.CompileBody(context)
-                if err != nil {
-                    panic(err)
-                }
+				body, err := packager.CompileBody(context)
+				if err != nil {
+					panic(err)
+				}
 
-                emailBody := `
+				emailBody := `
 This is a multi-part message in MIME format...
 
 --our-content-boundary
@@ -89,21 +89,21 @@ Content-type: text/plain
 
 Banana preamble User <supplied> "banana" text 3&3 4'4 user-123
 --our-content-boundary--`
-                Expect(body).To(Equal(emailBody))
-            })
-        })
+				Expect(body).To(Equal(emailBody))
+			})
+		})
 
-        Context("when no text is set", func() {
-            It("omits the plaintext portion of the email", func() {
-                context.Text = ""
-                packager = postal.NewPackager()
+		Context("when no text is set", func() {
+			It("omits the plaintext portion of the email", func() {
+				context.Text = ""
+				packager = postal.NewPackager()
 
-                body, err := packager.CompileBody(context)
-                if err != nil {
-                    panic(err)
-                }
+				body, err := packager.CompileBody(context)
+				if err != nil {
+					panic(err)
+				}
 
-                emailBody := `
+				emailBody := `
 This is a multi-part message in MIME format...
 
 --our-content-boundary
@@ -119,9 +119,9 @@ Content-Transfer-Encoding: quoted-printable
     </body>
 </html>
 --our-content-boundary--`
-                Expect(body).To(Equal(emailBody))
-            })
-        })
-    })
+				Expect(body).To(Equal(emailBody))
+			})
+		})
+	})
 
 })

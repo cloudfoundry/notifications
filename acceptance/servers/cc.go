@@ -1,48 +1,48 @@
 package servers
 
 import (
-    "fmt"
-    "net/http"
-    "net/http/httptest"
-    "os"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"os"
 
-    "github.com/gorilla/mux"
+	"github.com/gorilla/mux"
 )
 
 type CC struct {
-    server *httptest.Server
+	server *httptest.Server
 }
 
 func NewCC() CC {
-    router := mux.NewRouter()
-    router.HandleFunc("/v2/spaces/{guid}", CCGetSpace).Methods("GET")
-    router.HandleFunc("/v2/organizations/{guid}/users", CCGetOrgUsers).Methods("GET")
-    router.HandleFunc("/v2/organizations/{guid}/managers", CCGetOrgManagers).Methods("GET")
-    router.HandleFunc("/v2/organizations/{guid}/auditors", CCGetOrgAuditors).Methods("GET")
-    router.HandleFunc("/v2/organizations/{guid}/billing_managers", CCGetOrgBillingManagers).Methods("GET")
-    router.HandleFunc("/v2/organizations/{guid}", CCGetOrg).Methods("GET")
-    router.HandleFunc("/v2/users", CCGetSpaceUsers).Methods("GET")
-    router.HandleFunc("/{anything:.*}", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-        fmt.Printf("CC ROUTE REQUEST ---> %+v\n", req)
-        w.WriteHeader(http.StatusTeapot)
-    }))
+	router := mux.NewRouter()
+	router.HandleFunc("/v2/spaces/{guid}", CCGetSpace).Methods("GET")
+	router.HandleFunc("/v2/organizations/{guid}/users", CCGetOrgUsers).Methods("GET")
+	router.HandleFunc("/v2/organizations/{guid}/managers", CCGetOrgManagers).Methods("GET")
+	router.HandleFunc("/v2/organizations/{guid}/auditors", CCGetOrgAuditors).Methods("GET")
+	router.HandleFunc("/v2/organizations/{guid}/billing_managers", CCGetOrgBillingManagers).Methods("GET")
+	router.HandleFunc("/v2/organizations/{guid}", CCGetOrg).Methods("GET")
+	router.HandleFunc("/v2/users", CCGetSpaceUsers).Methods("GET")
+	router.HandleFunc("/{anything:.*}", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		fmt.Printf("CC ROUTE REQUEST ---> %+v\n", req)
+		w.WriteHeader(http.StatusTeapot)
+	}))
 
-    return CC{
-        server: httptest.NewUnstartedServer(router),
-    }
+	return CC{
+		server: httptest.NewUnstartedServer(router),
+	}
 }
 
 func (s CC) Boot() {
-    s.server.Start()
-    os.Setenv("CC_HOST", s.server.URL)
+	s.server.Start()
+	os.Setenv("CC_HOST", s.server.URL)
 }
 
 func (s CC) Close() {
-    s.server.Close()
+	s.server.Close()
 }
 
 var CCGetSpace = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-    json := `{
+	json := `{
        "metadata": {
           "guid": "space-123",
           "url": "/v2/spaces/space-123",
@@ -66,12 +66,12 @@ var CCGetSpace = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request)
        }
     }`
 
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(json))
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(json))
 })
 
 var CCGetOrg = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-    json := `{
+	json := `{
        "metadata": {
           "guid": "org-123",
           "url": "/v2/organizations/org-123",
@@ -95,12 +95,12 @@ var CCGetOrg = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
        }
     }`
 
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(json))
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(json))
 })
 
 var CCGetOrgUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-    json := `{
+	json := `{
        "total_results": 2,
        "total_pages": 1,
        "prev_url": null,
@@ -169,12 +169,12 @@ var CCGetOrgUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Reque
        ]
     }`
 
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(json))
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(json))
 })
 
 var CCGetOrgManagers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-    json := `{
+	json := `{
        "total_results": 1,
        "total_pages": 1,
        "prev_url": null,
@@ -203,12 +203,12 @@ var CCGetOrgManagers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Re
        ]
     }`
 
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(json))
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(json))
 })
 
 var CCGetOrgAuditors = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-    json := `{
+	json := `{
        "total_results": 1,
        "total_pages": 1,
        "prev_url": null,
@@ -237,12 +237,12 @@ var CCGetOrgAuditors = http.HandlerFunc(func(w http.ResponseWriter, req *http.Re
        ]
     }`
 
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(json))
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(json))
 })
 
 var CCGetOrgBillingManagers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-    json := `{
+	json := `{
        "total_results": 1,
        "total_pages": 1,
        "prev_url": null,
@@ -271,12 +271,12 @@ var CCGetOrgBillingManagers = http.HandlerFunc(func(w http.ResponseWriter, req *
        ]
     }`
 
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(json))
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(json))
 })
 
 var CCGetSpaceUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-    json := `{
+	json := `{
        "total_results": 2,
        "total_pages": 1,
        "prev_url": null,
@@ -344,6 +344,6 @@ var CCGetSpaceUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Req
           }
        ]
     }`
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(json))
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(json))
 })

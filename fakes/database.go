@@ -1,22 +1,22 @@
 package fakes
 
 import (
-    "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/coopernurse/gorp"
+	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/coopernurse/gorp"
 )
 
 type Database struct {
-    Conn *DBConn
+	Conn *DBConn
 }
 
 func NewDatabase() *Database {
-    return &Database{
-        Conn: NewDBConn(),
-    }
+	return &Database{
+		Conn: NewDBConn(),
+	}
 }
 
 func (fake Database) Connection() models.ConnectionInterface {
-    return fake.Conn
+	return fake.Conn
 }
 
 func (fake Database) TraceOn(prefix string, logger gorp.GorpLogger) {}

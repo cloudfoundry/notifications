@@ -1,90 +1,90 @@
 package strategies_test
 
 import (
-    "encoding/json"
+	"encoding/json"
 
-    "github.com/cloudfoundry-incubator/notifications/cf"
-    "github.com/cloudfoundry-incubator/notifications/fakes"
-    "github.com/cloudfoundry-incubator/notifications/postal"
-    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
-    "github.com/pivotal-cf/uaa-sso-golang/uaa"
+	"github.com/cloudfoundry-incubator/notifications/cf"
+	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("EmailStrategy", func() {
-    var emailStrategy strategies.EmailStrategy
+	var emailStrategy strategies.EmailStrategy
 
-    Describe("DispatchMail", func() {
-        var fakeMailer *fakes.Mailer
-        var conn *fakes.DBConn
-        var options postal.Options
-        var clientID string
-        var emailID string
-        var templatesLoader fakes.TemplatesLoader
+	Describe("DispatchMail", func() {
+		var fakeMailer *fakes.Mailer
+		var conn *fakes.DBConn
+		var options postal.Options
+		var clientID string
+		var emailID string
+		var templatesLoader fakes.TemplatesLoader
 
-        BeforeEach(func() {
-            fakeMailer = fakes.NewMailer()
-            templatesLoader = fakes.TemplatesLoader{}
-            emailStrategy = strategies.NewEmailStrategy(fakeMailer, &templatesLoader)
+		BeforeEach(func() {
+			fakeMailer = fakes.NewMailer()
+			templatesLoader = fakes.TemplatesLoader{}
+			emailStrategy = strategies.NewEmailStrategy(fakeMailer, &templatesLoader)
 
-            clientID = "raptors-123"
-            emailID = ""
+			clientID = "raptors-123"
+			emailID = ""
 
-            options = postal.Options{
-                Text: "email text",
-                To:   "dr@strangelove.com",
-            }
+			options = postal.Options{
+				Text: "email text",
+				To:   "dr@strangelove.com",
+			}
 
-            conn = fakes.NewDBConn()
+			conn = fakes.NewDBConn()
 
-            templatesLoader.Templates = postal.Templates{
-                Subject: "the subject",
-                Text:    "the text",
-                HTML:    "email template",
-            }
-        })
+			templatesLoader.Templates = postal.Templates{
+				Subject: "the subject",
+				Text:    "the text",
+				HTML:    "email template",
+			}
+		})
 
-        It("Calls Deliver on it's mailer with proper arguments", func() {
-            emailStrategy.Dispatch(clientID, emailID, options, conn)
+		It("Calls Deliver on it's mailer with proper arguments", func() {
+			emailStrategy.Dispatch(clientID, emailID, options, conn)
 
-            users := map[string]uaa.User{"": uaa.User{Emails: []string{options.To}}}
+			users := map[string]uaa.User{"": uaa.User{Emails: []string{options.To}}}
 
-            Expect(len(fakeMailer.DeliverArguments)).To(Equal(7))
+			Expect(len(fakeMailer.DeliverArguments)).To(Equal(7))
 
-            Expect(fakeMailer.DeliverArguments).To(ContainElement(conn))
-            Expect(fakeMailer.DeliverArguments).To(ContainElement(templatesLoader.Templates))
-            Expect(fakeMailer.DeliverArguments).To(ContainElement(users))
-            Expect(fakeMailer.DeliverArguments).To(ContainElement(options))
-            Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{}))
-            Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{}))
-            Expect(fakeMailer.DeliverArguments).To(ContainElement(clientID))
-        })
-    })
+			Expect(fakeMailer.DeliverArguments).To(ContainElement(conn))
+			Expect(fakeMailer.DeliverArguments).To(ContainElement(templatesLoader.Templates))
+			Expect(fakeMailer.DeliverArguments).To(ContainElement(users))
+			Expect(fakeMailer.DeliverArguments).To(ContainElement(options))
+			Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{}))
+			Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{}))
+			Expect(fakeMailer.DeliverArguments).To(ContainElement(clientID))
+		})
+	})
 
-    Describe("Trim", func() {
-        It("Trims the recipients field", func() {
-            responses, err := json.Marshal([]strategies.Response{
-                {
-                    Status:         "delivered",
-                    Email:          "user@example.com",
-                    NotificationID: "123-456",
-                },
-            })
+	Describe("Trim", func() {
+		It("Trims the recipients field", func() {
+			responses, err := json.Marshal([]strategies.Response{
+				{
+					Status:         "delivered",
+					Email:          "user@example.com",
+					NotificationID: "123-456",
+				},
+			})
 
-            trimmedResponses := emailStrategy.Trim(responses)
+			trimmedResponses := emailStrategy.Trim(responses)
 
-            var result []map[string]string
-            err = json.Unmarshal(trimmedResponses, &result)
-            if err != nil {
-                panic(err)
-            }
+			var result []map[string]string
+			err = json.Unmarshal(trimmedResponses, &result)
+			if err != nil {
+				panic(err)
+			}
 
-            Expect(result).To(ContainElement(map[string]string{"status": "delivered",
-                "email":           "user@example.com",
-                "notification_id": "123-456",
-            }))
-        })
-    })
+			Expect(result).To(ContainElement(map[string]string{"status": "delivered",
+				"email":           "user@example.com",
+				"notification_id": "123-456",
+			}))
+		})
+	})
 })

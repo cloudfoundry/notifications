@@ -1,27 +1,27 @@
 package mail_test
 
 import (
-    "bufio"
-    "crypto/rand"
-    "crypto/tls"
-    "log"
-    "net"
-    "net/url"
-    "strings"
-    "testing"
-    "time"
+	"bufio"
+	"crypto/rand"
+	"crypto/tls"
+	"log"
+	"net"
+	"net/url"
+	"strings"
+	"testing"
+	"time"
 
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 func TestMailSuite(t *testing.T) {
-    RegisterFailHandler(Fail)
-    RunSpecs(t, "Mail Suite")
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Mail Suite")
 }
 
 const (
-    certPEM = `-----BEGIN CERTIFICATE-----
+	certPEM = `-----BEGIN CERTIFICATE-----
 MIID4DCCAsigAwIBAgIJANRk1GTj0oKXMA0GCSqGSIb3DQEBBQUAMH4xCzAJBgNV
 BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRUwEwYDVQQHDAxTYW50YSBNb25p
 Y2ExFTATBgNVBAoMDFBpdm90YWwgTGFiczEWMBQGA1UECwwNQ2xvdWQgRm91bmRy
@@ -44,7 +44,7 @@ vRYAb2skOoiYrHo6OOGHfhYj+c0ikgag/0CDy9EZ05/b5xPCMRoRzyp9t2gJpaqz
 FyGrPuv4+T355ntQ274RGdytyYjMmvBANWX5+xzCJfoKlsfMxQNRgiwhNHjpqgZK
 e+/BhTCOY1sHLFwd0eZ/4psN9/ytZRtcH3Y8waIwuQi3MlH5
 -----END CERTIFICATE-----`
-    keyPEM = `-----BEGIN RSA PRIVATE KEY-----
+	keyPEM = `-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAyT+YaveHuISiyHBQhStt4HqXBpAK2arSF15roOXSI2L6O8Ll
 MaotI4j1OQNf19/6Q/OiBWGGBsVuf0ywde+Ikb9RMuq9FU15hRXecfFyK1PU7MXM
 UzzY5tnh9Tcgau6t+O7OgMNGSulU3tt3xV4kQ7oKulv/aHW73tTGs6Iib4MlXzp8
@@ -74,190 +74,190 @@ gMirbaXT377nSX0oPon0P1iUgl5tUJNqYnYdA+qcpoeCvXuObAzm
 )
 
 type SMTPServer struct {
-    URL             url.URL
-    CurrentDelivery Delivery
-    Deliveries      []Delivery
-    Listener        *net.TCPListener
-    SupportsTLS     bool
-    ConnectWait     time.Duration
-    halt            chan bool
+	URL             url.URL
+	CurrentDelivery Delivery
+	Deliveries      []Delivery
+	Listener        *net.TCPListener
+	SupportsTLS     bool
+	ConnectWait     time.Duration
+	halt            chan bool
 }
 
 type Delivery struct {
-    Recipient string
-    Sender    string
-    Data      []string
-    UsedTLS   bool
+	Recipient string
+	Sender    string
+	Data      []string
+	UsedTLS   bool
 }
 
 func NewSMTPServer(user, pass string) *SMTPServer {
-    addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
-    if err != nil {
-        panic(err)
-    }
-    listener, err := net.ListenTCP("tcp", addr)
-    if err != nil {
-        panic(err)
-    }
-    listenerURL, err := url.Parse(listener.Addr().String())
-    if err != nil {
-        panic(err)
-    }
+	addr, err := net.ResolveTCPAddr("tcp", "localhost:0")
+	if err != nil {
+		panic(err)
+	}
+	listener, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		panic(err)
+	}
+	listenerURL, err := url.Parse(listener.Addr().String())
+	if err != nil {
+		panic(err)
+	}
 
-    server := SMTPServer{
-        URL:      *listenerURL,
-        Listener: listener,
-        halt:     make(chan bool),
-    }
-    server.Run()
-    return &server
+	server := SMTPServer{
+		URL:      *listenerURL,
+		Listener: listener,
+		halt:     make(chan bool),
+	}
+	server.Run()
+	return &server
 }
 
 func (server *SMTPServer) Run() {
-    go func() {
-        for {
-            select {
-            case <-server.halt:
-                return
-            case connection := <-server.Accept():
-                go server.Respond(connection)
-            }
-        }
-    }()
+	go func() {
+		for {
+			select {
+			case <-server.halt:
+				return
+			case connection := <-server.Accept():
+				go server.Respond(connection)
+			}
+		}
+	}()
 }
 
 func (server *SMTPServer) Accept() chan *net.TCPConn {
-    connectionChan := make(chan *net.TCPConn)
+	connectionChan := make(chan *net.TCPConn)
 
-    go func() {
-        connection, err := server.Listener.AcceptTCP()
-        if err != nil {
-            return
-        }
-        connectionChan <- connection
-    }()
+	go func() {
+		connection, err := server.Listener.AcceptTCP()
+		if err != nil {
+			return
+		}
+		connectionChan <- connection
+	}()
 
-    return connectionChan
+	return connectionChan
 }
 
 func (server *SMTPServer) Close() {
-    server.halt <- true
-    server.Listener.Close()
+	server.halt <- true
+	server.Listener.Close()
 }
 
 func (server *SMTPServer) Respond(conn net.Conn) {
-    <-time.After(server.ConnectWait)
+	<-time.After(server.ConnectWait)
 
-    input := bufio.NewReader(conn)
-    output := bufio.NewWriter(conn)
-    server.Broadcast(output)
+	input := bufio.NewReader(conn)
+	output := bufio.NewWriter(conn)
+	server.Broadcast(output)
 
 Loop:
-    for {
-        msg, _ := input.ReadString('\n')
-        switch {
-        case strings.Contains(msg, "EHLO"):
-            server.RespondToEHLO(output)
-        case strings.Contains(msg, "STARTTLS"):
-            conn, input, output = server.RespondToStartTLS(conn, input, output)
-        case strings.Contains(msg, "AUTH PLAIN"):
-            server.RespondToAuthPlain(output)
-        case strings.Contains(msg, "MAIL FROM"):
-            server.RespondToMailFrom(output, msg)
-        case strings.Contains(msg, "RCPT TO"):
-            server.RespondToRcptTo(output, msg)
-        case strings.Contains(msg, "DATA"):
-            server.RespondToData(output)
-            server.RecordData(output, input)
-        case strings.Contains(msg, "QUIT"):
-            server.RespondToQuit(output)
-            break Loop
-        }
-    }
-    server.Deliveries = append(server.Deliveries, server.CurrentDelivery)
-    server.CurrentDelivery = Delivery{}
+	for {
+		msg, _ := input.ReadString('\n')
+		switch {
+		case strings.Contains(msg, "EHLO"):
+			server.RespondToEHLO(output)
+		case strings.Contains(msg, "STARTTLS"):
+			conn, input, output = server.RespondToStartTLS(conn, input, output)
+		case strings.Contains(msg, "AUTH PLAIN"):
+			server.RespondToAuthPlain(output)
+		case strings.Contains(msg, "MAIL FROM"):
+			server.RespondToMailFrom(output, msg)
+		case strings.Contains(msg, "RCPT TO"):
+			server.RespondToRcptTo(output, msg)
+		case strings.Contains(msg, "DATA"):
+			server.RespondToData(output)
+			server.RecordData(output, input)
+		case strings.Contains(msg, "QUIT"):
+			server.RespondToQuit(output)
+			break Loop
+		}
+	}
+	server.Deliveries = append(server.Deliveries, server.CurrentDelivery)
+	server.CurrentDelivery = Delivery{}
 }
 
 func (server *SMTPServer) Broadcast(output *bufio.Writer) {
-    output.WriteString("220 localhost\r\n")
-    output.Flush()
+	output.WriteString("220 localhost\r\n")
+	output.Flush()
 }
 
 func (server *SMTPServer) RespondToEHLO(output *bufio.Writer) {
-    output.WriteString("250-localhost Hello\n")
-    if server.SupportsTLS {
-        output.WriteString("250-STARTTLS\n")
-        output.WriteString("250 AUTH PLAIN LOGIN\r\n")
-    } else {
-        output.WriteString("250 AUTH LOGIN\r\n")
-    }
-    output.Flush()
+	output.WriteString("250-localhost Hello\n")
+	if server.SupportsTLS {
+		output.WriteString("250-STARTTLS\n")
+		output.WriteString("250 AUTH PLAIN LOGIN\r\n")
+	} else {
+		output.WriteString("250 AUTH LOGIN\r\n")
+	}
+	output.Flush()
 }
 
 func (server *SMTPServer) RespondToStartTLS(conn net.Conn, input *bufio.Reader, output *bufio.Writer) (*tls.Conn, *bufio.Reader, *bufio.Writer) {
-    output.WriteString("220 Go ahead\r\n")
-    output.Flush()
+	output.WriteString("220 Go ahead\r\n")
+	output.Flush()
 
-    server.CurrentDelivery.UsedTLS = true
+	server.CurrentDelivery.UsedTLS = true
 
-    cert, err := tls.X509KeyPair([]byte(certPEM), []byte(keyPEM))
-    if err != nil {
-        log.Fatalf("server: loadkeys: %s", err)
-    }
-    config := tls.Config{Certificates: []tls.Certificate{cert}}
-    config.Rand = rand.Reader
-    tlsConn := tls.Server(conn, &config)
+	cert, err := tls.X509KeyPair([]byte(certPEM), []byte(keyPEM))
+	if err != nil {
+		log.Fatalf("server: loadkeys: %s", err)
+	}
+	config := tls.Config{Certificates: []tls.Certificate{cert}}
+	config.Rand = rand.Reader
+	tlsConn := tls.Server(conn, &config)
 
-    return tlsConn, bufio.NewReader(tlsConn), bufio.NewWriter(tlsConn)
+	return tlsConn, bufio.NewReader(tlsConn), bufio.NewWriter(tlsConn)
 }
 
 func (server *SMTPServer) RespondToAuthPlain(output *bufio.Writer) {
-    output.WriteString("235 OK, Go ahead\r\n")
-    output.Flush()
+	output.WriteString("235 OK, Go ahead\r\n")
+	output.Flush()
 }
 
 func (server *SMTPServer) RespondToMailFrom(output *bufio.Writer, msg string) {
-    sender := strings.TrimSpace(msg)
-    sender = strings.TrimPrefix(sender, "MAIL FROM:")
-    sender = strings.Trim(sender, "<>")
-    server.CurrentDelivery.Sender = sender
+	sender := strings.TrimSpace(msg)
+	sender = strings.TrimPrefix(sender, "MAIL FROM:")
+	sender = strings.Trim(sender, "<>")
+	server.CurrentDelivery.Sender = sender
 
-    output.WriteString("250 OK\r\n")
-    output.Flush()
+	output.WriteString("250 OK\r\n")
+	output.Flush()
 }
 
 func (server *SMTPServer) RespondToRcptTo(output *bufio.Writer, msg string) {
-    recipient := strings.TrimSpace(msg)
-    recipient = strings.TrimPrefix(recipient, "RCPT TO:")
-    recipient = strings.Trim(recipient, "<>")
-    server.CurrentDelivery.Recipient = recipient
+	recipient := strings.TrimSpace(msg)
+	recipient = strings.TrimPrefix(recipient, "RCPT TO:")
+	recipient = strings.Trim(recipient, "<>")
+	server.CurrentDelivery.Recipient = recipient
 
-    output.WriteString("250 OK\r\n")
-    output.Flush()
+	output.WriteString("250 OK\r\n")
+	output.Flush()
 }
 
 func (server *SMTPServer) RespondToData(output *bufio.Writer) {
-    output.WriteString("354 OK\r\n")
-    output.Flush()
+	output.WriteString("354 OK\r\n")
+	output.Flush()
 }
 
 func (server *SMTPServer) RecordData(output *bufio.Writer, input *bufio.Reader) {
-    for {
-        msg, err := input.ReadString('\n')
-        if err != nil {
-            panic(err)
-        }
+	for {
+		msg, err := input.ReadString('\n')
+		if err != nil {
+			panic(err)
+		}
 
-        if strings.TrimSpace(msg) == "." {
-            break
-        }
-        server.CurrentDelivery.Data = append(server.CurrentDelivery.Data, strings.TrimSpace(msg))
-    }
-    output.WriteString("250 Written safely to disk.\r\n")
-    output.Flush()
+		if strings.TrimSpace(msg) == "." {
+			break
+		}
+		server.CurrentDelivery.Data = append(server.CurrentDelivery.Data, strings.TrimSpace(msg))
+	}
+	output.WriteString("250 Written safely to disk.\r\n")
+	output.Flush()
 }
 
 func (server *SMTPServer) RespondToQuit(output *bufio.Writer) {
-    output.WriteString("221 BYE\r\n")
-    output.Flush()
+	output.WriteString("221 BYE\r\n")
+	output.Flush()
 }

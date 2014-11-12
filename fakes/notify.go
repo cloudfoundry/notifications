@@ -1,27 +1,27 @@
 package fakes
 
 import (
-    "net/http"
+	"net/http"
 
-    "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/postal"
-    "github.com/cloudfoundry-incubator/notifications/postal/strategies"
-    "github.com/ryanmoran/stack"
+	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/ryanmoran/stack"
 )
 
 type Notify struct {
-    Response []byte
-    GUID     postal.TypedGUID
-    Error    error
+	Response []byte
+	GUID     postal.TypedGUID
+	Error    error
 }
 
 func NewNotify() *Notify {
-    return &Notify{}
+	return &Notify{}
 }
 
 func (fake *Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
-    guid postal.TypedGUID, strategy strategies.StrategyInterface) ([]byte, error) {
-    fake.GUID = guid
+	guid postal.TypedGUID, strategy strategies.StrategyInterface) ([]byte, error) {
+	fake.GUID = guid
 
-    return fake.Response, fake.Error
+	return fake.Response, fake.Error
 }

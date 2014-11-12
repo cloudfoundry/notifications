@@ -1,77 +1,77 @@
 package models_test
 
 import (
-    "path"
+	"path"
 
-    "github.com/cloudfoundry-incubator/notifications/config"
-    "github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/models"
 
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Database", func() {
-    var env config.Environment
-    var db *models.DB
-    var connection *models.Connection
+	var env config.Environment
+	var db *models.DB
+	var connection *models.Connection
 
-    BeforeEach(func() {
-        env = config.NewEnvironment()
-        migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
-        db = models.NewDatabase(env.DatabaseURL, migrationsPath)
-        connection = db.Connection().(*models.Connection)
-    })
+	BeforeEach(func() {
+		env = config.NewEnvironment()
+		migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
+		db = models.NewDatabase(env.DatabaseURL, migrationsPath)
+		connection = db.Connection().(*models.Connection)
+	})
 
-    It("returns a connection to the database", func() {
-        err := connection.Db.Ping()
-        Expect(err).To(BeNil())
+	It("returns a connection to the database", func() {
+		err := connection.Db.Ping()
+		Expect(err).To(BeNil())
 
-        _, err = connection.Db.Query("SHOW TABLES")
-        Expect(err).To(BeNil())
-    })
+		_, err = connection.Db.Query("SHOW TABLES")
+		Expect(err).To(BeNil())
+	})
 
-    It("returns a single connection only", func() {
-        migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
-        db2 := models.NewDatabase(env.DatabaseURL, migrationsPath)
+	It("returns a single connection only", func() {
+		migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
+		db2 := models.NewDatabase(env.DatabaseURL, migrationsPath)
 
-        Expect(db).To(Equal(db2))
-    })
+		Expect(db).To(Equal(db2))
+	})
 
-    It("has the correct tables", func() {
-        err := connection.Db.Ping()
-        Expect(err).To(BeNil())
+	It("has the correct tables", func() {
+		err := connection.Db.Ping()
+		Expect(err).To(BeNil())
 
-        rows, err := connection.Db.Query("SHOW TABLES")
-        Expect(err).To(BeNil())
+		rows, err := connection.Db.Query("SHOW TABLES")
+		Expect(err).To(BeNil())
 
-        tables := []string{}
-        for rows.Next() {
-            var table string
-            err = rows.Scan(&table)
-            if err != nil {
-                panic(err)
-            }
-            tables = append(tables, table)
-        }
-        err = rows.Err()
-        if err != nil {
-            panic(err)
-        }
+		tables := []string{}
+		for rows.Next() {
+			var table string
+			err = rows.Scan(&table)
+			if err != nil {
+				panic(err)
+			}
+			tables = append(tables, table)
+		}
+		err = rows.Err()
+		if err != nil {
+			panic(err)
+		}
 
-        rows.Close()
+		rows.Close()
 
-        Expect(tables).To(ContainElement("clients"))
-        Expect(tables).To(ContainElement("kinds"))
-        Expect(tables).To(ContainElement("receipts"))
-        Expect(tables).To(ContainElement("unsubscribes"))
-        Expect(tables).To(ContainElement("global_unsubscribes"))
-        Expect(tables).To(ContainElement("templates"))
-    })
+		Expect(tables).To(ContainElement("clients"))
+		Expect(tables).To(ContainElement("kinds"))
+		Expect(tables).To(ContainElement("receipts"))
+		Expect(tables).To(ContainElement("unsubscribes"))
+		Expect(tables).To(ContainElement("global_unsubscribes"))
+		Expect(tables).To(ContainElement("templates"))
+	})
 
-    Describe("Connection", func() {
-        It("returns a Connection", func() {
-            connection := db.Connection()
-            Expect(connection).To(BeAssignableToTypeOf(&models.Connection{}))
-        })
-    })
+	Describe("Connection", func() {
+		It("returns a Connection", func() {
+			connection := db.Connection()
+			Expect(connection).To(BeAssignableToTypeOf(&models.Connection{}))
+		})
+	})
 })

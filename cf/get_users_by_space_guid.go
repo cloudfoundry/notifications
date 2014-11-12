@@ -1,62 +1,62 @@
 package cf
 
 import (
-    "encoding/json"
-    "fmt"
-    "time"
+	"encoding/json"
+	"fmt"
+	"time"
 
-    "github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/cloudfoundry-incubator/notifications/metrics"
 )
 
 type CloudControllerUser struct {
-    GUID string `json:"guid"`
+	GUID string `json:"guid"`
 }
 
 type CloudControllerUsersResponse struct {
-    Resources []struct {
-        Metadata struct {
-            GUID string `json:"guid"`
-        } `json:"metadata"`
-    } `json:"resources"`
+	Resources []struct {
+		Metadata struct {
+			GUID string `json:"guid"`
+		} `json:"metadata"`
+	} `json:"resources"`
 }
 
 func (cc CloudController) GetUsersBySpaceGuid(guid, token string) ([]CloudControllerUser, error) {
-    users := make([]CloudControllerUser, 0)
+	users := make([]CloudControllerUser, 0)
 
-    then := time.Now()
+	then := time.Now()
 
-    code, body, err := cc.client.MakeRequest("GET", cc.UsersBySpaceGuidPath(guid), token, nil)
-    if err != nil {
-        return users, err
-    }
+	code, body, err := cc.client.MakeRequest("GET", cc.UsersBySpaceGuidPath(guid), token, nil)
+	if err != nil {
+		return users, err
+	}
 
-    duration := time.Now().Sub(then)
+	duration := time.Now().Sub(then)
 
-    metrics.NewMetric("histogram", map[string]interface{}{
-        "name":  "notifications.external-requests.cc.users-by-space-guid",
-        "value": duration.Seconds(),
-    }).Log()
+	metrics.NewMetric("histogram", map[string]interface{}{
+		"name":  "notifications.external-requests.cc.users-by-space-guid",
+		"value": duration.Seconds(),
+	}).Log()
 
-    if code > 399 {
-        return users, NewFailure(code, string(body))
-    }
+	if code > 399 {
+		return users, NewFailure(code, string(body))
+	}
 
-    usersResponse := CloudControllerUsersResponse{}
-    err = json.Unmarshal(body, &usersResponse)
-    if err != nil {
-        return users, err
-    }
+	usersResponse := CloudControllerUsersResponse{}
+	err = json.Unmarshal(body, &usersResponse)
+	if err != nil {
+		return users, err
+	}
 
-    for _, resource := range usersResponse.Resources {
-        user := CloudControllerUser{
-            GUID: resource.Metadata.GUID,
-        }
-        users = append(users, user)
-    }
+	for _, resource := range usersResponse.Resources {
+		user := CloudControllerUser{
+			GUID: resource.Metadata.GUID,
+		}
+		users = append(users, user)
+	}
 
-    return users, nil
+	return users, nil
 }
 
 func (cc CloudController) UsersBySpaceGuidPath(guid string) string {
-    return fmt.Sprintf("/v2/users?q=space_guid:%s", guid)
+	return fmt.Sprintf("/v2/users?q=space_guid:%s", guid)
 }

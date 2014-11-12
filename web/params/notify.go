@@ -1,15 +1,15 @@
 package params
 
 import (
-    "bytes"
-    "encoding/json"
-    "io"
-    "regexp"
-    "strings"
+	"bytes"
+	"encoding/json"
+	"io"
+	"regexp"
+	"strings"
 
-    "github.com/PuerkitoBio/goquery"
-    "github.com/cloudfoundry-incubator/notifications/models"
-    "github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/PuerkitoBio/goquery"
+	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/postal"
 )
 
 const InvalidEmail = "<>InvalidEmail<>"
@@ -19,201 +19,201 @@ var validOrganizationRoles = []string{"OrgManager", "OrgAuditor", "BillingManage
 type ParseError struct{}
 
 func (err ParseError) Error() string {
-    return "Request body could not be parsed"
+	return "Request body could not be parsed"
 }
 
 type ValidationError []string
 
 func (err ValidationError) Error() string {
-    return strings.Join(err, ", ")
+	return strings.Join(err, ", ")
 }
 
 func (err ValidationError) Errors() []string {
-    return []string(err)
+	return []string(err)
 }
 
 type Notify struct {
-    ReplyTo           string `json:"reply_to"`
-    Subject           string `json:"subject"`
-    Text              string `json:"text"`
-    RawHTML           string `json:"html"`
-    ParsedHTML        postal.HTML
-    KindID            string `json:"kind_id"`
-    KindDescription   string
-    SourceDescription string
-    Errors            []string
-    To                string `json:"to"`
-    Role              string `json:"role"`
+	ReplyTo           string `json:"reply_to"`
+	Subject           string `json:"subject"`
+	Text              string `json:"text"`
+	RawHTML           string `json:"html"`
+	ParsedHTML        postal.HTML
+	KindID            string `json:"kind_id"`
+	KindDescription   string
+	SourceDescription string
+	Errors            []string
+	To                string `json:"to"`
+	Role              string `json:"role"`
 }
 
 func NewNotify(body io.Reader) (Notify, error) {
-    notify := Notify{}
+	notify := Notify{}
 
-    err := notify.parseRequestBody(body)
-    if err != nil {
-        return notify, err
-    }
+	err := notify.parseRequestBody(body)
+	if err != nil {
+		return notify, err
+	}
 
-    notify.formatEmail()
+	notify.formatEmail()
 
-    err = notify.extractHTML()
-    if err != nil {
-        return notify, err
-    }
+	err = notify.extractHTML()
+	if err != nil {
+		return notify, err
+	}
 
-    return notify, nil
+	return notify, nil
 }
 
 func (notify *Notify) formatEmail() {
-    if notify.To == "" {
-        return
-    }
-    regex := regexp.MustCompile("[^<]*<([^@]*@[^@]*)>|([^<][^@]*@[^@]*)")
-    email := regex.FindStringSubmatch(notify.To)
-    if len(email) == 0 {
-        notify.To = InvalidEmail
-        return
-    }
+	if notify.To == "" {
+		return
+	}
+	regex := regexp.MustCompile("[^<]*<([^@]*@[^@]*)>|([^<][^@]*@[^@]*)")
+	email := regex.FindStringSubmatch(notify.To)
+	if len(email) == 0 {
+		notify.To = InvalidEmail
+		return
+	}
 
-    if email[1] != "" {
-        notify.To = email[1]
-    } else {
-        notify.To = email[2]
-    }
+	if email[1] != "" {
+		notify.To = email[1]
+	} else {
+		notify.To = email[2]
+	}
 }
 
 func (notify *Notify) ValidateEmailRequest() bool {
-    notify.Errors = []string{}
+	notify.Errors = []string{}
 
-    if notify.To == "" {
-        notify.Errors = append(notify.Errors, `"to" is a required field`)
-    }
+	if notify.To == "" {
+		notify.Errors = append(notify.Errors, `"to" is a required field`)
+	}
 
-    if notify.To == InvalidEmail {
-        notify.Errors = append(notify.Errors, `"to" is improperly formatted`)
-    }
+	if notify.To == InvalidEmail {
+		notify.Errors = append(notify.Errors, `"to" is improperly formatted`)
+	}
 
-    notify.checkTextHtmlFields()
+	notify.checkTextHtmlFields()
 
-    return len(notify.Errors) == 0
+	return len(notify.Errors) == 0
 }
 
 func (notify *Notify) ValidateGUIDRequest() bool {
-    notify.Errors = []string{}
+	notify.Errors = []string{}
 
-    notify.checkKindIDField()
-    notify.checkTextHtmlFields()
-    notify.checkRoleField()
+	notify.checkKindIDField()
+	notify.checkTextHtmlFields()
+	notify.checkRoleField()
 
-    return len(notify.Errors) == 0
+	return len(notify.Errors) == 0
 }
 
 func (notify *Notify) checkKindIDField() {
-    if notify.KindID == "" {
-        notify.Errors = append(notify.Errors, `"kind_id" is a required field`)
-    } else {
-        if !kindIDFormat.MatchString(notify.KindID) {
-            notify.Errors = append(notify.Errors, `"kind_id" is improperly formatted`)
-        }
-    }
+	if notify.KindID == "" {
+		notify.Errors = append(notify.Errors, `"kind_id" is a required field`)
+	} else {
+		if !kindIDFormat.MatchString(notify.KindID) {
+			notify.Errors = append(notify.Errors, `"kind_id" is improperly formatted`)
+		}
+	}
 }
 
 func (notify *Notify) checkRoleField() {
-    if notify.Role != "" {
-        for _, role := range validOrganizationRoles {
-            if notify.Role == role {
-                return
-            }
-        }
-        notify.Errors = append(notify.Errors, `"role" must be "OrgManager", "OrgAuditor", "BillingManager" or unset`)
-    }
+	if notify.Role != "" {
+		for _, role := range validOrganizationRoles {
+			if notify.Role == role {
+				return
+			}
+		}
+		notify.Errors = append(notify.Errors, `"role" must be "OrgManager", "OrgAuditor", "BillingManager" or unset`)
+	}
 }
 
 func (notify *Notify) checkTextHtmlFields() {
-    if notify.Text == "" && notify.ParsedHTML.BodyContent == "" {
-        notify.Errors = append(notify.Errors, `"text" or "html" fields must be supplied`)
-    }
+	if notify.Text == "" && notify.ParsedHTML.BodyContent == "" {
+		notify.Errors = append(notify.Errors, `"text" or "html" fields must be supplied`)
+	}
 }
 
 func (notify *Notify) parseRequestBody(body io.Reader) error {
-    buffer := bytes.NewBuffer([]byte{})
-    buffer.ReadFrom(body)
-    if buffer.Len() > 0 {
-        err := json.Unmarshal(buffer.Bytes(), &notify)
-        if err != nil {
-            return ParseError{}
-        }
-    }
-    return nil
+	buffer := bytes.NewBuffer([]byte{})
+	buffer.ReadFrom(body)
+	if buffer.Len() > 0 {
+		err := json.Unmarshal(buffer.Bytes(), &notify)
+		if err != nil {
+			return ParseError{}
+		}
+	}
+	return nil
 }
 
 func (notify *Notify) ToOptions(client models.Client, kind models.Kind) postal.Options {
-    return postal.Options{
-        ReplyTo:           notify.ReplyTo,
-        Subject:           notify.Subject,
-        KindDescription:   kind.Description,
-        SourceDescription: client.Description,
-        Text:              notify.Text,
-        HTML:              notify.ParsedHTML,
-        KindID:            notify.KindID,
-        To:                notify.To,
-        Role:              notify.Role,
-    }
+	return postal.Options{
+		ReplyTo:           notify.ReplyTo,
+		Subject:           notify.Subject,
+		KindDescription:   kind.Description,
+		SourceDescription: client.Description,
+		Text:              notify.Text,
+		HTML:              notify.ParsedHTML,
+		KindID:            notify.KindID,
+		To:                notify.To,
+		Role:              notify.Role,
+	}
 }
 
 func (notify *Notify) extractHTML() error {
-    reader := strings.NewReader(notify.RawHTML)
-    document, err := goquery.NewDocumentFromReader(reader)
-    if err != nil {
-        return err
-    }
+	reader := strings.NewReader(notify.RawHTML)
+	document, err := goquery.NewDocumentFromReader(reader)
+	if err != nil {
+		return err
+	}
 
-    notify.ParsedHTML.Doctype, err = notify.extractDoctype(notify.RawHTML)
-    if err != nil {
-        return err
-    }
+	notify.ParsedHTML.Doctype, err = notify.extractDoctype(notify.RawHTML)
+	if err != nil {
+		return err
+	}
 
-    notify.ParsedHTML.Head, err = notify.extractHead(document)
-    if err != nil {
-        return err
-    }
+	notify.ParsedHTML.Head, err = notify.extractHead(document)
+	if err != nil {
+		return err
+	}
 
-    bodyAttributes := ""
-    for _, attribute := range document.Find("body").Nodes[0].Attr {
-        bodyAttributes += " " + attribute.Key + `="` + attribute.Val + `"`
-    }
-    bodyAttributes = strings.TrimPrefix(bodyAttributes, " ")
+	bodyAttributes := ""
+	for _, attribute := range document.Find("body").Nodes[0].Attr {
+		bodyAttributes += " " + attribute.Key + `="` + attribute.Val + `"`
+	}
+	bodyAttributes = strings.TrimPrefix(bodyAttributes, " ")
 
-    bodyContent, err := document.Find("body").Html()
-    if err != nil {
-        return err
-    }
+	bodyContent, err := document.Find("body").Html()
+	if err != nil {
+		return err
+	}
 
-    if bodyContent != "" {
-        notify.ParsedHTML.BodyAttributes = bodyAttributes
-        notify.ParsedHTML.BodyContent = bodyContent
-    }
+	if bodyContent != "" {
+		notify.ParsedHTML.BodyAttributes = bodyAttributes
+		notify.ParsedHTML.BodyContent = bodyContent
+	}
 
-    return nil
+	return nil
 }
 
 func (notify *Notify) extractDoctype(rawHTML string) (string, error) {
-    r, err := regexp.Compile("<!DOCTYPE[^>]*>")
-    if err != nil {
-        return "", err
-    }
-    return r.FindString(rawHTML), nil
+	r, err := regexp.Compile("<!DOCTYPE[^>]*>")
+	if err != nil {
+		return "", err
+	}
+	return r.FindString(rawHTML), nil
 
 }
 
 func (notify *Notify) extractHead(document *goquery.Document) (string, error) {
-    htmlHead, err := document.Find("head").Html()
-    if err != nil {
-        return "", err
-    }
+	htmlHead, err := document.Find("head").Html()
+	if err != nil {
+		return "", err
+	}
 
-    if htmlHead == "" {
-        return "", nil
-    }
-    return htmlHead, nil
+	if htmlHead == "" {
+		return "", nil
+	}
+	return htmlHead, nil
 }

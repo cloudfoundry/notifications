@@ -1,35 +1,35 @@
 package postal
 
 import (
-    "io/ioutil"
-    "os"
+	"io/ioutil"
+	"os"
 )
 
 type FileSystemInterface interface {
-    Exists(string) bool
-    Read(string) (string, error)
+	Exists(string) bool
+	Read(string) (string, error)
 }
 
 type FileSystem struct{}
 
 func NewFileSystem() *FileSystem {
-    return &FileSystem{}
+	return &FileSystem{}
 }
 
 func (fs FileSystem) Exists(path string) bool {
-    _, err := os.Stat(path)
-    if err != nil {
-        return false
-    }
+	_, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
 
-    return true
+	return true
 }
 
 func (fs FileSystem) Read(path string) (string, error) {
-    bytes, err := ioutil.ReadFile(path)
-    if err != nil {
-        return "", err
-    }
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
 
-    return string(bytes), nil
+	return string(bytes), nil
 }
