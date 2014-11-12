@@ -84,13 +84,15 @@ var _ = Describe("Mailer", func() {
 			}
 			mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client")
 
-			for userGUID, user := range users {
+			for _ = range users {
 				job := <-queue.Reserve("me")
 				var delivery postal.Delivery
 				err := job.Unmarshal(&delivery)
 				if err != nil {
 					panic(err)
 				}
+
+				user := users[delivery.UserGUID]
 				Expect(delivery).To(Equal(postal.Delivery{
 					User: user,
 					Options: postal.Options{
@@ -102,7 +104,7 @@ var _ = Describe("Mailer", func() {
 						HTML:              postal.HTML{},
 						KindID:            "",
 					},
-					UserGUID:     userGUID,
+					UserGUID:     delivery.UserGUID,
 					Space:        space,
 					Organization: org,
 					ClientID:     "the-client",
