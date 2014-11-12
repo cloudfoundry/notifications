@@ -3,7 +3,6 @@ package application
 import (
     "errors"
     "log"
-    "reflect"
     "time"
 
     "github.com/cloudfoundry-incubator/notifications/config"
@@ -11,6 +10,7 @@ import (
     "github.com/cloudfoundry-incubator/notifications/postal"
     "github.com/cloudfoundry-incubator/notifications/web"
     "github.com/pivotal-cf/uaa-sso-golang/uaa"
+    "github.com/ryanmoran/viron"
 )
 
 const WorkerCount = 10
@@ -31,18 +31,7 @@ func (app Application) PrintConfiguration() {
     logger := app.mother.Logger()
     logger.Println("Booting with configuration:")
 
-    t := reflect.TypeOf(app.env)
-    v := reflect.ValueOf(app.env)
-    for i := 0; i < v.NumField(); i++ {
-        fieldType := t.Field(i)
-        fieldValue := v.Field(i)
-
-        if fieldType.Name == "EncryptionKey" {
-            fieldValue = reflect.ValueOf("****************")
-        }
-
-        logger.Printf("  %-18s -> %+v", fieldType.Name, fieldValue.Interface())
-    }
+    viron.Print(app.env, logger)
 }
 
 func (app Application) ConfigureSMTP() {

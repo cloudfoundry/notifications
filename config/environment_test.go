@@ -378,7 +378,7 @@ var _ = Describe("Environment", func() {
 
             env := config.NewEnvironment()
             sum := md5.Sum([]byte(key))
-            Expect(env.EncryptionKey).To(Equal(string(sum[:])))
+            Expect(env.EncryptionKey).To(Equal(sum[:]))
         })
 
         It("panics if it is not set", func() {

@@ -97,7 +97,7 @@
 		},
 		{
 			"ImportPath": "github.com/ryanmoran/viron",
-			"Rev": "5164295e4b29d160ff32185c80e662a384d613e4"
+			"Rev": "6cbd3ee795ba02bece4493faec283ca52fe86415"
 		},
 		{
 			"ImportPath": "github.com/ziutek/mymysql/godrv",

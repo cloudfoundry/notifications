@@ -49,7 +49,7 @@ var _ = Describe("DeliveryWorker", func() {
         userGUID = "user-123"
         sender := "from@email.com"
         sum := md5.Sum([]byte("banana's are so very tasty"))
-        encryptionKey := string(sum[:])
+        encryptionKey := sum[:]
 
         worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo, database, sender, encryptionKey)
 

@@ -34,13 +34,13 @@ type DeliveryWorker struct {
     kindsRepo              models.KindsRepoInterface
     database               models.DatabaseInterface
     sender                 string
-    encryptionKey          string
+    encryptionKey          []byte
     gobble.Worker
 }
 
 func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
     globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface, unsubscribesRepo models.UnsubscribesRepoInterface,
-    kindsRepo models.KindsRepoInterface, database models.DatabaseInterface, sender, encryptionKey string) DeliveryWorker {
+    kindsRepo models.KindsRepoInterface, database models.DatabaseInterface, sender string, encryptionKey []byte) DeliveryWorker {
 
     worker := DeliveryWorker{
         logger:                 logger,

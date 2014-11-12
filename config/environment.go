@@ -17,7 +17,7 @@ type Environment struct {
     CORSOrigin         string `env:"CORS_ORIGIN"          env-default:"*"`
     DBLoggingEnabled   bool   `env:"DB_LOGGING_ENABLED"`
     DatabaseURL        string `env:"DATABASE_URL"         env-required:"true"`
-    EncryptionKey      string `env:"ENCRYPTION_KEY"       env-required:"true"`
+    EncryptionKey      []byte `env:"ENCRYPTION_KEY"       env-required:"true"`
     ModelMigrationsDir string `env:"MODEL_MIGRATIONS_DIRECTORY"  env-required:"true"`
     Port               string `env:"PORT"                 env-default:"3000"`
     RootPath           string `env:"ROOT_PATH"`
@@ -35,7 +35,7 @@ type Environment struct {
     VerifySSL          bool   `env:"VERIFY_SSL"           env-default:"true"`
     VCAPApplication    struct {
         InstanceIndex int `json:"instance_index"`
-    }   `env:"VCAP_APPLICATION" env-required:"true"`
+    } `env:"VCAP_APPLICATION" env-required:"true"`
 }
 
 func NewEnvironment() Environment {
@@ -67,7 +67,6 @@ func (env *Environment) parseDatabaseURL() {
 }
 
 func (env *Environment) validateEncryptionKey() {
-    key := []byte(env.EncryptionKey)
-    sum := md5.Sum(key)
-    env.EncryptionKey = string(sum[:])
+    sum := md5.Sum(env.EncryptionKey)
+    env.EncryptionKey = sum[:]
 }
