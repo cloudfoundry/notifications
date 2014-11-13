@@ -36,8 +36,8 @@
 		},
 		{
 			"ImportPath": "github.com/dgrijalva/jwt-go",
-			"Comment": "v1.0.0-2-gf7a9d2e",
-			"Rev": "f7a9d2e66ed71a4e3bfaa24380e84bf465d665a8"
+			"Comment": "v2.2.0-2-g47b263f",
+			"Rev": "47b263f020574c14765ecc3ea88f0e9447046632"
 		},
 		{
 			"ImportPath": "github.com/go-sql-driver/mysql",
