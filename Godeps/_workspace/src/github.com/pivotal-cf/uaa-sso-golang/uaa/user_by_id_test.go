@@ -1,25 +1,25 @@
 package uaa_test
 
 import (
-    "net/http"
-    "net/http/httptest"
-    "strings"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 
-    "github.com/pivotal-cf/uaa-sso-golang/uaa"
+	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("UserByID", func() {
-    var fakeUAAServer *httptest.Server
-    var auth uaa.UAA
+	var fakeUAAServer *httptest.Server
+	var auth uaa.UAA
 
-    Context("when UAA is responding normally", func() {
-        BeforeEach(func() {
-            fakeUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-                if req.URL.Path == "/Users/87dfc5b4-daf9-49fd-9aa8-bb1e21d28929" && req.Method == "GET" && strings.Contains(req.Header.Get("Authorization"), "Bearer my-special-token") {
-                    response := `{
+	Context("when UAA is responding normally", func() {
+		BeforeEach(func() {
+			fakeUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				if req.URL.Path == "/Users/87dfc5b4-daf9-49fd-9aa8-bb1e21d28929" && req.Method == "GET" && strings.Contains(req.Header.Get("Authorization"), "Bearer my-special-token") {
+					response := `{
                       "id": "87dfc5b4-daf9-49fd-9aa8-bb1e21d28929",
                       "meta": {
                         "version": 6,
@@ -50,60 +50,60 @@ var _ = Describe("UserByID", func() {
                         "urn:scim:schemas:core:1.0"
                       ]
                     }`
-                    w.WriteHeader(http.StatusOK)
-                    w.Write([]byte(response))
-                } else {
-                    w.WriteHeader(http.StatusNotFound)
-                }
-            }))
-            auth = uaa.NewUAA("http://uaa.example.com", fakeUAAServer.URL, "the-client-id", "the-client-secret", "my-special-token")
-        })
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(response))
+				} else {
+					w.WriteHeader(http.StatusNotFound)
+				}
+			}))
+			auth = uaa.NewUAA("http://uaa.example.com", fakeUAAServer.URL, "the-client-id", "the-client-secret", "my-special-token")
+		})
 
-        AfterEach(func() {
-            fakeUAAServer.Close()
-        })
+		AfterEach(func() {
+			fakeUAAServer.Close()
+		})
 
-        It("returns a User from UAA", func() {
-            user, err := uaa.UserByID(auth, "87dfc5b4-daf9-49fd-9aa8-bb1e21d28929")
-            if err != nil {
-                panic(err)
-            }
+		It("returns a User from UAA", func() {
+			user, err := uaa.UserByID(auth, "87dfc5b4-daf9-49fd-9aa8-bb1e21d28929")
+			if err != nil {
+				panic(err)
+			}
 
-            Expect(user).To(Equal(uaa.User{
-                Username: "admin",
-                ID:       "87dfc5b4-daf9-49fd-9aa8-bb1e21d28929",
-                Name: uaa.Name{
-                    FamilyName: "Admin",
-                    GivenName:  "Mister",
-                },
-                Emails:   []string{"fake-user@example.com"},
-                Active:   true,
-                Verified: false,
-            }))
-        })
-    })
+			Expect(user).To(Equal(uaa.User{
+				Username: "admin",
+				ID:       "87dfc5b4-daf9-49fd-9aa8-bb1e21d28929",
+				Name: uaa.Name{
+					FamilyName: "Admin",
+					GivenName:  "Mister",
+				},
+				Emails:   []string{"fake-user@example.com"},
+				Active:   true,
+				Verified: false,
+			}))
+		})
+	})
 
-    Context("when UAA is not responding normally", func() {
-        BeforeEach(func() {
-            fakeUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-                if req.URL.Path == "/Users/1234" && req.Method == "GET" && strings.Contains(req.Header.Get("Authorization"), "Bearer my-special-token") {
-                    w.WriteHeader(http.StatusUnauthorized)
-                    w.Write([]byte(`{"errors": "Unauthorized"}`))
-                } else {
-                    w.WriteHeader(http.StatusNotFound)
-                }
-            }))
-            auth = uaa.NewUAA("http://uaa.example.com", fakeUAAServer.URL, "the-client-id", "the-client-secret", "my-special-token")
-        })
+	Context("when UAA is not responding normally", func() {
+		BeforeEach(func() {
+			fakeUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+				if req.URL.Path == "/Users/1234" && req.Method == "GET" && strings.Contains(req.Header.Get("Authorization"), "Bearer my-special-token") {
+					w.WriteHeader(http.StatusUnauthorized)
+					w.Write([]byte(`{"errors": "Unauthorized"}`))
+				} else {
+					w.WriteHeader(http.StatusNotFound)
+				}
+			}))
+			auth = uaa.NewUAA("http://uaa.example.com", fakeUAAServer.URL, "the-client-id", "the-client-secret", "my-special-token")
+		})
 
-        AfterEach(func() {
-            fakeUAAServer.Close()
-        })
+		AfterEach(func() {
+			fakeUAAServer.Close()
+		})
 
-        It("returns an error message", func() {
-            _, err := uaa.UserByID(auth, "1234")
-            Expect(err).To(BeAssignableToTypeOf(uaa.Failure{}))
-            Expect(err.Error()).To(Equal(`UAA Failure: 401 {"errors": "Unauthorized"}`))
-        })
-    })
+		It("returns an error message", func() {
+			_, err := uaa.UserByID(auth, "1234")
+			Expect(err).To(BeAssignableToTypeOf(uaa.Failure{}))
+			Expect(err.Error()).To(Equal(`UAA Failure: 401 {"errors": "Unauthorized"}`))
+		})
+	})
 })
