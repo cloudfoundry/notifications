@@ -43,7 +43,7 @@ var _ = Describe("Mailer", func() {
 				"user-3": {ID: "user-3"},
 				"user-4": {ID: "user-4", Emails: []string{"user-4"}},
 			}
-			responses := mailer.Deliver(conn, postal.Templates{}, users, postal.Options{KindID: "the-kind"}, space, org, "the-client")
+			responses := mailer.Deliver(conn, postal.Templates{}, users, postal.Options{KindID: "the-kind"}, space, org, "the-client", "my.scope")
 
 			Expect(len(responses)).To(Equal(4))
 			Expect(responses).To(ContainElement(strategies.Response{
@@ -82,7 +82,7 @@ var _ = Describe("Mailer", func() {
 				"user-3": {ID: "user-3"},
 				"user-4": {ID: "user-4", Emails: []string{"user-4"}},
 			}
-			mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client")
+			mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
 
 			for _ = range users {
 				job := <-queue.Reserve("me")
@@ -110,6 +110,7 @@ var _ = Describe("Mailer", func() {
 					ClientID:     "the-client",
 					Templates:    postal.Templates{Subject: "", Text: "", HTML: ""},
 					MessageID:    "deadbeef-aabb-ccdd-eeff-001122334455",
+					Scope:        "my.scope",
 				}))
 			}
 		})
@@ -122,7 +123,7 @@ var _ = Describe("Mailer", func() {
 					"user-3": {ID: "user-3"},
 					"user-4": {ID: "user-4", Emails: []string{"user-4"}},
 				}
-				mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client")
+				mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())
@@ -135,7 +136,7 @@ var _ = Describe("Mailer", func() {
 				users := map[string]uaa.User{
 					"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
 				}
-				mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client")
+				mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeFalse())

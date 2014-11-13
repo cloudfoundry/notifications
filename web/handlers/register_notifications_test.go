@@ -73,7 +73,7 @@ var _ = Describe("RegisterNotifications", func() {
 		rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
 		request.Header.Set("Authorization", "Bearer "+rawToken)
 
-		token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 			return []byte(config.UAAPublicKey), nil
 		})
 		context = stack.NewContext()
@@ -174,7 +174,7 @@ var _ = Describe("RegisterNotifications", func() {
 				rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
 				request.Header.Set("Authorization", "Bearer "+rawToken)
 
-				token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+				token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 					return []byte(config.UAAPublicKey), nil
 				})
 				if err != nil {

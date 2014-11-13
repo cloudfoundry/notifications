@@ -73,7 +73,7 @@ func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
 	templatesLoader := utilities.NewTemplatesLoader(finder)
 	mailer := mother.Mailer()
 	receiptsRepo := models.NewReceiptsRepo()
-	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController)
+	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, &uaaClient)
 
 	return strategies.NewSpaceStrategy(tokenLoader, userLoader, spaceLoader, organizationLoader, findsUserGUIDs, templatesLoader, mailer, receiptsRepo)
 }
@@ -88,12 +88,29 @@ func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
 	tokenLoader := utilities.NewTokenLoader(&uaaClient)
 	userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
 	organizationLoader := utilities.NewOrganizationLoader(cloudController)
+	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, &uaaClient)
 	templatesLoader := utilities.NewTemplatesLoader(finder)
 	mailer := mother.Mailer()
 	receiptsRepo := models.NewReceiptsRepo()
-	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController)
 
 	return strategies.NewOrganizationStrategy(tokenLoader, userLoader, organizationLoader, findsUserGUIDs, templatesLoader, mailer, receiptsRepo)
+}
+
+func (mother Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
+	env := config.NewEnvironment()
+	finder := mother.TemplateFinder()
+	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
+	uaaClient.VerifySSL = env.VerifySSL
+	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
+
+	tokenLoader := utilities.NewTokenLoader(&uaaClient)
+	userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
+	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, &uaaClient)
+	templatesLoader := utilities.NewTemplatesLoader(finder)
+	receiptsRepo := models.NewReceiptsRepo()
+	mailer := mother.Mailer()
+
+	return strategies.NewUAAScopeStrategy(tokenLoader, userLoader, findsUserGUIDs, templatesLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) FileSystem() services.FileSystemInterface {

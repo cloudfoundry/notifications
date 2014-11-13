@@ -27,11 +27,11 @@ func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 		return ware.Error(w, http.StatusUnauthorized, "Authorization header is invalid: missing")
 	}
 
-	token, err := jwt.Parse(rawToken, func(t *jwt.Token) ([]byte, error) {
+	token, err := jwt.Parse(rawToken, func(t *jwt.Token) (interface{}, error) {
 		return []byte(ware.UAAPublicKey), nil
 	})
 	if err != nil {
-		if strings.Contains(err.Error(), "Token is expired") {
+		if strings.Contains(err.Error(), "expired") {
 			return ware.Error(w, http.StatusUnauthorized, "Authorization header is invalid: expired")
 		}
 		return ware.Error(w, http.StatusUnauthorized, "Authorization header is invalid: corrupt")

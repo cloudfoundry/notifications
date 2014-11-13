@@ -14,10 +14,34 @@ import (
 var _ = Describe("FindsUserGUIDs", func() {
 	var finder utilities.FindsUserGUIDs
 	var cc *fakes.CloudController
+	var uaa *fakes.UAAClient
 
 	BeforeEach(func() {
 		cc = fakes.NewCloudController()
-		finder = utilities.NewFindsUserGUIDs(cc)
+		uaa = fakes.NewUAAClient()
+		finder = utilities.NewFindsUserGUIDs(cc, uaa)
+	})
+
+	Context("when looking for GUIDs that have a scope", func() {
+		BeforeEach(func() {
+			uaa.UsersGUIDsByScopeResponse["this.scope"] = []string{"user-402", "user-525"}
+		})
+
+		It("returns the userGUIDs that have that scope", func() {
+			guids, err := finder.UserGUIDsBelongingToScope("this.scope")
+
+			Expect(guids).To(Equal([]string{"user-402", "user-525"}))
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("when uaa has an error", func() {
+			It("returns the error", func() {
+				uaa.UsersGUIDsByScopeError = errors.New("foobar")
+				_, err := finder.UserGUIDsBelongingToScope("this.scope")
+
+				Expect(err).To(MatchError(errors.New("foobar")))
+			})
+		})
 	})
 
 	Context("when looking for GUIDs belonging to a space", func() {

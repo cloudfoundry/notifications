@@ -4,16 +4,19 @@ import "github.com/cloudfoundry-incubator/notifications/cf"
 
 type FindsUserGUIDs struct {
 	cloudController cf.CloudControllerInterface
+	uaa             UAAInterface
 }
 
 type FindsUserGUIDsInterface interface {
 	UserGUIDsBelongingToSpace(string, string) ([]string, error)
 	UserGUIDsBelongingToOrganization(string, string, string) ([]string, error)
+	UserGUIDsBelongingToScope(string) ([]string, error)
 }
 
-func NewFindsUserGUIDs(cloudController cf.CloudControllerInterface) FindsUserGUIDs {
+func NewFindsUserGUIDs(cloudController cf.CloudControllerInterface, uaa UAAInterface) FindsUserGUIDs {
 	return FindsUserGUIDs{
 		cloudController: cloudController,
+		uaa:             uaa,
 	}
 }
 
@@ -54,6 +57,17 @@ func (finder FindsUserGUIDs) UserGUIDsBelongingToOrganization(orgGUID, role, tok
 
 	for _, user := range users {
 		userGUIDs = append(userGUIDs, user.GUID)
+	}
+
+	return userGUIDs, nil
+}
+
+func (finder FindsUserGUIDs) UserGUIDsBelongingToScope(scope string) ([]string, error) {
+	var userGUIDs []string
+
+	userGUIDs, err := finder.uaa.UsersGUIDsByScope(scope)
+	if err != nil {
+		return userGUIDs, err
 	}
 
 	return userGUIDs, nil

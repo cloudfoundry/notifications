@@ -3,15 +3,19 @@ package fakes
 import "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 type UAAClient struct {
-	ClientToken      uaa.Token
-	ClientTokenError error
-	UsersByID        map[string]uaa.User
-	ErrorForUserByID error
-	AccessToken      string
+	ClientToken               uaa.Token
+	ClientTokenError          error
+	UsersByID                 map[string]uaa.User
+	ErrorForUserByID          error
+	AccessToken               string
+	UsersGUIDsByScopeResponse map[string][]string
+	UsersGUIDsByScopeError    error
 }
 
 func NewUAAClient() *UAAClient {
-	return &UAAClient{}
+	return &UAAClient{
+		UsersGUIDsByScopeResponse: make(map[string][]string),
+	}
 }
 
 func (fake *UAAClient) SetToken(token string) {
@@ -31,4 +35,8 @@ func (fake UAAClient) UsersEmailsByIDs(ids ...string) ([]uaa.User, error) {
 	}
 
 	return users, fake.ErrorForUserByID
+}
+
+func (fake *UAAClient) UsersGUIDsByScope(scope string) ([]string, error) {
+	return fake.UsersGUIDsByScopeResponse[scope], fake.UsersGUIDsByScopeError
 }

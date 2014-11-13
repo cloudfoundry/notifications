@@ -78,7 +78,7 @@ var _ = Describe("Authenticator", func() {
 			contextToken := context.Get("token")
 			Expect(contextToken).NotTo(BeNil())
 
-			token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 				return []byte(config.UAAPublicKey), nil
 			})
 			if err != nil {
@@ -96,7 +96,7 @@ var _ = Describe("Authenticator", func() {
 				contextToken := context.Get("token")
 				Expect(contextToken).NotTo(BeNil())
 
-				token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+				token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 					return []byte(config.UAAPublicKey), nil
 				})
 				if err != nil {

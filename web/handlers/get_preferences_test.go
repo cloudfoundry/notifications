@@ -55,7 +55,7 @@ var _ = Describe("GetPreferences", func() {
 			panic(err)
 		}
 
-		token, err := jwt.Parse(fakes.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) ([]byte, error) {
+		token, err := jwt.Parse(fakes.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
 			return []byte(config.UAAPublicKey), nil
 		})
 		context = stack.NewContext()

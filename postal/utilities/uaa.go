@@ -6,4 +6,5 @@ type UAAInterface interface {
 	uaa.GetClientTokenInterface
 	uaa.SetTokenInterface
 	uaa.UsersEmailsByIDsInterface
+	uaa.UsersGUIDsByScopeInterface
 }

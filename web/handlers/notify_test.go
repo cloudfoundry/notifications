@@ -81,7 +81,7 @@ var _ = Describe("Notify", func() {
 				}
 				request.Header.Set("Authorization", "Bearer "+rawToken)
 
-				token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+				token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 					return []byte(config.UAAPublicKey), nil
 				})
 
@@ -219,7 +219,7 @@ var _ = Describe("Notify", func() {
 					It("returns an error", func() {
 						tokenClaims["scope"] = []interface{}{"notifications.write"}
 						rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
-						token, err := jwt.Parse(rawToken, func(*jwt.Token) ([]byte, error) {
+						token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 							return []byte(config.UAAPublicKey), nil
 						})
 

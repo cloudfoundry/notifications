@@ -24,12 +24,12 @@ func (m SigningMethodFast) Alg() string {
 	return "FAST"
 }
 
-func (m SigningMethodFast) Sign(signingString string, key []byte) (string, error) {
+func (m SigningMethodFast) Sign(signingString string, key interface{}) (string, error) {
 	signature := jwt.EncodeSegment([]byte(signingString + "SUPERFAST"))
 	return signature, nil
 }
 
-func (m SigningMethodFast) Verify(signingString, signature string, key []byte) (err error) {
+func (m SigningMethodFast) Verify(signingString, signature string, key interface{}) (err error) {
 	if signature != jwt.EncodeSegment([]byte(signingString+"SUPERFAST")) {
 		return errors.New("Signature is invalid")
 	}

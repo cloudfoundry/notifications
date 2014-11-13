@@ -24,6 +24,7 @@ type Delivery struct {
 	ClientID     string
 	Templates    Templates
 	MessageID    string
+	Scope        string
 }
 
 type DeliveryWorker struct {

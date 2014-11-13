@@ -59,6 +59,7 @@ var _ = Describe("MessageContext", func() {
 			User: uaa.User{
 				Emails: []string{email},
 			},
+			Scope: "this.scope",
 		}
 
 		cloak = &fakes.Cloak{
@@ -90,6 +91,7 @@ var _ = Describe("MessageContext", func() {
 			Expect(context.Organization).To(Equal("the-org"))
 			Expect(context.OrganizationGUID).To(Equal("my-super-lovely-guid"))
 			Expect(context.UnsubscribeID).To(Equal("the-encoded-result"))
+			Expect(context.Scope).To(Equal("this.scope"))
 			Expect(cloak.DataToEncrypt).To(Equal([]byte("the-user|the-client-id|the-kind-id")))
 		})
 
@@ -125,6 +127,7 @@ var _ = Describe("MessageContext", func() {
 			delivery.MessageID = "some>id"
 			delivery.Space.Name = "the<space"
 			delivery.Organization.Name = "the>org"
+			delivery.Scope = ""
 		})
 
 		It("html escapes various fields on the message context", func() {
@@ -147,6 +150,7 @@ var _ = Describe("MessageContext", func() {
 			Expect(context.MessageID).To(Equal("some&gt;id"))
 			Expect(context.Space).To(Equal("the&lt;space"))
 			Expect(context.Organization).To(Equal("the&gt;org"))
+			Expect(context.Scope).To(Equal(""))
 		})
 	})
 })

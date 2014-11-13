@@ -26,6 +26,7 @@ func NewUAA() UAA {
 	router.HandleFunc("/oauth/token", UAAPostOAuthToken).Methods("POST")
 	router.HandleFunc("/token_key", UAAGetTokenKey).Methods("GET")
 	router.HandleFunc("/Users", UAAGetUsers).Methods("GET")
+	router.HandleFunc("/Groups", UAAGetUsersByScope).Methods("GET")
 	router.HandleFunc("/{anything:.*}", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		fmt.Printf("UAA ROUTE REQUEST ---> %+v\n", req)
 		w.WriteHeader(http.StatusTeapot)
@@ -139,6 +140,51 @@ var UAAGetUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request
 	w.Write(response)
 })
 
+var UAAGetUsersByScope = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	err := req.ParseForm()
+	if err != nil {
+		panic(err)
+	}
+
+	attribute := req.Form.Get("attributes")
+	if attribute != "members" {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"errors": "attribute not found"}`))
+	}
+
+	filter := req.Form.Get("filter")
+	queryRegexp := regexp.MustCompile(`displayName eq "(.*)"`)
+	matches := queryRegexp.FindAllStringSubmatch(filter, 1)
+	match := matches[0]
+	resources := UAAUsersByScope[match[1]]
+
+	response, err := json.Marshal(map[string]interface{}{
+		"resources":    resources,
+		"startIndex":   1,
+		"itemsPerPage": 100,
+		"totalResults": 1,
+		"schemas":      []string{"urn:scim:schemas:core:1.0"},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
+})
+
+var UAAUsersByScope = map[string]interface{}{
+	"this.scope": map[string]interface{}{
+		"members": []map[string]string{
+			{
+				"origin": "uaa",
+				"type":   "user",
+				"value":  "user-369",
+			},
+		},
+	},
+}
+
 var UAAUsers = map[string]interface{}{
 	"user-111": map[string]interface{}{
 		"id": "user-111",
@@ -231,6 +277,36 @@ var UAAUsers = map[string]interface{}{
 			{
 				"value":   "some-group-guid",
 				"display": "notifications.write",
+				"type":    "DIRECT",
+			},
+		},
+		"approvals": []interface{}{},
+		"active":    true,
+		"verified":  false,
+		"origin":    "uaa",
+		"schemas":   []string{"urn:scim:schemas:core:1.0"},
+	},
+	"user-369": map[string]interface{}{
+		"id": "user-369",
+		"meta": map[string]interface{}{
+			"version":      4,
+			"created":      "2014-07-16T21:00:09.021Z",
+			"lastModified": "2014-08-04T19:16:29.172Z",
+		},
+		"userName": "User369",
+		"name":     map[string]string{},
+		"emails": []map[string]string{
+			{"value": "user-369@example.com"},
+		},
+		"groups": []map[string]string{
+			{
+				"value":   "some-group-guid",
+				"display": "notifications.write",
+				"type":    "DIRECT",
+			},
+			{
+				"value":   "this-scope-guid",
+				"display": "this.scope",
 				"type":    "DIRECT",
 			},
 		},

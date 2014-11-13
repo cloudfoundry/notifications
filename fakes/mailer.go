@@ -17,7 +17,7 @@ func NewMailer() *Mailer {
 	return &Mailer{}
 }
 
-func (fake *Mailer) Deliver(conn models.ConnectionInterface, template postal.Templates, users map[string]uaa.User, options postal.Options, space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client string) []strategies.Response {
+func (fake *Mailer) Deliver(conn models.ConnectionInterface, template postal.Templates, users map[string]uaa.User, options postal.Options, space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, scope string) []strategies.Response {
 	fake.DeliverArguments = map[string]interface{}{
 		"connection": conn,
 		"template":   template,
@@ -26,6 +26,7 @@ func (fake *Mailer) Deliver(conn models.ConnectionInterface, template postal.Tem
 		"space":      space,
 		"org":        org,
 		"client":     client,
+		"scope":      scope,
 	}
 
 	return fake.Responses

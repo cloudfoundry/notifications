@@ -27,6 +27,7 @@ type MessageContext struct {
 	Organization      string
 	OrganizationGUID  string
 	UnsubscribeID     string
+	Scope             string
 }
 
 func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInterface) MessageContext {
@@ -67,6 +68,7 @@ func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInte
 		SpaceGUID:         delivery.Space.GUID,
 		Organization:      delivery.Organization.Name,
 		OrganizationGUID:  delivery.Organization.GUID,
+		Scope:             delivery.Scope,
 	}
 
 	unsubscribeID, err := cloak.Veil([]byte(delivery.UserGUID + "|" + delivery.ClientID + "|" + options.KindID))

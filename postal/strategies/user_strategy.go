@@ -52,7 +52,7 @@ func (strategy UserStrategy) Dispatch(clientID, guid string, options postal.Opti
 		return responses, err
 	}
 
-	responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID)
+	responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "")
 
 	return responses, nil
 }

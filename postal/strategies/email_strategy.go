@@ -38,7 +38,7 @@ func (strategy EmailStrategy) Dispatch(clientID, guid string, options postal.Opt
 		return []Response{}, postal.TemplateLoadError("An email template could not be loaded")
 	}
 
-	return strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID), nil
+	return strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, ""), nil
 }
 
 func (strategy EmailStrategy) Trim(responses []byte) []byte {

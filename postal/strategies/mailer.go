@@ -9,7 +9,7 @@ import (
 )
 
 type MailerInterface interface {
-	Deliver(models.ConnectionInterface, postal.Templates, map[string]uaa.User, postal.Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string) []Response
+	Deliver(models.ConnectionInterface, postal.Templates, map[string]uaa.User, postal.Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string) []Response
 }
 
 type Mailer struct {
@@ -25,7 +25,7 @@ func NewMailer(queue gobble.QueueInterface, guidGenerator postal.GUIDGenerationF
 }
 
 func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.Templates, users map[string]uaa.User,
-	options postal.Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID string) []Response {
+	options postal.Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, scope string) []Response {
 
 	responses := []Response{}
 	var jobs []gobble.Job
@@ -45,6 +45,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
 			ClientID:     clientID,
 			Templates:    templates,
 			MessageID:    messageID,
+			Scope:        scope,
 		}))
 
 		emailAddress := ""

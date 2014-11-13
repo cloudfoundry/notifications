@@ -72,7 +72,7 @@ func (strategy SpaceStrategy) Dispatch(clientID, guid string, options postal.Opt
 		return responses, err
 	}
 
-	responses = strategy.mailer.Deliver(conn, templates, users, options, space, organization, clientID)
+	responses = strategy.mailer.Deliver(conn, templates, users, options, space, organization, clientID, "")
 
 	return responses, nil
 }

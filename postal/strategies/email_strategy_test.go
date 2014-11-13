@@ -23,6 +23,7 @@ var _ = Describe("EmailStrategy", func() {
 		var clientID string
 		var emailID string
 		var templatesLoader fakes.TemplatesLoader
+		var scope string
 
 		BeforeEach(func() {
 			fakeMailer = fakes.NewMailer()
@@ -51,7 +52,7 @@ var _ = Describe("EmailStrategy", func() {
 
 			users := map[string]uaa.User{"": uaa.User{Emails: []string{options.To}}}
 
-			Expect(len(fakeMailer.DeliverArguments)).To(Equal(7))
+			Expect(len(fakeMailer.DeliverArguments)).To(Equal(8))
 
 			Expect(fakeMailer.DeliverArguments).To(ContainElement(conn))
 			Expect(fakeMailer.DeliverArguments).To(ContainElement(templatesLoader.Templates))
@@ -60,6 +61,7 @@ var _ = Describe("EmailStrategy", func() {
 			Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{}))
 			Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{}))
 			Expect(fakeMailer.DeliverArguments).To(ContainElement(clientID))
+			Expect(fakeMailer.DeliverArguments).To(ContainElement(scope))
 		})
 	})
 

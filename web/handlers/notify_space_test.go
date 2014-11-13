@@ -8,7 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -20,7 +19,6 @@ var _ = Describe("NotifySpace", func() {
 		var writer *httptest.ResponseRecorder
 		var request *http.Request
 		var notify *fakes.Notify
-		var context stack.Context
 
 		BeforeEach(func() {
 			var err error
@@ -30,7 +28,6 @@ var _ = Describe("NotifySpace", func() {
 			if err != nil {
 				panic(err)
 			}
-			context = stack.NewContext()
 
 			notify = fakes.NewNotify()
 			fakeDatabase := fakes.NewDatabase()
@@ -42,7 +39,7 @@ var _ = Describe("NotifySpace", func() {
 				notify.Response = []byte("whatever")
 				strategy := strategies.SpaceStrategy{}
 
-				handler.Execute(writer, request, nil, context, strategy)
+				handler.Execute(writer, request, nil, nil, strategy)
 
 				Expect(writer.Code).To(Equal(http.StatusOK))
 				Expect(notify.GUID.String()).To(Equal("space-001"))
@@ -57,7 +54,7 @@ var _ = Describe("NotifySpace", func() {
 				notify.Error = errors.New("the error")
 				strategy := strategies.SpaceStrategy{}
 
-				err := handler.Execute(writer, request, nil, context, strategy)
+				err := handler.Execute(writer, request, nil, nil, strategy)
 				Expect(err).To(Equal(notify.Error))
 			})
 		})

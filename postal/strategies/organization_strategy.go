@@ -65,7 +65,7 @@ func (strategy OrganizationStrategy) Dispatch(clientID, guid string, options pos
 		return responses, err
 	}
 
-	responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, organization, clientID)
+	responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, organization, clientID, "")
 
 	return responses, nil
 }
