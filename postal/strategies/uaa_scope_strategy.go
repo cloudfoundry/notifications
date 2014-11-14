@@ -1,6 +1,8 @@
 package strategies
 
 import (
+	"errors"
+
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -32,6 +34,10 @@ func NewUAAScopeStrategy(tokenLoader utilities.TokenLoaderInterface, userLoader 
 func (strategy UAAScopeStrategy) Dispatch(clientID, scope string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
 	responses := []Response{}
 
+	if strategy.scopeIsDefault(scope) {
+		return responses, errors.New("You cannot send a notification to a default scope")
+	}
+
 	token, err := strategy.tokenLoader.Load()
 	if err != nil {
 		return responses, err
@@ -61,6 +67,18 @@ func (strategy UAAScopeStrategy) Dispatch(clientID, scope string, options postal
 	responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, scope)
 
 	return responses, nil
+}
+
+func (strategy UAAScopeStrategy) scopeIsDefault(scope string) bool {
+	defaultScopes := []string{"cloud_controller.read", "cloud_controller.write", "openid", "approvals.me",
+		"cloud_controller_service_permissions.read", "scim.me", "uaa.user", "password.write", "scim.userids", "oauth.approvals"}
+
+	for _, singleScope := range defaultScopes {
+		if scope == singleScope {
+			return true
+		}
+	}
+	return false
 }
 
 func (strategy UAAScopeStrategy) Trim(responses []byte) []byte {

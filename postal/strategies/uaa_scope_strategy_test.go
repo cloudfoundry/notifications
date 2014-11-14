@@ -163,6 +163,18 @@ var _ = Describe("UAA Scope Strategy", func() {
 					Expect(err).To(HaveOccurred())
 				})
 			})
+
+			Context("when an invalid scope is passed", func() {
+				It("returns an error", func() {
+					defaultScopes := []string{"cloud_controller.read", "cloud_controller.write", "openid", "approvals.me",
+						"cloud_controller_service_permissions.read", "scim.me", "uaa.user", "password.write", "scim.userids", "oauth.approvals"}
+					for _, scope := range defaultScopes {
+						_, err := strategy.Dispatch(clientID, scope, options, conn)
+						Expect(err).To(HaveOccurred())
+						Expect(err).To(MatchError(errors.New("You cannot send a notification to a default scope")))
+					}
+				})
+			})
 		})
 	})
 
