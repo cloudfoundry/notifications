@@ -6,6 +6,7 @@
 	- [Send a notification to a user](#post-users-guid)
 	- [Send a notification to a space](#post-spaces-guid)
 	- [Send a notification to an organization](#post-organizations-guid)
+	- [Send a notification to a UAA-scope](#post-uaa-scopes)
 	- [Send a notification to an email address](#post-emails)
 - Registering Notifications
 	- [Registering client notifications](#put-registration)
@@ -237,6 +238,76 @@ $ curl -i -X POST \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"kind_id":"example-kind-id", "html":"this is a test"}' \
   http://notifications.example.com/organizations/organization-guid
+
+Connection: close
+Content-Length: 897
+Content-Type: text/plain; charset=utf-8
+Date: Thu, 06 Nov 2014 20:06:27 GMT
+X-Cf-Requestid: 3a564cd9-74c8-46f6-5d31-8a8b600fc43f
+
+[{
+	"notification_id":"344f4b28-07d5-4490-468f-0a2f6fb4a65c",
+	"recipient":"55498729-5749-4a4c-9e13-6893b795561b",
+	"status":"queued"
+	},{
+	"notification_id":"96e633ef-8749-4dec-411a-f38a87f3fe79",
+	"recipient":"d55067b8-cf2d-44ab-b70c-03dfd577a465",
+	"status":"queued"
+}]
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields          | Description                               |
+| --------------- | ----------------------------------------- |
+| notification_id | Random GUID assigned to notification sent |
+| recipient       | User GUID of notification recipient       |
+| status          | Current delivery status of notification   |
+
+----
+<a name="post-uaa-scopes"></a>
+#### Send a notification to a UAA Scope
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `notifications.write` scope. Sending __critical__ notifications requires the `critical_notifications.write` scope.
+
+###### Route
+```
+POST /uaa_scopes/{scope}
+```
+###### Params
+
+| Key                | Description                                    |
+| ------------------ | ---------------------------------------------- |
+| kind_id\*          | a key to identify the type of email to be sent |
+| text\*\*           | the text version of the email                  |
+| html\*\*           | the html version of the email                  |
+| kind_description   | a description of the kind_id                   |
+| subject            | the text of the subject                        |
+| reply_to           | the Reply-To address for the email             |
+| source_description | a description of the sender                    |
+
+\* required
+
+\*\* either text or html have to be set, not both
+
+###### CURL example
+```
+$ curl -i -X POST \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  -d '{"kind_id":"example-kind-id", "html":"this is a test"}' \
+  http://notifications.example.com/uaa_scopes/uaa.scope
 
 Connection: close
 Content-Length: 897

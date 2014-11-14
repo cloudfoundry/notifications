@@ -49,39 +49,44 @@ If you are unfamiliar with UAA consult the [UAA token overview](https://github.c
 
 ##Configuring Environment Variables
 
-| Variable                | Description                                 | Default  |
-| ----------------------- | ------------------------------------------- | -------- |
-| CC_HOST\*               | Cloud Controller Host                       | \<none\> |
-| CORS_ORIGIN             | Value to use for CORS Origin Header         | *        |
-| DB_LOGGING_ENABLED      | Logs DB interactions when set to true       | false    |
-| DATABASE_URL\*          | URL to your Database                        | \<none\> |
-| ENCRYPTION_KEY\*        | Key used to encrypt the unsubscribe ID      | \<none\> |
-| GOBBLE_MIGRATIONS_DIR\* | Location of the gobble migrations directory | \<none\> |
-| PORT                    | Port that application will bind to          | 3000     |
-| ROOT_PATH\*             | Root path of your application               | \<none\> |
-| SMTP_LOGGING_ENABLED    | Logs SMTP interactions when set to true     | \<none\> |
-| SMTP_HOST\*             | SMTP Host                                   | \<none\> |
-| SMTP_PASS               | SMTP Password                               | \<none\> |
-| SMTP_PORT\*             | SMTP Port                                   | \<none\> |
-| SMTP_TLS                | Use TLS when talking to SMTP server         | true     |
-| SMTP_USER               | SMTP Username                               | \<none\> |
-| SENDER\*                | Emails are sent from this address           | \<none\> |
-| TEST_MODE               | Run in test mode                            | false    |
-| UAA_CLIENT_ID\*         | The UAA client ID                           | \<none\> |
-| UAA_CLIENT_SECRET\*     | The UAA client secret                       | \<none\> |
-| UAA_HOST\*              | The UAA Host                                | \<none\> |
-| VERIFY_SSL              | Verifies SSL                                | true     |
+| Variable                     | Description                                 | Default  |
+| ---------------------------- | ------------------------------------------- | -------- |
+| CC_HOST\*                    | Cloud Controller Host                       | \<none\> |
+| CORS_ORIGIN                  | Value to use for CORS Origin Header         | *        |
+| DB_LOGGING_ENABLED           | Logs DB interactions when set to true       | false    |
+| DATABASE_URL\*               | URL to your Database                        | \<none\> |
+| ENCRYPTION_KEY\*             | Key used to encrypt the unsubscribe ID      | \<none\> |
+| GOBBLE_MIGRATIONS_DIR\*      | Location of the gobble migrations directory | \<none\> |
+| MODEL_MIGRATIONS_DIRECTORY\* | Location of the model migrations directory  | \<none\> |
+| PORT                         | Port that application will bind to          | 3000     |
+| ROOT_PATH\*                  | Root path of your application               | \<none\> |
+| SMTP_LOGGING_ENABLED         | Logs SMTP interactions when set to true     | \<none\> |
+| SMTP_HOST\*                  | SMTP Host                                   | \<none\> |
+| SMTP_PASS                    | SMTP Password                               | \<none\> |
+| SMTP_PORT\*                  | SMTP Port                                   | \<none\> |
+| SMTP_TLS                     | Use TLS when talking to SMTP server         | true     |
+| SMTP_USER                    | SMTP Username                               | \<none\> |
+| SENDER\*                     | Emails are sent from this address           | \<none\> |
+| TEST_MODE                    | Run in test mode                            | false    |
+| UAA_CLIENT_ID\*              | The UAA client ID                           | \<none\> |
+| UAA_CLIENT_SECRET\*          | The UAA client secret                       | \<none\> |
+| UAA_HOST\*                   | The UAA Host                                | \<none\> |
+| VERIFY_SSL                   | Verifies SSL                                | true     |
 
 
 \* required
 
 ## Posting to a notifications endpoint
 
-Notifications currently supports two different types of messages.  Messages to individual users and messages to spaces.
+Notifications currently supports several different types of messages.  Messages can be sent to:
 
-Users are messaged via the `/users/id` endpoint and spaces are messaged via `/spaces/id` endpoint.
+ - Users via the `/users/id` endpoint
+ - Spaces via the `/spaces/id` endpoint
+ - Organizations via the `/organizations/id` endpoint
+ - UAA Scopes via the `/uaa_scopes/scope` endpoint
+ - Emails via the `/emails` endpoint
 
-Both endpoints expect a json body to be posted with following keys:
+The Users, Spaces, Organizations, and UAA Scopes endpoints expect a json body to be posted with following keys:
 
 | Key                | Description                                    |
 | ------------------ | ---------------------------------------------- |
@@ -97,6 +102,21 @@ Both endpoints expect a json body to be posted with following keys:
 
 \*\* either text or html have to be set, not both
 
+The Emails endpoint expects a json body to be posted with the following keys:
+
+| Key                | Description                                    |
+| ------------------ | ---------------------------------------------- |
+| to\*               | the recipient of the email                     |
+| subject            | the text of the subject                        |
+| reply_to           | the Reply-To address for the email             |
+| text\**            | the text version of the email                  |
+| html\**            | the html version of the email                  |
+
+\* required
+
+\*\* either text or html have to be set, not both
+
+
 [Further API Documentation](/API.md)
 
 ## Configuring Email Templates
@@ -109,13 +129,15 @@ The default templates are located in **./templates**. The templates directory sh
 	space_body.html
 	organization_body.text
 	organization_body.html
+	uaa_scope_body.html
+	uaa_scope_body.text
 	email_body.text
 	email_body.html
 	subject.missing
 	subject.provided
 
 
-When emailing a single user, `user_body.html` and `user_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a space, `space_body.html` and `space_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing an organization, `organization_body.html` and `organization_body.text` are used as templates in the email body for the html and plaintext, respectively. 
+When emailing a single user, `user_body.html` and `user_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a space, `space_body.html` and `space_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing an organization, `organization_body.html` and `organization_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a UAA scope, `uaa_scope_body.html` and `uaa_scope_body.text` are used as templates in the email body for the html and plaintext, respectively. 
 
 When the subject is provided, the default subject template is found in `subject.provided`, while `subject.missing` is used when the email subject is not provided. 
 
