@@ -26,6 +26,7 @@ var _ = Describe("Notify", func() {
 		Context("When Emailing a user or a group", func() {
 			var handler handlers.Notify
 			var finder *fakes.Finder
+			var validator *fakes.Validator
 			var registrar *fakes.Registrar
 			var request *http.Request
 			var rawToken string
@@ -92,6 +93,7 @@ var _ = Describe("Notify", func() {
 
 				handler = handlers.NewNotify(finder, registrar)
 				strategy = fakes.NewMailStrategy()
+				validator = &fakes.Validator{}
 			})
 
 			Describe("Responses", func() {
@@ -106,7 +108,7 @@ var _ = Describe("Notify", func() {
 				})
 
 				It("trim is called on the strategy", func() {
-					_, err := handler.Execute(conn, request, context, postal.UAAGUID(""), strategy)
+					_, err := handler.Execute(conn, request, context, "", strategy, validator)
 					if err != nil {
 						panic(err)
 					}
@@ -116,7 +118,7 @@ var _ = Describe("Notify", func() {
 			})
 
 			It("delegates to the mailStrategy", func() {
-				_, err := handler.Execute(conn, request, context, postal.UAAGUID("space-001"), strategy)
+				_, err := handler.Execute(conn, request, context, "space-001", strategy, validator)
 				if err != nil {
 					panic(err)
 				}
@@ -137,7 +139,7 @@ var _ = Describe("Notify", func() {
 			})
 
 			It("registers the client and kind", func() {
-				_, err := handler.Execute(conn, request, context, postal.UAAGUID("space-001"), strategy)
+				_, err := handler.Execute(conn, request, context, "space-001", strategy, validator)
 				if err != nil {
 					panic(err)
 				}
@@ -152,24 +154,31 @@ var _ = Describe("Notify", func() {
 			Context("failure cases", func() {
 				Context("when validating params", func() {
 					It("returns a error response when params are missing", func() {
+						validator.ValidateErrors = []string{"boom"}
+
 						body, err := json.Marshal(map[string]string{
-							"subject": "Your instance is down",
+							"kind_id":  "test_email",
+							"text":     "This is the plain text body of the email",
+							"html":     "<p>This is the HTML Body of the email</p>",
+							"subject":  "Your instance is down",
+							"reply_to": "me@example.com",
 						})
+
 						if err != nil {
 							panic(err)
 						}
+
 						request, err = http.NewRequest("POST", "/spaces/space-001", bytes.NewBuffer(body))
 						if err != nil {
 							panic(err)
 						}
 						request.Header.Set("Authorization", "Bearer "+rawToken)
 
-						_, err = handler.Execute(conn, request, context, postal.UAAGUID("space-001"), strategy)
+						_, err = handler.Execute(conn, request, context, "space-001", strategy, validator)
 
 						Expect(err).ToNot(BeNil())
 						validationErr := err.(params.ValidationError)
-						Expect(validationErr.Errors()).To(ContainElement(`"kind_id" is a required field`))
-						Expect(validationErr.Errors()).To(ContainElement(`"text" or "html" fields must be supplied`))
+						Expect(validationErr.Errors()).To(ContainElement(`boom`))
 					})
 
 					It("returns a error response when params cannot be parsed", func() {
@@ -179,7 +188,7 @@ var _ = Describe("Notify", func() {
 						}
 						request.Header.Set("Authorization", "Bearer "+rawToken)
 
-						_, err = handler.Execute(conn, request, context, postal.UAAGUID("space-001"), strategy)
+						_, err = handler.Execute(conn, request, context, "space-001", strategy, validator)
 
 						Expect(err).To(Equal(params.ParseError{}))
 					})
@@ -189,7 +198,7 @@ var _ = Describe("Notify", func() {
 					It("returns the error", func() {
 						strategy.Error = errors.New("BOOM!")
 
-						_, err := handler.Execute(conn, request, context, postal.UAAGUID("user-123"), strategy)
+						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator)
 
 						Expect(err).To(Equal(errors.New("BOOM!")))
 					})
@@ -199,7 +208,7 @@ var _ = Describe("Notify", func() {
 					It("returns the error", func() {
 						finder.ClientAndKindError = errors.New("BOOM!")
 
-						_, err := handler.Execute(conn, request, context, postal.UAAGUID("user-123"), strategy)
+						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator)
 
 						Expect(err).To(Equal(errors.New("BOOM!")))
 					})
@@ -209,7 +218,7 @@ var _ = Describe("Notify", func() {
 					It("returns the error", func() {
 						registrar.RegisterError = errors.New("BOOM!")
 
-						_, err := handler.Execute(conn, request, context, postal.UAAGUID("user-123"), strategy)
+						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator)
 
 						Expect(err).To(Equal(errors.New("BOOM!")))
 					})
@@ -225,7 +234,7 @@ var _ = Describe("Notify", func() {
 
 						context.Set("token", token)
 
-						_, err = handler.Execute(conn, request, context, postal.UAAGUID("user-123"), strategy)
+						_, err = handler.Execute(conn, request, context, "user-123", strategy, validator)
 
 						Expect(err).To(BeAssignableToTypeOf(postal.NewCriticalNotificationError("test_email")))
 					})

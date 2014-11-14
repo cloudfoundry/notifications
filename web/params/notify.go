@@ -82,59 +82,6 @@ func (notify *Notify) formatEmail() {
 	}
 }
 
-func (notify *Notify) ValidateEmailRequest() bool {
-	notify.Errors = []string{}
-
-	if notify.To == "" {
-		notify.Errors = append(notify.Errors, `"to" is a required field`)
-	}
-
-	if notify.To == InvalidEmail {
-		notify.Errors = append(notify.Errors, `"to" is improperly formatted`)
-	}
-
-	notify.checkTextHtmlFields()
-
-	return len(notify.Errors) == 0
-}
-
-func (notify *Notify) ValidateGUIDRequest() bool {
-	notify.Errors = []string{}
-
-	notify.checkKindIDField()
-	notify.checkTextHtmlFields()
-	notify.checkRoleField()
-
-	return len(notify.Errors) == 0
-}
-
-func (notify *Notify) checkKindIDField() {
-	if notify.KindID == "" {
-		notify.Errors = append(notify.Errors, `"kind_id" is a required field`)
-	} else {
-		if !kindIDFormat.MatchString(notify.KindID) {
-			notify.Errors = append(notify.Errors, `"kind_id" is improperly formatted`)
-		}
-	}
-}
-
-func (notify *Notify) checkRoleField() {
-	if notify.Role != "" {
-		for _, role := range validOrganizationRoles {
-			if notify.Role == role {
-				return
-			}
-		}
-		notify.Errors = append(notify.Errors, `"role" must be "OrgManager", "OrgAuditor", "BillingManager" or unset`)
-	}
-}
-
-func (notify *Notify) checkTextHtmlFields() {
-	if notify.Text == "" && notify.ParsedHTML.BodyContent == "" {
-		notify.Errors = append(notify.Errors, `"text" or "html" fields must be supplied`)
-	}
-}
-
 func (notify *Notify) parseRequestBody(body io.Reader) error {
 	buffer := bytes.NewBuffer([]byte{})
 	buffer.ReadFrom(body)

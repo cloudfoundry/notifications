@@ -42,7 +42,7 @@ var _ = Describe("NotifyUAAScope", func() {
 				handler.Execute(writer, request, nil, nil, strategy)
 
 				Expect(writer.Code).To(Equal(http.StatusOK))
-				Expect(notify.GUID.String()).To(Equal("great.scope"))
+				Expect(notify.GUID).To(Equal("great.scope"))
 
 				body := string(writer.Body.Bytes())
 				Expect(body).To(Equal("whatever"))

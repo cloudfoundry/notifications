@@ -45,7 +45,7 @@ var _ = Describe("NotifyUser", func() {
 				body := string(writer.Body.Bytes())
 				Expect(body).To(Equal("whut"))
 
-				Expect(notify.GUID.String()).To(Equal("user-123"))
+				Expect(notify.GUID).To(Equal("user-123"))
 			})
 		})
 

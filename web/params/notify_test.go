@@ -290,6 +290,40 @@ var _ = Describe("Notify", func() {
 				})
 			})
 
+			Context("when the to field is invalid", func() {
+				Context("when it has unmatched <", func() {
+					It("assigns <>invalidEmail<>", func() {
+						body := strings.NewReader(`{
+                    "to": "<invalid email",
+                    "text": "Contents of the email message"
+                }`)
+
+						parameters, err := params.NewNotify(body)
+						if err != nil {
+							panic(err)
+						}
+
+						Expect(parameters.To).To(Equal(params.InvalidEmail))
+					})
+				})
+
+				Context("when it is missing an @", func() {
+					It("assigns <>invalidEmail<>", func() {
+						body := strings.NewReader(`{
+                    "to": "invalidemail.com",
+                    "text": "Contents of the email message"
+                }`)
+
+						parameters, err := params.NewNotify(body)
+						if err != nil {
+							panic(err)
+						}
+
+						Expect(parameters.To).To(Equal(params.InvalidEmail))
+					})
+				})
+			})
+
 			Context("when a lot of complicated html is sent", func() {
 				It("does the right thing", func() {
 					html := `<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\"><head><title>New Relic</title></head><body bgcolor=\"#cccccc\" leftmargin=\"10\" topmargin=\"0\" rightmargin=\"10\" bottommargin=\"10\" marginheight=\"10\" marginwidth=\"10\"><div>div here ya</div></body>`
@@ -305,226 +339,6 @@ var _ = Describe("Notify", func() {
 					Expect(parameters.ParsedHTML.BodyContent).To(Equal("<div>div here ya</div>"))
 					Expect(parameters.ParsedHTML.Head).To(Equal("<title>New Relic</title>"))
 				})
-			})
-		})
-	})
-
-	Describe("ValidateEmailRequest", func() {
-		It("validates the required parameters in the request body", func() {
-			body := strings.NewReader(`{
-                    "to": "user@example.com",
-                    "text": "Contents of the email message"
-                }`)
-
-			parameters, err := params.NewNotify(body)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(parameters.ValidateEmailRequest()).To(BeTrue())
-			Expect(len(parameters.Errors)).To(Equal(0))
-
-			parameters.To = ""
-
-			Expect(parameters.ValidateEmailRequest()).To(BeFalse())
-			Expect(len(parameters.Errors)).To(Equal(1))
-			Expect(parameters.Errors).To(ContainElement(`"to" is a required field`))
-
-			parameters.Text = ""
-
-			Expect(parameters.ValidateEmailRequest()).To(BeFalse())
-			Expect(len(parameters.Errors)).To(Equal(2))
-			Expect(parameters.Errors).To(ContainElement(`"to" is a required field`))
-			Expect(parameters.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
-
-			parameters.To = "otherUser@example.com"
-			parameters.ParsedHTML = postal.HTML{BodyContent: "<p>Contents of this email message</p>"}
-
-			Expect(parameters.ValidateEmailRequest()).To(BeTrue())
-			Expect(len(parameters.Errors)).To(Equal(0))
-
-		})
-
-		It("validates the format of an email", func() {
-			body := strings.NewReader(`{
-                    "to": "<invalid email",
-                    "text": "Contents of the email message"
-                }`)
-
-			parameters, err := params.NewNotify(body)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(parameters.ValidateEmailRequest()).To(BeFalse())
-			Expect(len(parameters.Errors)).To(Equal(1))
-			Expect(parameters.Errors).To(ContainElement(`"to" is improperly formatted`))
-		})
-
-		It("validates the format of an email", func() {
-			body := strings.NewReader(`{
-                    "to": "invalidemail.com",
-                    "text": "Contents of the email message"
-                }`)
-
-			parameters, err := params.NewNotify(body)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(parameters.ValidateEmailRequest()).To(BeFalse())
-			Expect(len(parameters.Errors)).To(Equal(1))
-			Expect(parameters.Errors).To(ContainElement(`"to" is improperly formatted`))
-		})
-	})
-
-	Describe("ValidateGUIDRequest", func() {
-		Context("the guid corresponds to a space or a user", func() {
-			var guid postal.TypedGUID
-			var emailID postal.TypedGUID
-			BeforeEach(func() {
-				guid = postal.UAAGUID("the-user")
-				emailID = postal.EmailID("email@example.com")
-			})
-
-			It("validates the required parameters in the request body", func() {
-				body := strings.NewReader(`{
-                    "kind_id": "test_email",
-                    "subject": "Summary of contents",
-                    "text": "Contents of the email message"
-                }`)
-				parameters, err := params.NewNotify(body)
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
-				Expect(len(parameters.Errors)).To(Equal(0))
-
-				parameters.KindID = ""
-
-				Expect(parameters.ValidateGUIDRequest()).To(BeFalse())
-				Expect(len(parameters.Errors)).To(Equal(1))
-				Expect(parameters.Errors).To(ContainElement(`"kind_id" is a required field`))
-
-				parameters.Text = ""
-
-				Expect(parameters.ValidateGUIDRequest()).To(BeFalse())
-				Expect(len(parameters.Errors)).To(Equal(2))
-				Expect(parameters.Errors).To(ContainElement(`"kind_id" is a required field`))
-				Expect(parameters.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
-
-				parameters.KindID = "something"
-				parameters.Text = "banana"
-
-				Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
-				Expect(len(parameters.Errors)).To(Equal(0))
-			})
-
-			It("either text or html must be set", func() {
-				body := strings.NewReader(`{
-                    "kind_id": "test_email"
-                }`)
-
-				parameters, err := params.NewNotify(body)
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(parameters.ValidateGUIDRequest()).To(BeFalse())
-				Expect(parameters.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
-
-				body = strings.NewReader(`{
-                    "kind_id": "test_email",
-                    "text": "Contents of the email message"
-                }`)
-
-				parameters, err = params.NewNotify(body)
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
-				Expect(len(parameters.Errors)).To(Equal(0))
-
-				body = strings.NewReader(`{
-                    "kind_id": "test_email",
-                    "html": "<html><body><p>the html</p></body></html>"
-                }`)
-
-				parameters, err = params.NewNotify(body)
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
-				Expect(len(parameters.Errors)).To(Equal(0))
-
-				body = strings.NewReader(`{
-                    "kind_id": "test_email",
-                    "text": "Contents of the email message",
-                    "html": "<html><body><p>the html</p></body></html>"
-                }`)
-
-				parameters, err = params.NewNotify(body)
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
-				Expect(len(parameters.Errors)).To(Equal(0))
-			})
-
-			It("validates the format of kind_id", func() {
-				body := strings.NewReader(`{
-                    "kind_id": "A_valid.id-99",
-                    "text": "Contents of the email message"
-                }`)
-
-				parameters, err := params.NewNotify(body)
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
-				Expect(len(parameters.Errors)).To(Equal(0))
-
-				body = strings.NewReader(`{
-                    "kind_id": "an_invalid.id-00!",
-                    "text": "Contents of the email message"
-                }`)
-
-				parameters, err = params.NewNotify(body)
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(parameters.ValidateGUIDRequest()).To(BeFalse())
-				Expect(len(parameters.Errors)).To(Equal(1))
-				Expect(parameters.Errors).To(ContainElement(`"kind_id" is improperly formatted`))
-			})
-
-			It("role must be OrgManager, OrgAuditor, BillingManager, or not set", func() {
-				body := strings.NewReader(`{
-                    "kind_id": "the-kind",
-                    "text": "Contents of the email message"
-                }`)
-
-				parameters, err := params.NewNotify(body)
-				if err != nil {
-					panic(err)
-				}
-
-				for _, role := range []string{"OrgManager", "OrgAuditor", "BillingManager", ""} {
-					parameters.Role = role
-					Expect(parameters.ValidateGUIDRequest()).To(BeTrue())
-					Expect(len(parameters.Errors)).To(Equal(0))
-				}
-
-				parameters.Role = "bad-role-name"
-				Expect(parameters.ValidateGUIDRequest()).To(BeFalse())
-				Expect(len(parameters.Errors)).To(Equal(1))
-				Expect(parameters.Errors).To(ContainElement(`"role" must be "OrgManager", "OrgAuditor", "BillingManager" or unset`))
 			})
 		})
 	})

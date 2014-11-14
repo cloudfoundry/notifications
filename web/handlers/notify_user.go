@@ -6,8 +6,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 )
 
@@ -42,9 +42,9 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 
 func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request,
 	connection models.ConnectionInterface, context stack.Context, strategy strategies.StrategyInterface) error {
-	userGUID := postal.UAAGUID(strings.TrimPrefix(req.URL.Path, "/users/"))
+	userGUID := strings.TrimPrefix(req.URL.Path, "/users/")
 
-	output, err := handler.notify.Execute(connection, req, context, userGUID, strategy)
+	output, err := handler.notify.Execute(connection, req, context, userGUID, strategy, params.GUIDValidator{})
 	if err != nil {
 		return err
 	}

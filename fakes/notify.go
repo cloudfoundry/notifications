@@ -4,14 +4,14 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/ryanmoran/stack"
 )
 
 type Notify struct {
 	Response []byte
-	GUID     postal.TypedGUID
+	GUID     string
 	Error    error
 }
 
@@ -20,7 +20,7 @@ func NewNotify() *Notify {
 }
 
 func (fake *Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
-	guid postal.TypedGUID, strategy strategies.StrategyInterface) ([]byte, error) {
+	guid string, strategy strategies.StrategyInterface, validator handlers.ValidatorInterface) ([]byte, error) {
 	fake.GUID = guid
 
 	return fake.Response, fake.Error

@@ -5,8 +5,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 )
 
@@ -40,7 +40,7 @@ func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request, c
 }
 
 func (handler NotifyEmail) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) error {
-	output, err := handler.notify.Execute(connection, req, context, postal.EmailID(""), handler.strategy)
+	output, err := handler.notify.Execute(connection, req, context, "", handler.strategy, params.EmailValidator{})
 	if err != nil {
 		return err
 	}

@@ -38,7 +38,6 @@ var _ = Describe("NotifyEmail", func() {
 				handler.Execute(writer, nil, nil, context)
 
 				Expect(writer.Code).To(Equal(http.StatusOK))
-				Expect(notify.GUID.IsTypeEmail()).To(BeTrue())
 
 				body := string(writer.Body.Bytes())
 				Expect(body).To(Equal("whut"))

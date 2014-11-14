@@ -14,7 +14,7 @@ import (
 )
 
 type NotifyInterface interface {
-	Execute(models.ConnectionInterface, *http.Request, stack.Context, postal.TypedGUID, strategies.StrategyInterface) ([]byte, error)
+	Execute(models.ConnectionInterface, *http.Request, stack.Context, string, strategies.StrategyInterface, ValidatorInterface) ([]byte, error)
 }
 
 type Notify struct {
@@ -29,21 +29,19 @@ func NewNotify(finder services.NotificationFinderInterface, registrar services.R
 	}
 }
 
+type ValidatorInterface interface {
+	Validate(*params.Notify) bool
+}
+
 func (handler Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
-	guid postal.TypedGUID, strategy strategies.StrategyInterface) ([]byte, error) {
+	guid string, strategy strategies.StrategyInterface, validator ValidatorInterface) ([]byte, error) {
 	parameters, err := params.NewNotify(req.Body)
 	if err != nil {
 		return []byte{}, err
 	}
 
-	if guid.IsTypeEmail() {
-		if !parameters.ValidateEmailRequest() {
-			return []byte{}, params.ValidationError(parameters.Errors)
-		}
-	} else {
-		if !parameters.ValidateGUIDRequest() {
-			return []byte{}, params.ValidationError(parameters.Errors)
-		}
+	if !validator.Validate(&parameters) {
+		return []byte{}, params.ValidationError(parameters.Errors)
 	}
 
 	token := context.Get("token").(*jwt.Token)
@@ -65,7 +63,7 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 
 	var responses []strategies.Response
 
-	responses, err = strategy.Dispatch(clientID, guid.String(), parameters.ToOptions(client, kind), connection)
+	responses, err = strategy.Dispatch(clientID, guid, parameters.ToOptions(client, kind), connection)
 	if err != nil {
 		return []byte{}, err
 	}
