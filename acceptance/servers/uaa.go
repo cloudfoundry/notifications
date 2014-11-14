@@ -174,12 +174,14 @@ var UAAGetUsersByScope = http.HandlerFunc(func(w http.ResponseWriter, req *http.
 })
 
 var UAAUsersByScope = map[string]interface{}{
-	"this.scope": map[string]interface{}{
-		"members": []map[string]string{
-			{
-				"origin": "uaa",
-				"type":   "user",
-				"value":  "user-369",
+	"this.scope": []map[string]interface{}{
+		{
+			"members": []map[string]string{
+				{
+					"origin": "uaa",
+					"type":   "user",
+					"value":  "user-369",
+				},
 			},
 		},
 	},

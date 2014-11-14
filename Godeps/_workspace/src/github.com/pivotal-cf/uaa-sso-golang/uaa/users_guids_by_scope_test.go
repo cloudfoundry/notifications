@@ -16,30 +16,33 @@ import (
 var _ = Describe("UsersGUIDsByScope", func() {
 	var fakeUAAServer *httptest.Server
 	var auth uaa.UAA
-	var users map[string][]map[string]string
+	var users []map[string][]map[string]string
 	var requestCount int
 
 	BeforeEach(func() {
 		requestCount = 0
-		users = map[string][]map[string]string{
-			"members": {
-				{
-					"origin": "uaa",
-					"type":   "USER",
-					"value":  "my-water-bottle-guid",
-				},
-				{
-					"origin": "uaa",
-					"type":   "USER",
-					"value":  "my-other-guid",
-				},
-				{
-					"origin": "uaa",
-					"type":   "USER",
-					"value":  "my-guid",
+		users = []map[string][]map[string]string{
+			{
+				"members": {
+					{
+						"origin": "uaa",
+						"type":   "USER",
+						"value":  "my-water-bottle-guid",
+					},
+					{
+						"origin": "uaa",
+						"type":   "USER",
+						"value":  "my-other-guid",
+					},
+					{
+						"origin": "uaa",
+						"type":   "USER",
+						"value":  "my-guid",
+					},
 				},
 			},
 		}
+
 		fakeUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			requestCount += 1
 
@@ -90,6 +93,21 @@ var _ = Describe("UsersGUIDsByScope", func() {
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(users).To(Equal([]string{"my-water-bottle-guid", "my-other-guid", "my-guid"}))
+	})
+
+	Context("when the members response is empty", func() {
+		It("does not blow up", func() {
+			users = []map[string][]map[string]string{
+				{
+					"Members": {},
+				},
+			}
+
+			guids, err := uaa.UsersGUIDsByScope(auth, "this.scope")
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(guids).To(Equal([]string{}))
+		})
 	})
 
 	Context("when UAA is not responding normally", func() {

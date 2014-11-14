@@ -11,7 +11,7 @@ type UsersGUIDsByScopeInterface interface {
 }
 
 type userGUIDsByScopeResponse struct {
-	Resources struct {
+	Resources []struct {
 		Members []struct {
 			GUID string `json:"value"`
 		} `json:"members"`
@@ -54,7 +54,7 @@ func guidsFromBody(body []byte) ([]string, error) {
 		return guids, err
 	}
 
-	for _, member := range response.Resources.Members {
+	for _, member := range response.Resources[0].Members {
 		guids = append(guids, member.GUID)
 	}
 
