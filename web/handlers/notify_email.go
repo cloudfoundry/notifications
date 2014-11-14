@@ -27,16 +27,16 @@ func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, st
 }
 
 func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+	metrics.NewMetric("counter", map[string]interface{}{
+		"name": "notifications.web.emails",
+	}).Log()
+
 	connection := handler.database.Connection()
 	err := handler.Execute(w, req, connection, context)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return
 	}
-
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.web.emails",
-	}).Log()
 }
 
 func (handler NotifyEmail) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) error {

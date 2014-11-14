@@ -28,16 +28,16 @@ func NewNotifyUser(notify NotifyInterface, errorWriter ErrorWriterInterface, str
 }
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+	metrics.NewMetric("counter", map[string]interface{}{
+		"name": "notifications.web.users",
+	}).Log()
+
 	connection := handler.database.Connection()
 	err := handler.Execute(w, req, connection, context, handler.strategy)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return
 	}
-
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.web.users",
-	}).Log()
 }
 
 func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request,

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
 )
@@ -28,6 +29,10 @@ func NewGetTemplates(templateFinder services.TemplateFinderInterface, errorWrite
 }
 
 func (handler GetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+	metrics.NewMetric("counter", map[string]interface{}{
+		"name": "notifications.web.templates.get",
+	}).Log()
+
 	templateName := strings.Split(req.URL.Path, "/templates/")[1]
 
 	template, err := handler.Finder.Find(templateName)

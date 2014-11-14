@@ -28,12 +28,12 @@ func NewUpdatePreferences(preferenceUpdater services.PreferenceUpdaterInterface,
 }
 
 func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	connection := handler.database.Connection()
-	handler.Execute(w, req, connection, context)
-
 	metrics.NewMetric("counter", map[string]interface{}{
 		"name": "notifications.web.preferences.update",
 	}).Log()
+
+	connection := handler.database.Connection()
+	handler.Execute(w, req, connection, context)
 }
 
 func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) {

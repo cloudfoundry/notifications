@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
@@ -22,6 +23,10 @@ func NewSetTemplates(updater services.TemplateUpdaterInterface, errorWriter Erro
 }
 
 func (handler SetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+	metrics.NewMetric("counter", map[string]interface{}{
+		"name": "notifications.web.templates.put",
+	}).Log()
+
 	templateName := strings.Split(req.URL.String(), "/templates/")[1]
 
 	templateParams, err := params.NewTemplate(templateName, req.Body)

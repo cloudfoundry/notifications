@@ -23,6 +23,10 @@ func NewGetPreferences(preferencesFinder services.PreferencesFinderInterface, er
 }
 
 func (handler GetPreferences) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+	metrics.NewMetric("counter", map[string]interface{}{
+		"name": "notifications.web.preferences.get",
+	}).Log()
+
 	token := context.Get("token").(*jwt.Token)
 	userID := token.Claims["user_id"].(string)
 
@@ -38,8 +42,4 @@ func (handler GetPreferences) ServeHTTP(w http.ResponseWriter, req *http.Request
 	}
 
 	w.Write(result)
-
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.web.preferences.get",
-	}).Log()
 }

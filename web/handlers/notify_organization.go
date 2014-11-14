@@ -28,16 +28,16 @@ func NewNotifyOrganization(notify NotifyInterface, errorWriter ErrorWriterInterf
 }
 
 func (handler NotifyOrganization) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+	metrics.NewMetric("counter", map[string]interface{}{
+		"name": "notifications.web.organizations",
+	}).Log()
+
 	connection := handler.database.Connection()
 	err := handler.Execute(w, req, connection, context, handler.strategy)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return
 	}
-
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.web.organizations",
-	}).Log()
 }
 
 func (handler NotifyOrganization) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface,

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
 )
@@ -21,6 +22,9 @@ func NewUnsetTemplates(deleter services.TemplateDeleterInterface, errorWriter Er
 }
 
 func (handler UnsetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, stack stack.Context) {
+	metrics.NewMetric("counter", map[string]interface{}{
+		"name": "notifications.web.templates.delete",
+	}).Log()
 
 	templateName := strings.Split(req.URL.Path, "/templates/")[1]
 
