@@ -171,7 +171,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 					for _, scope := range defaultScopes {
 						_, err := strategy.Dispatch(clientID, scope, options, conn)
 						Expect(err).To(HaveOccurred())
-						Expect(err).To(MatchError(errors.New("You cannot send a notification to a default scope")))
+						Expect(err).To(MatchError(strategies.DefaultScopeError{}))
 					}
 				})
 			})

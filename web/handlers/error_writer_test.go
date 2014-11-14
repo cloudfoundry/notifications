@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
@@ -193,6 +194,19 @@ var _ = Describe("ErrorWriter", func() {
 		}
 
 		Expect(body["errors"]).To(ContainElement("Record Not Found"))
+	})
+
+	It("returns a 406 when a record cannot be found", func() {
+		writer.Write(recorder, strategies.DefaultScopeError{})
+		Expect(recorder.Code).To(Equal(406))
+
+		body := make(map[string]interface{})
+		err := json.Unmarshal(recorder.Body.Bytes(), &body)
+		if err != nil {
+			panic(err)
+		}
+
+		Expect(body["errors"]).To(ContainElement("You cannot send a notification to a default scope"))
 	})
 
 	It("panics for unknown errors", func() {

@@ -1,8 +1,6 @@
 package strategies
 
 import (
-	"errors"
-
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -16,6 +14,12 @@ type UAAScopeStrategy struct {
 	templatesLoader utilities.TemplatesLoaderInterface
 	mailer          MailerInterface
 	userLoader      utilities.UserLoaderInterface
+}
+
+type DefaultScopeError struct{}
+
+func (d DefaultScopeError) Error() string {
+	return "You cannot send a notification to a default scope"
 }
 
 func NewUAAScopeStrategy(tokenLoader utilities.TokenLoaderInterface, userLoader utilities.UserLoaderInterface,
@@ -35,7 +39,7 @@ func (strategy UAAScopeStrategy) Dispatch(clientID, scope string, options postal
 	responses := []Response{}
 
 	if strategy.scopeIsDefault(scope) {
-		return responses, errors.New("You cannot send a notification to a default scope")
+		return responses, DefaultScopeError{}
 	}
 
 	token, err := strategy.tokenLoader.Load()
