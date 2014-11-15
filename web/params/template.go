@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"regexp"
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -78,7 +79,20 @@ func (template *Template) validateFormat(name string) error {
 	if len(nameParts) > 5 {
 		return ValidationError([]string{"Template name has an invalid format, too many periods."})
 	}
+
+	if template.hasInvalidCharacters(name) {
+		return ValidationError([]string{"Template name has an invalid format, only .-_ and alphanumeric characters are valid."})
+	}
+
 	return nil
+}
+
+func (template *Template) hasInvalidCharacters(name string) bool {
+	replacer := strings.NewReplacer("-", "", ".", "")
+	strippedName := replacer.Replace(name)
+
+	regex := regexp.MustCompile(`[\W]`)
+	return regex.Match([]byte(strippedName))
 }
 
 func (t *Template) ToModel() models.Template {

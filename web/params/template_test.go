@@ -53,7 +53,7 @@ var _ = Describe("Template", func() {
 		Context("when the name is invalid", func() {
 			It("returns an invalid name error", func() {
 				bad_endings := []string{"user.body", "something_body", "subject.something", "still.missing.something",
-					"client.kind.otherkind." + models.UserBodyTemplateName, "stupid.stuff.subject.uh.oh.damn." + models.EmailBodyTemplateName}
+					"client.kind.otherkind." + models.UserBodyTemplateName, "stupid.stuff.subject.uh.oh.damn." + models.EmailBodyTemplateName, "foo%.space_body"}
 
 				for _, ending := range bad_endings {
 					theTemplate := params.Template{
