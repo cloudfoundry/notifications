@@ -21,7 +21,7 @@ func NewRegistrar(clientsRepo models.ClientsRepoInterface, kindsRepo models.Kind
 }
 
 func (registrar Registrar) Register(conn models.ConnectionInterface, client models.Client, kinds []models.Kind) error {
-	client, err := registrar.clientsRepo.Upsert(conn, client)
+	_, err := registrar.clientsRepo.Upsert(conn, client)
 	if err != nil {
 		return err
 	}
