@@ -65,7 +65,7 @@ var _ = Describe("Everyone Strategy", func() {
 
 		allUsers.Users = users
 
-		strategy = strategies.NewEveryoneStrategy(allUsers, templatesLoader, mailer, receiptsRepo)
+		strategy = strategies.NewEveryoneStrategy(tokenLoader, allUsers, templatesLoader, mailer, receiptsRepo)
 	})
 
 	Describe("Dispatch", func() {
@@ -117,6 +117,15 @@ var _ = Describe("Everyone Strategy", func() {
 	})
 
 	Context("failure cases", func() {
+		Context("when token loader fails to return a token", func() {
+			It("returns an error", func() {
+				tokenLoader.LoadError = errors.New("BOOM!")
+				_, err := strategy.Dispatch(clientID, "", options, conn)
+
+				Expect(err).To(Equal(errors.New("BOOM!")))
+			})
+		})
+
 		Context("when allUsers fails to load users", func() {
 			It("returns the error", func() {
 				allUsers.LoadError = errors.New("BOOM!")

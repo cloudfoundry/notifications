@@ -101,13 +101,14 @@ func (mother Mother) EveryoneStrategy() strategies.EveryoneStrategy {
 	finder := mother.TemplateFinder()
 	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 	uaaClient.VerifySSL = env.VerifySSL
+	tokenLoader := utilities.NewTokenLoader(&uaaClient)
 	allUsers := utilities.NewAllUsers(&uaaClient)
 
 	templatesLoader := utilities.NewTemplatesLoader(finder)
 	mailer := mother.Mailer()
 	receiptsRepo := models.NewReceiptsRepo()
 
-	return strategies.NewEveryoneStrategy(allUsers, templatesLoader, mailer, receiptsRepo)
+	return strategies.NewEveryoneStrategy(tokenLoader, allUsers, templatesLoader, mailer, receiptsRepo)
 }
 
 func (mother Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {

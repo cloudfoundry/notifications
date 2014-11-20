@@ -8,15 +8,17 @@ import (
 )
 
 type EveryoneStrategy struct {
+	tokenLoader     utilities.TokenLoaderInterface
 	allUsers        utilities.AllUsersInterface
 	templatesLoader utilities.TemplatesLoaderInterface
 	mailer          MailerInterface
 	receiptsRepo    models.ReceiptsRepoInterface
 }
 
-func NewEveryoneStrategy(allUsers utilities.AllUsersInterface, templatesLoader utilities.TemplatesLoaderInterface, mailer MailerInterface,
+func NewEveryoneStrategy(tokenLoader utilities.TokenLoaderInterface, allUsers utilities.AllUsersInterface, templatesLoader utilities.TemplatesLoaderInterface, mailer MailerInterface,
 	receiptsRepo models.ReceiptsRepoInterface) EveryoneStrategy {
 	return EveryoneStrategy{
+		tokenLoader:     tokenLoader,
 		allUsers:        allUsers,
 		templatesLoader: templatesLoader,
 		mailer:          mailer,
@@ -26,6 +28,11 @@ func NewEveryoneStrategy(allUsers utilities.AllUsersInterface, templatesLoader u
 
 func (strategy EveryoneStrategy) Dispatch(clientID, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
 	responses := []Response{}
+
+	_, err := strategy.tokenLoader.Load()
+	if err != nil {
+		return responses, err
+	}
 
 	userEmails, userGUIDs, err := strategy.allUsers.AllUserEmailsAndGUIDs()
 	if err != nil {
