@@ -50,7 +50,7 @@ If you are unfamiliar with UAA consult the [UAA token overview](https://github.c
 ##Configuring Environment Variables
 
 | Variable                     | Description                                 | Default  |
-| ---------------------------- | ------------------------------------------- | -------- |
+|------------------------------|---------------------------------------------|----------|
 | CC_HOST\*                    | Cloud Controller Host                       | \<none\> |
 | CORS_ORIGIN                  | Value to use for CORS Origin Header         | *        |
 | DB_LOGGING_ENABLED           | Logs DB interactions when set to true       | false    |
@@ -89,15 +89,15 @@ Notifications currently supports several different types of messages.  Messages 
 
 The Users, Spaces, Organizations, Everyone, and UAA Scopes endpoints expect a json body to be posted with following keys:
 
-| Key                | Description                                    |
-| ------------------ | ---------------------------------------------- |
-| kind_id\*          | a key to identify the type of email to be sent |
-| text\*\*           | the text version of the email                  |
-| html\*\*           | the html version of the email                  |
-| kind_description   | a description of the kind_id                   |
-| subject            | the text of the subject                        |
-| reply_to           | the Reply-To address for the email             |
-| source_description | a description of the sender                    |
+| Key                  | Description                                    |
+|----------------------|------------------------------------------------|
+| kind_id\*            | a key to identify the type of email to be sent |
+| text\*\*             | the text version of the email                  |
+| html\*\*             | the html version of the email                  |
+| kind_description     | a description of the kind_id                   |
+| subject\*            | the text of the subject                        |
+| reply_to             | the Reply-To address for the email             |
+| source_description   | a description of the sender                    |
 
 \* required
 
@@ -106,9 +106,9 @@ The Users, Spaces, Organizations, Everyone, and UAA Scopes endpoints expect a js
 The Emails endpoint expects a json body to be posted with the following keys:
 
 | Key                | Description                                    |
-| ------------------ | ---------------------------------------------- |
+|--------------------|------------------------------------------------|
 | to\*               | the recipient of the email                     |
-| subject            | the text of the subject                        |
+| subject\*          | the text of the subject                        |
 | reply_to           | the Reply-To address for the email             |
 | text\**            | the text version of the email                  |
 | html\**            | the html version of the email                  |
@@ -136,13 +136,12 @@ The default templates are located in **./templates**. The templates directory sh
 	uaa_scope_body.text
 	email_body.text
 	email_body.html
-	subject.missing
 	subject.provided
 
 
 When emailing a single user, `user_body.html` and `user_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a space, `space_body.html` and `space_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing an organization, `organization_body.html` and `organization_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing all users in a system, `everyone_body.html` and `everyone_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a UAA scope, `uaa_scope_body.html` and `uaa_scope_body.text` are used as templates in the email body for the html and plaintext, respectively. 
 
-When the subject is provided, the default subject template is found in `subject.provided`, while `subject.missing` is used when the email subject is not provided. 
+The default subject template is found in `subject.provided`. 
 
 When using the `/emails` endpoint, `email_body.html` and `email_body.text` are used as templates in the email body for the html and plaintext, respectively.
 
@@ -153,7 +152,7 @@ The files located in the templates directory are defaults and will be used if th
 There are three types of overrides.
 
 | Type                     | Effect                                                                         |
-| ------------------------ | ------------------------------------------------------------------------------ |
+|--------------------------|--------------------------------------------------------------------------------|
 | global                   | applies to any email sent, has least precedence                                |
 | client specific          | applies to any email sent by a client, higher precedence than global           |
 | client and kind specific | applies to any email sent by a client with the kind_id, has highest precedence |
@@ -167,7 +166,7 @@ Any file that exists in `./templates` can be overriden by placing a file of the 
 The templates are [go templates](http://golang.org/pkg/text/template/).  The templates have access to the following variables:
 
 | Variable          | Description                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------------ |
+|-------------------|--------------------------------------------------------------------------------------------------|
 | KindDescription   | Pulled from json posted to endpoint under: kind_description, falls back to kind if not set       |
 | From              | Which account is in the from field of the email                                                  |
 | ReplyTo           | The address is in the reply to field of the email                                                |

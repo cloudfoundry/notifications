@@ -88,7 +88,7 @@ POST /users/{user-guid}
 | text\*\*           | the text version of the email                  |
 | html\*\*           | the html version of the email                  |
 | kind_description   | a description of the kind_id                   |
-| subject            | the text of the subject                        |
+| subject\*          | the text of the subject                        |
 | reply_to           | the Reply-To address for the email             |
 | source_description | a description of the sender                    |
 
@@ -100,7 +100,7 @@ POST /users/{user-guid}
 ```
 curl -i -X POST \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"kind_id":"example-kind-id", "html":"this is a test"}' \
+  -d '{"kind_id":"example-kind-id", "subject":"what it is all about", "html":"this is a test"}' \
   http://notifications.example.com/users/user-guid
 
 HTTP/1.1 200 OK
@@ -154,7 +154,7 @@ POST /spaces/{space-guid}
 | text\*\*           | the text version of the email                  |
 | html\*\*           | the html version of the email                  |
 | kind_description   | a description of the kind_id                   |
-| subject            | the text of the subject                        |
+| subject\*          | the text of the subject                        |
 | reply_to           | the Reply-To address for the email             |
 | source_description | a description of the sender                    |
 
@@ -166,7 +166,7 @@ POST /spaces/{space-guid}
 ```
 $ curl -i -X POST \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"kind_id":"example-kind-id", "html":"this is a test"}' \
+  -d '{"kind_id":"example-kind-id", "subject":"what it is all about", "html":"this is a test"}' \
   http://notifications.example.com/spaces/space-guid
 
 HTTP/1.1 200 OK
@@ -225,7 +225,7 @@ POST /organizations/{organization-guid}
 | text\*\*           | the text version of the email                  |
 | html\*\*           | the html version of the email                  |
 | kind_description   | a description of the kind_id                   |
-| subject            | the text of the subject                        |
+| subject\*          | the text of the subject                        |
 | reply_to           | the Reply-To address for the email             |
 | source_description | a description of the sender                    |
 
@@ -237,7 +237,7 @@ POST /organizations/{organization-guid}
 ```
 $ curl -i -X POST \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"kind_id":"example-kind-id", "html":"this is a test"}' \
+  -d '{"kind_id":"example-kind-id", "subject":"what it is all about", "html":"this is a test"}' \
   http://notifications.example.com/organizations/organization-guid
 
 Connection: close
@@ -296,7 +296,7 @@ POST /everyone
 | text\*\*           | the text version of the email                  |
 | html\*\*           | the html version of the email                  |
 | kind_description   | a description of the kind_id                   |
-| subject            | the text of the subject                        |
+| subject\*          | the text of the subject                        |
 | reply_to           | the Reply-To address for the email             |
 | source_description | a description of the sender                    |
 
@@ -308,7 +308,7 @@ POST /everyone
 ```
 $ curl -i -X POST \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"kind_id":"example-kind-id", "html":"this is a test"}' \
+  -d '{"kind_id":"example-kind-id", "subject":"what it is all about", "html":"this is a test"}' \
   http://notifications.example.com/everyone
 
 Connection: close
@@ -367,7 +367,7 @@ POST /uaa_scopes/{scope}
 | text\*\*           | the text version of the email                  |
 | html\*\*           | the html version of the email                  |
 | kind_description   | a description of the kind_id                   |
-| subject            | the text of the subject                        |
+| subject\*          | the text of the subject                        |
 | reply_to           | the Reply-To address for the email             |
 | source_description | a description of the sender                    |
 
@@ -379,7 +379,7 @@ POST /uaa_scopes/{scope}
 ```
 $ curl -i -X POST \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"kind_id":"example-kind-id", "html":"this is a test"}' \
+  -d '{"kind_id":"example-kind-id", "subject":"what it is all about", "html":"this is a test"}' \
   http://notifications.example.com/uaa_scopes/uaa.scope
 
 Connection: close
@@ -434,10 +434,10 @@ POST /emails
 | Key                | Description                                    |
 | ------------------ | ---------------------------------------------- |
 | to\*          | The email address (and possibly full name) of the intended recipient in SMTP compatible format. |
-| subject | The desired subject line of the notification.  The final subject may be prefixed, suffixed, or truncated by the notifier, all dependent on the templates.|
+| subject\* | The desired subject line of the notification.  The final subject may be prefixed, suffixed, or truncated by the notifier, all dependent on the templates.|
 | reply_to | The email address to be included as the Reply-To address of the outgoing message. |
-| text ** | The message body, in plain text  (required if html is absent) |
-| html ** | The message body, in HTML  (required if text is absent) |
+| text\*\* | The message body, in plain text  (required if html is absent) |
+| html\*\* | The message body, in HTML  (required if text is absent) |
 
 \* required
 
@@ -447,7 +447,7 @@ POST /emails
 ```
 $ curl -i -X POST \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"to":"user@example.com", "html":"this is a test"}' \
+  -d '{"to":"user@example.com", "subject":"what it is all about", "html":"this is a test"}' \
   http://notifications.example.com/emails
 
 HTTP/1.1 200 OK
@@ -498,7 +498,7 @@ PUT /registration
 
 | Key                 | Description                                    |
 | ------------------- | ---------------------------------------------- |
-| source_description* | A description of the sender, to be displayed in messages to users instead of the raw "client_id" field (which is derived from UAA) |
+| source_description\* | A description of the sender, to be displayed in messages to users instead of the raw "client_id" field (which is derived from UAA) |
 | kinds               | A complete list of all notification kinds that this client plans on using.  If passed, the notifier will add and remove kinds from its internal datastore to match the provided list. See table below for kinds fields |
 
 \* required
@@ -507,8 +507,8 @@ PUT /registration
 
 | Key                       | Description |
 | ------------------------- | ----------- |
-| id*                       | A simple machine readable string that identifies this type of notification.  It should be in the format /[0-9a-z_-.]+/i The notifier can use the ID to determine whether and how to notify a user. It’s recommended to use a GUID that doesn’t change for this field. |
-| description*              | A description of the kind, to be displayed in messages to users instead of the raw “id” field |
+| id\*                       | A simple machine readable string that identifies this type of notification.  It should be in the format /[0-9a-z_-.]+/i The notifier can use the ID to determine whether and how to notify a user. It’s recommended to use a GUID that doesn’t change for this field. |
+| description\*              | A description of the kind, to be displayed in messages to users instead of the raw “id” field |
 | critical (default: false) | A boolean describing whether this kind of notification is to be considered “critical”, usually meaning that it cannot be unsubscribed from.  Because critical notifications can be annoying to end-users, registering a critical notification kind requires the client to have an access token with the critical_notifications.write scope. |
 
 \* required
@@ -992,8 +992,8 @@ PUT /templates/{template-filename}
 
 | Key      | Description                                                     |
 | -------- | --------------------------------------------------------------- |
-| text*    | The template used for the text portion of the notification      |
-| html*    | The template used for the HTML portion of the notification      |
+| text\*    | The template used for the text portion of the notification      |
+| html\*    | The template used for the HTML portion of the notification      |
 
 \* required
 
@@ -1046,7 +1046,7 @@ DELETE /templates/{template-filename}
 
 | Key                   | Description                                                     |
 | --------------------- | --------------------------------------------------------------- |
-| template-filename*    | The template used for the text portion of the notification      |
+| template-filename\*    | The template used for the text portion of the notification      |
 
 \* required
 
