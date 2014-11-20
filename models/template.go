@@ -8,6 +8,7 @@ const (
 	EmailBodyTemplateName        = "email_body"
 	UAAScopeBodyTemplateName     = "uaa_scope_body"
 	OrganizationBodyTemplateName = "organization_body"
+	EveryoneBodyTemplateName     = "everyone_body"
 	SubjectMissingTemplateName   = "subject.missing"
 	SubjectProvidedTemplateName  = "subject.provided"
 )
@@ -18,6 +19,7 @@ var TemplateNames = []string{
 	EmailBodyTemplateName,
 	UAAScopeBodyTemplateName,
 	OrganizationBodyTemplateName,
+	EveryoneBodyTemplateName,
 	SubjectMissingTemplateName,
 	SubjectProvidedTemplateName,
 }

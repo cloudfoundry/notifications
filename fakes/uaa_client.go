@@ -10,6 +10,8 @@ type UAAClient struct {
 	AccessToken               string
 	UsersGUIDsByScopeResponse map[string][]string
 	UsersGUIDsByScopeError    error
+	AllUsersError             error
+	AllUsersData              []uaa.User
 }
 
 func NewUAAClient() *UAAClient {
@@ -39,4 +41,8 @@ func (fake UAAClient) UsersEmailsByIDs(ids ...string) ([]uaa.User, error) {
 
 func (fake *UAAClient) UsersGUIDsByScope(scope string) ([]string, error) {
 	return fake.UsersGUIDsByScopeResponse[scope], fake.UsersGUIDsByScopeError
+}
+
+func (fake *UAAClient) AllUsers() ([]uaa.User, error) {
+	return fake.AllUsersData, fake.AllUsersError
 }

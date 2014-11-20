@@ -96,6 +96,20 @@ func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
 	return strategies.NewOrganizationStrategy(tokenLoader, userLoader, organizationLoader, findsUserGUIDs, templatesLoader, mailer, receiptsRepo)
 }
 
+func (mother Mother) EveryoneStrategy() strategies.EveryoneStrategy {
+	env := config.NewEnvironment()
+	finder := mother.TemplateFinder()
+	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
+	uaaClient.VerifySSL = env.VerifySSL
+	allUsers := utilities.NewAllUsers(&uaaClient)
+
+	templatesLoader := utilities.NewTemplatesLoader(finder)
+	mailer := mother.Mailer()
+	receiptsRepo := models.NewReceiptsRepo()
+
+	return strategies.NewEveryoneStrategy(allUsers, templatesLoader, mailer, receiptsRepo)
+}
+
 func (mother Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
 	env := config.NewEnvironment()
 	finder := mother.TemplateFinder()

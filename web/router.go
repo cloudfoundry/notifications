@@ -18,6 +18,7 @@ type MotherInterface interface {
 	UserStrategy() strategies.UserStrategy
 	SpaceStrategy() strategies.SpaceStrategy
 	OrganizationStrategy() strategies.OrganizationStrategy
+	EveryoneStrategy() strategies.EveryoneStrategy
 	UAAScopeStrategy() strategies.UAAScopeStrategy
 	NotificationFinder() services.NotificationFinder
 	PreferencesFinder() *services.PreferencesFinder
@@ -40,6 +41,7 @@ func NewRouter(mother MotherInterface) Router {
 	userStrategy := mother.UserStrategy()
 	spaceStrategy := mother.SpaceStrategy()
 	organizationStrategy := mother.OrganizationStrategy()
+	everyoneStrategy := mother.EveryoneStrategy()
 	uaaScopeStrategy := mother.UAAScopeStrategy()
 	notify := handlers.NewNotify(mother.NotificationFinder(), registrar)
 	preferencesFinder := mother.PreferencesFinder()
@@ -63,6 +65,7 @@ func NewRouter(mother MotherInterface) Router {
 			"POST /users/{guid}":               stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, userStrategy, database)).Use(logging, notificationsWriteAuthenticator),
 			"POST /spaces/{guid}":              stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, spaceStrategy, database)).Use(logging, notificationsWriteAuthenticator),
 			"POST /organizations/{guid}":       stack.NewStack(handlers.NewNotifyOrganization(notify, errorWriter, organizationStrategy, database)).Use(logging, notificationsWriteAuthenticator),
+			"POST /everyone":                   stack.NewStack(handlers.NewNotifyEveryone(notify, errorWriter, everyoneStrategy, database)).Use(logging, notificationsWriteAuthenticator),
 			"POST /uaa_scopes/{scope}":         stack.NewStack(handlers.NewNotifyUAAScope(notify, errorWriter, uaaScopeStrategy, database)).Use(logging, notificationsWriteAuthenticator),
 			"POST /emails":                     stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailStrategy, database)).Use(logging, emailsWriteAuthenticator),
 			"PUT /registration":                stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter, database)).Use(logging, notificationsWriteAuthenticator),

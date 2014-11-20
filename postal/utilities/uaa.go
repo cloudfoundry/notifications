@@ -7,4 +7,5 @@ type UAAInterface interface {
 	uaa.SetTokenInterface
 	uaa.UsersEmailsByIDsInterface
 	uaa.UsersGUIDsByScopeInterface
+	uaa.AllUsersInterface
 }

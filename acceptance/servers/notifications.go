@@ -69,6 +69,10 @@ func (s Notifications) OrganizationsPath(organization string) string {
 	return "http://localhost:" + s.env.Port + "/organizations/" + organization
 }
 
+func (s Notifications) EveryonePath() string {
+	return "http://localhost:" + s.env.Port + "/everyone"
+}
+
 func (s Notifications) ScopesPath(scope string) string {
 	return "http://localhost:" + s.env.Port + "/uaa_scopes/" + scope
 }
