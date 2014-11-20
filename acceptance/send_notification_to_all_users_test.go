@@ -92,7 +92,7 @@ func (t SendNotificationToAllUsers) SendNotificationToAllUsers(notificationsServ
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "acceptance-test",
 		"html":    "<p>this is an acceptance%40test</p>",
-		"subject": "my-spammy-subject",
+		"subject": "",
 	})
 	if err != nil {
 		panic(err)
@@ -153,7 +153,7 @@ func (t SendNotificationToAllUsers) SendNotificationToAllUsers(notificationsServ
 	data := strings.Split(string(delivery.Data), "\n")
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 	Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["091b6583-0933-4d17-a5b6-66e54666c88e"]["notification_id"]))
-	Expect(data).To(ContainElement("Subject: CF Notification: my-spammy-subject"))
+	Expect(data).To(ContainElement("Subject: Subject Missing"))
 	Expect(data).To(ContainElement(`<p>The following "Acceptance Test" notification was sent to you directly by the`))
 	Expect(data).To(ContainElement(`    "Notifications Sender" component of Cloud Foundry:</p>`))
 	Expect(data).To(ContainElement("<p>this is an acceptance%40test</p>"))
