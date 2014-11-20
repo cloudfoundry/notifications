@@ -83,10 +83,11 @@ Notifications currently supports several different types of messages.  Messages 
  - Users via the `/users/id` endpoint
  - Spaces via the `/spaces/id` endpoint
  - Organizations via the `/organizations/id` endpoint
+ - All users in the system via the `/everyone` endpoint
  - UAA Scopes via the `/uaa_scopes/scope` endpoint
  - Emails via the `/emails` endpoint
 
-The Users, Spaces, Organizations, and UAA Scopes endpoints expect a json body to be posted with following keys:
+The Users, Spaces, Organizations, Everyone, and UAA Scopes endpoints expect a json body to be posted with following keys:
 
 | Key                | Description                                    |
 | ------------------ | ---------------------------------------------- |
@@ -129,6 +130,8 @@ The default templates are located in **./templates**. The templates directory sh
 	space_body.html
 	organization_body.text
 	organization_body.html
+	everyone_body.text
+	everyone_body.html
 	uaa_scope_body.html
 	uaa_scope_body.text
 	email_body.text
@@ -137,7 +140,7 @@ The default templates are located in **./templates**. The templates directory sh
 	subject.provided
 
 
-When emailing a single user, `user_body.html` and `user_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a space, `space_body.html` and `space_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing an organization, `organization_body.html` and `organization_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a UAA scope, `uaa_scope_body.html` and `uaa_scope_body.text` are used as templates in the email body for the html and plaintext, respectively. 
+When emailing a single user, `user_body.html` and `user_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a space, `space_body.html` and `space_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing an organization, `organization_body.html` and `organization_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing all users in a system, `everyone_body.html` and `everyone_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a UAA scope, `uaa_scope_body.html` and `uaa_scope_body.text` are used as templates in the email body for the html and plaintext, respectively. 
 
 When the subject is provided, the default subject template is found in `subject.provided`, while `subject.missing` is used when the email subject is not provided. 
 
