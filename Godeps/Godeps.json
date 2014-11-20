@@ -81,7 +81,7 @@
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",
-			"Rev": "e7e58df11a804e701e70781a52a00959ba1d9781"
+			"Rev": "0b91e8ad4bb6b9e71a6316e1bb6de7414c0e01b2"
 		},
 		{
 			"ImportPath": "github.com/pivotal-golang/conceal",

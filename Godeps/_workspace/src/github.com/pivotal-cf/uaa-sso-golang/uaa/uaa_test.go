@@ -169,4 +169,19 @@ var _ = Describe("UAA", func() {
 			Expect(usersEmailsByIDsWasCalledWith).To(Equal([]string{"something", "another-thing"}))
 		})
 	})
+
+	Describe("AllUsers", func() {
+		var allUsersWasCalled bool
+		It("delegates to the AllUsers command", func() {
+			Expect(reflect.ValueOf(auth.AllUsersCommand).Pointer()).To(Equal(reflect.ValueOf(uaa.AllUsers).Pointer()))
+
+			auth.AllUsersCommand = func(u uaa.UAA) ([]uaa.User, error) {
+				allUsersWasCalled = true
+				return []uaa.User{}, nil
+			}
+
+			auth.AllUsers()
+			Expect(allUsersWasCalled).To(BeTrue())
+		})
+	})
 })

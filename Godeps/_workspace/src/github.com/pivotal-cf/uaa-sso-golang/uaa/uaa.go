@@ -54,6 +54,7 @@ type UAAInterface interface {
 	UsersByIDsInterface
 	UsersEmailsByIDsInterface
 	UsersGUIDsByScopeInterface
+	AllUsersInterface
 }
 
 type AuthorizeURLInterface interface {
@@ -91,6 +92,7 @@ type UAA struct {
 	UsersByIDsCommand        func(UAA, ...string) ([]User, error)
 	UsersEmailsByIDsCommand  func(UAA, ...string) ([]User, error)
 	UsersGUIDsByScopeCommand func(UAA, string) ([]string, error)
+	AllUsersCommand          func(UAA) ([]User, error)
 }
 
 func NewUAA(loginURL, uaaURL, clientID, clientSecret, token string) UAA {
@@ -109,6 +111,7 @@ func NewUAA(loginURL, uaaURL, clientID, clientSecret, token string) UAA {
 		UsersByIDsCommand:        UsersByIDs,
 		UsersEmailsByIDsCommand:  UsersEmailsByIDs,
 		UsersGUIDsByScopeCommand: UsersGUIDsByScope,
+		AllUsersCommand:          AllUsers,
 	}
 }
 
@@ -172,4 +175,8 @@ func (u UAA) UsersEmailsByIDs(ids ...string) ([]User, error) {
 
 func (u UAA) UsersGUIDsByScope(scope string) ([]string, error) {
 	return u.UsersGUIDsByScopeCommand(u, scope)
+}
+
+func (u UAA) AllUsers() ([]User, error) {
+	return u.AllUsersCommand(u)
 }
