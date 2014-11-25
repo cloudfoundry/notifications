@@ -16,7 +16,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Send a notification to a user", func() {
+var _ = Describe("Send a notification to a user, using the deprecated /registration endpoint", func() {
 	BeforeEach(func() {
 		TruncateTables()
 	})
@@ -45,21 +45,19 @@ var _ = Describe("Send a notification to a user", func() {
 		}
 
 		t := SendNotificationToUser{}
-		t.RegisterClientNotification(notificationsServer, clientToken)
-		t.SendNotificationToUser(notificationsServer, clientToken, smtpServer)
+		t.DeprecatedRegisterClientNotification(notificationsServer, clientToken)
+		t.DeprecatedSendNotificationToUser(notificationsServer, clientToken, smtpServer)
 	})
 })
 
-type SendNotificationToUser struct{}
-
-// Make request to /notifications
-func (t SendNotificationToUser) RegisterClientNotification(notificationsServer servers.Notifications, clientToken uaa.Token) {
+// Make request to /registation
+func (t SendNotificationToUser) DeprecatedRegisterClientNotification(notificationsServer servers.Notifications, clientToken uaa.Token) {
 	body, err := json.Marshal(map[string]interface{}{
-		"source_name": "Notifications Sender",
-		"notifications": map[string]interface{}{
-			"acceptance-test": map[string]interface{}{
+		"source_description": "Notifications Sender",
+		"kinds": []map[string]string{
+			{
+				"id":          "acceptance-test",
 				"description": "Acceptance Test",
-				"critical":    true,
 			},
 		},
 	})
@@ -67,7 +65,7 @@ func (t SendNotificationToUser) RegisterClientNotification(notificationsServer s
 		panic(err)
 	}
 
-	request, err := http.NewRequest("PUT", notificationsServer.NotificationsPath(), bytes.NewBuffer(body))
+	request, err := http.NewRequest("PUT", notificationsServer.RegistrationPath(), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
@@ -85,11 +83,11 @@ func (t SendNotificationToUser) RegisterClientNotification(notificationsServer s
 	}
 
 	// Confirm response status code looks ok
-	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
+	Expect(response.StatusCode).To(Equal(http.StatusOK))
 }
 
 // Make request to /users/:guid
-func (t SendNotificationToUser) SendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
+func (t SendNotificationToUser) DeprecatedSendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "acceptance-test",
 		"html":    "<p>this is an acceptance%40test</p>",

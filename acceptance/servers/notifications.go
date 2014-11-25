@@ -85,6 +85,10 @@ func (s Notifications) EmailPath() string {
 	return "http://localhost:" + s.env.Port + "/emails"
 }
 
+func (s Notifications) NotificationsPath() string {
+	return "http://localhost:" + s.env.Port + "/notifications"
+}
+
 func (s Notifications) RegistrationPath() string {
 	return "http://localhost:" + s.env.Port + "/registration"
 }

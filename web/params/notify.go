@@ -16,22 +16,6 @@ const InvalidEmail = "<>InvalidEmail<>"
 
 var validOrganizationRoles = []string{"OrgManager", "OrgAuditor", "BillingManager"}
 
-type ParseError struct{}
-
-func (err ParseError) Error() string {
-	return "Request body could not be parsed"
-}
-
-type ValidationError []string
-
-func (err ValidationError) Error() string {
-	return strings.Join(err, ", ")
-}
-
-func (err ValidationError) Errors() []string {
-	return []string(err)
-}
-
 type Notify struct {
 	ReplyTo           string `json:"reply_to"`
 	Subject           string `json:"subject"`

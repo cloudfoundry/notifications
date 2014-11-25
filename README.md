@@ -42,7 +42,7 @@ notifications-client-name:
   authorized_grant_types: authorization_code client_credentials refresh_token
   redirect_uri: http://example.com/sessions/create
   authorities: notification_preferences.admin
-  autoapprove: 
+  autoapprove:
 ```
 
 If you are unfamiliar with UAA consult the [UAA token overview](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-Tokens.md).
@@ -141,7 +141,7 @@ The default templates are located in **./templates**. The templates directory sh
 
 When emailing a single user, `user_body.html` and `user_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a space, `space_body.html` and `space_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing an organization, `organization_body.html` and `organization_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing all users in a system, `everyone_body.html` and `everyone_body.text` are used as templates in the email body for the html and plaintext, respectively. When emailing a UAA scope, `uaa_scope_body.html` and `uaa_scope_body.text` are used as templates in the email body for the html and plaintext, respectively. 
 
-The default subject template is found in `subject.provided`. 
+The default subject template is found in `subject.provided`.
 
 When using the `/emails` endpoint, `email_body.html` and `email_body.text` are used as templates in the email body for the html and plaintext, respectively.
 

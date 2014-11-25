@@ -69,6 +69,7 @@ func NewRouter(mother MotherInterface) Router {
 			"POST /uaa_scopes/{scope}":         stack.NewStack(handlers.NewNotifyUAAScope(notify, errorWriter, uaaScopeStrategy, database)).Use(logging, notificationsWriteAuthenticator),
 			"POST /emails":                     stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailStrategy, database)).Use(logging, emailsWriteAuthenticator),
 			"PUT /registration":                stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter, database)).Use(logging, notificationsWriteAuthenticator),
+			"PUT /notifications":               stack.NewStack(handlers.NewRegisterClientWithNotifications(registrar, errorWriter, database)).Use(logging, notificationsWriteAuthenticator),
 			"OPTIONS /user_preferences":        stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),
 			"OPTIONS /user_preferences/{guid}": stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),
 			"GET /user_preferences":            stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, cors, notificationPreferencesReadAuthenticator),

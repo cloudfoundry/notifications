@@ -10,7 +10,7 @@
 	- [Send a notification to a UAA-scope](#post-uaa-scopes)
 	- [Send a notification to an email address](#post-emails)
 - Registering Notifications
-	- [Registering client notifications](#put-registration)
+	- [Registering client notifications](#put-notifications)
 - Managing User Preferences
 	- [Retrieve options for /user_preferences endpoints](#options-user-preferences)
 	- [Retrieve user preferences with a user token](#get-user-preferences)
@@ -479,7 +479,7 @@ X-Cf-Requestid: eb7ee46c-2142-4a74-5b73-e4971eea511a
 
 ## Registering Notifications
 
-<a name="put-registration"></a>
+<a name="put-notifications"></a>
 #### Registering client notifications
 
 ##### Request
@@ -492,22 +492,22 @@ Authorization: bearer <CLIENT-TOKEN>
 
 ###### Route
 ```
-PUT /registration
+PUT /notifications
 ```
 ###### Params
 
 | Key                 | Description                                    |
 | ------------------- | ---------------------------------------------- |
-| source_description\* | A description of the sender, to be displayed in messages to users instead of the raw "client_id" field (which is derived from UAA) |
-| kinds               | A complete list of all notification kinds that this client plans on using.  If passed, the notifier will add and remove kinds from its internal datastore to match the provided list. See table below for kinds fields |
+| source_name\* | The name of the sender, to be displayed in messages to users instead of the raw "client_id" field (which is derived from UAA) |
+| notifications               | A list of notification types specified as a map (see table below for properties). |
 
 \* required
 
-###### Kinds
+###### Notifications Map Properties
 
 | Key                       | Description |
 | ------------------------- | ----------- |
-| id\*                       | A simple machine readable string that identifies this type of notification.  It should be in the format /[0-9a-z_-.]+/i The notifier can use the ID to determine whether and how to notify a user. It’s recommended to use a GUID that doesn’t change for this field. |
+| <name-of-notification>    | A key collecting the "description" and "critical" properties of a single notification |
 | description\*              | A description of the kind, to be displayed in messages to users instead of the raw “id” field |
 | critical (default: false) | A boolean describing whether this kind of notification is to be considered “critical”, usually meaning that it cannot be unsubscribed from.  Because critical notifications can be annoying to end-users, registering a critical notification kind requires the client to have an access token with the critical_notifications.write scope. |
 
@@ -517,8 +517,8 @@ PUT /registration
 ```
 $ curl -i -X PUT \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"source_description": "Galactic Empire", "kinds": [{"id": "example-kind-id", "description":"Example Kind Description", "critical": true}]}' \
-  http://notifications.example.com/registration
+  -d '{"source_name":"Galactic Empire", "notifications":{"my-first-notification-id":{"description":"Example Kind Description", "critical": true}, "my-second-notification-id":{"description":"Example description", "critical":true}}}' \
+  http://notifications.example.com/notifications
 
 
 HTTP/1.1 200 OK
