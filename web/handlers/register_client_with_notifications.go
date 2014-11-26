@@ -34,7 +34,9 @@ func (handler RegisterClientWithNotifications) ServeHTTP(w http.ResponseWriter, 
 	handler.Execute(w, req, handler.database.Connection(), context)
 }
 
-func (handler RegisterClientWithNotifications) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) {
+func (handler RegisterClientWithNotifications) Execute(w http.ResponseWriter, req *http.Request,
+	connection models.ConnectionInterface, context stack.Context) {
+
 	parameters, err := params.NewClientRegistration(req.Body)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
@@ -88,7 +90,13 @@ func (handler RegisterClientWithNotifications) Execute(w http.ResponseWriter, re
 			return
 		}
 	}
-	transaction.Commit()
+
+	err = transaction.Commit()
+	if err != nil {
+		handler.errorWriter.Write(w, err)
+		return
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
 

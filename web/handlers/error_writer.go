@@ -49,6 +49,8 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 		writer.write(w, http.StatusConflict, []string{err.Error()})
 	case models.ErrRecordNotFound:
 		writer.write(w, http.StatusNotFound, []string{err.Error()})
+	case models.TransactionCommitError:
+		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
 	case strategies.DefaultScopeError:
 		writer.write(w, http.StatusNotAcceptable, []string{err.Error()})
 	default:

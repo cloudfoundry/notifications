@@ -70,7 +70,10 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
 			return []Response{}
 		}
 	}
-	transaction.Commit()
+	err := transaction.Commit()
+	if err != nil {
+		return []Response{}
+	}
 
 	return responses
 }

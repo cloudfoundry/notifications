@@ -201,6 +201,18 @@ var _ = Describe("UpdatePreferences", func() {
 				Expect(conn.CommitWasCalled).To(BeFalse())
 				Expect(conn.RollbackWasCalled).To(BeFalse())
 			})
+
+			It("delegates transaction errors to the error writer", func() {
+				conn.CommitError = "transaction error, oh no"
+				handler.Execute(writer, request, conn, context)
+
+				Expect(errorWriter.Error).To(BeAssignableToTypeOf(models.NewTransactionCommitError("transaction error, oh no")))
+				Expect(conn.BeginWasCalled).To(BeTrue())
+				Expect(conn.CommitWasCalled).To(BeTrue())
+				Expect(conn.RollbackWasCalled).To(BeFalse())
+
+			})
+
 		})
 	})
 

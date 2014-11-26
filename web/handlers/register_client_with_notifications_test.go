@@ -250,6 +250,18 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 				Expect(conn.CommitWasCalled).To(BeFalse())
 				Expect(conn.RollbackWasCalled).To(BeTrue())
 			})
+
+			It("delegates transaction errors to the ErrorWriter", func() {
+				conn.CommitError = "transaction commit error"
+				handler.Execute(writer, request, conn, context)
+
+				Expect(conn.BeginWasCalled).To(BeTrue())
+				Expect(conn.CommitWasCalled).To(BeTrue())
+				Expect(conn.RollbackWasCalled).To(BeFalse())
+
+				Expect(errorWriter.Error).To(Equal(errors.New("transaction commit error")))
+
+			})
 		})
 	})
 })

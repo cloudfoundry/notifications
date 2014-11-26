@@ -80,7 +80,12 @@ func (handler RegisterNotifications) Execute(w http.ResponseWriter, req *http.Re
 			return
 		}
 	}
-	transaction.Commit()
+
+	err = transaction.Commit()
+	if err != nil {
+		handler.errorWriter.Write(w, err)
+		return
+	}
 }
 
 func (handler RegisterNotifications) ValidateCriticalScopes(scopes interface{}, kinds []models.Kind, client models.Client) ([]models.Kind, error) {

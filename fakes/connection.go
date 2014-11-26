@@ -2,6 +2,7 @@ package fakes
 
 import (
 	"database/sql"
+	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
@@ -20,6 +21,7 @@ type DBConn struct {
 	BeginWasCalled    bool
 	CommitWasCalled   bool
 	RollbackWasCalled bool
+	CommitError       string
 }
 
 func NewDBConn() *DBConn {
@@ -33,6 +35,9 @@ func (conn *DBConn) Begin() error {
 
 func (conn *DBConn) Commit() error {
 	conn.CommitWasCalled = true
+	if conn.CommitError != "" {
+		return errors.New(conn.CommitError)
+	}
 	return nil
 }
 

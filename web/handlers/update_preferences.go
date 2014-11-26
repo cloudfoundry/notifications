@@ -70,7 +70,12 @@ func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Reques
 		}
 		return
 	}
-	transaction.Commit()
+
+	err = transaction.Commit()
+	if err != nil {
+		handler.errorWriter.Write(w, models.NewTransactionCommitError(err.Error()))
+		return
+	}
 
 	w.WriteHeader(http.StatusNoContent)
 }

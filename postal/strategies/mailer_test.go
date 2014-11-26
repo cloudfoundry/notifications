@@ -123,11 +123,12 @@ var _ = Describe("Mailer", func() {
 					"user-3": {ID: "user-3"},
 					"user-4": {ID: "user-4", Emails: []string{"user-4"}},
 				}
-				mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
+				responses := mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())
 				Expect(conn.RollbackWasCalled).To(BeFalse())
+				Expect(responses).ToNot(BeEmpty())
 			})
 
 			It("rolls back the transaction when there is an error", func() {
@@ -142,6 +143,23 @@ var _ = Describe("Mailer", func() {
 				Expect(conn.CommitWasCalled).To(BeFalse())
 				Expect(conn.RollbackWasCalled).To(BeTrue())
 			})
+
+			It("returns an empty []Response{} if transaction fails", func() {
+				conn.CommitError = "the commit blew up"
+				users := map[string]uaa.User{
+					"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
+					"user-2": {},
+					"user-3": {ID: "user-3"},
+					"user-4": {ID: "user-4", Emails: []string{"user-4"}},
+				}
+				responses := mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
+
+				Expect(conn.BeginWasCalled).To(BeTrue())
+				Expect(conn.CommitWasCalled).To(BeTrue())
+				Expect(conn.RollbackWasCalled).To(BeFalse())
+				Expect(responses).To(Equal([]strategies.Response{}))
+			})
+
 		})
 	})
 })
