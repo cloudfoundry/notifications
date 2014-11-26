@@ -10,6 +10,10 @@ func (err ParseError) Error() string {
 
 type SchemaError string
 
+func NewSchemaError(msg string) SchemaError {
+	return SchemaError(msg)
+}
+
 func (err SchemaError) Error() string {
 	return string(err)
 }

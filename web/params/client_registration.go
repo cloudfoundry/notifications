@@ -54,8 +54,14 @@ func strictValidateJSON(bytes []byte) error {
 		if key == "source_name" {
 			continue
 		} else if key == "notifications" {
+			if untypedClientRegistration[key] == nil {
+				return SchemaError(fmt.Sprintf(`only include "notifications" key when adding a notification"`))
+			}
 			notifications := untypedClientRegistration[key].(map[string]interface{})
 			for _, notificationData := range notifications {
+				if notificationData == nil {
+					return SchemaError(fmt.Sprintf(`notification must not be null`))
+				}
 				notificationMap := notificationData.(map[string]interface{})
 				for propertyName, _ := range notificationMap {
 					if propertyName == "description" || propertyName == "critical" {

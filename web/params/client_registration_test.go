@@ -49,27 +49,45 @@ var _ = Describe("ClientRegistration", func() {
 			}))
 		})
 
-		It("returns an error when the parameters are invalid JSON", func() {
-			_, err := params.NewClientRegistration(strings.NewReader("this is not valid JSON"))
-			Expect(err).To(BeAssignableToTypeOf(params.ParseError{}))
+		Context("error cases", func() {
+			It("returns an error when the parameters are invalid JSON", func() {
+				_, err := params.NewClientRegistration(strings.NewReader("this is not valid JSON"))
+				Expect(err).To(BeAssignableToTypeOf(params.ParseError{}))
+			})
+
+			It("returns an error when the request body is missing", func() {
+				_, err := params.NewClientRegistration(ErrorReader{})
+				Expect(err).To(BeAssignableToTypeOf(params.ParseError{}))
+			})
+
+			Context("when the JSON contains unexpected properties", func() {
+				It("returns an error for invalid top level keys ", func() {
+					someJson := `{ "source_name" : "Raptor Containment Unit", "invalid_property" : 5 }`
+					_, err := params.NewClientRegistration(strings.NewReader(someJson))
+					Expect(err).To(BeAssignableToTypeOf(params.NewSchemaError("")))
+				})
+
+				It("returns an error for invalid nested keys", func() {
+					someJson := `{ "source_name" : "Raptor", "notifications": { "some_id": {"description" : "ok", "invalid_property" : 5 } } }`
+					_, err := params.NewClientRegistration(strings.NewReader(someJson))
+					Expect(err).To(BeAssignableToTypeOf(params.NewSchemaError("")))
+				})
+			})
+
+			Context("when the JSON contains null values", func() {
+				It("returns an error if 'notifications' collection is null", func() {
+					someJson := `{ "source_name" : "Something something raptor", "notifications": null }`
+					_, err := params.NewClientRegistration(strings.NewReader(someJson))
+					Expect(err).To(BeAssignableToTypeOf(params.NewSchemaError("")))
+				})
+				It("returns an error if an individual notification is null ", func() {
+					someJson := `{ "source_name" : "Raptor", "notifications": { "some_id":  null } }`
+					_, err := params.NewClientRegistration(strings.NewReader(someJson))
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(BeAssignableToTypeOf(params.NewSchemaError("")))
+				})
+			})
 		})
-
-		It("returns an error when the request body is missing", func() {
-			_, err := params.NewClientRegistration(ErrorReader{})
-			Expect(err).To(BeAssignableToTypeOf(params.ParseError{}))
-		})
-
-		It("returns an error when the JSON contains unexpected properties", func() {
-			someJson := `{ "source_name" : "Raptor Containment Unit", "invalid_property" : 5 }`
-			_, err := params.NewClientRegistration(strings.NewReader(someJson))
-			Expect(err).To(HaveOccurred())
-
-			someJson = `{ "source_name" : "Raptor", "notifications": { "some_id": {"description" : "ok", "invalid_property" : 5 } } }`
-			_, err = params.NewClientRegistration(strings.NewReader(someJson))
-			Expect(err).To(HaveOccurred())
-
-		})
-
 	})
 
 	Describe("Validate", func() {
