@@ -25,7 +25,7 @@ var _ = Describe("Notify", func() {
 	Describe("Execute", func() {
 		Context("When Emailing a user or a group", func() {
 			var handler handlers.Notify
-			var finder *fakes.Finder
+			var finder *fakes.NotificationsFinder
 			var validator *fakes.Validator
 			var registrar *fakes.Registrar
 			var request *http.Request
@@ -49,7 +49,7 @@ var _ = Describe("Notify", func() {
 					ClientID:    "mister-client",
 					Critical:    true,
 				}
-				finder = fakes.NewFinder()
+				finder = fakes.NewNotificationsFinder()
 				finder.Clients["mister-client"] = client
 				finder.Kinds["test_email|mister-client"] = kind
 

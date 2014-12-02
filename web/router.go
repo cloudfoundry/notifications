@@ -20,7 +20,7 @@ type MotherInterface interface {
 	OrganizationStrategy() strategies.OrganizationStrategy
 	EveryoneStrategy() strategies.EveryoneStrategy
 	UAAScopeStrategy() strategies.UAAScopeStrategy
-	NotificationFinder() services.NotificationFinder
+	NotificationsFinder() services.NotificationsFinder
 	PreferencesFinder() *services.PreferencesFinder
 	PreferenceUpdater() services.PreferenceUpdater
 	TemplateServiceObjects() (services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter)
@@ -37,26 +37,27 @@ type Router struct {
 
 func NewRouter(mother MotherInterface) Router {
 	registrar := mother.Registrar()
+	notificationsFinder := mother.NotificationsFinder()
 	emailStrategy := mother.EmailStrategy()
 	userStrategy := mother.UserStrategy()
 	spaceStrategy := mother.SpaceStrategy()
 	organizationStrategy := mother.OrganizationStrategy()
 	everyoneStrategy := mother.EveryoneStrategy()
 	uaaScopeStrategy := mother.UAAScopeStrategy()
-	notify := handlers.NewNotify(mother.NotificationFinder(), registrar)
+	notify := handlers.NewNotify(mother.NotificationsFinder(), registrar)
 	preferencesFinder := mother.PreferencesFinder()
 	preferenceUpdater := mother.PreferenceUpdater()
 	templateFinder, templateUpdater, templateDeleter := mother.TemplateServiceObjects()
 	logging := mother.Logging()
 	errorWriter := mother.ErrorWriter()
 	notificationsWriteAuthenticator := mother.Authenticator("notifications.write")
+	notificationsAdminAuthenticator := mother.Authenticator("notifications.admin")
 	notificationPreferencesReadAuthenticator := mother.Authenticator("notification_preferences.read")
 	notificationPreferencesWriteAuthenticator := mother.Authenticator("notification_preferences.write")
 	notificationPreferencesAdminAuthenticator := mother.Authenticator("notification_preferences.admin")
 	emailsWriteAuthenticator := mother.Authenticator("emails.write")
 	notificationsTemplateAdminAuthenticator := mother.Authenticator("notification_templates.admin")
 	database := mother.Database()
-
 	cors := mother.CORS()
 
 	return Router{
@@ -70,6 +71,7 @@ func NewRouter(mother MotherInterface) Router {
 			"POST /emails":                     stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailStrategy, database)).Use(logging, emailsWriteAuthenticator),
 			"PUT /registration":                stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter, database)).Use(logging, notificationsWriteAuthenticator),
 			"PUT /notifications":               stack.NewStack(handlers.NewRegisterClientWithNotifications(registrar, errorWriter, database)).Use(logging, notificationsWriteAuthenticator),
+			"GET /notifications":               stack.NewStack(handlers.NewGetAllNotifications(notificationsFinder, errorWriter)).Use(logging, notificationsAdminAuthenticator),
 			"OPTIONS /user_preferences":        stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),
 			"OPTIONS /user_preferences/{guid}": stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),
 			"GET /user_preferences":            stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, cors, notificationPreferencesReadAuthenticator),

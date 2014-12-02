@@ -4,6 +4,7 @@ import "github.com/cloudfoundry-incubator/notifications/models"
 
 type ClientsRepo struct {
 	Clients     map[string]models.Client
+	AllClients  []models.Client
 	UpsertError error
 	FindError   error
 }
@@ -37,4 +38,8 @@ func (fake *ClientsRepo) Find(conn models.ConnectionInterface, id string) (model
 		return client, fake.FindError
 	}
 	return models.Client{}, models.ErrRecordNotFound{}
+}
+
+func (fake *ClientsRepo) FindAll(conn models.ConnectionInterface) ([]models.Client, error) {
+	return fake.AllClients, nil
 }

@@ -11,6 +11,7 @@ type ClientsRepo struct{}
 type ClientsRepoInterface interface {
 	Create(ConnectionInterface, Client) (Client, error)
 	Find(ConnectionInterface, string) (Client, error)
+	FindAll(ConnectionInterface) ([]Client, error)
 	Update(ConnectionInterface, Client) (Client, error)
 	Upsert(ConnectionInterface, Client) (Client, error)
 }
@@ -41,6 +42,16 @@ func (repo ClientsRepo) Find(conn ConnectionInterface, id string) (Client, error
 		return client, err
 	}
 	return client, nil
+}
+
+func (repo ClientsRepo) FindAll(conn ConnectionInterface) ([]Client, error) {
+	clients := []Client{}
+	_, err := conn.Select(&clients, "SELECT * FROM `clients`")
+	if err != nil {
+		return []Client{}, err
+	}
+
+	return clients, nil
 }
 
 func (repo ClientsRepo) Update(conn ConnectionInterface, client Client) (Client, error) {

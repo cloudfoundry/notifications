@@ -18,11 +18,11 @@ type NotifyInterface interface {
 }
 
 type Notify struct {
-	finder    services.NotificationFinderInterface
+	finder    services.NotificationsFinderInterface
 	registrar services.RegistrarInterface
 }
 
-func NewNotify(finder services.NotificationFinderInterface, registrar services.RegistrarInterface) Notify {
+func NewNotify(finder services.NotificationsFinderInterface, registrar services.RegistrarInterface) Notify {
 	return Notify{
 		finder:    finder,
 		registrar: registrar,

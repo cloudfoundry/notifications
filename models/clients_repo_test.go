@@ -46,6 +46,37 @@ var _ = Describe("ClientsRepo", func() {
 		})
 	})
 
+	Describe("FindAll", func() {
+		It("returns all the records in the database", func() {
+			client1 := models.Client{
+				ID:          "client1",
+				Description: "client1-description",
+			}
+
+			client2 := models.Client{
+				ID:          "client2",
+				Description: "client2-description",
+			}
+
+			firstClient, err := repo.Create(conn, client1)
+			if err != nil {
+				panic(err)
+			}
+
+			secondClient, err := repo.Create(conn, client2)
+			if err != nil {
+				panic(err)
+			}
+
+			clients, err := repo.FindAll(conn)
+			if err != nil {
+				panic(err)
+			}
+
+			Expect(clients).To(Equal([]models.Client{firstClient, secondClient}))
+		})
+	})
+
 	Describe("Update", func() {
 		It("updates the record in the database", func() {
 			client := models.Client{

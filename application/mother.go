@@ -136,9 +136,9 @@ func (mother Mother) EmailStrategy() strategies.EmailStrategy {
 	return strategies.NewEmailStrategy(mother.Mailer(), utilities.NewTemplatesLoader(mother.TemplateFinder()))
 }
 
-func (mother Mother) NotificationFinder() services.NotificationFinder {
+func (mother Mother) NotificationsFinder() services.NotificationsFinder {
 	clientsRepo, kindsRepo := mother.Repos()
-	return services.NewNotificationFinder(clientsRepo, kindsRepo, mother.Database())
+	return services.NewNotificationsFinder(clientsRepo, kindsRepo, mother.Database())
 }
 
 func (mother Mother) Mailer() strategies.Mailer {

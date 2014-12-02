@@ -82,6 +82,72 @@ var _ = Describe("KindsRepo", func() {
 		})
 	})
 
+	Describe("FindByClient", func() {
+		It("finds all the records matching the given client ID", func() {
+			kind1 := models.Kind{
+				ID:          "kind1",
+				Description: "kind1-description",
+				Critical:    true,
+				ClientID:    "client1",
+			}
+
+			kind2 := models.Kind{
+				ID:          "kind2",
+				Description: "kind2-description",
+				Critical:    false,
+				ClientID:    "client2",
+			}
+
+			kind3 := models.Kind{
+				ID:          "kind3",
+				Description: "kind3-description",
+				Critical:    false,
+				ClientID:    "client1",
+			}
+
+			_, err := repo.Create(conn, kind1)
+			if err != nil {
+				panic(err)
+			}
+
+			_, err = repo.Create(conn, kind2)
+			if err != nil {
+				panic(err)
+			}
+
+			_, err = repo.Create(conn, kind3)
+			if err != nil {
+				panic(err)
+			}
+
+			kindsForClient1, err := repo.FindByClient(conn, "client1")
+			if err != nil {
+				panic(err)
+			}
+
+			Expect(kindsForClient1[0].ID).To(Equal(kind1.ID))
+			Expect(kindsForClient1[0].Description).To(Equal(kind1.Description))
+			Expect(kindsForClient1[0].Critical).To(Equal(kind1.Critical))
+			Expect(kindsForClient1[0].ClientID).To(Equal(kind1.ClientID))
+			Expect(kindsForClient1[0].CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+
+			Expect(kindsForClient1[1].ID).To(Equal(kind3.ID))
+			Expect(kindsForClient1[1].Description).To(Equal(kind3.Description))
+			Expect(kindsForClient1[1].Critical).To(Equal(kind3.Critical))
+			Expect(kindsForClient1[1].ClientID).To(Equal(kind3.ClientID))
+			Expect(kindsForClient1[1].CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+		})
+
+		Context("when there are no kinds for the given client", func() {
+			It("returns an empty slice of kinds", func() {
+				kindsForClient, err := repo.FindByClient(conn, "i-have-no-kinds")
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(kindsForClient).To(BeEmpty())
+			})
+		})
+	})
+
 	Describe("Update", func() {
 		It("updates the record in the database", func() {
 			kind := models.Kind{
