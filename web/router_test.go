@@ -108,7 +108,7 @@ var _ = Describe("Router", func() {
 		Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
 
 		authenticator := s.Middleware[1].(middleware.Authenticator)
-		Expect(authenticator.Scopes).To(Equal([]string{"notifications.admin"}))
+		Expect(authenticator.Scopes).To(Equal([]string{"notifications.manage"}))
 	})
 
 	It("routes GET /user_preferences", func() {

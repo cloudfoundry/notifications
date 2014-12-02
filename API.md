@@ -554,7 +554,7 @@ Returns all notifications in the system, grouped by client.  Clients without any
 ```
 Authorization: bearer <CLIENT-TOKEN>
 ```
-\* The client token requires `notifications.admin` scope.
+\* The client token requires `notifications.manage` scope.
 
 ###### Route
 ```
