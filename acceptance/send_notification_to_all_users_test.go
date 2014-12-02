@@ -144,11 +144,13 @@ func (t SendNotificationToAllUsers) SendNotificationToAllUsers(notificationsServ
 	Eventually(func() int {
 		return len(smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(2))
-	delivery := smtpServer.Deliveries[0]
 
+	recipients := []string{smtpServer.Deliveries[0].Recipients[0], smtpServer.Deliveries[1].Recipients[0]}
+	Expect(recipients).To(ConsistOf([]string{"why-email@example.com", "slayer@example.com"}))
+
+	delivery := smtpServer.Deliveries[0]
 	env := config.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
-	Expect(delivery.Recipients).To(Equal([]string{"why-email@example.com"}))
 
 	data := strings.Split(string(delivery.Data), "\n")
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
