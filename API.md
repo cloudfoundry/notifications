@@ -10,7 +10,9 @@
 	- [Send a notification to a UAA-scope](#post-uaa-scopes)
 	- [Send a notification to an email address](#post-emails)
 - Registering Notifications
-	- [Registering client notifications](#put-notifications)
+	- [Register client notifications](#put-notifications)
+- Listing notifications
+	- [List all notifications](#get-notifications)
 - Managing User Preferences
 	- [Retrieve options for /user_preferences endpoints](#options-user-preferences)
 	- [Retrieve user preferences with a user token](#get-user-preferences)
@@ -480,7 +482,7 @@ X-Cf-Requestid: eb7ee46c-2142-4a74-5b73-e4971eea511a
 ## Registering Notifications
 
 <a name="put-notifications"></a>
-#### Registering client notifications
+#### Register client notifications
 
 ##### Request
 
@@ -508,7 +510,7 @@ PUT /notifications
 | Key                       | Description |
 | ------------------------- | ----------- |
 | <name-of-notification>    | A key collecting the "description" and "critical" properties of a single notification |
-| description\*              | A description of the kind, to be displayed in messages to users instead of the raw “id” field |
+| description\*              | A description of the notification, to be displayed in messages to users instead of the raw “id” field |
 | critical (default: false) | A boolean describing whether this kind of notification is to be considered “critical”, usually meaning that it cannot be unsubscribed from.  Because critical notifications can be annoying to end-users, registering a critical notification kind requires the client to have an access token with the critical_notifications.write scope. |
 
 \* required
@@ -539,6 +541,85 @@ X-Cf-Requestid: f39e22a4-6693-4a6d-6b27-006aecc924d4
 | Fields   | Description |
 | -------- | ----------- |
 | \<none\> |             |
+
+## Listing Notifications
+
+<a name="get-notifications"></a>
+#### List all notifications
+Returns all notifications in the system, grouped by client.  Clients without any notifications are also included.
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `notifications.admin` scope.
+
+###### Route
+```
+GET /notifications
+```
+
+###### CURL example
+```
+$ curl -i \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/notifications
+
+HTTP/1.1 200 OK
+Connection: close
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 02 Dec 2014 21:40:59 GMT
+X-Cf-Requestid: e3499f18-069a-4eed-720f-35baa61f1b5c
+Transfer-Encoding: chunked
+
+{
+  "client-27054050-f813-4c0d-6fe4-2337f09a0aca": {
+    "name": "Flynn",
+    "notifications": {
+      "clu": {
+        "description": "CLU",
+        "critical": false
+      },
+      "grid": {
+        "description": "A Digital Frontier...",
+        "critical": false
+      },
+      "mcp": {
+        "description": "Master Control Program",
+        "critical": true
+      }
+    }
+  },
+ "client-36f1d81e-b9d6-400c-4f37-154ca2e8f01b": {
+    "name": "Some other client",
+    "notifications": {
+      "my-2nd-notification": {
+        "description": "another test thingy",
+        "critical": true
+      }
+    }
+  }
+}
+
+```
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields    | Description                                      |
+| --------  | -----------                                      |
+| client-id | Top-level keys are client GUIDs derived from UAA |
+| name      | The "source_name" set by the `PUT` method; displayed in messages to users |
+| notifications | A map, where the keys are notification IDs set by the `PUT` method |
+| description | A description of the notification.  Set by the `PUT` method |
+| critical | Boolean, indicating if notification is "critical".  Set by the `PUT` method |
+
 
 ## Managing User Preferences
 
