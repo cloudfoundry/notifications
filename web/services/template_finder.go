@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
@@ -38,75 +37,29 @@ func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, rootPath str
 	}
 }
 
-func (finder TemplateFinder) Find(templateName string) (models.Template, error) {
-	names := finder.ParseTemplateName(templateName)
-	if len(names) == 0 {
-		return models.Template{}, TemplateNotFoundError(templateName)
-	}
-	template, err := finder.search(finder.database.Connection(), names[0], names[1:])
+func (finder TemplateFinder) Find(templateID string) (models.Template, error) {
+	template, err := finder.search(finder.database.Connection(), templateID)
 	if err != nil {
 		return models.Template{}, err
-	}
-
-	if template.Name == templateName {
-		template.Overridden = true
 	}
 
 	return template, err
 }
 
-func (finder TemplateFinder) ParseTemplateName(name string) []string {
-	names := make([]string, 0)
-
-	for _, suffix := range models.TemplateNames {
-		if strings.HasSuffix(name, suffix) {
-			prefix := strings.TrimSuffix(name, suffix)
-			prefix = strings.TrimSuffix(prefix, ".")
-			var parts []string
-			for _, part := range strings.Split(prefix, ".") {
-				if part != "" {
-					parts = append(parts, part)
-				}
-			}
-			length := len(parts)
-			if length > 2 {
-				return names
-			}
-			for i := 0; i < length; i++ {
-				beginning := strings.Join(parts, ".")
-				names = append(names, beginning+"."+suffix)
-				parts = parts[:len(parts)-1]
-			}
-			names = append(names, suffix)
-			return names
-		}
-	}
-	return names
-}
-
-func (finder TemplateFinder) search(connection models.ConnectionInterface, name string, alternates []string) (models.Template, error) {
-	template, err := finder.templatesRepo.Find(connection, name)
+func (finder TemplateFinder) search(connection models.ConnectionInterface, templateID string) (models.Template, error) {
+	template, err := finder.templatesRepo.Find(connection, templateID)
 
 	if err != nil {
 		if (err == models.ErrRecordNotFound{}) {
-			if len(alternates) > 0 {
-				return finder.search(connection, alternates[0], alternates[1:])
-			} else {
-				return finder.findDefaultTemplate(name)
-			}
+			return finder.findDefaultTemplate(templateID)
 		}
 		return models.Template{}, err
 	}
-
 	return template, nil
 }
 
-func (finder TemplateFinder) findDefaultTemplate(name string) (models.Template, error) {
-	if name == models.SubjectMissingTemplateName || name == models.SubjectProvidedTemplateName {
-		return finder.defaultSubjectTemplate(name)
-	} else {
-		return finder.defaultTemplate(name)
-	}
+func (finder TemplateFinder) findDefaultTemplate(templateID string) (models.Template, error) {
+	return finder.defaultTemplate(templateID)
 }
 
 func (finder TemplateFinder) defaultTemplate(name string) (models.Template, error) {
@@ -121,14 +74,6 @@ func (finder TemplateFinder) defaultTemplate(name string) (models.Template, erro
 	}
 
 	return models.Template{Text: text, HTML: html}, nil
-}
-
-func (finder TemplateFinder) defaultSubjectTemplate(name string) (models.Template, error) {
-	text, err := finder.readTemplate(name)
-	if err != nil {
-		return models.Template{}, err
-	}
-	return models.Template{Text: text, HTML: ""}, nil
 }
 
 func (finder TemplateFinder) readTemplate(name string) (string, error) {

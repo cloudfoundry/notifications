@@ -10,26 +10,31 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Updater", func() {
-	Describe("#Update", func() {
+var _ = Describe("Creator", func() {
+	Describe("Create", func() {
 		var templatesRepo *fakes.TemplatesRepo
 		var template models.Template
-		var updater services.TemplateUpdater
+		var creator services.TemplateCreator
 
 		BeforeEach(func() {
 			templatesRepo = fakes.NewTemplatesRepo()
 			template = models.Template{
-				Name: "gobble." + models.UserBodyTemplateName,
-				Text: "gobble",
-				HTML: "<p>gobble</p>",
+				Name:    "Big Hero 6 Template",
+				Text:    "Adorable robot.",
+				HTML:    "<p>Many heroes.</p>",
+				Subject: "Robots and Heroes",
 			}
 
-			updater = services.NewTemplateUpdater(templatesRepo, fakes.NewDatabase())
+			creator = services.NewTemplateCreator(templatesRepo, fakes.NewDatabase())
 		})
 
-		It("Inserts templates into the templates repo", func() {
+		It("Creates a new template via the templates repo", func() {
 			Expect(templatesRepo.Templates).ToNot(ContainElement(template))
-			err := updater.Update(template)
+			_, err := creator.Create(template)
+			if err != nil {
+				panic(err)
+			}
+
 			Expect(err).ToNot(HaveOccurred())
 			Expect(templatesRepo.Templates).To(ContainElement(template))
 		})
@@ -37,8 +42,8 @@ var _ = Describe("Updater", func() {
 		It("propagates errors from repo", func() {
 			expectedErr := errors.New("Boom!")
 
-			templatesRepo.UpsertError = expectedErr
-			err := updater.Update(template)
+			templatesRepo.CreateError = expectedErr
+			_, err := creator.Create(template)
 
 			Expect(err).To(Equal(expectedErr))
 		})

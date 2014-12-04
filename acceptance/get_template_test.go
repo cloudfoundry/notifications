@@ -26,10 +26,9 @@ var _ = Describe("Templates GET Endpoint", func() {
 		database := models.NewDatabase(env.DatabaseURL, migrationsPath)
 
 		templateData := models.Template{
-			Name:       "overridden-client." + models.UserBodyTemplateName,
-			Text:       "Text Template",
-			HTML:       "<p>HTML Template</p>",
-			Overridden: true,
+			Name: "overridden-client." + models.UserBodyTemplateName,
+			Text: "Text Template",
+			HTML: "<p>HTML Template</p>",
 		}
 		database.Connection().Insert(&templateData)
 	})
@@ -128,7 +127,6 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
     using the "{{.UnsubscribeID}}" unsubscribe token.</p>
 `))
 
-	Expect(responseJSON.Overridden).To(BeFalse())
 }
 
 func (t GetTemplates) GetUserTemplates(notificationsServer servers.Notifications, clientToken uaa.Token) {
@@ -185,7 +183,6 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
     using the "{{.UnsubscribeID}}" unsubscribe token.</p>
 `))
 
-	Expect(responseJSON.Overridden).To(BeFalse())
 }
 
 func (t GetTemplates) GetEmailTemplates(notificationsServer servers.Notifications, clientToken uaa.Token) {
@@ -242,7 +239,6 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
     using the "{{.UnsubscribeID}}" unsubscribe token.</p>
 `))
 
-	Expect(responseJSON.Overridden).To(BeFalse())
 }
 
 func (t GetTemplates) GetUserTemplatesForOverriddenClient(notificationsServer servers.Notifications, clientToken uaa.Token, clientID string) {
@@ -277,8 +273,6 @@ func (t GetTemplates) GetUserTemplatesForOverriddenClient(notificationsServer se
 
 	Expect(responseJSON.HTML).To(Equal("<p>HTML Template</p>"))
 
-	Expect(responseJSON.Overridden).To(BeTrue())
-
 	request, err = http.NewRequest("GET", notificationsServer.TemplatePath(models.UserBodyTemplateName), bytes.NewBuffer([]byte{}))
 	if err != nil {
 		panic(err)
@@ -301,8 +295,6 @@ func (t GetTemplates) GetUserTemplatesForOverriddenClient(notificationsServer se
 	if err != nil {
 		panic(err)
 	}
-
-	Expect(responseJSON.Overridden).To(BeFalse())
 }
 
 func (t GetTemplates) GetUserTemplatesForClient(notificationsServer servers.Notifications, clientToken uaa.Token, clientID string) {
@@ -359,7 +351,6 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
     using the "{{.UnsubscribeID}}" unsubscribe token.</p>
 `))
 
-	Expect(responseJSON.Overridden).To(BeFalse())
 }
 
 func (t GetTemplates) GetUserTemplatesForClientAndKind(notificationsServer servers.Notifications, clientToken uaa.Token, clientID, kindID string) {
@@ -416,5 +407,4 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
     using the "{{.UnsubscribeID}}" unsubscribe token.</p>
 `))
 
-	Expect(responseJSON.Overridden).To(BeFalse())
 }

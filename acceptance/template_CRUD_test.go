@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"path"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/config"
@@ -16,12 +17,16 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Templates PUT Endpoint", func() {
+var _ = Describe("Create a new template", func() {
 	BeforeEach(func() {
 		TruncateTables()
+
+		env := config.NewEnvironment()
+		migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
+		models.NewDatabase(env.DatabaseURL, migrationsPath) // this is the "database" variable
 	})
 
-	It("allows a user to set body templates", func() {
+	It("allows a user to create a new template", func() {
 		// Boot Fake SMTP Server
 		smtpServer := servers.NewSMTP()
 		smtpServer.Boot()
@@ -45,19 +50,22 @@ var _ = Describe("Templates PUT Endpoint", func() {
 			panic(err)
 		}
 
-		test := SetTemplates{}
-		text := "rulebook"
-		html := "<p>follow the rules</p>"
-		test.SetDefaultSpaceTemplate(notificationsServer, clientToken, text, html)
-		test.GetOverriddenDefaultTemplate(notificationsServer, clientToken, text, html)
+		test := TemplatesCRUD{}
+		name := "Star Wars"
+		subject := "Awesomeness"
+		html := "<p>Millenium Falcon</p>"
+		text := "Millenium Falcon"
+
+		test.CreateNewTemplate(notificationsServer, clientToken, name, subject, html, text)
+		test.GetTemplate(notificationsServer, clientToken, name, subject, html, text)
 	})
 })
 
-type SetTemplates struct{}
+type TemplatesCRUD struct{}
 
-func (t SetTemplates) SetDefaultSpaceTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, text, html string) {
-	jsonBody := []byte(fmt.Sprintf(`{"text":"%s", "html":"%s"}`, text, html))
-	request, err := http.NewRequest("PUT", notificationsServer.TemplatePath(models.SpaceBodyTemplateName), bytes.NewBuffer(jsonBody))
+func (test TemplatesCRUD) CreateNewTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, name, subject, html, text string) {
+	jsonBody := []byte(fmt.Sprintf(`{"name":"%s", "subject":"%s", "html":"%s", "text":"%s"}`, name, subject, html, text))
+	request, err := http.NewRequest("POST", notificationsServer.TemplatesBasePath(), bytes.NewBuffer(jsonBody))
 	if err != nil {
 		panic(err)
 	}
@@ -69,12 +77,24 @@ func (t SetTemplates) SetDefaultSpaceTemplate(notificationsServer servers.Notifi
 		panic(err)
 	}
 
-	// Confirm response status code is a 204
-	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	var responseMap map[string]string
+	err = json.Unmarshal(body, &responseMap)
+	if err != nil {
+		panic(err)
+	}
+
+	Expect(response.StatusCode).To(Equal(http.StatusCreated))
+	Expect(responseMap).To(HaveKey("template-id"))
+	Expect(responseMap["template-id"]).ToNot(BeNil())
 }
 
-func (t SetTemplates) GetOverriddenDefaultTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, text, html string) {
-	request, err := http.NewRequest("GET", notificationsServer.TemplatePath(models.SpaceBodyTemplateName), bytes.NewBuffer([]byte{}))
+func (test TemplatesCRUD) GetTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, name, subject, html, text string) {
+	request, err := http.NewRequest("GET", notificationsServer.TemplatePath("guid"), bytes.NewBuffer([]byte{}))
 	if err != nil {
 		panic(err)
 	}
@@ -101,6 +121,8 @@ func (t SetTemplates) GetOverriddenDefaultTemplate(notificationsServer servers.N
 		panic(err)
 	}
 
+	Expect(responseJSON.Name).To(Equal(name))
+	Expect(responseJSON.Subject).To(Equal(subject))
 	Expect(responseJSON.Text).To(Equal(text))
 	Expect(responseJSON.HTML).To(Equal(html))
 }

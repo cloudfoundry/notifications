@@ -97,6 +97,20 @@ var _ = Describe("ErrorWriter", func() {
 		Expect(body["errors"]).To(ContainElement("An email template could not be loaded"))
 	})
 
+	It("returns a 500 when there is a template create error", func() {
+		writer.Write(recorder, params.TemplateCreateError{})
+
+		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
+
+		body := make(map[string]interface{})
+		err := json.Unmarshal(recorder.Body.Bytes(), &body)
+		if err != nil {
+			panic(err)
+		}
+
+		Expect(body["errors"]).To(ContainElement("Failed to create Template in the database"))
+	})
+
 	It("returns a 500 when there is a template update error", func() {
 		writer.Write(recorder, params.TemplateUpdateError{})
 

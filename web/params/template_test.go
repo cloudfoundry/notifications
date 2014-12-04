@@ -13,57 +13,45 @@ import (
 
 var _ = Describe("Template", func() {
 	Describe("NewTemplate", func() {
-		It("contructs parameters from a reader", func() {
-			templateName := models.UserBodyTemplateName
-			body, err := json.Marshal(map[string]interface{}{
-				"text": `its foobar of course`,
-				"html": `<p>its foobar</p>`,
-			})
-			if err != nil {
-				panic(err)
-			}
-
-			parameters, err := params.NewTemplate(templateName, bytes.NewBuffer(body))
-
-			Expect(parameters).To(BeAssignableToTypeOf(params.Template{}))
-			Expect(parameters.Name).To(Equal(models.UserBodyTemplateName))
-			Expect(parameters.Text).To(Equal("its foobar of course"))
-			Expect(parameters.HTML).To(Equal("<p>its foobar</p>"))
-		})
-	})
-
-	Describe("Validate", func() {
-		Context("when the name is valid", func() {
-			It("returns no error", func() {
-				bad_endings := []string{models.UserBodyTemplateName, "my.silly." + models.SpaceBodyTemplateName, "this.special." + models.EmailBodyTemplateName, "emergency.email." + models.SubjectMissingTemplateName,
-					models.SubjectProvidedTemplateName, "my.client." + models.UserBodyTemplateName, "client." + models.SpaceBodyTemplateName}
-
-				for _, ending := range bad_endings {
-					theTemplate := params.Template{
-						Name: ending,
-						Text: "its foobar of course",
-						HTML: "<p>its foobar</p>",
-					}
-					err := theTemplate.Validate()
-					Expect(err).ToNot(HaveOccurred())
+		Context("When creating a new template", func() {
+			It("contructs parameters from a reader", func() {
+				body, err := json.Marshal(map[string]interface{}{
+					"name":    `Foo Bar Baz`,
+					"text":    `its foobar of course`,
+					"html":    `<p>its foobar</p>`,
+					"subject": `Stuff and Things`,
+				})
+				if err != nil {
+					panic(err)
 				}
+
+				templateID := ""
+				parameters, err := params.NewTemplate(templateID, bytes.NewBuffer(body))
+
+				Expect(parameters).To(BeAssignableToTypeOf(params.Template{}))
+				Expect(parameters.Name).To(Equal("Foo Bar Baz"))
+				Expect(parameters.Text).To(Equal("its foobar of course"))
+				Expect(parameters.HTML).To(Equal("<p>its foobar</p>"))
+				Expect(parameters.Subject).To(Equal("Stuff and Things"))
 			})
-		})
 
-		Context("when the name is invalid", func() {
-			It("returns an invalid name error", func() {
-				bad_endings := []string{"user.body", "something_body", "subject.something", "still.missing.something",
-					"client.kind.otherkind." + models.UserBodyTemplateName, "stupid.stuff.subject.uh.oh.damn." + models.EmailBodyTemplateName, "foo%.space_body"}
-
-				for _, ending := range bad_endings {
-					theTemplate := params.Template{
-						Name: ending,
-						Text: "its foobar of course",
-						HTML: "<p>its foobar</p>",
-					}
-					err := theTemplate.Validate()
-					Expect(err).To(HaveOccurred())
+			It("gracefully handles non-required missing parameters", func() {
+				body, err := json.Marshal(map[string]interface{}{
+					"name": `Foo Bar Baz`,
+					"html": `<p>its foobar</p>`,
+				})
+				if err != nil {
+					panic(err)
 				}
+
+				templateID := ""
+				parameters, err := params.NewTemplate(templateID, bytes.NewBuffer(body))
+
+				Expect(parameters).To(BeAssignableToTypeOf(params.Template{}))
+				Expect(parameters.Name).To(Equal("Foo Bar Baz"))
+				Expect(parameters.Text).To(Equal(""))
+				Expect(parameters.HTML).To(Equal("<p>its foobar</p>"))
+				Expect(parameters.Subject).To(Equal("{{.Subject}}"))
 			})
 		})
 	})
@@ -71,18 +59,20 @@ var _ = Describe("Template", func() {
 	Describe("ToModel", func() {
 		It("turns a params.Template into a models.Template", func() {
 			theTemplate := params.Template{
-				Name: models.UserBodyTemplateName,
-				Text: "its foobar of course",
-				HTML: "<p>its foobar</p>",
+				Name:    "The Foo to the Bar",
+				Text:    "its foobar of course",
+				HTML:    "<p>its foobar</p>",
+				Subject: "Foobar Yah",
 			}
 			theModel := theTemplate.ToModel()
 
 			Expect(theModel).To(BeAssignableToTypeOf(models.Template{}))
-			Expect(theModel.Name).To(Equal(models.UserBodyTemplateName))
+			Expect(theModel.Name).To(Equal("The Foo to the Bar"))
 			Expect(theModel.Text).To(Equal("its foobar of course"))
 			Expect(theModel.HTML).To(Equal("<p>its foobar</p>"))
-			Expect(theModel.Overridden).To(BeTrue())
+			Expect(theModel.Subject).To(Equal("Foobar Yah"))
 			Expect(theModel.CreatedAt).To(BeZero())
+			Expect(theModel.UpdatedAt).To(BeZero())
 		})
 	})
 })
