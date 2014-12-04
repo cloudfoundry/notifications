@@ -16,10 +16,9 @@ type GetTemplates struct {
 }
 
 type TemplateOutput struct {
-	Name    string `json:"name"`
-	Subject string `json:"subject"`
-	HTML    string `json:"html"`
-	Text    string `json:"text"`
+	HTML       string `json:"html"`
+	Text       string `json:"text"`
+	Overridden bool   `json:"overridden"`
 }
 
 func NewGetTemplates(templateFinder services.TemplateFinderInterface, errorWriter ErrorWriterInterface) GetTemplates {
@@ -34,19 +33,18 @@ func (handler GetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, 
 		"name": "notifications.web.templates.get",
 	}).Log()
 
-	templateID := strings.Split(req.URL.Path, "/templates/")[1]
+	templateName := strings.Split(req.URL.Path, "/templates/")[1]
 
-	template, err := handler.Finder.Find(templateID)
+	template, err := handler.Finder.Find(templateName)
 	if err != nil {
 		handler.ErrorWriter.Write(w, err)
 		return
 	}
 
 	templateOutput := TemplateOutput{
-		Name:    template.Name,
-		Subject: template.Subject,
-		HTML:    template.HTML,
-		Text:    template.Text,
+		HTML:       template.HTML,
+		Text:       template.Text,
+		Overridden: template.Overridden,
 	}
 
 	response, err := json.Marshal(templateOutput)

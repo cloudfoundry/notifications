@@ -25,17 +25,12 @@ var _ = Describe("GetTemplates", func() {
 	var errorWriter *fakes.ErrorWriter
 
 	Describe("ServeHTTP", func() {
-		var templateID string
-
 		BeforeEach(func() {
 			finder = fakes.NewTemplateFinder()
-			templateID = "theTemplateID"
 
-			finder.Templates[templateID] = models.Template{
-				Name:    "The Name of The Template",
-				Subject: "All about the {{.Subject}}",
-				Text:    "the template {{variable}}",
-				HTML:    "<p> the template {{variable}} </p>",
+			finder.Templates["myTemplateName."+models.UserBodyTemplateName] = models.Template{
+				Text: "the template {{variable}}",
+				HTML: "<p> the template {{variable}} </p>",
 			}
 			writer = httptest.NewRecorder()
 			errorWriter = fakes.NewErrorWriter()
@@ -46,7 +41,7 @@ var _ = Describe("GetTemplates", func() {
 			BeforeEach(func() {
 
 				var err error
-				request, err = http.NewRequest("GET", "/templates/"+templateID, bytes.NewBuffer([]byte{}))
+				request, err = http.NewRequest("GET", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer([]byte{}))
 				if err != nil {
 					panic(err)
 				}
@@ -54,7 +49,7 @@ var _ = Describe("GetTemplates", func() {
 
 			It("Calls find on its finder with appropriate arguments", func() {
 				handler.ServeHTTP(writer, request, context)
-				Expect(finder.TemplateID).To(Equal(templateID))
+				Expect(finder.TemplateName).To(Equal("myTemplateName." + models.UserBodyTemplateName))
 			})
 
 			It("writes out the finder's response", func() {
@@ -68,11 +63,10 @@ var _ = Describe("GetTemplates", func() {
 					panic(err)
 				}
 
-				Expect(len(template)).To(Equal(4))
-				Expect(template["name"].(string)).To(Equal("The Name of The Template"))
-				Expect(template["subject"].(string)).To(Equal("All about the {{.Subject}}"))
-				Expect(template["text"].(string)).To(Equal("the template {{variable}}"))
+				Expect(len(template)).To(Equal(3))
 				Expect(template["html"].(string)).To(Equal("<p> the template {{variable}} </p>"))
+				Expect(template["text"].(string)).To(Equal("the template {{variable}}"))
+				Expect(template["overridden"].(bool)).To(Equal(false))
 			})
 		})
 
@@ -81,7 +75,7 @@ var _ = Describe("GetTemplates", func() {
 				finder.FindError = errors.New("BOOM!")
 
 				var err error
-				request, err = http.NewRequest("GET", "/templates/someTemplateID", bytes.NewBuffer([]byte{}))
+				request, err = http.NewRequest("GET", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer([]byte{}))
 				if err != nil {
 					panic(err)
 				}

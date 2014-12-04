@@ -19,9 +19,10 @@ var _ = Describe("Updater", func() {
 		BeforeEach(func() {
 			templatesRepo = fakes.NewTemplatesRepo()
 			template = models.Template{
-				Name: "gobble." + models.UserBodyTemplateName,
-				Text: "gobble",
-				HTML: "<p>gobble</p>",
+				Name:       "gobble." + models.UserBodyTemplateName,
+				Text:       "gobble",
+				HTML:       "<p>gobble</p>",
+				Overridden: true,
 			}
 
 			updater = services.NewTemplateUpdater(templatesRepo, fakes.NewDatabase())

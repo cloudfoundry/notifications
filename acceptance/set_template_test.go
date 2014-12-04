@@ -103,4 +103,5 @@ func (t SetTemplates) GetOverriddenDefaultTemplate(notificationsServer servers.N
 
 	Expect(responseJSON.Text).To(Equal(text))
 	Expect(responseJSON.HTML).To(Equal(html))
+	Expect(responseJSON.Overridden).To(BeTrue())
 }

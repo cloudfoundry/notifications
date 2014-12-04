@@ -35,11 +35,11 @@ func (handler SetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, 
 		return
 	}
 
-	//err = templateParams.Validate()
-	//if err != nil {
-	//handler.ErrorWriter.Write(w, err)
-	//return
-	//}
+	err = templateParams.Validate()
+	if err != nil {
+		handler.ErrorWriter.Write(w, err)
+		return
+	}
 
 	err = handler.updater.Update(templateParams.ToModel())
 	if err != nil {

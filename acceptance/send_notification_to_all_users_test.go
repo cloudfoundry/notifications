@@ -148,14 +148,7 @@ func (t SendNotificationToAllUsers) SendNotificationToAllUsers(notificationsServ
 	recipients := []string{smtpServer.Deliveries[0].Recipients[0], smtpServer.Deliveries[1].Recipients[0]}
 	Expect(recipients).To(ConsistOf([]string{"why-email@example.com", "slayer@example.com"}))
 
-	var recipientIndex int
-	if smtpServer.Deliveries[0].Recipients[0] == "why-email@example.com" {
-		recipientIndex = 0
-	} else {
-		recipientIndex = 1
-	}
-
-	delivery := smtpServer.Deliveries[recipientIndex]
+	delivery := smtpServer.Deliveries[0]
 	env := config.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
 

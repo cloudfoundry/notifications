@@ -16,7 +16,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = XDescribe("SetTemplates", func() {
+var _ = Describe("SetTemplates", func() {
 	var err error
 	var handler handlers.SetTemplates
 	var writer *httptest.ResponseRecorder
@@ -41,9 +41,10 @@ var _ = XDescribe("SetTemplates", func() {
 		It("calls set on its setter with appropriate arguments", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(updater.UpdateArgument).To(Equal(models.Template{
-				Name: "myTemplateName." + models.UserBodyTemplateName,
-				Text: "{{turkey}}",
-				HTML: "<p>{{turkey}} gobble</p>",
+				Name:       "myTemplateName." + models.UserBodyTemplateName,
+				Text:       "{{turkey}}",
+				HTML:       "<p>{{turkey}} gobble</p>",
+				Overridden: true,
 			}))
 			Expect(writer.Code).To(Equal(http.StatusNoContent))
 		})

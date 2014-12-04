@@ -209,14 +209,13 @@ func (mother Mother) TemplateFinder() services.TemplateFinder {
 	return services.NewTemplateFinder(repo, env.RootPath, database, fileSystem)
 }
 
-func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter) {
+func (mother Mother) TemplateServiceObjects() (services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter) {
 	env := config.NewEnvironment()
 	database := mother.Database()
 	repo := mother.TemplatesRepo()
 	fileSystem := mother.FileSystem()
 
-	return services.NewTemplateCreator(repo, database),
-		services.NewTemplateFinder(repo, env.RootPath, database, fileSystem),
+	return services.NewTemplateFinder(repo, env.RootPath, database, fileSystem),
 		services.NewTemplateUpdater(repo, database),
 		services.NewTemplateDeleter(repo, database)
 }

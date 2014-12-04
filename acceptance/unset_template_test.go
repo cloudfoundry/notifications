@@ -145,4 +145,5 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
     using the "{{.UnsubscribeID}}" unsubscribe token.</p>
 `))
 
+	Expect(responseJSON.Overridden).To(BeFalse())
 }

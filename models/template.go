@@ -25,12 +25,11 @@ var TemplateNames = []string{
 }
 
 type Template struct {
-	Primary   int       `db:"primary"`
-	ID        string    `db:id`
-	Name      string    `db:"name"`
-	Text      string    `db:"text"`
-	HTML      string    `db:"html"`
-	Subject   string    `db:"subject"`
-	CreatedAt time.Time `db:"created_at"`
-	UpdatedAt time.Time `db:"updated_at"`
+	Primary    int       `db:"primary"`
+	Name       string    `db:"name"`
+	Text       string    `db:"text"`
+	HTML       string    `db:"html"`
+	Overridden bool      `db:"-"`
+	CreatedAt  time.Time `db:"created_at"`
+	UpdatedAt  time.Time `db:"updated_at"`
 }
