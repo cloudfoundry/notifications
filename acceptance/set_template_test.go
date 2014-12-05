@@ -16,7 +16,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Templates PUT Endpoint", func() {
+var _ = XDescribe("Templates PUT Endpoint", func() {
 	BeforeEach(func() {
 		TruncateTables()
 	})

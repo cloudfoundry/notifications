@@ -16,7 +16,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("SetTemplates", func() {
+var _ = XDescribe("SetTemplates", func() {
 	var err error
 	var handler handlers.SetTemplates
 	var writer *httptest.ResponseRecorder

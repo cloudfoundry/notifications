@@ -12,9 +12,10 @@ import (
 )
 
 type Template struct {
-	Name string `json:"name"`
-	Text string `json:"text"`
-	HTML string `json:"html"`
+	Name    string `json:"name"`
+	Text    string `json:"text"`
+	HTML    string `json:"html"`
+	Subject string `json:"subject"`
 }
 
 type TemplateUpdateError struct{}
@@ -23,7 +24,13 @@ func (err TemplateUpdateError) Error() string {
 	return "failed to update Template in the database"
 }
 
-func NewTemplate(templateName string, body io.Reader) (Template, error) {
+type TemplateCreateError struct{}
+
+func (err TemplateCreateError) Error() string {
+	return "Failed to create Template in the database"
+}
+
+func NewTemplate(body io.Reader) (Template, error) {
 	var template Template
 
 	jsonBody, err := ioutil.ReadAll(body)
@@ -36,19 +43,22 @@ func NewTemplate(templateName string, body io.Reader) (Template, error) {
 		return template, ParseError{}
 	}
 
-	err = containsArguments(string(jsonBody))
+	err = containsArguments(template)
 	if err != nil {
 		return Template{}, err
 	}
 
-	template.Name = templateName
+	template.setDefaults()
 
 	return template, nil
 }
 
-func containsArguments(jsonBody string) error {
-	if !strings.Contains(jsonBody, `"html":`) || !strings.Contains(jsonBody, `"text":`) {
-		return ValidationError([]string{"Request is missing a required field"})
+func containsArguments(template Template) error {
+	if template.Name == "" {
+		return ValidationError([]string{"Request is missing the required field: name"})
+	}
+	if template.HTML == "" {
+		return ValidationError([]string{"Request is missing the required field: html"})
 	}
 	return nil
 }
@@ -100,7 +110,14 @@ func (t *Template) ToModel() models.Template {
 		Name:       t.Name,
 		Text:       t.Text,
 		HTML:       t.HTML,
+		Subject:    t.Subject,
 		Overridden: true,
 	}
 	return template
+}
+
+func (template *Template) setDefaults() {
+	if template.Subject == "" {
+		template.Subject = "{{.Subject}}"
+	}
 }

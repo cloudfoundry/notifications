@@ -26,7 +26,9 @@ var TemplateNames = []string{
 
 type Template struct {
 	Primary    int       `db:"primary"`
+	ID         string    `db:"id"`
 	Name       string    `db:"name"`
+	Subject    string    `db:"subject"`
 	Text       string    `db:"text"`
 	HTML       string    `db:"html"`
 	Overridden bool      `db:"-"`

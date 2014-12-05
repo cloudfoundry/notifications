@@ -175,6 +175,15 @@ var _ = Describe("Router", func() {
 		Expect(authenticator.Scopes).To(Equal([]string{"notification_templates.admin"}))
 	})
 
+	It("routes POST /templates", func() {
+		s := router.Routes().Get("POST /templates").GetHandler().(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.CreateTemplates{}))
+		Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+
+		authenticator := s.Middleware[1].(middleware.Authenticator)
+		Expect(authenticator.Scopes).To(Equal([]string{"notification_templates.write"}))
+	})
+
 	It("routes PUT /templates/{templateName}", func() {
 		s := router.Routes().Get("PUT /templates/{templateName}").GetHandler().(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.SetTemplates{}))

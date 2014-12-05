@@ -21,10 +21,7 @@
 	- [Retrieve user preferences with a client token](#get-user-preferences-guid)
 	- [Update user preferences with a client token](#patch-user-preferences-guid)
 - Managing Templates
-    - [Retrieve Templates](#get-template)
-    - [Set Templates](#set-template)
-    - [Delete Templates](#delete-template)
-
+	- [Create a new template](#post-templates)
 
 ## System Status
 
@@ -998,63 +995,10 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 
 ## Managing Templates
 
-<a name="get-template"></a>
+<a name="post-template"></a>
+### Create Templates
 
-### Retrieve Templates
-
-This endpoint is used to retrieve the templates that are stored using the template filename as a parameter for the request.
-
-##### Request
-
-###### Headers
-```
-Authorization: bearer <CLIENT-TOKEN>
-```
-\* The client token does not require any scopes at this time.
-
-###### Route
-```
-GET /templates/{template-filename}
-```
-
-###### CURL example
-```
-$ curl -i -X GET \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  http://notifications.example.com/templates/template-filename
-
-HTTP/1.1 200 OK
-Connection: close
-Content-Length: 1126
-Content-Type: text/plain; charset=utf-8
-Date: Mon, 27 Oct 2014 23:52:31 GMT
-X-Cf-Requestid: 5d19a080-2c88-4fe6-5eb5-42f9bda2d073
-
-{
-	"text": "Message to: {{.To}}, sent from the {{.ClientID}} UAA Client",
-	"html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>",
-	"overridden": false
-}
-```
-
-##### Response
-
-###### Status
-```
-200 OK
-```
-
-###### Body
-| Fields      | Description                                                     |
-| ----------- | --------------------------------------------------------------- |
-| text        | The template used for the text portion of the notification      |
-| html        | The template used for the HTML portion of the notification      |
-| overridden  | True if this template is overridden                             |
-
-<a name="set-template"></a>
-### Set Templates
-
-This endpoint is used to change the templates attached to particular kinds of notifications.
+This endpoint is used to create a template and save it to the database.
 
 
 ##### Request
@@ -1063,97 +1007,49 @@ This endpoint is used to change the templates attached to particular kinds of no
 ```
 Authorization: bearer <CLIENT-TOKEN>
 ```
-\* The client does not require any scopes at this time
+\* The client token requires `notifications_templates.write` scope
 
 ###### Route
 ```
-PUT /templates/{template-filename}
+POST /templates
 ```
 ###### Params
 
-| Key      | Description                                                     |
-| -------- | --------------------------------------------------------------- |
-| text\*    | The template used for the text portion of the notification      |
-| html\*    | The template used for the HTML portion of the notification      |
+| Key      | Description                                                      |
+| -------- | -----------------------------------------------------------------|
+| name\*   | A human-readable template name                                   |
+| html\*   | The template used for the HTML portion of the notification       |
+| text     | The template used for the text portion of the notification       |
+| subject  | An email subject template, defaults to "{{.Subject}}" if missing |
 
 \* required
 
 ###### CURL example
 ```
-$ curl -i -X PUT \
+$ curl -i -X POST \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>",}' \
+  -d '{"name": "My template", "subject":"System notification: {{.Subject}}", "text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>",}' \
   http://notifications.example.com/templates/template-filename
 
-204 No Content
+201 Created
 Connection: close
 Content-Length: 0
 Content-Type: text/plain; charset=utf-8
 Date: Tue, 28 Oct 2014 00:18:48 GMT
 X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
+
+
+{"template-id": "E3710280-954B-4147-B7E2-AF5BF62772B5"}
 ```
 
 ##### Response
 
 ###### Status
 ```
-204 No Content
+201 Created
 ```
 
 ###### Body
-| Fields   | Description |
-| -------- | ----------- |
-| \<none\> |             |
-
-<a name="delete-template"></a>
-### Delete Templates
-
-This endpoint is used to delete an override template attached to a particular kind of notifications.
-
-
-##### Request
-
-###### Headers
-```
-Authorization: bearer <CLIENT-TOKEN>
-```
-\* The client does not require any scopes at this time
-
-###### Route
-```
-DELETE /templates/{template-filename}
-```
-###### Params
-
-| Key                   | Description                                                     |
-| --------------------- | --------------------------------------------------------------- |
-| template-filename\*    | The template used for the text portion of the notification      |
-
-\* required
-
-###### CURL example
-```
-$ curl -X DELETE \
-  http://notifications.example.com/templates/template-filename
-
-204 No Content
-Connection: close
-Content-Length: 0
-Content-Type: text/plain; charset=utf-8
-Date: Tue, 28 Oct 2014 00:18:48 GMT
-X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
-```
-
-##### Response
-
-###### Status
-```
-204 No Content
-```
-
-###### Body
-| Fields   | Description |
-| -------- | ----------- |
-| \<none\> |             |
-
-
+| Fields      | Description             |
+| ------------| ------------------------|
+| template-id | A system-generated UUID |

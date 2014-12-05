@@ -16,7 +16,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Templates GET Endpoint", func() {
+var _ = XDescribe("Templates GET Endpoint", func() {
 
 	BeforeEach(func() {
 		TruncateTables()

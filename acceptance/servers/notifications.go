@@ -101,6 +101,10 @@ func (s Notifications) SpecificUserPreferencesPath(userGUID string) string {
 	return "http://localhost:" + s.env.Port + "/user_preferences/" + userGUID
 }
 
+func (s Notifications) TemplatesBasePath() string {
+	return "http://localhost:" + s.env.Port + "/templates"
+}
+
 func (s Notifications) TemplatePath(templateName string) string {
 	return "http://localhost:" + s.env.Port + "/templates/" + templateName
 }

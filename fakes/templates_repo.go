@@ -6,6 +6,7 @@ type TemplatesRepo struct {
 	Templates       map[string]models.Template
 	FindError       error
 	UpsertError     error
+	CreateError     error
 	DestroyArgument string
 	DestroyError    error
 }
@@ -32,4 +33,9 @@ func (fake TemplatesRepo) Upsert(conn models.ConnectionInterface, template model
 func (fake *TemplatesRepo) Destroy(conn models.ConnectionInterface, templateName string) error {
 	fake.DestroyArgument = templateName
 	return fake.DestroyError
+}
+
+func (fake *TemplatesRepo) Create(conn models.ConnectionInterface, template models.Template) (models.Template, error) {
+	fake.Templates[template.Name] = template
+	return template, fake.CreateError
 }
