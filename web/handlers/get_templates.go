@@ -16,9 +16,8 @@ type GetTemplates struct {
 }
 
 type TemplateOutput struct {
-	HTML       string `json:"html"`
-	Text       string `json:"text"`
-	Overridden bool   `json:"overridden"`
+	HTML string `json:"html"`
+	Text string `json:"text"`
 }
 
 func NewGetTemplates(templateFinder services.TemplateFinderInterface, errorWriter ErrorWriterInterface) GetTemplates {
@@ -42,9 +41,8 @@ func (handler GetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, 
 	}
 
 	templateOutput := TemplateOutput{
-		HTML:       template.HTML,
-		Text:       template.Text,
-		Overridden: template.Overridden,
+		HTML: template.HTML,
+		Text: template.Text,
 	}
 
 	response, err := json.Marshal(templateOutput)

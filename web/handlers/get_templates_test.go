@@ -63,10 +63,9 @@ var _ = Describe("GetTemplates", func() {
 					panic(err)
 				}
 
-				Expect(len(template)).To(Equal(3))
+				Expect(len(template)).To(Equal(2))
 				Expect(template["html"].(string)).To(Equal("<p> the template {{variable}} </p>"))
 				Expect(template["text"].(string)).To(Equal("the template {{variable}}"))
-				Expect(template["overridden"].(bool)).To(Equal(false))
 			})
 		})
 

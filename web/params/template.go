@@ -107,11 +107,10 @@ func (template *Template) hasInvalidCharacters(name string) bool {
 
 func (t *Template) ToModel() models.Template {
 	template := models.Template{
-		Name:       t.Name,
-		Text:       t.Text,
-		HTML:       t.HTML,
-		Subject:    t.Subject,
-		Overridden: true,
+		Name:    t.Name,
+		Text:    t.Text,
+		HTML:    t.HTML,
+		Subject: t.Subject,
 	}
 	return template
 }

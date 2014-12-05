@@ -144,6 +144,4 @@ using the "{{.UnsubscribeID}}" unsubscribe token.
     with the {{.ClientID}} UAA client. The notification can be unsubscribed from
     using the "{{.UnsubscribeID}}" unsubscribe token.</p>
 `))
-
-	Expect(responseJSON.Overridden).To(BeFalse())
 }

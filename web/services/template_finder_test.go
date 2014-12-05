@@ -33,7 +33,6 @@ var _ = Describe("Finder", func() {
 
 					template, err := finder.Find("login.fp." + models.SpaceBodyTemplateName)
 					Expect(err).ToNot(HaveOccurred())
-					Expect(template.Overridden).To(BeFalse())
 					Expect(template.Text).To(Equal("default-space-text"))
 					Expect(template.HTML).To(Equal("default-space-html"))
 				})
@@ -43,7 +42,6 @@ var _ = Describe("Finder", func() {
 
 					template, err := finder.Find("login.fp." + models.UserBodyTemplateName)
 					Expect(err).ToNot(HaveOccurred())
-					Expect(template.Overridden).To(BeFalse())
 					Expect(template.Text).To(Equal("default-user-text"))
 					Expect(template.HTML).To(Equal("default-user-html"))
 				})
@@ -53,7 +51,6 @@ var _ = Describe("Finder", func() {
 
 					template, err := finder.Find("login.fp." + models.EmailBodyTemplateName)
 					Expect(err).ToNot(HaveOccurred())
-					Expect(template.Overridden).To(BeFalse())
 					Expect(template.Text).To(Equal("email-body-text"))
 					Expect(template.HTML).To(Equal("email-body-html"))
 				})
@@ -63,7 +60,6 @@ var _ = Describe("Finder", func() {
 
 					template, err := finder.Find("login.fp." + models.SubjectMissingTemplateName)
 					Expect(err).ToNot(HaveOccurred())
-					Expect(template.Overridden).To(BeFalse())
 					Expect(template.Text).To(Equal("default-missing-subject"))
 
 				})
@@ -73,7 +69,6 @@ var _ = Describe("Finder", func() {
 
 					template, err := finder.Find("login.fp." + models.SubjectProvidedTemplateName)
 					Expect(err).ToNot(HaveOccurred())
-					Expect(template.Overridden).To(BeFalse())
 					Expect(template.Text).To(Equal("default-provided-subject"))
 
 				})
@@ -84,10 +79,9 @@ var _ = Describe("Finder", func() {
 
 				BeforeEach(func() {
 					expectedTemplate = models.Template{
-						Name:       "authentication.new." + models.UserBodyTemplateName,
-						Text:       "authenticate new hungry raptors template",
-						HTML:       "<p>hungry raptors are newly authenticated template</p>",
-						Overridden: true,
+						Name: "authentication.new." + models.UserBodyTemplateName,
+						Text: "authenticate new hungry raptors template",
+						HTML: "<p>hungry raptors are newly authenticated template</p>",
 					}
 					templatesRepo.Templates["authentication.new."+models.UserBodyTemplateName] = expectedTemplate
 				})
@@ -95,7 +89,6 @@ var _ = Describe("Finder", func() {
 				It("returns the requested override template", func() {
 					template, err := finder.Find("authentication.new." + models.UserBodyTemplateName)
 					Expect(err).ToNot(HaveOccurred())
-					Expect(template.Overridden).To(BeTrue())
 					Expect(template).To(Equal(expectedTemplate))
 				})
 
@@ -117,7 +110,6 @@ var _ = Describe("Finder", func() {
 					It("returns the fallback override that exists", func() {
 						template, err := finder.Find("authentication.new." + models.UserBodyTemplateName)
 						Expect(err).ToNot(HaveOccurred())
-						Expect(template.Overridden).To(BeFalse())
 						Expect(template).To(Equal(expectedTemplate))
 					})
 				})
@@ -137,7 +129,6 @@ var _ = Describe("Finder", func() {
 					It("returns the fallback override that exists", func() {
 						template, err := finder.Find("authentication.new." + models.UserBodyTemplateName)
 						Expect(err).ToNot(HaveOccurred())
-						Expect(template.Overridden).To(BeFalse())
 						Expect(template).To(Equal(expectedTemplate))
 					})
 				})

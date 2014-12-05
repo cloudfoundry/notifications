@@ -43,11 +43,10 @@ var _ = Describe("CreateTemplates", func() {
 			body := string(writer.Body.Bytes())
 
 			Expect(creator.CreateArgument).To(Equal(models.Template{
-				Name:       "Emergency Template",
-				Text:       "Message to: {{.To}}. Raptor Alert.",
-				HTML:       "<p>{{.ClientID}} you should run.</p>",
-				Subject:    "Raptor Containment Unit Breached",
-				Overridden: true,
+				Name:    "Emergency Template",
+				Text:    "Message to: {{.To}}. Raptor Alert.",
+				HTML:    "<p>{{.ClientID}} you should run.</p>",
+				Subject: "Raptor Containment Unit Breached",
 			}))
 			Expect(writer.Code).To(Equal(http.StatusCreated))
 			Expect(body).To(Equal(`{"template-id":"guid"}`))

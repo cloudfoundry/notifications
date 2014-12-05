@@ -48,10 +48,6 @@ func (finder TemplateFinder) Find(templateName string) (models.Template, error) 
 		return models.Template{}, err
 	}
 
-	if template.Name == templateName {
-		template.Overridden = true
-	}
-
 	return template, err
 }
 

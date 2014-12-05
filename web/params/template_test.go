@@ -68,7 +68,6 @@ var _ = Describe("Template", func() {
 			Expect(theModel.Name).To(Equal("The Foo to the Bar"))
 			Expect(theModel.Text).To(Equal("its foobar of course"))
 			Expect(theModel.HTML).To(Equal("<p>its foobar</p>"))
-			Expect(theModel.Overridden).To(BeTrue())
 			Expect(theModel.CreatedAt).To(BeZero())
 			Expect(theModel.UpdatedAt).To(BeZero())
 		})
