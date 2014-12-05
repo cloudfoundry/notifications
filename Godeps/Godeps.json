@@ -20,6 +20,11 @@
 			"Rev": "4f03c71bc42ba0015a68bea86422f0ecbb71bf70"
 		},
 		{
+			"ImportPath": "code.google.com/p/go-uuid/uuid",
+			"Comment": "null-15",
+			"Rev": "35bc42037350f0078e3c974c6ea690f1926603ab"
+		},
+		{
 			"ImportPath": "code.google.com/p/go.net/html",
 			"Comment": "null-126",
 			"Rev": "53130366067a9f0b47893ae8a81677391fdd0f42"
