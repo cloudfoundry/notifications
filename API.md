@@ -21,7 +21,8 @@
 	- [Retrieve user preferences with a client token](#get-user-preferences-guid)
 	- [Update user preferences with a client token](#patch-user-preferences-guid)
 - Managing Templates
-	- [Create a new template](#post-templates)
+	- [Create a new template](#post-template)
+	- [Retrieve a template](#get-template)
 
 ## System Status
 
@@ -996,7 +997,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 ## Managing Templates
 
 <a name="post-template"></a>
-### Create Templates
+### Create Template
 
 This endpoint is used to create a template and save it to the database.
 
@@ -1007,7 +1008,7 @@ This endpoint is used to create a template and save it to the database.
 ```
 Authorization: bearer <CLIENT-TOKEN>
 ```
-\* The client token requires `notifications_templates.write` scope
+\* The client token requires `notification_templates.write` scope
 
 ###### Route
 ```
@@ -1029,7 +1030,7 @@ POST /templates
 $ curl -i -X POST \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"name": "My template", "subject":"System notification: {{.Subject}}", "text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>",}' \
-  http://notifications.example.com/templates/template-filename
+  http://notifications.example.com/templates
 
 201 Created
 Connection: close
@@ -1053,3 +1054,59 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 | Fields      | Description             |
 | ------------| ------------------------|
 | template-id | A system-generated UUID |
+
+<a name="get-template"></a>
+### Retrieve Template
+
+This endpoint is used to retrieve a template that was saved to the database.
+
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `notification_templates.read` scope
+
+###### Route
+```
+GET /templates/{my-template-id}
+```
+###### CURL example
+```
+$ curl -i -X GET \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/templates/my-template-id
+
+200 OK
+Connection: close
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 28 Oct 2014 00:18:48 GMT
+X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
+
+
+{
+  "name":"My Custom Template",
+  "subject" : "Hey! {{.Subject}}",
+  "text" : "Dude! Stuff's Happening!",
+  "html" : "<h1>Dude!</h1>{{.HTML}}"
+}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields      | Description                                  |
+| ------------| ---------------------------------------------|
+| name        | The human readable name of the template      |
+| subject     | The subject for the template                 |
+| text        | The plaintext representation of the template |
+| html        | The HTML representation of the template      |
+

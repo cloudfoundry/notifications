@@ -57,6 +57,7 @@ func NewRouter(mother MotherInterface) Router {
 	notificationPreferencesAdminAuthenticator := mother.Authenticator("notification_preferences.admin")
 	emailsWriteAuthenticator := mother.Authenticator("emails.write")
 	notificationsTemplateWriteAuthenticator := mother.Authenticator("notification_templates.write")
+	notificationsTemplateReadAuthenticator := mother.Authenticator("notification_templates.read")
 	notificationsTemplateAdminAuthenticator := mother.Authenticator("notification_templates.admin")
 	database := mother.Database()
 	cors := mother.CORS()
@@ -79,10 +80,10 @@ func NewRouter(mother MotherInterface) Router {
 			"GET /user_preferences/{guid}":     stack.NewStack(handlers.NewGetPreferencesForUser(preferencesFinder, errorWriter)).Use(logging, cors, notificationPreferencesAdminAuthenticator),
 			"PATCH /user_preferences":          stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter, database)).Use(logging, cors, notificationPreferencesWriteAuthenticator),
 			"PATCH /user_preferences/{guid}":   stack.NewStack(handlers.NewUpdateSpecificUserPreferences(preferenceUpdater, errorWriter, database)).Use(logging, cors, notificationPreferencesAdminAuthenticator),
-			"GET /templates/{templateName}":    stack.NewStack(handlers.NewGetTemplates(templateFinder, errorWriter)).Use(logging, notificationsTemplateAdminAuthenticator),
+			"POST /templates":                  stack.NewStack(handlers.NewCreateTemplate(templateCreator, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
+			"GET /templates/{templateID}":      stack.NewStack(handlers.NewGetTemplates(templateFinder, errorWriter)).Use(logging, notificationsTemplateReadAuthenticator),
 			"PUT /templates/{templateName}":    stack.NewStack(handlers.NewSetTemplates(templateUpdater, errorWriter)).Use(logging, notificationsTemplateAdminAuthenticator),
 			"DELETE /templates/{templateName}": stack.NewStack(handlers.NewUnsetTemplates(templateDeleter, errorWriter)).Use(logging),
-			"POST /templates":                  stack.NewStack(handlers.NewCreateTemplates(templateCreator, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
 		},
 	}
 }

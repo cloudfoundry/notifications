@@ -2,11 +2,8 @@ package params
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
-	"regexp"
-	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
@@ -16,12 +13,6 @@ type Template struct {
 	Text    string `json:"text"`
 	HTML    string `json:"html"`
 	Subject string `json:"subject"`
-}
-
-type TemplateUpdateError struct{}
-
-func (err TemplateUpdateError) Error() string {
-	return "failed to update Template in the database"
 }
 
 type TemplateCreateError struct{}
@@ -60,59 +51,17 @@ func containsArguments(template Template) error {
 	if template.HTML == "" {
 		return ValidationError([]string{"Request is missing the required field: html"})
 	}
-	return nil
-}
-
-func (template *Template) Validate() error {
-	invalidSuffix := true
-	name := template.Name
-
-	for _, validEnding := range models.TemplateNames {
-		if strings.HasSuffix(name, validEnding) {
-			invalidSuffix = false
-		}
-	}
-
-	if invalidSuffix {
-		return ValidationError([]string{fmt.Sprintf("Template has invalid suffix, must end with one of %v\n", models.TemplateNames)})
-	}
-
-	return template.validateFormat(name)
-}
-
-func (template *Template) validateFormat(name string) error {
-	nameParts := strings.Split(name, ".")
-	if len(nameParts) == 4 && nameParts[2] != "subject" {
-		return ValidationError([]string{"Template name has an invalid format, too many periods."})
-	}
-
-	if len(nameParts) > 5 {
-		return ValidationError([]string{"Template name has an invalid format, too many periods."})
-	}
-
-	if template.hasInvalidCharacters(name) {
-		return ValidationError([]string{"Template name has an invalid format, only .-_ and alphanumeric characters are valid."})
-	}
 
 	return nil
-}
-
-func (template *Template) hasInvalidCharacters(name string) bool {
-	replacer := strings.NewReplacer("-", "", ".", "")
-	strippedName := replacer.Replace(name)
-
-	regex := regexp.MustCompile(`[\W]`)
-	return regex.Match([]byte(strippedName))
 }
 
 func (t *Template) ToModel() models.Template {
-	template := models.Template{
+	return models.Template{
 		Name:    t.Name,
 		Text:    t.Text,
 		HTML:    t.HTML,
 		Subject: t.Subject,
 	}
-	return template
 }
 
 func (template *Template) setDefaults() {

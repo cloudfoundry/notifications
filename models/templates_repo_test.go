@@ -27,23 +27,47 @@ var _ = Describe("TemplatesRepo", func() {
 		createdAt = time.Now().Add(-1 * time.Hour).Truncate(1 * time.Second).UTC()
 
 		template = models.Template{
-			Name:      "raptor_template",
+			ID:        "raptor_template",
+			Name:      "Raptors On The Run",
 			Text:      "run and hide",
 			HTML:      "<h1>containment unit breached!</h1>",
-			ID:        "very-fake-guid",
 			CreatedAt: createdAt,
 		}
 
 		conn.Insert(&template)
 	})
 
+	Context("#FindByID", func() {
+		Context("the template is in the database", func() {
+			It("returns the template when it is found", func() {
+				raptorTemplate, err := repo.FindByID(conn, "raptor_template")
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(raptorTemplate.ID).To(Equal("raptor_template"))
+				Expect(raptorTemplate.Name).To(Equal("Raptors On The Run"))
+				Expect(raptorTemplate.Text).To(Equal("run and hide"))
+				Expect(raptorTemplate.HTML).To(Equal("<h1>containment unit breached!</h1>"))
+			})
+		})
+
+		Context("the template is not in the database", func() {
+			It("returns a record not found error", func() {
+				sillyTemplate, err := repo.FindByID(conn, "silly_template")
+
+				Expect(sillyTemplate).To(Equal(models.Template{}))
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError(models.ErrRecordNotFound{}))
+			})
+		})
+	})
+
 	Context("#Find", func() {
 		Context("the template is in the database", func() {
 			It("returns the template when it is found", func() {
-				raptorTemplate, err := repo.Find(conn, "very-fake-guid")
+				raptorTemplate, err := repo.Find(conn, "Raptors On The Run")
 
 				Expect(err).ToNot(HaveOccurred())
-				Expect(raptorTemplate.Name).To(Equal("raptor_template"))
+				Expect(raptorTemplate.Name).To(Equal("Raptors On The Run"))
 				Expect(raptorTemplate.Text).To(Equal("run and hide"))
 				Expect(raptorTemplate.HTML).To(Equal("<h1>containment unit breached!</h1>"))
 			})
@@ -73,11 +97,12 @@ var _ = Describe("TemplatesRepo", func() {
 			createdTemplate, err := repo.Create(conn, newTemplate)
 			Expect(err).ToNot(HaveOccurred())
 
-			foundTemplate, err := repo.Find(conn, createdTemplate.ID)
+			foundTemplate, err := repo.Find(conn, createdTemplate.Name)
 			if err != nil {
 				panic(err)
 			}
 
+			Expect(foundTemplate.ID).NotTo(BeNil())
 			Expect(foundTemplate.Name).To(Equal(newTemplate.Name))
 			Expect(foundTemplate.Subject).To(Equal(newTemplate.Subject))
 			Expect(foundTemplate.Text).To(Equal(newTemplate.Text))
@@ -85,12 +110,9 @@ var _ = Describe("TemplatesRepo", func() {
 			Expect(foundTemplate.CreatedAt).To(Equal(createdAt))
 			Expect(foundTemplate.UpdatedAt).To(Equal(createdAt))
 		})
-
-		XIt("generates a guid for the template ID", func() {
-		})
 	})
 
-	XDescribe("#Upsert", func() {
+	Describe("#Upsert", func() {
 		It("inserts a template into the database", func() {
 			var err error
 
@@ -105,7 +127,7 @@ var _ = Describe("TemplatesRepo", func() {
 			_, err = repo.Upsert(conn, newTemplate)
 			Expect(err).ToNot(HaveOccurred())
 
-			foundTemplate, err := repo.Find(conn, newTemplate.ID)
+			foundTemplate, err := repo.Find(conn, newTemplate.Name)
 			if err != nil {
 				panic(err)
 			}
@@ -123,7 +145,7 @@ var _ = Describe("TemplatesRepo", func() {
 			_, err := repo.Upsert(conn, template)
 			Expect(err).ToNot(HaveOccurred())
 
-			foundTemplate, err := repo.Find(conn, template.ID)
+			foundTemplate, err := repo.Find(conn, template.Name)
 			if err != nil {
 				panic(err)
 			}
@@ -138,18 +160,18 @@ var _ = Describe("TemplatesRepo", func() {
 		})
 	})
 
-	XDescribe("#Destroy", func() {
+	Describe("#Destroy", func() {
 		Context("the template exists in the database", func() {
 			It("deletes the template", func() {
-				_, err := repo.Find(conn, template.ID)
+				_, err := repo.Find(conn, template.Name)
 				if err != nil {
 					panic(err)
 				}
 
-				err = repo.Destroy(conn, template.ID)
+				err = repo.Destroy(conn, template.Name)
 				Expect(err).ToNot(HaveOccurred())
 
-				_, err = repo.Find(conn, template.ID)
+				_, err = repo.Find(conn, template.Name)
 				Expect(err).To(Equal(models.ErrRecordNotFound{}))
 
 			})

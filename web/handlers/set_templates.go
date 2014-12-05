@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
@@ -26,10 +27,9 @@ func (handler SetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, 
 		"name": "notifications.web.templates.put",
 	}).Log()
 
-	//templateName := strings.Split(req.URL.String(), "/templates/")[1]
+	templateName := strings.Split(req.URL.String(), "/templates/")[1]
 
-	// TODO: fix this when we correct the PUT method
-	templateParams, err := params.NewTemplate(req.Body)
+	templateParams, err := params.NewDeprecatedTemplate(templateName, req.Body)
 	if err != nil {
 		handler.ErrorWriter.Write(w, err)
 		return

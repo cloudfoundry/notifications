@@ -41,6 +41,7 @@ var _ = Describe("EmailStrategy", func() {
 			conn = fakes.NewDBConn()
 
 			templatesLoader.Templates = postal.Templates{
+				Name:    "The Name",
 				Subject: "the subject",
 				Text:    "the text",
 				HTML:    "email template",

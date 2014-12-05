@@ -2,9 +2,7 @@ package acceptance
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
@@ -16,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = XDescribe("Templates PUT Endpoint", func() {
+var _ = Describe("Templates PUT Endpoint", func() {
 	BeforeEach(func() {
 		TruncateTables()
 	})
@@ -49,7 +47,6 @@ var _ = XDescribe("Templates PUT Endpoint", func() {
 		text := "rulebook"
 		html := "<p>follow the rules</p>"
 		test.SetDefaultSpaceTemplate(notificationsServer, clientToken, text, html)
-		test.GetOverriddenDefaultTemplate(notificationsServer, clientToken, text, html)
 	})
 })
 
@@ -71,36 +68,4 @@ func (t SetTemplates) SetDefaultSpaceTemplate(notificationsServer servers.Notifi
 
 	// Confirm response status code is a 204
 	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
-}
-
-func (t SetTemplates) GetOverriddenDefaultTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, text, html string) {
-	request, err := http.NewRequest("GET", notificationsServer.TemplatePath(models.SpaceBodyTemplateName), bytes.NewBuffer([]byte{}))
-	if err != nil {
-		panic(err)
-	}
-
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
-
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		panic(err)
-	}
-
-	// Confirm response status code is a 204
-	Expect(response.StatusCode).To(Equal(http.StatusOK))
-
-	// Confirm we got the correct template info
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	responseJSON := models.Template{}
-	err = json.Unmarshal(body, &responseJSON)
-	if err != nil {
-		panic(err)
-	}
-
-	Expect(responseJSON.Text).To(Equal(text))
-	Expect(responseJSON.HTML).To(Equal(html))
 }

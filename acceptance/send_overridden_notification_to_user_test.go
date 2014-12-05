@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = XDescribe("Send a notification to user with overridden template", func() {
+var _ = Describe("Send a notification to user with overridden template", func() {
 	BeforeEach(func() {
 		TruncateTables()
 	})

@@ -21,6 +21,7 @@ type TemplateFinder struct {
 
 type TemplateFinderInterface interface {
 	Find(string) (models.Template, error)
+	FindByID(string) (models.Template, error)
 }
 
 type TemplateNotFoundError string
@@ -36,6 +37,15 @@ func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, rootPath str
 		database:      database,
 		fileSystem:    fileSystem,
 	}
+}
+
+func (finder TemplateFinder) FindByID(templateID string) (models.Template, error) {
+	template, err := finder.templatesRepo.FindByID(finder.database.Connection(), templateID)
+	if err != nil {
+		return models.Template{}, err
+	}
+
+	return template, err
 }
 
 func (finder TemplateFinder) Find(templateName string) (models.Template, error) {

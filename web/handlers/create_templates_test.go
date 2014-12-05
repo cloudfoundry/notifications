@@ -16,9 +16,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("CreateTemplates", func() {
+var _ = Describe("CreateTemplate", func() {
 	var err error
-	var handler handlers.CreateTemplates
+	var handler handlers.CreateTemplate
 	var writer *httptest.ResponseRecorder
 	var request *http.Request
 	var context stack.Context
@@ -29,7 +29,7 @@ var _ = Describe("CreateTemplates", func() {
 		BeforeEach(func() {
 			creator = fakes.NewTemplateCreator()
 			errorWriter = fakes.NewErrorWriter()
-			handler = handlers.NewCreateTemplates(creator, errorWriter)
+			handler = handlers.NewCreateTemplate(creator, errorWriter)
 			writer = httptest.NewRecorder()
 			body := []byte(`{"name": "Emergency Template", "text": "Message to: {{.To}}. Raptor Alert.", "html": "<p>{{.ClientID}} you should run.</p>", "subject": "Raptor Containment Unit Breached"}`)
 			request, err = http.NewRequest("POST", "/templates", bytes.NewBuffer(body))

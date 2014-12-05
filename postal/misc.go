@@ -12,6 +12,7 @@ const (
 )
 
 type Templates struct {
+	Name    string
 	Subject string
 	Text    string
 	HTML    string

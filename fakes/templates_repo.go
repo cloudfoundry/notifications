@@ -17,6 +17,14 @@ func NewTemplatesRepo() *TemplatesRepo {
 	}
 }
 
+func (fake TemplatesRepo) FindByID(conn models.ConnectionInterface, templateID string) (models.Template, error) {
+	template, ok := fake.Templates[templateID]
+	if ok {
+		return template, fake.FindError
+	}
+	return models.Template{}, models.ErrRecordNotFound{}
+}
+
 func (fake TemplatesRepo) Find(conn models.ConnectionInterface, templateName string) (models.Template, error) {
 	template, ok := fake.Templates[templateName]
 	if ok {

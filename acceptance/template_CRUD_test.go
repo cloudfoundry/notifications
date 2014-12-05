@@ -3,7 +3,6 @@ package acceptance
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"path"
@@ -11,13 +10,14 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/config"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Create a new template", func() {
+var _ = Describe("Templates CRUD", func() {
 	BeforeEach(func() {
 		TruncateTables()
 
@@ -26,7 +26,7 @@ var _ = Describe("Create a new template", func() {
 		models.NewDatabase(env.DatabaseURL, migrationsPath) // this is the "database" variable
 	})
 
-	It("allows a user to create a new template", func() {
+	It("allows a user to perform CRUD actions on a template", func() {
 		// Boot Fake SMTP Server
 		smtpServer := servers.NewSMTP()
 		smtpServer.Boot()
@@ -51,20 +51,37 @@ var _ = Describe("Create a new template", func() {
 		}
 
 		test := TemplatesCRUD{}
-		name := "Star Wars"
-		subject := "Awesomeness"
-		html := "<p>Millenium Falcon</p>"
-		text := "Millenium Falcon"
+		createTemplate := params.Template{
+			Name:    "Star Wars",
+			Subject: "Awesomeness",
+			HTML:    "<p>Millenium Falcon</p>",
+			Text:    "Millenium Falcon",
+		}
 
-		test.CreateNewTemplate(notificationsServer, clientToken, name, subject, html, text)
+		getTemplate := params.Template{
+			Name:    "Big Hero 6",
+			Subject: "Heroes",
+			HTML:    "<h1>Robots!</h1>",
+			Text:    "Robots!",
+		}
+
+		test.CreateNewTemplate(notificationsServer, clientToken, createTemplate)
+		test.GetTemplate(notificationsServer, clientToken, getTemplate)
 	})
 })
 
 type TemplatesCRUD struct{}
 
-func (test TemplatesCRUD) CreateNewTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, name, subject, html, text string) {
-	jsonBody := []byte(fmt.Sprintf(`{"name":"%s", "subject":"%s", "html":"%s", "text":"%s"}`, name, subject, html, text))
-	request, err := http.NewRequest("POST", notificationsServer.TemplatesBasePath(), bytes.NewBuffer(jsonBody))
+func (test TemplatesCRUD) CreateNewTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, template params.Template) {
+	templateID, status := test.createTemplate(notificationsServer, clientToken, template)
+	Expect(status).To(Equal(http.StatusCreated))
+	Expect(templateID).NotTo(BeNil())
+}
+
+func (test TemplatesCRUD) GetTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, getTemplate params.Template) {
+	templateID, _ := test.createTemplate(notificationsServer, clientToken, getTemplate)
+
+	request, err := http.NewRequest("GET", notificationsServer.TemplatePath(templateID), bytes.NewBuffer([]byte{}))
 	if err != nil {
 		panic(err)
 	}
@@ -76,12 +93,43 @@ func (test TemplatesCRUD) CreateNewTemplate(notificationsServer servers.Notifica
 		panic(err)
 	}
 
+	Expect(response.StatusCode).To(Equal(http.StatusOK))
+
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		panic(err)
 	}
 
-	Expect(response.StatusCode).To(Equal(http.StatusCreated))
+	responseJSON := params.Template{}
+	err = json.Unmarshal(body, &responseJSON)
+	if err != nil {
+		panic(err)
+	}
+
+	Expect(responseJSON).To(Equal(getTemplate))
+}
+
+func (test TemplatesCRUD) createTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, getTemplate params.Template) (string, int) {
+	jsonBody, err := json.Marshal(getTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	request, err := http.NewRequest("POST", notificationsServer.TemplatesBasePath(), bytes.NewBuffer(jsonBody))
+	if err != nil {
+		panic(err)
+	}
+
+	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		panic(err)
+	}
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		panic(err)
+	}
 
 	var JSON struct {
 		TemplateID string `json:"template-id"`
@@ -92,5 +140,5 @@ func (test TemplatesCRUD) CreateNewTemplate(notificationsServer servers.Notifica
 		panic(err)
 	}
 
-	Expect(JSON.TemplateID).ToNot(BeNil())
+	return JSON.TemplateID, response.StatusCode
 }
