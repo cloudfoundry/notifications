@@ -58,7 +58,7 @@ type SendOverriddenNotificationToUser struct{}
 
 func (t SendOverriddenNotificationToUser) OverrideClientUserTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, textTemplate, htmlTemplate string) {
 	jsonBody := []byte(fmt.Sprintf(`{"text":"%s", "html":"%s"}`, textTemplate, htmlTemplate))
-	request, err := http.NewRequest("PUT", notificationsServer.TemplatePath("notifications-sender."+models.UserBodyTemplateName), bytes.NewBuffer(jsonBody))
+	request, err := http.NewRequest("PUT", notificationsServer.DeprecatedTemplatePath("notifications-sender."+models.UserBodyTemplateName), bytes.NewBuffer(jsonBody))
 	if err != nil {
 		panic(err)
 	}

@@ -32,7 +32,7 @@ var _ = Describe("SetTemplates", func() {
 			handler = handlers.NewSetTemplates(updater, errorWriter)
 			writer = httptest.NewRecorder()
 			body := []byte(`{"text": "{{turkey}}", "html": "<p>{{turkey}} gobble</p>"}`)
-			request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
+			request, err = http.NewRequest("PUT", "/deprecated_templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
 			if err != nil {
 				panic(err)
 			}
@@ -50,7 +50,7 @@ var _ = Describe("SetTemplates", func() {
 
 		It("can set a template with an empty text field", func() {
 			body := []byte(`{"html": "<p>gobble</p>", "text": ""}`)
-			request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
+			request, err = http.NewRequest("PUT", "/deprecated_templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
 			if err != nil {
 				panic(err)
 			}
@@ -60,7 +60,7 @@ var _ = Describe("SetTemplates", func() {
 
 		It("can set a template with an empty html field", func() {
 			body := []byte(`{"html": "", "text": "gobble"}`)
-			request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
+			request, err = http.NewRequest("PUT", "/deprecated_templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
 			if err != nil {
 				panic(err)
 			}
@@ -71,7 +71,7 @@ var _ = Describe("SetTemplates", func() {
 		Context("when an errors occurs", func() {
 			It("Writes a validation error to the errorwriter when the request is missing the text field", func() {
 				body := []byte(`{"html": "<p>gobble</p>"}`)
-				request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
+				request, err = http.NewRequest("PUT", "/deprecated_templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
 				if err != nil {
 					panic(err)
 				}
@@ -83,7 +83,7 @@ var _ = Describe("SetTemplates", func() {
 
 			It("Writes a validation error to the errorwriter when the request is missing the html field", func() {
 				body := []byte(`{"text": "gobble"}`)
-				request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
+				request, err = http.NewRequest("PUT", "/deprecated_templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
 				if err != nil {
 					panic(err)
 				}
@@ -95,7 +95,7 @@ var _ = Describe("SetTemplates", func() {
 
 			It("writes a parse error for an invalid request", func() {
 				body := []byte(`{"text": forgot to close the curly brace`)
-				request, err = http.NewRequest("PUT", "/templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
+				request, err = http.NewRequest("PUT", "/deprecated_templates/myTemplateName."+models.UserBodyTemplateName, bytes.NewBuffer(body))
 				if err != nil {
 					panic(err)
 				}
@@ -106,7 +106,7 @@ var _ = Describe("SetTemplates", func() {
 			It("returns a 500 for all other error cases", func() {
 				updater.UpdateError = fmt.Errorf("my new error")
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.TemplateUpdateError{}))
+				Expect(errorWriter.Error).To(Equal(updater.UpdateError))
 			})
 		})
 
@@ -116,7 +116,7 @@ var _ = Describe("SetTemplates", func() {
 
 				for _, ending := range bad_endings {
 					body := []byte(`{"text": "gobble", "html": "<p>gobble</p>"}`)
-					request, err = http.NewRequest("PUT", "/templates/"+ending, bytes.NewBuffer(body))
+					request, err = http.NewRequest("PUT", "/deprecated_templates/"+ending, bytes.NewBuffer(body))
 					if err != nil {
 						panic(err)
 					}

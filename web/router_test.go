@@ -184,22 +184,13 @@ var _ = Describe("Router", func() {
 		Expect(authenticator.Scopes).To(Equal([]string{"notification_templates.read"}))
 	})
 
-	It("routes POST /templates", func() {
-		s := router.Routes().Get("POST /templates").GetHandler().(stack.Stack)
-		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.CreateTemplate{}))
+	It("routes PUT /templates/{templateID}", func() {
+		s := router.Routes().Get("PUT /templates/{templateID}").GetHandler().(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UpdateTemplates{}))
 		Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
 
 		authenticator := s.Middleware[1].(middleware.Authenticator)
 		Expect(authenticator.Scopes).To(Equal([]string{"notification_templates.write"}))
-	})
-
-	It("routes PUT /templates/{templateName}", func() {
-		s := router.Routes().Get("PUT /templates/{templateName}").GetHandler().(stack.Stack)
-		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.SetTemplates{}))
-		Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
-
-		authenticator := s.Middleware[1].(middleware.Authenticator)
-		Expect(authenticator.Scopes).To(Equal([]string{"notification_templates.admin"}))
 	})
 
 	It("routes DELETE /templates/{templateName}", func() {

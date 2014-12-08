@@ -29,7 +29,7 @@ var _ = Describe("Updater", func() {
 
 		It("Inserts templates into the templates repo", func() {
 			Expect(templatesRepo.Templates).ToNot(ContainElement(template))
-			err := updater.Update(template)
+			err := updater.Update("my-awesome-id", template)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(templatesRepo.Templates).To(ContainElement(template))
 		})
@@ -38,7 +38,7 @@ var _ = Describe("Updater", func() {
 			expectedErr := errors.New("Boom!")
 
 			templatesRepo.UpsertError = expectedErr
-			err := updater.Update(template)
+			err := updater.Update("unimportant", template)
 
 			Expect(err).To(Equal(expectedErr))
 		})

@@ -23,6 +23,7 @@
 - Managing Templates
 	- [Create a new template](#post-template)
 	- [Retrieve a template](#get-template)
+	- [Update a template](#put-template)
 
 ## System Status
 
@@ -1110,3 +1111,56 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 | text        | The plaintext representation of the template |
 | html        | The HTML representation of the template      |
 
+<a name="put-template"></a>
+### Update Template
+
+This endpoint is used to update a template in the database.
+
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `notification_templates.write` scope
+
+###### Route
+```
+PUT /templates
+```
+###### Params
+
+| Key      | Description                                                      |
+| -------- | -----------------------------------------------------------------|
+| name\*   | A human-readable template name                                   |
+| subject  | An email subject template, defaults to "{{.Subject}}" if missing |
+| html\*   | The template used for the HTML portion of the notification       |
+| text     | The template used for the text portion of the notification       |
+
+\* required
+
+###### CURL example
+```
+$ curl -i -X PUT \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  -d '{"name": "My template", "subject":"System notification: {{.Subject}}", "text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>",}' \
+  http://notifications.example.com/templates
+
+204 No Content
+Connection: close
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 28 Oct 2014 00:18:48 GMT
+X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
+
+```
+
+##### Response
+
+###### Status
+```
+204 No Content
+```
+
+###### Body

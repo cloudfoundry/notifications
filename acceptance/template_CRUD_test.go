@@ -65,8 +65,16 @@ var _ = Describe("Templates CRUD", func() {
 			Text:    "Robots!",
 		}
 
+		updateTemplate := params.Template{
+			Name:    "Blah",
+			Subject: "More Blah",
+			HTML:    "<h1>This is blahblah</h1>",
+			Text:    "Blah even more",
+		}
+
 		test.CreateNewTemplate(notificationsServer, clientToken, createTemplate)
 		test.GetTemplate(notificationsServer, clientToken, getTemplate)
+		test.UpdateTemplate(notificationsServer, clientToken, updateTemplate)
 	})
 })
 
@@ -107,6 +115,65 @@ func (test TemplatesCRUD) GetTemplate(notificationsServer servers.Notifications,
 	}
 
 	Expect(responseJSON).To(Equal(getTemplate))
+}
+
+func (test TemplatesCRUD) UpdateTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, updateTemplate params.Template) {
+	templateID, _ := test.createTemplate(notificationsServer, clientToken, updateTemplate)
+
+	updateTemplate.Name = "New Name"
+	updateTemplate.HTML = "<p>Brand new HTML</p>"
+	updateTemplate.Subject = "lak;jsdfl;kajsdlf;"
+
+	requestJSON, err := json.Marshal(updateTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	request, err := http.NewRequest("PUT", notificationsServer.TemplatePath(templateID), bytes.NewBuffer(requestJSON))
+	if err != nil {
+		panic(err)
+	}
+
+	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		panic(err)
+	}
+
+	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	request, err = http.NewRequest("GET", notificationsServer.TemplatePath(templateID), bytes.NewBuffer([]byte{}))
+	if err != nil {
+		panic(err)
+	}
+
+	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+
+	response, err = http.DefaultClient.Do(request)
+	if err != nil {
+		panic(err)
+	}
+
+	Expect(response.StatusCode).To(Equal(http.StatusOK))
+
+	body, err = ioutil.ReadAll(response.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	responseJSON := params.Template{}
+	err = json.Unmarshal(body, &responseJSON)
+	if err != nil {
+		panic(err)
+	}
+
+	Expect(responseJSON).To(Equal(updateTemplate))
 }
 
 func (test TemplatesCRUD) createTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, getTemplate params.Template) (string, int) {

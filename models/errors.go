@@ -25,3 +25,11 @@ func NewTransactionCommitError(msg string) TransactionCommitError {
 func (err TransactionCommitError) Error() string {
 	return err.message
 }
+
+type TemplateUpdateError struct {
+	Message string
+}
+
+func (err TemplateUpdateError) Error() string {
+	return err.Message
+}

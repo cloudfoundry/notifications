@@ -11,6 +11,7 @@ type TemplatesRepoInterface interface {
 	FindByID(ConnectionInterface, string) (Template, error)
 	Find(ConnectionInterface, string) (Template, error)
 	Create(ConnectionInterface, Template) (Template, error)
+	Update(ConnectionInterface, string, Template) (Template, error)
 	Upsert(ConnectionInterface, Template) (Template, error)
 	Destroy(ConnectionInterface, string) error
 }
@@ -42,6 +43,29 @@ func (repo TemplatesRepo) Find(conn ConnectionInterface, templateName string) (T
 		}
 		return template, err
 	}
+	return template, nil
+}
+
+func (repo TemplatesRepo) Update(conn ConnectionInterface, templateID string, template Template) (Template, error) {
+	existingTemplate, err := repo.FindByID(conn, templateID)
+	if err != nil {
+		if (err == ErrRecordNotFound{}) {
+			return existingTemplate, TemplateUpdateError{Message: "Template " + templateID + " not found"}
+		}
+		return existingTemplate, err
+	}
+
+	existingTemplate.Name = template.Name
+	existingTemplate.Subject = template.Subject
+	existingTemplate.HTML = template.HTML
+	existingTemplate.Text = template.Text
+	existingTemplate.UpdatedAt = time.Now().Truncate(1 * time.Second).UTC()
+
+	_, err = conn.Update(&existingTemplate)
+	if err != nil {
+		return Template{}, TemplateUpdateError{Message: err.Error()}
+	}
+
 	return template, nil
 }
 

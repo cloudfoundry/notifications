@@ -112,7 +112,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 500 when there is a template update error", func() {
-		writer.Write(recorder, params.TemplateUpdateError{})
+		writer.Write(recorder, models.TemplateUpdateError{Message: "failed to update Template in the database"})
 
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
 

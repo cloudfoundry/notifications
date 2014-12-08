@@ -33,6 +33,11 @@ func (fake TemplatesRepo) Find(conn models.ConnectionInterface, templateName str
 	return models.Template{}, models.ErrRecordNotFound{}
 }
 
+func (fake TemplatesRepo) Update(conn models.ConnectionInterface, templateID string, template models.Template) (models.Template, error) {
+	fake.Templates[template.ID] = template
+	return template, fake.UpsertError
+}
+
 func (fake TemplatesRepo) Upsert(conn models.ConnectionInterface, template models.Template) (models.Template, error) {
 	fake.Templates[template.Name] = template
 	return template, fake.UpsertError

@@ -17,12 +17,6 @@ type DeprecatedTemplate struct {
 	HTML string `json:"html"`
 }
 
-type TemplateUpdateError struct{}
-
-func (err TemplateUpdateError) Error() string {
-	return "failed to update Template in the database"
-}
-
 func NewDeprecatedTemplate(templateName string, body io.Reader) (DeprecatedTemplate, error) {
 	var template DeprecatedTemplate
 

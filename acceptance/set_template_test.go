@@ -54,7 +54,7 @@ type SetTemplates struct{}
 
 func (t SetTemplates) SetDefaultSpaceTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, text, html string) {
 	jsonBody := []byte(fmt.Sprintf(`{"text":"%s", "html":"%s"}`, text, html))
-	request, err := http.NewRequest("PUT", notificationsServer.TemplatePath(models.SpaceBodyTemplateName), bytes.NewBuffer(jsonBody))
+	request, err := http.NewRequest("PUT", notificationsServer.DeprecatedTemplatePath(models.SpaceBodyTemplateName), bytes.NewBuffer(jsonBody))
 	if err != nil {
 		panic(err)
 	}

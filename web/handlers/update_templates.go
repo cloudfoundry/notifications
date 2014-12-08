@@ -10,38 +10,32 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type SetTemplates struct {
+type UpdateTemplates struct {
 	updater     services.TemplateUpdaterInterface
 	ErrorWriter ErrorWriterInterface
 }
 
-func NewSetTemplates(updater services.TemplateUpdaterInterface, errorWriter ErrorWriterInterface) SetTemplates {
-	return SetTemplates{
+func NewUpdateTemplates(updater services.TemplateUpdaterInterface, errorWriter ErrorWriterInterface) UpdateTemplates {
+	return UpdateTemplates{
 		updater:     updater,
 		ErrorWriter: errorWriter,
 	}
 }
 
-func (handler SetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+func (handler UpdateTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	metrics.NewMetric("counter", map[string]interface{}{
 		"name": "notifications.web.templates.put",
 	}).Log()
 
-	templateName := strings.Split(req.URL.String(), "/deprecated_templates/")[1]
+	templateID := strings.Split(req.URL.String(), "/templates/")[1]
 
-	templateParams, err := params.NewDeprecatedTemplate(templateName, req.Body)
+	templateParams, err := params.NewTemplate(req.Body)
 	if err != nil {
 		handler.ErrorWriter.Write(w, err)
 		return
 	}
 
-	err = templateParams.Validate()
-	if err != nil {
-		handler.ErrorWriter.Write(w, err)
-		return
-	}
-
-	err = handler.updater.DeprecatedUpdate(templateParams.ToModel())
+	err = handler.updater.Update(templateID, templateParams.ToModel())
 	if err != nil {
 		handler.ErrorWriter.Write(w, err)
 		return

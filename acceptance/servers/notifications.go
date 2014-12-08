@@ -105,6 +105,10 @@ func (s Notifications) TemplatesBasePath() string {
 	return "http://localhost:" + s.env.Port + "/templates"
 }
 
-func (s Notifications) TemplatePath(templateName string) string {
-	return "http://localhost:" + s.env.Port + "/templates/" + templateName
+func (s Notifications) TemplatePath(templateID string) string {
+	return "http://localhost:" + s.env.Port + "/templates/" + templateID
+}
+
+func (s Notifications) DeprecatedTemplatePath(templateName string) string {
+	return "http://localhost:" + s.env.Port + "/deprecated_templates/" + templateName
 }

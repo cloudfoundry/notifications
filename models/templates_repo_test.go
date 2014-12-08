@@ -112,6 +112,47 @@ var _ = Describe("TemplatesRepo", func() {
 		})
 	})
 
+	Describe("Update", func() {
+		var aNewTemplate models.Template
+
+		BeforeEach(func() {
+			aNewTemplate = models.Template{
+				Name:    "a brand new name",
+				Subject: "Some new subject",
+				Text:    "some newer text",
+				HTML:    "<p>new HTML</p>",
+			}
+		})
+
+		Context("the template exists in the database", func() {
+			It("updates a template currently in the database", func() {
+				_, err := repo.Update(conn, template.ID, aNewTemplate)
+				Expect(err).ToNot(HaveOccurred())
+
+				foundTemplate, err := repo.FindByID(conn, template.ID)
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(foundTemplate.Name).To(Equal(aNewTemplate.Name))
+				Expect(foundTemplate.Subject).To(Equal(aNewTemplate.Subject))
+				Expect(foundTemplate.Text).To(Equal(aNewTemplate.Text))
+				Expect(foundTemplate.HTML).To(Equal(aNewTemplate.HTML))
+				Expect(foundTemplate.CreatedAt).To(Equal(createdAt))
+				Expect(foundTemplate.UpdatedAt).ToNot(Equal(createdAt))
+				Expect(foundTemplate.UpdatedAt).To(BeTemporally(">", createdAt))
+			})
+		})
+
+		Context("the template does not exist in the database", func() {
+			It("bubbles up the error", func() {
+				_, err := repo.Update(conn, "a-bad-id", aNewTemplate)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError(models.TemplateUpdateError{Message: "Template a-bad-id not found"}))
+			})
+		})
+	})
+
 	Describe("#Upsert", func() {
 		It("inserts a template into the database", func() {
 			var err error
