@@ -50,7 +50,7 @@ func (repo TemplatesRepo) Update(conn ConnectionInterface, templateID string, te
 	existingTemplate, err := repo.FindByID(conn, templateID)
 	if err != nil {
 		if (err == ErrRecordNotFound{}) {
-			return existingTemplate, TemplateUpdateError{Message: "Template " + templateID + " not found"}
+			return existingTemplate, TemplateFindError{Message: "Template " + templateID + " not found"}
 		}
 		return existingTemplate, err
 	}

@@ -148,7 +148,7 @@ var _ = Describe("TemplatesRepo", func() {
 			It("bubbles up the error", func() {
 				_, err := repo.Update(conn, "a-bad-id", aNewTemplate)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(models.TemplateUpdateError{Message: "Template a-bad-id not found"}))
+				Expect(err).To(MatchError(models.TemplateFindError{Message: "Template a-bad-id not found"}))
 			})
 		})
 	})

@@ -26,6 +26,14 @@ func (err TransactionCommitError) Error() string {
 	return err.message
 }
 
+type TemplateFindError struct {
+	Message string
+}
+
+func (err TemplateFindError) Error() string {
+	return err.Message
+}
+
 type TemplateUpdateError struct {
 	Message string
 }

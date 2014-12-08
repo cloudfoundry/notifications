@@ -37,6 +37,8 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 		writer.write(w, http.StatusInternalServerError, []string{"An email template could not be loaded"})
 	case params.TemplateCreateError:
 		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
+	case models.TemplateFindError:
+		writer.write(w, http.StatusNotFound, []string{err.Error()})
 	case models.TemplateUpdateError:
 		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
 	case params.ParseError:

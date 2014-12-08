@@ -111,8 +111,22 @@ var _ = Describe("ErrorWriter", func() {
 		Expect(body["errors"]).To(ContainElement("Failed to create Template in the database"))
 	})
 
+	It("returns a 404 when there is a template find error", func() {
+		writer.Write(recorder, models.TemplateFindError{Message: "Template my-id could not be found"})
+
+		Expect(recorder.Code).To(Equal(http.StatusNotFound))
+
+		body := make(map[string]interface{})
+		err := json.Unmarshal(recorder.Body.Bytes(), &body)
+		if err != nil {
+			panic(err)
+		}
+
+		Expect(body["errors"]).To(ContainElement("Template my-id could not be found"))
+	})
+
 	It("returns a 500 when there is a template update error", func() {
-		writer.Write(recorder, models.TemplateUpdateError{Message: "failed to update Template in the database"})
+		writer.Write(recorder, models.TemplateUpdateError{Message: "Failed to update Template in the database"})
 
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
 
@@ -122,7 +136,7 @@ var _ = Describe("ErrorWriter", func() {
 			panic(err)
 		}
 
-		Expect(body["errors"]).To(ContainElement("failed to update Template in the database"))
+		Expect(body["errors"]).To(ContainElement("Failed to update Template in the database"))
 	})
 
 	It("returns a 404 when the space cannot be found", func() {
