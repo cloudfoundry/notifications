@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/valiant"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/dgrijalva/jwt-go"
@@ -50,6 +51,13 @@ func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Reques
 		handler.errorWriter.Write(w, params.ParseError{})
 		return
 	}
+
+	err = valiant.ValidateJSON(builder, body)
+	if err != nil {
+		handler.errorWriter.Write(w, params.ValidationError([]string{err.Error()}))
+		return
+	}
+
 	preferences, err := builder.ToPreferences()
 	if err != nil {
 		handler.errorWriter.Write(w, params.ValidationError([]string{err.Error()}))

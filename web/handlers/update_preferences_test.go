@@ -119,6 +119,34 @@ var _ = Describe("UpdatePreferences", func() {
 		})
 
 		Context("Failure cases", func() {
+			It("returns an error when the clients key is missing", func() {
+				jsonBody := `{"raptor-client": {"containment-unit-breach": {"email": false}}}`
+
+				request, err := http.NewRequest("PATCH", "/user_preferences", bytes.NewBuffer([]byte(jsonBody)))
+				if err != nil {
+					panic(err)
+				}
+
+				tokenHeader := map[string]interface{}{
+					"alg": "FAST",
+				}
+				tokenClaims := map[string]interface{}{
+					"user_id": "correct-user",
+					"exp":     int64(3404281214),
+				}
+
+				rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+				request.Header.Set("Authorization", "Bearer "+rawToken)
+
+				handler.Execute(writer, request, conn, context)
+
+				Expect(errorWriter.Error).ToNot(BeNil())
+				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
+				Expect(conn.BeginWasCalled).To(BeFalse())
+				Expect(conn.CommitWasCalled).To(BeFalse())
+				Expect(conn.RollbackWasCalled).To(BeFalse())
+			})
+
 			Context("preferenceUpdater.Execute errors", func() {
 
 				It("delegates MissingKindOrClientErrors as params.ValidationError to the ErrorWriter", func() {
