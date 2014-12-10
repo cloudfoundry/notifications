@@ -205,5 +205,9 @@ var _ = Describe("Router", func() {
 	It("routes DELETE /deprecated_templates/{templateName}", func() {
 		s := router.Routes().Get("DELETE /deprecated_templates/{templateName}").GetHandler().(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UnsetTemplates{}))
+		Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+
+		authenticator := s.Middleware[1].(middleware.Authenticator)
+		Expect(authenticator.Scopes).To(Equal([]string{"notification_templates.write"}))
 	})
 })

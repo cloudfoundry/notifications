@@ -85,7 +85,7 @@ func NewRouter(mother MotherInterface) Router {
 			"PUT /templates/{templateID}":                 stack.NewStack(handlers.NewUpdateTemplates(templateUpdater, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
 			"PUT /deprecated_templates/{templateName}":    stack.NewStack(handlers.NewSetTemplates(templateUpdater, errorWriter)).Use(logging, notificationsTemplateAdminAuthenticator),
 			"DELETE /templates/{templateID}":              stack.NewStack(handlers.NewDeleteTemplates(templateDeleter, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
-			"DELETE /deprecated_templates/{templateName}": stack.NewStack(handlers.NewUnsetTemplates(templateDeleter, errorWriter)).Use(logging),
+			"DELETE /deprecated_templates/{templateName}": stack.NewStack(handlers.NewUnsetTemplates(templateDeleter, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
 		},
 	}
 }
