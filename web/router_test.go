@@ -193,8 +193,17 @@ var _ = Describe("Router", func() {
 		Expect(authenticator.Scopes).To(Equal([]string{"notification_templates.write"}))
 	})
 
-	It("routes DELETE /templates/{templateName}", func() {
-		s := router.Routes().Get("DELETE /templates/{templateName}").GetHandler().(stack.Stack)
+	It("routes DELETE /templates/{templateID}", func() {
+		s := router.Routes().Get("DELETE /templates/{templateID}").GetHandler().(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.DeleteTemplates{}))
+		Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+
+		authenticator := s.Middleware[1].(middleware.Authenticator)
+		Expect(authenticator.Scopes).To(Equal([]string{"notification_templates.write"}))
+	})
+
+	It("routes DELETE /deprecated_templates/{templateName}", func() {
+		s := router.Routes().Get("DELETE /deprecated_templates/{templateName}").GetHandler().(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UnsetTemplates{}))
 	})
 })

@@ -9,26 +9,26 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type UnsetTemplates struct {
+type DeleteTemplates struct {
 	deleter     services.TemplateDeleterInterface
 	errorWriter ErrorWriterInterface
 }
 
-func NewUnsetTemplates(deleter services.TemplateDeleterInterface, errorWriter ErrorWriterInterface) UnsetTemplates {
-	return UnsetTemplates{
+func NewDeleteTemplates(deleter services.TemplateDeleterInterface, errorWriter ErrorWriterInterface) DeleteTemplates {
+	return DeleteTemplates{
 		deleter:     deleter,
 		errorWriter: errorWriter,
 	}
 }
 
-func (handler UnsetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, stack stack.Context) {
+func (handler DeleteTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, stack stack.Context) {
 	metrics.NewMetric("counter", map[string]interface{}{
 		"name": "notifications.web.templates.delete",
 	}).Log()
 
-	templateName := strings.Split(req.URL.Path, "/templates/")[1]
+	templateID := strings.Split(req.URL.Path, "/templates/")[1]
 
-	err := handler.deleter.DeprecatedDelete(templateName)
+	err := handler.deleter.Delete(templateID)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 	}

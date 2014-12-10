@@ -50,7 +50,11 @@ var _ = Describe("Templates CRUD", func() {
 			panic(err)
 		}
 
-		test := TemplatesCRUD{}
+		test := TemplatesCRUD{
+			notificationsServer: notificationsServer,
+			clientToken:         clientToken,
+		}
+
 		createTemplate := params.Template{
 			Name:    "Star Wars",
 			Subject: "Awesomeness",
@@ -72,53 +76,41 @@ var _ = Describe("Templates CRUD", func() {
 			Text:    "Blah even more",
 		}
 
-		test.CreateNewTemplate(notificationsServer, clientToken, createTemplate)
-		test.GetTemplate(notificationsServer, clientToken, getTemplate)
-		test.UpdateTemplate(notificationsServer, clientToken, updateTemplate)
+		deleteTemplate := params.Template{
+			Name:    "Hungry Play",
+			Subject: "Dystopian",
+			HTML:    "<h1>Sad</h1>",
+			Text:    "Run!!",
+		}
+
+		test.CreateNewTemplate(createTemplate)
+		test.GetTemplate(getTemplate)
+		test.UpdateTemplate(updateTemplate)
+		test.DeleteTemplate(deleteTemplate)
 	})
 })
 
-type TemplatesCRUD struct{}
+type TemplatesCRUD struct {
+	notificationsServer servers.Notifications
+	clientToken         uaa.Token
+}
 
-func (test TemplatesCRUD) CreateNewTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, template params.Template) {
-	templateID, status := test.createTemplate(notificationsServer, clientToken, template)
+func (test TemplatesCRUD) CreateNewTemplate(template params.Template) {
+	templateID, status := test.createTemplateHelper(template)
 	Expect(status).To(Equal(http.StatusCreated))
 	Expect(templateID).NotTo(BeNil())
 }
 
-func (test TemplatesCRUD) GetTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, getTemplate params.Template) {
-	templateID, _ := test.createTemplate(notificationsServer, clientToken, getTemplate)
+func (test TemplatesCRUD) GetTemplate(getTemplate params.Template) {
+	templateID, _ := test.createTemplateHelper(getTemplate)
+	statusCode, template := test.getTemplateHelper(templateID)
 
-	request, err := http.NewRequest("GET", notificationsServer.TemplatePath(templateID), bytes.NewBuffer([]byte{}))
-	if err != nil {
-		panic(err)
-	}
-
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
-
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		panic(err)
-	}
-
-	Expect(response.StatusCode).To(Equal(http.StatusOK))
-
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	responseJSON := params.Template{}
-	err = json.Unmarshal(body, &responseJSON)
-	if err != nil {
-		panic(err)
-	}
-
-	Expect(responseJSON).To(Equal(getTemplate))
+	Expect(statusCode).To(Equal(http.StatusOK))
+	Expect(template).To(Equal(getTemplate))
 }
 
-func (test TemplatesCRUD) UpdateTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, updateTemplate params.Template) {
-	templateID, _ := test.createTemplate(notificationsServer, clientToken, updateTemplate)
+func (test TemplatesCRUD) UpdateTemplate(updateTemplate params.Template) {
+	templateID, _ := test.createTemplateHelper(updateTemplate)
 
 	updateTemplate.Name = "New Name"
 	updateTemplate.HTML = "<p>Brand new HTML</p>"
@@ -129,12 +121,12 @@ func (test TemplatesCRUD) UpdateTemplate(notificationsServer servers.Notificatio
 		panic(err)
 	}
 
-	request, err := http.NewRequest("PUT", notificationsServer.TemplatePath(templateID), bytes.NewBuffer(requestJSON))
+	request, err := http.NewRequest("PUT", test.notificationsServer.TemplatePath(templateID), bytes.NewBuffer(requestJSON))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+test.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -143,51 +135,94 @@ func (test TemplatesCRUD) UpdateTemplate(notificationsServer servers.Notificatio
 
 	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 
+	statusCode, template := test.getTemplateHelper(templateID)
+	Expect(statusCode).To(Equal(http.StatusOK))
+	Expect(template).To(Equal(updateTemplate))
+}
+
+func (test TemplatesCRUD) DeleteTemplate(deleteTemplate params.Template) {
+	templateID, _ := test.createTemplateHelper(deleteTemplate)
+
+	//delete existing template
+	statusCode, body := test.deleteTemplateHelper(templateID)
+	Expect(statusCode).To(Equal(http.StatusNoContent))
+	Expect(body).To(BeEmpty())
+
+	// get to verify 404
+	statusCode, template := test.getTemplateHelper(templateID)
+	Expect(statusCode).To(Equal(http.StatusNotFound))
+	Expect(template).To(Equal(params.Template{}))
+
+	// try to delete again (missing template) to verify 404
+	statusCode, body = test.deleteTemplateHelper(templateID)
+	Expect(statusCode).To(Equal(http.StatusNotFound))
+	Expect(body).To(ContainSubstring("Not Found"))
+}
+
+func (test TemplatesCRUD) deleteTemplateHelper(templateID string) (int, []byte) {
+	request, err := http.NewRequest("DELETE", test.notificationsServer.TemplatePath(templateID), bytes.NewBuffer([]byte{}))
+	if err != nil {
+		panic(err)
+	}
+
+	request.Header.Set("Authorization", "Bearer "+test.clientToken.Access)
+
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		panic(err)
+	}
+
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		panic(err)
 	}
 
-	request, err = http.NewRequest("GET", notificationsServer.TemplatePath(templateID), bytes.NewBuffer([]byte{}))
-	if err != nil {
-		panic(err)
-	}
-
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
-
-	response, err = http.DefaultClient.Do(request)
-	if err != nil {
-		panic(err)
-	}
-
-	Expect(response.StatusCode).To(Equal(http.StatusOK))
-
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	responseJSON := params.Template{}
-	err = json.Unmarshal(body, &responseJSON)
-	if err != nil {
-		panic(err)
-	}
-
-	Expect(responseJSON).To(Equal(updateTemplate))
+	return response.StatusCode, body
 }
 
-func (test TemplatesCRUD) createTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, getTemplate params.Template) (string, int) {
-	jsonBody, err := json.Marshal(getTemplate)
+func (test TemplatesCRUD) getTemplateHelper(templateID string) (int, params.Template) {
+	request, err := http.NewRequest("GET", test.notificationsServer.TemplatePath(templateID), bytes.NewBuffer([]byte{}))
 	if err != nil {
 		panic(err)
 	}
 
-	request, err := http.NewRequest("POST", notificationsServer.TemplatesBasePath(), bytes.NewBuffer(jsonBody))
+	request.Header.Set("Authorization", "Bearer "+test.clientToken.Access)
+
+	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		return response.StatusCode, params.Template{}
+	}
+
+	responseTemplate := params.Template{}
+	err = json.Unmarshal(body, &responseTemplate)
+	if err != nil {
+		panic(err)
+	}
+
+	return response.StatusCode, responseTemplate
+}
+
+func (test TemplatesCRUD) createTemplateHelper(templateToCreate params.Template) (string, int) {
+	jsonBody, err := json.Marshal(templateToCreate)
+	if err != nil {
+		panic(err)
+	}
+
+	request, err := http.NewRequest("POST", test.notificationsServer.TemplatesBasePath(), bytes.NewBuffer(jsonBody))
+	if err != nil {
+		panic(err)
+	}
+
+	request.Header.Set("Authorization", "Bearer "+test.clientToken.Access)
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		panic(err)

@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/ryanmoran/stack"
 
@@ -15,8 +14,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("UnsetTemplates", func() {
-	var handler handlers.UnsetTemplates
+var _ = Describe("DeleteTemplates", func() {
+	var handler handlers.DeleteTemplates
 	var errorWriter *fakes.ErrorWriter
 	var writer *httptest.ResponseRecorder
 	var request *http.Request
@@ -28,25 +27,25 @@ var _ = Describe("UnsetTemplates", func() {
 		BeforeEach(func() {
 			deleter = fakes.NewTemplateDeleter()
 			errorWriter = fakes.NewErrorWriter()
-			handler = handlers.NewUnsetTemplates(deleter, errorWriter)
+			handler = handlers.NewDeleteTemplates(deleter, errorWriter)
 			writer = httptest.NewRecorder()
-			request, err = http.NewRequest("DELETE", "/templates/login.forgot."+models.UserBodyTemplateName, bytes.NewBuffer([]byte{}))
+			request, err = http.NewRequest("DELETE", "/templates/template-id-123", bytes.NewBuffer([]byte{}))
 			if err != nil {
 				panic(err)
 			}
 		})
 
-		It("calls deprecated delete on the repo", func() {
+		It("calls delete on the repo", func() {
 			handler.ServeHTTP(writer, request, context)
-			Expect(deleter.DeprecatedDeleteArgument).To(Equal("login.forgot." + models.UserBodyTemplateName))
+			Expect(deleter.DeleteArgument).To(Equal("template-id-123"))
 			Expect(writer.Code).To(Equal(http.StatusNoContent))
 		})
 
 		Context("When the deleter errors", func() {
 			It("writes the error to the errorWriter", func() {
-				deleter.DeprecatedDeleteError = errors.New("BOOM!")
+				deleter.DeleteError = errors.New("BOOM!")
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(Equal(deleter.DeprecatedDeleteError))
+				Expect(errorWriter.Error).To(Equal(deleter.DeleteError))
 			})
 		})
 	})

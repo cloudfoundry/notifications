@@ -22,8 +22,9 @@
 	- [Update user preferences with a client token](#patch-user-preferences-guid)
 - Managing Templates
 	- [Create a new template](#post-template)
-	- [Retrieve a template](#get-template)
+	- [Get a template](#get-template)
 	- [Update a template](#put-template)
+	- [Delete a template](#delete-template)
 
 ## System Status
 
@@ -1057,7 +1058,7 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 | template-id | A system-generated UUID |
 
 <a name="get-template"></a>
-### Retrieve Template
+### Get Template
 
 This endpoint is used to retrieve a template that was saved to the database.
 
@@ -1127,7 +1128,7 @@ Authorization: bearer <CLIENT-TOKEN>
 
 ###### Route
 ```
-PUT /templates
+PUT /templates/templateID
 ```
 ###### Params
 
@@ -1145,7 +1146,7 @@ PUT /templates
 $ curl -i -X PUT \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"name": "My template", "subject":"System notification: {{.Subject}}", "text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>",}' \
-  http://notifications.example.com/templates
+  http://notifications.example.com/templates/templateID
 
 204 No Content
 Connection: close
@@ -1164,3 +1165,40 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 ```
 
 ###### Body
+
+<a name="delete-template"></a>
+### Delete Template
+
+This endpoint is used to delete an existing template in the database.
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `notification_templates.write` scope
+
+###### Route
+```
+DELETE /templates/templateID
+```
+
+###### CURL example
+```
+$ curl -i -X DELETE -H "Authorization: Bearer <CLIENT-TOKEN>" http://notifications.example.com/templates/template-id
+
+204 No Content
+Connection: close
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 28 Oct 2014 00:18:48 GMT
+X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
+
+```
+
+##### Response
+- If template is found and successfully deleted, then the response is `204 No Content`
+- If template is not found, then the response is `404 Not Found`
+
+

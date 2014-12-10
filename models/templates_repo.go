@@ -14,6 +14,7 @@ type TemplatesRepoInterface interface {
 	Update(ConnectionInterface, string, Template) (Template, error)
 	Upsert(ConnectionInterface, Template) (Template, error)
 	Destroy(ConnectionInterface, string) error
+	DeprecatedDestroy(ConnectionInterface, string) error
 }
 
 type TemplatesRepo struct{}
@@ -107,7 +108,18 @@ func setTemplateTimestamps(template *Template) {
 	template.UpdatedAt = template.CreatedAt
 }
 
-func (repo TemplatesRepo) Destroy(conn ConnectionInterface, templateName string) error {
+func (repo TemplatesRepo) Destroy(conn ConnectionInterface, templateID string) error {
+	template, err := repo.FindByID(conn, templateID)
+	if err != nil {
+		return err
+	}
+
+	_, err = conn.Delete(&template)
+
+	return err
+}
+
+func (repo TemplatesRepo) DeprecatedDestroy(conn ConnectionInterface, templateName string) error {
 	template, err := repo.Find(conn, templateName)
 	if err != nil {
 		if (err == ErrRecordNotFound{}) {

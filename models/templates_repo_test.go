@@ -203,13 +203,41 @@ var _ = Describe("TemplatesRepo", func() {
 
 	Describe("#Destroy", func() {
 		Context("the template exists in the database", func() {
-			It("deletes the template", func() {
+			It("deletes the template by templateID", func() {
+				_, err := repo.FindByID(conn, template.ID)
+				if err != nil {
+					panic(err)
+				}
+
+				err = repo.Destroy(conn, template.ID)
+				Expect(err).ToNot(HaveOccurred())
+
+				_, err = repo.FindByID(conn, template.ID)
+				Expect(err).To(Equal(models.ErrRecordNotFound{}))
+			})
+		})
+
+		Context("the template does not exist in the database", func() {
+			It("returns an ErrRecordNotFound error", func() {
+				err := repo.Destroy(conn, "knockknock")
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(Equal(models.ErrRecordNotFound{}))
+
+				_, err = repo.FindByID(conn, "knockknock")
+				Expect(err).To(Equal(models.ErrRecordNotFound{}))
+			})
+		})
+	})
+
+	Describe("#DeprecatedDestroy", func() {
+		Context("the template exists in the database", func() {
+			It("deletes the template by name", func() {
 				_, err := repo.Find(conn, template.Name)
 				if err != nil {
 					panic(err)
 				}
 
-				err = repo.Destroy(conn, template.Name)
+				err = repo.DeprecatedDestroy(conn, template.Name)
 				Expect(err).ToNot(HaveOccurred())
 
 				_, err = repo.Find(conn, template.Name)
@@ -220,7 +248,7 @@ var _ = Describe("TemplatesRepo", func() {
 
 		Context("the template does not exist in the database", func() {
 			It("does not return an error", func() {
-				err := repo.Destroy(conn, "knockknock")
+				err := repo.DeprecatedDestroy(conn, "knockknock")
 				Expect(err).ToNot(HaveOccurred())
 
 				_, err = repo.Find(conn, "knockknock")
