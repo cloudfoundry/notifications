@@ -120,6 +120,36 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
 		})
 
 		Context("Failure cases", func() {
+			Context("when global_unsubscribe is not set", func() {
+				It("returns an error when the clients key is missing", func() {
+					userGUID = "the-correct-user"
+					jsonBody := `{"raptor-client": {"containment-unit-breach": {"email": false}}}`
+
+					request, err := http.NewRequest("PATCH", "domain/user_preferences/"+userGUID, bytes.NewBuffer([]byte(jsonBody)))
+					if err != nil {
+						panic(err)
+					}
+
+					tokenHeader := map[string]interface{}{
+						"alg": "FAST",
+					}
+					tokenClaims := map[string]interface{}{
+						"client_id": "mister-client",
+						"exp":       int64(3404281214),
+					}
+					rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+					request.Header.Set("Authorization", "Bearer "+rawToken)
+
+					handler.Execute(writer, request, conn, context)
+
+					Expect(errorWriter.Error).ToNot(BeNil())
+					Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
+					Expect(conn.BeginWasCalled).To(BeFalse())
+					Expect(conn.CommitWasCalled).To(BeFalse())
+					Expect(conn.RollbackWasCalled).To(BeFalse())
+				})
+			})
+
 			It("delegates MissingKindOrClientErrors as params.ValidationError to the ErrorWriter", func() {
 				updater.ExecuteError = services.MissingKindOrClientError("BOOM!")
 
@@ -143,6 +173,7 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
 				Expect(conn.CommitWasCalled).To(BeFalse())
 				Expect(conn.RollbackWasCalled).To(BeTrue())
 			})
+
 			It("delegates other errors to the ErrorWriter", func() {
 				updater.ExecuteError = errors.New("BOOM!")
 

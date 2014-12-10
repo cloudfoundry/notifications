@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/valiant"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
@@ -46,12 +47,20 @@ func (handler UpdateSpecificUserPreferences) Execute(w http.ResponseWriter, req 
 
 	builder, err := handler.ParsePreferences(body)
 	if err != nil {
-		panic(err)
+		handler.errorWriter.Write(w, err)
+		return
+	}
+
+	err = valiant.ValidateJSON(builder, body)
+	if err != nil {
+		handler.errorWriter.Write(w, params.ValidationError{err.Error()})
+		return
 	}
 
 	preferences, err := builder.ToPreferences()
 	if err != nil {
-		panic(err)
+		handler.errorWriter.Write(w, err)
+		return
 	}
 
 	transaction := conn.Transaction()
