@@ -51,7 +51,7 @@ var _ = Describe("Validate", func() {
 	})
 
 	Context("when the data is nested n levels deep", func() {
-		It("succeeds when the json is valid", func() {
+		It("succeeds when the json is valid, even if validate-required tag is not present", func() {
 			data := `{
 				"name":"Boshy",
 				"contact_info": {
@@ -67,7 +67,7 @@ var _ = Describe("Validate", func() {
 			type Address struct {
 				Street string `json:"street" validate-required:"false"`
 				City   string `json:"city" validate-required:"true"`
-				State  string `json:"state" validate-required:"true"`
+				State  string `json:"state"`
 			}
 
 			type ContactInfo struct {

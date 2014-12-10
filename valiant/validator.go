@@ -48,9 +48,14 @@ func recursivelyValidate(typedData interface{}, untypedData interface{}) error {
 func validateSingleField(field reflect.StructField, parentUntypedData map[string]interface{}) error {
 	jsonFieldName := field.Tag.Get("json")
 
-	required, err := strconv.ParseBool(field.Tag.Get("validate-required"))
-	if err != nil {
-		panic("we got an error on parsing the validate-required tag")
+	var err error
+	var required bool
+
+	if tagText := field.Tag.Get("validate-required"); tagText != "" {
+		required, err = strconv.ParseBool(tagText)
+		if err != nil {
+			panic("we got an error on parsing the validate-required tag")
+		}
 	}
 
 	if required {
