@@ -7,6 +7,7 @@ export MODEL_MIGRATIONS_DIRECTORY=models/migrations
 export HTTP_LOGGING_ENABLED=true
 export ROOT_PATH=$HOME/workspace/go/src/github.com/cloudfoundry-incubator/notifications
 export SENDER=no-reply@notifications.example.com
+export SMTP_AUTH_MECHANISM=plain
 export SMTP_HOST=smtp.example.com
 export SMTP_PASS=password
 export SMTP_PORT=587

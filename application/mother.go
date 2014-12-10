@@ -152,11 +152,22 @@ func (mother Mother) MailClient() *mail.Client {
 		Pass:           env.SMTPPass,
 		Host:           env.SMTPHost,
 		Port:           env.SMTPPort,
+		Secret:         env.SMTPCRAMMD5Secret,
 		TestMode:       env.TestMode,
 		SkipVerifySSL:  env.VerifySSL,
 		DisableTLS:     !env.SMTPTLS,
 		LoggingEnabled: env.SMTPLoggingEnabled,
 	}
+
+	switch env.SMTPAuthMechanism {
+	case config.SMTPAuthNone:
+		mailConfig.AuthMechanism = mail.AuthNone
+	case config.SMTPAuthPlain:
+		mailConfig.AuthMechanism = mail.AuthPlain
+	case config.SMTPAuthCRAMMD5:
+		mailConfig.AuthMechanism = mail.AuthCRAMMD5
+	}
+
 	client, err := mail.NewClient(mailConfig, mother.Logger())
 	if err != nil {
 		panic(err)

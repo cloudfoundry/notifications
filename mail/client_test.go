@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net"
+	"net/smtp"
 	"strings"
 	"time"
 
@@ -353,6 +354,64 @@ var _ = Describe("Mail", func() {
 			ok, params = client.Extension("STARTTLS")
 			Expect(ok).To(BeTrue())
 			Expect(params).To(Equal(""))
+		})
+	})
+
+	Describe("AuthMechanism", func() {
+		Context("when configured to use PLAIN auth", func() {
+			BeforeEach(func() {
+				var err error
+
+				config.AuthMechanism = mail.AuthPlain
+				client, err = mail.NewClient(config, logger)
+				if err != nil {
+					panic(err)
+				}
+			})
+
+			It("creates a PlainAuth strategy", func() {
+				auth := smtp.PlainAuth("", config.User, config.Pass, config.Host)
+				mechanism := client.AuthMechanism()
+
+				Expect(mechanism).To(BeAssignableToTypeOf(auth))
+			})
+		})
+
+		Context("when configured to use CRAMMD5 auth", func() {
+			BeforeEach(func() {
+				var err error
+
+				config.AuthMechanism = mail.AuthCRAMMD5
+				client, err = mail.NewClient(config, logger)
+				if err != nil {
+					panic(err)
+				}
+			})
+
+			It("creates a CRAMMD5Auth strategy", func() {
+				auth := smtp.CRAMMD5Auth(config.User, config.Secret)
+				mechanism := client.AuthMechanism()
+
+				Expect(mechanism).To(BeAssignableToTypeOf(auth))
+			})
+		})
+
+		Context("when configured to use no auth", func() {
+			BeforeEach(func() {
+				var err error
+
+				config.AuthMechanism = mail.AuthNone
+				client, err = mail.NewClient(config, logger)
+				if err != nil {
+					panic(err)
+				}
+			})
+
+			It("creates a CRAMMD5Auth strategy", func() {
+				mechanism := client.AuthMechanism()
+
+				Expect(mechanism).To(BeNil())
+			})
 		})
 	})
 

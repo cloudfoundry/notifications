@@ -33,6 +33,8 @@ var _ = Describe("Environment", func() {
 		"VERIFY_SSL",
 		"ENCRYPTION_KEY",
 		"SMTP_LOGGING_ENABLED",
+		"SMTP_AUTH_MECHANISM",
+		"SMTP_CRAMMD5_SECRET",
 	}
 
 	BeforeEach(func() {
@@ -155,6 +157,8 @@ var _ = Describe("Environment", func() {
 			os.Setenv("SMTP_HOST", "smtp.example.com")
 			os.Setenv("SMTP_PORT", "567")
 			os.Setenv("SMTP_TLS", "true")
+			os.Setenv("SMTP_CRAMMD5_SECRET", "supersecret")
+			os.Setenv("SMTP_AUTH_MECHANISM", "plain")
 
 			env := config.NewEnvironment()
 
@@ -162,6 +166,8 @@ var _ = Describe("Environment", func() {
 			Expect(env.SMTPPass).To(Equal("my-smtp-password"))
 			Expect(env.SMTPHost).To(Equal("smtp.example.com"))
 			Expect(env.SMTPPort).To(Equal("567"))
+			Expect(env.SMTPCRAMMD5Secret).To(Equal("supersecret"))
+			Expect(env.SMTPAuthMechanism).To(Equal("plain"))
 			Expect(env.SMTPTLS).To(BeTrue())
 		})
 
@@ -182,30 +188,52 @@ var _ = Describe("Environment", func() {
 			}).NotTo(Panic())
 		})
 
+		It("it panics if SMTP_AUTH_MECHANISM is not one of the three supported types", func() {
+			os.Setenv("SMTP_AUTH_MECHANISM", "cram-md5")
+			Expect(func() {
+				config.NewEnvironment()
+			}).NotTo(Panic())
+
+			os.Setenv("SMTP_AUTH_MECHANISM", "plain")
+			Expect(func() {
+				config.NewEnvironment()
+			}).NotTo(Panic())
+
+			os.Setenv("SMTP_AUTH_MECHANISM", "none")
+			Expect(func() {
+				config.NewEnvironment()
+			}).NotTo(Panic())
+
+			os.Setenv("SMTP_AUTH_MECHANISM", "banana")
+			Expect(func() {
+				config.NewEnvironment()
+			}).To(Panic())
+		})
+
 		It("panics when the values are missing", func() {
-			os.Setenv("SMTP_USER", "my-smtp-user")
-			os.Setenv("SMTP_PASS", "my-smtp-password")
 			os.Setenv("SMTP_HOST", "smtp.example.com")
 			os.Setenv("SMTP_PORT", "567")
-			os.Setenv("SMTP_TLS", "")
+			os.Setenv("SMTP_AUTH_MECHANISM", "plain")
 
 			Expect(func() {
 				config.NewEnvironment()
 			}).NotTo(Panic())
 
-			os.Setenv("SMTP_USER", "my-smtp-user")
-			os.Setenv("SMTP_PASS", "my-smtp-password")
 			os.Setenv("SMTP_HOST", "")
-			os.Setenv("SMTP_PORT", "567")
 
 			Expect(func() {
 				config.NewEnvironment()
 			}).To(Panic())
 
-			os.Setenv("SMTP_USER", "my-smtp-user")
-			os.Setenv("SMTP_PASS", "my-smtp-password")
 			os.Setenv("SMTP_HOST", "smtp.example.com")
 			os.Setenv("SMTP_PORT", "")
+
+			Expect(func() {
+				config.NewEnvironment()
+			}).To(Panic())
+
+			os.Setenv("SMTP_AUTH_MECHANISM", "")
+			os.Setenv("SMTP_PORT", "567")
 
 			Expect(func() {
 				config.NewEnvironment()

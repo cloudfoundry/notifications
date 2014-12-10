@@ -10,6 +10,14 @@ import (
 	"github.com/ryanmoran/viron"
 )
 
+const (
+	SMTPAuthNone    = "none"
+	SMTPAuthPlain   = "plain"
+	SMTPAuthCRAMMD5 = "cram-md5"
+)
+
+var SMTPAuthMechanisms = []string{SMTPAuthNone, SMTPAuthPlain, SMTPAuthCRAMMD5}
+
 var UAAPublicKey string
 
 type Environment struct {
@@ -21,6 +29,8 @@ type Environment struct {
 	ModelMigrationsDir string `env:"MODEL_MIGRATIONS_DIRECTORY"  env-required:"true"`
 	Port               string `env:"PORT"                 env-default:"3000"`
 	RootPath           string `env:"ROOT_PATH"`
+	SMTPAuthMechanism  string `env:"SMTP_AUTH_MECHANISM"  env-required:"true"`
+	SMTPCRAMMD5Secret  string `env:"SMTP_CRAMMD5_SECRET"`
 	SMTPHost           string `env:"SMTP_HOST"            env-required:"true"`
 	SMTPLoggingEnabled bool   `env:"SMTP_LOGGING_ENABLED" env-default:"false"`
 	SMTPPass           string `env:"SMTP_PASS"`
@@ -46,6 +56,7 @@ func NewEnvironment() Environment {
 	}
 	env.parseDatabaseURL()
 	env.validateEncryptionKey()
+	env.validateSMTPAuthMechanism()
 
 	return env
 }
@@ -69,4 +80,14 @@ func (env *Environment) parseDatabaseURL() {
 func (env *Environment) validateEncryptionKey() {
 	sum := md5.Sum(env.EncryptionKey)
 	env.EncryptionKey = sum[:]
+}
+
+func (env *Environment) validateSMTPAuthMechanism() {
+	for _, mechanism := range SMTPAuthMechanisms {
+		if mechanism == env.SMTPAuthMechanism {
+			return
+		}
+	}
+
+	panic(errors.New(fmt.Sprintf("Could not parse SMTP_AUTH_MECHANISM %q, it is not one of the allowed values: %+v", env.SMTPAuthMechanism, SMTPAuthMechanisms)))
 }

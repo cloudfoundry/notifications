@@ -11,6 +11,14 @@ import (
 	"time"
 )
 
+const (
+	AuthNone AuthMechanism = iota
+	AuthPlain
+	AuthCRAMMD5
+)
+
+type AuthMechanism int
+
 type Client struct {
 	config Config
 	client *smtp.Client
@@ -22,6 +30,8 @@ type Config struct {
 	Port           string
 	User           string
 	Pass           string
+	Secret         string
+	AuthMechanism  AuthMechanism
 	TestMode       bool
 	SkipVerifySSL  bool
 	DisableTLS     bool
@@ -186,13 +196,29 @@ func (c *Client) StartTLS() error {
 
 func (c *Client) Auth() error {
 	if ok, _ := c.Extension("AUTH"); ok {
-		err := c.client.Auth(smtp.PlainAuth("", c.config.User, c.config.Pass, c.config.Host))
-		if err != nil {
-			return err
+		if mechanism := c.AuthMechanism(); mechanism != nil {
+			err := c.client.Auth(mechanism)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
+}
+
+func (c *Client) AuthMechanism() smtp.Auth {
+	switch c.config.AuthMechanism {
+	case AuthCRAMMD5:
+		c.PrintLog("Using CRAMMD5 to authenticate")
+		return smtp.CRAMMD5Auth(c.config.User, c.config.Secret)
+	case AuthPlain:
+		c.PrintLog("Using PLAIN to authenticate")
+		return smtp.PlainAuth("", c.config.User, c.config.Pass, c.config.Host)
+	default:
+		c.PrintLog("No authentication mechanism configured")
+		return nil
+	}
 }
 
 func (c *Client) Data(msg Message) error {

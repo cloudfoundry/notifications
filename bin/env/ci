@@ -2,6 +2,7 @@
 set -e
 
 export HTTP_LOGGING_ENABLED=true
+export SMTP_AUTH_MECHANISM=plain
 export SMTP_HOST=smtp.example.com
 export SMTP_PASS=password
 export SMTP_PORT=587
