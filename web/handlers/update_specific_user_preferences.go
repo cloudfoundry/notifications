@@ -53,7 +53,7 @@ func (handler UpdateSpecificUserPreferences) Execute(w http.ResponseWriter, req 
 
 	err = valiant.ValidateJSON(builder, body)
 	if err != nil {
-		handler.errorWriter.Write(w, params.ValidationError{err.Error()})
+		handler.errorWriter.Write(w, params.ValidationError([]string{err.Error()}))
 		return
 	}
 
