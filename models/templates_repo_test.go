@@ -201,6 +201,40 @@ var _ = Describe("TemplatesRepo", func() {
 		})
 	})
 
+	Describe("#ListIDsAndNames", func() {
+		Context("there are templates in the database", func() {
+			It("returns a list of templates - ID and Name only", func() {
+				secondTemplate := models.Template{
+					ID:        "star_template",
+					Name:      "Shooting Stars",
+					Text:      "pretty",
+					HTML:      "<h1>Awe</h1>",
+					CreatedAt: createdAt,
+				}
+
+				conn.Insert(&secondTemplate)
+
+				expectedMetadata := []models.Template{
+					models.Template{
+						ID:   "raptor_template",
+						Name: "Raptors On The Run",
+					},
+					models.Template{
+						ID:   "star_template",
+						Name: "Shooting Stars",
+					},
+				}
+				templatesMetadata, err := repo.ListIDsAndNames(conn)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(templatesMetadata).To(Equal(expectedMetadata))
+				Expect(templatesMetadata[0].Text).To(BeEmpty())
+				Expect(templatesMetadata[0].HTML).To(BeEmpty())
+				Expect(templatesMetadata[0].Subject).To(BeEmpty())
+			})
+		})
+	})
+
 	Describe("#Destroy", func() {
 		Context("the template exists in the database", func() {
 			It("deletes the template by templateID", func() {

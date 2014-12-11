@@ -13,6 +13,7 @@ type TemplatesRepoInterface interface {
 	Create(ConnectionInterface, Template) (Template, error)
 	Update(ConnectionInterface, string, Template) (Template, error)
 	Upsert(ConnectionInterface, Template) (Template, error)
+	ListIDsAndNames(ConnectionInterface) ([]Template, error)
 	Destroy(ConnectionInterface, string) error
 	DeprecatedDestroy(ConnectionInterface, string) error
 }
@@ -88,6 +89,15 @@ func (repo TemplatesRepo) Upsert(conn ConnectionInterface, template Template) (T
 	}
 
 	return template, nil
+}
+
+func (repo TemplatesRepo) ListIDsAndNames(conn ConnectionInterface) ([]Template, error) {
+	templates := []Template{}
+	_, err := conn.Select(&templates, "SELECT ID, Name FROM `templates`")
+	if err != nil {
+		return []Template{}, err
+	}
+	return templates, nil
 }
 
 func (repo TemplatesRepo) Create(conn ConnectionInterface, template Template) (Template, error) {

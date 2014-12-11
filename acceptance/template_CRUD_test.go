@@ -11,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/config"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
+	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -55,38 +56,38 @@ var _ = Describe("Templates CRUD", func() {
 			clientToken:         clientToken,
 		}
 
-		createTemplate := params.Template{
-			Name:    "Star Wars",
-			Subject: "Awesomeness",
-			HTML:    "<p>Millenium Falcon</p>",
-			Text:    "Millenium Falcon",
+		testTemplates := []params.Template{
+			params.Template{
+				Name:    "Star Wars",
+				Subject: "Awesomeness",
+				HTML:    "<p>Millenium Falcon</p>",
+				Text:    "Millenium Falcon",
+			},
+			params.Template{
+				Name:    "Big Hero 6",
+				Subject: "Heroes",
+				HTML:    "<h1>Robots!</h1>",
+				Text:    "Robots!",
+			},
+			params.Template{
+				Name:    "Blah",
+				Subject: "More Blah",
+				HTML:    "<h1>This is blahblah</h1>",
+				Text:    "Blah even more",
+			},
+			params.Template{
+				Name:    "Hungry Play",
+				Subject: "Dystopian",
+				HTML:    "<h1>Sad</h1>",
+				Text:    "Run!!",
+			},
 		}
 
-		getTemplate := params.Template{
-			Name:    "Big Hero 6",
-			Subject: "Heroes",
-			HTML:    "<h1>Robots!</h1>",
-			Text:    "Robots!",
-		}
-
-		updateTemplate := params.Template{
-			Name:    "Blah",
-			Subject: "More Blah",
-			HTML:    "<h1>This is blahblah</h1>",
-			Text:    "Blah even more",
-		}
-
-		deleteTemplate := params.Template{
-			Name:    "Hungry Play",
-			Subject: "Dystopian",
-			HTML:    "<h1>Sad</h1>",
-			Text:    "Run!!",
-		}
-
-		test.CreateNewTemplate(createTemplate)
-		test.GetTemplate(getTemplate)
-		test.UpdateTemplate(updateTemplate)
-		test.DeleteTemplate(deleteTemplate)
+		test.CreateNewTemplate(testTemplates[0])
+		test.GetTemplate(testTemplates[1])
+		test.UpdateTemplate(testTemplates[2])
+		test.DeleteTemplate(testTemplates[3])
+		test.ListTemplates(testTemplates)
 	})
 })
 
@@ -96,12 +97,14 @@ type TemplatesCRUD struct {
 }
 
 func (test TemplatesCRUD) CreateNewTemplate(template params.Template) {
+	TruncateTables()
 	templateID, status := test.createTemplateHelper(template)
 	Expect(status).To(Equal(http.StatusCreated))
 	Expect(templateID).NotTo(BeNil())
 }
 
 func (test TemplatesCRUD) GetTemplate(getTemplate params.Template) {
+	TruncateTables()
 	templateID, _ := test.createTemplateHelper(getTemplate)
 	statusCode, template := test.getTemplateHelper(templateID)
 
@@ -110,6 +113,7 @@ func (test TemplatesCRUD) GetTemplate(getTemplate params.Template) {
 }
 
 func (test TemplatesCRUD) UpdateTemplate(updateTemplate params.Template) {
+	TruncateTables()
 	templateID, _ := test.createTemplateHelper(updateTemplate)
 
 	updateTemplate.Name = "New Name"
@@ -141,6 +145,7 @@ func (test TemplatesCRUD) UpdateTemplate(updateTemplate params.Template) {
 }
 
 func (test TemplatesCRUD) DeleteTemplate(deleteTemplate params.Template) {
+	TruncateTables()
 	templateID, _ := test.createTemplateHelper(deleteTemplate)
 
 	//delete existing template
@@ -157,6 +162,43 @@ func (test TemplatesCRUD) DeleteTemplate(deleteTemplate params.Template) {
 	statusCode, body = test.deleteTemplateHelper(templateID)
 	Expect(statusCode).To(Equal(http.StatusNotFound))
 	Expect(body).To(ContainSubstring("Not Found"))
+}
+
+func (test TemplatesCRUD) ListTemplates(testTemplates []params.Template) {
+	TruncateTables()
+
+	//create a bunch of templates
+	templateMetadata := map[string]services.TemplateMetadata{}
+	for _, fullTemplate := range testTemplates {
+		templateID, statusCode := test.createTemplateHelper(fullTemplate)
+		if statusCode != http.StatusCreated {
+			panic("ListTemplates failed to create test Templates")
+		}
+		templateMetadata[templateID] = services.TemplateMetadata{Name: fullTemplate.Name}
+	}
+
+	//call Get /templates
+	request, err := http.NewRequest("GET", test.notificationsServer.TemplatesBasePath(), bytes.NewBuffer([]byte{}))
+	request.Header.Set("Authorization", "Bearer "+test.clientToken.Access)
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		panic(err)
+	}
+
+	Expect(response.StatusCode).To(Equal(200))
+
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	var templatesListResponse map[string]services.TemplateMetadata
+	err = json.Unmarshal(body, &templatesListResponse)
+	if err != nil {
+		panic(err)
+	}
+
+	Expect(templatesListResponse).To(Equal(templateMetadata))
 }
 
 func (test TemplatesCRUD) deleteTemplateHelper(templateID string) (int, []byte) {

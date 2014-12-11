@@ -4,9 +4,11 @@ import "github.com/cloudfoundry-incubator/notifications/models"
 
 type TemplatesRepo struct {
 	Templates                 map[string]models.Template
+	TemplatesList             []models.Template
 	FindError                 error
 	UpsertError               error
 	CreateError               error
+	ListError                 error
 	DestroyArgument           string
 	DestroyError              error
 	DeprecatedDestroyArgument string
@@ -43,6 +45,10 @@ func (fake TemplatesRepo) Update(conn models.ConnectionInterface, templateID str
 func (fake TemplatesRepo) Upsert(conn models.ConnectionInterface, template models.Template) (models.Template, error) {
 	fake.Templates[template.Name] = template
 	return template, fake.UpsertError
+}
+
+func (fake TemplatesRepo) ListIDsAndNames(conn models.ConnectionInterface) ([]models.Template, error) {
+	return fake.TemplatesList, fake.ListError
 }
 
 func (fake *TemplatesRepo) Destroy(conn models.ConnectionInterface, templateID string) error {
