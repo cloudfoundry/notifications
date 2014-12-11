@@ -25,6 +25,7 @@
 	- [Get a template](#get-template)
 	- [Update a template](#put-template)
 	- [Delete a template](#delete-template)
+	- [List templates](#list-template)
 
 ## System Status
 
@@ -1201,4 +1202,52 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 - If template is found and successfully deleted, then the response is `204 No Content`
 - If template is not found, then the response is `404 Not Found`
 
+<a name="list-template"></a>
+### List Templates
+
+This endpoint is used to retrieve a list of template id's and names that were saved to the database.
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `notification_templates.read` scope
+
+###### Route
+```
+GET /templates
+```
+###### CURL example
+```
+$ curl -i -X GET \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/templates
+
+200 OK
+Connection: close
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 28 Oct 2014 00:18:48 GMT
+X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
+
+{
+  "F47CF7A7-43DE-4EA9-8B43-1A4C0964CDFB": {"name": "My Custom Template" },
+  "584AB0E7-15EA-4BDA-B43F-BEB4EC301644": {"name": "Another template" }
+}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields      | Description                                  |
+| ------------| ---------------------------------------------|
+| template-id | The system-generated ID for a given template |
+| name        | The human readable name of the template      |
 
