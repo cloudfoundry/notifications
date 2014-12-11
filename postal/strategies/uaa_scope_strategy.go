@@ -85,11 +85,6 @@ func (strategy UAAScopeStrategy) scopeIsDefault(scope string) bool {
 	return false
 }
 
-func (strategy UAAScopeStrategy) Trim(responses []byte) []byte {
-	t := Trimmer{}
-	return t.TrimFields(responses, EmailFieldName)
-}
-
 func (strategy UAAScopeStrategy) subjectSuffix(subject string) string {
 	if subject == "" {
 		return models.SubjectMissingTemplateName

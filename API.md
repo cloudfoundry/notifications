@@ -461,7 +461,7 @@ Date: Tue, 30 Sep 2014 22:27:48 GMT
 X-Cf-Requestid: eb7ee46c-2142-4a74-5b73-e4971eea511a
 
 [{
-	"email":"user@example.com",
+	"recipient":"user@example.com",
 	"notification_id":"86ad7892-8217-4359-54b1-fe3ca60d8ac9",
 	"status":"queued"
 }]
@@ -477,7 +477,7 @@ X-Cf-Requestid: eb7ee46c-2142-4a74-5b73-e4971eea511a
 | Fields          | Description                               |
 | --------------- | ----------------------------------------- |
 | notification_id | Random GUID assigned to notification sent |
-| email           | Email address of notification recipient   |
+| recipient       | Email address of notification recipient   |
 | status          | Current delivery status of notification   |
 
 ## Registering Notifications

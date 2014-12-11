@@ -1,7 +1,6 @@
 package strategies_test
 
 import (
-	"encoding/json"
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
@@ -151,46 +150,6 @@ var _ = Describe("Everyone Strategy", func() {
 
 				_, err := strategy.Dispatch(clientID, "", options, conn)
 				Expect(err).ToNot(BeNil())
-			})
-		})
-	})
-
-	Describe("Trim", func() {
-		Describe("TrimFields", func() {
-			It("trims the specified fields from the response object", func() {
-				responses, err := json.Marshal([]strategies.Response{
-					{
-						Status:         "delivered",
-						Recipient:      "user-319",
-						Email:          "",
-						NotificationID: "123-456",
-					},
-					{
-						Status:         "delivered",
-						Recipient:      "user-380",
-						Email:          "",
-						NotificationID: "789-1011",
-					},
-				})
-
-				trimmedResponses := strategy.Trim(responses)
-
-				var result []map[string]string
-				err = json.Unmarshal(trimmedResponses, &result)
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(result).To(Equal([]map[string]string{
-					{"status": "delivered",
-						"recipient":       "user-319",
-						"notification_id": "123-456",
-					},
-					{"status": "delivered",
-						"recipient":       "user-380",
-						"notification_id": "789-1011",
-					},
-				}))
 			})
 		})
 	})

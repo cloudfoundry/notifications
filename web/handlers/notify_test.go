@@ -11,7 +11,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/dgrijalva/jwt-go"
@@ -94,27 +93,6 @@ var _ = Describe("Notify", func() {
 				handler = handlers.NewNotify(finder, registrar)
 				strategy = fakes.NewMailStrategy()
 				validator = &fakes.Validator{}
-			})
-
-			Describe("Responses", func() {
-				BeforeEach(func() {
-					strategy.Responses = []strategies.Response{
-						{
-							Status:         "delivered",
-							Recipient:      "user-123",
-							NotificationID: "123-456",
-						},
-					}
-				})
-
-				It("trim is called on the strategy", func() {
-					_, err := handler.Execute(conn, request, context, "", strategy, validator)
-					if err != nil {
-						panic(err)
-					}
-
-					Expect(strategy.TrimCalled).To(Equal(true))
-				})
 			})
 
 			It("delegates to the mailStrategy", func() {

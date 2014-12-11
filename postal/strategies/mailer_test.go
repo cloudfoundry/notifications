@@ -36,7 +36,6 @@ var _ = Describe("Mailer", func() {
 
 	Describe("Deliver", func() {
 		It("returns the correct types of responses for users", func() {
-
 			users := map[string]uaa.User{
 				"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
 				"user-2": {},
@@ -50,28 +49,24 @@ var _ = Describe("Mailer", func() {
 				Status:         "queued",
 				Recipient:      "user-1",
 				NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-				Email:          "user-1@example.com",
 			}))
 
 			Expect(responses).To(ContainElement(strategies.Response{
 				Status:         "queued",
 				Recipient:      "user-2",
 				NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-				Email:          "",
 			}))
 
 			Expect(responses).To(ContainElement(strategies.Response{
 				Status:         "queued",
 				Recipient:      "user-3",
 				NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-				Email:          "",
 			}))
 
 			Expect(responses).To(ContainElement(strategies.Response{
 				Status:         "queued",
 				Recipient:      "user-4",
 				NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-				Email:          "user-4",
 			}))
 		})
 

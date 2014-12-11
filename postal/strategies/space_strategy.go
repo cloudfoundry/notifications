@@ -77,11 +77,6 @@ func (strategy SpaceStrategy) Dispatch(clientID, guid string, options postal.Opt
 	return responses, nil
 }
 
-func (strategy SpaceStrategy) Trim(responses []byte) []byte {
-	t := Trimmer{}
-	return t.TrimFields(responses, EmailFieldName)
-}
-
 func (strategy SpaceStrategy) subjectSuffix(subject string) string {
 	if subject == "" {
 		return models.SubjectMissingTemplateName

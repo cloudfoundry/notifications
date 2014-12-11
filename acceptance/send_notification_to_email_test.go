@@ -92,7 +92,7 @@ func (t SendNotificationToEmail) SendNotificationToEmail(notificationsServer ser
 	Expect(len(responseJSON)).To(Equal(1))
 	responseItem := responseJSON[0]
 	Expect(responseItem["status"]).To(Equal("queued"))
-	Expect(responseItem["email"]).To(Equal("user@example.com"))
+	Expect(responseItem["recipient"]).To(Equal("user@example.com"))
 	Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
 
 	// Confirm the email message was delivered correctly

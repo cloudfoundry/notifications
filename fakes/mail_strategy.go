@@ -23,8 +23,3 @@ func (fake *MailStrategy) Dispatch(clientID string, guid string,
 	fake.DispatchArguments = []interface{}{clientID, guid, options}
 	return fake.Responses, fake.Error
 }
-
-func (fake *MailStrategy) Trim(response []byte) []byte {
-	fake.TrimCalled = true
-	return response
-}

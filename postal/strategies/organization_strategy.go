@@ -70,11 +70,6 @@ func (strategy OrganizationStrategy) Dispatch(clientID, guid string, options pos
 	return responses, nil
 }
 
-func (strategy OrganizationStrategy) Trim(responses []byte) []byte {
-	t := Trimmer{}
-	return t.TrimFields(responses, EmailFieldName)
-}
-
 func (strategy OrganizationStrategy) subjectSuffix(subject string) string {
 	if subject == "" {
 		return models.SubjectMissingTemplateName

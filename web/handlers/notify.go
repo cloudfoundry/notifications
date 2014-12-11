@@ -73,8 +73,6 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 		panic(err)
 	}
 
-	output = strategy.Trim(output)
-
 	return output, nil
 }
 

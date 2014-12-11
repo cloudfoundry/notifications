@@ -55,11 +55,6 @@ func (strategy EveryoneStrategy) Dispatch(clientID, guid string, options postal.
 	return responses, nil
 }
 
-func (strategy EveryoneStrategy) Trim(responses []byte) []byte {
-	t := Trimmer{}
-	return t.TrimFields(responses, EmailFieldName)
-}
-
 func (strategy EveryoneStrategy) subjectSuffix(subject string) string {
 	if subject == "" {
 		return models.SubjectMissingTemplateName

@@ -48,16 +48,10 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
 			Scope:        scope,
 		}))
 
-		emailAddress := ""
-		if len(user.Emails) > 0 {
-			emailAddress = user.Emails[0]
-		}
-
 		responses = append(responses, Response{
 			Status:         postal.StatusQueued,
-			Recipient:      userGUID,
 			NotificationID: messageID,
-			Email:          emailAddress,
+			Recipient:      userGUID,
 		})
 	}
 

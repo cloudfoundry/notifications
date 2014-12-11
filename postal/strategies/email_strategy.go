@@ -8,12 +8,6 @@ import (
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
-const (
-	EmailFieldName      = "email"
-	RecipientsFieldName = "recipient"
-	EmptyIDForNonUser   = ""
-)
-
 type EmailStrategy struct {
 	mailer          MailerInterface
 	templatesLoader utilities.TemplatesLoaderInterface
@@ -28,7 +22,7 @@ func NewEmailStrategy(mailer MailerInterface, templatesLoader utilities.Template
 
 func (strategy EmailStrategy) Dispatch(clientID, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
 	users := map[string]uaa.User{
-		EmptyIDForNonUser: uaa.User{
+		options.To: uaa.User{
 			Emails: []string{options.To},
 		},
 	}
@@ -39,11 +33,6 @@ func (strategy EmailStrategy) Dispatch(clientID, guid string, options postal.Opt
 	}
 
 	return strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, ""), nil
-}
-
-func (strategy EmailStrategy) Trim(responses []byte) []byte {
-	t := Trimmer{}
-	return t.TrimFields(responses, RecipientsFieldName)
 }
 
 func (strategy EmailStrategy) determineSubjectTemplate(subject string) string {

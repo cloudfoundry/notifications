@@ -1,7 +1,6 @@
 package strategies_test
 
 import (
-	"encoding/json"
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
@@ -174,33 +173,6 @@ var _ = Describe("UAA Scope Strategy", func() {
 						Expect(err).To(MatchError(strategies.DefaultScopeError{}))
 					}
 				})
-			})
-		})
-	})
-
-	Describe("Trim", func() {
-		Describe("TrimFields", func() {
-			It("trims the specified fields from the response object", func() {
-				responses, err := json.Marshal([]strategies.Response{
-					{
-						Status:         "delivered",
-						Recipient:      "user-311",
-						NotificationID: "123-456",
-					},
-				})
-
-				trimmedResponses := strategy.Trim(responses)
-
-				var result []map[string]string
-				err = json.Unmarshal(trimmedResponses, &result)
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(result).To(ContainElement(map[string]string{"status": "delivered",
-					"recipient":       "user-311",
-					"notification_id": "123-456",
-				}))
 			})
 		})
 	})

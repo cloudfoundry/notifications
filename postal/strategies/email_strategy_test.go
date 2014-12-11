@@ -1,8 +1,6 @@
 package strategies_test
 
 import (
-	"encoding/json"
-
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -51,7 +49,7 @@ var _ = Describe("EmailStrategy", func() {
 		It("Calls Deliver on it's mailer with proper arguments", func() {
 			emailStrategy.Dispatch(clientID, emailID, options, conn)
 
-			users := map[string]uaa.User{"": uaa.User{Emails: []string{options.To}}}
+			users := map[string]uaa.User{options.To: uaa.User{Emails: []string{options.To}}}
 
 			Expect(len(fakeMailer.DeliverArguments)).To(Equal(8))
 
@@ -63,31 +61,6 @@ var _ = Describe("EmailStrategy", func() {
 			Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{}))
 			Expect(fakeMailer.DeliverArguments).To(ContainElement(clientID))
 			Expect(fakeMailer.DeliverArguments).To(ContainElement(scope))
-		})
-	})
-
-	Describe("Trim", func() {
-		It("Trims the recipients field", func() {
-			responses, err := json.Marshal([]strategies.Response{
-				{
-					Status:         "delivered",
-					Email:          "user@example.com",
-					NotificationID: "123-456",
-				},
-			})
-
-			trimmedResponses := emailStrategy.Trim(responses)
-
-			var result []map[string]string
-			err = json.Unmarshal(trimmedResponses, &result)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(result).To(ContainElement(map[string]string{"status": "delivered",
-				"email":           "user@example.com",
-				"notification_id": "123-456",
-			}))
 		})
 	})
 })

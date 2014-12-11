@@ -57,11 +57,6 @@ func (strategy UserStrategy) Dispatch(clientID, guid string, options postal.Opti
 	return responses, nil
 }
 
-func (strategy UserStrategy) Trim(responses []byte) []byte {
-	t := Trimmer{}
-	return t.TrimFields(responses, EmailFieldName)
-}
-
 func (strategy UserStrategy) subjectSuffix(subject string) string {
 	if subject == "" {
 		return models.SubjectMissingTemplateName
