@@ -1094,7 +1094,7 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
   "name":"My Custom Template",
   "subject" : "Hey! {{.Subject}}",
   "text" : "Dude! Stuff's Happening!",
-  "html" : "<h1>Dude!</h1>{{.HTML}}"
+  "html" : "\u003ch1\u003eHello!\u003c/h1\u003e"
 }
 ```
 
@@ -1111,7 +1111,11 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 | name        | The human readable name of the template      |
 | subject     | The subject for the template                 |
 | text        | The plaintext representation of the template |
-| html        | The HTML representation of the template      |
+| html        | The HTML representation of the template *    |
+
+\* The HTML is Unicode escaped.  This is the expected behavior of the
+[Golang JSON marshaller](http://golang.org/pkg/encoding/json/#Marshal)
+
 
 <a name="put-template"></a>
 ### Update Template
