@@ -63,10 +63,9 @@ type SendNotificationsToOrganizationRole struct{}
 // Make request to /registation
 func (t SendNotificationsToOrganizationRole) RegisterClientNotifications(notificationsServer servers.Notifications, clientToken uaa.Token) {
 	body, err := json.Marshal(map[string]interface{}{
-		"source_description": "Notifications Sender",
-		"kinds": []map[string]string{
-			{
-				"id":          "organization-role-test",
+		"source_name": "Notifications Sender",
+		"notifications": map[string]map[string]string{
+			"organization-role-test": {
 				"description": "Organization Role Test",
 			},
 		},
@@ -75,7 +74,7 @@ func (t SendNotificationsToOrganizationRole) RegisterClientNotifications(notific
 		panic(err)
 	}
 
-	request, err := http.NewRequest("PUT", notificationsServer.RegistrationPath(), bytes.NewBuffer(body))
+	request, err := http.NewRequest("PUT", notificationsServer.NotificationsPath(), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
@@ -93,7 +92,7 @@ func (t SendNotificationsToOrganizationRole) RegisterClientNotifications(notific
 	}
 
 	// Confirm response status code looks ok
-	Expect(response.StatusCode).To(Equal(http.StatusOK))
+	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 
 }
 

@@ -62,10 +62,9 @@ type SendNotificationsToUsersWithScope struct{}
 // Make request to /registation
 func (t SendNotificationsToUsersWithScope) RegisterClientNotifications(notificationsServer servers.Notifications, clientToken uaa.Token) {
 	body, err := json.Marshal(map[string]interface{}{
-		"source_description": "Notifications Sender",
-		"kinds": []map[string]string{
-			{
-				"id":          "scope-test",
+		"source_name": "Notifications Sender",
+		"notifications": map[string]map[string]string{
+			"scope-test": {
 				"description": "Scope Test",
 			},
 		},
@@ -74,7 +73,7 @@ func (t SendNotificationsToUsersWithScope) RegisterClientNotifications(notificat
 		panic(err)
 	}
 
-	request, err := http.NewRequest("PUT", notificationsServer.RegistrationPath(), bytes.NewBuffer(body))
+	request, err := http.NewRequest("PUT", notificationsServer.NotificationsPath(), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
@@ -92,7 +91,7 @@ func (t SendNotificationsToUsersWithScope) RegisterClientNotifications(notificat
 	}
 
 	// Confirm response status code looks ok
-	Expect(response.StatusCode).To(Equal(http.StatusOK))
+	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 
 }
 

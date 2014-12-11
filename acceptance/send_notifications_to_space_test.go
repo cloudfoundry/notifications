@@ -60,10 +60,9 @@ type SendNotificationsToSpace struct{}
 // Make request to /registation
 func (t SendNotificationsToSpace) RegisterClientNotifications(notificationsServer servers.Notifications, clientToken uaa.Token) {
 	body, err := json.Marshal(map[string]interface{}{
-		"source_description": "Notifications Sender",
-		"kinds": []map[string]string{
-			{
-				"id":          "space-test",
+		"source_name": "Notifications Sender",
+		"notifications": map[string]map[string]string{
+			"space-test": {
 				"description": "Space Test",
 			},
 		},
@@ -72,7 +71,7 @@ func (t SendNotificationsToSpace) RegisterClientNotifications(notificationsServe
 		panic(err)
 	}
 
-	request, err := http.NewRequest("PUT", notificationsServer.RegistrationPath(), bytes.NewBuffer(body))
+	request, err := http.NewRequest("PUT", notificationsServer.NotificationsPath(), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +89,7 @@ func (t SendNotificationsToSpace) RegisterClientNotifications(notificationsServe
 	}
 
 	// Confirm response status code looks ok
-	Expect(response.StatusCode).To(Equal(http.StatusOK))
+	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 
 }
 
