@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
@@ -21,6 +22,10 @@ func NewCreateTemplate(creator services.TemplateCreatorInterface, errorWriter Er
 }
 
 func (handler CreateTemplate) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+	metrics.NewMetric("counter", map[string]interface{}{
+		"name": "notifications.web.templates.create",
+	}).Log()
+
 	templateParams, err := params.NewTemplate(req.Body)
 	if err != nil {
 		handler.ErrorWriter.Write(w, err)
