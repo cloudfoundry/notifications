@@ -98,14 +98,14 @@ type TemplatesCRUD struct {
 
 func (test TemplatesCRUD) CreateNewTemplate(template params.Template) {
 	TruncateTables()
-	templateID, status := test.createTemplateHelper(template)
+	status, templateID := test.createTemplateHelper(template)
 	Expect(status).To(Equal(http.StatusCreated))
 	Expect(templateID).NotTo(BeNil())
 }
 
 func (test TemplatesCRUD) GetTemplate(getTemplate params.Template) {
 	TruncateTables()
-	templateID, _ := test.createTemplateHelper(getTemplate)
+	_, templateID := test.createTemplateHelper(getTemplate)
 	statusCode, template := test.getTemplateHelper(templateID)
 
 	Expect(statusCode).To(Equal(http.StatusOK))
@@ -114,7 +114,7 @@ func (test TemplatesCRUD) GetTemplate(getTemplate params.Template) {
 
 func (test TemplatesCRUD) UpdateTemplate(updateTemplate params.Template) {
 	TruncateTables()
-	templateID, _ := test.createTemplateHelper(updateTemplate)
+	_, templateID := test.createTemplateHelper(updateTemplate)
 
 	updateTemplate.Name = "New Name"
 	updateTemplate.HTML = "<p>Brand new HTML</p>"
@@ -146,7 +146,7 @@ func (test TemplatesCRUD) UpdateTemplate(updateTemplate params.Template) {
 
 func (test TemplatesCRUD) DeleteTemplate(deleteTemplate params.Template) {
 	TruncateTables()
-	templateID, _ := test.createTemplateHelper(deleteTemplate)
+	_, templateID := test.createTemplateHelper(deleteTemplate)
 
 	//delete existing template
 	statusCode, body := test.deleteTemplateHelper(templateID)
@@ -170,7 +170,7 @@ func (test TemplatesCRUD) ListTemplates(testTemplates []params.Template) {
 	//create a bunch of templates
 	templateMetadata := map[string]services.TemplateMetadata{}
 	for _, fullTemplate := range testTemplates {
-		templateID, statusCode := test.createTemplateHelper(fullTemplate)
+		statusCode, templateID := test.createTemplateHelper(fullTemplate)
 		if statusCode != http.StatusCreated {
 			panic("ListTemplates failed to create test Templates")
 		}
@@ -253,7 +253,7 @@ func (test TemplatesCRUD) getTemplateHelper(templateID string) (int, params.Temp
 	return response.StatusCode, responseTemplate
 }
 
-func (test TemplatesCRUD) createTemplateHelper(templateToCreate params.Template) (string, int) {
+func (test TemplatesCRUD) createTemplateHelper(templateToCreate params.Template) (int, string) {
 	jsonBody, err := json.Marshal(templateToCreate)
 	if err != nil {
 		panic(err)
@@ -284,5 +284,5 @@ func (test TemplatesCRUD) createTemplateHelper(templateToCreate params.Template)
 		panic(err)
 	}
 
-	return JSON.TemplateID, response.StatusCode
+	return response.StatusCode, JSON.TemplateID
 }
