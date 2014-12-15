@@ -4,11 +4,13 @@ import "github.com/cloudfoundry-incubator/notifications/models"
 
 type ClientWithNotifications struct {
 	Name          string                  `json:"name"`
+	Template      string                  `json:"template"`
 	Notifications map[string]Notification `json:"notifications"`
 }
 
 type Notification struct {
 	Description string `json:"description"`
+	Template    string `json:"template"`
 	Critical    bool   `json:"critical"`
 }
 
@@ -48,6 +50,7 @@ func (finder NotificationsFinder) AllClientNotifications() (map[string]ClientWit
 
 	return allClientNotifications, nil
 }
+
 func (finder NotificationsFinder) getAllNotificationsForClient(client models.Client) (ClientWithNotifications, error) {
 	kinds, err := finder.allKindsForClient(client.ID)
 	if err != nil {
@@ -57,6 +60,7 @@ func (finder NotificationsFinder) getAllNotificationsForClient(client models.Cli
 	notifications := finder.kindsToNotifications(kinds)
 	clientWithNotifications := ClientWithNotifications{
 		Name:          client.Description,
+		Template:      "default",
 		Notifications: notifications,
 	}
 	return clientWithNotifications, nil
@@ -67,6 +71,7 @@ func (finder NotificationsFinder) kindsToNotifications(kinds []models.Kind) map[
 	for _, kind := range kinds {
 		notification := Notification{
 			Description: kind.Description,
+			Template:    "default",
 			Critical:    kind.Critical,
 		}
 		notifications[kind.ID] = notification

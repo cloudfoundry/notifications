@@ -23,7 +23,6 @@ var _ = Describe("GetAllNotifications", func() {
 
 	BeforeEach(func() {
 		errorWriter = fakes.NewErrorWriter()
-
 		writer = httptest.NewRecorder()
 
 		request, err = http.NewRequest("GET", "/notifications", nil)
@@ -32,7 +31,6 @@ var _ = Describe("GetAllNotifications", func() {
 		}
 
 		notificationsFinder = fakes.NewNotificationsFinder()
-
 		handler = handlers.NewGetAllNotifications(notificationsFinder, errorWriter)
 	})
 
@@ -40,27 +38,33 @@ var _ = Describe("GetAllNotifications", func() {
 		It("receives the clients/notifications from the finder", func() {
 			notificationsFinder.ClientsWithNotifications = map[string]services.ClientWithNotifications{
 				"client-123": services.ClientWithNotifications{
-					Name: "Jurassic Park",
+					Name:     "Jurassic Park",
+					Template: "default",
 					Notifications: map[string]services.Notification{
 						"perimeter-breach": {
 							Description: "very bad",
+							Template:    "default",
 							Critical:    true,
 						},
 						"fence-broken": {
 							Description: "even worse",
+							Template:    "default",
 							Critical:    true,
 						},
 					},
 				},
 				"client-456": services.ClientWithNotifications{
-					Name: "Jurassic Park Ride",
+					Name:     "Jurassic Park Ride",
+					Template: "default",
 					Notifications: map[string]services.Notification{
 						"perimeter-is-good": {
 							Description: "very good",
+							Template:    "default",
 							Critical:    false,
 						},
 						"fence-works": {
 							Description: "even better",
+							Template:    "default",
 							Critical:    true,
 						},
 					},
@@ -74,26 +78,32 @@ var _ = Describe("GetAllNotifications", func() {
 			Expect(writer.Body.Bytes()).To(MatchJSON(`{
 				"client-123": {
 					"name": "Jurassic Park",
+					"template": "default",
 					"notifications": {
 						"perimeter-breach": {
 							"description": "very bad",
+							"template": "default",
 							"critical": true
 						},
 						"fence-broken": {
 							"description": "even worse",
+							"template": "default",
 							"critical": true
 						}
 					}
 				},
 				"client-456": {
 					"name": "Jurassic Park Ride",
+					"template": "default",
 					"notifications": {
 						"perimeter-is-good": {
 							"description": "very good",
+							"template": "default",
 							"critical": false
 						},
 						"fence-works": {
 							"description": "even better",
+							"template": "default",
 							"critical": true
 						}
 					}

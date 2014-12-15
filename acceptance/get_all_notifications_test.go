@@ -128,34 +128,41 @@ func (test AllNotifications) GetAllNotifications() {
 
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
 	Expect(body).To(MatchJSON(`{
-		"client-123" : {
-			"name":"source name stuff",
+		"client-123": {
+			"name": "source name stuff",
+			"template": "default",
 			"notifications": {
 				"kind-asd": {
 					"description": "remember stuff",
+					"template": "default",
 					"critical": false
 				},
-				"kind-abc" : {
+				"kind-abc": {
 					"description": "forgot things",
+					"template": "default",
 					"critical": true
 				}
 			}
 		},
-		"client-456" : {
+		"client-456": {
 			"name": "raptors",
+			"template": "default",
 			"notifications": {
 				"dino-kind": {
 					"description": "forgot things",
+					"template": "default",
 					"critical": true
 				},
 				"fossilized-kind": {
 					"description": "remember stuff",
+					"template": "default",
 					"critical": false
 				}
 			}
 		},
-		"client-890" : {
-			"name" : "this client has no notifications",
+		"client-890": {
+			"name": "this client has no notifications",
+			"template": "default",
 			"notifications": {}
 		}
 	}`))

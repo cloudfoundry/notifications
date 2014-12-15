@@ -144,29 +144,35 @@ var _ = Describe("NotificationsFinder", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(clientsWithNotifications).To(Equal(map[string]services.ClientWithNotifications{
 				"star-wars": {
-					Name: "The Force Awakens",
+					Name:     "The Force Awakens",
+					Template: "default",
 					Notifications: map[string]services.Notification{
 						"multi-light-saber": {
 							Description: "LOL WUT?",
+							Template:    "default",
 							Critical:    false,
 						},
 						"millenium-falcon": {
 							Description: "Awesome!",
+							Template:    "default",
 							Critical:    true,
 						},
 					},
 				},
 				"big-hero-6": {
-					Name: "Marvel",
+					Name:     "Marvel",
+					Template: "default",
 					Notifications: map[string]services.Notification{
 						"robots": {
 							Description: "hero",
+							Template:    "default",
 							Critical:    true,
 						},
 					},
 				},
 				"the-imitation-game": {
 					Name:          "Alan Turing",
+					Template:      "default",
 					Notifications: map[string]services.Notification{},
 				},
 			}))
