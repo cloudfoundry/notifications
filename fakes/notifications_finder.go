@@ -1,28 +1,33 @@
 package fakes
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/web/services"
-)
+import "github.com/cloudfoundry-incubator/notifications/models"
 
 type NotificationsFinder struct {
-	Clients                     map[string]models.Client
-	Kinds                       map[string]models.Kind
-	ClientAndKindError          error
-	ClientsWithNotifications    map[string]services.ClientWithNotifications
-	AllClientNotificationsError error
+	Clients                         map[string]models.Client
+	Kinds                           map[string]models.Kind
+	ClientAndKindError              error
+	AllClientsAndNotificationsError error
 }
 
 func NewNotificationsFinder() *NotificationsFinder {
 	return &NotificationsFinder{
 		Clients: make(map[string]models.Client),
 		Kinds:   make(map[string]models.Kind),
-		ClientsWithNotifications: make(map[string]services.ClientWithNotifications),
 	}
 }
 
-func (finder *NotificationsFinder) AllClientNotifications() (map[string]services.ClientWithNotifications, error) {
-	return finder.ClientsWithNotifications, finder.AllClientNotificationsError
+func (finder *NotificationsFinder) AllClientsAndNotifications() ([]models.Client, []models.Kind, error) {
+	var clients []models.Client
+	var kinds []models.Kind
+	for _, client := range finder.Clients {
+		clients = append(clients, client)
+	}
+
+	for _, kind := range finder.Kinds {
+		kinds = append(kinds, kind)
+	}
+
+	return clients, kinds, finder.AllClientsAndNotificationsError
 }
 
 func (finder *NotificationsFinder) ClientAndKind(clientID, kindID string) (models.Client, models.Kind, error) {

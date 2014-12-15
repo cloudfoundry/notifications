@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 
 	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/services"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -36,38 +36,41 @@ var _ = Describe("GetAllNotifications", func() {
 
 	Describe("ServeHTTP", func() {
 		It("receives the clients/notifications from the finder", func() {
-			notificationsFinder.ClientsWithNotifications = map[string]services.ClientWithNotifications{
-				"client-123": services.ClientWithNotifications{
-					Name:     "Jurassic Park",
-					Template: "default",
-					Notifications: map[string]services.Notification{
-						"perimeter-breach": {
-							Description: "very bad",
-							Template:    "default",
-							Critical:    true,
-						},
-						"fence-broken": {
-							Description: "even worse",
-							Template:    "default",
-							Critical:    true,
-						},
-					},
+			notificationsFinder.Clients = map[string]models.Client{
+				"client-123": {
+					ID:          "client-123",
+					Description: "Jurassic Park",
 				},
-				"client-456": services.ClientWithNotifications{
-					Name:     "Jurassic Park Ride",
-					Template: "default",
-					Notifications: map[string]services.Notification{
-						"perimeter-is-good": {
-							Description: "very good",
-							Template:    "default",
-							Critical:    false,
-						},
-						"fence-works": {
-							Description: "even better",
-							Template:    "default",
-							Critical:    true,
-						},
-					},
+				"client-456": {
+					ID:          "client-456",
+					Description: "Jurassic Park Ride",
+				},
+			}
+
+			notificationsFinder.Kinds = map[string]models.Kind{
+				"perimeter-breach": {
+					ID:          "perimeter-breach",
+					Description: "very bad",
+					Critical:    true,
+					ClientID:    "client-123",
+				},
+				"fence-broken": {
+					ID:          "fence-broken",
+					Description: "even worse",
+					Critical:    true,
+					ClientID:    "client-123",
+				},
+				"perimeter-is-good": {
+					ID:          "perimeter-is-good",
+					Description: "very good",
+					Critical:    false,
+					ClientID:    "client-456",
+				},
+				"fence-works": {
+					ID:          "fence-works",
+					Description: "even better",
+					Critical:    true,
+					ClientID:    "client-456",
 				},
 			}
 
@@ -113,7 +116,7 @@ var _ = Describe("GetAllNotifications", func() {
 
 		Context("when the notifications finder errors", func() {
 			It("delegates to the error writer", func() {
-				notificationsFinder.AllClientNotificationsError = errors.New("BANANA!!!")
+				notificationsFinder.AllClientsAndNotificationsError = errors.New("BANANA!!!")
 
 				handler.ServeHTTP(writer, request, nil)
 

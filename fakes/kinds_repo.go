@@ -58,6 +58,16 @@ func (fake *KindsRepo) FindByClient(conn models.ConnectionInterface, clientID st
 	return kinds, nil
 }
 
+func (fake *KindsRepo) FindAll(conn models.ConnectionInterface) ([]models.Kind, error) {
+	var kinds []models.Kind
+
+	for _, kind := range fake.Kinds {
+		kinds = append(kinds, kind)
+	}
+
+	return kinds, nil
+}
+
 func (fake *KindsRepo) Trim(conn models.ConnectionInterface, clientID string, kindIDs []string) (int, error) {
 	fake.TrimArguments = []interface{}{clientID, kindIDs}
 	return 0, fake.TrimError

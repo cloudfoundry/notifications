@@ -2,18 +2,6 @@ package services
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-type ClientWithNotifications struct {
-	Name          string                  `json:"name"`
-	Template      string                  `json:"template"`
-	Notifications map[string]Notification `json:"notifications"`
-}
-
-type Notification struct {
-	Description string `json:"description"`
-	Template    string `json:"template"`
-	Critical    bool   `json:"critical"`
-}
-
 type NotificationsFinder struct {
 	clientsRepo models.ClientsRepoInterface
 	kindsRepo   models.KindsRepoInterface
@@ -21,7 +9,7 @@ type NotificationsFinder struct {
 }
 
 type NotificationsFinderInterface interface {
-	AllClientNotifications() (map[string]ClientWithNotifications, error)
+	AllClientsAndNotifications() ([]models.Client, []models.Kind, error)
 	ClientAndKind(string, string) (models.Client, models.Kind, error)
 }
 
@@ -33,70 +21,22 @@ func NewNotificationsFinder(clientsRepo models.ClientsRepoInterface, kindsRepo m
 	}
 }
 
-func (finder NotificationsFinder) AllClientNotifications() (map[string]ClientWithNotifications, error) {
-	clients, err := finder.allClients()
+func (finder NotificationsFinder) AllClientsAndNotifications() ([]models.Client, []models.Kind, error) {
+	var clients []models.Client
+	var notifications []models.Kind
+	var err error
+
+	clients, err = finder.clientsRepo.FindAll(finder.database.Connection())
 	if err != nil {
-		return map[string]ClientWithNotifications{}, err
+		return clients, notifications, err
 	}
 
-	allClientNotifications := map[string]ClientWithNotifications{}
-	for _, client := range clients {
-		clientWithNotifications, err := finder.getAllNotificationsForClient(client)
-		if err != nil {
-			return map[string]ClientWithNotifications{}, err
-		}
-		allClientNotifications[client.ID] = clientWithNotifications
-	}
-
-	return allClientNotifications, nil
-}
-
-func (finder NotificationsFinder) getAllNotificationsForClient(client models.Client) (ClientWithNotifications, error) {
-	kinds, err := finder.allKindsForClient(client.ID)
+	notifications, err = finder.kindsRepo.FindAll(finder.database.Connection())
 	if err != nil {
-		return ClientWithNotifications{}, err
+		return clients, notifications, err
 	}
 
-	notifications := finder.kindsToNotifications(kinds)
-	clientWithNotifications := ClientWithNotifications{
-		Name:          client.Description,
-		Template:      "default",
-		Notifications: notifications,
-	}
-	return clientWithNotifications, nil
-}
-
-func (finder NotificationsFinder) kindsToNotifications(kinds []models.Kind) map[string]Notification {
-	notifications := map[string]Notification{}
-	for _, kind := range kinds {
-		notification := Notification{
-			Description: kind.Description,
-			Template:    "default",
-			Critical:    kind.Critical,
-		}
-		notifications[kind.ID] = notification
-	}
-
-	return notifications
-}
-
-func (finder NotificationsFinder) allClients() ([]models.Client, error) {
-	clientsRepo := finder.clientsRepo
-	clients, err := clientsRepo.FindAll(finder.database.Connection())
-	if err != nil {
-		return []models.Client{}, err
-	}
-
-	return clients, nil
-}
-
-func (finder NotificationsFinder) allKindsForClient(clientID string) ([]models.Kind, error) {
-	kinds, err := finder.kindsRepo.FindByClient(finder.database.Connection(), clientID)
-	if err != nil {
-		return []models.Kind{}, err
-	}
-
-	return kinds, nil
+	return clients, notifications, nil
 }
 
 func (finder NotificationsFinder) ClientAndKind(clientID, kindID string) (models.Client, models.Kind, error) {

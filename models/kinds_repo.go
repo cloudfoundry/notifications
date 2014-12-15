@@ -23,6 +23,7 @@ type KindsRepoInterface interface {
 	Create(ConnectionInterface, Kind) (Kind, error)
 	Find(ConnectionInterface, string, string) (Kind, error)
 	FindByClient(ConnectionInterface, string) ([]Kind, error)
+	FindAll(ConnectionInterface) ([]Kind, error)
 	Update(ConnectionInterface, Kind) (Kind, error)
 	Upsert(ConnectionInterface, Kind) (Kind, error)
 	Trim(ConnectionInterface, string, []string) (int, error)
@@ -66,6 +67,18 @@ func (repo KindsRepo) FindByClient(conn ConnectionInterface, clientID string) ([
 
 	return kinds, nil
 }
+
+func (repo KindsRepo) FindAll(conn ConnectionInterface) ([]Kind, error) {
+	kinds := []Kind{}
+	_, err := conn.Select(&kinds, `SELECT * FROM kinds`)
+
+	if err != nil {
+		return []Kind{}, err
+	}
+
+	return kinds, nil
+}
+
 func (repo KindsRepo) Update(conn ConnectionInterface, kind Kind) (Kind, error) {
 	_, err := conn.Update(&kind)
 	if err != nil {

@@ -301,4 +301,31 @@ var _ = Describe("KindsRepo", func() {
 			}
 		})
 	})
+
+	Describe("FindAll", func() {
+		It("returns all the records in the database", func() {
+			kind1, err := repo.Create(conn, models.Kind{
+				ID:       "my-kind",
+				ClientID: "the-client-id",
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			kind2, err := repo.Create(conn, models.Kind{
+				ID:       "another-kind",
+				ClientID: "some-client-id",
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			kinds, err := repo.FindAll(conn)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(kinds).To(HaveLen(2))
+			Expect(kinds).To(ContainElement(kind1))
+			Expect(kinds).To(ContainElement(kind2))
+		})
+	})
 })

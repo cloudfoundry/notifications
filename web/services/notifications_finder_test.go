@@ -91,32 +91,41 @@ var _ = Describe("NotificationsFinder", func() {
 		})
 	})
 
-	Describe("AllClientNotifications", func() {
+	Describe("AllClientsAndNotifications", func() {
+		var starWars, bigHero6, imitationGame models.Client
+		var multiSaber, milleniumFalcon, robots models.Kind
+
 		BeforeEach(func() {
-			clientsRepo.Clients["star-wars"] = models.Client{
+			starWars = models.Client{
 				ID:          "star-wars",
 				Description: "The Force Awakens",
 				CreatedAt:   time.Now(),
 			}
-			clientsRepo.Clients["big-hero-6"] = models.Client{
+			bigHero6 = models.Client{
 				ID:          "big-hero-6",
 				Description: "Marvel",
 				CreatedAt:   time.Now(),
 			}
-			clientsRepo.Clients["the-imitation-game"] = models.Client{
+			imitationGame = models.Client{
 				ID:          "the-imitation-game",
 				Description: "Alan Turing",
 				CreatedAt:   time.Now(),
 			}
 
-			kindsRepo.Kinds["star-wars|multi-light-saber"] = models.Kind{
+			clientsRepo.Clients = map[string]models.Client{
+				"the-imitation-game": imitationGame,
+				"big-hero-6":         bigHero6,
+				"star-wars":          starWars,
+			}
+
+			multiSaber = models.Kind{
 				ID:          "multi-light-saber",
 				ClientID:    "star-wars",
 				Description: "LOL WUT?",
 				Critical:    false,
 				CreatedAt:   time.Now(),
 			}
-			kindsRepo.Kinds["star-wars|millenium-falcon"] = models.Kind{
+			milleniumFalcon = models.Kind{
 				ID:          "millenium-falcon",
 				ClientID:    "star-wars",
 				Description: "Awesome!",
@@ -124,12 +133,18 @@ var _ = Describe("NotificationsFinder", func() {
 				CreatedAt:   time.Now(),
 			}
 
-			kindsRepo.Kinds["big-hero-6|robots"] = models.Kind{
+			robots = models.Kind{
 				ID:          "robots",
 				ClientID:    "big-hero-6",
 				Description: "hero",
 				Critical:    true,
 				CreatedAt:   time.Now(),
+			}
+
+			kindsRepo.Kinds = map[string]models.Kind{
+				"star-wars|multi-light-saber": multiSaber,
+				"star-wars|millenium-falcon":  milleniumFalcon,
+				"big-hero-6|robots":           robots,
 			}
 		})
 
@@ -140,42 +155,17 @@ var _ = Describe("NotificationsFinder", func() {
 			}
 
 			clientsRepo.AllClients = clients
-			clientsWithNotifications, err := finder.AllClientNotifications()
+			clients, notifications, err := finder.AllClientsAndNotifications()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(clientsWithNotifications).To(Equal(map[string]services.ClientWithNotifications{
-				"star-wars": {
-					Name:     "The Force Awakens",
-					Template: "default",
-					Notifications: map[string]services.Notification{
-						"multi-light-saber": {
-							Description: "LOL WUT?",
-							Template:    "default",
-							Critical:    false,
-						},
-						"millenium-falcon": {
-							Description: "Awesome!",
-							Template:    "default",
-							Critical:    true,
-						},
-					},
-				},
-				"big-hero-6": {
-					Name:     "Marvel",
-					Template: "default",
-					Notifications: map[string]services.Notification{
-						"robots": {
-							Description: "hero",
-							Template:    "default",
-							Critical:    true,
-						},
-					},
-				},
-				"the-imitation-game": {
-					Name:          "Alan Turing",
-					Template:      "default",
-					Notifications: map[string]services.Notification{},
-				},
-			}))
+			Expect(clients).To(HaveLen(3))
+			Expect(clients).To(ContainElement(starWars))
+			Expect(clients).To(ContainElement(bigHero6))
+			Expect(clients).To(ContainElement(imitationGame))
+
+			Expect(notifications).To(HaveLen(3))
+			Expect(notifications).To(ContainElement(multiSaber))
+			Expect(notifications).To(ContainElement(milleniumFalcon))
+			Expect(notifications).To(ContainElement(robots))
 		})
 	})
 })
