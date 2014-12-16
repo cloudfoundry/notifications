@@ -8,7 +8,9 @@ import (
 	"io"
 	"os"
 	"path"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -24,6 +26,7 @@ const (
 )
 
 var tableName = "gorp_migrations"
+var numberPrefixRegex = regexp.MustCompile(`^(\d+).*$`)
 
 // Set the name of the table used to store migration info.
 //
@@ -40,6 +43,36 @@ type Migration struct {
 	Down []string
 }
 
+func (m Migration) Less(other *Migration) bool {
+	switch {
+	case m.isNumeric() && other.isNumeric():
+		return m.VersionInt() < other.VersionInt()
+	case m.isNumeric() && !other.isNumeric():
+		return true
+	case !m.isNumeric() && other.isNumeric():
+		return false
+	default:
+		return m.Id < other.Id
+	}
+}
+
+func (m Migration) isNumeric() bool {
+	return len(m.NumberPrefixMatches()) > 0
+}
+
+func (m Migration) NumberPrefixMatches() []string {
+	return numberPrefixRegex.FindStringSubmatch(m.Id)
+}
+
+func (m Migration) VersionInt() int64 {
+	v := m.NumberPrefixMatches()[1]
+	value, err := strconv.ParseInt(v, 10, 64)
+	if err != nil {
+		panic(fmt.Sprintf("Could not parse %q into int64: %s", v, err))
+	}
+	return value
+}
+
 type PlannedMigration struct {
 	*Migration
 	Queries []string
@@ -49,7 +82,7 @@ type byId []*Migration
 
 func (b byId) Len() int           { return len(b) }
 func (b byId) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
-func (b byId) Less(i, j int) bool { return b[i].Id < b[j].Id }
+func (b byId) Less(i, j int) bool { return b[i].Less(b[j]) }
 
 type MigrationRecord struct {
 	Id        string    `db:"id"`
@@ -269,12 +302,25 @@ func PlanMigration(db *sql.DB, dialect string, m MigrationSource, dir MigrationD
 		return nil, nil, err
 	}
 
-	// Find the newest applied migration
-	var record MigrationRecord
-	query := fmt.Sprintf("SELECT * FROM %s ORDER BY id DESC LIMIT 1", tableName)
-	err = dbMap.SelectOne(&record, query)
-	if err != nil && err != sql.ErrNoRows {
+	var migrationRecords []MigrationRecord
+	_, err = dbMap.Select(&migrationRecords, fmt.Sprintf("SELECT * FROM %s", tableName))
+	if err != nil {
 		return nil, nil, err
+	}
+
+	// Sort migrations that have been run by Id.
+	var existingMigrations []*Migration
+	for _, migrationRecord := range migrationRecords {
+		existingMigrations = append(existingMigrations, &Migration{
+			Id: migrationRecord.Id,
+		})
+	}
+	sort.Sort(byId(existingMigrations))
+
+	// Get last migration that was run
+	record := &Migration{}
+	if len(existingMigrations) > 0 {
+		record = existingMigrations[len(existingMigrations)-1]
 	}
 
 	// Figure out which of the supplied migrations has been applied.
@@ -303,8 +349,13 @@ func PlanMigration(db *sql.DB, dialect string, m MigrationSource, dir MigrationD
 // Filter a slice of migrations into ones that should be applied.
 func ToApply(migrations []*Migration, current string, direction MigrationDirection) []*Migration {
 	var index = -1
-	for index < len(migrations)-1 && migrations[index+1].Id <= current {
-		index++
+	if current != "" {
+		for index < len(migrations)-1 {
+			index++
+			if migrations[index].Id == current {
+				break
+			}
+		}
 	}
 
 	if direction == Up {

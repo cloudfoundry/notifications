@@ -58,7 +58,7 @@ func (handler GetAllNotifications) constructNotifications(clients []models.Clien
 	for _, client := range clients {
 		clientWithNotifications := Client{
 			Name:     client.Description,
-			Template: "default",
+			Template: client.TemplateToUse(),
 		}
 
 		clientNotifications := make(map[string]Notification)
@@ -71,6 +71,7 @@ func (handler GetAllNotifications) constructNotifications(clients []models.Clien
 				}
 			}
 		}
+
 		clientWithNotifications.Notifications = clientNotifications
 		notificationsByClient[client.ID] = clientWithNotifications
 	}

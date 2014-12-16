@@ -7,6 +7,7 @@ type ClientsRepo struct {
 	AllClients  []models.Client
 	UpsertError error
 	FindError   error
+	UpdateError error
 }
 
 func NewClientsRepo() *ClientsRepo {
@@ -25,7 +26,7 @@ func (fake *ClientsRepo) Create(conn models.ConnectionInterface, client models.C
 
 func (fake *ClientsRepo) Update(conn models.ConnectionInterface, client models.Client) (models.Client, error) {
 	fake.Clients[client.ID] = client
-	return client, nil
+	return client, fake.UpdateError
 }
 
 func (fake *ClientsRepo) Upsert(conn models.ConnectionInterface, client models.Client) (models.Client, error) {

@@ -5,11 +5,9 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"path"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/config"
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -21,10 +19,6 @@ import (
 var _ = Describe("Templates CRUD", func() {
 	BeforeEach(func() {
 		TruncateTables()
-
-		env := config.NewEnvironment()
-		migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
-		models.NewDatabase(env.DatabaseURL, migrationsPath) // this is the "database" variable
 	})
 
 	It("allows a user to perform CRUD actions on a template", func() {
@@ -276,7 +270,7 @@ func (test TemplatesCRUD) createTemplateHelper(templateToCreate params.Template)
 	}
 
 	var JSON struct {
-		TemplateID string `json:"template-id"`
+		TemplateID string `json:"template_id"`
 	}
 
 	err = json.Unmarshal(body, &JSON)

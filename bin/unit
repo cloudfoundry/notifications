@@ -21,7 +21,8 @@ function run() {
 }
 
 if [[ -z "$1" ]]; then
-    run -r -skipPackage=acceptance ./
+    run -r -skipPackage=acceptance,models,gobble -p=true ./
+    run ./models ./gobble
 else
     run $@
 fi

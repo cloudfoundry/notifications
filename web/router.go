@@ -23,7 +23,7 @@ type MotherInterface interface {
 	NotificationsFinder() services.NotificationsFinder
 	PreferencesFinder() *services.PreferencesFinder
 	PreferenceUpdater() services.PreferenceUpdater
-	TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister)
+	TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner)
 	Database() models.DatabaseInterface
 	Logging() stack.Middleware
 	ErrorWriter() handlers.ErrorWriter
@@ -47,7 +47,7 @@ func NewRouter(mother MotherInterface) Router {
 	notify := handlers.NewNotify(mother.NotificationsFinder(), registrar)
 	preferencesFinder := mother.PreferencesFinder()
 	preferenceUpdater := mother.PreferenceUpdater()
-	templateCreator, templateFinder, templateUpdater, templateDeleter, templateLister := mother.TemplateServiceObjects()
+	templateCreator, templateFinder, templateUpdater, templateDeleter, templateLister, templateAssigner := mother.TemplateServiceObjects()
 	logging := mother.Logging()
 	errorWriter := mother.ErrorWriter()
 	notificationsWriteAuthenticator := mother.Authenticator("notifications.write")
@@ -87,6 +87,7 @@ func NewRouter(mother MotherInterface) Router {
 			"DELETE /templates/{templateID}":              stack.NewStack(handlers.NewDeleteTemplates(templateDeleter, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
 			"DELETE /deprecated_templates/{templateName}": stack.NewStack(handlers.NewUnsetTemplates(templateDeleter, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
 			"GET /templates":                              stack.NewStack(handlers.NewListTemplates(templateLister, errorWriter)).Use(logging, notificationsTemplateReadAuthenticator),
+			"PUT /clients/{clientID}/template":            stack.NewStack(handlers.NewAssignClientTemplate(templateAssigner, errorWriter)).Use(logging, notificationsManageAuthenticator),
 		},
 	}
 }

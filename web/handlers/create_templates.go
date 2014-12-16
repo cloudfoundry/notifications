@@ -38,6 +38,6 @@ func (handler CreateTemplate) ServeHTTP(w http.ResponseWriter, req *http.Request
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(`{"template-id":"` + templateID + `"}`))
+	w.Write([]byte(`{"template_id":"` + templateID + `"}`))
 
 }

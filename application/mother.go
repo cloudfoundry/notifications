@@ -210,7 +210,7 @@ func (mother Mother) TemplateFinder() services.TemplateFinder {
 }
 
 func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
-	services.TemplateDeleter, services.TemplateLister) {
+	services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner) {
 
 	env := config.NewEnvironment()
 	database := mother.Database()
@@ -221,7 +221,8 @@ func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, service
 		services.NewTemplateFinder(repo, env.RootPath, database, fileSystem),
 		services.NewTemplateUpdater(repo, database),
 		services.NewTemplateDeleter(repo, database),
-		services.NewTemplateLister(repo, database)
+		services.NewTemplateLister(repo, database),
+		services.NewTemplateAssigner(models.NewClientsRepo(), repo, database)
 }
 
 func (mother Mother) KindsRepo() models.KindsRepo {

@@ -112,3 +112,7 @@ func (s Notifications) TemplatePath(templateID string) string {
 func (s Notifications) DeprecatedTemplatePath(templateName string) string {
 	return "http://localhost:" + s.env.Port + "/deprecated_templates/" + templateName
 }
+
+func (s Notifications) ClientsTemplatePath(clientID string) string {
+	return "http://localhost:" + s.env.Port + "/clients/" + clientID + "/template"
+}

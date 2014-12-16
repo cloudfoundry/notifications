@@ -63,5 +63,6 @@ func (fake *TemplatesRepo) DeprecatedDestroy(conn models.ConnectionInterface, te
 
 func (fake *TemplatesRepo) Create(conn models.ConnectionInterface, template models.Template) (models.Template, error) {
 	fake.Templates[template.Name] = template
+	fake.Templates[template.ID] = template // TODO: really?
 	return template, fake.CreateError
 }

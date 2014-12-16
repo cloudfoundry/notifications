@@ -49,7 +49,7 @@ var _ = Describe("CreateTemplate", func() {
 				Subject: "Raptor Containment Unit Breached",
 			}))
 			Expect(writer.Code).To(Equal(http.StatusCreated))
-			Expect(body).To(Equal(`{"template-id":"guid"}`))
+			Expect(body).To(Equal(`{"template_id":"guid"}`))
 		})
 
 		Context("when an errors occurs", func() {
