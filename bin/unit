@@ -16,8 +16,9 @@ source $DIR/env/$ENVIRONMENT
 function run() {
   set +e
   ginkgo -randomizeAllSpecs=true -randomizeSuites=true -succinct=true $@
-  if [[ $? != 0 ]]; then
-    fail $?
+  EXIT_CODE=$?
+  if [[ $EXIT_CODE != 0 ]]; then
+    fail
   fi
   set -e
 }
@@ -25,7 +26,7 @@ function run() {
 function fail() {
   echo
   echo -e "${RED}UNIT SUITE FAIL${NONE}"
-  exit $1
+  exit $EXIT_CODE
 }
 
 if [[ -z "$1" ]]; then
