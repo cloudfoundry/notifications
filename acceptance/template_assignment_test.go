@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
+	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/config"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -48,6 +49,7 @@ var _ = Describe("Assign Templates", func() {
 		notificationID := "acceptance-test"
 
 		test := AssignTemplate{
+			client:              support.NewClient(notificationsServer),
 			notificationsServer: notificationsServer,
 			clientToken:         clientToken,
 		}
@@ -79,44 +81,25 @@ type NotificationsResponse map[string]struct {
 }
 
 type AssignTemplate struct {
+	client              *support.Client
 	notificationsServer servers.Notifications
 	clientToken         uaa.Token
 	TemplateID          string
 }
 
 func (test AssignTemplate) RegisterClientNotification(notificationID string) {
-	body, err := json.Marshal(map[string]interface{}{
-		"source_name": "Notifications Sender",
-		"notifications": map[string]interface{}{
-			notificationID: map[string]interface{}{
-				"description": "Acceptance Test",
-				"critical":    true,
+	code, err := test.client.Notifications.Register(test.clientToken.Access, support.RegisterClient{
+		SourceName: "Notifications Sender",
+		Notifications: map[string]support.RegisterNotification{
+			notificationID: {
+				Description: "Acceptance Test",
+				Critical:    true,
 			},
 		},
 	})
-	if err != nil {
-		panic(err)
-	}
 
-	request, err := http.NewRequest("PUT", test.notificationsServer.NotificationsPath(), bytes.NewBuffer(body))
-	if err != nil {
-		panic(err)
-	}
-
-	request.Header.Set("Authorization", "Bearer "+test.clientToken.Access)
-
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		panic(err)
-	}
-
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	// Confirm response status code looks ok
-	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
+	Expect(err).NotTo(HaveOccurred())
+	Expect(code).To(Equal(http.StatusNoContent))
 }
 
 func (test *AssignTemplate) CreateNewTemplate(template params.Template) {

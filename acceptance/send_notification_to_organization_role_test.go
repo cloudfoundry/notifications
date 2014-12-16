@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
+	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/config"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -49,7 +50,9 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 			panic(err)
 		}
 
-		test := SendNotificationsToOrganizationRole{}
+		test := SendNotificationsToOrganizationRole{
+			client: support.NewClient(notificationsServer),
+		}
 		test.RegisterClientNotifications(notificationsServer, clientToken)
 		test.SendNotificationsToOrganizationManagers(notificationsServer, clientToken, smtpServer)
 		test.SendNotificationsToOrganizationAuditors(notificationsServer, clientToken, smtpServer)
@@ -58,42 +61,23 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 	})
 })
 
-type SendNotificationsToOrganizationRole struct{}
+type SendNotificationsToOrganizationRole struct {
+	client *support.Client
+}
 
 // Make request to /registation
 func (t SendNotificationsToOrganizationRole) RegisterClientNotifications(notificationsServer servers.Notifications, clientToken uaa.Token) {
-	body, err := json.Marshal(map[string]interface{}{
-		"source_name": "Notifications Sender",
-		"notifications": map[string]map[string]string{
+	code, err := t.client.Notifications.Register(clientToken.Access, support.RegisterClient{
+		SourceName: "Notifications Sender",
+		Notifications: map[string]support.RegisterNotification{
 			"organization-role-test": {
-				"description": "Organization Role Test",
+				Description: "Organization Role Test",
 			},
 		},
 	})
-	if err != nil {
-		panic(err)
-	}
 
-	request, err := http.NewRequest("PUT", notificationsServer.NotificationsPath(), bytes.NewBuffer(body))
-	if err != nil {
-		panic(err)
-	}
-
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
-
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		panic(err)
-	}
-
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	// Confirm response status code looks ok
-	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
-
+	Expect(err).NotTo(HaveOccurred())
+	Expect(code).To(Equal(http.StatusNoContent))
 }
 
 // Make request to /organization/:guid for managers

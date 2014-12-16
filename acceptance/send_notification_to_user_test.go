@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
+	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/config"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -44,51 +45,34 @@ var _ = Describe("Send a notification to a user", func() {
 			panic(err)
 		}
 
-		t := SendNotificationToUser{}
+		t := SendNotificationToUser{
+			client: support.NewClient(notificationsServer),
+		}
+
 		t.RegisterClientNotification(notificationsServer, clientToken)
 		t.SendNotificationToUser(notificationsServer, clientToken, smtpServer)
 	})
 })
 
-type SendNotificationToUser struct{}
+type SendNotificationToUser struct {
+	client *support.Client
+}
 
-// Make request to /notifications
 func (t SendNotificationToUser) RegisterClientNotification(notificationsServer servers.Notifications, clientToken uaa.Token) {
-	body, err := json.Marshal(map[string]interface{}{
-		"source_name": "Notifications Sender",
-		"notifications": map[string]interface{}{
-			"acceptance-test": map[string]interface{}{
-				"description": "Acceptance Test",
-				"critical":    true,
+	code, err := t.client.Notifications.Register(clientToken.Access, support.RegisterClient{
+		SourceName: "Notifications Sender",
+		Notifications: map[string]support.RegisterNotification{
+			"acceptance-test": {
+				Description: "Acceptance Test",
+				Critical:    true,
 			},
 		},
 	})
-	if err != nil {
-		panic(err)
-	}
 
-	request, err := http.NewRequest("PUT", notificationsServer.NotificationsPath(), bytes.NewBuffer(body))
-	if err != nil {
-		panic(err)
-	}
-
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
-
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		panic(err)
-	}
-
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	// Confirm response status code looks ok
-	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
+	Expect(err).NotTo(HaveOccurred())
+	Expect(code).To(Equal(http.StatusNoContent))
 }
 
-// Make request to /users/:guid
 func (t SendNotificationToUser) SendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "acceptance-test",
