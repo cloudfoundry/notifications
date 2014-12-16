@@ -1,7 +1,7 @@
 package web_test
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/application"
+	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
@@ -15,7 +15,7 @@ var _ = Describe("Router", func() {
 	var router web.Router
 
 	BeforeEach(func() {
-		router = web.NewRouter(application.NewMother())
+		router = web.NewRouter(fakes.NewMother())
 	})
 
 	It("routes GET /info", func() {
