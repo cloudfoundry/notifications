@@ -21,7 +21,7 @@ var _ = Describe("Assign Templates", func() {
 		TruncateTables()
 	})
 
-	It("Creates a template and then assigns it to a client", func() {
+	It("Creates a template and then assigns it", func() {
 		// Boot Fake SMTP Server
 		smtpServer := servers.NewSMTP()
 		smtpServer.Boot()
@@ -45,6 +45,8 @@ var _ = Describe("Assign Templates", func() {
 			panic(err)
 		}
 
+		notificationID := "acceptance-test"
+
 		test := AssignTemplate{
 			notificationsServer: notificationsServer,
 			clientToken:         clientToken,
@@ -57,12 +59,24 @@ var _ = Describe("Assign Templates", func() {
 			Text:    "Millenium Falcon",
 		}
 
-		test.RegisterClientNotification()
+		test.RegisterClientNotification(notificationID)
 		test.CreateNewTemplate(createdTemplate)
 		test.AssignTemplateToClient(clientID)
-		test.ConfirmAssignment(clientID)
+		test.ConfirmClientTemplateAssignment(clientID)
+		test.AssignTemplateToNotification(clientID, notificationID)
+		test.ConfirmNotificationTemplateAssignment(clientID, notificationID)
 	})
 })
+
+type NotificationsResponse map[string]struct {
+	Name          string `json:"name"`
+	Template      string `json:"template"`
+	Notifications map[string]struct {
+		Description string `json:"description"`
+		Critical    bool   `json:"critical"`
+		Template    string `json:"template"`
+	} `json:"notifications"`
+}
 
 type AssignTemplate struct {
 	notificationsServer servers.Notifications
@@ -70,11 +84,11 @@ type AssignTemplate struct {
 	TemplateID          string
 }
 
-func (test AssignTemplate) RegisterClientNotification() {
+func (test AssignTemplate) RegisterClientNotification(notificationID string) {
 	body, err := json.Marshal(map[string]interface{}{
 		"source_name": "Notifications Sender",
 		"notifications": map[string]interface{}{
-			"acceptance-test": map[string]interface{}{
+			notificationID: map[string]interface{}{
 				"description": "Acceptance Test",
 				"critical":    true,
 			},
@@ -117,10 +131,22 @@ func (test *AssignTemplate) AssignTemplateToClient(clientID string) {
 	Expect(status).To(Equal(http.StatusNoContent))
 }
 
-func (test *AssignTemplate) ConfirmAssignment(clientID string) {
+func (test *AssignTemplate) ConfirmClientTemplateAssignment(clientID string) {
 	status, notifications := test.getNotifications()
 	Expect(status).To(Equal(http.StatusOK))
 	Expect(notifications[clientID].Template).To(Equal(test.TemplateID))
+}
+
+func (test *AssignTemplate) AssignTemplateToNotification(clientID, notificationID string) {
+	status := test.assignNotificationHelper(clientID, notificationID)
+	Expect(status).To(Equal(http.StatusNoContent))
+}
+
+func (test *AssignTemplate) ConfirmNotificationTemplateAssignment(clientID, notificationID string) {
+	status, notifications := test.getNotifications()
+	Expect(status).To(Equal(http.StatusOK))
+	clientNotifications := notifications[clientID].Notifications
+	Expect(clientNotifications[notificationID].Template).To(Equal(test.TemplateID))
 }
 
 func (test *AssignTemplate) createTemplateHelper(templateToCreate params.Template) (int, string) {
@@ -172,6 +198,21 @@ func (test *AssignTemplate) assignTemplateHelper(clientID string) int {
 	return response.StatusCode
 }
 
+func (test *AssignTemplate) assignNotificationHelper(clientID, notificationID string) int {
+	request, err := http.NewRequest("PUT", test.notificationsServer.ClientsNotificationsTemplatePath(clientID, notificationID), bytes.NewBuffer([]byte(fmt.Sprintf(`{"template":%q}`, test.TemplateID))))
+	if err != nil {
+		panic(err)
+	}
+
+	request.Header.Set("Authorization", "Bearer "+test.clientToken.Access)
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		panic(err)
+	}
+
+	return response.StatusCode
+}
+
 func (test *AssignTemplate) getNotifications() (int, NotificationsResponse) {
 	request, err := http.NewRequest("GET", test.notificationsServer.NotificationsPath(), nil)
 	if err != nil {
@@ -191,13 +232,4 @@ func (test *AssignTemplate) getNotifications() (int, NotificationsResponse) {
 	}
 
 	return response.StatusCode, JSON
-}
-
-type NotificationsResponse map[string]struct {
-	Name          string `json:"name"`
-	Template      string `json:"template"`
-	Notifications map[string]struct {
-		Description string `json:"description"`
-		Critical    bool   `json:"critical"`
-	} `json:"notifications"`
 }

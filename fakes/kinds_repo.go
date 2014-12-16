@@ -7,6 +7,7 @@ type KindsRepo struct {
 	UpsertError   error
 	TrimError     error
 	FindError     error
+	UpdateError   error
 	TrimArguments []interface{}
 }
 
@@ -29,7 +30,7 @@ func (fake *KindsRepo) Create(conn models.ConnectionInterface, kind models.Kind)
 func (fake *KindsRepo) Update(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
 	key := kind.ID + kind.ClientID
 	fake.Kinds[key] = kind
-	return kind, nil
+	return kind, fake.UpdateError
 }
 
 func (fake *KindsRepo) Upsert(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {

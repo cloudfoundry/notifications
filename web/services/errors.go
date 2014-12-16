@@ -18,6 +18,12 @@ func (err ClientMissingError) Error() string {
 	return string(err)
 }
 
+type KindMissingError string
+
+func (err KindMissingError) Error() string {
+	return string(err)
+}
+
 type TemplateAssignmentError string
 
 func (err TemplateAssignmentError) Error() string {

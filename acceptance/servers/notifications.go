@@ -61,58 +61,66 @@ func (s Notifications) Close() {
 	}
 }
 
+func (s Notifications) RootPath() string {
+	return "http://localhost:" + s.env.Port
+}
+
 func (s Notifications) SpacesPath(space string) string {
-	return "http://localhost:" + s.env.Port + "/spaces/" + space
+	return s.RootPath() + "/spaces/" + space
 }
 
 func (s Notifications) OrganizationsPath(organization string) string {
-	return "http://localhost:" + s.env.Port + "/organizations/" + organization
+	return s.RootPath() + "/organizations/" + organization
 }
 
 func (s Notifications) EveryonePath() string {
-	return "http://localhost:" + s.env.Port + "/everyone"
+	return s.RootPath() + "/everyone"
 }
 
 func (s Notifications) ScopesPath(scope string) string {
-	return "http://localhost:" + s.env.Port + "/uaa_scopes/" + scope
+	return s.RootPath() + "/uaa_scopes/" + scope
 }
 
 func (s Notifications) UsersPath(user string) string {
-	return "http://localhost:" + s.env.Port + "/users/" + user
+	return s.RootPath() + "/users/" + user
 }
 
 func (s Notifications) EmailPath() string {
-	return "http://localhost:" + s.env.Port + "/emails"
+	return s.RootPath() + "/emails"
 }
 
 func (s Notifications) NotificationsPath() string {
-	return "http://localhost:" + s.env.Port + "/notifications"
+	return s.RootPath() + "/notifications"
 }
 
 func (s Notifications) RegistrationPath() string {
-	return "http://localhost:" + s.env.Port + "/registration"
+	return s.RootPath() + "/registration"
 }
 
 func (s Notifications) UserPreferencesPath() string {
-	return "http://localhost:" + s.env.Port + "/user_preferences"
+	return s.RootPath() + "/user_preferences"
 }
 
 func (s Notifications) SpecificUserPreferencesPath(userGUID string) string {
-	return "http://localhost:" + s.env.Port + "/user_preferences/" + userGUID
+	return s.RootPath() + "/user_preferences/" + userGUID
 }
 
 func (s Notifications) TemplatesBasePath() string {
-	return "http://localhost:" + s.env.Port + "/templates"
+	return s.RootPath() + "/templates"
 }
 
 func (s Notifications) TemplatePath(templateID string) string {
-	return "http://localhost:" + s.env.Port + "/templates/" + templateID
+	return s.RootPath() + "/templates/" + templateID
 }
 
 func (s Notifications) DeprecatedTemplatePath(templateName string) string {
-	return "http://localhost:" + s.env.Port + "/deprecated_templates/" + templateName
+	return s.RootPath() + "/deprecated_templates/" + templateName
 }
 
 func (s Notifications) ClientsTemplatePath(clientID string) string {
-	return "http://localhost:" + s.env.Port + "/clients/" + clientID + "/template"
+	return s.RootPath() + "/clients/" + clientID + "/template"
+}
+
+func (s Notifications) ClientsNotificationsTemplatePath(clientID, notificationID string) string {
+	return s.RootPath() + "/clients/" + clientID + "/notifications/" + notificationID + "/template"
 }

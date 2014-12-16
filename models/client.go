@@ -12,7 +12,7 @@ type Client struct {
 	Template    string    `db:"template_id"`
 }
 
-func (c *Client) TemplateToUse() string {
+func (c Client) TemplateToUse() string {
 	if c.Template != "" {
 		return c.Template
 	}

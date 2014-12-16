@@ -66,7 +66,7 @@ func (handler GetAllNotifications) constructNotifications(clients []models.Clien
 			if notification.ClientID == client.ID {
 				clientNotifications[notification.ID] = Notification{
 					Description: notification.Description,
-					Template:    "default",
+					Template:    notification.TemplateToUse(),
 					Critical:    notification.Critical,
 				}
 			}

@@ -203,10 +203,10 @@ func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
 func (mother Mother) TemplateFinder() services.TemplateFinder {
 	env := config.NewEnvironment()
 	database := mother.Database()
-	repo := mother.TemplatesRepo()
+	templatesRepo := mother.TemplatesRepo()
 	fileSystem := mother.FileSystem()
 
-	return services.NewTemplateFinder(repo, env.RootPath, database, fileSystem)
+	return services.NewTemplateFinder(templatesRepo, env.RootPath, database, fileSystem)
 }
 
 func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
@@ -214,15 +214,16 @@ func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, service
 
 	env := config.NewEnvironment()
 	database := mother.Database()
-	repo := mother.TemplatesRepo()
+	clientsRepo, kindsRepo := mother.Repos()
+	templatesRepo := mother.TemplatesRepo()
 	fileSystem := mother.FileSystem()
 
-	return services.NewTemplateCreator(repo, database),
-		services.NewTemplateFinder(repo, env.RootPath, database, fileSystem),
-		services.NewTemplateUpdater(repo, database),
-		services.NewTemplateDeleter(repo, database),
-		services.NewTemplateLister(repo, database),
-		services.NewTemplateAssigner(models.NewClientsRepo(), repo, database)
+	return services.NewTemplateCreator(templatesRepo, database),
+		services.NewTemplateFinder(templatesRepo, env.RootPath, database, fileSystem),
+		services.NewTemplateUpdater(templatesRepo, database),
+		services.NewTemplateDeleter(templatesRepo, database),
+		services.NewTemplateLister(templatesRepo, database),
+		services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo, database)
 }
 
 func (mother Mother) KindsRepo() models.KindsRepo {
