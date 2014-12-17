@@ -58,7 +58,7 @@ func (strategy UAAScopeStrategy) Dispatch(clientID, scope string, options postal
 	}
 
 	subjectSuffix := strategy.subjectSuffix(options.Subject)
-	templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, models.UAAScopeBodyTemplateName, clientID, options.KindID)
+	templates, err := strategy.templatesLoader.DeprecatedLoadTemplates(subjectSuffix, models.UAAScopeBodyTemplateName, clientID, options.KindID)
 	if err != nil {
 		return responses, postal.TemplateLoadError("An email template could not be loaded")
 	}

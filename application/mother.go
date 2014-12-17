@@ -46,13 +46,12 @@ func (mother *Mother) Queue() *gobble.Queue {
 
 func (mother Mother) UserStrategy() strategies.UserStrategy {
 	env := config.NewEnvironment()
-	finder := mother.TemplateFinder()
 	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 	uaaClient.VerifySSL = env.VerifySSL
 
 	tokenLoader := utilities.NewTokenLoader(&uaaClient)
 	userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
-	templatesLoader := utilities.NewTemplatesLoader(finder)
+	templatesLoader := mother.TemplatesLoader()
 	mailer := mother.Mailer()
 	receiptsRepo := models.NewReceiptsRepo()
 
@@ -61,7 +60,6 @@ func (mother Mother) UserStrategy() strategies.UserStrategy {
 
 func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
 	env := config.NewEnvironment()
-	finder := mother.TemplateFinder()
 	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 	uaaClient.VerifySSL = env.VerifySSL
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
@@ -70,7 +68,7 @@ func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
 	userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
 	spaceLoader := utilities.NewSpaceLoader(cloudController)
 	organizationLoader := utilities.NewOrganizationLoader(cloudController)
-	templatesLoader := utilities.NewTemplatesLoader(finder)
+	templatesLoader := mother.TemplatesLoader()
 	mailer := mother.Mailer()
 	receiptsRepo := models.NewReceiptsRepo()
 	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, &uaaClient)
@@ -80,7 +78,6 @@ func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
 
 func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
 	env := config.NewEnvironment()
-	finder := mother.TemplateFinder()
 	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 	uaaClient.VerifySSL = env.VerifySSL
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
@@ -89,7 +86,7 @@ func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
 	userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
 	organizationLoader := utilities.NewOrganizationLoader(cloudController)
 	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, &uaaClient)
-	templatesLoader := utilities.NewTemplatesLoader(finder)
+	templatesLoader := mother.TemplatesLoader()
 	mailer := mother.Mailer()
 	receiptsRepo := models.NewReceiptsRepo()
 
@@ -98,13 +95,12 @@ func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
 
 func (mother Mother) EveryoneStrategy() strategies.EveryoneStrategy {
 	env := config.NewEnvironment()
-	finder := mother.TemplateFinder()
 	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 	uaaClient.VerifySSL = env.VerifySSL
 	tokenLoader := utilities.NewTokenLoader(&uaaClient)
 	allUsers := utilities.NewAllUsers(&uaaClient)
 
-	templatesLoader := utilities.NewTemplatesLoader(finder)
+	templatesLoader := mother.TemplatesLoader()
 	mailer := mother.Mailer()
 	receiptsRepo := models.NewReceiptsRepo()
 
@@ -113,7 +109,6 @@ func (mother Mother) EveryoneStrategy() strategies.EveryoneStrategy {
 
 func (mother Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
 	env := config.NewEnvironment()
-	finder := mother.TemplateFinder()
 	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 	uaaClient.VerifySSL = env.VerifySSL
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
@@ -121,7 +116,7 @@ func (mother Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
 	tokenLoader := utilities.NewTokenLoader(&uaaClient)
 	userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
 	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, &uaaClient)
-	templatesLoader := utilities.NewTemplatesLoader(finder)
+	templatesLoader := mother.TemplatesLoader()
 	receiptsRepo := models.NewReceiptsRepo()
 	mailer := mother.Mailer()
 
@@ -133,7 +128,7 @@ func (mother Mother) FileSystem() services.FileSystemInterface {
 }
 
 func (mother Mother) EmailStrategy() strategies.EmailStrategy {
-	return strategies.NewEmailStrategy(mother.Mailer(), utilities.NewTemplatesLoader(mother.TemplateFinder()))
+	return strategies.NewEmailStrategy(mother.Mailer(), mother.TemplatesLoader())
 }
 
 func (mother Mother) NotificationsFinder() services.NotificationsFinder {
@@ -143,6 +138,14 @@ func (mother Mother) NotificationsFinder() services.NotificationsFinder {
 
 func (mother Mother) Mailer() strategies.Mailer {
 	return strategies.NewMailer(mother.Queue(), uuid.NewV4)
+}
+
+func (mother Mother) TemplatesLoader() utilities.TemplatesLoader {
+	finder := mother.TemplateFinder()
+	database := mother.Database()
+	clientsRepo, kindsRepo := mother.Repos()
+	templatesRepo := mother.TemplatesRepo()
+	return utilities.NewTemplatesLoader(finder, database, clientsRepo, kindsRepo, templatesRepo)
 }
 
 func (mother Mother) MailClient() *mail.Client {

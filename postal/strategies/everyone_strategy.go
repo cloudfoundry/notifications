@@ -40,7 +40,7 @@ func (strategy EveryoneStrategy) Dispatch(clientID, guid string, options postal.
 	}
 
 	subjectSuffix := strategy.subjectSuffix(options.Subject)
-	templates, err := strategy.templatesLoader.LoadTemplates(subjectSuffix, models.EveryoneBodyTemplateName, clientID, options.KindID)
+	templates, err := strategy.templatesLoader.DeprecatedLoadTemplates(subjectSuffix, models.EveryoneBodyTemplateName, clientID, options.KindID)
 	if err != nil {
 		return responses, postal.TemplateLoadError("An email template could not be loaded")
 	}
