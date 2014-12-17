@@ -1,9 +1,6 @@
 package acceptance
 
 import (
-	"bytes"
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -11,6 +8,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -38,28 +36,44 @@ var _ = Describe("Send a notification to all users of UAA", func() {
 		defer notificationsServer.Close()
 
 		// Retrieve UAA token
+		clientID := "notifications-sender"
 		env := config.NewEnvironment()
-		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
+		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
 		clientToken, err := uaaClient.GetClientToken()
 		if err != nil {
 			panic(err)
 		}
 
 		t := SendNotificationToAllUsers{
-			client: support.NewClient(notificationsServer),
+			client:              support.NewClient(notificationsServer),
+			clientToken:         clientToken,
+			notificationsServer: notificationsServer,
+			smtpServer:          smtpServer,
 		}
-		t.RegisterClientNotification(notificationsServer, clientToken)
-		t.SendNotificationToAllUsers(notificationsServer, clientToken, smtpServer)
+
+		t.RegisterClientNotification()
+		t.CreateNewTemplate(params.Template{
+			Name:    "Jurassic Park",
+			Subject: "Genetics {{.Subject}}",
+			HTML:    "<h1>T-Rex</h1>{{.HTML}}",
+			Text:    "T-Rex\n{{.Text}}",
+		})
+		t.AssignTemplateToClient(clientID)
+		t.SendNotificationToAllUsers()
 	})
 })
 
 type SendNotificationToAllUsers struct {
-	client *support.Client
+	client              *support.Client
+	clientToken         uaa.Token
+	notificationsServer servers.Notifications
+	smtpServer          *servers.SMTP
+	TemplateID          string
 }
 
 // Make request to /registation
-func (t SendNotificationToAllUsers) RegisterClientNotification(notificationsServer servers.Notifications, clientToken uaa.Token) {
-	code, err := t.client.Notifications.Register(clientToken.Access, support.RegisterClient{
+func (t SendNotificationToAllUsers) RegisterClientNotification() {
+	code, err := t.client.Notifications.Register(t.clientToken.Access, support.RegisterClient{
 		SourceName: "Notifications Sender",
 		Notifications: map[string]support.RegisterNotification{
 			"acceptance-test": {
@@ -72,82 +86,71 @@ func (t SendNotificationToAllUsers) RegisterClientNotification(notificationsServ
 	Expect(code).To(Equal(http.StatusNoContent))
 }
 
-func (t SendNotificationToAllUsers) SendNotificationToAllUsers(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
-	body, err := json.Marshal(map[string]string{
-		"kind_id": "acceptance-test",
-		"html":    "<p>this is an acceptance%40test</p>",
-		"subject": "",
+func (t *SendNotificationToAllUsers) CreateNewTemplate(template params.Template) {
+	status, templateID, err := t.client.Templates.Create(t.clientToken.Access, template)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(status).To(Equal(http.StatusCreated))
+	Expect(templateID).NotTo(Equal(""))
+	t.TemplateID = templateID
+}
+
+func (t SendNotificationToAllUsers) AssignTemplateToClient(clientID string) {
+	status, err := t.client.Templates.AssignToClient(t.clientToken.Access, clientID, t.TemplateID)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(status).To(Equal(http.StatusNoContent))
+}
+
+func (t SendNotificationToAllUsers) SendNotificationToAllUsers() {
+	status, responses, err := t.client.Notify.AllUsers(t.clientToken.Access, support.Notify{
+		KindID:  "acceptance-test",
+		HTML:    "<p>this is an acceptance-test</p>",
+		Text:    "oh no!",
+		Subject: "gone awry",
 	})
-	if err != nil {
-		panic(err)
-	}
 
-	request, err := http.NewRequest("POST", notificationsServer.EveryonePath(), bytes.NewBuffer(body))
-	if err != nil {
-		panic(err)
-	}
+	Expect(err).NotTo(HaveOccurred())
+	Expect(status).To(Equal(http.StatusOK))
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	Expect(responses).To(HaveLen(2))
 
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		panic(err)
-	}
-
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	// Confirm the request response looks correct
-	Expect(response.StatusCode).To(Equal(http.StatusOK))
-
-	responseJSON := []map[string]string{}
-	err = json.Unmarshal(body, &responseJSON)
-	if err != nil {
-		panic(err)
-	}
-
-	Expect(len(responseJSON)).To(Equal(2))
-
-	indexedResponses := map[string]map[string]string{}
-	for _, resp := range responseJSON {
-		indexedResponses[resp["recipient"]] = resp
+	indexedResponses := map[string]support.NotifyResponse{}
+	for _, resp := range responses {
+		indexedResponses[resp.Recipient] = resp
 	}
 
 	responseItem := indexedResponses["091b6583-0933-4d17-a5b6-66e54666c88e"]
-	Expect(responseItem["recipient"]).To(Equal("091b6583-0933-4d17-a5b6-66e54666c88e"))
-	Expect(responseItem["status"]).To(Equal("queued"))
-	Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
+	Expect(responseItem.Recipient).To(Equal("091b6583-0933-4d17-a5b6-66e54666c88e"))
+	Expect(responseItem.Status).To(Equal("queued"))
+	Expect(GUIDRegex.MatchString(responseItem.NotificationID)).To(BeTrue())
 
 	responseItem = indexedResponses["943e6076-b1a5-4404-811b-a1ee9253bf56"]
-	Expect(responseItem["recipient"]).To(Equal("943e6076-b1a5-4404-811b-a1ee9253bf56"))
-	Expect(responseItem["status"]).To(Equal("queued"))
-	Expect(GUIDRegex.MatchString(responseItem["notification_id"])).To(BeTrue())
+	Expect(responseItem.Recipient).To(Equal("943e6076-b1a5-4404-811b-a1ee9253bf56"))
+	Expect(responseItem.Status).To(Equal("queued"))
+	Expect(GUIDRegex.MatchString(responseItem.NotificationID)).To(BeTrue())
 
 	Eventually(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(2))
 
-	recipients := []string{smtpServer.Deliveries[0].Recipients[0], smtpServer.Deliveries[1].Recipients[0]}
+	recipients := []string{t.smtpServer.Deliveries[0].Recipients[0], t.smtpServer.Deliveries[1].Recipients[0]}
 	Expect(recipients).To(ConsistOf([]string{"why-email@example.com", "slayer@example.com"}))
 
 	var recipientIndex int
-	if smtpServer.Deliveries[0].Recipients[0] == "why-email@example.com" {
+	if t.smtpServer.Deliveries[0].Recipients[0] == "why-email@example.com" {
 		recipientIndex = 0
 	} else {
 		recipientIndex = 1
 	}
 
-	delivery := smtpServer.Deliveries[recipientIndex]
+	delivery := t.smtpServer.Deliveries[recipientIndex]
 	env := config.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
 
 	data := strings.Split(string(delivery.Data), "\n")
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
-	Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["091b6583-0933-4d17-a5b6-66e54666c88e"]["notification_id"]))
-	Expect(data).To(ContainElement("Subject: Subject Missing"))
-	Expect(data).To(ContainElement(`<p>The following "Acceptance Test" notification was sent to you directly by the`))
-	Expect(data).To(ContainElement(`    "Notifications Sender" component of Cloud Foundry:</p>`))
-	Expect(data).To(ContainElement("<p>this is an acceptance%40test</p>"))
+	Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["091b6583-0933-4d17-a5b6-66e54666c88e"].NotificationID))
+	Expect(data).To(ContainElement("Subject: Genetics gone awry"))
+	Expect(data).To(ContainElement("        <h1>T-Rex</h1><p>this is an acceptance-test</p>"))
+	Expect(data).To(ContainElement("T-Rex"))
+	Expect(data).To(ContainElement("oh no!"))
 }

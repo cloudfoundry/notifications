@@ -3,7 +3,6 @@ package acceptance
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -45,7 +45,8 @@ var _ = Describe("Sending notifications to users with certain scopes", func() {
 
 		// Retrieve UAA token
 		env := config.NewEnvironment()
-		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
+		clientID := "notifications-sender"
+		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
 		clientToken, err := uaaClient.GetClientToken()
 		if err != nil {
 			panic(err)
@@ -53,15 +54,25 @@ var _ = Describe("Sending notifications to users with certain scopes", func() {
 
 		scope := "this.scope"
 		test := SendNotificationsToUsersWithScope{
-			client: support.NewClient(notificationsServer),
+			client:      support.NewClient(notificationsServer),
+			clientToken: clientToken,
 		}
 		test.RegisterClientNotifications(notificationsServer, clientToken)
+		test.CreateNewTemplate(params.Template{
+			Name:    "Frozen",
+			Subject: "Food {{.Subject}}",
+			HTML:    "<h1>Fish</h1>{{.HTML}}",
+			Text:    "Fish\n{{.Text}}",
+		})
+		test.AssignTemplateToClient(clientID)
 		test.SendNotificationsToScope(notificationsServer, clientToken, smtpServer, scope)
 	})
 })
 
 type SendNotificationsToUsersWithScope struct {
-	client *support.Client
+	client      *support.Client
+	clientToken uaa.Token
+	TemplateID  string
 }
 
 // Make request to /registation
@@ -79,12 +90,27 @@ func (t SendNotificationsToUsersWithScope) RegisterClientNotifications(notificat
 	Expect(code).To(Equal(http.StatusNoContent))
 }
 
+func (t *SendNotificationsToUsersWithScope) CreateNewTemplate(template params.Template) {
+	status, templateID, err := t.client.Templates.Create(t.clientToken.Access, template)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(status).To(Equal(http.StatusCreated))
+	Expect(templateID).NotTo(Equal(""))
+	t.TemplateID = templateID
+}
+
+func (t SendNotificationsToUsersWithScope) AssignTemplateToClient(clientID string) {
+	status, err := t.client.Templates.AssignToClient(t.clientToken.Access, clientID, t.TemplateID)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(status).To(Equal(http.StatusNoContent))
+}
+
 // Make request to /uaa_scopes/:scope for a scope
 func (t SendNotificationsToUsersWithScope) SendNotificationsToScope(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP, scope string) {
 	smtpServer.Reset()
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "scope-test",
+		"html":    "this is a scope test",
 		"text":    "this is a scope test",
 		"subject": "scope-subject",
 	})
@@ -139,8 +165,8 @@ func (t SendNotificationsToUsersWithScope) SendNotificationsToScope(notification
 	data := strings.Split(string(delivery.Data), "\n")
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 	Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["user-369"]["notification_id"]))
-	Expect(data).To(ContainElement("Subject: CF Notification: scope-subject"))
-	Expect(data).To(ContainElement(`The following "Scope Test" notification was sent to you by the "Notifications Sender"`))
-	Expect(data).To(ContainElement(fmt.Sprintf(`component of Cloud Foundry because you have the "%s" scope:`, scope)))
+	Expect(data).To(ContainElement("Subject: Food scope-subject"))
+	Expect(data).To(ContainElement("        <h1>Fish</h1>this is a scope test"))
 	Expect(data).To(ContainElement("this is a scope test"))
+	Expect(data).To(ContainElement("Fish"))
 }

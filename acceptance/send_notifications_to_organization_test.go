@@ -11,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -44,22 +45,33 @@ var _ = Describe("Sending notifications to all users in an organization", func()
 
 		// Retrieve UAA token
 		env := config.NewEnvironment()
-		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
+		clientID := "notifications-sender"
+		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
 		clientToken, err := uaaClient.GetClientToken()
 		if err != nil {
 			panic(err)
 		}
 
 		test := SendNotificationsToOrganization{
-			client: support.NewClient(notificationsServer),
+			client:      support.NewClient(notificationsServer),
+			clientToken: clientToken,
 		}
 		test.RegisterClientNotifications(notificationsServer, clientToken)
+		test.CreateNewTemplate(params.Template{
+			Name:    "Gravity",
+			Subject: "Coca cola {{.Subject}}",
+			HTML:    "<h1>Rat</h1>{{.HTML}}",
+			Text:    "Rat\n{{.Text}}",
+		})
+		test.AssignTemplateToClient(clientID)
 		test.SendNotificationsToOrganization(notificationsServer, clientToken, smtpServer)
 	})
 })
 
 type SendNotificationsToOrganization struct {
-	client *support.Client
+	client      *support.Client
+	clientToken uaa.Token
+	TemplateID  string
 }
 
 // Make request to /registation
@@ -77,10 +89,25 @@ func (t SendNotificationsToOrganization) RegisterClientNotifications(notificatio
 	Expect(code).To(Equal(http.StatusNoContent))
 }
 
+func (t *SendNotificationsToOrganization) CreateNewTemplate(template params.Template) {
+	status, templateID, err := t.client.Templates.Create(t.clientToken.Access, template)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(status).To(Equal(http.StatusCreated))
+	Expect(templateID).NotTo(Equal(""))
+	t.TemplateID = templateID
+}
+
+func (t SendNotificationsToOrganization) AssignTemplateToClient(clientID string) {
+	status, err := t.client.Templates.AssignToClient(t.clientToken.Access, clientID, t.TemplateID)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(status).To(Equal(http.StatusNoContent))
+}
+
 // Make request to /organization/:guid
 func (t SendNotificationsToOrganization) SendNotificationsToOrganization(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "organization-test",
+		"html":    "this is an organization test",
 		"text":    "this is an organization test",
 		"subject": "organization-subject",
 	})
@@ -145,8 +172,8 @@ func (t SendNotificationsToOrganization) SendNotificationsToOrganization(notific
 	data := strings.Split(string(delivery.Data), "\n")
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 	Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["user-456"]["notification_id"]))
-	Expect(data).To(ContainElement("Subject: CF Notification: organization-subject"))
-	Expect(data).To(ContainElement(`The following "Organization Test" notification was sent to you by the "Notifications Sender"`))
-	Expect(data).To(ContainElement(`component of Cloud Foundry because you are a member of the "notifications-service" organization:`))
+	Expect(data).To(ContainElement("Subject: Coca cola organization-subject"))
+	Expect(data).To(ContainElement("        <h1>Rat</h1>this is an organization test"))
+	Expect(data).To(ContainElement("Rat"))
 	Expect(data).To(ContainElement("this is an organization test"))
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -44,22 +45,33 @@ var _ = Describe("Sending notifications to all users in a space", func() {
 
 		// Retrieve UAA token
 		env := config.NewEnvironment()
-		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
+		clientID := "notifications-sender"
+		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
 		clientToken, err := uaaClient.GetClientToken()
 		if err != nil {
 			panic(err)
 		}
 
 		test := SendNotificationsToSpace{
-			client: support.NewClient(notificationsServer),
+			client:      support.NewClient(notificationsServer),
+			clientToken: clientToken,
 		}
 		test.RegisterClientNotifications(notificationsServer, clientToken)
+		test.CreateNewTemplate(params.Template{
+			Name:    "Men in Black",
+			Subject: "Aliens {{.Subject}}",
+			HTML:    "<h1>Dogs</h1>{{.HTML}}",
+			Text:    "Dogs\n{{.Text}}",
+		})
+		test.AssignTemplateToClient(clientID)
 		test.SendNotificationsToSpace(notificationsServer, clientToken, smtpServer)
 	})
 })
 
 type SendNotificationsToSpace struct {
-	client *support.Client
+	client      *support.Client
+	TemplateID  string
+	clientToken uaa.Token
 }
 
 // Make request to /registation
@@ -77,10 +89,25 @@ func (t SendNotificationsToSpace) RegisterClientNotifications(notificationsServe
 	Expect(code).To(Equal(http.StatusNoContent))
 }
 
+func (t *SendNotificationsToSpace) CreateNewTemplate(template params.Template) {
+	status, templateID, err := t.client.Templates.Create(t.clientToken.Access, template)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(status).To(Equal(http.StatusCreated))
+	Expect(templateID).NotTo(Equal(""))
+	t.TemplateID = templateID
+}
+
+func (t SendNotificationsToSpace) AssignTemplateToClient(clientID string) {
+	status, err := t.client.Templates.AssignToClient(t.clientToken.Access, clientID, t.TemplateID)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(status).To(Equal(http.StatusNoContent))
+}
+
 // Make request to /spaces/:guid
 func (t SendNotificationsToSpace) SendNotificationsToSpace(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "space-test",
+		"html":    "this is a space test",
 		"text":    "this is a space test",
 		"subject": "space-subject",
 	})
@@ -145,9 +172,8 @@ func (t SendNotificationsToSpace) SendNotificationsToSpace(notificationsServer s
 	data := strings.Split(string(delivery.Data), "\n")
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 	Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["user-456"]["notification_id"]))
-	Expect(data).To(ContainElement("Subject: CF Notification: space-subject"))
-	Expect(data).To(ContainElement(`The following "Space Test" notification was sent to you by the "Notifications Sender"`))
-	Expect(data).To(ContainElement(`component of Cloud Foundry because you are a member of the "notifications-service" space`))
-	Expect(data).To(ContainElement(`in the "notifications-service" organization:`))
+	Expect(data).To(ContainElement("Subject: Aliens space-subject"))
+	Expect(data).To(ContainElement("        <h1>Dogs</h1>this is a space test"))
+	Expect(data).To(ContainElement("Dogs"))
 	Expect(data).To(ContainElement("this is a space test"))
 }

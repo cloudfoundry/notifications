@@ -81,7 +81,6 @@ func (t SendNotificationToUser) RegisterClientNotification() {
 		Notifications: map[string]support.RegisterNotification{
 			"acceptance-test": {
 				Description: "Acceptance Test",
-				Critical:    true,
 			},
 		},
 	})

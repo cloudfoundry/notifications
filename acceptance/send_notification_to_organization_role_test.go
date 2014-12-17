@@ -11,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -44,16 +45,25 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 
 		// Retrieve UAA token
 		env := config.NewEnvironment()
-		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
+		clientID := "notifications-sender"
+		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
 		clientToken, err := uaaClient.GetClientToken()
 		if err != nil {
 			panic(err)
 		}
 
 		test := SendNotificationsToOrganizationRole{
-			client: support.NewClient(notificationsServer),
+			client:      support.NewClient(notificationsServer),
+			clientToken: clientToken,
 		}
 		test.RegisterClientNotifications(notificationsServer, clientToken)
+		test.CreateNewTemplate(params.Template{
+			Name:    "ET",
+			Subject: "Phone home {{.Subject}}",
+			HTML:    "<h1>Cat</h1>{{.HTML}}",
+			Text:    "Cat\n{{.Text}}",
+		})
+		test.AssignTemplateToClient(clientID)
 		test.SendNotificationsToOrganizationManagers(notificationsServer, clientToken, smtpServer)
 		test.SendNotificationsToOrganizationAuditors(notificationsServer, clientToken, smtpServer)
 		test.SendNotificationsToOrganizationBillingManagers(notificationsServer, clientToken, smtpServer)
@@ -62,7 +72,9 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 })
 
 type SendNotificationsToOrganizationRole struct {
-	client *support.Client
+	client      *support.Client
+	clientToken uaa.Token
+	TemplateID  string
 }
 
 // Make request to /registation
@@ -80,12 +92,27 @@ func (t SendNotificationsToOrganizationRole) RegisterClientNotifications(notific
 	Expect(code).To(Equal(http.StatusNoContent))
 }
 
+func (t *SendNotificationsToOrganizationRole) CreateNewTemplate(template params.Template) {
+	status, templateID, err := t.client.Templates.Create(t.clientToken.Access, template)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(status).To(Equal(http.StatusCreated))
+	Expect(templateID).NotTo(Equal(""))
+	t.TemplateID = templateID
+}
+
+func (t SendNotificationsToOrganizationRole) AssignTemplateToClient(clientID string) {
+	status, err := t.client.Templates.AssignToClient(t.clientToken.Access, clientID, t.TemplateID)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(status).To(Equal(http.StatusNoContent))
+}
+
 // Make request to /organization/:guid for managers
 func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationManagers(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
 	smtpServer.Reset()
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "organization-role-test",
+		"html":    "this is another organization role test",
 		"text":    "this is an organization role test",
 		"subject": "organization-role-subject",
 		"role":    "OrgManager",
@@ -141,10 +168,10 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationMana
 	data := strings.Split(string(delivery.Data), "\n")
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 	Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["user-456"]["notification_id"]))
-	Expect(data).To(ContainElement("Subject: CF Notification: organization-role-subject"))
-	Expect(data).To(ContainElement(`The following "Organization Role Test" notification was sent to you by the "Notifications Sender"`))
-	Expect(data).To(ContainElement(`component of Cloud Foundry because you are a member of the "notifications-service" organization:`))
+	Expect(data).To(ContainElement("Subject: Phone home organization-role-subject"))
+	Expect(data).To(ContainElement("Cat"))
 	Expect(data).To(ContainElement("this is an organization role test"))
+	Expect(data).To(ContainElement("        <h1>Cat</h1>this is another organization role test"))
 }
 
 // Make request to /organization/:guid for auditors
@@ -153,6 +180,7 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationAudi
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "organization-role-test",
+		"html":    "this is another organization role test",
 		"text":    "this is an organization role test",
 		"subject": "organization-role-subject",
 		"role":    "OrgAuditor",
@@ -208,10 +236,10 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationAudi
 	data := strings.Split(string(delivery.Data), "\n")
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 	Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["user-123"]["notification_id"]))
-	Expect(data).To(ContainElement("Subject: CF Notification: organization-role-subject"))
-	Expect(data).To(ContainElement(`The following "Organization Role Test" notification was sent to you by the "Notifications Sender"`))
-	Expect(data).To(ContainElement(`component of Cloud Foundry because you are a member of the "notifications-service" organization:`))
+	Expect(data).To(ContainElement("Subject: Phone home organization-role-subject"))
+	Expect(data).To(ContainElement("Cat"))
 	Expect(data).To(ContainElement("this is an organization role test"))
+	Expect(data).To(ContainElement("        <h1>Cat</h1>this is another organization role test"))
 }
 
 // Make request to /organization/:guid for billing managers
@@ -220,6 +248,7 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationBill
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "organization-role-test",
+		"html":    "this is another organization role test",
 		"text":    "this is an organization role test",
 		"subject": "organization-role-subject",
 		"role":    "BillingManager",
@@ -275,10 +304,10 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationBill
 	data := strings.Split(string(delivery.Data), "\n")
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 	Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["user-111"]["notification_id"]))
-	Expect(data).To(ContainElement("Subject: CF Notification: organization-role-subject"))
-	Expect(data).To(ContainElement(`The following "Organization Role Test" notification was sent to you by the "Notifications Sender"`))
-	Expect(data).To(ContainElement(`component of Cloud Foundry because you are a member of the "notifications-service" organization:`))
+	Expect(data).To(ContainElement("Subject: Phone home organization-role-subject"))
+	Expect(data).To(ContainElement("Cat"))
 	Expect(data).To(ContainElement("this is an organization role test"))
+	Expect(data).To(ContainElement("        <h1>Cat</h1>this is another organization role test"))
 }
 
 // Make request to /organization/:guid for invalid role
@@ -287,6 +316,7 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationInva
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "organization-role-test",
+		"html":    "this is another organization role test",
 		"text":    "this is an organization role test",
 		"subject": "organization-role-subject",
 		"role":    "bad-role",
