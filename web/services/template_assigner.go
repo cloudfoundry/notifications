@@ -32,9 +32,6 @@ func (assigner TemplateAssigner) AssignToClient(clientID, templateID string) err
 
 	client, err := assigner.clientsRepo.Find(conn, clientID)
 	if err != nil {
-		if (err == models.ErrRecordNotFound{}) {
-			return ClientMissingError("No client with id '" + clientID + "'")
-		}
 		return err
 	}
 
@@ -61,17 +58,11 @@ func (assigner TemplateAssigner) AssignToNotification(clientID, notificationID, 
 
 	_, err := assigner.clientsRepo.Find(conn, clientID)
 	if err != nil {
-		if (err == models.ErrRecordNotFound{}) {
-			return ClientMissingError("No client with id '" + clientID + "'")
-		}
 		return err
 	}
 
 	kind, err := assigner.kindsRepo.Find(conn, notificationID, clientID)
 	if err != nil {
-		if (err == models.ErrRecordNotFound{}) {
-			return KindMissingError("No notification with id '" + notificationID + "'")
-		}
 		return err
 	}
 

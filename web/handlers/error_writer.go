@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
+	"github.com/cloudfoundry-incubator/notifications/web/services"
 )
 
 type ErrorWriterInterface interface {
@@ -57,6 +58,8 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
 	case strategies.DefaultScopeError:
 		writer.write(w, http.StatusNotAcceptable, []string{err.Error()})
+	case services.TemplateAssignmentError:
+		writer.write(w, 422, []string{err.Error()})
 	default:
 		panic(err)
 	}

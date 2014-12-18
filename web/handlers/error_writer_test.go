@@ -12,6 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
+	"github.com/cloudfoundry-incubator/notifications/web/services"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -235,6 +236,19 @@ var _ = Describe("ErrorWriter", func() {
 		}
 
 		Expect(body["errors"]).To(ContainElement("You cannot send a notification to a default scope"))
+	})
+
+	It("returns a 422 when a template cannot be assigned", func() {
+		writer.Write(recorder, services.TemplateAssignmentError("The template could not be assigned"))
+		Expect(recorder.Code).To(Equal(422))
+
+		body := make(map[string]interface{})
+		err := json.Unmarshal(recorder.Body.Bytes(), &body)
+		if err != nil {
+			panic(err)
+		}
+
+		Expect(body["errors"]).To(ContainElement("The template could not be assigned"))
 	})
 
 	It("panics for unknown errors", func() {
