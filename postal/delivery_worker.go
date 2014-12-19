@@ -111,7 +111,7 @@ func (worker DeliveryWorker) ShouldDeliver(delivery Delivery) bool {
 
 	_, err = worker.unsubscribesRepo.Find(conn, delivery.ClientID, delivery.Options.KindID, delivery.UserGUID)
 	if err != nil {
-		if (err == models.ErrRecordNotFound{}) {
+		if _, ok := err.(models.RecordNotFoundError); ok {
 			return len(delivery.User.Emails) > 0 && strings.Contains(delivery.User.Emails[0], "@")
 		}
 
@@ -125,7 +125,7 @@ func (worker DeliveryWorker) ShouldDeliver(delivery Delivery) bool {
 
 func (worker DeliveryWorker) isCritical(conn models.ConnectionInterface, kindID, clientID string) bool {
 	kind, err := worker.kindsRepo.Find(conn, kindID, clientID)
-	if (err == models.ErrRecordNotFound{}) {
+	if _, ok := err.(models.RecordNotFoundError); ok {
 		return false
 	}
 

@@ -25,7 +25,7 @@ func (repo ClientsRepo) Create(conn ConnectionInterface, client Client) (Client,
 	err := conn.Insert(&client)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
-			err = ErrDuplicateRecord{}
+			err = DuplicateRecordError{}
 		}
 		return client, err
 	}
@@ -37,7 +37,7 @@ func (repo ClientsRepo) Find(conn ConnectionInterface, id string) (Client, error
 	err := conn.SelectOne(&client, "SELECT * FROM `clients` WHERE `id` = ?", id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = ErrRecordNotFound{}
+			err = NewRecordNotFoundError("Client with ID %q could not be found", id)
 		}
 		return client, err
 	}
@@ -68,13 +68,12 @@ func (repo ClientsRepo) Upsert(conn ConnectionInterface, client Client) (Client,
 	client.Primary = existingClient.Primary
 	client.CreatedAt = existingClient.CreatedAt
 
-	if err != nil {
-		if (err == ErrRecordNotFound{}) {
-			return repo.Create(conn, client)
-		} else {
-			return client, err
-		}
+	switch err.(type) {
+	case RecordNotFoundError:
+		return repo.Create(conn, client)
+	case nil:
+		return repo.Update(conn, client)
+	default:
+		return client, err
 	}
-
-	return repo.Update(conn, client)
 }

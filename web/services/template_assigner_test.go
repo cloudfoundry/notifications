@@ -63,7 +63,7 @@ var _ = Describe("TemplateAssigner", func() {
 			It("reports that the client cannot be found", func() {
 				err := assigner.AssignToClient("bad-client", "my-template")
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(BeAssignableToTypeOf(models.ErrRecordNotFound{}))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 			})
 
 			It("reports that the template cannot be found", func() {
@@ -144,13 +144,13 @@ var _ = Describe("TemplateAssigner", func() {
 			It("reports that the client cannot be found", func() {
 				err := assigner.AssignToNotification("bad-client", "my-kind", "my-template")
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(BeAssignableToTypeOf(models.ErrRecordNotFound{}))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 			})
 
 			It("reports that the kind cannot be found", func() {
 				err := assigner.AssignToNotification("my-client", "bad-kind", "my-template")
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(BeAssignableToTypeOf(models.ErrRecordNotFound{}))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 			})
 
 			It("reports that the template cannot be found", func() {

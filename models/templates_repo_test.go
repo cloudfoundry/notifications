@@ -56,7 +56,7 @@ var _ = Describe("TemplatesRepo", func() {
 
 				Expect(sillyTemplate).To(Equal(models.Template{}))
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(models.ErrRecordNotFound{}))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 			})
 		})
 	})
@@ -79,7 +79,7 @@ var _ = Describe("TemplatesRepo", func() {
 
 				Expect(sillyTemplate).To(Equal(models.Template{}))
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(models.ErrRecordNotFound{}))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 			})
 		})
 	})
@@ -247,18 +247,18 @@ var _ = Describe("TemplatesRepo", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				_, err = repo.FindByID(conn, template.ID)
-				Expect(err).To(Equal(models.ErrRecordNotFound{}))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 			})
 		})
 
 		Context("the template does not exist in the database", func() {
-			It("returns an ErrRecordNotFound error", func() {
+			It("returns an RecordNotFoundError", func() {
 				err := repo.Destroy(conn, "knockknock")
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(Equal(models.ErrRecordNotFound{}))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 
 				_, err = repo.FindByID(conn, "knockknock")
-				Expect(err).To(Equal(models.ErrRecordNotFound{}))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 			})
 		})
 	})
@@ -275,7 +275,7 @@ var _ = Describe("TemplatesRepo", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				_, err = repo.Find(conn, template.Name)
-				Expect(err).To(Equal(models.ErrRecordNotFound{}))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 
 			})
 		})
@@ -286,7 +286,7 @@ var _ = Describe("TemplatesRepo", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				_, err = repo.Find(conn, "knockknock")
-				Expect(err).To(Equal(models.ErrRecordNotFound{}))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 
 			})
 		})

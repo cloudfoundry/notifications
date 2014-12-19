@@ -15,7 +15,7 @@ func NewUnsubscribesRepo() *UnsubscribesRepo {
 func (fake *UnsubscribesRepo) Create(conn models.ConnectionInterface, unsubscribe models.Unsubscribe) (models.Unsubscribe, error) {
 	key := unsubscribe.ClientID + unsubscribe.KindID + unsubscribe.UserID
 	if _, ok := fake.Unsubscribes[key]; ok {
-		return unsubscribe, models.ErrDuplicateRecord{}
+		return unsubscribe, models.DuplicateRecordError{}
 	}
 	fake.Unsubscribes[key] = unsubscribe
 	return unsubscribe, nil
@@ -32,7 +32,7 @@ func (fake *UnsubscribesRepo) Find(conn models.ConnectionInterface, clientID str
 	if unsubscribe, ok := fake.Unsubscribes[key]; ok {
 		return unsubscribe, nil
 	}
-	return models.Unsubscribe{}, models.ErrRecordNotFound{}
+	return models.Unsubscribe{}, models.NewRecordNotFoundError("Unsubscribe %q, %q, %q could not be found", clientID, kindID, userID)
 }
 
 func (fake *UnsubscribesRepo) Destroy(conn models.ConnectionInterface, unsubscribe models.Unsubscribe) (int, error) {

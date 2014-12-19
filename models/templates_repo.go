@@ -29,7 +29,7 @@ func (repo TemplatesRepo) FindByID(conn ConnectionInterface, templateID string) 
 	err := conn.SelectOne(&template, "SELECT * FROM `templates` WHERE `id`=?", templateID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return template, ErrRecordNotFound{}
+			return template, NewRecordNotFoundError("Template with ID %q could not be found", templateID)
 		}
 		return template, err
 	}
@@ -41,7 +41,7 @@ func (repo TemplatesRepo) Find(conn ConnectionInterface, templateName string) (T
 	err := conn.SelectOne(&template, "SELECT * FROM `templates` WHERE `name`=?", templateName)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return template, ErrRecordNotFound{}
+			return template, NewRecordNotFoundError("Template with name %q could not be found", templateName)
 		}
 		return template, err
 	}
@@ -51,7 +51,7 @@ func (repo TemplatesRepo) Find(conn ConnectionInterface, templateName string) (T
 func (repo TemplatesRepo) Update(conn ConnectionInterface, templateID string, template Template) (Template, error) {
 	existingTemplate, err := repo.FindByID(conn, templateID)
 	if err != nil {
-		if (err == ErrRecordNotFound{}) {
+		if _, ok := err.(RecordNotFoundError); ok {
 			return existingTemplate, TemplateFindError{Message: "Template " + templateID + " not found"}
 		}
 		return existingTemplate, err
@@ -74,7 +74,7 @@ func (repo TemplatesRepo) Update(conn ConnectionInterface, templateID string, te
 func (repo TemplatesRepo) Upsert(conn ConnectionInterface, template Template) (Template, error) {
 	existingTemplate, err := repo.Find(conn, template.Name)
 	if err != nil {
-		if (err == ErrRecordNotFound{}) {
+		if _, ok := err.(RecordNotFoundError); ok {
 			return repo.Create(conn, template)
 		}
 		return Template{}, err
@@ -132,7 +132,7 @@ func (repo TemplatesRepo) Destroy(conn ConnectionInterface, templateID string) e
 func (repo TemplatesRepo) DeprecatedDestroy(conn ConnectionInterface, templateName string) error {
 	template, err := repo.Find(conn, templateName)
 	if err != nil {
-		if (err == ErrRecordNotFound{}) {
+		if _, ok := err.(RecordNotFoundError); ok {
 			return nil
 		}
 		return err

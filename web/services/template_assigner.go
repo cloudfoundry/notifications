@@ -37,7 +37,7 @@ func (assigner TemplateAssigner) AssignToClient(clientID, templateID string) err
 
 	_, err = assigner.templatesRepo.FindByID(conn, templateID)
 	if err != nil {
-		if (err == models.ErrRecordNotFound{}) {
+		if _, ok := err.(models.RecordNotFoundError); ok {
 			return TemplateAssignmentError("No template with id '" + templateID + "'")
 		}
 		return err
@@ -68,7 +68,7 @@ func (assigner TemplateAssigner) AssignToNotification(clientID, notificationID, 
 
 	_, err = assigner.templatesRepo.FindByID(conn, templateID)
 	if err != nil {
-		if (err == models.ErrRecordNotFound{}) {
+		if _, ok := err.(models.RecordNotFoundError); ok {
 			return TemplateAssignmentError("No template with id '" + templateID + "'")
 		}
 		return err

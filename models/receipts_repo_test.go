@@ -54,14 +54,14 @@ var _ = Describe("Receipts Repo", func() {
 			Expect(receipt.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
 		})
 
-		It("returns an ErrDuplicateRecord when the receipt already exists in the database", func() {
+		It("returns an DuplicateRecordError when the receipt already exists in the database", func() {
 			_, err := repo.Create(conn, receipt)
 			if err != nil {
 				panic(err)
 			}
 
 			receipt, err = repo.Create(conn, receipt)
-			Expect(err).To(Equal(models.ErrDuplicateRecord{}))
+			Expect(err).To(Equal(models.DuplicateRecordError{}))
 		})
 	})
 
@@ -90,9 +90,9 @@ var _ = Describe("Receipts Repo", func() {
 			Expect(receipt.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
 		})
 
-		It("returns an ErrRecordNotFound when the requested receipt does not exist in the database", func() {
+		It("returns an RecordNotFoundError when the requested receipt does not exist in the database", func() {
 			_, err := repo.Find(conn, "user-000", "client-000", "unkind-client")
-			Expect(err).To(Equal(models.ErrRecordNotFound{}))
+			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 		})
 	})
 

@@ -21,7 +21,7 @@ func NewKindsRepo() *KindsRepo {
 func (fake *KindsRepo) Create(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
 	key := kind.ID + kind.ClientID
 	if _, ok := fake.Kinds[key]; ok {
-		return kind, models.ErrDuplicateRecord{}
+		return kind, models.DuplicateRecordError{}
 	}
 	fake.Kinds[key] = kind
 	return kind, nil
@@ -44,7 +44,7 @@ func (fake *KindsRepo) Find(conn models.ConnectionInterface, id, clientID string
 	if kind, ok := fake.Kinds[key]; ok {
 		return kind, fake.FindError
 	}
-	return models.Kind{}, models.ErrRecordNotFound{}
+	return models.Kind{}, models.NewRecordNotFoundError("Kind %q %q could not be found", id, clientID)
 }
 
 func (fake *KindsRepo) FindByClient(conn models.ConnectionInterface, clientID string) ([]models.Kind, error) {

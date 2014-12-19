@@ -38,7 +38,7 @@ func (repo KindsRepo) Create(conn ConnectionInterface, kind Kind) (Kind, error) 
 	err := conn.Insert(&kind)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
-			err = ErrDuplicateRecord{}
+			err = DuplicateRecordError{}
 		}
 		return kind, err
 	}
@@ -50,7 +50,7 @@ func (repo KindsRepo) Find(conn ConnectionInterface, id, clientID string) (Kind,
 	err := conn.SelectOne(&kind, "SELECT * FROM `kinds` WHERE `id` = ? AND `client_id` = ?", id, clientID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = ErrRecordNotFound{}
+			err = NewRecordNotFoundError("Notification with ID %q belonging to client %q could not be found", id, clientID)
 		}
 		return kind, err
 	}
@@ -93,14 +93,14 @@ func (repo KindsRepo) Upsert(conn ConnectionInterface, kind Kind) (Kind, error) 
 	kind.Primary = existingKind.Primary
 	kind.CreatedAt = existingKind.CreatedAt
 
-	if err != nil {
-		if (err == ErrRecordNotFound{}) {
-			return repo.Create(conn, kind)
-		} else {
-			return kind, err
-		}
+	switch err.(type) {
+	case RecordNotFoundError:
+		return repo.Create(conn, kind)
+	case nil:
+		return repo.Update(conn, kind)
+	default:
+		return kind, err
 	}
-	return repo.Update(conn, kind)
 }
 
 func (repo KindsRepo) Trim(conn ConnectionInterface, clientID string, kindIDs []string) (int, error) {

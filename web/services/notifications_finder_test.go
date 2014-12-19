@@ -74,7 +74,7 @@ var _ = Describe("NotificationsFinder", func() {
 			})
 		})
 
-		Context("when the repo returns an error other than ErrRecordNotFound", func() {
+		Context("when the repo returns an error other than RecordNotFoundError", func() {
 			It("returns the error", func() {
 				clientsRepo.FindError = errors.New("BOOM!")
 				_, _, err := finder.ClientAndKind("raptors", "perimeter_breach")
@@ -82,7 +82,7 @@ var _ = Describe("NotificationsFinder", func() {
 			})
 		})
 
-		Context("when the kinds repo returns an error other than ErrRecordNotFound", func() {
+		Context("when the kinds repo returns an error other than RecordNotFoundError", func() {
 			It("returns the error", func() {
 				kindsRepo.FindError = errors.New("BOOM!")
 				_, _, err := finder.ClientAndKind("raptors", "perimeter_breach")

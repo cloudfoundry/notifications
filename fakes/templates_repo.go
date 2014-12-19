@@ -26,7 +26,7 @@ func (fake TemplatesRepo) FindByID(conn models.ConnectionInterface, templateID s
 	if ok {
 		return template, fake.FindError
 	}
-	return models.Template{}, models.ErrRecordNotFound{}
+	return models.Template{}, models.NewRecordNotFoundError("Template %q could not be found", templateID)
 }
 
 func (fake TemplatesRepo) Find(conn models.ConnectionInterface, templateName string) (models.Template, error) {
@@ -34,7 +34,7 @@ func (fake TemplatesRepo) Find(conn models.ConnectionInterface, templateName str
 	if ok {
 		return template, fake.FindError
 	}
-	return models.Template{}, models.ErrRecordNotFound{}
+	return models.Template{}, models.NewRecordNotFoundError("Template %q could not be found", templateName)
 }
 
 func (fake TemplatesRepo) Update(conn models.ConnectionInterface, templateID string, template models.Template) (models.Template, error) {

@@ -56,7 +56,7 @@ func (finder NotificationsFinder) ClientAndKind(clientID, kindID string) (models
 func (finder NotificationsFinder) client(clientID string) (models.Client, error) {
 	client, err := finder.clientsRepo.Find(finder.database.Connection(), clientID)
 	if err != nil {
-		if _, ok := err.(models.ErrRecordNotFound); ok {
+		if _, ok := err.(models.RecordNotFoundError); ok {
 			return models.Client{ID: clientID}, nil
 		} else {
 			return models.Client{}, err
@@ -68,7 +68,7 @@ func (finder NotificationsFinder) client(clientID string) (models.Client, error)
 func (finder NotificationsFinder) kind(clientID, kindID string) (models.Kind, error) {
 	kind, err := finder.kindsRepo.Find(finder.database.Connection(), kindID, clientID)
 	if err != nil {
-		if _, ok := err.(models.ErrRecordNotFound); ok {
+		if _, ok := err.(models.RecordNotFoundError); ok {
 			return models.Kind{ID: kindID, ClientID: clientID}, nil
 		} else {
 			return models.Kind{}, err

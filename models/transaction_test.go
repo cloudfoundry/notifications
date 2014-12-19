@@ -76,7 +76,7 @@ var _ = Describe("Transaction", func() {
 			}
 
 			_, err = repo.Find(conn, "my-client")
-			Expect(err).To(BeAssignableToTypeOf(models.ErrRecordNotFound{}))
+			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 		})
 	})
 })

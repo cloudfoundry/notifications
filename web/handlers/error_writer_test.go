@@ -198,7 +198,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 409 when there is a duplicate record", func() {
-		writer.Write(recorder, models.ErrDuplicateRecord{})
+		writer.Write(recorder, models.DuplicateRecordError{})
 
 		Expect(recorder.Code).To(Equal(409))
 
@@ -212,7 +212,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 404 when a record cannot be found", func() {
-		writer.Write(recorder, models.ErrRecordNotFound{})
+		writer.Write(recorder, models.NewRecordNotFoundError("hello"))
 
 		Expect(recorder.Code).To(Equal(404))
 
@@ -222,7 +222,7 @@ var _ = Describe("ErrorWriter", func() {
 			panic(err)
 		}
 
-		Expect(body["errors"]).To(ContainElement("Record Not Found"))
+		Expect(body["errors"]).To(ContainElement("Record Not Found: hello"))
 	})
 
 	It("returns a 406 when a record cannot be found", func() {

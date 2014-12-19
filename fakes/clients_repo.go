@@ -18,7 +18,7 @@ func NewClientsRepo() *ClientsRepo {
 
 func (fake *ClientsRepo) Create(conn models.ConnectionInterface, client models.Client) (models.Client, error) {
 	if _, ok := fake.Clients[client.ID]; ok {
-		return client, models.ErrDuplicateRecord{}
+		return client, models.DuplicateRecordError{}
 	}
 	fake.Clients[client.ID] = client
 	return client, nil
@@ -38,7 +38,7 @@ func (fake *ClientsRepo) Find(conn models.ConnectionInterface, id string) (model
 	if client, ok := fake.Clients[id]; ok {
 		return client, fake.FindError
 	}
-	return models.Client{}, models.ErrRecordNotFound{}
+	return models.Client{}, models.NewRecordNotFoundError("Client %q could not be found", id)
 }
 
 func (fake *ClientsRepo) FindAll(conn models.ConnectionInterface) ([]models.Client, error) {

@@ -62,12 +62,12 @@ var _ = Describe("UnsubscribesRepo", func() {
 			}
 
 			_, err = repo.Create(conn, unsubscribe)
-			Expect(err).To(BeAssignableToTypeOf(models.ErrDuplicateRecord{}))
+			Expect(err).To(BeAssignableToTypeOf(models.DuplicateRecordError{}))
 		})
 
 		It("returns a record not found error when the record does not exist", func() {
 			_, err := repo.Find(conn, "bad-client", "bad-kind", "bad-user")
-			Expect(err).To(Equal(models.ErrRecordNotFound{}))
+			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 		})
 	})
 

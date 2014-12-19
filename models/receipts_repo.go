@@ -25,7 +25,7 @@ func (repo ReceiptsRepo) Create(conn ConnectionInterface, receipt Receipt) (Rece
 	err := conn.Insert(&receipt)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
-			err = ErrDuplicateRecord{}
+			err = DuplicateRecordError{}
 		}
 		return Receipt{}, err
 	}
@@ -38,7 +38,7 @@ func (repo ReceiptsRepo) Find(conn ConnectionInterface, userGUID, clientID, kind
 	err := conn.SelectOne(&receipt, "SELECT * FROM  `receipts` WHERE `user_guid` = ? AND `client_id` = ? AND `kind_id` = ?", userGUID, clientID, kindID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = ErrRecordNotFound{}
+			err = NewRecordNotFoundError("Receipt for user %q of client %q and notification %q could not be found", userGUID, clientID, kindID)
 		}
 		return Receipt{}, err
 	}

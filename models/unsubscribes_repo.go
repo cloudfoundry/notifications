@@ -24,7 +24,7 @@ func (repo UnsubscribesRepo) Create(conn ConnectionInterface, unsubscribe Unsubs
 	err := conn.Insert(&unsubscribe)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
-			err = ErrDuplicateRecord{}
+			err = DuplicateRecordError{}
 		}
 		return unsubscribe, err
 	}
@@ -36,7 +36,7 @@ func (repo UnsubscribesRepo) Find(conn ConnectionInterface, clientID string, kin
 	err := conn.SelectOne(&unsubscribe, "SELECT * FROM `unsubscribes` WHERE `client_id` = ? AND `kind_id` = ? AND `user_id` = ?", clientID, kindID, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = ErrRecordNotFound{}
+			err = NewRecordNotFoundError("Unsubscribe for user %q of client %q and notification %q could not be found", userID, clientID, kindID)
 		}
 		return unsubscribe, err
 	}
@@ -46,7 +46,7 @@ func (repo UnsubscribesRepo) Find(conn ConnectionInterface, clientID string, kin
 func (repo UnsubscribesRepo) Upsert(conn ConnectionInterface, unsubscribe Unsubscribe) (Unsubscribe, error) {
 	_, err := repo.Find(conn, unsubscribe.ClientID, unsubscribe.KindID, unsubscribe.UserID)
 	if err != nil {
-		if (err == ErrRecordNotFound{}) {
+		if _, ok := err.(RecordNotFoundError); ok {
 			return repo.Create(conn, unsubscribe)
 		}
 		return unsubscribe, err
@@ -71,7 +71,7 @@ func (repo UnsubscribesRepo) FindAllByUserID(conn ConnectionInterface, userID st
 func (repo UnsubscribesRepo) Destroy(conn ConnectionInterface, unsubscribe Unsubscribe) (int, error) {
 	unsubscribe, err := repo.Find(conn, unsubscribe.ClientID, unsubscribe.KindID, unsubscribe.UserID)
 	if err != nil {
-		if (err == ErrRecordNotFound{}) {
+		if _, ok := err.(RecordNotFoundError); ok {
 			return 0, nil
 		}
 		return 0, err

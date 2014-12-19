@@ -288,7 +288,7 @@ var _ = Describe("KindsRepo", func() {
 			Expect(count).To(Equal(1))
 
 			_, err = repo.Find(conn, "my-kind", "the-client-id")
-			Expect(err).To(BeAssignableToTypeOf(models.ErrRecordNotFound{}))
+			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 
 			_, err = repo.Find(conn, "ignored-kind", "other-client-id")
 			if err != nil {

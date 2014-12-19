@@ -77,7 +77,7 @@ var _ = Describe("Finder", func() {
 		Context("when the finder returns a template", func() {
 			Context("when the override does not exist", func() {
 				It("returns the default space template", func() {
-					templatesRepo.FindError = models.ErrRecordNotFound{}
+					templatesRepo.FindError = models.RecordNotFoundError("")
 
 					template, err := finder.Find("login.fp." + models.SpaceBodyTemplateName)
 					Expect(err).ToNot(HaveOccurred())
@@ -86,7 +86,7 @@ var _ = Describe("Finder", func() {
 				})
 
 				It("returns the default user template", func() {
-					templatesRepo.FindError = models.ErrRecordNotFound{}
+					templatesRepo.FindError = models.RecordNotFoundError("")
 
 					template, err := finder.Find("login.fp." + models.UserBodyTemplateName)
 					Expect(err).ToNot(HaveOccurred())
@@ -95,7 +95,7 @@ var _ = Describe("Finder", func() {
 				})
 
 				It("returns the default email template", func() {
-					templatesRepo.FindError = models.ErrRecordNotFound{}
+					templatesRepo.FindError = models.RecordNotFoundError("")
 
 					template, err := finder.Find("login.fp." + models.EmailBodyTemplateName)
 					Expect(err).ToNot(HaveOccurred())
@@ -104,7 +104,7 @@ var _ = Describe("Finder", func() {
 				})
 
 				It("returns the default subject missing template", func() {
-					templatesRepo.FindError = models.ErrRecordNotFound{}
+					templatesRepo.FindError = models.RecordNotFoundError("")
 
 					template, err := finder.Find("login.fp." + models.SubjectMissingTemplateName)
 					Expect(err).ToNot(HaveOccurred())
@@ -113,7 +113,7 @@ var _ = Describe("Finder", func() {
 				})
 
 				It("returns the default subject provided template", func() {
-					templatesRepo.FindError = models.ErrRecordNotFound{}
+					templatesRepo.FindError = models.RecordNotFoundError("")
 
 					template, err := finder.Find("login.fp." + models.SubjectProvidedTemplateName)
 					Expect(err).ToNot(HaveOccurred())

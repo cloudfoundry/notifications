@@ -1,14 +1,25 @@
 package models
 
-type ErrRecordNotFound struct{}
+import "fmt"
 
-func (err ErrRecordNotFound) Error() string {
-	return "Record Not Found"
+func NewRecordNotFoundError(format string, arguments ...interface{}) RecordNotFoundError {
+	return RecordNotFoundError(fmt.Sprintf(format, arguments...))
 }
 
-type ErrDuplicateRecord struct{}
+type RecordNotFoundError string
 
-func (err ErrDuplicateRecord) Error() string {
+func (err RecordNotFoundError) Error() string {
+	message := "Record Not Found"
+	if err != "" {
+		message = fmt.Sprintf("%s: %s", message, string(err))
+	}
+
+	return message
+}
+
+type DuplicateRecordError struct{}
+
+func (err DuplicateRecordError) Error() string {
 	return "Duplicate Record"
 }
 

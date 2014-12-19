@@ -94,7 +94,7 @@ func (finder TemplateFinder) search(connection models.ConnectionInterface, name 
 	template, err := finder.templatesRepo.Find(connection, name)
 
 	if err != nil {
-		if (err == models.ErrRecordNotFound{}) {
+		if _, ok := err.(models.RecordNotFoundError); ok {
 			if len(alternates) > 0 {
 				return finder.search(connection, alternates[0], alternates[1:])
 			} else {
