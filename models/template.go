@@ -31,6 +31,7 @@ type Template struct {
 	Subject   string    `db:"subject"`
 	Text      string    `db:"text"`
 	HTML      string    `db:"html"`
+	Metadata  string    `db:"metadata"`
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 }

@@ -52,28 +52,32 @@ var _ = Describe("Templates CRUD", func() {
 
 		testTemplates := []params.Template{
 			params.Template{
-				Name:    "Star Wars",
-				Subject: "Awesomeness",
-				HTML:    "<p>Millenium Falcon</p>",
-				Text:    "Millenium Falcon",
+				Name:     "Star Wars",
+				Subject:  "Awesomeness",
+				HTML:     "<p>Millenium Falcon</p>",
+				Text:     "Millenium Falcon",
+				Metadata: make(map[string]interface{}),
 			},
 			params.Template{
-				Name:    "Big Hero 6",
-				Subject: "Heroes",
-				HTML:    "<h1>Robots!</h1>",
-				Text:    "Robots!",
+				Name:     "Big Hero 6",
+				Subject:  "Heroes",
+				HTML:     "<h1>Robots!</h1>",
+				Text:     "Robots!",
+				Metadata: make(map[string]interface{}),
 			},
 			params.Template{
-				Name:    "Blah",
-				Subject: "More Blah",
-				HTML:    "<h1>This is blahblah</h1>",
-				Text:    "Blah even more",
+				Name:     "Blah",
+				Subject:  "More Blah",
+				HTML:     "<h1>This is blahblah</h1>",
+				Text:     "Blah even more",
+				Metadata: make(map[string]interface{}),
 			},
 			params.Template{
-				Name:    "Hungry Play",
-				Subject: "Dystopian",
-				HTML:    "<h1>Sad</h1>",
-				Text:    "Run!!",
+				Name:     "Hungry Play",
+				Subject:  "Dystopian",
+				HTML:     "<h1>Sad</h1>",
+				Text:     "Run!!",
+				Metadata: make(map[string]interface{}),
 			},
 		}
 

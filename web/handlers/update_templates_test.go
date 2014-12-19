@@ -41,10 +41,11 @@ var _ = Describe("UpdateTemplates", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(updater.UpdateArgumentID).To(Equal("a-template-id"))
 			Expect(updater.UpdateArgumentBody).To(Equal(models.Template{
-				Name:    "An Interesting Template",
-				Subject: "very interesting",
-				Text:    "{{turkey}}",
-				HTML:    "<p>{{turkey}} gobble</p>",
+				Name:     "An Interesting Template",
+				Subject:  "very interesting",
+				Text:     "{{turkey}}",
+				HTML:     "<p>{{turkey}} gobble</p>",
+				Metadata: "{}",
 			}))
 			Expect(writer.Code).To(Equal(http.StatusNoContent))
 		})

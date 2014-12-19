@@ -11,6 +11,14 @@ type TemplatesService struct {
 	client *Client
 }
 
+type Template struct {
+	Name     string                 `json:"name"`
+	Subject  string                 `json:"subject"`
+	Text     string                 `json:"text"`
+	HTML     string                 `json:"html"`
+	Metadata map[string]interface{} `json:"metadata"`
+}
+
 func (t TemplatesService) Create(token string, template params.Template) (int, string, error) {
 	var status int
 	var templateID string
@@ -63,4 +71,26 @@ func (t TemplatesService) AssignToClient(token, clientID, templateID string) (in
 	}
 
 	return status, nil
+}
+
+func (t TemplatesService) Get(token, templateID string) (int, Template, error) {
+	var status int
+	var template Template
+
+	request, err := t.client.makeRequest("GET", t.client.server.TemplatePath(templateID), nil, token)
+	if err != nil {
+		return status, template, err
+	}
+
+	status, body, err := t.client.do(request)
+	if err != nil {
+		return status, template, err
+	}
+
+	err = json.Unmarshal(body, &template)
+	if err != nil {
+		return status, template, err
+	}
+
+	return status, template, nil
 }

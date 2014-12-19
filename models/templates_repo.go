@@ -105,6 +105,7 @@ func (repo TemplatesRepo) Create(conn ConnectionInterface, template Template) (T
 	template.ID = uuid.New()
 
 	err := conn.Insert(&template)
+
 	if err != nil {
 		return Template{}, err
 	}

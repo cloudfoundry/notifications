@@ -38,15 +38,16 @@ var _ = Describe("CreateTemplate", func() {
 			}
 		})
 
-		It("calls create on its Creator with the correct arguements", func() {
+		It("calls create on its Creator with the correct arguments", func() {
 			handler.ServeHTTP(writer, request, context)
 			body := string(writer.Body.Bytes())
 
 			Expect(creator.CreateArgument).To(Equal(models.Template{
-				Name:    "Emergency Template",
-				Text:    "Message to: {{.To}}. Raptor Alert.",
-				HTML:    "<p>{{.ClientID}} you should run.</p>",
-				Subject: "Raptor Containment Unit Breached",
+				Name:     "Emergency Template",
+				Text:     "Message to: {{.To}}. Raptor Alert.",
+				HTML:     "<p>{{.ClientID}} you should run.</p>",
+				Subject:  "Raptor Containment Unit Breached",
+				Metadata: "{}",
 			}))
 			Expect(writer.Code).To(Equal(http.StatusCreated))
 			Expect(body).To(Equal(`{"template_id":"guid"}`))

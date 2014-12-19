@@ -20,6 +20,9 @@ var _ = Describe("Template", func() {
 					"text":    `its foobar of course`,
 					"html":    `<p>its foobar</p>`,
 					"subject": `Stuff and Things`,
+					"metadata": map[string]interface{}{
+						"some_property": "some_value",
+					},
 				})
 				if err != nil {
 					panic(err)
@@ -32,24 +35,26 @@ var _ = Describe("Template", func() {
 				Expect(parameters.Text).To(Equal("its foobar of course"))
 				Expect(parameters.HTML).To(Equal("<p>its foobar</p>"))
 				Expect(parameters.Subject).To(Equal("Stuff and Things"))
+				Expect(parameters.Metadata).To(HaveKeyWithValue("some_property", "some_value"))
 			})
 
 			It("gracefully handles non-required missing parameters", func() {
 				body, err := json.Marshal(map[string]interface{}{
-					"name": `Foo Bar Baz`,
-					"html": `<p>its foobar</p>`,
+					"name": "Foo Bar Baz",
+					"html": "<p>its foobar</p>",
 				})
 				if err != nil {
 					panic(err)
 				}
 
 				parameters, err := params.NewTemplate(bytes.NewBuffer(body))
-
+				Expect(err).NotTo(HaveOccurred())
 				Expect(parameters).To(BeAssignableToTypeOf(params.Template{}))
 				Expect(parameters.Name).To(Equal("Foo Bar Baz"))
 				Expect(parameters.Text).To(Equal(""))
 				Expect(parameters.HTML).To(Equal("<p>its foobar</p>"))
 				Expect(parameters.Subject).To(Equal("{{.Subject}}"))
+				Expect(parameters.Metadata).To(Equal(map[string]interface{}{}))
 			})
 		})
 	})
@@ -61,6 +66,9 @@ var _ = Describe("Template", func() {
 				Text:    "its foobar of course",
 				HTML:    "<p>its foobar</p>",
 				Subject: "Foobar Yah",
+				Metadata: map[string]interface{}{
+					"some_property": "some_value",
+				},
 			}
 			theModel := theTemplate.ToModel()
 
@@ -69,6 +77,7 @@ var _ = Describe("Template", func() {
 			Expect(theModel.Text).To(Equal("its foobar of course"))
 			Expect(theModel.HTML).To(Equal("<p>its foobar</p>"))
 			Expect(theModel.Subject).To(Equal("Foobar Yah"))
+			Expect(theModel.Metadata).To(MatchJSON(`{"some_property":"some_value"}`))
 			Expect(theModel.CreatedAt).To(BeZero())
 			Expect(theModel.UpdatedAt).To(BeZero())
 		})

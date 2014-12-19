@@ -3,16 +3,16 @@ package params
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
 
 type Template struct {
-	Name    string `json:"name"`
-	Text    string `json:"text"`
-	HTML    string `json:"html"`
-	Subject string `json:"subject"`
+	Name     string                 `json:"name"`
+	Text     string                 `json:"text"`
+	HTML     string                 `json:"html"`
+	Subject  string                 `json:"subject"`
+	Metadata map[string]interface{} `json:"metadata"`
 }
 
 type TemplateCreateError struct{}
@@ -22,19 +22,16 @@ func (err TemplateCreateError) Error() string {
 }
 
 func NewTemplate(body io.Reader) (Template, error) {
-	var template Template
+	template := Template{
+		Metadata: make(map[string]interface{}),
+	}
 
-	jsonBody, err := ioutil.ReadAll(body)
+	err := json.NewDecoder(body).Decode(&template)
 	if err != nil {
 		return Template{}, ParseError{}
 	}
 
-	err = json.Unmarshal(jsonBody, &template)
-	if err != nil {
-		return template, ParseError{}
-	}
-
-	err = containsArguments(template)
+	err = template.Validate()
 	if err != nil {
 		return Template{}, err
 	}
@@ -44,10 +41,11 @@ func NewTemplate(body io.Reader) (Template, error) {
 	return template, nil
 }
 
-func containsArguments(template Template) error {
+func (template Template) Validate() error {
 	if template.Name == "" {
 		return ValidationError([]string{"Request is missing the required field: name"})
 	}
+
 	if template.HTML == "" {
 		return ValidationError([]string{"Request is missing the required field: html"})
 	}
@@ -55,12 +53,22 @@ func containsArguments(template Template) error {
 	return nil
 }
 
-func (t *Template) ToModel() models.Template {
+func (template Template) ToModel() models.Template {
+	if template.Metadata == nil {
+		template.Metadata = make(map[string]interface{})
+	}
+
+	metadata, err := json.Marshal(template.Metadata)
+	if err != nil {
+		panic(err)
+	}
+
 	return models.Template{
-		Name:    t.Name,
-		Text:    t.Text,
-		HTML:    t.HTML,
-		Subject: t.Subject,
+		Name:     template.Name,
+		Text:     template.Text,
+		HTML:     template.HTML,
+		Subject:  template.Subject,
+		Metadata: string(metadata),
 	}
 }
 

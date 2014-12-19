@@ -16,10 +16,11 @@ type GetTemplates struct {
 }
 
 type TemplateOutput struct {
-	Name    string `json:"name"`
-	Subject string `json:"subject"`
-	HTML    string `json:"html"`
-	Text    string `json:"text"`
+	Name     string                 `json:"name"`
+	Subject  string                 `json:"subject"`
+	HTML     string                 `json:"html"`
+	Text     string                 `json:"text"`
+	Metadata map[string]interface{} `json:"metadata"`
 }
 
 func NewGetTemplates(templateFinder services.TemplateFinderInterface, errorWriter ErrorWriterInterface) GetTemplates {
@@ -42,11 +43,19 @@ func (handler GetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, 
 		return
 	}
 
+	var metadata map[string]interface{}
+	err = json.Unmarshal([]byte(template.Metadata), &metadata)
+	if err != nil {
+		handler.ErrorWriter.Write(w, err)
+		return
+	}
+
 	templateOutput := TemplateOutput{
-		Name:    template.Name,
-		Subject: template.Subject,
-		HTML:    template.HTML,
-		Text:    template.Text,
+		Name:     template.Name,
+		Subject:  template.Subject,
+		HTML:     template.HTML,
+		Text:     template.Text,
+		Metadata: metadata,
 	}
 
 	response, err := json.Marshal(templateOutput)

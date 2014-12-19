@@ -31,7 +31,10 @@ func (handler CreateTemplate) ServeHTTP(w http.ResponseWriter, req *http.Request
 		handler.ErrorWriter.Write(w, err)
 		return
 	}
-	templateID, err := handler.Creator.Create(templateParams.ToModel())
+
+	template := templateParams.ToModel()
+
+	templateID, err := handler.Creator.Create(template)
 	if err != nil {
 		handler.ErrorWriter.Write(w, params.TemplateCreateError{})
 		return

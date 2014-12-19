@@ -32,10 +32,11 @@ var _ = Describe("GetTemplates", func() {
 			templateID = "theTemplateID"
 
 			finder.Templates[templateID] = models.Template{
-				Name:    "The Name of The Template",
-				Subject: "All about the {{.Subject}}",
-				Text:    "the template {{variable}}",
-				HTML:    "<p> the template {{variable}} </p>",
+				Name:     "The Name of The Template",
+				Subject:  "All about the {{.Subject}}",
+				Text:     "the template {{variable}}",
+				HTML:     "<p> the template {{variable}} </p>",
+				Metadata: `{"hello": "world"}`,
 			}
 			writer = httptest.NewRecorder()
 			errorWriter = fakes.NewErrorWriter()
@@ -68,11 +69,12 @@ var _ = Describe("GetTemplates", func() {
 					panic(err)
 				}
 
-				Expect(len(template)).To(Equal(4))
-				Expect(template["name"].(string)).To(Equal("The Name of The Template"))
-				Expect(template["subject"].(string)).To(Equal("All about the {{.Subject}}"))
-				Expect(template["text"].(string)).To(Equal("the template {{variable}}"))
-				Expect(template["html"].(string)).To(Equal("<p> the template {{variable}} </p>"))
+				Expect(template).To(HaveLen(5))
+				Expect(template["name"]).To(Equal("The Name of The Template"))
+				Expect(template["subject"]).To(Equal("All about the {{.Subject}}"))
+				Expect(template["text"]).To(Equal("the template {{variable}}"))
+				Expect(template["html"]).To(Equal("<p> the template {{variable}} </p>"))
+				Expect(template["metadata"]).To(Equal(map[string]interface{}{"hello": "world"}))
 			})
 		})
 
