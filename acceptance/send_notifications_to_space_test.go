@@ -53,10 +53,12 @@ var _ = Describe("Sending notifications to all users in a space", func() {
 		}
 
 		test := SendNotificationsToSpace{
-			client:      support.NewClient(notificationsServer),
-			clientToken: clientToken,
+			client:              support.NewClient(notificationsServer),
+			clientToken:         clientToken,
+			notificationsServer: notificationsServer,
+			smtpServer:          smtpServer,
 		}
-		test.RegisterClientNotifications(notificationsServer, clientToken)
+		test.RegisterClientNotifications()
 		test.CreateNewTemplate(params.Template{
 			Name:    "Men in Black",
 			Subject: "Aliens {{.Subject}}",
@@ -64,19 +66,21 @@ var _ = Describe("Sending notifications to all users in a space", func() {
 			Text:    "Dogs\n{{.Text}}",
 		})
 		test.AssignTemplateToClient(clientID)
-		test.SendNotificationsToSpace(notificationsServer, clientToken, smtpServer)
+		test.SendNotificationsToSpace()
 	})
 })
 
 type SendNotificationsToSpace struct {
-	client      *support.Client
-	TemplateID  string
-	clientToken uaa.Token
+	client              *support.Client
+	TemplateID          string
+	clientToken         uaa.Token
+	notificationsServer servers.Notifications
+	smtpServer          *servers.SMTP
 }
 
 // Make request to /registation
-func (t SendNotificationsToSpace) RegisterClientNotifications(notificationsServer servers.Notifications, clientToken uaa.Token) {
-	code, err := t.client.Notifications.Register(clientToken.Access, support.RegisterClient{
+func (t SendNotificationsToSpace) RegisterClientNotifications() {
+	code, err := t.client.Notifications.Register(t.clientToken.Access, support.RegisterClient{
 		SourceName: "Notifications Sender",
 		Notifications: map[string]support.RegisterNotification{
 			"space-test": {
@@ -104,19 +108,19 @@ func (t SendNotificationsToSpace) AssignTemplateToClient(clientID string) {
 }
 
 // Make request to /spaces/:guid
-func (t SendNotificationsToSpace) SendNotificationsToSpace(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
+func (t SendNotificationsToSpace) SendNotificationsToSpace() {
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "space-test",
 		"html":    "this is a space test",
 		"text":    "this is a space test",
 		"subject": "space-subject",
 	})
-	request, err := http.NewRequest("POST", notificationsServer.SpacesPath("space-123"), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.SpacesPath("space-123"), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -161,9 +165,9 @@ func (t SendNotificationsToSpace) SendNotificationsToSpace(notificationsServer s
 
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(1))
-	delivery := smtpServer.Deliveries[0]
+	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))

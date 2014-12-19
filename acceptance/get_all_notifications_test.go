@@ -42,9 +42,9 @@ var _ = Describe("Get a list of all notifications", func() {
 			panic(err)
 		}
 
-		test := AllNotifications{notificationsServer: notificationsServer, clientToken: clientToken}
-		test.SetNotifications()
-		test.GetAllNotifications()
+		t := AllNotifications{notificationsServer: notificationsServer, clientToken: clientToken}
+		t.SetNotifications()
+		t.GetAllNotifications()
 	})
 })
 
@@ -53,7 +53,7 @@ type AllNotifications struct {
 	clientToken         uaa.Token
 }
 
-func (test AllNotifications) setNotifications(clientID, data string) {
+func (t AllNotifications) setNotifications(clientID, data string) {
 	env := application.NewEnvironment()
 	uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
 	clientToken, err := uaaClient.GetClientToken()
@@ -61,7 +61,7 @@ func (test AllNotifications) setNotifications(clientID, data string) {
 		panic(err)
 	}
 
-	request, err := http.NewRequest("PUT", test.notificationsServer.NotificationsPath(), strings.NewReader(data))
+	request, err := http.NewRequest("PUT", t.notificationsServer.NotificationsPath(), strings.NewReader(data))
 	if err != nil {
 		panic(err)
 	}
@@ -76,8 +76,8 @@ func (test AllNotifications) setNotifications(clientID, data string) {
 	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 }
 
-func (test AllNotifications) SetNotifications() {
-	test.setNotifications("client-123", `{
+func (t AllNotifications) SetNotifications() {
+	t.setNotifications("client-123", `{
 		"source_name":"source name stuff",
 		"notifications":{
 			"kind-asd":{
@@ -90,7 +90,7 @@ func (test AllNotifications) SetNotifications() {
 			}
 		}
 	}`)
-	test.setNotifications("client-456", `{
+	t.setNotifications("client-456", `{
 		"source_name": "raptors",
 		"notifications": {
 			"dino-kind": {
@@ -103,18 +103,18 @@ func (test AllNotifications) SetNotifications() {
 			}
 		}
 	}`)
-	test.setNotifications("client-890", `{
+	t.setNotifications("client-890", `{
 		"source_name": "this client has no notifications"
 	}`)
 }
 
-func (test AllNotifications) GetAllNotifications() {
-	request, err := http.NewRequest("GET", test.notificationsServer.NotificationsPath(), nil)
+func (t AllNotifications) GetAllNotifications() {
+	request, err := http.NewRequest("GET", t.notificationsServer.NotificationsPath(), nil)
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+test.clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {

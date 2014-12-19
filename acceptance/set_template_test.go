@@ -43,23 +43,31 @@ var _ = Describe("Templates PUT Endpoint", func() {
 			panic(err)
 		}
 
-		test := SetTemplates{}
-		text := "rulebook"
-		html := "<p>follow the rules</p>"
-		test.SetDefaultSpaceTemplate(notificationsServer, clientToken, text, html)
+		t := SetTemplates{
+			notificationsServer: notificationsServer,
+			clientToken:         clientToken,
+			text:                "rulebook",
+			html:                "<p>follow the rules</p>",
+		}
+		t.SetDefaultSpaceTemplate()
 	})
 })
 
-type SetTemplates struct{}
+type SetTemplates struct {
+	notificationsServer servers.Notifications
+	clientToken         uaa.Token
+	text                string
+	html                string
+}
 
-func (t SetTemplates) SetDefaultSpaceTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, text, html string) {
-	jsonBody := []byte(fmt.Sprintf(`{"text":"%s", "html":"%s"}`, text, html))
-	request, err := http.NewRequest("PUT", notificationsServer.DeprecatedTemplatePath(models.SpaceBodyTemplateName), bytes.NewBuffer(jsonBody))
+func (t SetTemplates) SetDefaultSpaceTemplate() {
+	jsonBody := []byte(fmt.Sprintf(`{"text":"%s", "html":"%s"}`, t.text, t.html))
+	request, err := http.NewRequest("PUT", t.notificationsServer.DeprecatedTemplatePath(models.SpaceBodyTemplateName), bytes.NewBuffer(jsonBody))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {

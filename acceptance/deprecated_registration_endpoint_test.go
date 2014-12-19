@@ -44,14 +44,24 @@ var _ = Describe("Send a notification to a user, using the deprecated /registrat
 			panic(err)
 		}
 
-		t := SendNotificationToUser{}
-		t.DeprecatedRegisterClientNotification(notificationsServer, clientToken)
-		t.DeprecatedSendNotificationToUser(notificationsServer, clientToken, smtpServer)
+		t := DeprecatedRegistrationEndpoint{
+			notificationsServer: notificationsServer,
+			smtpServer:          smtpServer,
+			clientToken:         clientToken,
+		}
+		t.RegisterClientNotification()
+		t.SendNotificationToUser()
 	})
 })
 
+type DeprecatedRegistrationEndpoint struct {
+	notificationsServer servers.Notifications
+	smtpServer          *servers.SMTP
+	clientToken         uaa.Token
+}
+
 // Make request to /registation
-func (t SendNotificationToUser) DeprecatedRegisterClientNotification(notificationsServer servers.Notifications, clientToken uaa.Token) {
+func (t DeprecatedRegistrationEndpoint) RegisterClientNotification() {
 	body, err := json.Marshal(map[string]interface{}{
 		"source_description": "Notifications Sender",
 		"kinds": []map[string]string{
@@ -65,12 +75,12 @@ func (t SendNotificationToUser) DeprecatedRegisterClientNotification(notificatio
 		panic(err)
 	}
 
-	request, err := http.NewRequest("PUT", notificationsServer.RegistrationPath(), bytes.NewBuffer(body))
+	request, err := http.NewRequest("PUT", t.notificationsServer.RegistrationPath(), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -87,7 +97,7 @@ func (t SendNotificationToUser) DeprecatedRegisterClientNotification(notificatio
 }
 
 // Make request to /users/:guid
-func (t SendNotificationToUser) DeprecatedSendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
+func (t DeprecatedRegistrationEndpoint) SendNotificationToUser() {
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "acceptance-test",
 		"html":    "<p>this is an acceptance%40test</p>",
@@ -97,12 +107,12 @@ func (t SendNotificationToUser) DeprecatedSendNotificationToUser(notificationsSe
 		panic(err)
 	}
 
-	request, err := http.NewRequest("POST", notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -131,9 +141,9 @@ func (t SendNotificationToUser) DeprecatedSendNotificationToUser(notificationsSe
 
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(1))
-	delivery := smtpServer.Deliveries[0]
+	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))

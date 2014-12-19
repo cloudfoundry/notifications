@@ -42,12 +42,6 @@ var _ = Describe("Templates Metadata", func() {
 			panic(err)
 		}
 
-		test := TemplateMetadata{
-			client:              support.NewClient(notificationsServer),
-			notificationsServer: notificationsServer,
-			clientToken:         clientToken,
-		}
-
 		createdTemplate := params.Template{
 			Name:    "Star Wars",
 			Subject: "Awesomeness",
@@ -58,8 +52,13 @@ var _ = Describe("Templates Metadata", func() {
 			},
 		}
 
-		test.CreateNewTemplateWithMetadata(createdTemplate)
-		test.GetTemplateWithMetadata()
+		t := TemplateMetadata{
+			client:              support.NewClient(notificationsServer),
+			notificationsServer: notificationsServer,
+			clientToken:         clientToken,
+		}
+		t.CreateNewTemplateWithMetadata(createdTemplate)
+		t.GetTemplateWithMetadata()
 	})
 })
 

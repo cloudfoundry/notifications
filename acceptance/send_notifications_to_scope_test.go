@@ -52,12 +52,14 @@ var _ = Describe("Sending notifications to users with certain scopes", func() {
 			panic(err)
 		}
 
-		scope := "this.scope"
 		test := SendNotificationsToUsersWithScope{
-			client:      support.NewClient(notificationsServer),
-			clientToken: clientToken,
+			client:              support.NewClient(notificationsServer),
+			clientToken:         clientToken,
+			notificationsServer: notificationsServer,
+			smtpServer:          smtpServer,
+			scope:               "this.scope",
 		}
-		test.RegisterClientNotifications(notificationsServer, clientToken)
+		test.RegisterClientNotifications()
 		test.CreateNewTemplate(params.Template{
 			Name:    "Frozen",
 			Subject: "Food {{.Subject}}",
@@ -65,19 +67,22 @@ var _ = Describe("Sending notifications to users with certain scopes", func() {
 			Text:    "Fish\n{{.Text}}",
 		})
 		test.AssignTemplateToClient(clientID)
-		test.SendNotificationsToScope(notificationsServer, clientToken, smtpServer, scope)
+		test.SendNotificationsToScope()
 	})
 })
 
 type SendNotificationsToUsersWithScope struct {
-	client      *support.Client
-	clientToken uaa.Token
-	TemplateID  string
+	client              *support.Client
+	clientToken         uaa.Token
+	TemplateID          string
+	notificationsServer servers.Notifications
+	smtpServer          *servers.SMTP
+	scope               string
 }
 
 // Make request to /registation
-func (t SendNotificationsToUsersWithScope) RegisterClientNotifications(notificationsServer servers.Notifications, clientToken uaa.Token) {
-	code, err := t.client.Notifications.Register(clientToken.Access, support.RegisterClient{
+func (t SendNotificationsToUsersWithScope) RegisterClientNotifications() {
+	code, err := t.client.Notifications.Register(t.clientToken.Access, support.RegisterClient{
 		SourceName: "Notifications Sender",
 		Notifications: map[string]support.RegisterNotification{
 			"scope-test": {
@@ -105,8 +110,8 @@ func (t SendNotificationsToUsersWithScope) AssignTemplateToClient(clientID strin
 }
 
 // Make request to /uaa_scopes/:scope for a scope
-func (t SendNotificationsToUsersWithScope) SendNotificationsToScope(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP, scope string) {
-	smtpServer.Reset()
+func (t SendNotificationsToUsersWithScope) SendNotificationsToScope() {
+	t.smtpServer.Reset()
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "scope-test",
@@ -114,12 +119,12 @@ func (t SendNotificationsToUsersWithScope) SendNotificationsToScope(notification
 		"text":    "this is a scope test",
 		"subject": "scope-subject",
 	})
-	request, err := http.NewRequest("POST", notificationsServer.ScopesPath(scope), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.ScopesPath(t.scope), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -154,9 +159,9 @@ func (t SendNotificationsToUsersWithScope) SendNotificationsToScope(notification
 
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(1))
-	delivery := smtpServer.Deliveries[0]
+	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))

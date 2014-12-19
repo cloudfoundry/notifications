@@ -46,24 +46,34 @@ var _ = Describe("Send a notification to user with overridden template", func() 
 			panic(err)
 		}
 
-		textTemplate := "text"
-		htmlTemplate := "<p>html</p>"
-		t := SendOverriddenNotificationToUser{}
-		t.OverrideClientUserTemplate(notificationsServer, clientToken, textTemplate, htmlTemplate)
-		t.SendNotificationToUser(notificationsServer, clientToken, smtpServer, textTemplate, htmlTemplate)
+		t := SendOverriddenNotificationToUser{
+			notificationsServer: notificationsServer,
+			smtpServer:          smtpServer,
+			clientToken:         clientToken,
+			textTemplate:        "text",
+			htmlTemplate:        "<p>html</p>",
+		}
+		t.OverrideClientUserTemplate()
+		t.SendNotificationToUser()
 	})
 })
 
-type SendOverriddenNotificationToUser struct{}
+type SendOverriddenNotificationToUser struct {
+	notificationsServer servers.Notifications
+	smtpServer          *servers.SMTP
+	clientToken         uaa.Token
+	textTemplate        string
+	htmlTemplate        string
+}
 
-func (t SendOverriddenNotificationToUser) OverrideClientUserTemplate(notificationsServer servers.Notifications, clientToken uaa.Token, textTemplate, htmlTemplate string) {
-	jsonBody := []byte(fmt.Sprintf(`{"text":"%s", "html":"%s"}`, textTemplate, htmlTemplate))
-	request, err := http.NewRequest("PUT", notificationsServer.DeprecatedTemplatePath("notifications-sender."+models.UserBodyTemplateName), bytes.NewBuffer(jsonBody))
+func (t SendOverriddenNotificationToUser) OverrideClientUserTemplate() {
+	jsonBody := []byte(fmt.Sprintf(`{"text":"%s", "html":"%s"}`, t.textTemplate, t.htmlTemplate))
+	request, err := http.NewRequest("PUT", t.notificationsServer.DeprecatedTemplatePath("notifications-sender."+models.UserBodyTemplateName), bytes.NewBuffer(jsonBody))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -74,8 +84,7 @@ func (t SendOverriddenNotificationToUser) OverrideClientUserTemplate(notificatio
 	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 }
 
-func (t SendOverriddenNotificationToUser) SendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token,
-	smtpServer *servers.SMTP, text, html string) {
+func (t SendOverriddenNotificationToUser) SendNotificationToUser() {
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "acceptance-test",
@@ -87,12 +96,12 @@ func (t SendOverriddenNotificationToUser) SendNotificationToUser(notificationsSe
 		panic(err)
 	}
 
-	request, err := http.NewRequest("POST", notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -121,9 +130,9 @@ func (t SendOverriddenNotificationToUser) SendNotificationToUser(notificationsSe
 
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(1))
-	delivery := smtpServer.Deliveries[0]
+	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
@@ -131,6 +140,6 @@ func (t SendOverriddenNotificationToUser) SendNotificationToUser(notificationsSe
 
 	data := strings.Split(string(delivery.Data), "\n")
 
-	Expect(data).To(ContainElement(text))
+	Expect(data).To(ContainElement(t.textTemplate))
 	Expect(data).To(ContainElement("        <p>html</p>"))
 }

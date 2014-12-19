@@ -51,35 +51,43 @@ var _ = Describe("Preferences Endpoint", func() {
 		userGUID := "user-123"
 
 		test := ManageArbitraryUsersPreferences{
-			client: support.NewClient(notificationsServer),
+			client:              support.NewClient(notificationsServer),
+			notificationsServer: notificationsServer,
+			clientToken:         clientToken,
+			smtpServer:          smtpServer,
+			userGUID:            userGUID,
 		}
 
-		test.RegisterClientNotifications(notificationsServer, clientToken)
-		test.SendNotificationToUser(notificationsServer, clientToken, smtpServer)
-		test.RetrieveUserPreferences(notificationsServer, clientToken, userGUID)
+		test.RegisterClientNotifications()
+		test.SendNotificationToUser()
+		test.RetrieveUserPreferences()
 
 		// Notification Unsubscribe
-		test.UnsubscribeFromNotification(notificationsServer, clientToken, userGUID)
-		test.ConfirmUserUnsubscribed(notificationsServer, clientToken, userGUID)
-		test.ConfirmUserDoesNotReceiveNotification(notificationsServer, clientToken, smtpServer)
+		test.UnsubscribeFromNotification()
+		test.ConfirmUserUnsubscribed()
+		test.ConfirmUserDoesNotReceiveNotification()
 
 		// Global Unsubscribe
-		test.GlobalUnsubscribe(notificationsServer, clientToken, userGUID)
-		test.ConfirmGlobalUnsubscribe(notificationsServer, clientToken, userGUID)
-		test.ConfirmUserDoesNotReceiveNotificationsGlobal(notificationsServer, clientToken, smtpServer)
-		test.UndoGlobalUnsubscribe(notificationsServer, clientToken, userGUID)
-		test.ReConfirmUserUnsubscribed(notificationsServer, clientToken, userGUID)
-		test.ConfirmUserReceivesNotificationsGlobal(notificationsServer, clientToken, smtpServer)
+		test.GlobalUnsubscribe()
+		test.ConfirmGlobalUnsubscribe()
+		test.ConfirmUserDoesNotReceiveNotificationsGlobal()
+		test.UndoGlobalUnsubscribe()
+		test.ReConfirmUserUnsubscribed()
+		test.ConfirmUserReceivesNotificationsGlobal()
 	})
 })
 
 type ManageArbitraryUsersPreferences struct {
-	client *support.Client
+	client              *support.Client
+	notificationsServer servers.Notifications
+	smtpServer          *servers.SMTP
+	clientToken         uaa.Token
+	userGUID            string
 }
 
 // Make request to /registation
-func (t ManageArbitraryUsersPreferences) RegisterClientNotifications(notificationsServer servers.Notifications, clientToken uaa.Token) {
-	code, err := t.client.Notifications.Register(clientToken.Access, support.RegisterClient{
+func (t ManageArbitraryUsersPreferences) RegisterClientNotifications() {
+	code, err := t.client.Notifications.Register(t.clientToken.Access, support.RegisterClient{
 		SourceName: "Notifications Sender",
 		Notifications: map[string]support.RegisterNotification{
 			"acceptance-test": {
@@ -96,7 +104,7 @@ func (t ManageArbitraryUsersPreferences) RegisterClientNotifications(notificatio
 }
 
 // Make request to /users/:guid
-func (t ManageArbitraryUsersPreferences) SendNotificationToUser(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
+func (t ManageArbitraryUsersPreferences) SendNotificationToUser() {
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "unsubscribe-acceptance-test",
 		"html":    "<p>this is an acceptance test</p>",
@@ -106,12 +114,12 @@ func (t ManageArbitraryUsersPreferences) SendNotificationToUser(notificationsSer
 		panic(err)
 	}
 
-	request, err := http.NewRequest("POST", notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -140,9 +148,9 @@ func (t ManageArbitraryUsersPreferences) SendNotificationToUser(notificationsSer
 
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(1))
-	delivery := smtpServer.Deliveries[0]
+	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
@@ -157,13 +165,13 @@ func (t ManageArbitraryUsersPreferences) SendNotificationToUser(notificationsSer
 	Expect(data).To(ContainElement("<p>this is an acceptance test</p>"))
 }
 
-func (t ManageArbitraryUsersPreferences) RetrieveUserPreferences(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string) {
-	request, err := http.NewRequest("GET", notificationsServer.SpecificUserPreferencesPath(userGUID), nil)
+func (t ManageArbitraryUsersPreferences) RetrieveUserPreferences() {
+	request, err := http.NewRequest("GET", t.notificationsServer.SpecificUserPreferencesPath(t.userGUID), nil)
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -198,7 +206,7 @@ func (t ManageArbitraryUsersPreferences) RetrieveUserPreferences(notificationsSe
 }
 
 // Make a PATCH request to /user_preferences/:userGUID
-func (t ManageArbitraryUsersPreferences) UnsubscribeFromNotification(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string) {
+func (t ManageArbitraryUsersPreferences) UnsubscribeFromNotification() {
 	builder := services.NewPreferencesBuilder()
 	builder.Add(models.Preference{
 		ClientID: "notifications-sender",
@@ -212,12 +220,12 @@ func (t ManageArbitraryUsersPreferences) UnsubscribeFromNotification(notificatio
 		panic(err)
 	}
 
-	request, err := http.NewRequest("PATCH", notificationsServer.SpecificUserPreferencesPath(userGUID), bytes.NewBuffer(body))
+	request, err := http.NewRequest("PATCH", t.notificationsServer.SpecificUserPreferencesPath(t.userGUID), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -228,13 +236,13 @@ func (t ManageArbitraryUsersPreferences) UnsubscribeFromNotification(notificatio
 	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 }
 
-func (t ManageArbitraryUsersPreferences) ConfirmUserUnsubscribed(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string) {
-	request, err := http.NewRequest("GET", notificationsServer.SpecificUserPreferencesPath(userGUID), nil)
+func (t ManageArbitraryUsersPreferences) ConfirmUserUnsubscribed() {
+	request, err := http.NewRequest("GET", t.notificationsServer.SpecificUserPreferencesPath(t.userGUID), nil)
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -268,8 +276,8 @@ func (t ManageArbitraryUsersPreferences) ConfirmUserUnsubscribed(notificationsSe
 	Expect(node.Count).To(Equal(1))
 }
 
-func (t ManageArbitraryUsersPreferences) ConfirmUserDoesNotReceiveNotification(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
-	smtpServer.Reset()
+func (t ManageArbitraryUsersPreferences) ConfirmUserDoesNotReceiveNotification() {
+	t.smtpServer.Reset()
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "unsubscribe-acceptance-test",
@@ -280,12 +288,12 @@ func (t ManageArbitraryUsersPreferences) ConfirmUserDoesNotReceiveNotification(n
 		panic(err)
 	}
 
-	request, err := http.NewRequest("POST", notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -314,11 +322,11 @@ func (t ManageArbitraryUsersPreferences) ConfirmUserDoesNotReceiveNotification(n
 
 	// Confirm the email message never gets delivered
 	Consistently(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(0))
 }
 
-func (t ManageArbitraryUsersPreferences) GlobalUnsubscribe(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string) {
+func (t ManageArbitraryUsersPreferences) GlobalUnsubscribe() {
 	requestBodyPayload := map[string]interface{}{
 		"global_unsubscribe": true,
 		"clients":            map[string]interface{}{},
@@ -329,12 +337,12 @@ func (t ManageArbitraryUsersPreferences) GlobalUnsubscribe(notificationsServer s
 		panic(err)
 	}
 
-	request, err := http.NewRequest("PATCH", notificationsServer.SpecificUserPreferencesPath(userGUID), bytes.NewBuffer(body))
+	request, err := http.NewRequest("PATCH", t.notificationsServer.SpecificUserPreferencesPath(t.userGUID), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -350,13 +358,13 @@ func (t ManageArbitraryUsersPreferences) GlobalUnsubscribe(notificationsServer s
 	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 }
 
-func (t ManageArbitraryUsersPreferences) ConfirmGlobalUnsubscribe(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string) {
-	request, err := http.NewRequest("GET", notificationsServer.SpecificUserPreferencesPath(userGUID), nil)
+func (t ManageArbitraryUsersPreferences) ConfirmGlobalUnsubscribe() {
+	request, err := http.NewRequest("GET", t.notificationsServer.SpecificUserPreferencesPath(t.userGUID), nil)
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -380,8 +388,8 @@ func (t ManageArbitraryUsersPreferences) ConfirmGlobalUnsubscribe(notificationsS
 	Expect(prefsResponseJSON.GlobalUnsubscribe).To(BeTrue())
 }
 
-func (t ManageArbitraryUsersPreferences) ConfirmUserDoesNotReceiveNotificationsGlobal(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
-	smtpServer.Reset()
+func (t ManageArbitraryUsersPreferences) ConfirmUserDoesNotReceiveNotificationsGlobal() {
+	t.smtpServer.Reset()
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "acceptance-test",
@@ -392,12 +400,12 @@ func (t ManageArbitraryUsersPreferences) ConfirmUserDoesNotReceiveNotificationsG
 		panic(err)
 	}
 
-	request, err := http.NewRequest("POST", notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -426,11 +434,11 @@ func (t ManageArbitraryUsersPreferences) ConfirmUserDoesNotReceiveNotificationsG
 
 	// Confirm the email message never gets delivered
 	Consistently(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(0))
 }
 
-func (t ManageArbitraryUsersPreferences) UndoGlobalUnsubscribe(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string) {
+func (t ManageArbitraryUsersPreferences) UndoGlobalUnsubscribe() {
 	requestBodyPayload := map[string]interface{}{
 		"global_unsubscribe": false,
 		"clients":            map[string]interface{}{},
@@ -441,12 +449,12 @@ func (t ManageArbitraryUsersPreferences) UndoGlobalUnsubscribe(notificationsServ
 		panic(err)
 	}
 
-	request, err := http.NewRequest("PATCH", notificationsServer.SpecificUserPreferencesPath(userGUID), bytes.NewBuffer(body))
+	request, err := http.NewRequest("PATCH", t.notificationsServer.SpecificUserPreferencesPath(t.userGUID), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -462,13 +470,13 @@ func (t ManageArbitraryUsersPreferences) UndoGlobalUnsubscribe(notificationsServ
 	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 }
 
-func (t ManageArbitraryUsersPreferences) ReConfirmUserUnsubscribed(notificationsServer servers.Notifications, clientToken uaa.Token, userGUID string) {
-	request, err := http.NewRequest("GET", notificationsServer.SpecificUserPreferencesPath(userGUID), nil)
+func (t ManageArbitraryUsersPreferences) ReConfirmUserUnsubscribed() {
+	request, err := http.NewRequest("GET", t.notificationsServer.SpecificUserPreferencesPath(t.userGUID), nil)
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -492,8 +500,8 @@ func (t ManageArbitraryUsersPreferences) ReConfirmUserUnsubscribed(notifications
 	Expect(prefsResponseJSON.GlobalUnsubscribe).To(BeFalse())
 }
 
-func (t ManageArbitraryUsersPreferences) ConfirmUserReceivesNotificationsGlobal(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
-	smtpServer.Reset()
+func (t ManageArbitraryUsersPreferences) ConfirmUserReceivesNotificationsGlobal() {
+	t.smtpServer.Reset()
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "acceptance-test",
@@ -504,12 +512,12 @@ func (t ManageArbitraryUsersPreferences) ConfirmUserReceivesNotificationsGlobal(
 		panic(err)
 	}
 
-	request, err := http.NewRequest("POST", notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.UsersPath("user-123"), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -538,6 +546,6 @@ func (t ManageArbitraryUsersPreferences) ConfirmUserReceivesNotificationsGlobal(
 
 	// Confirm the email message gets delivered
 	Eventually(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(1))
 }

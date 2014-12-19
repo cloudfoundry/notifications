@@ -53,10 +53,12 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 		}
 
 		test := SendNotificationsToOrganizationRole{
-			client:      support.NewClient(notificationsServer),
-			clientToken: clientToken,
+			client:              support.NewClient(notificationsServer),
+			clientToken:         clientToken,
+			notificationsServer: notificationsServer,
+			smtpServer:          smtpServer,
 		}
-		test.RegisterClientNotifications(notificationsServer, clientToken)
+		test.RegisterClientNotifications()
 		test.CreateNewTemplate(params.Template{
 			Name:    "ET",
 			Subject: "Phone home {{.Subject}}",
@@ -64,22 +66,24 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 			Text:    "Cat\n{{.Text}}",
 		})
 		test.AssignTemplateToClient(clientID)
-		test.SendNotificationsToOrganizationManagers(notificationsServer, clientToken, smtpServer)
-		test.SendNotificationsToOrganizationAuditors(notificationsServer, clientToken, smtpServer)
-		test.SendNotificationsToOrganizationBillingManagers(notificationsServer, clientToken, smtpServer)
-		test.SendNotificationsToOrganizationInvalidRole(notificationsServer, clientToken, smtpServer)
+		test.SendNotificationsToOrganizationManagers()
+		test.SendNotificationsToOrganizationAuditors()
+		test.SendNotificationsToOrganizationBillingManagers()
+		test.SendNotificationsToOrganizationInvalidRole()
 	})
 })
 
 type SendNotificationsToOrganizationRole struct {
-	client      *support.Client
-	clientToken uaa.Token
-	TemplateID  string
+	client              *support.Client
+	clientToken         uaa.Token
+	TemplateID          string
+	notificationsServer servers.Notifications
+	smtpServer          *servers.SMTP
 }
 
 // Make request to /registation
-func (t SendNotificationsToOrganizationRole) RegisterClientNotifications(notificationsServer servers.Notifications, clientToken uaa.Token) {
-	code, err := t.client.Notifications.Register(clientToken.Access, support.RegisterClient{
+func (t SendNotificationsToOrganizationRole) RegisterClientNotifications() {
+	code, err := t.client.Notifications.Register(t.clientToken.Access, support.RegisterClient{
 		SourceName: "Notifications Sender",
 		Notifications: map[string]support.RegisterNotification{
 			"organization-role-test": {
@@ -107,8 +111,8 @@ func (t SendNotificationsToOrganizationRole) AssignTemplateToClient(clientID str
 }
 
 // Make request to /organization/:guid for managers
-func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationManagers(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
-	smtpServer.Reset()
+func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationManagers() {
+	t.smtpServer.Reset()
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "organization-role-test",
@@ -117,12 +121,12 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationMana
 		"subject": "organization-role-subject",
 		"role":    "OrgManager",
 	})
-	request, err := http.NewRequest("POST", notificationsServer.OrganizationsPath("org-123"), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.OrganizationsPath("org-123"), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -157,9 +161,9 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationMana
 
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(1))
-	delivery := smtpServer.Deliveries[0]
+	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
@@ -175,8 +179,8 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationMana
 }
 
 // Make request to /organization/:guid for auditors
-func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationAuditors(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
-	smtpServer.Reset()
+func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationAuditors() {
+	t.smtpServer.Reset()
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "organization-role-test",
@@ -185,12 +189,12 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationAudi
 		"subject": "organization-role-subject",
 		"role":    "OrgAuditor",
 	})
-	request, err := http.NewRequest("POST", notificationsServer.OrganizationsPath("org-123"), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.OrganizationsPath("org-123"), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -225,9 +229,9 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationAudi
 
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(1))
-	delivery := smtpServer.Deliveries[0]
+	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
@@ -243,8 +247,8 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationAudi
 }
 
 // Make request to /organization/:guid for billing managers
-func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationBillingManagers(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
-	smtpServer.Reset()
+func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationBillingManagers() {
+	t.smtpServer.Reset()
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "organization-role-test",
@@ -253,12 +257,12 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationBill
 		"subject": "organization-role-subject",
 		"role":    "BillingManager",
 	})
-	request, err := http.NewRequest("POST", notificationsServer.OrganizationsPath("org-123"), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.OrganizationsPath("org-123"), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -293,9 +297,9 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationBill
 
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(1))
-	delivery := smtpServer.Deliveries[0]
+	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
@@ -311,8 +315,8 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationBill
 }
 
 // Make request to /organization/:guid for invalid role
-func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationInvalidRole(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
-	smtpServer.Reset()
+func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationInvalidRole() {
+	t.smtpServer.Reset()
 
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "organization-role-test",
@@ -321,12 +325,12 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationInva
 		"subject": "organization-role-subject",
 		"role":    "bad-role",
 	})
-	request, err := http.NewRequest("POST", notificationsServer.OrganizationsPath("org-123"), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.OrganizationsPath("org-123"), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {

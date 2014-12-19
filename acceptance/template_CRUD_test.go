@@ -45,11 +45,6 @@ var _ = Describe("Templates CRUD", func() {
 			panic(err)
 		}
 
-		test := TemplatesCRUD{
-			notificationsServer: notificationsServer,
-			clientToken:         clientToken,
-		}
-
 		testTemplates := []params.Template{
 			params.Template{
 				Name:     "Star Wars",
@@ -81,11 +76,15 @@ var _ = Describe("Templates CRUD", func() {
 			},
 		}
 
-		test.CreateNewTemplate(testTemplates[0])
-		test.GetTemplate(testTemplates[1])
-		test.UpdateTemplate(testTemplates[2])
-		test.DeleteTemplate(testTemplates[3])
-		test.ListTemplates(testTemplates)
+		t := TemplatesCRUD{
+			notificationsServer: notificationsServer,
+			clientToken:         clientToken,
+		}
+		t.CreateNewTemplate(testTemplates[0])
+		t.GetTemplate(testTemplates[1])
+		t.UpdateTemplate(testTemplates[2])
+		t.DeleteTemplate(testTemplates[3])
+		t.ListTemplates(testTemplates)
 	})
 })
 

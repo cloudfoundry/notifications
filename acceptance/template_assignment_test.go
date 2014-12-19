@@ -47,13 +47,6 @@ var _ = Describe("Assign Templates", func() {
 		}
 
 		notificationID := "acceptance-test"
-
-		test := AssignTemplate{
-			client:              support.NewClient(notificationsServer),
-			notificationsServer: notificationsServer,
-			clientToken:         clientToken,
-		}
-
 		createdTemplate := params.Template{
 			Name:    "Star Wars",
 			Subject: "Awesomeness",
@@ -61,12 +54,17 @@ var _ = Describe("Assign Templates", func() {
 			Text:    "Millenium Falcon",
 		}
 
-		test.RegisterClientNotification(notificationID)
-		test.CreateNewTemplate(createdTemplate)
-		test.AssignTemplateToClient(clientID)
-		test.ConfirmClientTemplateAssignment(clientID)
-		test.AssignTemplateToNotification(clientID, notificationID)
-		test.ConfirmNotificationTemplateAssignment(clientID, notificationID)
+		t := AssignTemplate{
+			client:              support.NewClient(notificationsServer),
+			notificationsServer: notificationsServer,
+			clientToken:         clientToken,
+		}
+		t.RegisterClientNotification(notificationID)
+		t.CreateNewTemplate(createdTemplate)
+		t.AssignTemplateToClient(clientID)
+		t.ConfirmClientTemplateAssignment(clientID)
+		t.AssignTemplateToNotification(clientID, notificationID)
+		t.ConfirmNotificationTemplateAssignment(clientID, notificationID)
 	})
 })
 

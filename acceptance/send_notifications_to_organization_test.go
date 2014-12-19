@@ -53,10 +53,12 @@ var _ = Describe("Sending notifications to all users in an organization", func()
 		}
 
 		test := SendNotificationsToOrganization{
-			client:      support.NewClient(notificationsServer),
-			clientToken: clientToken,
+			client:              support.NewClient(notificationsServer),
+			clientToken:         clientToken,
+			notificationsServer: notificationsServer,
+			smtpServer:          smtpServer,
 		}
-		test.RegisterClientNotifications(notificationsServer, clientToken)
+		test.RegisterClientNotifications()
 		test.CreateNewTemplate(params.Template{
 			Name:    "Gravity",
 			Subject: "Coca cola {{.Subject}}",
@@ -64,19 +66,21 @@ var _ = Describe("Sending notifications to all users in an organization", func()
 			Text:    "Rat\n{{.Text}}",
 		})
 		test.AssignTemplateToClient(clientID)
-		test.SendNotificationsToOrganization(notificationsServer, clientToken, smtpServer)
+		test.SendNotificationsToOrganization()
 	})
 })
 
 type SendNotificationsToOrganization struct {
-	client      *support.Client
-	clientToken uaa.Token
-	TemplateID  string
+	client              *support.Client
+	clientToken         uaa.Token
+	TemplateID          string
+	notificationsServer servers.Notifications
+	smtpServer          *servers.SMTP
 }
 
 // Make request to /registation
-func (t SendNotificationsToOrganization) RegisterClientNotifications(notificationsServer servers.Notifications, clientToken uaa.Token) {
-	code, err := t.client.Notifications.Register(clientToken.Access, support.RegisterClient{
+func (t SendNotificationsToOrganization) RegisterClientNotifications() {
+	code, err := t.client.Notifications.Register(t.clientToken.Access, support.RegisterClient{
 		SourceName: "Notifications Sender",
 		Notifications: map[string]support.RegisterNotification{
 			"organization-test": {
@@ -104,19 +108,19 @@ func (t SendNotificationsToOrganization) AssignTemplateToClient(clientID string)
 }
 
 // Make request to /organization/:guid
-func (t SendNotificationsToOrganization) SendNotificationsToOrganization(notificationsServer servers.Notifications, clientToken uaa.Token, smtpServer *servers.SMTP) {
+func (t SendNotificationsToOrganization) SendNotificationsToOrganization() {
 	body, err := json.Marshal(map[string]string{
 		"kind_id": "organization-test",
 		"html":    "this is an organization test",
 		"text":    "this is an organization test",
 		"subject": "organization-subject",
 	})
-	request, err := http.NewRequest("POST", notificationsServer.OrganizationsPath("org-123"), bytes.NewBuffer(body))
+	request, err := http.NewRequest("POST", t.notificationsServer.OrganizationsPath("org-123"), bytes.NewBuffer(body))
 	if err != nil {
 		panic(err)
 	}
 
-	request.Header.Set("Authorization", "Bearer "+clientToken.Access)
+	request.Header.Set("Authorization", "Bearer "+t.clientToken.Access)
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -161,9 +165,9 @@ func (t SendNotificationsToOrganization) SendNotificationsToOrganization(notific
 
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
-		return len(smtpServer.Deliveries)
+		return len(t.smtpServer.Deliveries)
 	}, 5*time.Second).Should(Equal(1))
-	delivery := smtpServer.Deliveries[0]
+	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
