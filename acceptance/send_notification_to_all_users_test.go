@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -37,7 +37,7 @@ var _ = Describe("Send a notification to all users of UAA", func() {
 
 		// Retrieve UAA token
 		clientID := "notifications-sender"
-		env := config.NewEnvironment()
+		env := application.NewEnvironment()
 		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
 		clientToken, err := uaaClient.GetClientToken()
 		if err != nil {
@@ -143,7 +143,7 @@ func (t SendNotificationToAllUsers) SendNotificationToAllUsers() {
 	}
 
 	delivery := t.smtpServer.Deliveries[recipientIndex]
-	env := config.NewEnvironment()
+	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
 
 	data := strings.Split(string(delivery.Data), "\n")

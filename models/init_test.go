@@ -4,7 +4,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -17,7 +17,7 @@ func TestModelsSuite(t *testing.T) {
 }
 
 func TruncateTables() {
-	env := config.NewEnvironment()
+	env := application.NewEnvironment()
 	migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
 	db := models.NewDatabase(env.DatabaseURL, migrationsPath)
 	connection := db.Connection().(*models.Connection)

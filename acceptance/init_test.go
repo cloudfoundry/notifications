@@ -6,8 +6,7 @@ import (
 	"path"
 	"regexp"
 	"testing"
-
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
@@ -23,7 +22,7 @@ var (
 var GUIDRegex = regexp.MustCompile(`[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}`)
 
 func TestAcceptanceSuite(t *testing.T) {
-	env := config.NewEnvironment()
+	env := application.NewEnvironment()
 	Setup(env)
 
 	RegisterFailHandler(Fail)
@@ -32,7 +31,7 @@ func TestAcceptanceSuite(t *testing.T) {
 	Teardown(env)
 }
 
-func Setup(env config.Environment) {
+func Setup(env application.Environment) {
 	path, err := exec.LookPath("go")
 	if err != nil {
 		panic(err)
@@ -51,7 +50,7 @@ func Setup(env config.Environment) {
 	}
 }
 
-func Teardown(env config.Environment) {
+func Teardown(env application.Environment) {
 	err := os.Remove(env.RootPath + "/bin/notifications")
 	if err != nil {
 		panic(err)
@@ -59,7 +58,7 @@ func Teardown(env config.Environment) {
 }
 
 func TruncateTables() {
-	env := config.NewEnvironment()
+	env := application.NewEnvironment()
 	migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
 	models.NewDatabase(env.DatabaseURL, migrationsPath).Connection().(*models.Connection).TruncateTables()
 	gobble.Database().Connection.TruncateTables()

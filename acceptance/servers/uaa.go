@@ -11,8 +11,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 )
@@ -47,7 +46,7 @@ func (s UAA) Close() {
 }
 
 func ReadFile(filename string) string {
-	env := config.NewEnvironment()
+	env := application.NewEnvironment()
 	root := env.RootPath
 	fileContents, err := ioutil.ReadFile(root + filename)
 	if err != nil {

@@ -6,7 +6,6 @@ import (
 	"path"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/config"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -45,7 +44,7 @@ func (mother *Mother) Queue() *gobble.Queue {
 }
 
 func (mother Mother) UserStrategy() strategies.UserStrategy {
-	env := config.NewEnvironment()
+	env := NewEnvironment()
 	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 	uaaClient.VerifySSL = env.VerifySSL
 
@@ -59,7 +58,7 @@ func (mother Mother) UserStrategy() strategies.UserStrategy {
 }
 
 func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
-	env := config.NewEnvironment()
+	env := NewEnvironment()
 	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 	uaaClient.VerifySSL = env.VerifySSL
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
@@ -77,7 +76,7 @@ func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
 }
 
 func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
-	env := config.NewEnvironment()
+	env := NewEnvironment()
 	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 	uaaClient.VerifySSL = env.VerifySSL
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
@@ -94,7 +93,7 @@ func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
 }
 
 func (mother Mother) EveryoneStrategy() strategies.EveryoneStrategy {
-	env := config.NewEnvironment()
+	env := NewEnvironment()
 	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 	uaaClient.VerifySSL = env.VerifySSL
 	tokenLoader := utilities.NewTokenLoader(&uaaClient)
@@ -108,7 +107,7 @@ func (mother Mother) EveryoneStrategy() strategies.EveryoneStrategy {
 }
 
 func (mother Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
-	env := config.NewEnvironment()
+	env := NewEnvironment()
 	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 	uaaClient.VerifySSL = env.VerifySSL
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
@@ -149,7 +148,7 @@ func (mother Mother) TemplatesLoader() utilities.TemplatesLoader {
 }
 
 func (mother Mother) MailClient() *mail.Client {
-	env := config.NewEnvironment()
+	env := NewEnvironment()
 	mailConfig := mail.Config{
 		User:           env.SMTPUser,
 		Pass:           env.SMTPPass,
@@ -163,11 +162,11 @@ func (mother Mother) MailClient() *mail.Client {
 	}
 
 	switch env.SMTPAuthMechanism {
-	case config.SMTPAuthNone:
+	case SMTPAuthNone:
 		mailConfig.AuthMechanism = mail.AuthNone
-	case config.SMTPAuthPlain:
+	case SMTPAuthPlain:
 		mailConfig.AuthMechanism = mail.AuthPlain
-	case config.SMTPAuthCRAMMD5:
+	case SMTPAuthCRAMMD5:
 		mailConfig.AuthMechanism = mail.AuthCRAMMD5
 	}
 
@@ -192,7 +191,7 @@ func (mother Mother) ErrorWriter() handlers.ErrorWriter {
 }
 
 func (mother Mother) Authenticator(scopes ...string) middleware.Authenticator {
-	return middleware.NewAuthenticator(config.UAAPublicKey, scopes...)
+	return middleware.NewAuthenticator(UAAPublicKey, scopes...)
 }
 
 func (mother Mother) Registrar() services.Registrar {
@@ -201,7 +200,7 @@ func (mother Mother) Registrar() services.Registrar {
 }
 
 func (mother Mother) Database() models.DatabaseInterface {
-	env := config.NewEnvironment()
+	env := NewEnvironment()
 	migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
 	return models.NewDatabase(env.DatabaseURL, migrationsPath)
 }
@@ -215,7 +214,7 @@ func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
 }
 
 func (mother Mother) TemplateFinder() services.TemplateFinder {
-	env := config.NewEnvironment()
+	env := NewEnvironment()
 	database := mother.Database()
 	templatesRepo := mother.TemplatesRepo()
 	fileSystem := mother.FileSystem()
@@ -226,7 +225,7 @@ func (mother Mother) TemplateFinder() services.TemplateFinder {
 func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
 	services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner) {
 
-	env := config.NewEnvironment()
+	env := NewEnvironment()
 	database := mother.Database()
 	clientsRepo, kindsRepo := mother.Repos()
 	templatesRepo := mother.TemplatesRepo()
@@ -257,6 +256,6 @@ func (mother Mother) TemplatesRepo() models.TemplatesRepo {
 }
 
 func (mother Mother) CORS() middleware.CORS {
-	env := config.NewEnvironment()
+	env := NewEnvironment()
 	return middleware.NewCORS(env.CORSOrigin)
 }

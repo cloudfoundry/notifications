@@ -5,16 +5,16 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 )
 
 type Notifications struct {
 	cmd *exec.Cmd
-	env config.Environment
+	env application.Environment
 }
 
 func NewNotifications() Notifications {
-	env := config.NewEnvironment()
+	env := application.NewEnvironment()
 	cmd := exec.Cmd{
 		Path: env.RootPath + "/bin/notifications",
 		Dir:  env.RootPath,
@@ -24,7 +24,7 @@ func NewNotifications() Notifications {
 
 	return Notifications{
 		cmd: &cmd,
-		env: config.NewEnvironment(),
+		env: env,
 	}
 }
 

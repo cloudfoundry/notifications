@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -35,7 +35,7 @@ var _ = Describe("Get a list of all notifications", func() {
 
 		// Retrieve Client UAA token
 		clientID := "notifications-sender"
-		env := config.NewEnvironment()
+		env := application.NewEnvironment()
 		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
 		clientToken, err := uaaClient.GetClientToken()
 		if err != nil {
@@ -54,7 +54,7 @@ type AllNotifications struct {
 }
 
 func (test AllNotifications) setNotifications(clientID, data string) {
-	env := config.NewEnvironment()
+	env := application.NewEnvironment()
 	uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
 	clientToken, err := uaaClient.GetClientToken()
 	if err != nil {

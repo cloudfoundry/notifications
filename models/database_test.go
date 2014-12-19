@@ -3,7 +3,7 @@ package models_test
 import (
 	"path"
 
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -11,12 +11,12 @@ import (
 )
 
 var _ = Describe("Database", func() {
-	var env config.Environment
+	var env application.Environment
 	var db *models.DB
 	var connection *models.Connection
 
 	BeforeEach(func() {
-		env = config.NewEnvironment()
+		env = application.NewEnvironment()
 		migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
 		db = models.NewDatabase(env.DatabaseURL, migrationsPath)
 		connection = db.Connection().(*models.Connection)

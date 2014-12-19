@@ -1,7 +1,7 @@
 package postal_test
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 
 	. "github.com/onsi/ginkgo"
@@ -15,7 +15,7 @@ var _ = Describe("FileSystem", func() {
 
 	Describe("Read", func() {
 		It("returns a string of the file contents at the specified location", func() {
-			env := config.NewEnvironment()
+			env := application.NewEnvironment()
 			path := env.RootPath + FixtureFile
 			contents, err := fs.Read(path)
 			if err != nil {
@@ -30,7 +30,7 @@ var _ = Describe("FileSystem", func() {
 		var path string
 
 		BeforeEach(func() {
-			env := config.NewEnvironment()
+			env := application.NewEnvironment()
 			path = env.RootPath + FixtureFile
 		})
 

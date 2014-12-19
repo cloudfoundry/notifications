@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -73,7 +73,7 @@ var _ = Describe("UpdatePreferences", func() {
 			request.Header.Set("Authorization", "Bearer "+rawToken)
 
 			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-				return []byte(config.UAAPublicKey), nil
+				return []byte(application.UAAPublicKey), nil
 			})
 
 			context = stack.NewContext()

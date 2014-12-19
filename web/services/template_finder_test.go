@@ -3,7 +3,7 @@ package services_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
@@ -19,7 +19,7 @@ var _ = Describe("Finder", func() {
 
 	Describe("#FindByID", func() {
 		BeforeEach(func() {
-			env := config.NewEnvironment()
+			env := application.NewEnvironment()
 			templatesRepo = fakes.NewTemplatesRepo()
 			fileSystem = fakes.NewFileSystem(env.RootPath)
 
@@ -67,7 +67,7 @@ var _ = Describe("Finder", func() {
 
 	Describe("#Find", func() {
 		BeforeEach(func() {
-			env := config.NewEnvironment()
+			env := application.NewEnvironment()
 			templatesRepo = fakes.NewTemplatesRepo()
 			fileSystem = fakes.NewFileSystem(env.RootPath)
 

@@ -1,4 +1,4 @@
-package config
+package application
 
 import (
 	"crypto/md5"

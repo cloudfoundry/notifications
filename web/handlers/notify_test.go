@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -82,7 +82,7 @@ var _ = Describe("Notify", func() {
 				request.Header.Set("Authorization", "Bearer "+rawToken)
 
 				token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-					return []byte(config.UAAPublicKey), nil
+					return []byte(application.UAAPublicKey), nil
 				})
 
 				context = stack.NewContext()
@@ -207,7 +207,7 @@ var _ = Describe("Notify", func() {
 						tokenClaims["scope"] = []interface{}{"notifications.write"}
 						rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
 						token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-							return []byte(config.UAAPublicKey), nil
+							return []byte(application.UAAPublicKey), nil
 						})
 
 						context.Set("token", token)

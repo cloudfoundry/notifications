@@ -3,7 +3,7 @@ package models_test
 import (
 	"path"
 
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -17,7 +17,7 @@ var _ = Describe("GlobalUnsubscribesRepo", func() {
 	Describe("Set/Get", func() {
 		BeforeEach(func() {
 			TruncateTables()
-			env := config.NewEnvironment()
+			env := application.NewEnvironment()
 			migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
 			db := models.NewDatabase(env.DatabaseURL, migrationsPath)
 			conn = db.Connection().(*models.Connection)

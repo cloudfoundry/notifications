@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/dgrijalva/jwt-go"
@@ -26,7 +26,7 @@ var _ = Describe("Authenticator", func() {
 	BeforeEach(func() {
 		var err error
 
-		ware = middleware.NewAuthenticator(config.UAAPublicKey, "fake.scope")
+		ware = middleware.NewAuthenticator(application.UAAPublicKey, "fake.scope")
 		writer = httptest.NewRecorder()
 		request, err = http.NewRequest("GET", "/some/path", nil)
 		if err != nil {
@@ -79,7 +79,7 @@ var _ = Describe("Authenticator", func() {
 			Expect(contextToken).NotTo(BeNil())
 
 			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-				return []byte(config.UAAPublicKey), nil
+				return []byte(application.UAAPublicKey), nil
 			})
 			if err != nil {
 				panic(err)
@@ -97,7 +97,7 @@ var _ = Describe("Authenticator", func() {
 				Expect(contextToken).NotTo(BeNil())
 
 				token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-					return []byte(config.UAAPublicKey), nil
+					return []byte(application.UAAPublicKey), nil
 				})
 				if err != nil {
 					panic(err)

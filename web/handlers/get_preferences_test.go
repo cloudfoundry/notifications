@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -56,7 +56,7 @@ var _ = Describe("GetPreferences", func() {
 		}
 
 		token, err := jwt.Parse(fakes.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
-			return []byte(config.UAAPublicKey), nil
+			return []byte(application.UAAPublicKey), nil
 		})
 		context = stack.NewContext()
 		context.Set("token", token)

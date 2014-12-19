@@ -4,7 +4,7 @@ import (
 	"path"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -19,7 +19,7 @@ var _ = Describe("Receipts Repo", func() {
 		TruncateTables()
 		repo = models.NewReceiptsRepo()
 
-		env := config.NewEnvironment()
+		env := application.NewEnvironment()
 		migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
 		db := models.NewDatabase(env.DatabaseURL, migrationsPath)
 		conn = db.Connection().(*models.Connection)

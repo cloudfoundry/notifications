@@ -4,8 +4,6 @@ import (
 	"errors"
 	"log"
 	"time"
-
-	"github.com/cloudfoundry-incubator/notifications/config"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/web"
@@ -16,13 +14,13 @@ import (
 const WorkerCount = 10
 
 type Application struct {
-	env    config.Environment
+	env    Environment
 	mother *Mother
 }
 
 func NewApplication() Application {
 	return Application{
-		env:    config.NewEnvironment(),
+		env:    NewEnvironment(),
 		mother: NewMother(),
 	}
 }
@@ -72,8 +70,8 @@ func (app Application) RetrieveUAAPublicKey() {
 		panic(err)
 	}
 
-	config.UAAPublicKey = key
-	log.Printf("UAA Public Key: %s", config.UAAPublicKey)
+	UAAPublicKey = key
+	log.Printf("UAA Public Key: %s", UAAPublicKey)
 }
 
 func (app Application) Migrate() {

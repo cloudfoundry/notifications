@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -37,7 +37,7 @@ var _ = Describe("Send a notification to a user, using the deprecated /registrat
 		defer notificationsServer.Close()
 
 		// Retrieve UAA token
-		env := config.NewEnvironment()
+		env := application.NewEnvironment()
 		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
 		clientToken, err := uaaClient.GetClientToken()
 		if err != nil {
@@ -135,7 +135,7 @@ func (t SendNotificationToUser) DeprecatedSendNotificationToUser(notificationsSe
 	}, 5*time.Second).Should(Equal(1))
 	delivery := smtpServer.Deliveries[0]
 
-	env := config.NewEnvironment()
+	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
 	Expect(delivery.Recipients).To(Equal([]string{"user-123@example.com"}))
 

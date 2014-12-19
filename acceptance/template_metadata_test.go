@@ -5,7 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -35,7 +35,7 @@ var _ = Describe("Templates Metadata", func() {
 
 		// Retrieve Client UAA token
 		clientID := "notifications-admin"
-		env := config.NewEnvironment()
+		env := application.NewEnvironment()
 		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
 		clientToken, err := uaaClient.GetClientToken()
 		if err != nil {

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -39,7 +39,7 @@ var _ = Describe("Send a notification to user with overridden template", func() 
 		defer notificationsServer.Close()
 
 		// Retrieve UAA token
-		env := config.NewEnvironment()
+		env := application.NewEnvironment()
 		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
 		clientToken, err := uaaClient.GetClientToken()
 		if err != nil {
@@ -125,7 +125,7 @@ func (t SendOverriddenNotificationToUser) SendNotificationToUser(notificationsSe
 	}, 5*time.Second).Should(Equal(1))
 	delivery := smtpServer.Deliveries[0]
 
-	env := config.NewEnvironment()
+	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
 	Expect(delivery.Recipients).To(Equal([]string{"user-123@example.com"}))
 

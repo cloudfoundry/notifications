@@ -10,7 +10,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -44,7 +44,7 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 		defer notificationsServer.Close()
 
 		// Retrieve UAA token
-		env := config.NewEnvironment()
+		env := application.NewEnvironment()
 		clientID := "notifications-sender"
 		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
 		clientToken, err := uaaClient.GetClientToken()
@@ -161,7 +161,7 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationMana
 	}, 5*time.Second).Should(Equal(1))
 	delivery := smtpServer.Deliveries[0]
 
-	env := config.NewEnvironment()
+	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
 	Expect(delivery.Recipients).To(Equal([]string{"user-456@example.com"}))
 
@@ -229,7 +229,7 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationAudi
 	}, 5*time.Second).Should(Equal(1))
 	delivery := smtpServer.Deliveries[0]
 
-	env := config.NewEnvironment()
+	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
 	Expect(delivery.Recipients).To(Equal([]string{"user-123@example.com"}))
 
@@ -297,7 +297,7 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationBill
 	}, 5*time.Second).Should(Equal(1))
 	delivery := smtpServer.Deliveries[0]
 
-	env := config.NewEnvironment()
+	env := application.NewEnvironment()
 	Expect(delivery.Sender).To(Equal(env.Sender))
 	Expect(delivery.Recipients).To(Equal([]string{"user-111@example.com"}))
 

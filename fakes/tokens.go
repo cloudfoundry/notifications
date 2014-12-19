@@ -3,7 +3,7 @@ package fakes
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/config"
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -38,7 +38,7 @@ func (m SigningMethodFast) Verify(signingString, signature string, key interface
 }
 
 func BuildToken(header map[string]interface{}, claims map[string]interface{}) string {
-	config.UAAPublicKey = UAAPublicKey
+	application.UAAPublicKey = UAAPublicKey
 
 	alg := header["alg"].(string)
 	signingMethod := jwt.GetSigningMethod(alg)
