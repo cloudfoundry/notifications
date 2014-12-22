@@ -71,10 +71,15 @@ func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInte
 		Scope:             delivery.Scope,
 	}
 
+	if messageContext.Subject == "" {
+		messageContext.Subject = "[no subject]"
+	}
+
 	unsubscribeID, err := cloak.Veil([]byte(delivery.UserGUID + "|" + delivery.ClientID + "|" + options.KindID))
 	if err != nil {
 		panic(err)
 	}
+
 	messageContext.UnsubscribeID = string(unsubscribeID)
 	return messageContext
 }

@@ -108,6 +108,12 @@ var _ = Describe("MessageContext", func() {
 
 			Expect(context.SourceDescription).To(Equal("the-client-id"))
 		})
+
+		It("fills in subject when subject is not specified", func() {
+			delivery.Options.Subject = ""
+			context := postal.NewMessageContext(delivery, sender, cloak)
+			Expect(context.Subject).To(Equal("[no subject]"))
+		})
 	})
 
 	Describe("Escape", func() {
