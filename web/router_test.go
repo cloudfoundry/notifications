@@ -237,4 +237,13 @@ var _ = Describe("Router", func() {
 		authenticator := s.Middleware[1].(middleware.Authenticator)
 		Expect(authenticator.Scopes).To(Equal([]string{"notifications.manage"}))
 	})
+
+	It("routes GET /default_template", func() {
+		s := router.Routes().Get("GET /default_template").GetHandler().(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetDefaultTemplate{}))
+		Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+
+		authenticator := s.Middleware[1].(middleware.Authenticator)
+		Expect(authenticator.Scopes).To(Equal([]string{"notification_templates.read"}))
+	})
 })

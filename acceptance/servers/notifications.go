@@ -105,6 +105,10 @@ func (s Notifications) SpecificUserPreferencesPath(userGUID string) string {
 	return s.RootPath() + "/user_preferences/" + userGUID
 }
 
+func (s Notifications) DefaultTemplatePath() string {
+	return s.RootPath() + "/default_template"
+}
+
 func (s Notifications) TemplatesBasePath() string {
 	return s.RootPath() + "/templates"
 }
