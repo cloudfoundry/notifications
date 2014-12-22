@@ -3,7 +3,6 @@ package acceptance
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -87,11 +86,6 @@ func (t DeprecatedRegistrationEndpoint) RegisterClientNotification() {
 		panic(err)
 	}
 
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	// Confirm response status code looks ok
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
 }
@@ -119,16 +113,11 @@ func (t DeprecatedRegistrationEndpoint) SendNotificationToUser() {
 		panic(err)
 	}
 
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	// Confirm the request response looks correct
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
 
 	responseJSON := []map[string]string{}
-	err = json.Unmarshal(body, &responseJSON)
+	err = json.NewDecoder(response.Body).Decode(&responseJSON)
 	if err != nil {
 		panic(err)
 	}

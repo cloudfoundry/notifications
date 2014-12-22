@@ -1,9 +1,10 @@
 package acceptance
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
@@ -148,7 +149,7 @@ func (test TemplatesCRUD) DeleteTemplate(deleteTemplate params.Template) {
 	//delete existing template
 	statusCode, body := test.deleteTemplateHelper(templateID)
 	Expect(statusCode).To(Equal(http.StatusNoContent))
-	Expect(body).To(BeEmpty())
+	Expect(bufio.NewReader(body).Buffered()).To(Equal(0))
 
 	// get to verify 404
 	statusCode, template := test.getTemplateHelper(templateID)
@@ -158,7 +159,12 @@ func (test TemplatesCRUD) DeleteTemplate(deleteTemplate params.Template) {
 	// try to delete again (missing template) to verify 404
 	statusCode, body = test.deleteTemplateHelper(templateID)
 	Expect(statusCode).To(Equal(http.StatusNotFound))
-	Expect(body).To(ContainSubstring("Not Found"))
+	buffer := bytes.NewBuffer([]byte{})
+	_, err := buffer.ReadFrom(body)
+	if err != nil {
+		panic(err)
+	}
+	Expect(buffer).To(ContainSubstring("Not Found"))
 }
 
 func (test TemplatesCRUD) ListTemplates(testTemplates []params.Template) {
@@ -184,13 +190,8 @@ func (test TemplatesCRUD) ListTemplates(testTemplates []params.Template) {
 
 	Expect(response.StatusCode).To(Equal(200))
 
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	var templatesListResponse map[string]services.TemplateMetadata
-	err = json.Unmarshal(body, &templatesListResponse)
+	err = json.NewDecoder(response.Body).Decode(&templatesListResponse)
 	if err != nil {
 		panic(err)
 	}
@@ -198,7 +199,7 @@ func (test TemplatesCRUD) ListTemplates(testTemplates []params.Template) {
 	Expect(templatesListResponse).To(Equal(templateMetadata))
 }
 
-func (test TemplatesCRUD) deleteTemplateHelper(templateID string) (int, []byte) {
+func (test TemplatesCRUD) deleteTemplateHelper(templateID string) (int, io.Reader) {
 	request, err := http.NewRequest("DELETE", test.notificationsServer.TemplatePath(templateID), bytes.NewBuffer([]byte{}))
 	if err != nil {
 		panic(err)
@@ -211,12 +212,7 @@ func (test TemplatesCRUD) deleteTemplateHelper(templateID string) (int, []byte) 
 		panic(err)
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	return response.StatusCode, body
+	return response.StatusCode, response.Body
 }
 
 func (test TemplatesCRUD) getTemplateHelper(templateID string) (int, params.Template) {
@@ -232,17 +228,12 @@ func (test TemplatesCRUD) getTemplateHelper(templateID string) (int, params.Temp
 		panic(err)
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	if response.StatusCode != http.StatusOK {
 		return response.StatusCode, params.Template{}
 	}
 
 	responseTemplate := params.Template{}
-	err = json.Unmarshal(body, &responseTemplate)
+	err = json.NewDecoder(response.Body).Decode(&responseTemplate)
 	if err != nil {
 		panic(err)
 	}
@@ -267,16 +258,11 @@ func (test TemplatesCRUD) createTemplateHelper(templateToCreate params.Template)
 		panic(err)
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	var JSON struct {
 		TemplateID string `json:"template_id"`
 	}
 
-	err = json.Unmarshal(body, &JSON)
+	err = json.NewDecoder(response.Body).Decode(&JSON)
 	if err != nil {
 		panic(err)
 	}

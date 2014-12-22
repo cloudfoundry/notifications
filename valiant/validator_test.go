@@ -1,7 +1,7 @@
 package valiant_test
 
 import (
-	"encoding/json"
+	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/valiant"
 
@@ -12,7 +12,7 @@ import (
 var _ = Describe("Validate", func() {
 	Context("when the data is one level deep", func() {
 		It("succeeds when the json is valid", func() {
-			data := `{"name":"Boshy", "email": true}`
+			data := strings.NewReader(`{"name":"Boshy", "email": true}`)
 
 			type Person struct {
 				Name  string `json:"name"    validate-required:"true"`
@@ -20,18 +20,13 @@ var _ = Describe("Validate", func() {
 			}
 
 			var someone Person
-
-			err := json.Unmarshal([]byte(data), &someone)
-			if err != nil {
-				panic(err)
-			}
-
-			err = valiant.ValidateJSON(someone, []byte(data))
+			validator := valiant.NewValidator(data)
+			err := validator.Validate(&someone)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("returns an error when the json is missing a required field", func() {
-			data := `{"email": true}`
+			data := strings.NewReader(`{"email": true}`)
 
 			type Person struct {
 				Name  string `json:"name"    validate-required:"true"`
@@ -39,20 +34,16 @@ var _ = Describe("Validate", func() {
 			}
 
 			var someone Person
-			err := json.Unmarshal([]byte(data), &someone)
-			if err != nil {
-				panic(err)
-			}
 
-			err = valiant.ValidateJSON(someone, []byte(data))
+			validator := valiant.NewValidator(data)
+			err := validator.Validate(&someone)
 			Expect(err).To(HaveOccurred())
-
 		})
 	})
 
 	Context("when the data is nested n levels deep", func() {
 		It("succeeds when the json is valid, even if validate-required tag is not present", func() {
-			data := `{
+			data := strings.NewReader(`{
 				"name":"Boshy",
 				"contact_info": {
 				    "address": {
@@ -62,7 +53,7 @@ var _ = Describe("Validate", func() {
 				    },
 				"phone": "310-310-3100",
 				"email": true
-			}}`
+			}}`)
 
 			type Address struct {
 				Street string `json:"street" validate-required:"false"`
@@ -83,17 +74,13 @@ var _ = Describe("Validate", func() {
 
 			var someone Person
 
-			err := json.Unmarshal([]byte(data), &someone)
-			if err != nil {
-				panic(err)
-			}
-
-			err = valiant.ValidateJSON(someone, []byte(data))
+			validator := valiant.NewValidator(data)
+			err := validator.Validate(&someone)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("returns an error when the json is missing a required field", func() {
-			data := `{
+			data := strings.NewReader(`{
 				"name":"Boshy",
 				"contact_info": {
 				    "address": {
@@ -101,7 +88,7 @@ var _ = Describe("Validate", func() {
 				    },
 				"phone": "310-310-3100",
 				"email": true
-			}}`
+			}}`)
 
 			type Address struct {
 				Street string `json:"street" validate-required:"false"`
@@ -122,14 +109,9 @@ var _ = Describe("Validate", func() {
 
 			var someone Person
 
-			err := json.Unmarshal([]byte(data), &someone)
-			if err != nil {
-				panic(err)
-			}
-
-			err = valiant.ValidateJSON(someone, []byte(data))
+			validator := valiant.NewValidator(data)
+			err := validator.Validate(&someone)
 			Expect(err).To(HaveOccurred())
-
 		})
 	})
 })

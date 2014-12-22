@@ -1,10 +1,10 @@
 package params
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 )
 
 type ClientRegistration struct {
@@ -21,17 +21,16 @@ type NotificationStruct struct {
 func NewClientRegistration(body io.Reader) (ClientRegistration, error) {
 	var clientRegistration ClientRegistration
 
-	bytes, err := ioutil.ReadAll(body)
+	decodeReader := bytes.NewBuffer([]byte{})
+	validateReader := bytes.NewBuffer([]byte{})
+	io.Copy(io.MultiWriter(decodeReader, validateReader), body)
+
+	err := json.NewDecoder(decodeReader).Decode(&clientRegistration)
 	if err != nil {
 		return clientRegistration, ParseError{}
 	}
 
-	err = json.Unmarshal(bytes, &clientRegistration)
-	if err != nil {
-		return clientRegistration, ParseError{}
-	}
-
-	err = strictValidateJSON(bytes)
+	err = strictValidateJSON(validateReader.Bytes())
 	if err != nil {
 		return clientRegistration, err
 	}

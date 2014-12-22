@@ -186,8 +186,8 @@ var _ = Describe("UpdatePreferences", func() {
 				})
 			})
 
-			It("delegates parse errors to the ErrorWriter", func() {
-				requestBody, err := json.Marshal([]string{})
+			It("delegates json validation errors to the ErrorWriter", func() {
+				requestBody, err := json.Marshal(struct{}{})
 				if err != nil {
 					panic(err)
 				}
@@ -199,7 +199,7 @@ var _ = Describe("UpdatePreferences", func() {
 
 				handler.Execute(writer, request, conn, context)
 
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
+				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
 				Expect(conn.BeginWasCalled).To(BeFalse())
 				Expect(conn.CommitWasCalled).To(BeFalse())
 				Expect(conn.RollbackWasCalled).To(BeFalse())

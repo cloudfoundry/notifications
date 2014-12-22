@@ -1,7 +1,7 @@
 package acceptance
 
 import (
-	"io/ioutil"
+	"bytes"
 	"net/http"
 	"strings"
 
@@ -121,13 +121,14 @@ func (t AllNotifications) GetAllNotifications() {
 		panic(err)
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
+	buffer := bytes.NewBuffer([]byte{})
+	_, err = buffer.ReadFrom(response.Body)
 	if err != nil {
 		panic(err)
 	}
 
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
-	Expect(body).To(MatchJSON(`{
+	Expect(buffer).To(MatchJSON(`{
 		"client-123": {
 			"name": "source name stuff",
 			"template": "default",

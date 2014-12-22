@@ -1,9 +1,9 @@
 package params
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"regexp"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -19,25 +19,24 @@ type Registration struct {
 
 func NewRegistration(body io.Reader) (Registration, error) {
 	var registration Registration
+	var hashParams map[string]interface{}
 
-	bytes, err := ioutil.ReadAll(body)
+	hashReader := bytes.NewBuffer([]byte{})
+	structReader := bytes.NewBuffer([]byte{})
+	io.Copy(io.MultiWriter(hashReader, structReader), body)
+
+	err := json.NewDecoder(hashReader).Decode(&hashParams)
 	if err != nil {
 		return registration, ParseError{}
 	}
 
-	var hashParams map[string]interface{}
-	err = json.Unmarshal(bytes, &hashParams)
+	err = json.NewDecoder(structReader).Decode(&registration)
 	if err != nil {
 		return registration, ParseError{}
 	}
 
 	if _, ok := hashParams["kinds"]; ok {
 		registration.IncludesKinds = true
-	}
-
-	err = json.Unmarshal(bytes, &registration)
-	if err != nil {
-		return registration, ParseError{}
 	}
 
 	return registration, nil

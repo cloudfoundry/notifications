@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
@@ -41,18 +39,9 @@ func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Reques
 	token := context.Get("token").(*jwt.Token)
 	userID := token.Claims["user_id"].(string)
 
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	builder, err := handler.ParsePreferences(body)
-	if err != nil {
-		handler.errorWriter.Write(w, params.ParseError{})
-		return
-	}
-
-	err = valiant.ValidateJSON(builder, body)
+	builder := services.NewPreferencesBuilder()
+	validator := valiant.NewValidator(req.Body)
+	err := validator.Validate(&builder)
 	if err != nil {
 		handler.errorWriter.Write(w, params.ValidationError([]string{err.Error()}))
 		return
@@ -86,13 +75,4 @@ func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Reques
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func (handler UpdatePreferences) ParsePreferences(body []byte) (services.PreferencesBuilder, error) {
-	builder := services.NewPreferencesBuilder()
-	err := json.Unmarshal(body, &builder)
-	if err != nil {
-		return builder, err
-	}
-	return builder, nil
 }

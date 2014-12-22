@@ -3,7 +3,6 @@ package acceptance
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -139,13 +138,8 @@ func (t ManageUsersOwnPreferences) SendNotificationToUser() {
 	// Confirm the request response looks correct
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
 
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	responseJSON := []map[string]string{}
-	err = json.Unmarshal(body, &responseJSON)
+	err = json.NewDecoder(response.Body).Decode(&responseJSON)
 	if err != nil {
 		panic(err)
 	}
@@ -192,13 +186,8 @@ func (t ManageUsersOwnPreferences) RetrieveUserPreferences() {
 	// Confirm the request response looks correct
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
 
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	prefsResponseJSON := services.PreferencesBuilder{}
-	err = json.Unmarshal(body, &prefsResponseJSON)
+	err = json.NewDecoder(response.Body).Decode(&prefsResponseJSON)
 	if err != nil {
 		panic(err)
 	}
@@ -260,17 +249,11 @@ func (t ManageUsersOwnPreferences) ConfirmUserUnsubscribed() {
 	if err != nil {
 		panic(err)
 	}
-
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	// Confirm the request response looks correct
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
 
 	prefsResponseJSON := services.PreferencesBuilder{}
-	err = json.Unmarshal(body, &prefsResponseJSON)
+	err = json.NewDecoder(response.Body).Decode(&prefsResponseJSON)
 	if err != nil {
 		panic(err)
 	}
@@ -312,17 +295,11 @@ func (t ManageUsersOwnPreferences) ConfirmsUnsubscribedNotificationsAreNotReceiv
 	if err != nil {
 		panic(err)
 	}
-
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	// Confirm the request response looks correct
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
 
 	responseJSON := []map[string]string{}
-	err = json.Unmarshal(body, &responseJSON)
+	err = json.NewDecoder(response.Body).Decode(&responseJSON)
 	if err != nil {
 		panic(err)
 	}
@@ -383,16 +360,11 @@ func (t ManageUsersOwnPreferences) ConfirmUserResubscribed() {
 		panic(err)
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	// Confirm the request response looks correct
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
 
 	prefsResponseJSON := services.PreferencesBuilder{}
-	err = json.Unmarshal(body, &prefsResponseJSON)
+	err = json.NewDecoder(response.Body).Decode(&prefsResponseJSON)
 	if err != nil {
 		panic(err)
 	}
@@ -433,11 +405,6 @@ func (t ManageUsersOwnPreferences) GlobalUnsubscribe() {
 		panic(err)
 	}
 
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	// Confirm the request response looks correct
 	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 }
@@ -455,16 +422,11 @@ func (t ManageUsersOwnPreferences) ConfirmGlobalUnsubscribe() {
 		panic(err)
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	// Confirm the request response looks correct
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
 
 	prefsResponseJSON := services.PreferencesBuilder{}
-	err = json.Unmarshal(body, &prefsResponseJSON)
+	err = json.NewDecoder(response.Body).Decode(&prefsResponseJSON)
 	if err != nil {
 		panic(err)
 	}
@@ -499,13 +461,8 @@ func (t ManageUsersOwnPreferences) ConfirmUserDoesNotReceiveNotificationsGlobal(
 	// Confirm the request response looks correct
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
 
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	responseJSON := []map[string]string{}
-	err = json.Unmarshal(body, &responseJSON)
+	err = json.NewDecoder(response.Body).Decode(&responseJSON)
 	if err != nil {
 		panic(err)
 	}
@@ -545,11 +502,6 @@ func (t ManageUsersOwnPreferences) UndoGlobalUnsubscribe() {
 		panic(err)
 	}
 
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	// Confirm the request response looks correct
 	Expect(response.StatusCode).To(Equal(http.StatusNoContent))
 }
@@ -567,16 +519,11 @@ func (t ManageUsersOwnPreferences) ReConfirmUserUnsubscribed() {
 		panic(err)
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	// Confirm the request response looks correct
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
 
 	prefsResponseJSON := services.PreferencesBuilder{}
-	err = json.Unmarshal(body, &prefsResponseJSON)
+	err = json.NewDecoder(response.Body).Decode(&prefsResponseJSON)
 	if err != nil {
 		panic(err)
 	}
@@ -611,13 +558,8 @@ func (t ManageUsersOwnPreferences) ConfirmUserReceivesNotificationsGlobal() {
 	// Confirm the request response looks correct
 	Expect(response.StatusCode).To(Equal(http.StatusOK))
 
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	responseJSON := []map[string]string{}
-	err = json.Unmarshal(body, &responseJSON)
+	err = json.NewDecoder(response.Body).Decode(&responseJSON)
 	if err != nil {
 		panic(err)
 	}

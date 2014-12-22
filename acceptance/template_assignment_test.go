@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
@@ -147,16 +146,11 @@ func (test *AssignTemplate) createTemplateHelper(templateToCreate params.Templat
 		panic(err)
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
-	}
-
 	var JSON struct {
 		TemplateID string `json:"template_id"`
 	}
 
-	err = json.Unmarshal(body, &JSON)
+	err = json.NewDecoder(response.Body).Decode(&JSON)
 	if err != nil {
 		panic(err)
 	}

@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"regexp"
 
@@ -40,18 +38,9 @@ func (handler UpdateSpecificUserPreferences) ServeHTTP(w http.ResponseWriter, re
 func (handler UpdateSpecificUserPreferences) Execute(w http.ResponseWriter, req *http.Request, conn models.ConnectionInterface, context stack.Context) {
 	userGUID := handler.parseGUID(req.URL.Path)
 
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	builder, err := handler.ParsePreferences(body)
-	if err != nil {
-		handler.errorWriter.Write(w, err)
-		return
-	}
-
-	err = valiant.ValidateJSON(builder, body)
+	builder := services.NewPreferencesBuilder()
+	validator := valiant.NewValidator(req.Body)
+	err := validator.Validate(&builder)
 	if err != nil {
 		handler.errorWriter.Write(w, params.ValidationError([]string{err.Error()}))
 		return
@@ -88,17 +77,5 @@ func (handler UpdateSpecificUserPreferences) Execute(w http.ResponseWriter, req 
 }
 
 func (handler UpdateSpecificUserPreferences) parseGUID(path string) string {
-
-	regex := regexp.MustCompile(".*/user_preferences/(.*)")
-
-	return regex.FindStringSubmatch(path)[1]
-}
-
-func (handler UpdateSpecificUserPreferences) ParsePreferences(body []byte) (services.PreferencesBuilder, error) {
-	builder := services.NewPreferencesBuilder()
-	err := json.Unmarshal(body, &builder)
-	if err != nil {
-		return builder, err
-	}
-	return builder, nil
+	return regexp.MustCompile(".*/user_preferences/(.*)").FindStringSubmatch(path)[1]
 }

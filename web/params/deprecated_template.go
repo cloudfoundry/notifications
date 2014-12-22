@@ -1,10 +1,10 @@
 package params
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"regexp"
 	"strings"
 
@@ -20,17 +20,16 @@ type DeprecatedTemplate struct {
 func NewDeprecatedTemplate(templateName string, body io.Reader) (DeprecatedTemplate, error) {
 	var template DeprecatedTemplate
 
-	jsonBody, err := ioutil.ReadAll(body)
+	decodeReader := bytes.NewBuffer([]byte{})
+	stringReader := bytes.NewBuffer([]byte{})
+	io.Copy(io.MultiWriter(decodeReader, stringReader), body)
+
+	err := json.NewDecoder(decodeReader).Decode(&template)
 	if err != nil {
 		return DeprecatedTemplate{}, ParseError{}
 	}
 
-	err = json.Unmarshal(jsonBody, &template)
-	if err != nil {
-		return DeprecatedTemplate{}, ParseError{}
-	}
-
-	err = deprecatedContainsArguments(string(jsonBody))
+	err = deprecatedContainsArguments(stringReader.String())
 	if err != nil {
 		return DeprecatedTemplate{}, err
 	}
