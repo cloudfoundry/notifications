@@ -57,13 +57,12 @@ func (repo TemplatesRepo) Update(conn ConnectionInterface, templateID string, te
 		return existingTemplate, err
 	}
 
-	existingTemplate.Name = template.Name
-	existingTemplate.Subject = template.Subject
-	existingTemplate.HTML = template.HTML
-	existingTemplate.Text = template.Text
-	existingTemplate.UpdatedAt = time.Now().Truncate(1 * time.Second).UTC()
+	template.Primary = existingTemplate.Primary
+	template.ID = existingTemplate.ID
+	template.CreatedAt = existingTemplate.CreatedAt
+	template.UpdatedAt = time.Now().Truncate(1 * time.Second).UTC()
 
-	_, err = conn.Update(&existingTemplate)
+	_, err = conn.Update(&template)
 	if err != nil {
 		return Template{}, TemplateUpdateError{Message: err.Error()}
 	}

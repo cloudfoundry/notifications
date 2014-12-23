@@ -42,7 +42,12 @@ var _ = Describe("Templates Metadata", func() {
 			panic(err)
 		}
 
-		createdTemplate := params.Template{
+		t := TemplateMetadata{
+			client:              support.NewClient(notificationsServer),
+			notificationsServer: notificationsServer,
+			clientToken:         clientToken,
+		}
+		t.CreateNewTemplateWithMetadata(params.Template{
 			Name:    "Star Wars",
 			Subject: "Awesomeness",
 			HTML:    "<p>Millenium Falcon</p>",
@@ -50,15 +55,22 @@ var _ = Describe("Templates Metadata", func() {
 			Metadata: map[string]interface{}{
 				"some_property": "some_value",
 			},
-		}
-
-		t := TemplateMetadata{
-			client:              support.NewClient(notificationsServer),
-			notificationsServer: notificationsServer,
-			clientToken:         clientToken,
-		}
-		t.CreateNewTemplateWithMetadata(createdTemplate)
-		t.GetTemplateWithMetadata()
+		})
+		t.ConfirmMetadataStored(map[string]interface{}{
+			"some_property": "some_value",
+		})
+		t.UpdateTemplateMetadata(params.Template{
+			Name:    "Star Wars",
+			Subject: "Awesomeness",
+			HTML:    "<p>Millenium Falcon</p>",
+			Text:    "Millenium Falcon",
+			Metadata: map[string]interface{}{
+				"hello": true,
+			},
+		})
+		t.ConfirmMetadataStored(map[string]interface{}{
+			"hello": true,
+		})
 	})
 })
 
@@ -69,22 +81,27 @@ type TemplateMetadata struct {
 	templateID          string
 }
 
-func (test *TemplateMetadata) CreateNewTemplateWithMetadata(template params.Template) {
-	status, templateID, err := test.client.Templates.Create(test.clientToken.Access, template)
+func (t *TemplateMetadata) CreateNewTemplateWithMetadata(template params.Template) {
+	status, templateID, err := t.client.Templates.Create(t.clientToken.Access, template)
 
 	Expect(err).NotTo(HaveOccurred())
 	Expect(status).To(Equal(http.StatusCreated))
 	Expect(templateID).NotTo(BeNil())
 
-	test.templateID = templateID
+	t.templateID = templateID
 }
 
-func (test *TemplateMetadata) GetTemplateWithMetadata() {
-	status, response, err := test.client.Templates.Get(test.clientToken.Access, test.templateID)
+func (t *TemplateMetadata) UpdateTemplateMetadata(template params.Template) {
+	status, err := t.client.Templates.Update(t.clientToken.Access, t.templateID, template)
+
+	Expect(err).NotTo(HaveOccurred())
+	Expect(status).To(Equal(http.StatusNoContent))
+}
+
+func (t *TemplateMetadata) ConfirmMetadataStored(metadata map[string]interface{}) {
+	status, response, err := t.client.Templates.Get(t.clientToken.Access, t.templateID)
 
 	Expect(err).NotTo(HaveOccurred())
 	Expect(status).To(Equal(http.StatusOK))
-	Expect(response.Metadata).To(Equal(map[string]interface{}{
-		"some_property": "some_value",
-	}))
+	Expect(response.Metadata).To(Equal(metadata))
 }

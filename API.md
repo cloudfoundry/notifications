@@ -1025,6 +1025,7 @@ POST /templates
 | html\*   | The template used for the HTML portion of the notification       |
 | text     | The template used for the text portion of the notification       |
 | subject  | An email subject template, defaults to "{{.Subject}}" if missing |
+| metadata | Extra metadata to be stored alongside the template               |
 
 \* required
 
@@ -1032,7 +1033,7 @@ POST /templates
 ```
 $ curl -i -X POST \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"name": "My template", "subject":"System notification: {{.Subject}}", "text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>",}' \
+  -d '{"name": "My template", "subject":"System notification: {{.Subject}}", "text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>", "metadata": {"tags": "<h1>", "raptors": "scary"}}' \
   http://notifications.example.com/templates
 
 201 Created
@@ -1094,7 +1095,10 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
   "name":"My Custom Template",
   "subject" : "Hey! {{.Subject}}",
   "text" : "Dude! Stuff's Happening!",
-  "html" : "\u003ch1\u003eHello!\u003c/h1\u003e"
+  "html" : "\u003ch1\u003eHello!\u003c/h1\u003e",
+  "metadata" : {
+	"tag": "<h1>"
+  }
 }
 ```
 
@@ -1112,6 +1116,7 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 | subject     | The subject for the template                 |
 | text        | The plaintext representation of the template |
 | html        | The HTML representation of the template *    |
+| metadata    | Extra metadata stored alongside the template |
 
 \* The HTML is Unicode escaped.  This is the expected behavior of the
 [Golang JSON marshaller](http://golang.org/pkg/encoding/json/#Marshal)
@@ -1121,7 +1126,6 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 ### Update Template
 
 This endpoint is used to update a template in the database.
-
 
 ##### Request
 
@@ -1143,6 +1147,7 @@ PUT /templates/templateID
 | subject  | An email subject template, defaults to "{{.Subject}}" if missing |
 | html\*   | The template used for the HTML portion of the notification       |
 | text     | The template used for the text portion of the notification       |
+| metadata | Extra metadata stored alongside the template                     |
 
 \* required
 
@@ -1150,7 +1155,7 @@ PUT /templates/templateID
 ```
 $ curl -i -X PUT \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"name": "My template", "subject":"System notification: {{.Subject}}", "text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>",}' \
+  -d '{"name": "My template", "subject":"System notification: {{.Subject}}", "text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>"}' \
   http://notifications.example.com/templates/templateID
 
 204 No Content

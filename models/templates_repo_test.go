@@ -117,10 +117,11 @@ var _ = Describe("TemplatesRepo", func() {
 
 		BeforeEach(func() {
 			aNewTemplate = models.Template{
-				Name:    "a brand new name",
-				Subject: "Some new subject",
-				Text:    "some newer text",
-				HTML:    "<p>new HTML</p>",
+				Name:     "a brand new name",
+				Subject:  "Some new subject",
+				Text:     "some newer text",
+				HTML:     "<p>new HTML</p>",
+				Metadata: "{\"cloudy\": true}",
 			}
 		})
 
@@ -138,6 +139,7 @@ var _ = Describe("TemplatesRepo", func() {
 				Expect(foundTemplate.Subject).To(Equal(aNewTemplate.Subject))
 				Expect(foundTemplate.Text).To(Equal(aNewTemplate.Text))
 				Expect(foundTemplate.HTML).To(Equal(aNewTemplate.HTML))
+				Expect(foundTemplate.Metadata).To(Equal(aNewTemplate.Metadata))
 				Expect(foundTemplate.CreatedAt).To(Equal(createdAt))
 				Expect(foundTemplate.UpdatedAt).ToNot(Equal(createdAt))
 				Expect(foundTemplate.UpdatedAt).To(BeTemporally(">", createdAt))
