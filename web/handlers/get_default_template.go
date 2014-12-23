@@ -51,5 +51,4 @@ func (handler GetDefaultTemplate) ServeHTTP(w http.ResponseWriter, req *http.Req
 		panic(err)
 	}
 	w.Write(response)
-
 }

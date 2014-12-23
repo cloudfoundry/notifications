@@ -82,6 +82,7 @@ func NewRouter(mother MotherInterface) Router {
 			"PATCH /user_preferences/{guid}":                                  stack.NewStack(handlers.NewUpdateSpecificUserPreferences(preferenceUpdater, errorWriter, database)).Use(logging, cors, notificationPreferencesAdminAuthenticator),
 			"POST /templates":                                                 stack.NewStack(handlers.NewCreateTemplate(templateCreator, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
 			"GET /default_template":                                           stack.NewStack(handlers.NewGetDefaultTemplate(templateFinder, errorWriter)).Use(logging, notificationsTemplateReadAuthenticator),
+			"PUT /default_template":                                           stack.NewStack(handlers.NewUpdateDefaultTemplate(templateUpdater, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
 			"GET /templates/{templateID}":                                     stack.NewStack(handlers.NewGetTemplates(templateFinder, errorWriter)).Use(logging, notificationsTemplateReadAuthenticator),
 			"PUT /templates/{templateID}":                                     stack.NewStack(handlers.NewUpdateTemplates(templateUpdater, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
 			"PUT /deprecated_templates/{templateName}":                        stack.NewStack(handlers.NewSetTemplates(templateUpdater, errorWriter)).Use(logging, notificationsTemplateAdminAuthenticator),

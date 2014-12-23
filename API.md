@@ -26,6 +26,8 @@
 	- [Update a template](#put-template)
 	- [Delete a template](#delete-template)
 	- [List templates](#list-template)
+	- [Get the default template](#get-default-template)
+	- [Update the default template](#put-default-template)
 
 ## System Status
 
@@ -1260,3 +1262,117 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 | template-id | The system-generated ID for a given template |
 | name        | The human readable name of the template      |
 
+
+<a name="get-default-template"></a>
+### Get Default Template
+
+This endpoint is used to retrieve the default template.
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `notification_templates.read` scope
+
+###### Route
+```
+GET /default_template
+```
+###### CURL example
+```
+$ curl -i -X GET \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/default_template
+
+200 OK
+Connection: close
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 28 Oct 2014 00:18:48 GMT
+X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
+
+
+{
+  "name":"The Default Template",
+  "subject" : "CF Notification: {{.Subject}}",
+  "text" : "{{.Text}}",
+  "html" : "{{.HTML}}",
+  "metadata" : {}
+}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields      | Description                                  |
+| ------------| ---------------------------------------------|
+| name        | The human readable name of the template      |
+| subject     | The subject for the template                 |
+| text        | The plaintext representation of the template |
+| html        | The HTML representation of the template *    |
+| metadata    | Extra metadata stored alongside the template |
+
+\* The HTML is Unicode escaped.  This is the expected behavior of the
+[Golang JSON marshaller](http://golang.org/pkg/encoding/json/#Marshal)
+
+
+<a name="put-default-template"></a>
+### Update Template
+
+This endpoint is used to update the default template.
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `notification_templates.write` scope
+
+###### Route
+```
+PUT /default_template
+```
+###### Params
+
+| Key      | Description                                                      |
+| -------- | -----------------------------------------------------------------|
+| name\*   | A human-readable template name                                   |
+| subject  | An email subject template, defaults to "{{.Subject}}" if missing |
+| html\*   | The template used for the HTML portion of the notification       |
+| text     | The template used for the text portion of the notification       |
+| metadata | Extra metadata stored alongside the template                     |
+
+\* required
+
+###### CURL example
+```
+$ curl -i -X PUT \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  -d '{"name": "My template", "subject":"System notification: {{.Subject}}", "text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>"}' \
+  http://notifications.example.com/default_template
+
+204 No Content
+Connection: close
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 28 Oct 2014 00:18:48 GMT
+X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
+
+```
+
+##### Response
+
+###### Status
+```
+204 No Content
+```
+
+###### Body
