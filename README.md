@@ -17,7 +17,7 @@ properties:
 
 ### Client Configurations
 #### Send Notifications
-The following client configurations are needed for sending messages to individual users, users in a specific space and arbitrary email addresses. 
+The following client configurations are needed for sending messages to individual users, users in a specific space and arbitrary email addresses.
 
 To send non-critical notifications, notifications.write scope is required. Sending critical notifications requires critical_notifications.write scope. To send notifications to an arbitrary email address requires emails.write scope.
 
