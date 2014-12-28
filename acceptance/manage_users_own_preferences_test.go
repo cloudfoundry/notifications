@@ -135,7 +135,7 @@ func (t ManageUsersOwnPreferences) SendNotificationToUser() {
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(1))
+	}, 1*time.Second).Should(Equal(1))
 	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
@@ -295,7 +295,7 @@ func (t ManageUsersOwnPreferences) ConfirmsUnsubscribedNotificationsAreNotReceiv
 	// Confirm the email message was never delivered
 	Consistently(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(0))
+	}, 1*time.Second).Should(Equal(0))
 }
 
 // Make PATCH request to /user_preferences
@@ -458,7 +458,7 @@ func (t ManageUsersOwnPreferences) ConfirmUserDoesNotReceiveNotificationsGlobal(
 	// Confirm the email message never gets delivered
 	Consistently(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(0))
+	}, 1*time.Second).Should(Equal(0))
 }
 
 func (t ManageUsersOwnPreferences) UndoGlobalUnsubscribe() {
@@ -555,5 +555,5 @@ func (t ManageUsersOwnPreferences) ConfirmUserReceivesNotificationsGlobal() {
 	// Confirm the email message gets delivered
 	Eventually(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(1))
+	}, 1*time.Second).Should(Equal(1))
 }

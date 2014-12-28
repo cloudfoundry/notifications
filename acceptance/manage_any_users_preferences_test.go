@@ -124,7 +124,7 @@ func (t ManageArbitraryUsersPreferences) SendNotificationToUser() {
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(1))
+	}, 1*time.Second).Should(Equal(1))
 	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
@@ -281,7 +281,7 @@ func (t ManageArbitraryUsersPreferences) ConfirmUserDoesNotReceiveNotification()
 	// Confirm the email message never gets delivered
 	Consistently(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(0))
+	}, 1*time.Second).Should(Equal(0))
 }
 
 func (t ManageArbitraryUsersPreferences) GlobalUnsubscribe() {
@@ -378,7 +378,7 @@ func (t ManageArbitraryUsersPreferences) ConfirmUserDoesNotReceiveNotificationsG
 	// Confirm the email message never gets delivered
 	Consistently(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(0))
+	}, 1*time.Second).Should(Equal(0))
 }
 
 func (t ManageArbitraryUsersPreferences) UndoGlobalUnsubscribe() {
@@ -474,5 +474,5 @@ func (t ManageArbitraryUsersPreferences) ConfirmUserReceivesNotificationsGlobal(
 	// Confirm the email message gets delivered
 	Eventually(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(1))
+	}, 1*time.Second).Should(Equal(1))
 }

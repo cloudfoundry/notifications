@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"time"
+
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/web"
@@ -87,7 +88,7 @@ func (app Application) EnableDBLogging() {
 
 func (app Application) UnlockJobs() {
 	if app.env.VCAPApplication.InstanceIndex == 0 {
-		gobble.NewQueue().Unlock()
+		app.mother.Queue().Unlock()
 	}
 }
 

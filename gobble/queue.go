@@ -18,11 +18,18 @@ type QueueInterface interface {
 }
 
 type Queue struct {
+	config Config
 	closed bool
 }
 
-func NewQueue() *Queue {
-	return &Queue{}
+func NewQueue(config Config) *Queue {
+	if config.WaitMaxDuration == 0 {
+		config.WaitMaxDuration = WaitMaxDuration
+	}
+
+	return &Queue{
+		config: config,
+	}
 }
 
 func (queue *Queue) Enqueue(job Job) (Job, error) {
@@ -97,7 +104,7 @@ func (queue *Queue) findJob() Job {
 		if err != nil {
 			if err == sql.ErrNoRows {
 				job = Job{}
-				queue.waitUpTo(WaitMaxDuration)
+				queue.waitUpTo(queue.config.WaitMaxDuration)
 				continue
 			}
 			panic(err)

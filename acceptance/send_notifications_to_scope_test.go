@@ -131,7 +131,7 @@ func (t SendNotificationsToUsersWithScope) SendNotificationsToScope() {
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(1))
+	}, 1*time.Second).Should(Equal(1))
 	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()

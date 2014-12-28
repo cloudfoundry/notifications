@@ -133,7 +133,7 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationMana
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(1))
+	}, 1*time.Second).Should(Equal(1))
 	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
@@ -196,7 +196,7 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationAudi
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(1))
+	}, 1*time.Second).Should(Equal(1))
 	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()
@@ -259,7 +259,7 @@ func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationBill
 	// Confirm the email message was delivered correctly
 	Eventually(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(1))
+	}, 1*time.Second).Should(Equal(1))
 	delivery := t.smtpServer.Deliveries[0]
 
 	env := application.NewEnvironment()

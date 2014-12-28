@@ -16,12 +16,17 @@ var _ = Describe("Environment", func() {
 		"CC_HOST",
 		"CORS_ORIGIN",
 		"DATABASE_URL",
-		"MODEL_MIGRATIONS_DIRECTORY",
 		"DB_LOGGING_ENABLED",
+		"ENCRYPTION_KEY",
+		"GOBBLE_WAIT_MAX_DURATION",
+		"MODEL_MIGRATIONS_DIRECTORY",
 		"PORT",
 		"ROOT_PATH",
 		"SENDER",
+		"SMTP_AUTH_MECHANISM",
+		"SMTP_CRAMMD5_SECRET",
 		"SMTP_HOST",
+		"SMTP_LOGGING_ENABLED",
 		"SMTP_PASS",
 		"SMTP_PORT",
 		"SMTP_USER",
@@ -31,10 +36,6 @@ var _ = Describe("Environment", func() {
 		"UAA_HOST",
 		"VCAP_APPLICATION",
 		"VERIFY_SSL",
-		"ENCRYPTION_KEY",
-		"SMTP_LOGGING_ENABLED",
-		"SMTP_AUTH_MECHANISM",
-		"SMTP_CRAMMD5_SECRET",
 	}
 
 	BeforeEach(func() {
@@ -415,6 +416,22 @@ var _ = Describe("Environment", func() {
 			Expect(func() {
 				application.NewEnvironment()
 			}).To(Panic())
+		})
+	})
+
+	Describe("Gobble WaitMaxDuration", func() {
+		It("sets the value if present", func() {
+			os.Setenv("GOBBLE_WAIT_MAX_DURATION", "2500")
+			env := application.NewEnvironment()
+
+			Expect(env.GobbleWaitMaxDuration).To(Equal(2500))
+		})
+
+		It("defaults to 5000", func() {
+			os.Setenv("GOBBLE_WAIT_MAX_DURATION", "")
+			env := application.NewEnvironment()
+
+			Expect(env.GobbleWaitMaxDuration).To(Equal(5000))
 		})
 	})
 })

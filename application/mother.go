@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
@@ -37,9 +38,13 @@ func (mother *Mother) Logger() *log.Logger {
 }
 
 func (mother *Mother) Queue() *gobble.Queue {
+	env := NewEnvironment()
 	if mother.queue == nil {
-		mother.queue = gobble.NewQueue()
+		mother.queue = gobble.NewQueue(gobble.Config{
+			WaitMaxDuration: time.Duration(env.GobbleWaitMaxDuration) * time.Millisecond,
+		})
 	}
+
 	return mother.queue
 }
 

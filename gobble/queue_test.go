@@ -11,18 +11,16 @@ import (
 
 var _ = Describe("Queue", func() {
 	var queue *gobble.Queue
-	var waitMaxDuration time.Duration
 
 	BeforeEach(func() {
 		TruncateTables()
 
-		waitMaxDuration = gobble.WaitMaxDuration
-		gobble.WaitMaxDuration = 100 * time.Millisecond
-		queue = gobble.NewQueue()
+		queue = gobble.NewQueue(gobble.Config{
+			WaitMaxDuration: 50 * time.Millisecond,
+		})
 	})
 
 	AfterEach(func() {
-		gobble.WaitMaxDuration = waitMaxDuration
 		queue.Close()
 	})
 
@@ -33,9 +31,7 @@ var _ = Describe("Queue", func() {
 			})
 
 			job, err := queue.Enqueue(job)
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
 			if err != nil {
@@ -47,7 +43,7 @@ var _ = Describe("Queue", func() {
 				jobs = append(jobs, *(result.(*gobble.Job)))
 			}
 
-			Expect(len(jobs)).To(Equal(1))
+			Expect(jobs).To(HaveLen(1))
 			Expect(jobs).To(ContainElement(job))
 		})
 	})
@@ -161,15 +157,15 @@ var _ = Describe("Queue", func() {
 			go reserveJob("worker-1")
 			go reserveJob("worker-2")
 
-			Eventually(done, 5*time.Second).Should(Receive())
-			Eventually(done, 5*time.Second).Should(Receive())
+			Eventually(done, 1*time.Second).Should(Receive())
+			Eventually(done, 1*time.Second).Should(Receive())
 
 			results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
 			if err != nil {
 				panic(err)
 			}
 
-			Expect(len(results)).To(Equal(0))
+			Expect(results).To(HaveLen(0))
 		})
 
 		It("picks the first job that is active", func() {
@@ -197,14 +193,14 @@ var _ = Describe("Queue", func() {
 			if err != nil {
 				panic(err)
 			}
-			Expect(len(results)).To(Equal(1))
+			Expect(results).To(HaveLen(1))
 
 			queue.Dequeue(job)
 			results, err = gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
 			if err != nil {
 				panic(err)
 			}
-			Expect(len(results)).To(Equal(0))
+			Expect(results).To(HaveLen(0))
 		})
 	})
 
@@ -215,21 +211,21 @@ var _ = Describe("Queue", func() {
 			if err != nil {
 				panic(err)
 			}
-			Expect(len(results)).To(Equal(1))
+			Expect(results).To(HaveLen(1))
 
 			<-queue.Reserve("my-worker")
 			results, err = gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
 			if err != nil {
 				panic(err)
 			}
-			Expect(len(results)).To(Equal(0))
+			Expect(results).To(HaveLen(0))
 
 			queue.Unlock()
 			results, err = gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
 			if err != nil {
 				panic(err)
 			}
-			Expect(len(results)).To(Equal(1))
+			Expect(results).To(HaveLen(1))
 		})
 	})
 })

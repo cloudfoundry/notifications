@@ -22,7 +22,7 @@ var _ = Describe("Worker", func() {
 			callbackWasCalledWith = *job
 		}
 
-		queue = gobble.NewQueue()
+		queue = gobble.NewQueue(gobble.Config{})
 		worker = gobble.NewWorker(1, queue, callback)
 	})
 

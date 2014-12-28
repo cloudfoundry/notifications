@@ -112,7 +112,7 @@ func (t SendNotificationToAllUsers) SendNotificationToAllUsers() {
 
 	Eventually(func() int {
 		return len(t.smtpServer.Deliveries)
-	}, 5*time.Second).Should(Equal(2))
+	}, 1*time.Second).Should(Equal(2))
 
 	recipients := []string{t.smtpServer.Deliveries[0].Recipients[0], t.smtpServer.Deliveries[1].Recipients[0]}
 	Expect(recipients).To(ConsistOf([]string{"why-email@example.com", "slayer@example.com"}))
