@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"

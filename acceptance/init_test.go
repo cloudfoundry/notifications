@@ -1,11 +1,11 @@
 package acceptance
 
 import (
-	"os"
-	"os/exec"
 	"path"
 	"regexp"
 	"testing"
+
+	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -21,41 +21,45 @@ var (
 
 var GUIDRegex = regexp.MustCompile(`[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}`)
 
-func TestAcceptanceSuite(t *testing.T) {
-	env := application.NewEnvironment()
-	Setup(env)
+var Servers struct {
+	Notifications servers.Notifications
+	SMTP          *servers.SMTP
+	CC            servers.CC
+	UAA           servers.UAA
+}
 
+func TestAcceptanceSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Acceptance Suite")
-
-	Teardown(env)
 }
 
-func Setup(env application.Environment) {
-	path, err := exec.LookPath("go")
-	if err != nil {
-		panic(err)
-	}
+var _ = BeforeSuite(func() {
+	Servers.SMTP = servers.NewSMTP()
+	Servers.SMTP.Boot()
 
-	cmd := exec.Cmd{
-		Path:   path,
-		Args:   []string{"go", "build", "-o", "bin/notifications", "main.go"},
-		Dir:    env.RootPath,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-	}
-	err = cmd.Run()
-	if err != nil {
-		panic(err)
-	}
-}
+	Servers.UAA = servers.NewUAA()
+	Servers.UAA.Boot()
 
-func Teardown(env application.Environment) {
-	err := os.Remove(env.RootPath + "/bin/notifications")
-	if err != nil {
-		panic(err)
-	}
-}
+	Servers.CC = servers.NewCC()
+	Servers.CC.Boot()
+
+	Servers.Notifications = servers.NewNotifications()
+	Servers.Notifications.Compile()
+	Servers.Notifications.Boot()
+})
+
+var _ = AfterSuite(func() {
+	Servers.Notifications.Close()
+	Servers.Notifications.Destroy()
+	Servers.CC.Close()
+	Servers.UAA.Close()
+	Servers.SMTP.Close()
+})
+
+var _ = BeforeEach(func() {
+	TruncateTables()
+	Servers.SMTP.Reset()
+})
 
 func TruncateTables() {
 	env := application.NewEnvironment()

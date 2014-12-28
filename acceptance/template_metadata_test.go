@@ -14,25 +14,7 @@ import (
 )
 
 var _ = Describe("Templates Metadata", func() {
-	BeforeEach(func() {
-		TruncateTables()
-	})
-
 	It("Creates a template with metadata", func() {
-		// Boot Fake SMTP Server
-		smtpServer := servers.NewSMTP()
-		smtpServer.Boot()
-
-		// Boot Fake UAA Server
-		uaaServer := servers.NewUAA()
-		uaaServer.Boot()
-		defer uaaServer.Close()
-
-		// Boot Real Notifications Server
-		notificationsServer := servers.NewNotifications()
-		notificationsServer.Boot()
-		defer notificationsServer.Close()
-
 		// Retrieve Client UAA token
 		clientID := "notifications-admin"
 		env := application.NewEnvironment()
@@ -43,8 +25,8 @@ var _ = Describe("Templates Metadata", func() {
 		}
 
 		t := TemplateMetadata{
-			client:              support.NewClient(notificationsServer),
-			notificationsServer: notificationsServer,
+			client:              support.NewClient(Servers.Notifications),
+			notificationsServer: Servers.Notifications,
 			clientToken:         clientToken,
 		}
 		t.CreateNewTemplateWithMetadata(params.Template{

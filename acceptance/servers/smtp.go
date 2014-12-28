@@ -8,6 +8,7 @@ import (
 )
 
 type SMTP struct {
+	listener   net.Listener
 	server     *smtpd.Server
 	Deliveries []smtpd.Envelope
 }
@@ -22,16 +23,17 @@ func NewSMTP() *SMTP {
 }
 
 func (s *SMTP) Boot() {
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	var err error
+	s.listener, err = net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		panic(err)
 	}
 
 	s.server.Handler = s.Handler
 
-	go s.server.Serve(listener)
+	go s.server.Serve(s.listener)
 
-	addr := listener.Addr().String()
+	addr := s.listener.Addr().String()
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
 		panic(err)
@@ -47,4 +49,8 @@ func (s *SMTP) Handler(peer smtpd.Peer, env smtpd.Envelope) error {
 
 func (s *SMTP) Reset() {
 	s.Deliveries = []smtpd.Envelope{}
+}
+
+func (s *SMTP) Close() {
+	s.listener.Close()
 }

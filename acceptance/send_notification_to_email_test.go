@@ -16,25 +16,7 @@ import (
 )
 
 var _ = Describe("Send a notification to an email", func() {
-	BeforeEach(func() {
-		TruncateTables()
-	})
-
 	It("sends a single notification to an email", func() {
-		// Boot Fake SMTP Server
-		smtpServer := servers.NewSMTP()
-		smtpServer.Boot()
-
-		// Boot Fake UAA Server
-		uaaServer := servers.NewUAA()
-		uaaServer.Boot()
-		defer uaaServer.Close()
-
-		// Boot Real Notifications Server
-		notificationsServer := servers.NewNotifications()
-		notificationsServer.Boot()
-		defer notificationsServer.Close()
-
 		// Retrieve UAA token
 		clientID := "notifications-sender"
 		env := application.NewEnvironment()
@@ -45,10 +27,10 @@ var _ = Describe("Send a notification to an email", func() {
 		}
 
 		t := SendNotificationToEmail{
-			client:              support.NewClient(notificationsServer),
+			client:              support.NewClient(Servers.Notifications),
 			clientToken:         clientToken,
-			notificationsServer: notificationsServer,
-			smtpServer:          smtpServer,
+			notificationsServer: Servers.Notifications,
+			smtpServer:          Servers.SMTP,
 		}
 
 		t.RegisterClientNotification()

@@ -18,30 +18,7 @@ import (
 )
 
 var _ = Describe("Sending notifications to all users in a space", func() {
-	BeforeEach(func() {
-		TruncateTables()
-	})
-
 	It("sends a notification to each user in a space", func() {
-		// Boot Fake SMTP Server
-		smtpServer := servers.NewSMTP()
-		smtpServer.Boot()
-
-		// Boot Fake UAA Server
-		uaaServer := servers.NewUAA()
-		uaaServer.Boot()
-		defer uaaServer.Close()
-
-		// Boot Fake CC Server
-		ccServer := servers.NewCC()
-		ccServer.Boot()
-		defer ccServer.Close()
-
-		// Boot Real Notifications Server
-		notificationsServer := servers.NewNotifications()
-		notificationsServer.Boot()
-		defer notificationsServer.Close()
-
 		// Retrieve UAA token
 		env := application.NewEnvironment()
 		clientID := "notifications-sender"
@@ -52,10 +29,10 @@ var _ = Describe("Sending notifications to all users in a space", func() {
 		}
 
 		test := SendNotificationsToSpace{
-			client:              support.NewClient(notificationsServer),
+			client:              support.NewClient(Servers.Notifications),
 			clientToken:         clientToken,
-			notificationsServer: notificationsServer,
-			smtpServer:          smtpServer,
+			notificationsServer: Servers.Notifications,
+			smtpServer:          Servers.SMTP,
 		}
 		test.RegisterClientNotifications()
 		test.CreateNewTemplate(params.Template{

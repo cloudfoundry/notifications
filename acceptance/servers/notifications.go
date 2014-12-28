@@ -2,6 +2,7 @@ package servers
 
 import (
 	"net/http"
+	"os"
 	"os/exec"
 	"time"
 
@@ -25,6 +26,32 @@ func NewNotifications() Notifications {
 	return Notifications{
 		cmd: &cmd,
 		env: env,
+	}
+}
+
+func (s Notifications) Compile() {
+	path, err := exec.LookPath("go")
+	if err != nil {
+		panic(err)
+	}
+
+	cmd := exec.Cmd{
+		Path:   path,
+		Args:   []string{"go", "build", "-o", "bin/notifications", "main.go"},
+		Dir:    s.env.RootPath,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	}
+	err = cmd.Run()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s Notifications) Destroy() {
+	err := os.Remove(s.env.RootPath + "/bin/notifications")
+	if err != nil {
+		panic(err)
 	}
 }
 

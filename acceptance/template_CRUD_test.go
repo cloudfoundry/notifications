@@ -18,25 +18,7 @@ import (
 )
 
 var _ = Describe("Templates CRUD", func() {
-	BeforeEach(func() {
-		TruncateTables()
-	})
-
 	It("allows a user to perform CRUD actions on a template", func() {
-		// Boot Fake SMTP Server
-		smtpServer := servers.NewSMTP()
-		smtpServer.Boot()
-
-		// Boot Fake UAA Server
-		uaaServer := servers.NewUAA()
-		uaaServer.Boot()
-		defer uaaServer.Close()
-
-		// Boot Real Notifications Server
-		notificationsServer := servers.NewNotifications()
-		notificationsServer.Boot()
-		defer notificationsServer.Close()
-
 		// Retrieve Client UAA token
 		clientID := "notifications-admin"
 		env := application.NewEnvironment()
@@ -78,7 +60,7 @@ var _ = Describe("Templates CRUD", func() {
 		}
 
 		t := TemplatesCRUD{
-			notificationsServer: notificationsServer,
+			notificationsServer: Servers.Notifications,
 			clientToken:         clientToken,
 		}
 		t.CreateNewTemplate(testTemplates[0])

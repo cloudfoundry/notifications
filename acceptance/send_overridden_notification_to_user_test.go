@@ -18,25 +18,7 @@ import (
 )
 
 var _ = Describe("Send a notification to user with overridden template", func() {
-	BeforeEach(func() {
-		TruncateTables()
-	})
-
 	It("send a notification to user", func() {
-		// Boot Fake SMTP Server
-		smtpServer := servers.NewSMTP()
-		smtpServer.Boot()
-
-		// Boot Fake UAA Server
-		uaaServer := servers.NewUAA()
-		uaaServer.Boot()
-		defer uaaServer.Close()
-
-		// Boot Real Notifications Server
-		notificationsServer := servers.NewNotifications()
-		notificationsServer.Boot()
-		defer notificationsServer.Close()
-
 		// Retrieve UAA token
 		env := application.NewEnvironment()
 		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
@@ -46,8 +28,8 @@ var _ = Describe("Send a notification to user with overridden template", func() 
 		}
 
 		t := SendOverriddenNotificationToUser{
-			notificationsServer: notificationsServer,
-			smtpServer:          smtpServer,
+			notificationsServer: Servers.Notifications,
+			smtpServer:          Servers.SMTP,
 			clientToken:         clientToken,
 			textTemplate:        "text",
 			htmlTemplate:        "<p>html</p>",

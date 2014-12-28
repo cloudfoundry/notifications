@@ -15,22 +15,10 @@ import (
 )
 
 var _ = Describe("Default Template", func() {
-	var notificationsServer servers.Notifications
-	var uaaServer servers.UAA
 	var t TemplateDefault
 	var env application.Environment
 
 	BeforeEach(func() {
-		TruncateTables()
-		smtpServer := servers.NewSMTP()
-		smtpServer.Boot()
-
-		uaaServer = servers.NewUAA()
-		uaaServer.Boot()
-
-		notificationsServer = servers.NewNotifications()
-		notificationsServer.Boot()
-
 		clientID := "notifications-admin"
 		env = application.NewEnvironment()
 		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
@@ -40,14 +28,9 @@ var _ = Describe("Default Template", func() {
 		}
 
 		t = TemplateDefault{
-			notificationsServer: notificationsServer,
+			notificationsServer: Servers.Notifications,
 			clientToken:         clientToken,
 		}
-	})
-
-	AfterEach(func() {
-		uaaServer.Close()
-		notificationsServer.Close()
 	})
 
 	It("can retrieve the default template", func() {

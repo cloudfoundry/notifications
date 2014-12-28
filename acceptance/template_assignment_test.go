@@ -17,25 +17,7 @@ import (
 )
 
 var _ = Describe("Assign Templates", func() {
-	BeforeEach(func() {
-		TruncateTables()
-	})
-
 	It("Creates a template and then assigns it", func() {
-		// Boot Fake SMTP Server
-		smtpServer := servers.NewSMTP()
-		smtpServer.Boot()
-
-		// Boot Fake UAA Server
-		uaaServer := servers.NewUAA()
-		uaaServer.Boot()
-		defer uaaServer.Close()
-
-		// Boot Real Notifications Server
-		notificationsServer := servers.NewNotifications()
-		notificationsServer.Boot()
-		defer notificationsServer.Close()
-
 		// Retrieve Client UAA token
 		clientID := "notifications-admin"
 		env := application.NewEnvironment()
@@ -54,8 +36,8 @@ var _ = Describe("Assign Templates", func() {
 		}
 
 		t := AssignTemplate{
-			client:              support.NewClient(notificationsServer),
-			notificationsServer: notificationsServer,
+			client:              support.NewClient(Servers.Notifications),
+			notificationsServer: Servers.Notifications,
 			clientToken:         clientToken,
 		}
 		t.RegisterClientNotification(notificationID)

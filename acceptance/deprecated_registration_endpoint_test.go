@@ -16,25 +16,7 @@ import (
 )
 
 var _ = Describe("Send a notification to a user, using the deprecated /registration endpoint", func() {
-	BeforeEach(func() {
-		TruncateTables()
-	})
-
 	It("sends a single notification email to a user", func() {
-		// Boot Fake SMTP Server
-		smtpServer := servers.NewSMTP()
-		smtpServer.Boot()
-
-		// Boot Fake UAA Server
-		uaaServer := servers.NewUAA()
-		uaaServer.Boot()
-		defer uaaServer.Close()
-
-		// Boot Real Notifications Server
-		notificationsServer := servers.NewNotifications()
-		notificationsServer.Boot()
-		defer notificationsServer.Close()
-
 		// Retrieve UAA token
 		env := application.NewEnvironment()
 		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
@@ -44,8 +26,8 @@ var _ = Describe("Send a notification to a user, using the deprecated /registrat
 		}
 
 		t := DeprecatedRegistrationEndpoint{
-			notificationsServer: notificationsServer,
-			smtpServer:          smtpServer,
+			notificationsServer: Servers.Notifications,
+			smtpServer:          Servers.SMTP,
 			clientToken:         clientToken,
 		}
 		t.RegisterClientNotification()

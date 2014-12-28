@@ -14,25 +14,7 @@ import (
 )
 
 var _ = Describe("Get a list of all notifications", func() {
-	BeforeEach(func() {
-		TruncateTables()
-	})
-
 	It("allows a user to get body templates", func() {
-		// Boot Fake SMTP Server
-		smtpServer := servers.NewSMTP()
-		smtpServer.Boot()
-
-		// Boot Fake UAA Server
-		uaaServer := servers.NewUAA()
-		uaaServer.Boot()
-		defer uaaServer.Close()
-
-		// Boot Real Notifications Server
-		notificationsServer := servers.NewNotifications()
-		notificationsServer.Boot()
-		defer notificationsServer.Close()
-
 		// Retrieve Client UAA token
 		clientID := "notifications-sender"
 		env := application.NewEnvironment()
@@ -42,7 +24,10 @@ var _ = Describe("Get a list of all notifications", func() {
 			panic(err)
 		}
 
-		t := AllNotifications{notificationsServer: notificationsServer, clientToken: clientToken}
+		t := AllNotifications{
+			notificationsServer: Servers.Notifications,
+			clientToken:         clientToken,
+		}
 		t.SetNotifications()
 		t.GetAllNotifications()
 	})

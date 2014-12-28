@@ -19,26 +19,8 @@ import (
 )
 
 var _ = Describe("Preferences Endpoint", func() {
-	BeforeEach(func() {
-		TruncateTables()
-	})
-
 	It("user unsubscribes from a notification", func() {
 		userGUID := "user-123"
-
-		// Boot Fake SMTP Server
-		smtpServer := servers.NewSMTP()
-		smtpServer.Boot()
-
-		// Boot Fake UAA Server
-		uaaServer := servers.NewUAA()
-		uaaServer.Boot()
-		defer uaaServer.Close()
-
-		// Boot Real Notifications Server
-		notificationsServer := servers.NewNotifications()
-		notificationsServer.Boot()
-		defer notificationsServer.Close()
 
 		// Retrieve Client UAA token
 		env := application.NewEnvironment()
@@ -55,9 +37,9 @@ var _ = Describe("Preferences Endpoint", func() {
 		}
 
 		test := ManageUsersOwnPreferences{
-			client:              support.NewClient(notificationsServer),
-			notificationsServer: notificationsServer,
-			smtpServer:          smtpServer,
+			client:              support.NewClient(Servers.Notifications),
+			notificationsServer: Servers.Notifications,
+			smtpServer:          Servers.SMTP,
 			clientToken:         clientToken,
 			userToken:           userToken,
 			userGUID:            userGUID,
