@@ -19,8 +19,10 @@ func NewNotifications() Notifications {
 	cmd := exec.Cmd{
 		Path: env.RootPath + "/bin/notifications",
 		Dir:  env.RootPath,
-		//Stdout: os.Stdout, // Uncomment to get server output for debugging
-		//Stderr: os.Stderr,
+	}
+	if os.Getenv("TRACE") != "" {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 	}
 
 	return Notifications{
