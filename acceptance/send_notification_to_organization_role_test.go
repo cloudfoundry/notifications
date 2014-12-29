@@ -85,7 +85,6 @@ func (t SendNotificationsToOrganizationRole) AssignTemplateToClient(clientID str
 	Expect(status).To(Equal(http.StatusNoContent))
 }
 
-// Make request to /organization/:guid for managers
 func (t SendNotificationsToOrganizationRole) SendNotificationsToOrganizationManagers() {
 	t.smtpServer.Reset()
 
