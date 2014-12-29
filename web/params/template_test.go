@@ -35,7 +35,7 @@ var _ = Describe("Template", func() {
 				Expect(parameters.Text).To(Equal("its foobar of course"))
 				Expect(parameters.HTML).To(Equal("<p>its foobar</p>"))
 				Expect(parameters.Subject).To(Equal("Stuff and Things"))
-				Expect(parameters.Metadata).To(HaveKeyWithValue("some_property", "some_value"))
+				Expect(string(parameters.Metadata)).To(MatchJSON(`{"some_property": "some_value"}`))
 			})
 
 			It("gracefully handles non-required missing parameters", func() {
@@ -54,7 +54,7 @@ var _ = Describe("Template", func() {
 				Expect(parameters.Text).To(Equal(""))
 				Expect(parameters.HTML).To(Equal("<p>its foobar</p>"))
 				Expect(parameters.Subject).To(Equal("{{.Subject}}"))
-				Expect(parameters.Metadata).To(Equal(map[string]interface{}{}))
+				Expect(parameters.Metadata).To(Equal(json.RawMessage("{}")))
 			})
 		})
 	})
@@ -62,13 +62,11 @@ var _ = Describe("Template", func() {
 	Describe("ToModel", func() {
 		It("turns a params.Template into a models.Template", func() {
 			theTemplate := params.Template{
-				Name:    "The Foo to the Bar",
-				Text:    "its foobar of course",
-				HTML:    "<p>its foobar</p>",
-				Subject: "Foobar Yah",
-				Metadata: map[string]interface{}{
-					"some_property": "some_value",
-				},
+				Name:     "The Foo to the Bar",
+				Text:     "its foobar of course",
+				HTML:     "<p>its foobar</p>",
+				Subject:  "Foobar Yah",
+				Metadata: json.RawMessage(`{"some_property": "some_value"}`),
 			}
 			theModel := theTemplate.ToModel()
 
@@ -77,7 +75,7 @@ var _ = Describe("Template", func() {
 			Expect(theModel.Text).To(Equal("its foobar of course"))
 			Expect(theModel.HTML).To(Equal("<p>its foobar</p>"))
 			Expect(theModel.Subject).To(Equal("Foobar Yah"))
-			Expect(theModel.Metadata).To(MatchJSON(`{"some_property":"some_value"}`))
+			Expect(theModel.Metadata).To(MatchJSON(`{"some_property": "some_value"}`))
 			Expect(theModel.CreatedAt).To(BeZero())
 			Expect(theModel.UpdatedAt).To(BeZero())
 		})

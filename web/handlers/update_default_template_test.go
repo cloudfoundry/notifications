@@ -37,9 +37,7 @@ var _ = Describe("UpdateDefaultTemplate", func() {
 			"subject": "{{.Subject}}",
 			"html": "<p>something</p>",
 			"text": "something",
-			"metadata": {
-				"hello": true
-			}
+			"metadata": {"hello": true}
 		}`
 		request, err = http.NewRequest("PUT", "/default_template", strings.NewReader(body))
 		if err != nil {
@@ -54,7 +52,7 @@ var _ = Describe("UpdateDefaultTemplate", func() {
 			Subject:  "{{.Subject}}",
 			HTML:     "<p>something</p>",
 			Text:     "something",
-			Metadata: `{"hello":true}`,
+			Metadata: `{"hello": true}`,
 		}))
 		Expect(writer.Code).To(Equal(http.StatusNoContent))
 	})

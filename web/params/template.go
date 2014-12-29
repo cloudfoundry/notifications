@@ -8,11 +8,11 @@ import (
 )
 
 type Template struct {
-	Name     string                 `json:"name"`
-	Text     string                 `json:"text"`
-	HTML     string                 `json:"html"`
-	Subject  string                 `json:"subject"`
-	Metadata map[string]interface{} `json:"metadata"`
+	Name     string          `json:"name"`
+	Text     string          `json:"text"`
+	HTML     string          `json:"html"`
+	Subject  string          `json:"subject"`
+	Metadata json.RawMessage `json:"metadata"`
 }
 
 type TemplateCreateError struct{}
@@ -22,13 +22,13 @@ func (err TemplateCreateError) Error() string {
 }
 
 func NewTemplate(body io.Reader) (Template, error) {
-	template := Template{
-		Metadata: make(map[string]interface{}),
-	}
-
+	var template Template
 	err := json.NewDecoder(body).Decode(&template)
 	if err != nil {
 		return Template{}, ParseError{}
+	}
+	if template.Metadata == nil {
+		template.Metadata = json.RawMessage("{}")
 	}
 
 	err = template.Validate()
@@ -54,21 +54,12 @@ func (template Template) Validate() error {
 }
 
 func (template Template) ToModel() models.Template {
-	if template.Metadata == nil {
-		template.Metadata = make(map[string]interface{})
-	}
-
-	metadata, err := json.Marshal(template.Metadata)
-	if err != nil {
-		panic(err)
-	}
-
 	return models.Template{
 		Name:     template.Name,
 		Text:     template.Text,
 		HTML:     template.HTML,
 		Subject:  template.Subject,
-		Metadata: string(metadata),
+		Metadata: string(template.Metadata),
 	}
 }
 
