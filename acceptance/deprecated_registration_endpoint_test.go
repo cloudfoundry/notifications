@@ -15,9 +15,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Send a notification to a user, using the deprecated /registration endpoint", func() {
-	It("sends a single notification email to a user", func() {
-		// Retrieve UAA token
+var _ = Describe("notifications can be registered, using the deprecated /registration endpoint", func() {
+	It("registers a notification", func() {
 		env := application.NewEnvironment()
 		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
 		clientToken, err := uaaClient.GetClientToken()

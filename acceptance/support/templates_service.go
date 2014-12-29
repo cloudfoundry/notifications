@@ -120,3 +120,19 @@ func (t TemplatesService) AssignToClient(token, clientID, templateID string) (in
 
 	return status, nil
 }
+
+func (t TemplatesService) AssignToNotification(token, clientID, notificationID, templateID string) (int, error) {
+	body, err := json.Marshal(map[string]string{
+		"template": templateID,
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	status, _, err := t.client.makeRequest("PUT", t.client.server.ClientsNotificationsTemplatePath(clientID, notificationID), bytes.NewBuffer(body), token)
+	if err != nil {
+		return 0, err
+	}
+
+	return status, nil
+}
