@@ -20,18 +20,15 @@ type RegisterNotification struct {
 }
 
 func (n NotificationsService) Register(token string, clientToRegister RegisterClient) (int, error) {
-	var status int
-
 	content, err := json.Marshal(clientToRegister)
 	if err != nil {
-		return status, err
+		return 0, err
 	}
 
-	request, err := n.client.makeRequest("PUT", n.client.server.NotificationsPath(), bytes.NewBuffer(content), token)
+	status, _, err := n.client.makeRequest("PUT", n.client.server.NotificationsPath(), bytes.NewBuffer(content), token)
 	if err != nil {
-		return status, err
+		return 0, err
 	}
 
-	status, _, err = n.client.do(request)
-	return status, err
+	return status, nil
 }

@@ -31,12 +31,7 @@ func (n NotifyService) User(token, userID string, notify Notify) (int, []NotifyR
 		return 0, responses, err
 	}
 
-	request, err := n.client.makeRequest("POST", n.client.server.UsersPath(userID), bytes.NewBuffer(body), token)
-	if err != nil {
-		return 0, responses, err
-	}
-
-	status, responseBody, err := n.client.do(request)
+	status, responseBody, err := n.client.makeRequest("POST", n.client.server.UsersPath(userID), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, responses, err
 	}
@@ -57,12 +52,7 @@ func (n NotifyService) AllUsers(token string, notify Notify) (int, []NotifyRespo
 		return 0, responses, err
 	}
 
-	request, err := n.client.makeRequest("POST", n.client.server.EveryonePath(), bytes.NewBuffer(body), token)
-	if err != nil {
-		return 0, responses, err
-	}
-
-	status, responseBody, err := n.client.do(request)
+	status, responseBody, err := n.client.makeRequest("POST", n.client.server.EveryonePath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, responses, err
 	}
@@ -83,12 +73,7 @@ func (n NotifyService) Email(token string, notify Notify) (int, []NotifyResponse
 		return 0, responses, err
 	}
 
-	request, err := n.client.makeRequest("POST", n.client.server.EmailPath(), bytes.NewBuffer(body), token)
-	if err != nil {
-		return 0, responses, err
-	}
-
-	status, responseBody, err := n.client.do(request)
+	status, responseBody, err := n.client.makeRequest("POST", n.client.server.EmailPath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, responses, err
 	}

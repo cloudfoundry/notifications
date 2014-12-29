@@ -20,21 +20,14 @@ type Template struct {
 }
 
 func (t TemplatesService) Create(token string, template params.Template) (int, string, error) {
-	var templateID string
-
 	body, err := json.Marshal(template)
 	if err != nil {
-		return 0, templateID, err
+		return 0, "", err
 	}
 
-	request, err := t.client.makeRequest("POST", t.client.server.TemplatesBasePath(), bytes.NewBuffer(body), token)
+	status, responseBody, err := t.client.makeRequest("POST", t.client.server.TemplatesBasePath(), bytes.NewBuffer(body), token)
 	if err != nil {
-		return 0, templateID, err
-	}
-
-	status, responseBody, err := t.client.do(request)
-	if err != nil {
-		return 0, templateID, err
+		return 0, "", err
 	}
 
 	var JSON struct {
@@ -43,7 +36,7 @@ func (t TemplatesService) Create(token string, template params.Template) (int, s
 
 	err = json.NewDecoder(responseBody).Decode(&JSON)
 	if err != nil {
-		return 0, templateID, err
+		return 0, "", err
 	}
 
 	return status, JSON.TemplateID, nil
@@ -55,12 +48,7 @@ func (t TemplatesService) Update(token string, id string, template params.Templa
 		return 0, err
 	}
 
-	request, err := t.client.makeRequest("PUT", t.client.server.TemplatePath(id), bytes.NewBuffer(body), token)
-	if err != nil {
-		return 0, err
-	}
-
-	status, _, err := t.client.do(request)
+	status, _, err := t.client.makeRequest("PUT", t.client.server.TemplatePath(id), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}
@@ -69,23 +57,16 @@ func (t TemplatesService) Update(token string, id string, template params.Templa
 }
 
 func (t TemplatesService) AssignToClient(token, clientID, templateID string) (int, error) {
-	var status int
-
 	body, err := json.Marshal(map[string]string{
 		"template": templateID,
 	})
 	if err != nil {
-		return status, err
+		return 0, err
 	}
 
-	request, err := t.client.makeRequest("PUT", t.client.server.ClientsTemplatePath(clientID), bytes.NewBuffer(body), token)
+	status, _, err := t.client.makeRequest("PUT", t.client.server.ClientsTemplatePath(clientID), bytes.NewBuffer(body), token)
 	if err != nil {
-		return status, err
-	}
-
-	status, _, err = t.client.do(request)
-	if err != nil {
-		return status, err
+		return 0, err
 	}
 
 	return status, nil
@@ -94,17 +75,12 @@ func (t TemplatesService) AssignToClient(token, clientID, templateID string) (in
 func (t TemplatesService) Get(token, templateID string) (int, Template, error) {
 	var template Template
 
-	request, err := t.client.makeRequest("GET", t.client.server.TemplatePath(templateID), nil, token)
+	status, body, err := t.client.makeRequest("GET", t.client.server.TemplatePath(templateID), nil, token)
 	if err != nil {
 		return 0, template, err
 	}
 
-	status, responseBody, err := t.client.do(request)
-	if err != nil {
-		return 0, template, err
-	}
-
-	err = json.NewDecoder(responseBody).Decode(&template)
+	err = json.NewDecoder(body).Decode(&template)
 	if err != nil {
 		return 0, template, err
 	}

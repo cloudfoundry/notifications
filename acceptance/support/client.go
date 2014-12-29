@@ -25,18 +25,14 @@ func NewClient(server servers.Notifications) *Client {
 	return client
 }
 
-func (c Client) makeRequest(method, path string, content io.Reader, token string) (*http.Request, error) {
+func (c Client) makeRequest(method, path string, content io.Reader, token string) (int, io.Reader, error) {
 	request, err := http.NewRequest(method, path, content)
 	if err != nil {
-		return request, err
+		return 0, nil, err
 	}
 
 	request.Header.Set("Authorization", "Bearer "+token)
 
-	return request, nil
-}
-
-func (c Client) do(request *http.Request) (int, io.Reader, error) {
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return 0, nil, err
