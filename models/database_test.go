@@ -135,6 +135,7 @@ var _ = Describe("Database", func() {
 				Expect(template.HTML).To(Equal("{{.HTML}}"))
 				Expect(template.Text).To(Equal("{{.Text}}"))
 				Expect(template.Metadata).To(Equal("{}"))
+				Expect(template.Overridden).To(BeFalse())
 			})
 		})
 

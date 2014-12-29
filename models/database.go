@@ -130,7 +130,7 @@ func (database DB) Seed() {
 		existingTemplate.Text = template.Text
 		existingTemplate.Metadata = string(template.Metadata)
 		existingTemplate.UpdatedAt = time.Now().Truncate(1 * time.Second).UTC()
-		_, err = repo.Update(conn, "default", existingTemplate)
+		_, err = conn.Update(&existingTemplate)
 		if err != nil {
 			panic(err)
 		}
