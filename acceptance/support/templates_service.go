@@ -3,8 +3,6 @@ package support
 import (
 	"bytes"
 	"encoding/json"
-
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 )
 
 type TemplatesService struct {
@@ -19,7 +17,12 @@ type Template struct {
 	Metadata map[string]interface{} `json:"metadata"`
 }
 
-func (t TemplatesService) Create(token string, template params.Template) (int, string, error) {
+type TemplateListItem struct {
+	ID   string
+	Name string `json:"name"`
+}
+
+func (t TemplatesService) Create(token string, template Template) (int, string, error) {
 	body, err := json.Marshal(template)
 	if err != nil {
 		return 0, "", err
@@ -42,7 +45,23 @@ func (t TemplatesService) Create(token string, template params.Template) (int, s
 	return status, JSON.TemplateID, nil
 }
 
-func (t TemplatesService) Update(token string, id string, template params.Template) (int, error) {
+func (t TemplatesService) Get(token, templateID string) (int, Template, error) {
+	var template Template
+
+	status, body, err := t.client.makeRequest("GET", t.client.server.TemplatePath(templateID), nil, token)
+	if err != nil {
+		return 0, template, err
+	}
+
+	err = json.NewDecoder(body).Decode(&template)
+	if err != nil {
+		return 0, template, err
+	}
+
+	return status, template, nil
+}
+
+func (t TemplatesService) Update(token, id string, template Template) (int, error) {
 	body, err := json.Marshal(template)
 	if err != nil {
 		return 0, err
@@ -54,6 +73,36 @@ func (t TemplatesService) Update(token string, id string, template params.Templa
 	}
 
 	return status, nil
+}
+
+func (t TemplatesService) Delete(token, id string) (int, error) {
+	status, _, err := t.client.makeRequest("DELETE", t.client.server.TemplatePath(id), nil, token)
+	if err != nil {
+		return 0, err
+	}
+
+	return status, nil
+}
+
+func (t TemplatesService) List(token string) (int, []TemplateListItem, error) {
+	var list []TemplateListItem
+	status, body, err := t.client.makeRequest("GET", t.client.server.TemplatesBasePath(), nil, token)
+	if err != nil {
+		return 0, list, err
+	}
+
+	var templates map[string]TemplateListItem
+	err = json.NewDecoder(body).Decode(&templates)
+	if err != nil {
+		panic(err)
+	}
+
+	for id, template := range templates {
+		template.ID = id
+		list = append(list, template)
+	}
+
+	return status, list, err
 }
 
 func (t TemplatesService) AssignToClient(token, clientID, templateID string) (int, error) {
@@ -70,20 +119,4 @@ func (t TemplatesService) AssignToClient(token, clientID, templateID string) (in
 	}
 
 	return status, nil
-}
-
-func (t TemplatesService) Get(token, templateID string) (int, Template, error) {
-	var template Template
-
-	status, body, err := t.client.makeRequest("GET", t.client.server.TemplatePath(templateID), nil, token)
-	if err != nil {
-		return 0, template, err
-	}
-
-	err = json.NewDecoder(body).Decode(&template)
-	if err != nil {
-		return 0, template, err
-	}
-
-	return status, template, nil
 }

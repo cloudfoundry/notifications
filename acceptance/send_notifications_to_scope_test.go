@@ -10,7 +10,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -36,7 +35,7 @@ var _ = Describe("Sending notifications to users with certain scopes", func() {
 			scope:               "this.scope",
 		}
 		test.RegisterClientNotifications()
-		test.CreateNewTemplate(params.Template{
+		test.CreateNewTemplate(support.Template{
 			Name:    "Frozen",
 			Subject: "Food {{.Subject}}",
 			HTML:    "<h1>Fish</h1>{{.HTML}}",
@@ -71,7 +70,7 @@ func (t SendNotificationsToUsersWithScope) RegisterClientNotifications() {
 	Expect(code).To(Equal(http.StatusNoContent))
 }
 
-func (t *SendNotificationsToUsersWithScope) CreateNewTemplate(template params.Template) {
+func (t *SendNotificationsToUsersWithScope) CreateNewTemplate(template support.Template) {
 	status, templateID, err := t.client.Templates.Create(t.clientToken.Access, template)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(status).To(Equal(http.StatusCreated))

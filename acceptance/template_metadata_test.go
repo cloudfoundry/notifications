@@ -6,7 +6,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -29,7 +28,7 @@ var _ = Describe("Templates Metadata", func() {
 			notificationsServer: Servers.Notifications,
 			clientToken:         clientToken,
 		}
-		t.CreateNewTemplateWithMetadata(params.Template{
+		t.CreateNewTemplateWithMetadata(support.Template{
 			Name:    "Star Wars",
 			Subject: "Awesomeness",
 			HTML:    "<p>Millenium Falcon</p>",
@@ -41,7 +40,7 @@ var _ = Describe("Templates Metadata", func() {
 		t.ConfirmMetadataStored(map[string]interface{}{
 			"some_property": "some_value",
 		})
-		t.UpdateTemplateMetadata(params.Template{
+		t.UpdateTemplateMetadata(support.Template{
 			Name:    "Star Wars",
 			Subject: "Awesomeness",
 			HTML:    "<p>Millenium Falcon</p>",
@@ -63,7 +62,7 @@ type TemplateMetadata struct {
 	templateID          string
 }
 
-func (t *TemplateMetadata) CreateNewTemplateWithMetadata(template params.Template) {
+func (t *TemplateMetadata) CreateNewTemplateWithMetadata(template support.Template) {
 	status, templateID, err := t.client.Templates.Create(t.clientToken.Access, template)
 
 	Expect(err).NotTo(HaveOccurred())
@@ -73,7 +72,7 @@ func (t *TemplateMetadata) CreateNewTemplateWithMetadata(template params.Templat
 	t.templateID = templateID
 }
 
-func (t *TemplateMetadata) UpdateTemplateMetadata(template params.Template) {
+func (t *TemplateMetadata) UpdateTemplateMetadata(template support.Template) {
 	status, err := t.client.Templates.Update(t.clientToken.Access, t.templateID, template)
 
 	Expect(err).NotTo(HaveOccurred())

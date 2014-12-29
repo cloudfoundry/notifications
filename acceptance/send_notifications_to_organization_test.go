@@ -10,7 +10,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -35,7 +34,7 @@ var _ = Describe("Sending notifications to all users in an organization", func()
 			smtpServer:          Servers.SMTP,
 		}
 		test.RegisterClientNotifications()
-		test.CreateNewTemplate(params.Template{
+		test.CreateNewTemplate(support.Template{
 			Name:    "Gravity",
 			Subject: "Coca cola {{.Subject}}",
 			HTML:    "<h1>Rat</h1>{{.HTML}}",
@@ -69,7 +68,7 @@ func (t SendNotificationsToOrganization) RegisterClientNotifications() {
 	Expect(code).To(Equal(http.StatusNoContent))
 }
 
-func (t *SendNotificationsToOrganization) CreateNewTemplate(template params.Template) {
+func (t *SendNotificationsToOrganization) CreateNewTemplate(template support.Template) {
 	status, templateID, err := t.client.Templates.Create(t.clientToken.Access, template)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(status).To(Equal(http.StatusCreated))
