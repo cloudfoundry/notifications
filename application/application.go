@@ -80,6 +80,10 @@ func (app Application) Migrate() {
 	gobble.Database()
 }
 
+func (app Application) Seed() {
+	app.mother.Database().Seed()
+}
+
 func (app Application) EnableDBLogging() {
 	if app.env.DBLoggingEnabled {
 		app.mother.Database().TraceOn("[DB]", app.mother.Logger())

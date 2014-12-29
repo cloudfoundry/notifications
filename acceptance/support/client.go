@@ -18,9 +18,18 @@ func NewClient(server servers.Notifications) *Client {
 	client := &Client{
 		server: server,
 	}
-	client.Notifications = &NotificationsService{client: client}
-	client.Templates = &TemplatesService{client: client}
-	client.Notify = &NotifyService{client: client}
+	client.Notifications = &NotificationsService{
+		client: client,
+	}
+	client.Templates = &TemplatesService{
+		client: client,
+		Default: &DefaultTemplateService{
+			client: client,
+		},
+	}
+	client.Notify = &NotifyService{
+		client: client,
+	}
 
 	return client
 }

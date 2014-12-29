@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
@@ -15,19 +16,8 @@ type Notifications struct {
 }
 
 func NewNotifications() Notifications {
-	env := application.NewEnvironment()
-	cmd := exec.Cmd{
-		Path: env.RootPath + "/bin/notifications",
-		Dir:  env.RootPath,
-	}
-	if os.Getenv("TRACE") != "" {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	}
-
 	return Notifications{
-		cmd: &cmd,
-		env: env,
+		env: application.NewEnvironment(),
 	}
 }
 
@@ -51,13 +41,23 @@ func (s Notifications) Compile() {
 }
 
 func (s Notifications) Destroy() {
-	err := os.Remove(s.env.RootPath + "/bin/notifications")
+	err := os.Remove(path.Join(s.env.RootPath, "bin", "notifications"))
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (s Notifications) Boot() {
+func (s *Notifications) Boot() {
+	cmd := exec.Cmd{
+		Path: path.Join(s.env.RootPath, "bin", "notifications"),
+		Dir:  s.env.RootPath,
+	}
+	if os.Getenv("TRACE") != "" {
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+	s.cmd = &cmd
+
 	err := s.cmd.Start()
 	if err != nil {
 		panic(err)
@@ -88,6 +88,11 @@ func (s Notifications) Close() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (s *Notifications) Restart() {
+	s.Close()
+	s.Boot()
 }
 
 func (s Notifications) RootPath() string {

@@ -10,6 +10,7 @@ func main() {
 	app.ConfigureSMTP()
 	app.RetrieveUAAPublicKey()
 	app.Migrate()
+	app.Seed()
 	app.EnableDBLogging()
 	app.UnlockJobs()
 	app.StartWorkers()

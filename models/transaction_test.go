@@ -18,7 +18,10 @@ var _ = Describe("Transaction", func() {
 		TruncateTables()
 		env := application.NewEnvironment()
 		migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
-		db := models.NewDatabase(env.DatabaseURL, migrationsPath)
+		db := models.NewDatabase(models.Config{
+			DatabaseURL:    env.DatabaseURL,
+			MigrationsPath: migrationsPath,
+		})
 		conn = db.Connection()
 		transaction = conn.Transaction()
 	})

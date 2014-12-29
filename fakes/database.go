@@ -20,3 +20,5 @@ func (fake Database) Connection() models.ConnectionInterface {
 }
 
 func (fake Database) TraceOn(prefix string, logger gorp.GorpLogger) {}
+
+func (fake Database) Seed() {}

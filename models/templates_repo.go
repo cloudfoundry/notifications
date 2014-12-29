@@ -61,6 +61,7 @@ func (repo TemplatesRepo) Update(conn ConnectionInterface, templateID string, te
 	template.ID = existingTemplate.ID
 	template.CreatedAt = existingTemplate.CreatedAt
 	template.UpdatedAt = time.Now().Truncate(1 * time.Second).UTC()
+	template.Overridden = true
 
 	_, err = conn.Update(&template)
 	if err != nil {
@@ -100,14 +101,18 @@ func (repo TemplatesRepo) ListIDsAndNames(conn ConnectionInterface) ([]Template,
 }
 
 func (repo TemplatesRepo) Create(conn ConnectionInterface, template Template) (Template, error) {
-	setTemplateTimestamps(&template)
 	template.ID = uuid.New()
 
-	err := conn.Insert(&template)
+	return repo.create(conn, template)
+}
 
+func (repo TemplatesRepo) create(conn ConnectionInterface, template Template) (Template, error) {
+	setTemplateTimestamps(&template)
+	err := conn.Insert(&template)
 	if err != nil {
 		return Template{}, err
 	}
+
 	return template, nil
 }
 

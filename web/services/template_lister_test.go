@@ -14,7 +14,7 @@ import (
 var _ = Describe("TemplateLister", func() {
 	var lister services.TemplateLister
 	var templatesRepo *fakes.TemplatesRepo
-	var expectedMetadata map[string]services.TemplateMetadata
+	var expectedTemplates map[string]services.TemplateSummary
 	BeforeEach(func() {
 		templatesRepo = fakes.NewTemplatesRepo()
 		lister = services.NewTemplateLister(templatesRepo, fakes.NewDatabase())
@@ -30,6 +30,13 @@ var _ = Describe("TemplateLister", func() {
 						Subject: "Awesomeness",
 						HTML:    "<p>Millenium Falcon</p>",
 						Text:    "Millenium Falcon",
+					},
+					models.Template{
+						ID:      "default",
+						Name:    "default name",
+						Subject: "default subject",
+						HTML:    "<h1>default</h1>",
+						Text:    "defaults!",
 					},
 					models.Template{
 						ID:      "robot-guid",
@@ -53,7 +60,7 @@ var _ = Describe("TemplateLister", func() {
 						Text:    "Run!!",
 					},
 				}
-				expectedMetadata = map[string]services.TemplateMetadata{
+				expectedTemplates = map[string]services.TemplateSummary{
 					"starwarr-guid":   {Name: "Star Wars"},
 					"robot-guid":      {Name: "Big Hero 6"},
 					"boring-guid":     {Name: "Blah"},
@@ -65,7 +72,7 @@ var _ = Describe("TemplateLister", func() {
 			It("returns a list of guids and template names", func() {
 				templates, err := lister.List()
 				Expect(err).ToNot(HaveOccurred())
-				Expect(templates).To(Equal(expectedMetadata))
+				Expect(templates).To(Equal(expectedTemplates))
 			})
 		})
 

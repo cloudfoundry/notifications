@@ -20,7 +20,10 @@ var _ = Describe("ClientsRepo", func() {
 		repo = models.NewClientsRepo()
 		env := application.NewEnvironment()
 		migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
-		conn = models.NewDatabase(env.DatabaseURL, migrationsPath).Connection()
+		conn = models.NewDatabase(models.Config{
+			DatabaseURL:    env.DatabaseURL,
+			MigrationsPath: migrationsPath,
+		}).Connection()
 	})
 
 	Describe("Create", func() {

@@ -206,8 +206,11 @@ func (mother Mother) Registrar() services.Registrar {
 
 func (mother Mother) Database() models.DatabaseInterface {
 	env := NewEnvironment()
-	migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
-	return models.NewDatabase(env.DatabaseURL, migrationsPath)
+	return models.NewDatabase(models.Config{
+		DatabaseURL:         env.DatabaseURL,
+		MigrationsPath:      path.Join(env.RootPath, env.ModelMigrationsDir),
+		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
+	})
 }
 
 func (mother Mother) PreferencesFinder() *services.PreferencesFinder {

@@ -1,0 +1,7 @@
+{
+	"name": "Default Template",
+	"subject": "CF Notification: {{.Subject}}",
+	"html": "{{.HTML}}",
+	"text": "{{.Text}}",
+	"metadata": {}
+}

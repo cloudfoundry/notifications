@@ -4,12 +4,12 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
 
-type TemplateMetadata struct {
+type TemplateSummary struct {
 	Name string `json:"name"`
 }
 
 type TemplateListerInterface interface {
-	List() (map[string]TemplateMetadata, error)
+	List() (map[string]TemplateSummary, error)
 }
 type TemplateLister struct {
 	templatesRepo models.TemplatesRepoInterface
@@ -23,15 +23,17 @@ func NewTemplateLister(repo models.TemplatesRepoInterface, database models.Datab
 	}
 }
 
-func (lister TemplateLister) List() (map[string]TemplateMetadata, error) {
+func (lister TemplateLister) List() (map[string]TemplateSummary, error) {
 	templates, err := lister.templatesRepo.ListIDsAndNames(lister.database.Connection())
 	if err != nil {
-		return map[string]TemplateMetadata{}, err
+		return map[string]TemplateSummary{}, err
 	}
 
-	templatesMap := map[string]TemplateMetadata{}
+	templatesMap := map[string]TemplateSummary{}
 	for _, template := range templates {
-		templatesMap[template.ID] = TemplateMetadata{Name: template.Name}
+		if template.ID != "default" {
+			templatesMap[template.ID] = TemplateSummary{Name: template.Name}
+		}
 	}
 	return templatesMap, nil
 }

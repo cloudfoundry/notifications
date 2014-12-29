@@ -23,22 +23,22 @@ var _ = Describe("ListTemplates", func() {
 	var context stack.Context
 	var lister *fakes.TemplateLister
 	var errorWriter *fakes.ErrorWriter
-	var testTemplates map[string]services.TemplateMetadata
+	var testTemplates map[string]services.TemplateSummary
 
 	Describe("ServeHTTP", func() {
 		BeforeEach(func() {
 
-			testTemplates = map[string]services.TemplateMetadata{
-				"chewbaca-guid": services.TemplateMetadata{
+			testTemplates = map[string]services.TemplateSummary{
+				"chewbaca-guid": {
 					Name: "Star Wars",
 				},
-				"giant-friendly-robot-guid": services.TemplateMetadata{
+				"giant-friendly-robot-guid": {
 					Name: "Big Hero 6",
 				},
-				"boring-template-guid": services.TemplateMetadata{
+				"boring-template-guid": {
 					Name: "Blah",
 				},
-				"starvation-guid": services.TemplateMetadata{
+				"starvation-guid": {
 					Name: "Hungry Play",
 				},
 			}
@@ -69,7 +69,7 @@ var _ = Describe("ListTemplates", func() {
 				handler.ServeHTTP(writer, request, context)
 				Expect(writer.Code).To(Equal(http.StatusOK))
 
-				var templates map[string]services.TemplateMetadata
+				var templates map[string]services.TemplateSummary
 
 				err := json.Unmarshal(writer.Body.Bytes(), &templates)
 				if err != nil {

@@ -19,7 +19,10 @@ var _ = Describe("GlobalUnsubscribesRepo", func() {
 			TruncateTables()
 			env := application.NewEnvironment()
 			migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
-			db := models.NewDatabase(env.DatabaseURL, migrationsPath)
+			db := models.NewDatabase(models.Config{
+				DatabaseURL:    env.DatabaseURL,
+				MigrationsPath: migrationsPath,
+			})
 			conn = db.Connection().(*models.Connection)
 			repo = models.NewGlobalUnsubscribesRepo()
 		})

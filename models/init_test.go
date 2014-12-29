@@ -19,7 +19,10 @@ func TestModelsSuite(t *testing.T) {
 func TruncateTables() {
 	env := application.NewEnvironment()
 	migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
-	db := models.NewDatabase(env.DatabaseURL, migrationsPath)
+	db := models.NewDatabase(models.Config{
+		DatabaseURL:    env.DatabaseURL,
+		MigrationsPath: migrationsPath,
+	})
 	connection := db.Connection().(*models.Connection)
 	err := connection.TruncateTables()
 	if err != nil {

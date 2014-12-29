@@ -6,7 +6,8 @@ import (
 )
 
 type TemplatesService struct {
-	client *Client
+	client  *Client
+	Default *DefaultTemplateService
 }
 
 type Template struct {

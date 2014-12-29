@@ -22,7 +22,10 @@ var _ = Describe("TemplatesRepo", func() {
 		repo = models.NewTemplatesRepo()
 		env := application.NewEnvironment()
 		migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
-		db := models.NewDatabase(env.DatabaseURL, migrationsPath)
+		db := models.NewDatabase(models.Config{
+			DatabaseURL:    env.DatabaseURL,
+			MigrationsPath: migrationsPath,
+		})
 		conn = db.Connection()
 		createdAt = time.Now().Add(-1 * time.Hour).Truncate(1 * time.Second).UTC()
 
@@ -143,6 +146,7 @@ var _ = Describe("TemplatesRepo", func() {
 				Expect(foundTemplate.CreatedAt).To(Equal(createdAt))
 				Expect(foundTemplate.UpdatedAt).ToNot(Equal(createdAt))
 				Expect(foundTemplate.UpdatedAt).To(BeTemporally(">", createdAt))
+				Expect(foundTemplate.Overridden).To(BeTrue())
 			})
 		})
 

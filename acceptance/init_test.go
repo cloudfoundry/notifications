@@ -63,7 +63,14 @@ var _ = BeforeEach(func() {
 
 func TruncateTables() {
 	env := application.NewEnvironment()
-	migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
-	models.NewDatabase(env.DatabaseURL, migrationsPath).Connection().(*models.Connection).TruncateTables()
+	config := models.Config{
+		DatabaseURL:         env.DatabaseURL,
+		MigrationsPath:      path.Join(env.RootPath, env.ModelMigrationsDir),
+		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
+	}
+	database := models.NewDatabase(config)
+	database.Connection().(*models.Connection).TruncateTables()
 	gobble.Database().Connection.TruncateTables()
+
+	database.Seed()
 }
