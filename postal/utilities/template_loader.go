@@ -7,7 +7,6 @@ import (
 )
 
 type TemplatesLoaderInterface interface {
-	DeprecatedLoadTemplates(string, string, string, string) (postal.Templates, error)
 	LoadTemplates(string, string, string, string) (postal.Templates, error)
 }
 
@@ -31,28 +30,6 @@ func NewTemplatesLoader(finder services.TemplateFinderInterface, database models
 	}
 }
 
-func (loader TemplatesLoader) DeprecatedLoadTemplates(subjectSuffix, contentSuffix, client, kind string) (postal.Templates, error) {
-	contentPath := client + "." + kind + "." + contentSuffix
-	contentTemplate, err := loader.finder.Find(contentPath)
-	if err != nil {
-		return postal.Templates{}, err
-	}
-
-	subjectPath := client + "." + kind + "." + subjectSuffix
-	subjectTemplate, err := loader.finder.Find(subjectPath)
-	if err != nil {
-		return postal.Templates{}, err
-	}
-
-	templates := postal.Templates{
-		Subject: subjectTemplate.Text,
-		Text:    contentTemplate.Text,
-		HTML:    contentTemplate.HTML,
-	}
-
-	return templates, nil
-}
-
 func (loader TemplatesLoader) LoadTemplates(clientID, kindID, contentSuffix, subjectSuffix string) (postal.Templates, error) {
 	conn := loader.database.Connection()
 
@@ -74,7 +51,7 @@ func (loader TemplatesLoader) LoadTemplates(clientID, kindID, contentSuffix, sub
 		return loader.loadTemplate(conn, client.Template)
 	}
 
-	return loader.DeprecatedLoadTemplates(subjectSuffix, contentSuffix, clientID, kindID)
+	return loader.loadTemplate(conn, "default")
 }
 
 func (loader TemplatesLoader) loadTemplate(conn models.ConnectionInterface, templateID string) (postal.Templates, error) {

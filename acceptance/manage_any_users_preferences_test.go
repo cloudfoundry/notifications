@@ -135,9 +135,7 @@ func (t ManageArbitraryUsersPreferences) SendNotificationToUser() {
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 	Expect(data).To(ContainElement("X-CF-Notification-ID: " + responseItem["notification_id"]))
 	Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
-	Expect(data).To(ContainElement(`<p>The following "Unsubscribe Acceptance Test" notification was sent to you directly by the`))
-	Expect(data).To(ContainElement(`    "Notifications Sender" component of Cloud Foundry:</p>`))
-	Expect(data).To(ContainElement("<p>this is an acceptance test</p>"))
+	Expect(data).To(ContainElement("        <p>this is an acceptance test</p>"))
 }
 
 func (t ManageArbitraryUsersPreferences) RetrieveUserPreferences() {

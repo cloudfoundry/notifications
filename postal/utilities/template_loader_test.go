@@ -28,44 +28,7 @@ var _ = Describe("TemplateLoader", func() {
 		templatesRepo = fakes.NewTemplatesRepo()
 		database = fakes.NewDatabase()
 		conn = database.Connection()
-
-		finder.Templates["raptors.hungry."+models.SubjectProvidedTemplateName] = models.Template{
-			Text: "Dinosaurs are coming",
-		}
-
-		finder.Templates["raptors.hungry."+models.UserBodyTemplateName] = models.Template{
-			HTML: "<p>Can Raptors Open Doors?</p>",
-			Text: "Yes they ca--",
-		}
-
-		finder.Templates["my-client-id.my-kind-id."+models.UserBodyTemplateName] = models.Template{
-			HTML: "<p>Default</p>",
-			Text: "default",
-		}
-
-		finder.Templates["my-client-id.my-kind-id."+models.SubjectProvidedTemplateName] = models.Template{
-			Text: "default subject",
-		}
-
 		loader = utilities.NewTemplatesLoader(finder, database, clientsRepo, kindsRepo, templatesRepo)
-	})
-
-	Describe("DeprecatedLoadTemplates", func() {
-		It("returns templates using its finder", func() {
-			templates, err := loader.DeprecatedLoadTemplates(models.SubjectProvidedTemplateName, models.UserBodyTemplateName, "raptors", "hungry")
-			Expect(err).ToNot(HaveOccurred())
-			Expect(templates.HTML).To(Equal("<p>Can Raptors Open Doors?</p>"))
-			Expect(templates.Text).To(Equal("Yes they ca--"))
-			Expect(templates.Subject).To(Equal("Dinosaurs are coming"))
-		})
-
-		Context("the finder errors", func() {
-			It("propagates that error", func() {
-				finder.FindError = errors.New("Boom!")
-				_, err := loader.DeprecatedLoadTemplates(models.SubjectProvidedTemplateName, models.UserBodyTemplateName, "raptors", "hungry")
-				Expect(err).To(HaveOccurred())
-			})
-		})
 	})
 
 	Describe("LoadTemplates", func() {
@@ -85,6 +48,17 @@ var _ = Describe("TemplateLoader", func() {
 			kind, err = kindsRepo.Create(conn, models.Kind{
 				ID:       "my-kind-id",
 				ClientID: client.ID,
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			_, err = templatesRepo.Create(conn, models.Template{
+				ID:      "default",
+				Name:    "Default Template",
+				HTML:    "<p>The default template</p>",
+				Text:    "The default template",
+				Subject: "default subject",
 			})
 			if err != nil {
 				panic(err)
@@ -158,9 +132,9 @@ var _ = Describe("TemplateLoader", func() {
 				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id", models.UserBodyTemplateName, models.SubjectProvidedTemplateName)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(templates).To(Equal(postal.Templates{
+					HTML:    "<p>The default template</p>",
+					Text:    "The default template",
 					Subject: "default subject",
-					HTML:    "<p>Default</p>",
-					Text:    "default",
 				}))
 			})
 		})
