@@ -89,11 +89,11 @@ var _ = Describe("Database", func() {
 		})
 
 		It("has the default template pre-seeded", func() {
-			_, err := repo.FindByID(connection, "default")
+			_, err := repo.FindByID(connection, models.DefaultTemplateID)
 			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 
 			db.Seed()
-			template, err := repo.FindByID(connection, "default")
+			template, err := repo.FindByID(connection, models.DefaultTemplateID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(template.Name).To(Equal("Default Template"))
 			Expect(template.Subject).To(Equal("CF Notification: {{.Subject}}"))
@@ -114,7 +114,7 @@ var _ = Describe("Database", func() {
 			It("re-seeds the default template when the file is updated", func() {
 				db.Seed()
 
-				template, err := repo.FindByID(connection, "default")
+				template, err := repo.FindByID(connection, models.DefaultTemplateID)
 				Expect(err).NotTo(HaveOccurred())
 
 				template.Name = "Updated Default"
@@ -128,7 +128,7 @@ var _ = Describe("Database", func() {
 
 				db.Seed()
 
-				template, err = repo.FindByID(connection, "default")
+				template, err = repo.FindByID(connection, models.DefaultTemplateID)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(template.Name).To(Equal("Default Template"))
 				Expect(template.Subject).To(Equal("CF Notification: {{.Subject}}"))
@@ -143,7 +143,7 @@ var _ = Describe("Database", func() {
 			It("does not re-seed the default template", func() {
 				db.Seed()
 
-				template, err := repo.FindByID(connection, "default")
+				template, err := repo.FindByID(connection, models.DefaultTemplateID)
 				Expect(err).NotTo(HaveOccurred())
 
 				template.Name = "Updated Default"
@@ -152,12 +152,12 @@ var _ = Describe("Database", func() {
 				template.HTML = "Updated HTML"
 				template.Metadata = `{"test": true}`
 				template.Overridden = true
-				_, err = repo.Update(connection, "default", template)
+				_, err = repo.Update(connection, models.DefaultTemplateID, template)
 				Expect(err).NotTo(HaveOccurred())
 
 				db.Seed()
 
-				template, err = repo.FindByID(connection, "default")
+				template, err = repo.FindByID(connection, models.DefaultTemplateID)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(template.Name).To(Equal("Updated Default"))
 				Expect(template.Subject).To(Equal("Updated Subject"))

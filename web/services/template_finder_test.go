@@ -3,7 +3,6 @@ package services_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
@@ -15,15 +14,12 @@ import (
 var _ = Describe("Finder", func() {
 	var finder services.TemplateFinder
 	var templatesRepo *fakes.TemplatesRepo
-	var fileSystem fakes.FileSystem
 
 	Describe("#FindByID", func() {
 		BeforeEach(func() {
-			env := application.NewEnvironment()
 			templatesRepo = fakes.NewTemplatesRepo()
-			fileSystem = fakes.NewFileSystem(env.RootPath)
 
-			finder = services.NewTemplateFinder(templatesRepo, env.RootPath, fakes.NewDatabase(), fileSystem)
+			finder = services.NewTemplateFinder(templatesRepo, fakes.NewDatabase())
 		})
 
 		Context("when the finder returns a template", func() {

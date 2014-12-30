@@ -2,7 +2,6 @@ package models
 
 import "time"
 
-const DefaultTemplateID = "default"
 
 type Client struct {
 	Primary     int       `db:"primary"`

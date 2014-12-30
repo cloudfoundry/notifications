@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
 )
@@ -26,7 +27,7 @@ func (handler GetDefaultTemplate) ServeHTTP(w http.ResponseWriter, req *http.Req
 		"name": "notifications.web.default_template.get",
 	}).Log()
 
-	template, err := handler.finder.FindByID("default")
+	template, err := handler.finder.FindByID(models.DefaultTemplateID)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

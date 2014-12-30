@@ -46,7 +46,7 @@ var _ = Describe("UpdateDefaultTemplate", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(updater.UpdateArgumentID).To(Equal("default"))
+		Expect(updater.UpdateArgumentID).To(Equal(models.DefaultTemplateID))
 		Expect(updater.UpdateArgumentBody).To(Equal(models.Template{
 			Name:     "Defaultish Template",
 			Subject:  "{{.Subject}}",

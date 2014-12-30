@@ -10,7 +10,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -127,10 +126,6 @@ func (mother Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
 	return strategies.NewUAAScopeStrategy(tokenLoader, userLoader, findsUserGUIDs, templatesLoader, mailer, receiptsRepo)
 }
 
-func (mother Mother) FileSystem() services.FileSystemInterface {
-	return postal.NewFileSystem()
-}
-
 func (mother Mother) EmailStrategy() strategies.EmailStrategy {
 	return strategies.NewEmailStrategy(mother.Mailer(), mother.TemplatesLoader())
 }
@@ -222,25 +217,21 @@ func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
 }
 
 func (mother Mother) TemplateFinder() services.TemplateFinder {
-	env := NewEnvironment()
 	database := mother.Database()
 	templatesRepo := mother.TemplatesRepo()
-	fileSystem := mother.FileSystem()
 
-	return services.NewTemplateFinder(templatesRepo, env.RootPath, database, fileSystem)
+	return services.NewTemplateFinder(templatesRepo, database)
 }
 
 func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
 	services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner) {
 
-	env := NewEnvironment()
 	database := mother.Database()
 	clientsRepo, kindsRepo := mother.Repos()
 	templatesRepo := mother.TemplatesRepo()
-	fileSystem := mother.FileSystem()
 
 	return services.NewTemplateCreator(templatesRepo, database),
-		services.NewTemplateFinder(templatesRepo, env.RootPath, database, fileSystem),
+		services.NewTemplateFinder(templatesRepo, database),
 		services.NewTemplateUpdater(templatesRepo, database),
 		services.NewTemplateDeleter(templatesRepo, database),
 		services.NewTemplateLister(templatesRepo, database),

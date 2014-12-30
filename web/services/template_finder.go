@@ -1,20 +1,9 @@
 package services
 
-import (
-	"fmt"
-
-	"github.com/cloudfoundry-incubator/notifications/models"
-)
-
-type FileSystemInterface interface {
-	Exists(string) bool
-	Read(string) (string, error)
-}
+import "github.com/cloudfoundry-incubator/notifications/models"
 
 type TemplateFinder struct {
 	templatesRepo models.TemplatesRepoInterface
-	rootPath      string
-	fileSystem    FileSystemInterface
 	database      models.DatabaseInterface
 }
 
@@ -22,18 +11,10 @@ type TemplateFinderInterface interface {
 	FindByID(string) (models.Template, error)
 }
 
-type TemplateNotFoundError string
-
-func (err TemplateNotFoundError) Error() string {
-	return fmt.Sprintf("Template %q could not be found.", string(err))
-}
-
-func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, rootPath string, database models.DatabaseInterface, fileSystem FileSystemInterface) TemplateFinder {
+func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface, database models.DatabaseInterface) TemplateFinder {
 	return TemplateFinder{
 		templatesRepo: templatesRepo,
-		rootPath:      rootPath,
 		database:      database,
-		fileSystem:    fileSystem,
 	}
 }
 

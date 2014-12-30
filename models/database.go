@@ -103,14 +103,14 @@ func (database DB) Seed() {
 	json.Unmarshal(bytes, &template)
 
 	conn := database.Connection()
-	existingTemplate, err := repo.FindByID(conn, "default")
+	existingTemplate, err := repo.FindByID(conn, DefaultTemplateID)
 	if err != nil {
 		if _, ok := err.(RecordNotFoundError); !ok {
 			panic(err)
 		}
 
 		_, err = repo.create(conn, Template{
-			ID:       "default",
+			ID:       DefaultTemplateID,
 			Name:     template.Name,
 			Subject:  template.Subject,
 			HTML:     template.HTML,

@@ -32,7 +32,7 @@ var _ = Describe("TemplateLister", func() {
 						Text:    "Millenium Falcon",
 					},
 					models.Template{
-						ID:      "default",
+						ID:      models.DefaultTemplateID,
 						Name:    "default name",
 						Subject: "default subject",
 						HTML:    "<h1>default</h1>",

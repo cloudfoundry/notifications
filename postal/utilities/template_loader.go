@@ -51,7 +51,7 @@ func (loader TemplatesLoader) LoadTemplates(clientID, kindID string) (postal.Tem
 		return loader.loadTemplate(conn, client.Template)
 	}
 
-	return loader.loadTemplate(conn, "default")
+	return loader.loadTemplate(conn, models.DefaultTemplateID)
 }
 
 func (loader TemplatesLoader) loadTemplate(conn models.ConnectionInterface, templateID string) (postal.Templates, error) {

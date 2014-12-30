@@ -54,7 +54,7 @@ var _ = Describe("TemplateLoader", func() {
 			}
 
 			_, err = templatesRepo.Create(conn, models.Template{
-				ID:      "default",
+				ID:      models.DefaultTemplateID,
 				Name:    "Default Template",
 				HTML:    "<p>The default template</p>",
 				Text:    "The default template",

@@ -31,7 +31,7 @@ func (lister TemplateLister) List() (map[string]TemplateSummary, error) {
 
 	templatesMap := map[string]TemplateSummary{}
 	for _, template := range templates {
-		if template.ID != "default" {
+		if template.ID != models.DefaultTemplateID {
 			templatesMap[template.ID] = TemplateSummary{Name: template.Name}
 		}
 	}

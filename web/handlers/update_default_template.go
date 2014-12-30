@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
@@ -32,7 +33,7 @@ func (handler UpdateDefaultTemplate) ServeHTTP(w http.ResponseWriter, req *http.
 		return
 	}
 
-	err = handler.updater.Update("default", template.ToModel())
+	err = handler.updater.Update(models.DefaultTemplateID, template.ToModel())
 	if err != nil {
 		panic(err)
 	}

@@ -21,8 +21,8 @@ var _ = Describe("GetDefaultTemplate", func() {
 	BeforeEach(func() {
 		errorWriter = fakes.NewErrorWriter()
 		templateFinder = fakes.NewTemplateFinder()
-		templateFinder.Templates["default"] = models.Template{
-			ID:       "default",
+		templateFinder.Templates[models.DefaultTemplateID] = models.Template{
+			ID:       models.DefaultTemplateID,
 			Name:     "Default Template",
 			Subject:  "CF Notification: {{.Subject}}",
 			Text:     "Default Template {{.Text}}",
