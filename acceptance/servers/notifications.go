@@ -151,10 +151,6 @@ func (s Notifications) TemplatePath(templateID string) string {
 	return s.RootPath() + "/templates/" + templateID
 }
 
-func (s Notifications) DeprecatedTemplatePath(templateName string) string {
-	return s.RootPath() + "/deprecated_templates/" + templateName
-}
-
 func (s Notifications) ClientsTemplatePath(clientID string) string {
 	return s.RootPath() + "/clients/" + clientID + "/template"
 }

@@ -4,7 +4,6 @@ import "github.com/cloudfoundry-incubator/notifications/models"
 
 type TemplateDeleterInterface interface {
 	Delete(string) error
-	DeprecatedDelete(string) error
 }
 
 type TemplateDeleter struct {
@@ -22,9 +21,4 @@ func NewTemplateDeleter(repo models.TemplatesRepoInterface, database models.Data
 func (deleter TemplateDeleter) Delete(templateID string) error {
 	connection := deleter.Database.Connection()
 	return deleter.TemplatesRepo.Destroy(connection, templateID)
-}
-
-func (deleter TemplateDeleter) DeprecatedDelete(templateName string) error {
-	connection := deleter.Database.Connection()
-	return deleter.TemplatesRepo.DeprecatedDestroy(connection, templateName)
 }

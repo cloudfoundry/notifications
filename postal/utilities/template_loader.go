@@ -7,7 +7,7 @@ import (
 )
 
 type TemplatesLoaderInterface interface {
-	LoadTemplates(string, string, string, string) (postal.Templates, error)
+	LoadTemplates(string, string) (postal.Templates, error)
 }
 
 type TemplatesLoader struct {
@@ -30,7 +30,7 @@ func NewTemplatesLoader(finder services.TemplateFinderInterface, database models
 	}
 }
 
-func (loader TemplatesLoader) LoadTemplates(clientID, kindID, contentSuffix, subjectSuffix string) (postal.Templates, error) {
+func (loader TemplatesLoader) LoadTemplates(clientID, kindID string) (postal.Templates, error) {
 	conn := loader.database.Connection()
 
 	kind, err := loader.kindsRepo.Find(conn, kindID, clientID)

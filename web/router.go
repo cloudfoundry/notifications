@@ -58,7 +58,6 @@ func NewRouter(mother MotherInterface) Router {
 	emailsWriteAuthenticator := mother.Authenticator("emails.write")
 	notificationsTemplateWriteAuthenticator := mother.Authenticator("notification_templates.write")
 	notificationsTemplateReadAuthenticator := mother.Authenticator("notification_templates.read")
-	notificationsTemplateAdminAuthenticator := mother.Authenticator("notification_templates.admin")
 	database := mother.Database()
 	cors := mother.CORS()
 
@@ -85,9 +84,7 @@ func NewRouter(mother MotherInterface) Router {
 			"PUT /default_template":                                           stack.NewStack(handlers.NewUpdateDefaultTemplate(templateUpdater, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
 			"GET /templates/{templateID}":                                     stack.NewStack(handlers.NewGetTemplates(templateFinder, errorWriter)).Use(logging, notificationsTemplateReadAuthenticator),
 			"PUT /templates/{templateID}":                                     stack.NewStack(handlers.NewUpdateTemplates(templateUpdater, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
-			"PUT /deprecated_templates/{templateName}":                        stack.NewStack(handlers.NewSetTemplates(templateUpdater, errorWriter)).Use(logging, notificationsTemplateAdminAuthenticator),
 			"DELETE /templates/{templateID}":                                  stack.NewStack(handlers.NewDeleteTemplates(templateDeleter, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
-			"DELETE /deprecated_templates/{templateName}":                     stack.NewStack(handlers.NewUnsetTemplates(templateDeleter, errorWriter)).Use(logging, notificationsTemplateWriteAuthenticator),
 			"GET /templates":                                                  stack.NewStack(handlers.NewListTemplates(templateLister, errorWriter)).Use(logging, notificationsTemplateReadAuthenticator),
 			"PUT /clients/{clientID}/template":                                stack.NewStack(handlers.NewAssignClientTemplate(templateAssigner, errorWriter)).Use(logging, notificationsManageAuthenticator),
 			"PUT /clients/{clientID}/notifications/{notificationID}/template": stack.NewStack(handlers.NewAssignNotificationTemplate(templateAssigner, errorWriter)).Use(logging, notificationsManageAuthenticator),

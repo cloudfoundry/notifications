@@ -37,7 +37,7 @@ var _ = Describe("Updater", func() {
 		It("propagates errors from repo", func() {
 			expectedErr := errors.New("Boom!")
 
-			templatesRepo.UpsertError = expectedErr
+			templatesRepo.UpdateError = expectedErr
 			err := updater.Update("unimportant", template)
 
 			Expect(err).To(Equal(expectedErr))

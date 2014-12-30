@@ -9,13 +9,10 @@ import (
 
 type TemplatesRepoInterface interface {
 	FindByID(ConnectionInterface, string) (Template, error)
-	Find(ConnectionInterface, string) (Template, error)
 	Create(ConnectionInterface, Template) (Template, error)
 	Update(ConnectionInterface, string, Template) (Template, error)
-	Upsert(ConnectionInterface, Template) (Template, error)
 	ListIDsAndNames(ConnectionInterface) ([]Template, error)
 	Destroy(ConnectionInterface, string) error
-	DeprecatedDestroy(ConnectionInterface, string) error
 }
 
 type TemplatesRepo struct{}
@@ -30,18 +27,6 @@ func (repo TemplatesRepo) FindByID(conn ConnectionInterface, templateID string) 
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return template, NewRecordNotFoundError("Template with ID %q could not be found", templateID)
-		}
-		return template, err
-	}
-	return template, nil
-}
-
-func (repo TemplatesRepo) Find(conn ConnectionInterface, templateName string) (Template, error) {
-	template := Template{}
-	err := conn.SelectOne(&template, "SELECT * FROM `templates` WHERE `name`=?", templateName)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return template, NewRecordNotFoundError("Template with name %q could not be found", templateName)
 		}
 		return template, err
 	}
@@ -66,26 +51,6 @@ func (repo TemplatesRepo) Update(conn ConnectionInterface, templateID string, te
 	_, err = conn.Update(&template)
 	if err != nil {
 		return Template{}, TemplateUpdateError{Message: err.Error()}
-	}
-
-	return template, nil
-}
-
-func (repo TemplatesRepo) Upsert(conn ConnectionInterface, template Template) (Template, error) {
-	existingTemplate, err := repo.Find(conn, template.Name)
-	if err != nil {
-		if _, ok := err.(RecordNotFoundError); ok {
-			return repo.Create(conn, template)
-		}
-		return Template{}, err
-	}
-
-	template.Primary = existingTemplate.Primary
-	template.CreatedAt = existingTemplate.CreatedAt
-	template.UpdatedAt = time.Now().Truncate(1 * time.Second).UTC()
-	_, err = conn.Update(&template)
-	if err != nil {
-		return Template{}, err
 	}
 
 	return template, nil
@@ -126,20 +91,6 @@ func setTemplateTimestamps(template *Template) {
 func (repo TemplatesRepo) Destroy(conn ConnectionInterface, templateID string) error {
 	template, err := repo.FindByID(conn, templateID)
 	if err != nil {
-		return err
-	}
-
-	_, err = conn.Delete(&template)
-
-	return err
-}
-
-func (repo TemplatesRepo) DeprecatedDestroy(conn ConnectionInterface, templateName string) error {
-	template, err := repo.Find(conn, templateName)
-	if err != nil {
-		if _, ok := err.(RecordNotFoundError); ok {
-			return nil
-		}
 		return err
 	}
 

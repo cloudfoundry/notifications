@@ -19,9 +19,3 @@ func (fake *TemplateUpdater) Update(templateID string, template models.Template)
 
 	return fake.UpdateError
 }
-
-func (fake *TemplateUpdater) DeprecatedUpdate(template models.Template) error {
-	fake.UpdateArgument = template
-
-	return fake.UpdateError
-}

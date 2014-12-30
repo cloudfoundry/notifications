@@ -57,8 +57,7 @@ func (strategy UAAScopeStrategy) Dispatch(clientID, scope string, options postal
 		return responses, err
 	}
 
-	subjectSuffix := strategy.subjectSuffix(options.Subject)
-	templates, err := strategy.templatesLoader.LoadTemplates(clientID, options.KindID, models.UAAScopeBodyTemplateName, subjectSuffix)
+	templates, err := strategy.templatesLoader.LoadTemplates(clientID, options.KindID)
 	if err != nil {
 		return responses, postal.TemplateLoadError("An email template could not be loaded")
 	}
@@ -83,11 +82,4 @@ func (strategy UAAScopeStrategy) scopeIsDefault(scope string) bool {
 		}
 	}
 	return false
-}
-
-func (strategy UAAScopeStrategy) subjectSuffix(subject string) string {
-	if subject == "" {
-		return models.SubjectMissingTemplateName
-	}
-	return models.SubjectProvidedTemplateName
 }

@@ -41,8 +41,7 @@ func (strategy UserStrategy) Dispatch(clientID, guid string, options postal.Opti
 		return responses, err
 	}
 
-	subjectSuffix := strategy.subjectSuffix(options.Subject)
-	templates, err := strategy.templatesLoader.LoadTemplates(clientID, options.KindID, models.UserBodyTemplateName, subjectSuffix)
+	templates, err := strategy.templatesLoader.LoadTemplates(clientID, options.KindID)
 	if err != nil {
 		return responses, postal.TemplateLoadError("An email template could not be loaded")
 	}
@@ -55,11 +54,4 @@ func (strategy UserStrategy) Dispatch(clientID, guid string, options postal.Opti
 	responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "")
 
 	return responses, nil
-}
-
-func (strategy UserStrategy) subjectSuffix(subject string) string {
-	if subject == "" {
-		return models.SubjectMissingTemplateName
-	}
-	return models.SubjectProvidedTemplateName
 }

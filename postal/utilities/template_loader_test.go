@@ -86,7 +86,7 @@ var _ = Describe("TemplateLoader", func() {
 			})
 
 			It("returns the template belonging to the kind", func() {
-				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id", models.UserBodyTemplateName, models.SubjectProvidedTemplateName)
+				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(templates).To(Equal(postal.Templates{
 					HTML:    "<p>kind template</p>",
@@ -117,7 +117,7 @@ var _ = Describe("TemplateLoader", func() {
 			})
 
 			It("returns the template belonging to the client", func() {
-				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id", models.UserBodyTemplateName, models.SubjectProvidedTemplateName)
+				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(templates).To(Equal(postal.Templates{
 					HTML:    "<p>client template</p>",
@@ -129,7 +129,7 @@ var _ = Describe("TemplateLoader", func() {
 
 		Context("when the neither client nor kind has a template", func() {
 			It("returns the default template", func() {
-				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id", models.UserBodyTemplateName, models.SubjectProvidedTemplateName)
+				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(templates).To(Equal(postal.Templates{
 					HTML:    "<p>The default template</p>",
@@ -145,7 +145,7 @@ var _ = Describe("TemplateLoader", func() {
 			})
 
 			It("bubbles up the error", func() {
-				_, err := loader.LoadTemplates("my-client-id", "my-kind-id", models.UserBodyTemplateName, models.SubjectProvidedTemplateName)
+				_, err := loader.LoadTemplates("my-client-id", "my-kind-id")
 				Expect(err).To(HaveOccurred())
 			})
 
@@ -157,7 +157,7 @@ var _ = Describe("TemplateLoader", func() {
 			})
 
 			It("bubbles up the error", func() {
-				_, err := loader.LoadTemplates("my-client-id", "my-kind-id", models.UserBodyTemplateName, models.SubjectProvidedTemplateName)
+				_, err := loader.LoadTemplates("my-client-id", "my-kind-id")
 				Expect(err).To(HaveOccurred())
 			})
 		})

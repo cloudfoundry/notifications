@@ -64,29 +64,6 @@ var _ = Describe("TemplatesRepo", func() {
 		})
 	})
 
-	Context("#Find", func() {
-		Context("the template is in the database", func() {
-			It("returns the template when it is found", func() {
-				raptorTemplate, err := repo.Find(conn, "Raptors On The Run")
-
-				Expect(err).ToNot(HaveOccurred())
-				Expect(raptorTemplate.Name).To(Equal("Raptors On The Run"))
-				Expect(raptorTemplate.Text).To(Equal("run and hide"))
-				Expect(raptorTemplate.HTML).To(Equal("<h1>containment unit breached!</h1>"))
-			})
-		})
-
-		Context("the template is not in the database", func() {
-			It("returns a record not found error", func() {
-				sillyTemplate, err := repo.Find(conn, "silly_template")
-
-				Expect(sillyTemplate).To(Equal(models.Template{}))
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
-			})
-		})
-	})
-
 	Describe("#Create", func() {
 		It("inserts a template into the database", func() {
 			newTemplate := models.Template{
@@ -100,12 +77,12 @@ var _ = Describe("TemplatesRepo", func() {
 			createdTemplate, err := repo.Create(conn, newTemplate)
 			Expect(err).ToNot(HaveOccurred())
 
-			foundTemplate, err := repo.Find(conn, createdTemplate.Name)
+			foundTemplate, err := repo.FindByID(conn, createdTemplate.ID)
 			if err != nil {
 				panic(err)
 			}
 
-			Expect(foundTemplate.ID).NotTo(BeNil())
+			Expect(foundTemplate.ID).To(Equal(createdTemplate.ID))
 			Expect(foundTemplate.Name).To(Equal(newTemplate.Name))
 			Expect(foundTemplate.Subject).To(Equal(newTemplate.Subject))
 			Expect(foundTemplate.Text).To(Equal(newTemplate.Text))
@@ -156,54 +133,6 @@ var _ = Describe("TemplatesRepo", func() {
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(models.TemplateFindError{Message: "Template a-bad-id not found"}))
 			})
-		})
-	})
-
-	Describe("#Upsert", func() {
-		It("inserts a template into the database", func() {
-			var err error
-
-			newTemplate := models.Template{
-				Name:      "silly_template." + models.UserBodyTemplateName,
-				Subject:   "silliness",
-				Text:      "omg",
-				HTML:      "<h1>OMG</h1>",
-				CreatedAt: createdAt,
-			}
-
-			_, err = repo.Upsert(conn, newTemplate)
-			Expect(err).ToNot(HaveOccurred())
-
-			foundTemplate, err := repo.Find(conn, newTemplate.Name)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(foundTemplate.Name).To(Equal(newTemplate.Name))
-			Expect(foundTemplate.Subject).To(Equal(newTemplate.Subject))
-			Expect(foundTemplate.Text).To(Equal(newTemplate.Text))
-			Expect(foundTemplate.HTML).To(Equal(newTemplate.HTML))
-			Expect(foundTemplate.CreatedAt).To(Equal(createdAt))
-			Expect(foundTemplate.UpdatedAt).To(Equal(createdAt))
-		})
-
-		It("updates a template currently in the database", func() {
-			template.Text = "new text"
-			_, err := repo.Upsert(conn, template)
-			Expect(err).ToNot(HaveOccurred())
-
-			foundTemplate, err := repo.Find(conn, template.Name)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(foundTemplate.Name).To(Equal(template.Name))
-			Expect(foundTemplate.Subject).To(Equal(template.Subject))
-			Expect(foundTemplate.Text).To(Equal(template.Text))
-			Expect(foundTemplate.HTML).To(Equal(template.HTML))
-			Expect(foundTemplate.CreatedAt).To(Equal(createdAt))
-			Expect(foundTemplate.UpdatedAt).ToNot(Equal(createdAt))
-			Expect(foundTemplate.UpdatedAt).To(BeTemporally(">", createdAt))
 		})
 	})
 
@@ -265,35 +194,6 @@ var _ = Describe("TemplatesRepo", func() {
 
 				_, err = repo.FindByID(conn, "knockknock")
 				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
-			})
-		})
-	})
-
-	Describe("#DeprecatedDestroy", func() {
-		Context("the template exists in the database", func() {
-			It("deletes the template by name", func() {
-				_, err := repo.Find(conn, template.Name)
-				if err != nil {
-					panic(err)
-				}
-
-				err = repo.DeprecatedDestroy(conn, template.Name)
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = repo.Find(conn, template.Name)
-				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
-
-			})
-		})
-
-		Context("the template does not exist in the database", func() {
-			It("does not return an error", func() {
-				err := repo.DeprecatedDestroy(conn, "knockknock")
-				Expect(err).ToNot(HaveOccurred())
-
-				_, err = repo.Find(conn, "knockknock")
-				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
-
 			})
 		})
 	})

@@ -61,8 +61,7 @@ func (strategy SpaceStrategy) Dispatch(clientID, guid string, options postal.Opt
 		return responses, err
 	}
 
-	subjectSuffix := strategy.subjectSuffix(options.Subject)
-	templates, err := strategy.templatesLoader.LoadTemplates(clientID, options.KindID, models.SpaceBodyTemplateName, subjectSuffix)
+	templates, err := strategy.templatesLoader.LoadTemplates(clientID, options.KindID)
 	if err != nil {
 		return responses, postal.TemplateLoadError("An email template could not be loaded")
 	}
@@ -75,11 +74,4 @@ func (strategy SpaceStrategy) Dispatch(clientID, guid string, options postal.Opt
 	responses = strategy.mailer.Deliver(conn, templates, users, options, space, organization, clientID, "")
 
 	return responses, nil
-}
-
-func (strategy SpaceStrategy) subjectSuffix(subject string) string {
-	if subject == "" {
-		return models.SubjectMissingTemplateName
-	}
-	return models.SubjectProvidedTemplateName
 }
