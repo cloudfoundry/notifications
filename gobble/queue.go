@@ -15,11 +15,13 @@ type QueueInterface interface {
 	Reserve(string) <-chan Job
 	Dequeue(Job)
 	Requeue(Job)
+	Unlock()
 }
 
 type Queue struct {
-	config Config
-	closed bool
+	config   Config
+	database *DB
+	closed   bool
 }
 
 func NewQueue(config Config) *Queue {
@@ -28,12 +30,13 @@ func NewQueue(config Config) *Queue {
 	}
 
 	return &Queue{
-		config: config,
+		database: Database(),
+		config:   config,
 	}
 }
 
 func (queue *Queue) Enqueue(job Job) (Job, error) {
-	err := Database().Connection.Insert(&job)
+	err := queue.database.Connection.Insert(&job)
 	if err != nil {
 		return job, err
 	}
@@ -42,7 +45,7 @@ func (queue *Queue) Enqueue(job Job) (Job, error) {
 }
 
 func (queue *Queue) Requeue(job Job) {
-	_, err := Database().Connection.Update(&job)
+	_, err := queue.database.Connection.Update(&job)
 	if err != nil {
 		panic(err)
 	}
@@ -84,14 +87,14 @@ func (queue *Queue) reserve(channel chan Job, workerID string) {
 }
 
 func (queue *Queue) Dequeue(job Job) {
-	_, err := Database().Connection.Delete(&job)
+	_, err := queue.database.Connection.Delete(&job)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (queue Queue) Unlock() {
-	_, err := Database().Connection.Exec("UPDATE `jobs` set `worker_id` = \"\" WHERE `worker_id` != \"\"")
+	_, err := queue.database.Connection.Exec("UPDATE `jobs` set `worker_id` = \"\" WHERE `worker_id` != \"\"")
 	if err != nil {
 		panic(err)
 	}
@@ -100,7 +103,7 @@ func (queue Queue) Unlock() {
 func (queue *Queue) findJob() Job {
 	job := Job{}
 	for job.ID == 0 {
-		err := Database().Connection.SelectOne(&job, "SELECT * FROM `jobs` WHERE `worker_id` = \"\" AND `active_at` <= ? LIMIT 1", time.Now())
+		err := queue.database.Connection.SelectOne(&job, "SELECT * FROM `jobs` WHERE `worker_id` = \"\" AND `active_at` <= ? LIMIT 1", time.Now())
 		if err != nil {
 			if err == sql.ErrNoRows {
 				job = Job{}
@@ -115,7 +118,7 @@ func (queue *Queue) findJob() Job {
 
 func (queue *Queue) updateJob(job Job, workerID string) (Job, error) {
 	job.WorkerID = workerID
-	_, err := Database().Connection.Update(&job)
+	_, err := queue.database.Connection.Update(&job)
 	if err != nil {
 		return job, err
 	}

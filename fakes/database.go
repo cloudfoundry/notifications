@@ -6,7 +6,8 @@ import (
 )
 
 type Database struct {
-	Conn *DBConn
+	Conn          *DBConn
+	SeedWasCalled bool
 }
 
 func NewDatabase() *Database {
@@ -21,4 +22,6 @@ func (fake Database) Connection() models.ConnectionInterface {
 
 func (fake Database) TraceOn(prefix string, logger gorp.GorpLogger) {}
 
-func (fake Database) Seed() {}
+func (fake *Database) Seed() {
+	fake.SeedWasCalled = true
+}

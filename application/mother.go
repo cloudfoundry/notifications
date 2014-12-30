@@ -36,7 +36,7 @@ func (mother *Mother) Logger() *log.Logger {
 	return mother.logger
 }
 
-func (mother *Mother) Queue() *gobble.Queue {
+func (mother *Mother) Queue() gobble.QueueInterface {
 	env := NewEnvironment()
 	if mother.queue == nil {
 		mother.queue = gobble.NewQueue(gobble.Config{

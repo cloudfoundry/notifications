@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -15,15 +14,31 @@ import (
 const WorkerCount = 10
 
 type Application struct {
-	env    Environment
-	mother *Mother
+	env      Environment
+	mother   *Mother
+	migrator Migrator
 }
 
 func NewApplication() Application {
+	mother := NewMother()
+	env := NewEnvironment()
+
 	return Application{
-		env:    NewEnvironment(),
-		mother: NewMother(),
+		env:      env,
+		mother:   mother,
+		migrator: NewMigrator(mother, env.VCAPApplication.InstanceIndex == 0),
 	}
+}
+
+func (app Application) Boot() {
+	app.PrintConfiguration()
+	app.ConfigureSMTP()
+	app.RetrieveUAAPublicKey()
+	app.migrator.Migrate()
+	app.EnableDBLogging()
+	app.UnlockJobs()
+	app.StartWorkers()
+	app.StartServer()
 }
 
 func (app Application) PrintConfiguration() {
@@ -75,24 +90,13 @@ func (app Application) RetrieveUAAPublicKey() {
 	log.Printf("UAA Public Key: %s", UAAPublicKey)
 }
 
-func (app Application) Migrate() {
-	app.mother.Database()
-	gobble.Database()
-}
-
-func (app Application) Seed() {
-	app.mother.Database().Seed()
+func (app Application) UnlockJobs() {
+	app.mother.Queue().Unlock()
 }
 
 func (app Application) EnableDBLogging() {
 	if app.env.DBLoggingEnabled {
 		app.mother.Database().TraceOn("[DB]", app.mother.Logger())
-	}
-}
-
-func (app Application) UnlockJobs() {
-	if app.env.VCAPApplication.InstanceIndex == 0 {
-		app.mother.Queue().Unlock()
 	}
 }
 

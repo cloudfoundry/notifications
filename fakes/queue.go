@@ -39,3 +39,5 @@ func (fake *Queue) Requeue(job gobble.Job) {
 		fake.jobs <- job
 	}(job)
 }
+
+func (fake *Queue) Unlock() {}
