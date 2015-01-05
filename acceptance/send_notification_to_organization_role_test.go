@@ -18,14 +18,8 @@ import (
 
 var _ = Describe("Sending notifications to users with certain roles in an organization", func() {
 	It("sends a notification to each user in an organization with that role", func() {
-		// Retrieve UAA token
-		env := application.NewEnvironment()
 		clientID := "notifications-sender"
-		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
-		clientToken, err := uaaClient.GetClientToken()
-		if err != nil {
-			panic(err)
-		}
+		clientToken := GetClientTokenFor(clientID)
 
 		test := SendNotificationsToOrganizationRole{
 			client:              support.NewClient(Servers.Notifications),

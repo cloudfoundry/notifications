@@ -4,8 +4,6 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
-	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -16,13 +14,7 @@ var _ = Describe("Assign Templates", func() {
 		var templateID string
 		notificationID := "acceptance-test"
 		clientID := "notifications-admin"
-		env := application.NewEnvironment()
-		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
-		clientToken, err := uaaClient.GetClientToken()
-		if err != nil {
-			panic(err)
-		}
-
+		clientToken := GetClientTokenFor(clientID)
 		client := support.NewClient(Servers.Notifications)
 
 		By("registering a notification", func() {

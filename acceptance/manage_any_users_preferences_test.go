@@ -20,14 +20,7 @@ import (
 
 var _ = Describe("Preferences Endpoint", func() {
 	It("client unsubscribes a user from a notification", func() {
-		// Retrieve Client UAA token
-		env := application.NewEnvironment()
-		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
-		clientToken, err := uaaClient.GetClientToken()
-		if err != nil {
-			panic(err)
-		}
-
+		clientToken := GetClientTokenFor("notifications-sender")
 		userGUID := "user-123"
 
 		test := ManageArbitraryUsersPreferences{

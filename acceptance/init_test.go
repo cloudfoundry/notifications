@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -73,4 +74,27 @@ func TruncateTables() {
 	gobble.Database().Connection.TruncateTables()
 
 	database.Seed()
+}
+
+func GetClientTokenFor(clientID string) uaa.Token {
+	token, err := GetUAAClientFor(clientID).GetClientToken()
+	if err != nil {
+		panic(err)
+	}
+
+	return token
+}
+
+func GetUserTokenFor(code string) uaa.Token {
+	token, err := GetUAAClientFor("notifications-sender").Exchange(code)
+	if err != nil {
+		panic(err)
+	}
+
+	return token
+}
+
+func GetUAAClientFor(clientID string) uaa.UAA {
+	env := application.NewEnvironment()
+	return uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
 }

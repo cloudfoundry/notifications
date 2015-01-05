@@ -9,7 +9,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,12 +16,7 @@ import (
 
 var _ = Describe("notifications can be registered, using the deprecated /registration endpoint", func() {
 	It("registers a notification", func() {
-		env := application.NewEnvironment()
-		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-sender", "secret", "")
-		clientToken, err := uaaClient.GetClientToken()
-		if err != nil {
-			panic(err)
-		}
+		clientToken := GetClientTokenFor("notifications-sender")
 		client := support.NewClient(Servers.Notifications)
 		userID := "user-123"
 
@@ -82,6 +76,7 @@ var _ = Describe("notifications can be registered, using the deprecated /registr
 			}, 1*time.Second).Should(Equal(1))
 			delivery := Servers.SMTP.Deliveries[0]
 
+			env := application.NewEnvironment()
 			Expect(delivery.Sender).To(Equal(env.Sender))
 			Expect(delivery.Recipients).To(Equal([]string{"user-123@example.com"}))
 

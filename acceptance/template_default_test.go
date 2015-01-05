@@ -15,18 +15,10 @@ import (
 
 var _ = Describe("Default Template", func() {
 	var client *support.Client
-	var env application.Environment
 	var clientToken uaa.Token
 
 	BeforeEach(func() {
-		var err error
-		clientID := "notifications-admin"
-		env = application.NewEnvironment()
-		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
-		clientToken, err = uaaClient.GetClientToken()
-		if err != nil {
-			panic(err)
-		}
+		clientToken = GetClientTokenFor("notifications-admin")
 		client = support.NewClient(Servers.Notifications)
 	})
 
@@ -120,6 +112,7 @@ var _ = Describe("Default Template", func() {
 			}, 1*time.Second).Should(Equal(1))
 			delivery := Servers.SMTP.Deliveries[0]
 
+			env := application.NewEnvironment()
 			Expect(delivery.Sender).To(Equal(env.Sender))
 			Expect(delivery.Recipients).To(Equal([]string{"user@example.com"}))
 

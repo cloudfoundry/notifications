@@ -4,8 +4,6 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
-	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,12 +12,7 @@ import (
 var _ = Describe("Template Metadata", func() {
 	It("creates and updates a template with metadata", func() {
 		var templateID string
-		env := application.NewEnvironment()
-		uaaClient := uaa.NewUAA("", env.UAAHost, "notifications-admin", "secret", "")
-		clientToken, err := uaaClient.GetClientToken()
-		if err != nil {
-			panic(err)
-		}
+		clientToken := GetClientTokenFor("notifications-admin")
 		client := support.NewClient(Servers.Notifications)
 
 		By("creating a template with metadata", func() {

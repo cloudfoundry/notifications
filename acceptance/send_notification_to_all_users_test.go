@@ -7,7 +7,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,13 +17,7 @@ var _ = Describe("Send a notification to all users of UAA", func() {
 		var templateID string
 		indexedResponses := map[string]support.NotifyResponse{}
 		clientID := "notifications-sender"
-		env := application.NewEnvironment()
-		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
-		clientToken, err := uaaClient.GetClientToken()
-		if err != nil {
-			panic(err)
-		}
-
+		clientToken := GetClientTokenFor(clientID)
 		client := support.NewClient(Servers.Notifications)
 
 		By("registering a notification", func() {
@@ -103,6 +96,7 @@ var _ = Describe("Send a notification to all users of UAA", func() {
 				recipientIndex = 1
 			}
 
+			env := application.NewEnvironment()
 			delivery := Servers.SMTP.Deliveries[recipientIndex]
 			Expect(delivery.Sender).To(Equal(env.Sender))
 

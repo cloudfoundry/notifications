@@ -18,18 +18,11 @@ import (
 
 var _ = Describe("Sending notifications to all users in a space", func() {
 	It("sends a notification to each user in a space", func() {
-		// Retrieve UAA token
-		env := application.NewEnvironment()
 		clientID := "notifications-sender"
-		uaaClient := uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
-		clientToken, err := uaaClient.GetClientToken()
-		if err != nil {
-			panic(err)
-		}
 
 		test := SendNotificationsToSpace{
 			client:              support.NewClient(Servers.Notifications),
-			clientToken:         clientToken,
+			clientToken:         GetClientTokenFor(clientID),
 			notificationsServer: Servers.Notifications,
 			smtpServer:          Servers.SMTP,
 		}

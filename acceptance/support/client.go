@@ -1,14 +1,19 @@
 package support
 
 import (
+	"bytes"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 )
 
 type Client struct {
 	server        servers.Notifications
+	trace         bool
 	Notifications *NotificationsService
 	Templates     *TemplatesService
 	Notify        *NotifyService
@@ -17,6 +22,7 @@ type Client struct {
 func NewClient(server servers.Notifications) *Client {
 	client := &Client{
 		server: server,
+		trace:  os.Getenv("TRACE") != "",
 	}
 	client.Notifications = &NotificationsService{
 		client: client,
@@ -39,6 +45,7 @@ func (c Client) makeRequest(method, path string, content io.Reader, token string
 	if err != nil {
 		return 0, nil, err
 	}
+	c.printRequest(request)
 
 	request.Header.Set("Authorization", "Bearer "+token)
 
@@ -46,6 +53,41 @@ func (c Client) makeRequest(method, path string, content io.Reader, token string
 	if err != nil {
 		return 0, nil, err
 	}
+	c.printResponse(response)
 
 	return response.StatusCode, response.Body, nil
+}
+
+func (c Client) printRequest(request *http.Request) {
+	if c.trace {
+		buffer := bytes.NewBuffer([]byte{})
+		body := bytes.NewBuffer([]byte{})
+		if request.Body != nil {
+			_, err := io.Copy(io.MultiWriter(buffer, body), request.Body)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		request.Body = ioutil.NopCloser(body)
+
+		fmt.Printf("[REQ] %s %s %s\n", request.Method, request.URL.String(), buffer.String())
+	}
+}
+
+func (c Client) printResponse(response *http.Response) {
+	if c.trace {
+		buffer := bytes.NewBuffer([]byte{})
+		body := bytes.NewBuffer([]byte{})
+		if response.Body != nil {
+			_, err := io.Copy(io.MultiWriter(buffer, body), response.Body)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		response.Body = ioutil.NopCloser(body)
+
+		fmt.Printf("[RES] %s %s\n", response.Status, buffer.String())
+	}
 }
