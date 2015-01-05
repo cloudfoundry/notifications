@@ -28,6 +28,8 @@
 	- [List templates](#list-template)
 	- [Get the default template](#get-default-template)
 	- [Update the default template](#put-default-template)
+	- [Assign a template to a client](#put-client-template)
+	- [Assign a template to a notification](#put-client-notification-template)
 
 ## System Status
 
@@ -580,27 +582,33 @@ Transfer-Encoding: chunked
 {
   "client-27054050-f813-4c0d-6fe4-2337f09a0aca": {
     "name": "Flynn",
+    "template": "default",
     "notifications": {
       "clu": {
         "description": "CLU",
-        "critical": false
+        "critical": false,
+        "template": "default"
       },
       "grid": {
         "description": "A Digital Frontier...",
-        "critical": false
+        "critical": false,
+        "template": "EC6E8386-3096-48A4-A0C0-C0005B6933B2"
       },
       "mcp": {
         "description": "Master Control Program",
-        "critical": true
+        "critical": true,
+        "template": "C66DA695-C500-4D73-98F4-FC166EE0A0E9"
       }
     }
   },
  "client-36f1d81e-b9d6-400c-4f37-154ca2e8f01b": {
     "name": "Some other client",
+    "template": "8BA02476-DC1F-493E-A6BF-EFE1D95ADFBD",
     "notifications": {
       "my-2nd-notification": {
         "description": "another test thingy",
-        "critical": true
+        "critical": true,
+        "template": "default"
       }
     }
   }
@@ -615,13 +623,15 @@ Transfer-Encoding: chunked
 ```
 
 ###### Body
-| Fields    | Description                                      |
-| --------  | -----------                                      |
-| client-id | Top-level keys are client GUIDs derived from UAA |
-| name      | The "source_name" set by the `PUT` method; displayed in messages to users |
-| notifications | A map, where the keys are notification IDs set by the `PUT` method |
-| description | A description of the notification.  Set by the `PUT` method |
-| critical | Boolean, indicating if notification is "critical".  Set by the `PUT` method |
+| Fields                    | Description                                                                 |
+| ------------------------- | --------------------------------------------------------------------------- |
+| client-id                 | Top-level keys are client GUIDs derived from UAA                            |
+| name                      | The "source_name" set by the `PUT` method; displayed in messages to users   |
+| template                  | The ID of the template assigned to the client                               |
+| notifications             | A map, where the keys are notification IDs set by the `PUT` method          |
+| notifications.description | A description of the notification.  Set by the `PUT` method                 |
+| notifications.critical    | Boolean, indicating if notification is "critical".  Set by the `PUT` method |
+| notifications.template    | The ID of the template assigned to the notification                         |
 
 
 ## Managing User Preferences
@@ -1324,7 +1334,7 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 
 
 <a name="put-default-template"></a>
-### Update Template
+### Update Default Template
 
 This endpoint is used to update the default template.
 
@@ -1375,4 +1385,98 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 204 No Content
 ```
 
-###### Body
+<a name="put-client-template"></a>
+### Assign a template to a client
+
+This endpoint is used to assign an existing template to a known client.
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `notifications.manage` scope
+
+###### Route
+```
+PUT /clients/:client_id/template
+```
+###### Params
+
+| Key        | Description                                                                                |
+| ---------- | -------------------------------------------------------------------------------------------|
+| template\* | ID of template to be assigned (a value of `null` or `""` will assign the default template) |
+
+\* required
+
+###### CURL example
+```
+$ curl -i -X PUT \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  -d '{"template": "4102591e-10d7-4c83-9fc9-1c88c5754f37"}' \
+  http://notifications.example.com/clients/my-client/template
+
+204 No Content
+Connection: close
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 28 Oct 2014 00:18:48 GMT
+X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
+
+```
+
+##### Response
+
+###### Status
+```
+204 No Content
+```
+
+<a name="put-client-notification-template"></a>
+### Assign a template to a notification
+
+This endpoint is used to assign an existing template to a notification belonging to a known client.
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `notifications.manage` scope
+
+###### Route
+```
+PUT /clients/:client_id/notifications/:notification_id/template
+```
+###### Params
+
+| Key        | Description                                                                                |
+| ---------- | -------------------------------------------------------------------------------------------|
+| template\* | ID of template to be assigned (a value of `null` or `""` will assign the default template) |
+
+\* required
+
+###### CURL example
+```
+$ curl -i -X PUT \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  -d '{"template": "4102591e-10d7-4c83-9fc9-1c88c5754f37"}' \
+  http://notifications.example.com/clients/my-client/notifications/my-notification/template
+
+204 No Content
+Connection: close
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 28 Oct 2014 00:18:48 GMT
+X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
+
+```
+
+##### Response
+
+###### Status
+```
+204 No Content
+```
