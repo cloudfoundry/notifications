@@ -528,7 +528,7 @@ $ curl -i -X PUT \
   http://notifications.example.com/notifications
 
 
-HTTP/1.1 200 OK
+HTTP/1.1 204 OK
 Connection: close
 Content-Length: 0
 Content-Type: text/plain; charset=utf-8
@@ -539,13 +539,8 @@ X-Cf-Requestid: f39e22a4-6693-4a6d-6b27-006aecc924d4
 
 ###### Status
 ```
-200 OK
+204 No Content
 ```
-
-###### Body
-| Fields   | Description |
-| -------- | ----------- |
-| \<none\> |             |
 
 ## Listing Notifications
 
