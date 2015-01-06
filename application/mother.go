@@ -236,7 +236,7 @@ func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, service
 		services.NewTemplateDeleter(templatesRepo, database),
 		services.NewTemplateLister(templatesRepo, database),
 		services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo, database),
-		services.NewTemplateAssociationLister(clientsRepo, kindsRepo, database)
+		services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo, database)
 }
 
 func (mother Mother) KindsRepo() models.KindsRepo {

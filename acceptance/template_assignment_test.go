@@ -4,18 +4,25 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
+	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Assign Templates", func() {
+	var templateID, notificationID, clientID string
+	var clientToken uaa.Token
+	var client *support.Client
+
+	BeforeEach(func() {
+		notificationID = "acceptance-test"
+		clientID = "notifications-admin"
+		clientToken = GetClientTokenFor(clientID)
+		client = support.NewClient(Servers.Notifications)
+	})
+
 	It("Creates a template and then assigns it", func() {
-		var templateID string
-		notificationID := "acceptance-test"
-		clientID := "notifications-admin"
-		clientToken := GetClientTokenFor(clientID)
-		client := support.NewClient(Servers.Notifications)
 
 		By("registering a notification", func() {
 			code, err := client.Notifications.Register(clientToken.Access, support.RegisterClient{
@@ -91,5 +98,11 @@ var _ = Describe("Assign Templates", func() {
 				NotificationID: notificationID,
 			}))
 		})
+	})
+
+	It("does not know about non-existent templates", func() {
+		status, _, err := client.Templates.Associations(clientToken.Access, "random-template-id")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(status).To(Equal(http.StatusNotFound))
 	})
 })

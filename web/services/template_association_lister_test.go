@@ -17,19 +17,29 @@ var _ = Describe("TemplateAssociationLister", func() {
 	var templateID string
 	var clientsRepo *fakes.ClientsRepo
 	var kindsRepo *fakes.KindsRepo
+	var templatesRepo *fakes.TemplatesRepo
 	var database *fakes.Database
 
 	Describe("List", func() {
 		BeforeEach(func() {
 			clientsRepo = fakes.NewClientsRepo()
 			kindsRepo = fakes.NewKindsRepo()
+			templatesRepo = fakes.NewTemplatesRepo()
 			database = fakes.NewDatabase()
-			lister = services.NewTemplateAssociationLister(clientsRepo, kindsRepo, database)
+
+			templateID = "a-template-id"
+			_, err := templatesRepo.Create(database.Connection(), models.Template{
+				ID: templateID,
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			lister = services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo, database)
 		})
 
 		Context("when a template has been associated to some clients and notifications", func() {
 			BeforeEach(func() {
-				templateID = "a-template-id"
 				expectedAssociations = []services.TemplateAssociation{
 					{
 						ClientID: "some-client",
@@ -94,6 +104,15 @@ var _ = Describe("TemplateAssociationLister", func() {
 
 					_, err := lister.List(templateID)
 					Expect(err).To(MatchError(errors.New("more bad happened")))
+				})
+			})
+
+			Context("when the template repo returns an error", func() {
+				It("returns the underlying error", func() {
+					templatesRepo.FindError = errors.New("something terrible happened")
+
+					_, err := lister.List(templateID)
+					Expect(err).To(MatchError(errors.New("something terrible happened")))
 				})
 			})
 		})

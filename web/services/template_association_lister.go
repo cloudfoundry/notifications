@@ -12,21 +12,28 @@ type TemplateAssociationListerInterface interface {
 }
 
 type TemplateAssociationLister struct {
-	clientsRepo models.ClientsRepoInterface
-	kindsRepo   models.KindsRepoInterface
-	database    models.DatabaseInterface
+	clientsRepo   models.ClientsRepoInterface
+	kindsRepo     models.KindsRepoInterface
+	templatesRepo models.TemplatesRepoInterface
+	database      models.DatabaseInterface
 }
 
-func NewTemplateAssociationLister(clientsRepo models.ClientsRepoInterface, kindsRepo models.KindsRepoInterface, database models.DatabaseInterface) TemplateAssociationLister {
+func NewTemplateAssociationLister(clientsRepo models.ClientsRepoInterface, kindsRepo models.KindsRepoInterface, templatesRepo models.TemplatesRepoInterface, database models.DatabaseInterface) TemplateAssociationLister {
 	return TemplateAssociationLister{
-		clientsRepo: clientsRepo,
-		kindsRepo:   kindsRepo,
-		database:    database,
+		clientsRepo:   clientsRepo,
+		kindsRepo:     kindsRepo,
+		templatesRepo: templatesRepo,
+		database:      database,
 	}
 }
 
 func (lister TemplateAssociationLister) List(templateID string) ([]TemplateAssociation, error) {
 	associations := []TemplateAssociation{}
+
+	_, err := lister.templatesRepo.FindByID(lister.database.Connection(), templateID)
+	if err != nil {
+		return associations, err
+	}
 
 	clients, err := lister.clientsRepo.FindAllByTemplateID(lister.database.Connection(), templateID)
 	if err != nil {

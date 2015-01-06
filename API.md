@@ -1508,8 +1508,8 @@ Date: Tue, 28 Oct 2014 00:18:48 GMT
 X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 
 {"associations":[
-    {"client":"client-id"}
-    {"client":"client-id", "notification":"example-notification-id"}
+    {"client":"client-id"},
+    {"client":"client-id", "notification":"example-notification-id"},
     {"client":"client-id2", "notification":"example-notification-id2"}
   ]
 }
