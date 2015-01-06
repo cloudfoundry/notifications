@@ -110,3 +110,24 @@ func (n NotifyService) OrganizationRole(token, organizationGUID string, notify N
 
 	return status, responses, nil
 }
+
+func (n NotifyService) Organization(token, organizationGUID string, notify Notify) (int, []NotifyResponse, error) {
+	var responses []NotifyResponse
+
+	body, err := json.Marshal(notify)
+	if err != nil {
+		return 0, responses, err
+	}
+
+	status, responseBody, err := n.client.makeRequest("POST", n.client.server.OrganizationsPath(organizationGUID), bytes.NewBuffer(body), token)
+	if err != nil {
+		return 0, responses, err
+	}
+
+	err = json.NewDecoder(responseBody).Decode(&responses)
+	if err != nil {
+		return 0, responses, err
+	}
+
+	return status, responses, nil
+}
