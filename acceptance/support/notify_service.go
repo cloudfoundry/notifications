@@ -3,6 +3,7 @@ package support
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
 )
 
 type NotifyService struct {
@@ -15,6 +16,7 @@ type Notify struct {
 	Subject string `json:"subject"`
 	Text    string `json:"text"`
 	To      string `json:"to,omitempty"`
+	Role    string `json:"role,omitempty"`
 }
 
 type NotifyResponse struct {
@@ -23,7 +25,7 @@ type NotifyResponse struct {
 	NotificationID string `json:"notification_id"`
 }
 
-func (n NotifyService) User(token, userID string, notify Notify) (int, []NotifyResponse, error) {
+func (n NotifyService) User(token, userGUID string, notify Notify) (int, []NotifyResponse, error) {
 	var responses []NotifyResponse
 
 	body, err := json.Marshal(notify)
@@ -31,7 +33,7 @@ func (n NotifyService) User(token, userID string, notify Notify) (int, []NotifyR
 		return 0, responses, err
 	}
 
-	status, responseBody, err := n.client.makeRequest("POST", n.client.server.UsersPath(userID), bytes.NewBuffer(body), token)
+	status, responseBody, err := n.client.makeRequest("POST", n.client.server.UsersPath(userGUID), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, responses, err
 	}
@@ -81,6 +83,29 @@ func (n NotifyService) Email(token string, notify Notify) (int, []NotifyResponse
 	err = json.NewDecoder(responseBody).Decode(&responses)
 	if err != nil {
 		return 0, responses, err
+	}
+
+	return status, responses, nil
+}
+
+func (n NotifyService) OrganizationRole(token, organizationGUID string, notify Notify) (int, []NotifyResponse, error) {
+	var responses []NotifyResponse
+
+	body, err := json.Marshal(notify)
+	if err != nil {
+		return 0, responses, err
+	}
+
+	status, responseBody, err := n.client.makeRequest("POST", n.client.server.OrganizationsPath(organizationGUID), bytes.NewBuffer(body), token)
+	if err != nil {
+		return 0, responses, err
+	}
+
+	if status == http.StatusOK {
+		err = json.NewDecoder(responseBody).Decode(&responses)
+		if err != nil {
+			return 0, responses, err
+		}
 	}
 
 	return status, responses, nil
