@@ -30,6 +30,7 @@
 	- [Update the default template](#put-default-template)
 	- [Assign a template to a client](#put-client-template)
 	- [Assign a template to a notification](#put-client-notification-template)
+	- [List template associations](#get-template-associations)
 
 ## System Status
 
@@ -1475,3 +1476,55 @@ X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
 ```
 204 No Content
 ```
+
+<a name="get-template-associations"></a>
+### List template associations
+
+This endpoint is used to list all clients and notifications associated to a template.
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `notifications.manage` scope
+
+###### Route
+```
+GET /default_template
+```
+###### CURL example
+```
+$ curl -i -X GET \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/templates/template-id/associations
+
+200 OK
+Connection: close
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 28 Oct 2014 00:18:48 GMT
+X-Cf-Requestid: 8938a949-66b1-43f5-4fad-a91fc050b603
+
+{"associations":[
+    {"client":"client-id"}
+    {"client":"client-id", "notification":"example-notification-id"}
+    {"client":"client-id2", "notification":"example-notification-id2"}
+  ]
+}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields                    | Description                                          |
+| ------------------------- | ---------------------------------------------------- |
+| associations              | The list of all associated clients and notifications |
+| associations.client       | The client ID associated with this template          |
+| associations.notification | The notification ID associated with this template    |
