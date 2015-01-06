@@ -24,6 +24,7 @@ type KindsRepoInterface interface {
 	Find(ConnectionInterface, string, string) (Kind, error)
 	FindByClient(ConnectionInterface, string) ([]Kind, error)
 	FindAll(ConnectionInterface) ([]Kind, error)
+	FindAllByTemplateID(ConnectionInterface, string) ([]Kind, error)
 	Update(ConnectionInterface, Kind) (Kind, error)
 	Upsert(ConnectionInterface, Kind) (Kind, error)
 	Trim(ConnectionInterface, string, []string) (int, error)
@@ -130,6 +131,15 @@ func (repo KindsRepo) findAllByClientID(conn ConnectionInterface, clientID strin
 	}
 	for _, result := range results {
 		kinds = append(kinds, *result.(*Kind))
+	}
+	return kinds, nil
+}
+
+func (repo KindsRepo) FindAllByTemplateID(conn ConnectionInterface, templateID string) ([]Kind, error) {
+	kinds := []Kind{}
+	_, err := conn.Select(&kinds, "SELECT * FROM `kinds` WHERE `template_id` = ?", templateID)
+	if err != nil {
+		return kinds, err
 	}
 	return kinds, nil
 }

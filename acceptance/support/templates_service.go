@@ -23,6 +23,29 @@ type TemplateListItem struct {
 	Name string `json:"name"`
 }
 
+type TemplateAssociation struct {
+	ClientID       string `json:"client"`
+	NotificationID string `json:"notification"`
+}
+
+func (t TemplatesService) Associations(token, templateID string) (int, []TemplateAssociation, error) {
+	var associations struct {
+		Associations []TemplateAssociation `json:"associations"`
+	}
+
+	status, body, err := t.client.makeRequest("GET", t.client.server.TemplateAssociations(templateID), nil, token)
+	if err != nil {
+		return 0, associations.Associations, err
+	}
+
+	err = json.NewDecoder(body).Decode(&associations)
+	if err != nil {
+		return 0, associations.Associations, err
+	}
+
+	return status, associations.Associations, nil
+}
+
 func (t TemplatesService) Create(token string, template Template) (int, string, error) {
 	body, err := json.Marshal(template)
 	if err != nil {

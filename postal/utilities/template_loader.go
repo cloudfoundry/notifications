@@ -38,8 +38,8 @@ func (loader TemplatesLoader) LoadTemplates(clientID, kindID string) (postal.Tem
 		return postal.Templates{}, err
 	}
 
-	if kind.Template != "" {
-		return loader.loadTemplate(conn, kind.Template)
+	if kind.TemplateID != "" {
+		return loader.loadTemplate(conn, kind.TemplateID)
 	}
 
 	client, err := loader.clientsRepo.Find(conn, clientID)
@@ -47,8 +47,8 @@ func (loader TemplatesLoader) LoadTemplates(clientID, kindID string) (postal.Tem
 		return postal.Templates{}, err
 	}
 
-	if client.Template != "" {
-		return loader.loadTemplate(conn, client.Template)
+	if client.TemplateID != "" {
+		return loader.loadTemplate(conn, client.TemplateID)
 	}
 
 	return loader.loadTemplate(conn, models.DefaultTemplateID)

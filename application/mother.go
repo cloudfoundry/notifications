@@ -224,7 +224,7 @@ func (mother Mother) TemplateFinder() services.TemplateFinder {
 }
 
 func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
-	services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner) {
+	services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister) {
 
 	database := mother.Database()
 	clientsRepo, kindsRepo := mother.Repos()
@@ -235,7 +235,8 @@ func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, service
 		services.NewTemplateUpdater(templatesRepo, database),
 		services.NewTemplateDeleter(templatesRepo, database),
 		services.NewTemplateLister(templatesRepo, database),
-		services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo, database)
+		services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo, database),
+		services.NewTemplateAssociationLister(clientsRepo, kindsRepo, database)
 }
 
 func (mother Mother) KindsRepo() models.KindsRepo {

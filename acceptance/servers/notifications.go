@@ -151,6 +151,10 @@ func (s Notifications) TemplatePath(templateID string) string {
 	return s.RootPath() + "/templates/" + templateID
 }
 
+func (s Notifications) TemplateAssociations(templateID string) string {
+	return s.RootPath() + "/templates/" + templateID + "/associations"
+}
+
 func (s Notifications) ClientsTemplatePath(clientID string) string {
 	return s.RootPath() + "/clients/" + clientID + "/template"
 }

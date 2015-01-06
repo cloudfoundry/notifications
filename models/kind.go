@@ -9,12 +9,12 @@ type Kind struct {
 	Critical    bool      `db:"critical"`
 	ClientID    string    `db:"client_id"`
 	CreatedAt   time.Time `db:"created_at"`
-	Template    string    `db:"template_id"`
+	TemplateID  string    `db:"template_id"`
 }
 
 func (k Kind) TemplateToUse() string {
-	if k.Template != "" {
-		return k.Template
+	if k.TemplateID != "" {
+		return k.TemplateID
 	}
 
 	return DefaultTemplateID

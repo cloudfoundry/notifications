@@ -57,8 +57,8 @@ func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
 
 func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder,
 	services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister,
-	services.TemplateAssigner) {
-	return services.TemplateCreator{}, services.TemplateFinder{}, services.TemplateUpdater{}, services.TemplateDeleter{}, services.TemplateLister{}, services.TemplateAssigner{}
+	services.TemplateAssigner, services.TemplateAssociationLister) {
+	return services.TemplateCreator{}, services.TemplateFinder{}, services.TemplateUpdater{}, services.TemplateDeleter{}, services.TemplateLister{}, services.TemplateAssigner{}, services.TemplateAssociationLister{}
 }
 
 func (mother Mother) Database() models.DatabaseInterface {

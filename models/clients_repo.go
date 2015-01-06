@@ -12,6 +12,7 @@ type ClientsRepoInterface interface {
 	Create(ConnectionInterface, Client) (Client, error)
 	Find(ConnectionInterface, string) (Client, error)
 	FindAll(ConnectionInterface) ([]Client, error)
+	FindAllByTemplateID(ConnectionInterface, string) ([]Client, error)
 	Update(ConnectionInterface, Client) (Client, error)
 	Upsert(ConnectionInterface, Client) (Client, error)
 }
@@ -76,4 +77,14 @@ func (repo ClientsRepo) Upsert(conn ConnectionInterface, client Client) (Client,
 	default:
 		return client, err
 	}
+}
+
+func (repo ClientsRepo) FindAllByTemplateID(conn ConnectionInterface, templateID string) ([]Client, error) {
+	clients := []Client{}
+	_, err := conn.Select(&clients, "SELECT * FROM `clients` WHERE `template_id` = ?", templateID)
+	if err != nil {
+		return clients, err
+	}
+
+	return clients, nil
 }

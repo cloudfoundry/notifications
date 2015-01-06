@@ -13,7 +13,7 @@ var _ = Describe("Kind", func() {
 	Describe("TemplateToUse", func() {
 		Context("when the template is set", func() {
 			BeforeEach(func() {
-				kind.Template = "template-id"
+				kind.TemplateID = "template-id"
 			})
 
 			It("returns the template value", func() {
@@ -23,7 +23,7 @@ var _ = Describe("Kind", func() {
 
 		Context("when the template is not set", func() {
 			BeforeEach(func() {
-				kind.Template = ""
+				kind.TemplateID = ""
 			})
 
 			It("returns the default template value", func() {

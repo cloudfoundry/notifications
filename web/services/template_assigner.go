@@ -43,7 +43,7 @@ func (assigner TemplateAssigner) AssignToClient(clientID, templateID string) err
 		return err
 	}
 
-	client.Template = templateID
+	client.TemplateID = templateID
 
 	_, err = assigner.clientsRepo.Update(conn, client)
 	if err != nil {
@@ -74,7 +74,7 @@ func (assigner TemplateAssigner) AssignToNotification(clientID, notificationID, 
 		return err
 	}
 
-	kind.Template = templateID
+	kind.TemplateID = templateID
 	_, err = assigner.kindsRepo.Update(conn, kind)
 	if err != nil {
 		return err

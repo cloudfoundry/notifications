@@ -331,4 +331,22 @@ var _ = Describe("KindsRepo", func() {
 			Expect(kinds).To(ContainElement(kind2))
 		})
 	})
+
+	Describe("FindAllByTemplateID", func() {
+		It("returns all kinds with a given template ID", func() {
+			kind, err := repo.Create(conn, models.Kind{
+				ID:         "some-id",
+				TemplateID: "some-template",
+			})
+
+			_, err = repo.Create(conn, models.Kind{
+				ID: "another-id",
+			})
+
+			kinds, err := repo.FindAllByTemplateID(conn, "some-template")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(kinds).To(HaveLen(1))
+			Expect(kinds).To(ContainElement(kind))
+		})
+	})
 })

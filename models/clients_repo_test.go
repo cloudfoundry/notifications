@@ -156,4 +156,28 @@ var _ = Describe("ClientsRepo", func() {
 			})
 		})
 	})
+
+	Describe("FindAllByTemplateID", func() {
+		It("returns a list of clients with the given template ID", func() {
+			client1, err := repo.Create(conn, models.Client{
+				ID:         "i-have-a-template",
+				TemplateID: "some-template-id",
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			_, err = repo.Create(conn, models.Client{
+				ID: "i-dont-have-a-template",
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			returnedClients, err := repo.FindAllByTemplateID(conn, "some-template-id")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(returnedClients).To(HaveLen(1))
+			Expect(returnedClients).To(ContainElement(client1))
+		})
+	})
 })

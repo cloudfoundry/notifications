@@ -77,5 +77,19 @@ var _ = Describe("Assign Templates", func() {
 			Expect(clientNotifications).To(HaveLen(1))
 			Expect(clientNotifications[notificationID].Template).To(Equal(templateID))
 		})
+
+		By("confirming that the client and notification are listed in the assignments", func() {
+			status, associations, err := client.Templates.Associations(clientToken.Access, templateID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+			Expect(associations).To(HaveLen(2))
+			Expect(associations).To(ContainElement(support.TemplateAssociation{
+				ClientID: clientID,
+			}))
+			Expect(associations).To(ContainElement(support.TemplateAssociation{
+				ClientID:       clientID,
+				NotificationID: notificationID,
+			}))
+		})
 	})
 })

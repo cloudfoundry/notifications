@@ -3,11 +3,12 @@ package fakes
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type ClientsRepo struct {
-	Clients     map[string]models.Client
-	AllClients  []models.Client
-	UpsertError error
-	FindError   error
-	UpdateError error
+	Clients                  map[string]models.Client
+	AllClients               []models.Client
+	UpsertError              error
+	FindError                error
+	UpdateError              error
+	FindAllByTemplateIDError error
 }
 
 func NewClientsRepo() *ClientsRepo {
@@ -43,4 +44,14 @@ func (fake *ClientsRepo) Find(conn models.ConnectionInterface, id string) (model
 
 func (fake *ClientsRepo) FindAll(conn models.ConnectionInterface) ([]models.Client, error) {
 	return fake.AllClients, nil
+}
+
+func (fake *ClientsRepo) FindAllByTemplateID(conn models.ConnectionInterface, templateID string) ([]models.Client, error) {
+	var clients []models.Client
+	for _, client := range fake.Clients {
+		if client.TemplateID == templateID {
+			clients = append(clients, client)
+		}
+	}
+	return clients, fake.FindAllByTemplateIDError
 }

@@ -56,7 +56,7 @@ var _ = Describe("TemplateAssigner", func() {
 				panic(err)
 			}
 
-			Expect(client.Template).To(Equal("my-template"))
+			Expect(client.TemplateID).To(Equal("my-template"))
 		})
 
 		Context("when the request includes a non-existant id", func() {
@@ -137,7 +137,7 @@ var _ = Describe("TemplateAssigner", func() {
 				panic(err)
 			}
 
-			Expect(kind.Template).To(Equal("my-template"))
+			Expect(kind.TemplateID).To(Equal("my-template"))
 		})
 
 		Context("when the request includes a non-existant id", func() {

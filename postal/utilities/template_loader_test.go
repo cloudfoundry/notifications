@@ -78,7 +78,7 @@ var _ = Describe("TemplateLoader", func() {
 					panic(err)
 				}
 
-				kind.Template = template.ID
+				kind.TemplateID = template.ID
 				_, err = kindsRepo.Update(conn, kind)
 				if err != nil {
 					panic(err)
@@ -109,7 +109,7 @@ var _ = Describe("TemplateLoader", func() {
 					panic(err)
 				}
 
-				client.Template = template.ID
+				client.TemplateID = template.ID
 				_, err = clientsRepo.Update(conn, client)
 				if err != nil {
 					panic(err)
