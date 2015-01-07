@@ -425,6 +425,16 @@ var _ = Describe("Mail", func() {
 
 			Expect(buffer.String()).To(ContainSubstring("SMTP Error: BOOM!"))
 		})
+
+		It("quits the current connection when an error occurs", func() {
+			Expect(mailServer.ConnectionState).To(Equal(StateUnknown))
+
+			client.Connect()
+			Expect(mailServer.ConnectionState).To(Equal(StateConnected))
+
+			client.Error(errors.New("BOOM!!"))
+			Expect(mailServer.ConnectionState).To(Equal(StateClosed))
+		})
 	})
 
 	Describe("PrintLog", func() {

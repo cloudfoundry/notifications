@@ -253,7 +253,15 @@ func (c *Client) Quit() error {
 }
 
 func (c *Client) Error(err error) error {
+	if c.client != nil {
+		failure := c.client.Quit()
+		if failure != nil {
+			return failure
+		}
+	}
+
 	c.logger.Printf("SMTP Error: %s", err.Error())
+
 	return err
 }
 

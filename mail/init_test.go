@@ -71,6 +71,9 @@ cikMqwKBgDLBKiVLqSeli1BrlURWGMyl7j+NgYNdih+M2Ra8dAuWt6BTQfjYW53u
 EK8URF8KvO4+PR5pRJDCNx6+uOLoTsBE7KBYEiLzK9rTpEBQIv35h4hmF75SNiF/
 gMirbaXT377nSX0oPon0P1iUgl5tUJNqYnYdA+qcpoeCvXuObAzm
 -----END RSA PRIVATE KEY-----`
+	StateUnknown   = "unknown"
+	StateConnected = "connected"
+	StateClosed    = "closed"
 )
 
 type SMTPServer struct {
@@ -81,6 +84,7 @@ type SMTPServer struct {
 	SupportsTLS     bool
 	ConnectWait     time.Duration
 	halt            chan bool
+	ConnectionState string
 }
 
 type Delivery struct {
@@ -105,9 +109,10 @@ func NewSMTPServer(user, pass string) *SMTPServer {
 	}
 
 	server := SMTPServer{
-		URL:      *listenerURL,
-		Listener: listener,
-		halt:     make(chan bool),
+		URL:             *listenerURL,
+		Listener:        listener,
+		ConnectionState: StateUnknown,
+		halt:            make(chan bool),
 	}
 	server.Run()
 	return &server
@@ -147,6 +152,7 @@ func (server *SMTPServer) Close() {
 
 func (server *SMTPServer) Respond(conn net.Conn) {
 	<-time.After(server.ConnectWait)
+	server.ConnectionState = StateConnected
 
 	input := bufio.NewReader(conn)
 	output := bufio.NewWriter(conn)
@@ -260,4 +266,5 @@ func (server *SMTPServer) RecordData(output *bufio.Writer, input *bufio.Reader) 
 func (server *SMTPServer) RespondToQuit(output *bufio.Writer) {
 	output.WriteString("221 BYE\r\n")
 	output.Flush()
+	server.ConnectionState = StateClosed
 }
