@@ -90,7 +90,7 @@
 		},
 		{
 			"ImportPath": "github.com/pivotal-golang/conceal",
-			"Rev": "11bfb27ff14f79cf70d5ce41f777d5c3ed93e53f"
+			"Rev": "31656578115c62eb24f14f2a2946b018807cb6d2"
 		},
 		{
 			"ImportPath": "github.com/rubenv/sql-migrate",
