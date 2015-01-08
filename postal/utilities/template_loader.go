@@ -33,13 +33,15 @@ func NewTemplatesLoader(finder services.TemplateFinderInterface, database models
 func (loader TemplatesLoader) LoadTemplates(clientID, kindID string) (postal.Templates, error) {
 	conn := loader.database.Connection()
 
-	kind, err := loader.kindsRepo.Find(conn, kindID, clientID)
-	if err != nil {
-		return postal.Templates{}, err
-	}
+	if kindID != "" {
+		kind, err := loader.kindsRepo.Find(conn, kindID, clientID)
+		if err != nil {
+			return postal.Templates{}, err
+		}
 
-	if kind.TemplateID != "" {
-		return loader.loadTemplate(conn, kind.TemplateID)
+		if kind.TemplateID != "" {
+			return loader.loadTemplate(conn, kind.TemplateID)
+		}
 	}
 
 	client, err := loader.clientsRepo.Find(conn, clientID)

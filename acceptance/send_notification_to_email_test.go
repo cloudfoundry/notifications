@@ -55,7 +55,6 @@ var _ = Describe("Send a notification to an email", func() {
 
 		By("sending a notification to an email address", func() {
 			status, responses, err := client.Notify.Email(clientToken.Access, support.Notify{
-				KindID:  "acceptance-test",
 				HTML:    "<header>this is an acceptance test</header>",
 				Subject: "my-special-subject",
 				To:      "John User <user@example.com>",
@@ -86,6 +85,23 @@ var _ = Describe("Send a notification to an email", func() {
 			Expect(data).To(ContainElement("X-CF-Notification-ID: " + response.NotificationID))
 			Expect(data).To(ContainElement("Subject: Boldness my-special-subject"))
 			Expect(data).To(ContainElement("        <p>Enterprise</p><header>this is an acceptance test</header>"))
+		})
+
+		By("confirming that the client notificatins list remains unaffected", func() {
+			status, list, err := client.Notifications.List(GetClientTokenFor("notifications-sender").Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+			Expect(list).To(HaveLen(1))
+
+			notificationsSender := list[clientID]
+			Expect(notificationsSender.Name).To(Equal("Notifications Sender"))
+			Expect(notificationsSender.Template).To(Equal(templateID))
+			Expect(notificationsSender.Notifications).To(HaveLen(1))
+
+			acceptanceNotification := notificationsSender.Notifications["acceptance-test"]
+			Expect(acceptanceNotification.Description).To(Equal("Acceptance Test"))
+			Expect(acceptanceNotification.Template).To(Equal("default"))
+			Expect(acceptanceNotification.Critical).To(BeFalse())
 		})
 	})
 })

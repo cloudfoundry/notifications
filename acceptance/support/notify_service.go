@@ -11,7 +11,7 @@ type NotifyService struct {
 }
 
 type Notify struct {
-	KindID  string `json:"kind_id"`
+	KindID  string `json:"kind_id,omitempty"`
 	HTML    string `json:"html"`
 	Subject string `json:"subject"`
 	Text    string `json:"text"`

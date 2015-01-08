@@ -27,6 +27,10 @@ func (registrar Registrar) Register(conn models.ConnectionInterface, client mode
 	}
 
 	for _, kind := range kinds {
+		if kind.ID == "" {
+			continue
+		}
+
 		_, err := registrar.kindsRepo.Upsert(conn, kind)
 		if err != nil {
 			return err

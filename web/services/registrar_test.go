@@ -140,7 +140,14 @@ var _ = Describe("Registrar", func() {
 				panic(err)
 			}
 			Expect(kind).To(Equal(sleepy))
+		})
 
+		Context("when kind is an empty record", func() {
+			It("does nothing", func() {
+				err := registrar.Register(conn, models.Client{}, []models.Kind{models.Kind{}})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(kindsRepo.Kinds).To(HaveLen(0))
+			})
 		})
 
 		Context("error cases", func() {
@@ -155,7 +162,9 @@ var _ = Describe("Registrar", func() {
 			It("returns the errors from the kinds repo", func() {
 				kindsRepo.UpsertError = errors.New("BOOM!")
 
-				err := registrar.Register(conn, models.Client{}, []models.Kind{models.Kind{}})
+				err := registrar.Register(conn, models.Client{}, []models.Kind{
+					{ID: "something"},
+				})
 
 				Expect(err).To(Equal(errors.New("BOOM!")))
 			})

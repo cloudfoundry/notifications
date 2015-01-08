@@ -139,6 +139,18 @@ var _ = Describe("TemplateLoader", func() {
 			})
 		})
 
+		Context("when kindID is an empty string", func() {
+			It("does not look for a template belonging to the kind", func() {
+				templates, err := loader.LoadTemplates("my-client-id", "")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(templates).To(Equal(postal.Templates{
+					HTML:    "<p>The default template</p>",
+					Text:    "The default template",
+					Subject: "default subject",
+				}))
+			})
+		})
+
 		Context("when the kinds repo has an error", func() {
 			BeforeEach(func() {
 				kindsRepo.FindError = errors.New("BOOM!")
@@ -161,6 +173,5 @@ var _ = Describe("TemplateLoader", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
-
 	})
 })
