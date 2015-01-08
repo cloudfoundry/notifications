@@ -30,16 +30,17 @@ func NewTemplateAssigner(clientsRepo models.ClientsRepoInterface,
 func (assigner TemplateAssigner) AssignToClient(clientID, templateID string) error {
 	conn := assigner.database.Connection()
 
+	if templateID == models.DefaultTemplateID {
+		templateID = ""
+	}
+
 	client, err := assigner.clientsRepo.Find(conn, clientID)
 	if err != nil {
 		return err
 	}
 
-	_, err = assigner.templatesRepo.FindByID(conn, templateID)
+	err = assigner.findTemplate(conn, templateID)
 	if err != nil {
-		if _, ok := err.(models.RecordNotFoundError); ok {
-			return TemplateAssignmentError("No template with id '" + templateID + "'")
-		}
 		return err
 	}
 
@@ -56,6 +57,10 @@ func (assigner TemplateAssigner) AssignToClient(clientID, templateID string) err
 func (assigner TemplateAssigner) AssignToNotification(clientID, notificationID, templateID string) error {
 	conn := assigner.database.Connection()
 
+	if templateID == models.DefaultTemplateID {
+		templateID = ""
+	}
+
 	_, err := assigner.clientsRepo.Find(conn, clientID)
 	if err != nil {
 		return err
@@ -66,17 +71,31 @@ func (assigner TemplateAssigner) AssignToNotification(clientID, notificationID, 
 		return err
 	}
 
-	_, err = assigner.templatesRepo.FindByID(conn, templateID)
+	err = assigner.findTemplate(conn, templateID)
 	if err != nil {
-		if _, ok := err.(models.RecordNotFoundError); ok {
-			return TemplateAssignmentError("No template with id '" + templateID + "'")
-		}
 		return err
 	}
 
 	kind.TemplateID = templateID
+
 	_, err = assigner.kindsRepo.Update(conn, kind)
 	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (assigner TemplateAssigner) findTemplate(conn models.ConnectionInterface, templateID string) error {
+	if templateID == "" {
+		return nil
+	}
+
+	_, err := assigner.templatesRepo.FindByID(conn, templateID)
+	if err != nil {
+		if _, ok := err.(models.RecordNotFoundError); ok {
+			return TemplateAssignmentError("No template with id '" + templateID + "'")
+		}
 		return err
 	}
 

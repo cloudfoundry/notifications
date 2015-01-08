@@ -23,7 +23,6 @@ var _ = Describe("Assign Templates", func() {
 	})
 
 	It("Creates a template and then assigns it", func() {
-
 		By("registering a notification", func() {
 			code, err := client.Notifications.Register(clientToken.Access, support.RegisterClient{
 				SourceName: "Notifications Sender",
@@ -97,6 +96,23 @@ var _ = Describe("Assign Templates", func() {
 				ClientID:       clientID,
 				NotificationID: notificationID,
 			}))
+		})
+
+		By("resetting the template assignment", func() {
+			status, err := client.Templates.AssignToNotification(clientToken.Access, clientID, notificationID, "")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNoContent))
+		})
+
+		By("confirming that the notifications has the default template assigned", func() {
+			status, notifications, err := client.Notifications.List(clientToken.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+			Expect(notifications).To(HaveLen(1))
+
+			clientNotifications := notifications[clientID].Notifications
+			Expect(clientNotifications).To(HaveLen(1))
+			Expect(clientNotifications[notificationID].Template).To(Equal("default"))
 		})
 	})
 

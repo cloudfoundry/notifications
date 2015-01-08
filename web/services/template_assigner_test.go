@@ -29,10 +29,12 @@ var _ = Describe("TemplateAssigner", func() {
 	})
 
 	Describe("AssignToClient", func() {
+		var client models.Client
+
 		BeforeEach(func() {
 			var err error
 
-			_, err = clientsRepo.Create(conn, models.Client{
+			client, err = clientsRepo.Create(conn, models.Client{
 				ID: "my-client",
 			})
 			if err != nil {
@@ -73,6 +75,41 @@ var _ = Describe("TemplateAssigner", func() {
 			})
 		})
 
+		Context("when the request should reset the template assignment", func() {
+			BeforeEach(func() {
+				var err error
+				client.TemplateID = "some-random-template"
+				client, err = clientsRepo.Update(conn, client)
+				if err != nil {
+					panic(err)
+				}
+			})
+
+			It("allows template id of empty string to reset the assignment", func() {
+				err := assigner.AssignToClient("my-client", "")
+				Expect(err).NotTo(HaveOccurred())
+
+				client, err = clientsRepo.Find(conn, "my-client")
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(client.TemplateID).To(Equal(""))
+			})
+
+			It("allows template id of default template id to reset the assignment", func() {
+				err := assigner.AssignToClient("my-client", models.DefaultTemplateID)
+				Expect(err).NotTo(HaveOccurred())
+
+				client, err = clientsRepo.Find(conn, "my-client")
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(client.TemplateID).To(Equal(""))
+			})
+		})
+
 		Context("when it gets an error it doesn't understand", func() {
 			Context("on finding the client", func() {
 				It("returns any errors it doesn't understand", func() {
@@ -104,6 +141,8 @@ var _ = Describe("TemplateAssigner", func() {
 	})
 
 	Describe("AssignToNotification", func() {
+		var kind models.Kind
+
 		BeforeEach(func() {
 			client, err := clientsRepo.Create(conn, models.Client{
 				ID: "my-client",
@@ -112,7 +151,7 @@ var _ = Describe("TemplateAssigner", func() {
 				panic(err)
 			}
 
-			_, err = kindsRepo.Create(conn, models.Kind{
+			kind, err = kindsRepo.Create(conn, models.Kind{
 				ID:       "my-kind",
 				ClientID: client.ID,
 			})
@@ -132,7 +171,7 @@ var _ = Describe("TemplateAssigner", func() {
 			err := assigner.AssignToNotification("my-client", "my-kind", "my-template")
 			Expect(err).NotTo(HaveOccurred())
 
-			kind, err := kindsRepo.Find(conn, "my-kind", "my-client")
+			kind, err = kindsRepo.Find(conn, "my-kind", "my-client")
 			if err != nil {
 				panic(err)
 			}
@@ -157,6 +196,41 @@ var _ = Describe("TemplateAssigner", func() {
 				err := assigner.AssignToNotification("my-client", "my-kind", "non-existant-template")
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(BeAssignableToTypeOf(services.TemplateAssignmentError("")))
+			})
+		})
+
+		Context("when the request should reset the template assignment", func() {
+			BeforeEach(func() {
+				var err error
+				kind.TemplateID = "some-random-template"
+				kind, err = kindsRepo.Update(conn, kind)
+				if err != nil {
+					panic(err)
+				}
+			})
+
+			It("allows template id of empty string to reset the assignment", func() {
+				err := assigner.AssignToNotification("my-client", "my-kind", "")
+				Expect(err).NotTo(HaveOccurred())
+
+				kind, err = kindsRepo.Find(conn, "my-kind", "my-client")
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(kind.TemplateID).To(Equal(""))
+			})
+
+			It("allows template id of default template id to reset the assignment", func() {
+				err := assigner.AssignToNotification("my-client", "my-kind", models.DefaultTemplateID)
+				Expect(err).NotTo(HaveOccurred())
+
+				kind, err = kindsRepo.Find(conn, "my-kind", "my-client")
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(kind.TemplateID).To(Equal(""))
 			})
 		})
 
