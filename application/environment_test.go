@@ -1,7 +1,6 @@
 package application_test
 
 import (
-	"crypto/md5"
 	"os"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
@@ -406,8 +405,7 @@ var _ = Describe("Environment", func() {
 			os.Setenv("ENCRYPTION_KEY", key)
 
 			env := application.NewEnvironment()
-			sum := md5.Sum([]byte(key))
-			Expect(env.EncryptionKey).To(Equal(sum[:]))
+			Expect(env.EncryptionKey).To(Equal([]byte(key)))
 		})
 
 		It("panics if it is not set", func() {

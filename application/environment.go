@@ -1,7 +1,6 @@
 package application
 
 import (
-	"crypto/md5"
 	"errors"
 	"fmt"
 	"net/url"
@@ -56,7 +55,6 @@ func NewEnvironment() Environment {
 		panic(err)
 	}
 	env.parseDatabaseURL()
-	env.validateEncryptionKey()
 	env.validateSMTPAuthMechanism()
 
 	return env
@@ -76,11 +74,6 @@ func (env *Environment) parseDatabaseURL() {
 
 	password, _ := parsedURL.User.Password()
 	env.DatabaseURL = fmt.Sprintf("%s:%s@%s(%s)%s?parseTime=true", parsedURL.User.Username(), password, parsedURL.Scheme, parsedURL.Host, parsedURL.Path)
-}
-
-func (env *Environment) validateEncryptionKey() {
-	sum := md5.Sum(env.EncryptionKey)
-	env.EncryptionKey = sum[:]
 }
 
 func (env *Environment) validateSMTPAuthMechanism() {
