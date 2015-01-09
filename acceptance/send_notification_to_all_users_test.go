@@ -39,8 +39,8 @@ var _ = Describe("Send a notification to all users of UAA", func() {
 			status, templateID, err = client.Templates.Create(clientToken.Access, support.Template{
 				Name:    "Jurassic Park",
 				Subject: "Genetics {{.Subject}}",
-				HTML:    "<h1>T-Rex</h1>{{.HTML}}",
-				Text:    "T-Rex\n{{.Text}}",
+				HTML:    "<h1>T-Rex</h1>{{.HTML}}<b>{{.Endorsement}}</b>",
+				Text:    "T-Rex\n{{.Text}}\n{{.Endorsement}}",
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
@@ -104,9 +104,10 @@ var _ = Describe("Send a notification to all users of UAA", func() {
 			Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 			Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["091b6583-0933-4d17-a5b6-66e54666c88e"].NotificationID))
 			Expect(data).To(ContainElement("Subject: Genetics gone awry"))
-			Expect(data).To(ContainElement("        <h1>T-Rex</h1><p>this is an acceptance-test</p>"))
+			Expect(data).To(ContainElement("        <h1>T-Rex</h1><p>this is an acceptance-test</p><b>This message was sent to everyone.</b>"))
 			Expect(data).To(ContainElement("T-Rex"))
 			Expect(data).To(ContainElement("oh no!"))
+			Expect(data).To(ContainElement("This message was sent to everyone."))
 		})
 	})
 })

@@ -39,8 +39,8 @@ var _ = Describe("Sending notifications to all users in an organization", func()
 			status, templateID, err = client.Templates.Create(clientToken.Access, support.Template{
 				Name:    "Gravity",
 				Subject: "Coca cola {{.Subject}}",
-				HTML:    "<h1>Rat</h1>{{.HTML}}",
-				Text:    "Rat\n{{.Text}}",
+				HTML:    "<h1>Rat</h1>{{.HTML}}<section>{{.Endorsement}}</section>",
+				Text:    "Rat\n{{.Text}}\n{{.Endorsement}}",
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
@@ -98,9 +98,10 @@ var _ = Describe("Sending notifications to all users in an organization", func()
 			Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 			Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["user-456"].NotificationID))
 			Expect(data).To(ContainElement("Subject: Coca cola organization-subject"))
-			Expect(data).To(ContainElement("        <h1>Rat</h1>this is an organization test"))
+			Expect(data).To(ContainElement("        <h1>Rat</h1>this is an organization test<section>You received this message because you belong to the notifications-service organization.</section>"))
 			Expect(data).To(ContainElement("Rat"))
 			Expect(data).To(ContainElement("this is an organization test"))
+			Expect(data).To(ContainElement("You received this message because you belong to the notifications-service organization."))
 		})
 	})
 })

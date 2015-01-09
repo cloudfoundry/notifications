@@ -88,10 +88,14 @@ var _ = Describe("UserStrategy", func() {
 
 			templatesLoader.Templates = templates
 
+			Expect(options.Endorsement).To(BeEmpty())
+
 			_, err := strategy.Dispatch(clientID, "user-123", options, conn)
 			if err != nil {
 				panic(err)
 			}
+
+			options.Endorsement = strategies.UserEndorsement
 
 			Expect(mailer.DeliverArguments).To(ContainElement(conn))
 			Expect(mailer.DeliverArguments).To(ContainElement(templates))

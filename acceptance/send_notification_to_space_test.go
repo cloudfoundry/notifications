@@ -30,8 +30,8 @@ var _ = Describe("Sending notifications to all users in a space", func() {
 		test.CreateNewTemplate(support.Template{
 			Name:    "Men in Black",
 			Subject: "Aliens {{.Subject}}",
-			HTML:    "<h1>Dogs</h1>{{.HTML}}",
-			Text:    "Dogs\n{{.Text}}",
+			HTML:    "<h1>Dogs</h1>{{.HTML}}<h2>{{.Endorsement}}</h2>",
+			Text:    "Dogs\n{{.Text}}\n{{.Endorsement}}",
 		})
 		test.AssignTemplateToClient(clientID)
 		test.SendNotificationsToSpace()
@@ -140,7 +140,8 @@ func (t SendNotificationsToSpace) SendNotificationsToSpace() {
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 	Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["user-456"]["notification_id"]))
 	Expect(data).To(ContainElement("Subject: Aliens space-subject"))
-	Expect(data).To(ContainElement("        <h1>Dogs</h1>this is a space test"))
+	Expect(data).To(ContainElement("        <h1>Dogs</h1>this is a space test<h2>You received this message because you belong to the notifications-service space in the notifications-service organization.</h2>"))
 	Expect(data).To(ContainElement("Dogs"))
 	Expect(data).To(ContainElement("this is a space test"))
+	Expect(data).To(ContainElement("You received this message because you belong to the notifications-service space in the notifications-service organization."))
 }

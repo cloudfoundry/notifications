@@ -45,8 +45,8 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 			status, templateID, err = client.Templates.Create(clientToken.Access, support.Template{
 				Name:    "ET",
 				Subject: "Phone home {{.Subject}}",
-				HTML:    "<h1>Cat</h1>{{.HTML}}",
-				Text:    "Cat\n{{.Text}}",
+				HTML:    "<h1>Cat</h1>{{.HTML}}<header>{{.Endorsement}}</header>",
+				Text:    "Cat\n{{.Text}}\n{{.Endorsement}}",
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
@@ -97,7 +97,8 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 			Expect(data).To(ContainElement("Subject: Phone home organization-role-subject"))
 			Expect(data).To(ContainElement("Cat"))
 			Expect(data).To(ContainElement("this is an organization role test"))
-			Expect(data).To(ContainElement("        <h1>Cat</h1>this is another organization role test"))
+			Expect(data).To(ContainElement("You received this message because you are an OrgManager in the notifications-service organization."))
+			Expect(data).To(ContainElement("        <h1>Cat</h1>this is another organization role test<header>You received this message because you are an OrgManager in the notifications-service organization.</header>"))
 		})
 	})
 
@@ -139,7 +140,8 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 			Expect(data).To(ContainElement("Subject: Phone home organization-role-subject"))
 			Expect(data).To(ContainElement("Cat"))
 			Expect(data).To(ContainElement("this is an organization role test"))
-			Expect(data).To(ContainElement("        <h1>Cat</h1>this is another organization role test"))
+			Expect(data).To(ContainElement("You received this message because you are an OrgAuditor in the notifications-service organization."))
+			Expect(data).To(ContainElement("        <h1>Cat</h1>this is another organization role test<header>You received this message because you are an OrgAuditor in the notifications-service organization.</header>"))
 		})
 	})
 
@@ -181,7 +183,8 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 			Expect(data).To(ContainElement("Subject: Phone home organization-role-subject"))
 			Expect(data).To(ContainElement("Cat"))
 			Expect(data).To(ContainElement("this is an organization role test"))
-			Expect(data).To(ContainElement("        <h1>Cat</h1>this is another organization role test"))
+			Expect(data).To(ContainElement("You received this message because you are an BillingManager in the notifications-service organization."))
+			Expect(data).To(ContainElement("        <h1>Cat</h1>this is another organization role test<header>You received this message because you are an BillingManager in the notifications-service organization.</header>"))
 		})
 	})
 

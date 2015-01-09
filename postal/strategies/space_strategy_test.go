@@ -115,10 +115,14 @@ var _ = Describe("Space Strategy", func() {
 
 				templatesLoader.Templates = templates
 
+				Expect(options.Endorsement).To(BeEmpty())
+
 				_, err := strategy.Dispatch(clientID, "space-001", options, conn)
 				if err != nil {
 					panic(err)
 				}
+
+				options.Endorsement = strategies.SpaceEndorsement
 
 				Expect(mailer.DeliverArguments).To(ContainElement(conn))
 				Expect(mailer.DeliverArguments).To(ContainElement(templates))

@@ -6,6 +6,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 )
 
+const SpaceEndorsement = "You received this message because you belong to the {{.Space}} space in the {{.Organization}} organization."
+
 type SpaceStrategy struct {
 	tokenLoader        utilities.TokenLoaderInterface
 	userLoader         utilities.UserLoaderInterface
@@ -70,6 +72,8 @@ func (strategy SpaceStrategy) Dispatch(clientID, guid string, options postal.Opt
 	if err != nil {
 		return responses, err
 	}
+
+	options.Endorsement = SpaceEndorsement
 
 	responses = strategy.mailer.Deliver(conn, templates, users, options, space, organization, clientID, "")
 

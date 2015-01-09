@@ -37,4 +37,5 @@ type Options struct {
 	KindID            string
 	To                string
 	Role              string
+	Endorsement       string
 }

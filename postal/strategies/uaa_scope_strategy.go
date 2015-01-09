@@ -7,6 +7,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 )
 
+const ScopeEndorsement = "You received this message because you have the {{.Scope}} scope."
+
 type UAAScopeStrategy struct {
 	receiptsRepo    models.ReceiptsRepoInterface
 	findsUserGUIDs  utilities.FindsUserGUIDsInterface
@@ -66,6 +68,8 @@ func (strategy UAAScopeStrategy) Dispatch(clientID, scope string, options postal
 	if err != nil {
 		return responses, err
 	}
+
+	options.Endorsement = ScopeEndorsement
 
 	responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, scope)
 

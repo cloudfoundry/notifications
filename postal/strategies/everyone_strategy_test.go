@@ -97,10 +97,13 @@ var _ = Describe("Everyone Strategy", func() {
 
 			templatesLoader.Templates = templates
 
+			Expect(options.Endorsement).To(BeEmpty())
 			_, err := strategy.Dispatch(clientID, "", options, conn)
 			if err != nil {
 				panic(err)
 			}
+
+			options.Endorsement = strategies.EveryoneEndorsement
 
 			Expect(mailer.DeliverArguments).To(ContainElement(conn))
 			Expect(mailer.DeliverArguments).To(ContainElement(templates))

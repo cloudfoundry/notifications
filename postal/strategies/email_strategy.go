@@ -8,6 +8,8 @@ import (
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
+const EmailEndorsement = "This message was sent directly to your email address."
+
 type EmailStrategy struct {
 	mailer          MailerInterface
 	templatesLoader utilities.TemplatesLoaderInterface
@@ -31,6 +33,8 @@ func (strategy EmailStrategy) Dispatch(clientID, guid string, options postal.Opt
 	if err != nil {
 		return []Response{}, postal.TemplateLoadError("An email template could not be loaded")
 	}
+
+	options.Endorsement = EmailEndorsement
 
 	return strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, ""), nil
 }

@@ -41,8 +41,8 @@ var _ = Describe("Send a notification to a user", func() {
 			status, templateID, err = client.Templates.Create(clientToken.Access, support.Template{
 				Name:    "Star Wars",
 				Subject: "Awesomeness {{.Subject}}",
-				HTML:    "<p>Millenium Falcon</p>{{.HTML}}",
-				Text:    "Millenium Falcon\n{{.Text}}",
+				HTML:    "<p>Millenium Falcon</p>{{.HTML}}<b>{{.Endorsement}}</b>",
+				Text:    "Millenium Falcon\n{{.Text}}\n{{.Endorsement}}",
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
@@ -86,8 +86,9 @@ var _ = Describe("Send a notification to a user", func() {
 			Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 			Expect(data).To(ContainElement("X-CF-Notification-ID: " + response.NotificationID))
 			Expect(data).To(ContainElement("Subject: Awesomeness my-special-subject"))
-			Expect(data).To(ContainElement(`        <p>Millenium Falcon</p><p>this is an acceptance%40test</p>`))
+			Expect(data).To(ContainElement("        <p>Millenium Falcon</p><p>this is an acceptance%40test</p><b>This message was sent directly to you.</b>"))
 			Expect(data).To(ContainElement("hello from the acceptance test"))
+			Expect(data).To(ContainElement("This message was sent directly to you."))
 		})
 	})
 })

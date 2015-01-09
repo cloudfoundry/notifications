@@ -32,8 +32,8 @@ var _ = Describe("Sending notifications to users with certain scopes", func() {
 		test.CreateNewTemplate(support.Template{
 			Name:    "Frozen",
 			Subject: "Food {{.Subject}}",
-			HTML:    "<h1>Fish</h1>{{.HTML}}",
-			Text:    "Fish\n{{.Text}}",
+			HTML:    "<h1>Fish</h1>{{.HTML}}<b>{{.Endorsement}}</b>",
+			Text:    "Fish\n{{.Text}}\n{{.Endorsement}}",
 		})
 		test.AssignTemplateToClient(clientID)
 		test.SendNotificationsToScope()
@@ -135,7 +135,8 @@ func (t SendNotificationsToUsersWithScope) SendNotificationsToScope() {
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 	Expect(data).To(ContainElement("X-CF-Notification-ID: " + indexedResponses["user-369"]["notification_id"]))
 	Expect(data).To(ContainElement("Subject: Food scope-subject"))
-	Expect(data).To(ContainElement("        <h1>Fish</h1>this is a scope test"))
+	Expect(data).To(ContainElement("        <h1>Fish</h1>this is a scope test<b>You received this message because you have the this.scope scope.</b>"))
 	Expect(data).To(ContainElement("this is a scope test"))
 	Expect(data).To(ContainElement("Fish"))
+	Expect(data).To(ContainElement("You received this message because you have the this.scope scope."))
 }

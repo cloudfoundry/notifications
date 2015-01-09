@@ -7,6 +7,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 )
 
+const UserEndorsement = "This message was sent directly to you."
+
 type UserStrategy struct {
 	tokenLoader     utilities.TokenLoaderInterface
 	userLoader      utilities.UserLoaderInterface
@@ -50,6 +52,8 @@ func (strategy UserStrategy) Dispatch(clientID, guid string, options postal.Opti
 	if err != nil {
 		return responses, err
 	}
+
+	options.Endorsement = UserEndorsement
 
 	responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "")
 

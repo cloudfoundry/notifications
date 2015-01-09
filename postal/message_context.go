@@ -28,6 +28,8 @@ type MessageContext struct {
 	OrganizationGUID  string
 	UnsubscribeID     string
 	Scope             string
+	Endorsement       string
+	OrganizationRole  string
 }
 
 func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInterface) MessageContext {
@@ -69,6 +71,8 @@ func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInte
 		Organization:      delivery.Organization.Name,
 		OrganizationGUID:  delivery.Organization.GUID,
 		Scope:             delivery.Scope,
+		Endorsement:       options.Endorsement,
+		OrganizationRole:  options.Role,
 	}
 
 	if messageContext.Subject == "" {
@@ -96,4 +100,5 @@ func (context *MessageContext) Escape() {
 	context.MessageID = html.EscapeString(context.MessageID)
 	context.Space = html.EscapeString(context.Space)
 	context.Organization = html.EscapeString(context.Organization)
+	context.Endorsement = html.EscapeString(context.Endorsement)
 }

@@ -33,9 +33,12 @@ var _ = Describe("Packager", func() {
 			UserGUID:        "user-123",
 			HTMLComponents:  html,
 			HTML:            html.BodyContent,
-			TextTemplate:    "Banana preamble {{.Text}} {{.ClientID}} {{.MessageID}} {{.UserGUID}}",
-			HTMLTemplate:    "Banana preamble {{.HTML}} {{.Text}} {{.ClientID}} {{.MessageID}} {{.UserGUID}}",
+			Space:           "development",
+			Organization:    "banana",
+			TextTemplate:    "Banana preamble {{.Text}} {{.ClientID}} {{.MessageID}} {{.UserGUID}}\n{{.Endorsement}}",
+			HTMLTemplate:    "<header>{{.Endorsement}}</header>\nBanana preamble {{.HTML}} {{.Text}} {{.ClientID}} {{.MessageID}} {{.UserGUID}}",
 			SubjectTemplate: "The Subject: {{.Subject}}",
+			Endorsement:     "This is an endorsement for the {{.Space}} space and {{.Organization}} org.",
 		}
 		packager = postal.NewPackager()
 	})
@@ -54,6 +57,7 @@ This is a multi-part message in MIME format...
 Content-type: text/plain
 
 Banana preamble User <supplied> "banana" text 3&3 4'4 user-123
+This is an endorsement for the development space and banana org.
 --our-content-boundary
 Content-Type: text/html
 Content-Disposition: inline
@@ -63,7 +67,8 @@ Content-Transfer-Encoding: quoted-printable
 <head><title>The title</title></head>
 <html>
     <body class="bananaBody">
-        Banana preamble <p>user supplied banana html</p> User &lt;supplied&gt; &#34;banana&#34; text 3&amp;3 4&#39;4 user-123
+        <header>This is an endorsement for the development space and banana org.</header>
+Banana preamble <p>user supplied banana html</p> User &lt;supplied&gt; &#34;banana&#34; text 3&amp;3 4&#39;4 user-123
     </body>
 </html>
 --our-content-boundary--`
@@ -88,6 +93,7 @@ This is a multi-part message in MIME format...
 Content-type: text/plain
 
 Banana preamble User <supplied> "banana" text 3&3 4'4 user-123
+This is an endorsement for the development space and banana org.
 --our-content-boundary--`
 				Expect(body).To(Equal(emailBody))
 			})
@@ -115,7 +121,8 @@ Content-Transfer-Encoding: quoted-printable
 <head><title>The title</title></head>
 <html>
     <body class="bananaBody">
-        Banana preamble <p>user supplied banana html</p>  3&amp;3 4&#39;4 user-123
+        <header>This is an endorsement for the development space and banana org.</header>
+Banana preamble <p>user supplied banana html</p>  3&amp;3 4&#39;4 user-123
     </body>
 </html>
 --our-content-boundary--`

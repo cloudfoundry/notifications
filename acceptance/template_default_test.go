@@ -29,8 +29,8 @@ var _ = Describe("Default Template", func() {
 		Expect(template).To(Equal(support.Template{
 			Name:     "Default Template",
 			Subject:  "CF Notification: {{.Subject}}",
-			HTML:     "{{.HTML}}",
-			Text:     "{{.Text}}",
+			HTML:     "<p>{{.Endorsement}}</p>{{.HTML}}",
+			Text:     "{{.Endorsement}}\n{{.Text}}",
 			Metadata: map[string]interface{}{},
 		}))
 	})
@@ -120,7 +120,7 @@ var _ = Describe("Default Template", func() {
 			Expect(data).To(ContainElement("X-CF-Client-ID: notifications-admin"))
 			Expect(data).To(ContainElement("X-CF-Notification-ID: " + response.NotificationID))
 			Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
-			Expect(data).To(ContainElement("        <header>this is an acceptance test</header>"))
+			Expect(data).To(ContainElement("        <p>This message was sent directly to your email address.</p><header>this is an acceptance test</header>"))
 		})
 	})
 })

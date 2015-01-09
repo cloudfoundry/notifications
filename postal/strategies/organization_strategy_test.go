@@ -106,10 +106,14 @@ var _ = Describe("Organization Strategy", func() {
 
 				templatesLoader.Templates = templates
 
+				Expect(options.Endorsement).To(BeEmpty())
+
 				_, err := strategy.Dispatch(clientID, "org-001", options, conn)
 				if err != nil {
 					panic(err)
 				}
+
+				options.Endorsement = strategies.OrganizationEndorsement
 
 				Expect(mailer.DeliverArguments).To(ContainElement(conn))
 				Expect(mailer.DeliverArguments).To(ContainElement(templates))
@@ -122,6 +126,30 @@ var _ = Describe("Organization Strategy", func() {
 				Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{}))
 				Expect(mailer.DeliverArguments).To(ContainElement(clientID))
 				Expect(userLoader.LoadedGUIDs).To(Equal([]string{"user-123", "user-456"}))
+			})
+
+			Context("when the org role field is set", func() {
+				It("calls mailer.Deliver with the correct arguments", func() {
+					templates := postal.Templates{
+						Subject: "default-missing-subject",
+						Text:    "default-organization-text",
+						HTML:    "default-organization-html",
+					}
+
+					templatesLoader.Templates = templates
+					options.Role = "OrgManager"
+
+					Expect(options.Endorsement).To(BeEmpty())
+
+					_, err := strategy.Dispatch(clientID, "org-001", options, conn)
+					if err != nil {
+						panic(err)
+					}
+
+					options.Endorsement = strategies.OrganizationRoleEndorsement
+
+					Expect(mailer.DeliverArguments).To(ContainElement(options))
+				})
 			})
 		})
 

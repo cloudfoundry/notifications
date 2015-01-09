@@ -47,11 +47,15 @@ var _ = Describe("EmailStrategy", func() {
 		})
 
 		It("Calls Deliver on it's mailer with proper arguments", func() {
+			Expect(options.Endorsement).To(BeEmpty())
+
 			emailStrategy.Dispatch(clientID, emailID, options, conn)
 
 			users := map[string]uaa.User{options.To: uaa.User{Emails: []string{options.To}}}
 
 			Expect(len(fakeMailer.DeliverArguments)).To(Equal(8))
+
+			options.Endorsement = strategies.EmailEndorsement
 
 			Expect(fakeMailer.DeliverArguments).To(ContainElement(conn))
 			Expect(fakeMailer.DeliverArguments).To(ContainElement(templatesLoader.Templates))

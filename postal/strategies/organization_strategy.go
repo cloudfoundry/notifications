@@ -7,6 +7,9 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 )
 
+const OrganizationEndorsement = "You received this message because you belong to the {{.Organization}} organization."
+const OrganizationRoleEndorsement = "You received this message because you are an {{.OrganizationRole}} in the {{.Organization}} organization."
+
 type OrganizationStrategy struct {
 	tokenLoader        utilities.TokenLoaderInterface
 	userLoader         utilities.UserLoaderInterface
@@ -62,6 +65,12 @@ func (strategy OrganizationStrategy) Dispatch(clientID, guid string, options pos
 	err = strategy.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)
 	if err != nil {
 		return responses, err
+	}
+
+	options.Endorsement = OrganizationEndorsement
+
+	if options.Role != "" {
+		options.Endorsement = OrganizationRoleEndorsement
 	}
 
 	responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, organization, clientID, "")

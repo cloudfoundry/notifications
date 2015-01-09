@@ -134,7 +134,7 @@ func (t ManageUsersOwnPreferences) SendNotificationToUser() {
 	Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 	Expect(data).To(ContainElement("X-CF-Notification-ID: " + responseItem["notification_id"]))
 	Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
-	Expect(data).To(ContainElement("        <p>this is an acceptance test</p>"))
+	Expect(data).To(ContainElement("        <p>This message was sent directly to you.</p><p>this is an acceptance test</p>"))
 }
 
 // Make a GET request to /user_preferences

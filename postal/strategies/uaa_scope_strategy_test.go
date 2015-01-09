@@ -97,10 +97,14 @@ var _ = Describe("UAA Scope Strategy", func() {
 
 				templatesLoader.Templates = templates
 
+				Expect(options.Endorsement).To(BeEmpty())
+
 				_, err := strategy.Dispatch(clientID, "great.scope", options, conn)
 				if err != nil {
 					panic(err)
 				}
+
+				options.Endorsement = strategies.ScopeEndorsement
 
 				Expect(mailer.DeliverArguments).To(ContainElement(conn))
 				Expect(mailer.DeliverArguments).To(ContainElement(templates))

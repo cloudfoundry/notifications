@@ -1,7 +1,7 @@
 {
 	"name": "Default Template",
 	"subject": "CF Notification: {{.Subject}}",
-	"html": "{{.HTML}}",
-	"text": "{{.Text}}",
+	"html": "<p>{{.Endorsement}}</p>{{.HTML}}",
+	"text": "{{.Endorsement}}\n{{.Text}}",
 	"metadata": {}
 }

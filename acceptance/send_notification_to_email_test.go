@@ -39,8 +39,8 @@ var _ = Describe("Send a notification to an email", func() {
 			status, templateID, err = client.Templates.Create(clientToken.Access, support.Template{
 				Name:    "Star Trek",
 				Subject: "Boldness {{.Subject}}",
-				HTML:    "<p>Enterprise</p>{{.HTML}}",
-				Text:    "Enterprise\n{{.Text}}",
+				HTML:    "<p>Enterprise</p>{{.HTML}}<h1>{{.Endorsement}}</h1>",
+				Text:    "Enterprise\n{{.Text}}\n{{.Endorsement}}",
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
@@ -56,6 +56,7 @@ var _ = Describe("Send a notification to an email", func() {
 		By("sending a notification to an email address", func() {
 			status, responses, err := client.Notify.Email(clientToken.Access, support.Notify{
 				HTML:    "<header>this is an acceptance test</header>",
+				Text:    "some text for the email",
 				Subject: "my-special-subject",
 				To:      "John User <user@example.com>",
 			})
@@ -84,7 +85,10 @@ var _ = Describe("Send a notification to an email", func() {
 			Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 			Expect(data).To(ContainElement("X-CF-Notification-ID: " + response.NotificationID))
 			Expect(data).To(ContainElement("Subject: Boldness my-special-subject"))
-			Expect(data).To(ContainElement("        <p>Enterprise</p><header>this is an acceptance test</header>"))
+			Expect(data).To(ContainElement("        <p>Enterprise</p><header>this is an acceptance test</header><h1>This message was sent directly to your email address.</h1>"))
+			Expect(data).To(ContainElement("Enterprise"))
+			Expect(data).To(ContainElement("some text for the email"))
+			Expect(data).To(ContainElement("This message was sent directly to your email address."))
 		})
 
 		By("confirming that the client notificatins list remains unaffected", func() {

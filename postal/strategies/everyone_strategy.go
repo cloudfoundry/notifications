@@ -7,6 +7,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 )
 
+const EveryoneEndorsement = "This message was sent to everyone."
+
 type EveryoneStrategy struct {
 	tokenLoader     utilities.TokenLoaderInterface
 	allUsers        utilities.AllUsersInterface
@@ -48,6 +50,8 @@ func (strategy EveryoneStrategy) Dispatch(clientID, guid string, options postal.
 	if err != nil {
 		return responses, err
 	}
+
+	options.Endorsement = EveryoneEndorsement
 
 	responses = strategy.mailer.Deliver(conn, templates, userEmails, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "")
 

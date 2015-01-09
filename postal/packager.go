@@ -48,6 +48,11 @@ func (packager Packager) CompileBody(context MessageContext) (string, error) {
 	htmlPart := ""
 	closingBoundary := "--our-content-boundary--"
 
+	context.Endorsement, err = packager.compileTemplate(context, context.Endorsement, false)
+	if err != nil {
+		return "", err
+	}
+
 	if context.Text != "" {
 		plainText, err = packager.compileTemplate(context, context.TextTemplate, false)
 		if err != nil {

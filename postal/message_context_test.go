@@ -40,6 +40,8 @@ var _ = Describe("MessageContext", func() {
 			Text:              "user supplied email text",
 			HTML:              html,
 			KindID:            "the-kind-id",
+			Endorsement:       "this is the endorsement",
+			Role:              "OrgRole",
 		}
 
 		delivery = postal.Delivery{
@@ -93,6 +95,8 @@ var _ = Describe("MessageContext", func() {
 			Expect(context.UnsubscribeID).To(Equal("the-encoded-result"))
 			Expect(context.Scope).To(Equal("this.scope"))
 			Expect(cloak.DataToEncrypt).To(Equal([]byte("the-user|the-client-id|the-kind-id")))
+			Expect(context.Endorsement).To(Equal("this is the endorsement"))
+			Expect(context.OrganizationRole).To(Equal("OrgRole"))
 		})
 
 		It("falls back to Kind if KindDescription is missing", func() {
@@ -126,6 +130,8 @@ var _ = Describe("MessageContext", func() {
 				Text:              "user & supplied email text",
 				HTML:              postal.HTML{BodyContent: "user & supplied html"},
 				KindID:            "the & kind",
+				Endorsement:       "this & is the endorsement",
+				Role:              "OrgRole",
 			}
 
 			delivery.Options = options
@@ -157,6 +163,8 @@ var _ = Describe("MessageContext", func() {
 			Expect(context.Space).To(Equal("the&lt;space"))
 			Expect(context.Organization).To(Equal("the&gt;org"))
 			Expect(context.Scope).To(Equal(""))
+			Expect(context.Endorsement).To(Equal("this &amp; is the endorsement"))
+			Expect(context.OrganizationRole).To(Equal("OrgRole"))
 		})
 	})
 })
