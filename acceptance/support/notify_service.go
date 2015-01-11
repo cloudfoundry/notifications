@@ -92,3 +92,7 @@ func (service NotifyService) Organization(token, organizationGUID string, notify
 func (service NotifyService) Scope(token, scope string, notify Notify) (int, []NotifyResponse, error) {
 	return service.notify(token, service.client.server.ScopesPath(scope), notify, notifyRequest{})
 }
+
+func (service NotifyService) Space(token, spaceGUID string, notify Notify) (int, []NotifyResponse, error) {
+	return service.notify(token, service.client.server.SpacesPath(spaceGUID), notify, notifyRequest{})
+}
