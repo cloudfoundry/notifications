@@ -11,12 +11,28 @@ type NotifyService struct {
 }
 
 type Notify struct {
-	KindID  string `json:"kind_id,omitempty"`
-	HTML    string `json:"html"`
-	Subject string `json:"subject"`
-	Text    string `json:"text"`
+	Subject string
+	HTML    string
+	Text    string
+	KindID  string
+}
+
+type notifyRequest struct {
 	To      string `json:"to,omitempty"`
 	Role    string `json:"role,omitempty"`
+	Subject string `json:"subject"`
+	HTML    string `json:"html"`
+	Text    string `json:"text"`
+	KindID  string `json:"kind_id,omitempty"`
+}
+
+func (nr notifyRequest) Merge(n Notify) notifyRequest {
+	nr.Subject = n.Subject
+	nr.HTML = n.HTML
+	nr.Text = n.Text
+	nr.KindID = n.KindID
+
+	return nr
 }
 
 type NotifyResponse struct {
@@ -25,78 +41,16 @@ type NotifyResponse struct {
 	NotificationID string `json:"notification_id"`
 }
 
-func (n NotifyService) User(token, userGUID string, notify Notify) (int, []NotifyResponse, error) {
+func (service NotifyService) notify(token, path string, notify Notify, reqBody notifyRequest) (int, []NotifyResponse, error) {
 	var responses []NotifyResponse
 
-	body, err := json.Marshal(notify)
+	reqBody = reqBody.Merge(notify)
+	body, err := json.Marshal(reqBody)
 	if err != nil {
 		return 0, responses, err
 	}
 
-	status, responseBody, err := n.client.makeRequest("POST", n.client.server.UsersPath(userGUID), bytes.NewBuffer(body), token)
-	if err != nil {
-		return 0, responses, err
-	}
-
-	err = json.NewDecoder(responseBody).Decode(&responses)
-	if err != nil {
-		return 0, responses, err
-	}
-
-	return status, responses, nil
-}
-
-func (n NotifyService) AllUsers(token string, notify Notify) (int, []NotifyResponse, error) {
-	var responses []NotifyResponse
-
-	body, err := json.Marshal(notify)
-	if err != nil {
-		return 0, responses, err
-	}
-
-	status, responseBody, err := n.client.makeRequest("POST", n.client.server.EveryonePath(), bytes.NewBuffer(body), token)
-	if err != nil {
-		return 0, responses, err
-	}
-
-	err = json.NewDecoder(responseBody).Decode(&responses)
-	if err != nil {
-		return 0, responses, err
-	}
-
-	return status, responses, nil
-}
-
-func (n NotifyService) Email(token string, notify Notify) (int, []NotifyResponse, error) {
-	var responses []NotifyResponse
-
-	body, err := json.Marshal(notify)
-	if err != nil {
-		return 0, responses, err
-	}
-
-	status, responseBody, err := n.client.makeRequest("POST", n.client.server.EmailPath(), bytes.NewBuffer(body), token)
-	if err != nil {
-		return 0, responses, err
-	}
-
-	err = json.NewDecoder(responseBody).Decode(&responses)
-	if err != nil {
-		return 0, responses, err
-	}
-
-	return status, responses, nil
-}
-
-func (n NotifyService) OrganizationRole(token, organizationGUID string, notify Notify) (int, []NotifyResponse, error) {
-	var responses []NotifyResponse
-
-	body, err := json.Marshal(notify)
-	if err != nil {
-		return 0, responses, err
-	}
-
-	status, responseBody, err := n.client.makeRequest("POST", n.client.server.OrganizationsPath(organizationGUID), bytes.NewBuffer(body), token)
+	status, responseBody, err := service.client.makeRequest("POST", path, bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, responses, err
 	}
@@ -111,23 +65,30 @@ func (n NotifyService) OrganizationRole(token, organizationGUID string, notify N
 	return status, responses, nil
 }
 
-func (n NotifyService) Organization(token, organizationGUID string, notify Notify) (int, []NotifyResponse, error) {
-	var responses []NotifyResponse
+func (service NotifyService) User(token, userGUID string, notify Notify) (int, []NotifyResponse, error) {
+	return service.notify(token, service.client.server.UsersPath(userGUID), notify, notifyRequest{})
+}
 
-	body, err := json.Marshal(notify)
-	if err != nil {
-		return 0, responses, err
-	}
+func (service NotifyService) AllUsers(token string, notify Notify) (int, []NotifyResponse, error) {
+	return service.notify(token, service.client.server.EveryonePath(), notify, notifyRequest{})
+}
 
-	status, responseBody, err := n.client.makeRequest("POST", n.client.server.OrganizationsPath(organizationGUID), bytes.NewBuffer(body), token)
-	if err != nil {
-		return 0, responses, err
-	}
+func (service NotifyService) Email(token, email string, notify Notify) (int, []NotifyResponse, error) {
+	return service.notify(token, service.client.server.EmailPath(), notify, notifyRequest{
+		To: email,
+	})
+}
 
-	err = json.NewDecoder(responseBody).Decode(&responses)
-	if err != nil {
-		return 0, responses, err
-	}
+func (service NotifyService) OrganizationRole(token, organizationGUID, role string, notify Notify) (int, []NotifyResponse, error) {
+	return service.notify(token, service.client.server.OrganizationsPath(organizationGUID), notify, notifyRequest{
+		Role: role,
+	})
+}
 
-	return status, responses, nil
+func (service NotifyService) Organization(token, organizationGUID string, notify Notify) (int, []NotifyResponse, error) {
+	return service.notify(token, service.client.server.OrganizationsPath(organizationGUID), notify, notifyRequest{})
+}
+
+func (service NotifyService) Scope(token, scope string, notify Notify) (int, []NotifyResponse, error) {
+	return service.notify(token, service.client.server.ScopesPath(scope), notify, notifyRequest{})
 }

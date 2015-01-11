@@ -64,8 +64,7 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 		var response support.NotifyResponse
 
 		By("sending a notification to the OrgManager role", func() {
-			status, responses, err := client.Notify.OrganizationRole(clientToken.Access, "org-123", support.Notify{
-				Role:    "OrgManager",
+			status, responses, err := client.Notify.OrganizationRole(clientToken.Access, "org-123", "OrgManager", support.Notify{
 				KindID:  "organization-role-test",
 				HTML:    "this is another organization role test",
 				Text:    "this is an organization role test",
@@ -106,8 +105,7 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 		var response support.NotifyResponse
 
 		By("sending a notification to the OrgAuditor role", func() {
-			status, responses, err := client.Notify.OrganizationRole(clientToken.Access, "org-123", support.Notify{
-				Role:    "OrgAuditor",
+			status, responses, err := client.Notify.OrganizationRole(clientToken.Access, "org-123", "OrgAuditor", support.Notify{
 				KindID:  "organization-role-test",
 				HTML:    "this is another organization role test",
 				Text:    "this is an organization role test",
@@ -149,8 +147,7 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 		var response support.NotifyResponse
 
 		By("sending a notification to the BillingManager role", func() {
-			status, responses, err := client.Notify.OrganizationRole(clientToken.Access, "org-123", support.Notify{
-				Role:    "BillingManager",
+			status, responses, err := client.Notify.OrganizationRole(clientToken.Access, "org-123", "BillingManager", support.Notify{
 				KindID:  "organization-role-test",
 				HTML:    "this is another organization role test",
 				Text:    "this is an organization role test",
@@ -190,8 +187,7 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 
 	It("sends a notification to an invalid role in an organization", func() {
 		By("sending a notification to an invalid role", func() {
-			status, _, err := client.Notify.OrganizationRole(clientToken.Access, "org-123", support.Notify{
-				Role:    "bad-role",
+			status, _, err := client.Notify.OrganizationRole(clientToken.Access, "org-123", "bad-role", support.Notify{
 				KindID:  "organization-role-test",
 				HTML:    "this is another organization role test",
 				Text:    "this is an organization role test",

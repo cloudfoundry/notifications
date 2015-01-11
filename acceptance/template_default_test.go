@@ -89,11 +89,10 @@ var _ = Describe("Default Template", func() {
 		var response support.NotifyResponse
 
 		By("sending a notification to an email address", func() {
-			status, responses, err := client.Notify.Email(clientToken.Access, support.Notify{
+			status, responses, err := client.Notify.Email(clientToken.Access, "John User <user@example.com>", support.Notify{
 				KindID:  "acceptance-test",
 				HTML:    "<header>this is an acceptance test</header>",
 				Subject: "my-special-subject",
-				To:      "John User <user@example.com>",
 			})
 
 			Expect(err).NotTo(HaveOccurred())
