@@ -47,6 +47,10 @@ func (mother Mother) NotificationsFinder() services.NotificationsFinder {
 	return services.NotificationsFinder{}
 }
 
+func (mother Mother) NotificationsUpdater() services.NotificationsUpdater {
+	return services.NotificationsUpdater{}
+}
+
 func (mother Mother) PreferencesFinder() *services.PreferencesFinder {
 	return &services.PreferencesFinder{}
 }

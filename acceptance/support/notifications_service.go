@@ -62,3 +62,17 @@ func (n NotificationsService) List(token string) (int, NotificationsList, error)
 
 	return status, list, nil
 }
+
+func (n NotificationsService) Update(token, clientID, notificationID string, notification Notification) (int, error) {
+	content, err := json.Marshal(notification)
+	if err != nil {
+		return 0, err
+	}
+
+	status, _, err := n.client.makeRequest("PUT", n.client.server.NotificationsUpdatePath(clientID, notificationID), bytes.NewBuffer(content), token)
+	if err != nil {
+		return 0, err
+	}
+
+	return status, nil
+}

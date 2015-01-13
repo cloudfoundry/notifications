@@ -152,35 +152,55 @@ var _ = Describe("KindsRepo", func() {
 	})
 
 	Describe("Update", func() {
-		It("updates the record in the database", func() {
-			kind := models.Kind{
-				ID:       "my-kind",
-				ClientID: "my-client",
-			}
+		Context("when the record exists", func() {
+			It("updates the record in the database", func() {
+				kind := models.Kind{
+					ID:       "my-kind",
+					ClientID: "my-client",
+				}
 
-			kind, err := repo.Create(conn, kind)
-			if err != nil {
-				panic(err)
-			}
+				kind, err := repo.Create(conn, kind)
+				if err != nil {
+					panic(err)
+				}
 
-			kind.Description = "My Kind"
-			kind.Critical = true
+				primary := kind.Primary
+				createdAt := kind.CreatedAt
 
-			kind, err = repo.Update(conn, kind)
-			if err != nil {
-				panic(err)
-			}
+				kind.Description = "My Kind"
+				kind.Critical = true
+				kind.Primary = 42069
+				kind.CreatedAt = time.Now().Add(-3 * time.Minute)
 
-			kind, err = repo.Find(conn, "my-kind", "my-client")
-			if err != nil {
-				panic(err)
-			}
+				kind, err = repo.Update(conn, kind)
+				if err != nil {
+					panic(err)
+				}
 
-			Expect(kind.ID).To(Equal("my-kind"))
-			Expect(kind.Description).To(Equal("My Kind"))
-			Expect(kind.Critical).To(BeTrue())
-			Expect(kind.ClientID).To(Equal("my-client"))
-			Expect(kind.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+				kind, err = repo.Find(conn, "my-kind", "my-client")
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(kind.ID).To(Equal("my-kind"))
+				Expect(kind.Description).To(Equal("My Kind"))
+				Expect(kind.Critical).To(BeTrue())
+				Expect(kind.ClientID).To(Equal("my-client"))
+				Expect(kind.UpdatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+				Expect(kind.CreatedAt).To(Equal(createdAt))
+				Expect(kind.Primary).To(Equal(primary))
+			})
+		})
+
+		Context("when the record does not exist", func() {
+			It("returns a record not found error", func() {
+				kind := models.Kind{
+					ID:       "my-kind",
+					ClientID: "my-client",
+				}
+				_, err := repo.Update(conn, kind)
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+			})
 		})
 	})
 

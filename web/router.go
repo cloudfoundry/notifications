@@ -21,6 +21,7 @@ type MotherInterface interface {
 	EveryoneStrategy() strategies.EveryoneStrategy
 	UAAScopeStrategy() strategies.UAAScopeStrategy
 	NotificationsFinder() services.NotificationsFinder
+	NotificationsUpdater() services.NotificationsUpdater
 	PreferencesFinder() *services.PreferencesFinder
 	PreferenceUpdater() services.PreferenceUpdater
 	TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister)
@@ -48,6 +49,7 @@ func NewRouter(mother MotherInterface) Router {
 	preferencesFinder := mother.PreferencesFinder()
 	preferenceUpdater := mother.PreferenceUpdater()
 	templateCreator, templateFinder, templateUpdater, templateDeleter, templateLister, templateAssigner, templateAssociationLister := mother.TemplateServiceObjects()
+	notificationsUpdater := mother.NotificationsUpdater()
 	logging := mother.Logging()
 	errorWriter := mother.ErrorWriter()
 	notificationsWriteAuthenticator := mother.Authenticator("notifications.write")
@@ -72,6 +74,7 @@ func NewRouter(mother MotherInterface) Router {
 			"POST /emails":                                                    stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailStrategy, database)).Use(logging, emailsWriteAuthenticator),
 			"PUT /registration":                                               stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter, database)).Use(logging, notificationsWriteAuthenticator),
 			"PUT /notifications":                                              stack.NewStack(handlers.NewRegisterClientWithNotifications(registrar, errorWriter, database)).Use(logging, notificationsWriteAuthenticator),
+			"PUT /clients/{clientID}/notifications/{notificationID}":          stack.NewStack(handlers.NewUpdateNotifications(notificationsUpdater, errorWriter)).Use(logging, notificationsManageAuthenticator),
 			"GET /notifications":                                              stack.NewStack(handlers.NewGetAllNotifications(notificationsFinder, errorWriter)).Use(logging, notificationsManageAuthenticator),
 			"OPTIONS /user_preferences":                                       stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),
 			"OPTIONS /user_preferences/{guid}":                                stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, cors),

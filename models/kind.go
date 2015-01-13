@@ -9,6 +9,7 @@ type Kind struct {
 	Critical    bool      `db:"critical"`
 	ClientID    string    `db:"client_id"`
 	CreatedAt   time.Time `db:"created_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
 	TemplateID  string    `db:"template_id"`
 }
 

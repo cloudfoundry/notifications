@@ -127,6 +127,10 @@ func (s Notifications) NotificationsPath() string {
 	return s.RootPath() + "/notifications"
 }
 
+func (s Notifications) NotificationsUpdatePath(clientID, notificationID string) string {
+	return s.RootPath() + "/clients/" + clientID + "/notifications/" + notificationID
+}
+
 func (s Notifications) RegistrationPath() string {
 	return s.RootPath() + "/registration"
 }

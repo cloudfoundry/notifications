@@ -79,7 +79,7 @@ var _ = Describe("Validate", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("returns an error when the json is missing a required field", func() {
+		It("returns a RequiredFieldError when the json is missing a required field", func() {
 			data := strings.NewReader(`{
 				"name":"Boshy",
 				"contact_info": {
@@ -112,6 +112,7 @@ var _ = Describe("Validate", func() {
 			validator := valiant.NewValidator(data)
 			err := validator.Validate(&someone)
 			Expect(err).To(HaveOccurred())
+			Expect(err).To(BeAssignableToTypeOf(valiant.RequiredFieldError{}))
 		})
 	})
 })

@@ -3,7 +3,6 @@ package valiant
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"io"
 	"reflect"
 	"strconv"
@@ -11,6 +10,14 @@ import (
 
 type Validator struct {
 	input io.Reader
+}
+
+type RequiredFieldError struct {
+	ErrorMessage string
+}
+
+func (err RequiredFieldError) Error() string {
+	return err.ErrorMessage
 }
 
 func NewValidator(input io.Reader) Validator {
@@ -78,7 +85,7 @@ func validate(typed interface{}, untyped interface{}) error {
 func validateField(field reflect.StructField, parentUntyped map[string]interface{}) error {
 	if required(field) {
 		if _, ok := parentUntyped[field.Tag.Get("json")]; !ok {
-			return errors.New("Missing required field " + field.Name)
+			return RequiredFieldError{ErrorMessage: "Missing required field " + field.Name}
 		}
 	}
 

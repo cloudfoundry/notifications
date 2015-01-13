@@ -134,6 +134,10 @@ func (mother Mother) NotificationsFinder() services.NotificationsFinder {
 	clientsRepo, kindsRepo := mother.Repos()
 	return services.NewNotificationsFinder(clientsRepo, kindsRepo, mother.Database())
 }
+func (mother Mother) NotificationsUpdater() services.NotificationsUpdater {
+	_, kindsRepo := mother.Repos()
+	return services.NewNotificationsUpdater(kindsRepo, mother.Database())
+}
 
 func (mother Mother) Mailer() strategies.Mailer {
 	return strategies.NewMailer(mother.Queue(), uuid.NewV4)

@@ -101,6 +101,15 @@ var _ = Describe("Router", func() {
 		Expect(authenticator.Scopes).To(Equal([]string{"notifications.write"}))
 	})
 
+	It("routes PUT /clients/{clientID}/notifications/{notificationID}", func() {
+		s := router.Routes().Get("PUT /clients/{clientID}/notifications/{notificationID}").GetHandler().(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UpdateNotifications{}))
+		Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+
+		authenticator := s.Middleware[1].(middleware.Authenticator)
+		Expect(authenticator.Scopes).To(Equal([]string{"notifications.manage"}))
+	})
+
 	It("routes GET /notifications", func() {
 		s := router.Routes().Get("GET /notifications").GetHandler().(stack.Stack)
 

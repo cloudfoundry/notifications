@@ -81,7 +81,12 @@ func (repo KindsRepo) FindAll(conn ConnectionInterface) ([]Kind, error) {
 }
 
 func (repo KindsRepo) Update(conn ConnectionInterface, kind Kind) (Kind, error) {
-	_, err := conn.Update(&kind)
+	existingKind, err := repo.Find(conn, kind.ID, kind.ClientID)
+	kind.Primary = existingKind.Primary
+	kind.CreatedAt = existingKind.CreatedAt
+	kind.UpdatedAt = time.Now()
+
+	_, err = conn.Update(&kind)
 	if err != nil {
 		return kind, err
 	}
