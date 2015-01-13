@@ -304,6 +304,34 @@ var _ = Describe("DeliveryWorker", func() {
 			})
 		})
 
+		Context("when the template contains syntax errors", func() {
+			BeforeEach(func() {
+				delivery.Templates = postal.Templates{
+					Text:    "This message is a test of the endorsement broadcast system. \n\n {{.Text}} \n\n ==Endorsement== \n {{.Endorsement} \n ==End Endorsement==",
+					HTML:    "<h3>This message is a test of the Endorsement Broadcast System</h3><p>{{.HTML}}</p><h3>Endorsement:</h3><p>{.Endorsement}</p>",
+					Subject: "Endorsement Test: {{.Subject}}",
+				}
+				job = gobble.NewJob(delivery)
+			})
+
+			It("does not panic", func() {
+				Expect(func() {
+					worker.Deliver(&job)
+				}).ToNot(Panic())
+			})
+
+			It("does not mark the job for retry later", func() {
+				worker.Deliver(&job)
+				Expect(job.RetryCount).To(Equal(0))
+			})
+
+			It("logs that the packer errored", func() {
+				worker.Deliver(&job)
+				Expect(buffer.String()).To(ContainSubstring("Not delivering because template failed to pack"))
+			})
+
+		})
+
 		Context("when the job contains malformed JSON", func() {
 			BeforeEach(func() {
 				job.Payload = `{"Space":"my-space","Options":{"HTML":"<p>some text that just abruptly ends`

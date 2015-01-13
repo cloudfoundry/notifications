@@ -69,7 +69,12 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 	}
 
 	if worker.ShouldDeliver(delivery) {
-		message := worker.pack(delivery)
+		message, err := worker.pack(delivery)
+		if err != nil {
+			worker.logger.Printf("Not delivering because template failed to pack")
+			return
+		}
+
 		status := worker.SendMail(message)
 		if status != StatusDelivered {
 			worker.Retry(job)
@@ -132,7 +137,9 @@ func (worker DeliveryWorker) isCritical(conn models.ConnectionInterface, kindID,
 	return kind.Critical
 }
 
-func (worker DeliveryWorker) pack(delivery Delivery) mail.Message {
+func (worker DeliveryWorker) pack(delivery Delivery) (mail.Message, error) {
+	var message mail.Message
+
 	cloak, err := conceal.NewCloak([]byte(worker.encryptionKey))
 	if err != nil {
 		panic(err)
@@ -141,12 +148,12 @@ func (worker DeliveryWorker) pack(delivery Delivery) mail.Message {
 	context := NewMessageContext(delivery, worker.sender, cloak)
 	packager := NewPackager()
 
-	message, err := packager.Pack(context)
+	message, err = packager.Pack(context)
 	if err != nil {
-		panic(err)
+		return message, err
 	}
 
-	return message
+	return message, nil
 }
 
 func (worker DeliveryWorker) SendMail(message mail.Message) string {
