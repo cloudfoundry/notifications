@@ -11,6 +11,8 @@
 	- [Send a notification to an email address](#post-emails)
 - Registering Notifications
 	- [Register client notifications](#put-notifications)
+- Updating Notifications
+  - [Update a notification](#put-update-notification)
 - Listing notifications
 	- [List all notifications](#get-notifications)
 - Managing User Preferences
@@ -527,6 +529,55 @@ $ curl -i -X PUT \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"source_name":"Galactic Empire", "notifications":{"my-first-notification-id":{"description":"Example Kind Description", "critical": true}, "my-second-notification-id":{"description":"Example description", "critical":true}}}' \
   http://notifications.example.com/notifications
+
+
+HTTP/1.1 204 OK
+Connection: close
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 30 Sep 2014 22:47:50 GMT
+X-Cf-Requestid: f39e22a4-6693-4a6d-6b27-006aecc924d4
+```
+##### Response
+
+###### Status
+```
+204 No Content
+```
+
+## Updating Notifications
+
+<a name="put-update-notification"></a>
+#### Update a notification
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `notifications.manage` scope.
+
+###### Route
+```
+PUT /clients/{client-id}/notifications/{notification-id}
+```
+###### Params
+
+| Key                    | Description                                    |
+| --------------------   | ---------------------------------------------- |
+| description\*          | The description of the notification.           |
+| critical\*             | A boolean describing whether this kind of notification is to be considered “critical”, usually meaning that it cannot be unsubscribed from.|
+| template\*             | The GUID of the template to use when sending the notification.|
+
+\* required
+
+###### CURL example
+```
+$ curl -i -X PUT \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  -d '{"description":"my excellent description", "critical":true, "template":"68C52741-C3C3-4B52-A522-787BF6159F72"}' \
+  http://notifications.example.com/clients/a-good-client-id/notifications/my-notification-id
 
 
 HTTP/1.1 204 OK
