@@ -36,10 +36,13 @@ var _ = Describe("NotificationUpdater", func() {
 		})
 
 		It("updates the correct model with the new fields provided", func() {
-			err := notificationsUpdater.Update(clientID, notificationID, models.Kind{
+			err := notificationsUpdater.Update(models.Kind{
 				Description: "some-description",
 				Critical:    true,
-				TemplateID:  "a-brand-new-template"})
+				TemplateID:  "a-brand-new-template",
+				ID:          notificationID,
+				ClientID:    clientID,
+			})
 
 			Expect(err).ToNot(HaveOccurred())
 			updatedKind := kindsRepo.Kinds[notificationID+clientID]
@@ -54,7 +57,7 @@ var _ = Describe("NotificationUpdater", func() {
 		It("propagates errors returned by the repo", func() {
 			boomError := errors.New("Boom")
 			kindsRepo.UpdateError = boomError
-			err := notificationsUpdater.Update(clientID, notificationID, models.Kind{})
+			err := notificationsUpdater.Update(models.Kind{})
 
 			Expect(err).To(Equal(boomError))
 		})

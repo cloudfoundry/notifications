@@ -22,7 +22,7 @@ func NewUpdateNotifications(notificationsUpdater NotificationsUpdaterInterface, 
 }
 
 type NotificationsUpdaterInterface interface {
-	Update(string, string, models.Kind) error
+	Update(models.Kind) error
 }
 
 func (handler UpdateNotifications) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
@@ -38,7 +38,7 @@ func (handler UpdateNotifications) ServeHTTP(w http.ResponseWriter, req *http.Re
 	matches := regex.FindStringSubmatch(req.URL.Path)
 	clientID, notificationID := matches[1], matches[2]
 
-	err = handler.updater.Update(clientID, notificationID, updateParams.ToModel())
+	err = handler.updater.Update(updateParams.ToModel(clientID, notificationID))
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

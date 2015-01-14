@@ -29,10 +29,12 @@ func NewNotificationParams(body io.Reader) (NotificationUpdateParams, error) {
 	return params, nil
 }
 
-func (params NotificationUpdateParams) ToModel() models.Kind {
+func (params NotificationUpdateParams) ToModel(clientID, notificationID string) models.Kind {
 	return models.Kind{
 		Description: params.Description,
 		Critical:    params.Critical,
 		TemplateID:  params.TemplateID,
+		ClientID:    clientID,
+		ID:          notificationID,
 	}
 }

@@ -44,10 +44,9 @@ var _ = Describe("UpdateNotifications", func() {
 				Description: "test kind",
 				Critical:    false,
 				TemplateID:  "template-name",
+				ClientID:    "this-client",
+				ID:          "this-kind",
 			}))
-
-			Expect(updater.ID).To(Equal("this-kind"))
-			Expect(updater.ClientID).To(Equal("this-client"))
 			Expect(writer.Code).To(Equal(http.StatusNoContent))
 		})
 

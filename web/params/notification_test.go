@@ -47,10 +47,12 @@ var _ = Describe("Notification", func() {
 				panic(err)
 			}
 
-			notification := updateParams.ToModel()
+			notification := updateParams.ToModel("client-id", "notification-id")
 			Expect(notification.Description).To(Equal("my awesome notification"))
 			Expect(notification.Critical).To(Equal(true))
 			Expect(notification.TemplateID).To(Equal("my-awesome-template"))
+			Expect(notification.ClientID).To(Equal("client-id"))
+			Expect(notification.ID).To(Equal("notification-id"))
 		})
 	})
 })
