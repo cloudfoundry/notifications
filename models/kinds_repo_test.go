@@ -51,6 +51,7 @@ var _ = Describe("KindsRepo", func() {
 			Expect(kind.Critical).To(BeFalse())
 			Expect(kind.ClientID).To(Equal("my-client"))
 			Expect(kind.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+			Expect(kind.UpdatedAt).To(Equal(kind.CreatedAt))
 		})
 
 		It("allows duplicate kindIDs that are unique by clientID", func() {

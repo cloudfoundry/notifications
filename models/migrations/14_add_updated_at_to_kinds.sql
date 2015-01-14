@@ -1,6 +1,6 @@
 -- +migrate Up
 -- SQL in section 'Up' is executed when this migration is applied
-ALTER TABLE `kinds` ADD `updated_at` datetime DEFAULT NULL;
+ALTER TABLE `kinds` ADD `updated_at` datetime DEFAULT CURRENT_TIMESTAMP;
 
 -- +migrate Down
 -- SQL section 'Down' is executed when this migration is rolled back

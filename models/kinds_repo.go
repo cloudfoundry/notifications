@@ -36,6 +36,8 @@ func NewKindsRepo() KindsRepo {
 
 func (repo KindsRepo) Create(conn ConnectionInterface, kind Kind) (Kind, error) {
 	kind.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
+	kind.UpdatedAt = kind.CreatedAt
+
 	err := conn.Insert(&kind)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
@@ -82,9 +84,12 @@ func (repo KindsRepo) FindAll(conn ConnectionInterface) ([]Kind, error) {
 
 func (repo KindsRepo) Update(conn ConnectionInterface, kind Kind) (Kind, error) {
 	existingKind, err := repo.Find(conn, kind.ID, kind.ClientID)
+	if err != nil {
+		return kind, err
+	}
 	kind.Primary = existingKind.Primary
 	kind.CreatedAt = existingKind.CreatedAt
-	kind.UpdatedAt = time.Now()
+	kind.UpdatedAt = time.Now().Truncate(1 * time.Second).UTC()
 
 	_, err = conn.Update(&kind)
 	if err != nil {
@@ -97,7 +102,6 @@ func (repo KindsRepo) Update(conn ConnectionInterface, kind Kind) (Kind, error) 
 func (repo KindsRepo) Upsert(conn ConnectionInterface, kind Kind) (Kind, error) {
 	existingKind, err := repo.Find(conn, kind.ID, kind.ClientID)
 	kind.Primary = existingKind.Primary
-	kind.CreatedAt = existingKind.CreatedAt
 
 	switch err.(type) {
 	case RecordNotFoundError:
