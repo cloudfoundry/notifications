@@ -18,7 +18,6 @@ var _ = Describe("Environment", func() {
 		"DB_LOGGING_ENABLED",
 		"ENCRYPTION_KEY",
 		"GOBBLE_WAIT_MAX_DURATION",
-		"MODEL_MIGRATIONS_DIRECTORY",
 		"PORT",
 		"ROOT_PATH",
 		"SENDER",
@@ -82,17 +81,10 @@ var _ = Describe("Environment", func() {
 	})
 
 	Describe("Notifications Migrations Path", func() {
-		It("loads the value when it is set", func() {
-			os.Setenv("MODEL_MIGRATIONS_DIRECTORY", "migrations")
+		It("infers the right location", func() {
+			os.Setenv("ROOT_PATH", "/tmp/foo")
 			env := application.NewEnvironment()
-			Expect(env.ModelMigrationsDir).To(Equal("migrations"))
-		})
-
-		It("panics when the value is not set", func() {
-			os.Setenv("MODEL_MIGRATIONS_DIRECTORY", "")
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			Expect(env.ModelMigrationsDir).To(Equal("/tmp/foo/models/migrations"))
 		})
 	})
 

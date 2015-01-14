@@ -1,7 +1,6 @@
 package models_test
 
 import (
-	"path"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
@@ -21,10 +20,9 @@ var _ = Describe("TemplatesRepo", func() {
 		TruncateTables()
 		repo = models.NewTemplatesRepo()
 		env := application.NewEnvironment()
-		migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
 		db := models.NewDatabase(models.Config{
 			DatabaseURL:    env.DatabaseURL,
-			MigrationsPath: migrationsPath,
+			MigrationsPath: env.ModelMigrationsDir,
 		})
 		conn = db.Connection()
 		createdAt = time.Now().Add(-1 * time.Hour).Truncate(1 * time.Second).UTC()

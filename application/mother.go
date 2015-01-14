@@ -207,7 +207,7 @@ func (mother Mother) Database() models.DatabaseInterface {
 	env := NewEnvironment()
 	return models.NewDatabase(models.Config{
 		DatabaseURL:         env.DatabaseURL,
-		MigrationsPath:      path.Join(env.RootPath, env.ModelMigrationsDir),
+		MigrationsPath:      env.ModelMigrationsDir,
 		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
 	})
 }

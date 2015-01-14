@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/ryanmoran/viron"
@@ -26,7 +27,7 @@ type Environment struct {
 	DatabaseURL           string `env:"DATABASE_URL"                env-required:"true"`
 	EncryptionKey         []byte `env:"ENCRYPTION_KEY"              env-required:"true"`
 	GobbleWaitMaxDuration int    `env:"GOBBLE_WAIT_MAX_DURATION"    env-default:"5000"`
-	ModelMigrationsDir    string `env:"MODEL_MIGRATIONS_DIRECTORY"  env-required:"true"`
+	ModelMigrationsDir    string
 	Port                  string `env:"PORT"                        env-default:"3000"`
 	RootPath              string `env:"ROOT_PATH"`
 	SMTPAuthMechanism     string `env:"SMTP_AUTH_MECHANISM"         env-required:"true"`
@@ -56,8 +57,12 @@ func NewEnvironment() Environment {
 	}
 	env.parseDatabaseURL()
 	env.validateSMTPAuthMechanism()
-
+	env.inferModelMigrationsDir()
 	return env
+}
+
+func (env *Environment) inferModelMigrationsDir() {
+	env.ModelMigrationsDir = path.Join(env.RootPath, "models", "migrations")
 }
 
 func (env *Environment) parseDatabaseURL() {

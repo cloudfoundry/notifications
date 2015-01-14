@@ -1,7 +1,6 @@
 package models_test
 
 import (
-	"path"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
@@ -20,10 +19,9 @@ var _ = Describe("UnsubscribesRepo", func() {
 		repo = models.NewUnsubscribesRepo()
 
 		env := application.NewEnvironment()
-		migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
 		db := models.NewDatabase(models.Config{
 			DatabaseURL:    env.DatabaseURL,
-			MigrationsPath: migrationsPath,
+			MigrationsPath: env.ModelMigrationsDir,
 		})
 		conn = db.Connection().(*models.Connection)
 	})

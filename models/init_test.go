@@ -1,7 +1,6 @@
 package models_test
 
 import (
-	"path"
 	"testing"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
@@ -18,11 +17,11 @@ func TestModelsSuite(t *testing.T) {
 
 func TruncateTables() {
 	env := application.NewEnvironment()
-	migrationsPath := path.Join(env.RootPath, env.ModelMigrationsDir)
 	db := models.NewDatabase(models.Config{
 		DatabaseURL:    env.DatabaseURL,
-		MigrationsPath: migrationsPath,
+		MigrationsPath: env.ModelMigrationsDir,
 	})
+
 	connection := db.Connection().(*models.Connection)
 	err := connection.TruncateTables()
 	if err != nil {
