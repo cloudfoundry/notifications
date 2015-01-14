@@ -71,9 +71,7 @@ var _ = Describe("UpdateDefaultTemplate", func() {
 
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(errorWriter.Error).To(MatchError(params.ValidationError([]string{
-				"Request is missing the required field: html",
-			})))
+			Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
 		})
 	})
 })

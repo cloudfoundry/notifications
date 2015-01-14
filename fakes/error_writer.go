@@ -12,4 +12,5 @@ func NewErrorWriter() *ErrorWriter {
 
 func (writer *ErrorWriter) Write(w http.ResponseWriter, err error) {
 	writer.Error = err
+	w.WriteHeader(http.StatusTeapot)
 }

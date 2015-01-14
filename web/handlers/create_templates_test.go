@@ -62,9 +62,7 @@ var _ = Describe("CreateTemplate", func() {
 				}
 
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{
-					"Request is missing the required field: name",
-				})))
+				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
 			})
 
 			It("Writes a validation error to the errorwriter when the request is missing the html field", func() {
@@ -74,9 +72,7 @@ var _ = Describe("CreateTemplate", func() {
 					panic(err)
 				}
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{
-					"Request is missing the required field: html",
-				})))
+				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
 			})
 
 			It("writes a parse error for an invalid request", func() {

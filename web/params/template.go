@@ -6,12 +6,13 @@ import (
 	"text/template"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/valiant"
 )
 
 type Template struct {
-	Name     string          `json:"name"`
+	Name     string          `json:"name" validate-required:"true"`
 	Text     string          `json:"text"`
-	HTML     string          `json:"html"`
+	HTML     string          `json:"html" validate-required:"true"`
 	Subject  string          `json:"subject"`
 	Metadata json.RawMessage `json:"metadata"`
 }
@@ -24,17 +25,20 @@ func (err TemplateCreateError) Error() string {
 
 func NewTemplate(body io.Reader) (Template, error) {
 	var template Template
-	err := json.NewDecoder(body).Decode(&template)
+	validator := valiant.NewValidator(body)
+
+	err := validator.Validate(&template)
 	if err != nil {
-		return Template{}, ParseError{}
-	}
-	if template.Metadata == nil {
-		template.Metadata = json.RawMessage("{}")
+		switch err.(type) {
+		case valiant.RequiredFieldError:
+			return template, ValidationError([]string{err.Error()})
+		default:
+			return template, ParseError{}
+		}
 	}
 
-	err = template.validateFields()
-	if err != nil {
-		return Template{}, err
+	if template.Metadata == nil {
+		template.Metadata = json.RawMessage("{}")
 	}
 
 	err = template.validateSyntax()
@@ -45,18 +49,6 @@ func NewTemplate(body io.Reader) (Template, error) {
 	template.setDefaults()
 
 	return template, nil
-}
-
-func (t Template) validateFields() error {
-	if t.Name == "" {
-		return ValidationError([]string{"Request is missing the required field: name"})
-	}
-
-	if t.HTML == "" {
-		return ValidationError([]string{"Request is missing the required field: html"})
-	}
-
-	return nil
 }
 
 func (t Template) validateSyntax() error {

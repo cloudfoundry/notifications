@@ -30,7 +30,7 @@ var _ = Describe("UpdateTemplates", func() {
 			errorWriter = fakes.NewErrorWriter()
 			handler = handlers.NewUpdateTemplates(updater, errorWriter)
 			writer = httptest.NewRecorder()
-			body := []byte(`{"name": "An Interesting Template", "subject": "very interesting", "text": "{{turkey}}", "html": "<p>{{turkey}} gobble</p>"}`)
+			body := []byte(`{"name":"An Interesting Template", "subject":"very interesting subject", "text":"Here's the msg {{.Text}}", "html":"<p>turkey gobble</p>"}`)
 			request, err = http.NewRequest("PUT", "/templates/a-template-id", bytes.NewBuffer(body))
 			if err != nil {
 				panic(err)
@@ -39,15 +39,15 @@ var _ = Describe("UpdateTemplates", func() {
 
 		It("calls update on its updater with appropriate arguments", func() {
 			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusNoContent))
 			Expect(updater.UpdateArgumentID).To(Equal("a-template-id"))
 			Expect(updater.UpdateArgumentBody).To(Equal(models.Template{
 				Name:     "An Interesting Template",
-				Subject:  "very interesting",
-				Text:     "{{turkey}}",
-				HTML:     "<p>{{turkey}} gobble</p>",
+				Subject:  "very interesting subject",
+				Text:     "Here's the msg {{.Text}}",
+				HTML:     "<p>turkey gobble</p>",
 				Metadata: "{}",
 			}))
-			Expect(writer.Code).To(Equal(http.StatusNoContent))
 		})
 
 		It("can update a template without a subject field", func() {
@@ -82,9 +82,7 @@ var _ = Describe("UpdateTemplates", func() {
 					}
 
 					handler.ServeHTTP(writer, request, context)
-					Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{
-						"Request is missing the required field: name",
-					})))
+					Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
 				})
 			})
 
@@ -97,9 +95,7 @@ var _ = Describe("UpdateTemplates", func() {
 					}
 
 					handler.ServeHTTP(writer, request, context)
-					Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{
-						"Request is missing the required field: html",
-					})))
+					Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
 				})
 			})
 
