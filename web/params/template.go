@@ -3,6 +3,7 @@ package params
 import (
 	"encoding/json"
 	"io"
+	"text/template"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
@@ -31,7 +32,12 @@ func NewTemplate(body io.Reader) (Template, error) {
 		template.Metadata = json.RawMessage("{}")
 	}
 
-	err = template.Validate()
+	err = template.validateFields()
+	if err != nil {
+		return Template{}, err
+	}
+
+	err = template.validateSyntax()
 	if err != nil {
 		return Template{}, err
 	}
@@ -41,30 +47,47 @@ func NewTemplate(body io.Reader) (Template, error) {
 	return template, nil
 }
 
-func (template Template) Validate() error {
-	if template.Name == "" {
+func (t Template) validateFields() error {
+	if t.Name == "" {
 		return ValidationError([]string{"Request is missing the required field: name"})
 	}
 
-	if template.HTML == "" {
+	if t.HTML == "" {
 		return ValidationError([]string{"Request is missing the required field: html"})
 	}
 
 	return nil
 }
 
-func (template Template) ToModel() models.Template {
+func (t Template) validateSyntax() error {
+	toValidate := map[string]string{
+		"Subject": t.Subject,
+		"Text":    t.Text,
+		"HTML":    t.HTML,
+	}
+
+	for field, contents := range toValidate {
+		_, err := template.New("test").Parse(contents)
+		if err != nil {
+			return ValidationError([]string{field + " syntax is malformed please check your braces"})
+		}
+	}
+
+	return nil
+}
+
+func (t Template) ToModel() models.Template {
 	return models.Template{
-		Name:     template.Name,
-		Text:     template.Text,
-		HTML:     template.HTML,
-		Subject:  template.Subject,
-		Metadata: string(template.Metadata),
+		Name:     t.Name,
+		Text:     t.Text,
+		HTML:     t.HTML,
+		Subject:  t.Subject,
+		Metadata: string(t.Metadata),
 	}
 }
 
-func (template *Template) setDefaults() {
-	if template.Subject == "" {
-		template.Subject = "{{.Subject}}"
+func (t *Template) setDefaults() {
+	if t.Subject == "" {
+		t.Subject = "{{.Subject}}"
 	}
 }

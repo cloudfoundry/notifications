@@ -3,6 +3,7 @@ package params_test
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
@@ -10,6 +11,14 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
+
+func buildTemplateRequestBody(template params.Template) io.Reader {
+	body, err := json.Marshal(template)
+	if err != nil {
+		panic(err)
+	}
+	return bytes.NewBuffer(body)
+}
 
 var _ = Describe("Template", func() {
 	Describe("NewTemplate", func() {
@@ -55,6 +64,50 @@ var _ = Describe("Template", func() {
 				Expect(parameters.HTML).To(Equal("<p>its foobar</p>"))
 				Expect(parameters.Subject).To(Equal("{{.Subject}}"))
 				Expect(parameters.Metadata).To(Equal(json.RawMessage("{}")))
+			})
+
+			Context("when the template has invalid syntax", func() {
+				Context("when subject template has invalid syntax", func() {
+					It("returns a validation error", func() {
+						body := buildTemplateRequestBody(params.Template{
+							Name:    "Template name",
+							Text:    "Textual template",
+							HTML:    "HTML template",
+							Subject: "{{.bad}",
+						})
+						_, err := params.NewTemplate(body)
+						Expect(err).To(HaveOccurred())
+						Expect(err).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
+					})
+				})
+
+				Context("when text template has invalid syntax", func() {
+					It("returns a validation error", func() {
+						body := buildTemplateRequestBody(params.Template{
+							Name:    "Template name",
+							Text:    "You should feel {{.BAD}",
+							HTML:    "<h1> Amazing </h1>",
+							Subject: "Great Subject",
+						})
+						_, err := params.NewTemplate(body)
+						Expect(err).To(HaveOccurred())
+						Expect(err).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
+					})
+				})
+
+				Context("when html template has invalid syntax", func() {
+					It("returns a validation error", func() {
+						body := buildTemplateRequestBody(params.Template{
+							Name:    "Template name",
+							Text:    "Textual template",
+							HTML:    "{{.bad}",
+							Subject: "Great Subject",
+						})
+						_, err := params.NewTemplate(body)
+						Expect(err).To(HaveOccurred())
+						Expect(err).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
+					})
+				})
 			})
 		})
 	})
