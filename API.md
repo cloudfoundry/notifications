@@ -762,6 +762,7 @@ Date: Tue, 30 Sep 2014 23:19:11 GMT
 X-Cf-Requestid: 92cffe86-16fe-41a8-4b80-b10987b11060
 
 {
+    "global_unsubscribe": false,
 	"clients" : {
 		"login-service": {
 			"effa96de-2349-423a-b5e4-b1e84712a714": {
@@ -803,15 +804,18 @@ Access-Control-Allow-Origin: *
 ```
 The above headers constitute a CORS contract. They indicate that the GET and PATCH endpoints for the `/user_preferences` path support the specified headers from any origin.
 
-###### Body
+###### Response Body
 | Fields             | Description                                                     |
 | ------------------ | --------------------------------------------------------------- |
-| client_id          | Top-level keys are client identifiers                           |
-| kind_id            | 2nd-level keys are kind identifiers                             |
-| count              | Number of notifications sent for this kind                      |
-| email              | Indicates if the user is subscribed to receive the notification |
-| kind_description   | A human-friendly description of the notification                |
-| source_description | A human-friendly description of the sending client              |
+| global_unsubscribe | Boolean, indicates if user is unsubscribed to all notifications.  Overrides individual notification preferences |
+| clients            | Map of clients
+
+###### Client fields
+| Fields             | Description |
+| -------------------| ----------- |
+| client_id          | Unique id of the client |
+| kind_id            | Unique id of kind |
+| email              | Indicates if the user is subscribed to receive the notification| 
 
 ----
 <a name="patch-user-preferences"></a>
@@ -830,18 +834,24 @@ Authorization: bearer <USER-TOKEN>
 PATCH /user_preferences
 ```
 
-###### Params
+###### Request body
 | Fields             | Description                                                     |
 | ------------------ | --------------------------------------------------------------- |
-| client_id          | Top-level keys are client identifiers                           |
-| kind_id            | 2nd-level keys are kind identifiers                             |
-| email              | Indicates if the user is subscribed to receive the notification |
+| global_unsubscribe | Boolean, indicates if user is unsubscribed to all notifications.  Overrides individual notification preferences |
+| clients            | Map of clients
+
+###### Client fields
+| Fields             | Description |
+| -------------------| ----------- |
+| client_id          | Unique id of the client |
+| kind_id            | Unique id of kind |
+| email              | Indicates if the user is subscribed to receive the notification| 
 
 ###### CURL example
 ```
 $ curl -i -X PATCH \
   -H "Authorization: Bearer <USER-TOKEN>" \
-  -d '{"clients": {"login-service":{"effa96de-2349-423a-b5e4-b1e84712a714":{"email":true}}}}'
+  -d '{"global_unsubscribe": false, "clients": {"login-service":{"effa96de-2349-423a-b5e4-b1e84712a714":{"email":true}}}}'
   http://notifications.example.com/user_preferences
 
 HTTP/1.1 204 No Content
@@ -949,6 +959,7 @@ Date: Tue, 30 Sep 2014 23:19:11 GMT
 X-Cf-Requestid: 92cffe86-16fe-41a8-4b80-b10987b11060
 
 {
+	"global_unsubscribe":false,	
 	"clients": {
 		"login-service": {
 			"effa96de-2349-423a-b5e4-b1e84712a714": {
@@ -990,15 +1001,18 @@ Access-Control-Allow-Origin: *
 ```
 The above headers constitute a CORS contract. They indicate that the GET and PATCH endpoints for the `/user_preferences/{user-guid}` path support the specified headers from any origin.
 
-###### Body
+###### Response Body
 | Fields             | Description                                                     |
 | ------------------ | --------------------------------------------------------------- |
-| client_id          | Top-level keys are client identifiers                           |
-| kind_id            | 2nd-level keys are kind identifiers                             |
-| count              | Number of notifications sent for this kind                      |
-| email              | Indicates if the user is subscribed to receive the notification |
-| kind_description   | A human-friendly description of the notification                |
-| source_description | A human-friendly description of the sending client              |
+| global_unsubscribe | Boolean, indicates if user is unsubscribed to all notifications.  Overrides individual notification preferences |
+| clients            | Map of clients
+
+###### Client fields
+| Fields             | Description |
+| -------------------| ----------- |
+| client_id          | Unique id of the client |
+| kind_id            | Unique id of kind |
+| email              | Indicates if the user is subscribed to receive the notification| 
 
 ----
 <a name="patch-user-preferences-guid"></a>
@@ -1017,18 +1031,24 @@ Authorization: bearer <CLIENT-TOKEN>
 PATCH /user_preferences/user-guid
 ```
 
-###### Params
+###### Request body
 | Fields             | Description                                                     |
 | ------------------ | --------------------------------------------------------------- |
-| client_id          | Top-level keys are client identifiers                           |
-| kind_id            | 2nd-level keys are kind identifiers                             |
-| email              | Indicates if the user is subscribed to receive the notification |
+| global_unsubscribe | Boolean, indicates if user is unsubscribed to all notifications.  Overrides individual notification preferences |
+| clients            | Map of clients
+
+###### Client fields
+| Fields             | Description |
+| -------------------| ----------- |
+| client_id          | Unique id of the client |
+| kind_id            | Unique id of kind |
+| email              | Indicates if the user is subscribed to receive the notification| 
 
 ###### CURL example
 ```
 $ curl -i -X PATCH \
   -H "Authorization: Bearer <USER-TOKEN>" \
-  -d '{"clients": {"login-service":{"effa96de-2349-423a-b5e4-b1e84712a714":{"email":true}}}}'
+  -d '{"global_unsubcribe":false, "clients": {"login-service":{"effa96de-2349-423a-b5e4-b1e84712a714":{"email":true}}}}'
   http://notifications.example.com/user_preferences/user-guid
 
 HTTP/1.1 204 No Content
