@@ -57,7 +57,6 @@ If you are unfamiliar with UAA consult the [UAA token overview](https://github.c
 | DATABASE_URL\*               | URL to your Database                        | \<none\> |
 | ENCRYPTION_KEY\*             | Key used to encrypt the unsubscribe ID      | \<none\> |
 | GOBBLE_MIGRATIONS_DIR\*      | Location of the gobble migrations directory | \<none\> |
-| MODEL_MIGRATIONS_DIRECTORY\* | Location of the model migrations directory  | \<none\> |
 | PORT                         | Port that application will bind to          | 3000     |
 | ROOT_PATH\*                  | Root path of your application               | \<none\> |
 | SMTP_AUTH_MECHANISM\*        | SMTP Authentication (none, plain, cram-md5) | \<none\> |
