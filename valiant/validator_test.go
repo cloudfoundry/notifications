@@ -38,6 +38,8 @@ var _ = Describe("Validate", func() {
 			validator := valiant.NewValidator(data)
 			err := validator.Validate(&someone)
 			Expect(err).To(HaveOccurred())
+			Expect(err).To(BeAssignableToTypeOf(valiant.RequiredFieldError{}))
+			Expect(err).To(MatchError("Missing required field 'name'"))
 		})
 	})
 
@@ -84,7 +86,8 @@ var _ = Describe("Validate", func() {
 				"name":"Boshy",
 				"contact_info": {
 				    "address": {
-					    "street":"123 Sesame St"
+					    "street":"123 Sesame St",
+					    "city":"Los Angeles"
 				    },
 				"phone": "310-310-3100",
 				"email": true
@@ -113,6 +116,7 @@ var _ = Describe("Validate", func() {
 			err := validator.Validate(&someone)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(BeAssignableToTypeOf(valiant.RequiredFieldError{}))
+			Expect(err).To(MatchError("Missing required field 'state'"))
 		})
 	})
 })
