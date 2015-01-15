@@ -251,6 +251,19 @@ var _ = Describe("ErrorWriter", func() {
 		Expect(body["errors"]).To(ContainElement("The template could not be assigned"))
 	})
 
+	It("returns a 422 when a user token was expected but is not present", func() {
+		writer.Write(recorder, handlers.MissingUserTokenError("Missing user_id from token claims."))
+		Expect(recorder.Code).To(Equal(422))
+
+		body := make(map[string]interface{})
+		err := json.Unmarshal(recorder.Body.Bytes(), &body)
+		if err != nil {
+			panic(err)
+		}
+
+		Expect(body["errors"]).To(ContainElement("Missing user_id from token claims."))
+	})
+
 	It("panics for unknown errors", func() {
 		Expect(func() {
 			writer.Write(recorder, errors.New("BOOM!"))

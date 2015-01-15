@@ -60,6 +60,8 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 		writer.write(w, http.StatusNotAcceptable, []string{err.Error()})
 	case services.TemplateAssignmentError:
 		writer.write(w, 422, []string{err.Error()})
+	case MissingUserTokenError:
+		writer.write(w, 422, []string{err.Error()})
 	default:
 		panic(err)
 	}

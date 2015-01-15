@@ -109,4 +109,29 @@ var _ = Describe("GetPreferences", func() {
 			Expect(errorWriter.Error).To(Equal(preferencesFinder.FindError))
 		})
 	})
+
+	Context("when the request does not container a user_id claim", func() {
+		It("writes a MissingUserTokenError to the error writer", func() {
+			tokenHeader := map[string]interface{}{
+				"alg": "FAST",
+			}
+
+			tokenClaims := map[string]interface{}{}
+
+			request, err := http.NewRequest("GET", "/user_preferences", nil)
+			if err != nil {
+				panic(err)
+			}
+
+			token, err := jwt.Parse(fakes.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
+				return []byte(application.UAAPublicKey), nil
+			})
+
+			context = stack.NewContext()
+			context.Set("token", token)
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(errorWriter.Error).To(BeAssignableToTypeOf(handlers.MissingUserTokenError("")))
+		})
+	})
 })

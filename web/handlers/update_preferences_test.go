@@ -148,6 +148,33 @@ var _ = Describe("UpdatePreferences", func() {
 			})
 
 			Context("preferenceUpdater.Execute errors", func() {
+				Context("when the user_id claim is not present in the token", func() {
+					It("Writes a MissingUserTokenError to the error writer", func() {
+						tokenHeader := map[string]interface{}{
+							"alg": "FAST",
+						}
+
+						tokenClaims := map[string]interface{}{}
+
+						request, err := http.NewRequest("PATCH", "/user_preferences", nil)
+						if err != nil {
+							panic(err)
+						}
+
+						token, err := jwt.Parse(fakes.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
+							return []byte(application.UAAPublicKey), nil
+						})
+
+						context = stack.NewContext()
+						context.Set("token", token)
+
+						handler.ServeHTTP(writer, request, context)
+						Expect(errorWriter.Error).To(BeAssignableToTypeOf(handlers.MissingUserTokenError("")))
+						Expect(conn.BeginWasCalled).To(BeFalse())
+						Expect(conn.CommitWasCalled).To(BeFalse())
+						Expect(conn.RollbackWasCalled).To(BeFalse())
+					})
+				})
 
 				It("delegates MissingKindOrClientErrors as params.ValidationError to the ErrorWriter", func() {
 					updater.ExecuteError = services.MissingKindOrClientError("BOOM!")
@@ -238,10 +265,7 @@ var _ = Describe("UpdatePreferences", func() {
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())
 				Expect(conn.RollbackWasCalled).To(BeFalse())
-
 			})
-
 		})
 	})
-
 })

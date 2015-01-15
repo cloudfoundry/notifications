@@ -37,6 +37,12 @@ func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Requ
 
 func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) {
 	token := context.Get("token").(*jwt.Token)
+
+	if _, ok := token.Claims["user_id"]; !ok {
+		handler.errorWriter.Write(w, MissingUserTokenError("Missing user_id from token claims."))
+		return
+	}
+
 	userID := token.Claims["user_id"].(string)
 
 	builder := services.NewPreferencesBuilder()
