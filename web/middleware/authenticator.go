@@ -37,14 +37,8 @@ func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 		return ware.Error(w, http.StatusUnauthorized, "Authorization header is invalid: corrupt")
 	}
 
-	if scopes, ok := token.Claims["scope"]; ok {
-		for _, scope := range ware.Scopes {
-			if !ware.HasScope(scopes, scope) {
-				return ware.Error(w, http.StatusForbidden, "You are not authorized to perform the requested action")
-			}
-		}
-	} else {
-		return ware.Error(w, http.StatusForbidden, "You are not authorized to perform the requested action")
+	if !ware.containsATokenScope(w, token) {
+		return false
 	}
 
 	context.Set("token", token)
@@ -52,18 +46,30 @@ func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 	return true
 }
 
-func (ware Authenticator) Error(w http.ResponseWriter, code int, message string) bool {
-	w.WriteHeader(code)
-	w.Write([]byte(`{"errors":["` + message + `"]}`))
-	return false
+func (ware Authenticator) containsATokenScope(w http.ResponseWriter, token *jwt.Token) bool {
+	if tokenScopes, ok := token.Claims["scope"]; ok {
+		for _, wareScope := range ware.Scopes {
+			if contains(tokenScopes, wareScope) {
+				return true
+			}
+		}
+	}
+
+	return ware.Error(w, http.StatusForbidden, "You are not authorized to perform the requested action")
 }
 
-func (ware Authenticator) HasScope(elements interface{}, key string) bool {
+func contains(elements interface{}, key string) bool {
 	for _, elem := range elements.([]interface{}) {
 		if elem.(string) == key {
 			return true
 		}
 	}
+	return false
+}
+
+func (ware Authenticator) Error(w http.ResponseWriter, code int, message string) bool {
+	w.WriteHeader(code)
+	w.Write([]byte(`{"errors":["` + message + `"]}`))
 	return false
 }
 

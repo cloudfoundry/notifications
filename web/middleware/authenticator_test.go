@@ -26,7 +26,7 @@ var _ = Describe("Authenticator", func() {
 	BeforeEach(func() {
 		var err error
 
-		ware = middleware.NewAuthenticator(application.UAAPublicKey, "fake.scope")
+		ware = middleware.NewAuthenticator(application.UAAPublicKey, "fake.scope", "gaben.scope")
 		writer = httptest.NewRecorder()
 		request, err = http.NewRequest("GET", "/some/path", nil)
 		if err != nil {
@@ -45,7 +45,7 @@ var _ = Describe("Authenticator", func() {
 				"client_id": "mister-client",
 				"cid":       "mister-client",
 				"exp":       3404281214,
-				"scope":     []string{"fake.scope"},
+				"scope":     []string{"gaben.scope"},
 			}
 			rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
 
@@ -88,7 +88,7 @@ var _ = Describe("Authenticator", func() {
 			Expect(*(contextToken.(*jwt.Token))).To(Equal(*token))
 		})
 
-		Context("When the prefix to the token has different capitalization", func() {
+		Context("when the prefix to the token has different capitalization", func() {
 			It("still sets the token", func() {
 				request.Header.Set("Authorization", "bearer "+rawToken)
 				ware.ServeHTTP(writer, request, context)
