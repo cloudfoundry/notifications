@@ -83,6 +83,7 @@ func (database DB) migrate(migrationsPath string) {
 	database.connection.AddTableWithName(Unsubscribe{}, "unsubscribes").SetKeys(true, "Primary").SetUniqueTogether("user_id", "client_id", "kind_id")
 	database.connection.AddTableWithName(GlobalUnsubscribe{}, "global_unsubscribes").SetKeys(true, "Primary").ColMap("UserID").SetUnique(true)
 	database.connection.AddTableWithName(Template{}, "templates").SetKeys(true, "Primary").ColMap("Name").SetUnique(true)
+	database.connection.AddTableWithName(Message{}, "messages").SetKeys(false, "ID")
 }
 
 func (database DB) Seed() {

@@ -59,6 +59,10 @@ func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
 	return services.PreferenceUpdater{}
 }
 
+func (mother Mother) MessageFinder() services.MessageFinder {
+	return services.MessageFinder{}
+}
+
 func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder,
 	services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister,
 	services.TemplateAssigner, services.TemplateAssociationLister) {

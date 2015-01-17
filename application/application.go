@@ -102,7 +102,9 @@ func (app Application) EnableDBLogging() {
 
 func (app Application) StartWorkers() {
 	for i := 0; i < WorkerCount; i++ {
-		worker := postal.NewDeliveryWorker(i+1, app.mother.Logger(), app.mother.MailClient(), app.mother.Queue(), app.mother.GlobalUnsubscribesRepo(), app.mother.UnsubscribesRepo(), app.mother.KindsRepo(), app.mother.Database(), app.env.Sender, app.env.EncryptionKey)
+		worker := postal.NewDeliveryWorker(i+1, app.mother.Logger(), app.mother.MailClient(), app.mother.Queue(),
+			app.mother.GlobalUnsubscribesRepo(), app.mother.UnsubscribesRepo(), app.mother.KindsRepo(), app.mother.MessagesRepo(),
+			app.mother.Database(), app.env.Sender, app.env.EncryptionKey)
 		worker.Work()
 	}
 }

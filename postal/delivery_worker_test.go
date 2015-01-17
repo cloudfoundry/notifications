@@ -31,6 +31,7 @@ var _ = Describe("DeliveryWorker", func() {
 	var unsubscribesRepo *fakes.UnsubscribesRepo
 	var globalUnsubscribesRepo *fakes.GlobalUnsubscribesRepo
 	var kindsRepo *fakes.KindsRepo
+	var messagesRepo *fakes.MessagesRepo
 	var database *fakes.Database
 	var conn models.ConnectionInterface
 	var userGUID string
@@ -44,6 +45,7 @@ var _ = Describe("DeliveryWorker", func() {
 		unsubscribesRepo = fakes.NewUnsubscribesRepo()
 		globalUnsubscribesRepo = fakes.NewGlobalUnsubscribesRepo()
 		kindsRepo = fakes.NewKindsRepo()
+		messagesRepo = fakes.NewMessagesRepo()
 		database = fakes.NewDatabase()
 		conn = database.Connection()
 		userGUID = "user-123"
@@ -51,7 +53,7 @@ var _ = Describe("DeliveryWorker", func() {
 		sum := md5.Sum([]byte("banana's are so very tasty"))
 		encryptionKey := sum[:]
 
-		worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo, database, sender, encryptionKey)
+		worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo, messagesRepo, database, sender, encryptionKey)
 
 		delivery = postal.Delivery{
 			User: uaa.User{
@@ -124,6 +126,25 @@ var _ = Describe("DeliveryWorker", func() {
 			Expect(results).To(ContainElement("Message was successfully sent to fake-user@example.com"))
 		})
 
+		It("Upserts the StatusDelivered to the database", func() {
+			var jobDelivery postal.Delivery
+			err := job.Unmarshal(&jobDelivery)
+			if err != nil {
+				panic(err)
+			}
+
+			messageID := jobDelivery.MessageID
+			worker.Deliver(&job)
+
+			message, err := messagesRepo.FindByID(conn, messageID)
+			if err != nil {
+				panic(err)
+			}
+
+			Expect(message.Status).To(Equal(postal.StatusDelivered))
+
+		})
+
 		It("ensures message delivery", func() {
 			worker.Deliver(&job)
 
@@ -154,6 +175,25 @@ var _ = Describe("DeliveryWorker", func() {
 				Expect(buffer.String()).To(ContainSubstring("Failed to deliver message due to SMTP error: BOOM!"))
 			})
 
+			It("upserts the StatusFailed to the database", func() {
+				var jobDelivery postal.Delivery
+				err := job.Unmarshal(&jobDelivery)
+				if err != nil {
+					panic(err)
+				}
+
+				mailClient.SendError = errors.New("BOOM!")
+				messageID := jobDelivery.MessageID
+				worker.Deliver(&job)
+
+				message, err := messagesRepo.FindByID(conn, messageID)
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(message.Status).To(Equal(postal.StatusFailed))
+			})
+
 			Context("and the error is a connect error", func() {
 				It("logs an SMTP timeout error", func() {
 					mailClient.ConnectError = errors.New("server timeout")
@@ -166,6 +206,25 @@ var _ = Describe("DeliveryWorker", func() {
 					worker.Deliver(&job)
 					Expect(buffer.String()).ToNot(ContainSubstring("server timeout"))
 					Expect(buffer.String()).To(ContainSubstring("Error Establishing SMTP Connection: BOOM!"))
+				})
+
+				It("upserts the StatusUnavailable to the database", func() {
+					var jobDelivery postal.Delivery
+					err := job.Unmarshal(&jobDelivery)
+					if err != nil {
+						panic(err)
+					}
+
+					mailClient.ConnectError = errors.New("BOOM!")
+					messageID := jobDelivery.MessageID
+					worker.Deliver(&job)
+
+					message, err := messagesRepo.FindByID(conn, messageID)
+					if err != nil {
+						panic(err)
+					}
+
+					Expect(message.Status).To(Equal(postal.StatusUnavailable))
 				})
 
 				It("sets the retry duration using an exponential backoff algorithm", func() {

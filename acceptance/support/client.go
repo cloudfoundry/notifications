@@ -18,6 +18,7 @@ type Client struct {
 	Templates     *TemplatesService
 	Notify        *NotifyService
 	Preferences   *PreferencesService
+	Messages      *MessagesService
 }
 
 func NewClient(server servers.Notifications) *Client {
@@ -38,6 +39,9 @@ func NewClient(server servers.Notifications) *Client {
 		client: client,
 	}
 	client.Preferences = &PreferencesService{
+		client: client,
+	}
+	client.Messages = &MessagesService{
 		client: client,
 	}
 

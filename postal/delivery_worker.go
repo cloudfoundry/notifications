@@ -27,12 +27,17 @@ type Delivery struct {
 	Scope        string
 }
 
+type MessagesRepoInterface interface {
+	Upsert(models.ConnectionInterface, models.Message) (models.Message, error)
+}
+
 type DeliveryWorker struct {
 	logger                 *log.Logger
 	mailClient             mail.ClientInterface
 	globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface
 	unsubscribesRepo       models.UnsubscribesRepoInterface
 	kindsRepo              models.KindsRepoInterface
+	messagesRepo           MessagesRepoInterface
 	database               models.DatabaseInterface
 	sender                 string
 	encryptionKey          []byte
@@ -41,7 +46,8 @@ type DeliveryWorker struct {
 
 func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
 	globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface, unsubscribesRepo models.UnsubscribesRepoInterface,
-	kindsRepo models.KindsRepoInterface, database models.DatabaseInterface, sender string, encryptionKey []byte) DeliveryWorker {
+	kindsRepo models.KindsRepoInterface, messagesRepo MessagesRepoInterface,
+	database models.DatabaseInterface, sender string, encryptionKey []byte) DeliveryWorker {
 
 	worker := DeliveryWorker{
 		logger:                 logger,
@@ -49,6 +55,7 @@ func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterfa
 		globalUnsubscribesRepo: globalUnsubscribesRepo,
 		unsubscribesRepo:       unsubscribesRepo,
 		kindsRepo:              kindsRepo,
+		messagesRepo:           messagesRepo,
 		database:               database,
 		sender:                 sender,
 		encryptionKey:          encryptionKey,
@@ -86,11 +93,15 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 				"name": "notifications.worker.delivered",
 			}).Log()
 		}
+
+		worker.messagesRepo.Upsert(worker.database.Connection(), models.Message{ID: delivery.MessageID, Status: status})
+
 	} else {
 		metrics.NewMetric("counter", map[string]interface{}{
 			"name": "notifications.worker.unsubscribed",
 		}).Log()
 	}
+
 }
 
 func (worker DeliveryWorker) Retry(job *gobble.Job) {

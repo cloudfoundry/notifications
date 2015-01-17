@@ -23,13 +23,15 @@ var _ = Describe("Mailer", func() {
 	var conn *fakes.DBConn
 	var space cf.CloudControllerSpace
 	var org cf.CloudControllerOrganization
+	var messagesRepo *fakes.MessagesRepo
 
 	BeforeEach(func() {
 		buffer = bytes.NewBuffer([]byte{})
 		logger = log.New(buffer, "", 0)
 		queue = fakes.NewQueue()
 		conn = fakes.NewDBConn()
-		mailer = strategies.NewMailer(queue, fakes.GUIDGenerator)
+		messagesRepo = fakes.NewMessagesRepo()
+		mailer = strategies.NewMailer(queue, fakes.NewIncrementingGUIDGenerator().Generate, messagesRepo)
 		space = cf.CloudControllerSpace{Name: "the-space"}
 		org = cf.CloudControllerOrganization{Name: "the-org"}
 	})
@@ -45,29 +47,15 @@ var _ = Describe("Mailer", func() {
 			responses := mailer.Deliver(conn, postal.Templates{}, users, postal.Options{KindID: "the-kind"}, space, org, "the-client", "my.scope")
 
 			Expect(len(responses)).To(Equal(4))
-			Expect(responses).To(ContainElement(strategies.Response{
-				Status:         "queued",
-				Recipient:      "user-1",
-				NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-			}))
 
-			Expect(responses).To(ContainElement(strategies.Response{
-				Status:         "queued",
-				Recipient:      "user-2",
-				NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-			}))
+			guidsSeen := map[string]string{}
 
-			Expect(responses).To(ContainElement(strategies.Response{
-				Status:         "queued",
-				Recipient:      "user-3",
-				NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-			}))
-
-			Expect(responses).To(ContainElement(strategies.Response{
-				Status:         "queued",
-				Recipient:      "user-4",
-				NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
-			}))
+			for _, r := range responses {
+				Expect(r.Status).To(Equal("queued"))
+				Expect(users).To(HaveKey(r.Recipient))
+				Expect(guidsSeen).NotTo(HaveKey(r.NotificationID))
+				guidsSeen[r.NotificationID] = r.NotificationID
+			}
 		})
 
 		It("enqueues jobs with the deliveries", func() {
@@ -104,10 +92,34 @@ var _ = Describe("Mailer", func() {
 					Organization: org,
 					ClientID:     "the-client",
 					Templates:    postal.Templates{Subject: "", Text: "", HTML: ""},
-					MessageID:    "deadbeef-aabb-ccdd-eeff-001122334455",
+					MessageID:    delivery.MessageID,
 					Scope:        "my.scope",
 				}))
 			}
+		})
+
+		It("Upserts a StatusQueued for each of the jobs", func() {
+			users := map[string]uaa.User{
+				"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
+				"user-2": {},
+				"user-3": {ID: "user-3"},
+				"user-4": {ID: "user-4", Emails: []string{"user-4"}},
+			}
+			mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
+
+			for _ = range users {
+				job := <-queue.Reserve("me")
+				var delivery postal.Delivery
+				err := job.Unmarshal(&delivery)
+				if err != nil {
+					panic(err)
+				}
+
+				message, err := messagesRepo.FindByID(conn, delivery.MessageID)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(message.Status).To(Equal(postal.StatusQueued))
+			}
+
 		})
 
 		Context("using a transaction", func() {
@@ -126,8 +138,21 @@ var _ = Describe("Mailer", func() {
 				Expect(responses).ToNot(BeEmpty())
 			})
 
-			It("rolls back the transaction when there is an error", func() {
+			It("rolls back the transaction when there is an error in queueing", func() {
 				queue.EnqueueError = errors.New("BOOM!")
+
+				users := map[string]uaa.User{
+					"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
+				}
+				mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
+
+				Expect(conn.BeginWasCalled).To(BeTrue())
+				Expect(conn.CommitWasCalled).To(BeFalse())
+				Expect(conn.RollbackWasCalled).To(BeTrue())
+			})
+
+			It("rolls back the transaction when there is an error in message repo upserting", func() {
+				messagesRepo.UpsertError = errors.New("BOOM!")
 
 				users := map[string]uaa.User{
 					"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},

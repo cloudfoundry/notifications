@@ -6,8 +6,6 @@ const (
 	StatusUnavailable = "unavailable"
 	StatusFailed      = "failed"
 	StatusDelivered   = "delivered"
-	StatusNotFound    = "notfound"
-	StatusNoAddress   = "noaddress"
 	StatusQueued      = "queued"
 )
 

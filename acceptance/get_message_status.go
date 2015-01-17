@@ -1,0 +1,53 @@
+package acceptance
+
+import (
+	"net/http"
+	"time"
+
+	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
+	"github.com/pivotal-cf/uaa-sso-golang/uaa"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+var _ = Describe("Getting a Message's status", func() {
+	var clientToken uaa.Token
+	var client *support.Client
+
+	BeforeEach(func() {
+		clientToken = GetClientTokenFor("notification-sender")
+		client = support.NewClient(Servers.Notifications)
+	})
+
+	It("Gets a message's status", func() {
+		var messageGUID string
+
+		By("sending a notification to an email address", func() {
+			status, responses, err := client.Notify.Email(clientToken.Access, "John User <user@example.com>", support.Notify{
+				HTML:    "<header>this is an acceptance test</header>",
+				Text:    "some text for the email",
+				Subject: "my-special-subject",
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+
+			Expect(responses).To(HaveLen(1))
+			response := responses[0]
+			Expect(response.Status).To(Equal("queued"))
+			Expect(GUIDRegex.MatchString(response.NotificationID)).To(BeTrue())
+
+			messageGUID = response.NotificationID
+		})
+
+		By("polling the messages endpoint", func() {
+			Eventually(func() (support.GetResponse, error) {
+				return client.Messages.Get(clientToken.Access, messageGUID)
+			}, 1*time.Second).Should(Equal(support.GetResponse{
+				HTTPStatus: http.StatusOK,
+				Status:     "delivered",
+			}))
+		})
+	})
+})

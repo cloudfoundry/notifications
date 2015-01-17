@@ -24,6 +24,7 @@ type MotherInterface interface {
 	NotificationsUpdater() services.NotificationsUpdater
 	PreferencesFinder() *services.PreferencesFinder
 	PreferenceUpdater() services.PreferenceUpdater
+	MessageFinder() services.MessageFinder
 	TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister)
 	Database() models.DatabaseInterface
 	Logging() stack.Middleware
@@ -50,6 +51,7 @@ func NewRouter(mother MotherInterface) Router {
 	preferenceUpdater := mother.PreferenceUpdater()
 	templateCreator, templateFinder, templateUpdater, templateDeleter, templateLister, templateAssigner, templateAssociationLister := mother.TemplateServiceObjects()
 	notificationsUpdater := mother.NotificationsUpdater()
+	messageFinder := mother.MessageFinder()
 	logging := mother.Logging()
 	errorWriter := mother.ErrorWriter()
 	notificationsWriteAuthenticator := mother.Authenticator("notifications.write")
@@ -60,6 +62,7 @@ func NewRouter(mother MotherInterface) Router {
 	emailsWriteAuthenticator := mother.Authenticator("emails.write")
 	notificationsTemplateWriteAuthenticator := mother.Authenticator("notification_templates.write")
 	notificationsTemplateReadAuthenticator := mother.Authenticator("notification_templates.read")
+	notificationsWriteOrEmailsWriteAuthenticator := mother.Authenticator("notifications.write", "emails.write")
 	database := mother.Database()
 	cors := mother.CORS()
 
@@ -92,6 +95,7 @@ func NewRouter(mother MotherInterface) Router {
 			"PUT /clients/{clientID}/template":                                stack.NewStack(handlers.NewAssignClientTemplate(templateAssigner, errorWriter)).Use(logging, notificationsManageAuthenticator),
 			"PUT /clients/{clientID}/notifications/{notificationID}/template": stack.NewStack(handlers.NewAssignNotificationTemplate(templateAssigner, errorWriter)).Use(logging, notificationsManageAuthenticator),
 			"GET /templates/{templateID}/associations":                        stack.NewStack(handlers.NewListTemplateAssociations(templateAssociationLister, errorWriter)).Use(logging, notificationsManageAuthenticator),
+			"GET /messages/{messageID}":                                       stack.NewStack(handlers.NewGetMessages(messageFinder, errorWriter)).Use(logging, notificationsWriteOrEmailsWriteAuthenticator),
 		},
 	}
 }

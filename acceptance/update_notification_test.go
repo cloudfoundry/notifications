@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Updating A Notication", func() {
+var _ = Describe("Updating A Notification", func() {
 	var client *support.Client
 	var clientToken uaa.Token
 	var notificationID string

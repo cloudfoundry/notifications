@@ -264,4 +264,13 @@ var _ = Describe("Router", func() {
 		authenticator := s.Middleware[1].(middleware.Authenticator)
 		Expect(authenticator.Scopes).To(Equal([]string{"notification_templates.write"}))
 	})
+
+	It("routes GET /messages/{messageID}", func() {
+		s := router.Routes().Get("GET /messages/{messageID}").GetHandler().(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetMessages{}))
+		Expect(s.Middleware[0]).To(BeAssignableToTypeOf(stack.Logging{}))
+
+		authenticator := s.Middleware[1].(middleware.Authenticator)
+		Expect(authenticator.Scopes).To(ConsistOf([]string{"notifications.write", "emails.write"}))
+	})
 })

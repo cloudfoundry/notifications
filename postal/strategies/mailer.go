@@ -15,12 +15,18 @@ type MailerInterface interface {
 type Mailer struct {
 	queue         gobble.QueueInterface
 	guidGenerator postal.GUIDGenerationFunc
+	messagesRepo  MessagesRepoInterface
 }
 
-func NewMailer(queue gobble.QueueInterface, guidGenerator postal.GUIDGenerationFunc) Mailer {
+type MessagesRepoInterface interface {
+	Upsert(models.ConnectionInterface, models.Message) (models.Message, error)
+}
+
+func NewMailer(queue gobble.QueueInterface, guidGenerator postal.GUIDGenerationFunc, messagesRepo MessagesRepoInterface) Mailer {
 	return Mailer{
 		queue:         queue,
 		guidGenerator: guidGenerator,
+		messagesRepo:  messagesRepo,
 	}
 }
 
@@ -28,7 +34,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
 	options postal.Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, scope string) []Response {
 
 	responses := []Response{}
-	var jobs []gobble.Job
+	jobsByMessageID := map[string]gobble.Job{}
 	for userGUID, user := range users {
 		guid, err := mailer.guidGenerator()
 		if err != nil {
@@ -36,7 +42,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
 		}
 		messageID := guid.String()
 
-		jobs = append(jobs, gobble.NewJob(postal.Delivery{
+		jobsByMessageID[messageID] = gobble.NewJob(postal.Delivery{
 			User:         user,
 			Options:      options,
 			UserGUID:     userGUID,
@@ -46,7 +52,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
 			Templates:    templates,
 			MessageID:    messageID,
 			Scope:        scope,
-		}))
+		})
 
 		responses = append(responses, Response{
 			Status:         postal.StatusQueued,
@@ -57,8 +63,16 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
 
 	transaction := conn.Transaction()
 	transaction.Begin()
-	for _, job := range jobs {
+	for messageID, job := range jobsByMessageID {
 		_, err := mailer.queue.Enqueue(job)
+		if err != nil {
+			transaction.Rollback()
+			return []Response{}
+		}
+		_, err = mailer.messagesRepo.Upsert(transaction, models.Message{
+			ID:     messageID,
+			Status: "queued",
+		})
 		if err != nil {
 			transaction.Rollback()
 			return []Response{}

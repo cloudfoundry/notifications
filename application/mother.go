@@ -140,7 +140,7 @@ func (mother Mother) NotificationsUpdater() services.NotificationsUpdater {
 }
 
 func (mother Mother) Mailer() strategies.Mailer {
-	return strategies.NewMailer(mother.Queue(), uuid.NewV4)
+	return strategies.NewMailer(mother.Queue(), uuid.NewV4, mother.MessagesRepo())
 }
 
 func (mother Mother) TemplatesLoader() utilities.TemplatesLoader {
@@ -227,6 +227,13 @@ func (mother Mother) TemplateFinder() services.TemplateFinder {
 	return services.NewTemplateFinder(templatesRepo, database)
 }
 
+func (mother Mother) MessageFinder() services.MessageFinder {
+	database := mother.Database()
+	messagesRepo := mother.MessagesRepo()
+
+	return services.NewMessageFinder(messagesRepo, database)
+}
+
 func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
 	services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister) {
 
@@ -257,6 +264,10 @@ func (mother Mother) GlobalUnsubscribesRepo() models.GlobalUnsubscribesRepo {
 
 func (mother Mother) TemplatesRepo() models.TemplatesRepo {
 	return models.NewTemplatesRepo()
+}
+
+func (mother Mother) MessagesRepo() models.MessagesRepo {
+	return models.NewMessagesRepo()
 }
 
 func (mother Mother) CORS() middleware.CORS {

@@ -166,3 +166,7 @@ func (s Notifications) ClientsTemplatePath(clientID string) string {
 func (s Notifications) ClientsNotificationsTemplatePath(clientID, notificationID string) string {
 	return s.RootPath() + "/clients/" + clientID + "/notifications/" + notificationID + "/template"
 }
+
+func (s Notifications) StatusPath(messageID string) string {
+	return s.RootPath() + "/messages/" + messageID
+}
