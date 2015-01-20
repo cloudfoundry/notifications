@@ -1,6 +1,8 @@
 package models_test
 
 import (
+	"time"
+
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -50,36 +52,45 @@ var _ = Describe("MessagesRepo", func() {
 	})
 
 	Describe("Upsert", func() {
-		It("inserts new records into the database", func() {
-			message, err := repo.Upsert(conn, message)
-			if err != nil {
-				panic(err)
-			}
+		Context("when no record exists yet with the message id", func() {
+			It("inserts a new record", func() {
+				message.UpdatedAt = time.Now().Add(100 * time.Hour)
+				_, err := repo.Upsert(conn, message)
+				if err != nil {
+					panic(err)
+				}
 
-			messageFound, err := repo.FindByID(conn, message.ID)
-			Expect(err).ToNot(HaveOccurred())
+				messageFound, err := repo.FindByID(conn, message.ID)
+				Expect(err).ToNot(HaveOccurred())
 
-			Expect(messageFound).To(Equal(message))
+				Expect(messageFound.ID).To(Equal(message.ID))
+				Expect(messageFound.Status).To(Equal(message.Status))
+				Expect(messageFound.UpdatedAt).To(BeTemporally("~", time.Now(), time.Minute))
+			})
 		})
+		Context("when a record already exists with the message id", func() {
+			It("updates the existing record", func() {
+				_, err := repo.Create(conn, message)
+				if err != nil {
+					panic(err)
+				}
 
-		It("updates existing records in the database", func() {
-			message, err := repo.Create(conn, message)
-			if err != nil {
-				panic(err)
-			}
+				updatedMessage := message
+				updatedMessage.Status = postal.StatusFailed
 
-			updatedMessage := message
-			updatedMessage.Status = postal.StatusFailed
+				updatedMessage.UpdatedAt = time.Now().Add(100 * time.Hour)
+				updatedMessage, err = repo.Upsert(conn, updatedMessage)
+				if err != nil {
+					panic(err)
+				}
 
-			updatedMessage, err = repo.Upsert(conn, updatedMessage)
-			if err != nil {
-				panic(err)
-			}
+				messageFound, err := repo.FindByID(conn, message.ID)
+				Expect(err).ToNot(HaveOccurred())
 
-			messageFound, err := repo.FindByID(conn, message.ID)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(messageFound).To(Equal(updatedMessage))
+				Expect(messageFound.UpdatedAt).To(BeTemporally("~", time.Now(), time.Minute))
+				Expect(messageFound.ID).To(Equal(updatedMessage.ID))
+				Expect(messageFound.Status).To(Equal(updatedMessage.Status))
+			})
 		})
 	})
 })
