@@ -94,7 +94,10 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 			}).Log()
 		}
 
-		worker.messagesRepo.Upsert(worker.database.Connection(), models.Message{ID: delivery.MessageID, Status: status})
+		_, err = worker.messagesRepo.Upsert(worker.database.Connection(), models.Message{ID: delivery.MessageID, Status: status})
+		if err != nil {
+			worker.logger.Printf("Failed to upsert status of notification %s to %s", delivery.MessageID, message.To)
+		}
 
 	} else {
 		metrics.NewMetric("counter", map[string]interface{}{

@@ -408,5 +408,30 @@ var _ = Describe("DeliveryWorker", func() {
 				Expect(job.RetryCount).To(Equal(1))
 			})
 		})
+
+		Context("when the message status fails to be upserted into the db", func() {
+			It("logs the failure", func() {
+				messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
+				worker.Deliver(&job)
+				Expect(buffer.String()).To(ContainSubstring("Failed to upsert status of notification randomly-generated-guid to fake-user@example.com"))
+			})
+
+			It("still delivers the message", func() {
+				worker.Deliver(&job)
+
+				Expect(mailClient.Messages).To(ContainElement(mail.Message{
+					From:    "from@email.com",
+					ReplyTo: "thesender@example.com",
+					To:      "fake-user@example.com",
+					Subject: "the subject",
+					Body:    "\nThis is a multi-part message in MIME format...\n\n--our-content-boundary\nContent-type: text/plain\n\nbody content\n--our-content-boundary--",
+					Headers: []string{
+						"X-CF-Client-ID: some-client",
+						"X-CF-Notification-ID: randomly-generated-guid",
+					},
+				}))
+			})
+
+		})
 	})
 })
