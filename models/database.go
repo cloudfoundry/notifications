@@ -101,7 +101,10 @@ func (database DB) Seed() {
 		Metadata json.RawMessage `json:"metadata"`
 	}
 
-	json.Unmarshal(bytes, &template)
+	err = json.Unmarshal(bytes, &template)
+	if err != nil {
+		panic(err)
+	}
 
 	conn := database.Connection()
 	existingTemplate, err := repo.FindByID(conn, DefaultTemplateID)

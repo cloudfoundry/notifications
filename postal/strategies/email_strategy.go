@@ -31,7 +31,7 @@ func (strategy EmailStrategy) Dispatch(clientID, guid string, options postal.Opt
 
 	templates, err := strategy.templatesLoader.LoadTemplates(clientID, options.KindID)
 	if err != nil {
-		return []Response{}, postal.TemplateLoadError("An email template could not be loaded")
+		return []Response{}, postal.TemplateLoadError("An email template could not be loaded. Error: " + err.Error())
 	}
 
 	options.Endorsement = EmailEndorsement

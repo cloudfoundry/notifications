@@ -65,7 +65,7 @@ func (strategy SpaceStrategy) Dispatch(clientID, guid string, options postal.Opt
 
 	templates, err := strategy.templatesLoader.LoadTemplates(clientID, options.KindID)
 	if err != nil {
-		return responses, postal.TemplateLoadError("An email template could not be loaded")
+		return responses, postal.TemplateLoadError("An email template could not be loaded. Error: " + err.Error())
 	}
 
 	err = strategy.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)

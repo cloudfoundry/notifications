@@ -79,6 +79,15 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 		message, err := worker.pack(delivery)
 		if err != nil {
 			worker.logger.Printf("Not delivering because template failed to pack")
+			_, err = worker.messagesRepo.Upsert(worker.database.Connection(), models.Message{
+				ID:     delivery.MessageID,
+				Status: StatusFailed,
+			})
+
+			if err != nil {
+				worker.logger.Printf("Failed to upsert status '%s' of notification %s (failed to pack). Error: %s", StatusFailed, delivery.MessageID, err.Error())
+			}
+
 			return
 		}
 
@@ -96,7 +105,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 
 		_, err = worker.messagesRepo.Upsert(worker.database.Connection(), models.Message{ID: delivery.MessageID, Status: status})
 		if err != nil {
-			worker.logger.Printf("Failed to upsert status of notification %s to %s", delivery.MessageID, message.To)
+			worker.logger.Printf("Failed to upsert status '%s' of notification %s to %s. Error: %s", status, delivery.MessageID, message.To, err.Error())
 		}
 
 	} else {

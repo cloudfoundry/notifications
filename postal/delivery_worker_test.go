@@ -35,6 +35,7 @@ var _ = Describe("DeliveryWorker", func() {
 	var database *fakes.Database
 	var conn models.ConnectionInterface
 	var userGUID string
+	var fakeUserEmail string
 
 	BeforeEach(func() {
 		buffer = bytes.NewBuffer([]byte{})
@@ -52,12 +53,13 @@ var _ = Describe("DeliveryWorker", func() {
 		sender := "from@email.com"
 		sum := md5.Sum([]byte("banana's are so very tasty"))
 		encryptionKey := sum[:]
+		fakeUserEmail = "fake-user@example.com"
 
 		worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo, messagesRepo, database, sender, encryptionKey)
 
 		delivery = postal.Delivery{
 			User: uaa.User{
-				Emails: []string{"fake-user@example.com"},
+				Emails: []string{fakeUserEmail},
 			},
 			ClientID: "some-client",
 			UserGUID: userGUID,
@@ -127,13 +129,7 @@ var _ = Describe("DeliveryWorker", func() {
 		})
 
 		It("Upserts the StatusDelivered to the database", func() {
-			var jobDelivery postal.Delivery
-			err := job.Unmarshal(&jobDelivery)
-			if err != nil {
-				panic(err)
-			}
-
-			messageID := jobDelivery.MessageID
+			messageID := getMessageIDFromJob(job)
 			worker.Deliver(&job)
 
 			message, err := messagesRepo.FindByID(conn, messageID)
@@ -143,6 +139,21 @@ var _ = Describe("DeliveryWorker", func() {
 
 			Expect(message.Status).To(Equal(postal.StatusDelivered))
 
+		})
+
+		Context("when the StatusDelivered failed to be upserted to the database", func() {
+			It("Logs the error", func() {
+				messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
+				worker.Deliver(&job)
+				Expect(buffer.String()).To(ContainSubstring(
+					fmt.Sprintf("Failed to upsert status '%s' of notification %s to %s. Error: %s",
+						postal.StatusDelivered,
+						getMessageIDFromJob(job),
+						fakeUserEmail,
+						messagesRepo.UpsertError.Error(),
+					)))
+
+			})
 		})
 
 		It("ensures message delivery", func() {
@@ -162,36 +173,45 @@ var _ = Describe("DeliveryWorker", func() {
 		})
 
 		Context("when the delivery fails to be sent", func() {
-			It("marks the job for retry", func() {
-				mailClient.SendError = errors.New("my awesome error")
-				worker.Deliver(&job)
-				Expect(len(mailClient.Messages)).To(Equal(0))
-				Expect(job.ShouldRetry).To(BeTrue())
-			})
+			Context("because of a send error", func() {
+				BeforeEach(func() {
+					mailClient.SendError = errors.New("Error sending message!!!")
+				})
 
-			It("logs an SMTP send error", func() {
-				mailClient.SendError = errors.New("BOOM!")
-				worker.Deliver(&job)
-				Expect(buffer.String()).To(ContainSubstring("Failed to deliver message due to SMTP error: BOOM!"))
-			})
+				It("marks the job for retry", func() {
+					worker.Deliver(&job)
+					Expect(len(mailClient.Messages)).To(Equal(0))
+					Expect(job.ShouldRetry).To(BeTrue())
+				})
 
-			It("upserts the StatusFailed to the database", func() {
-				var jobDelivery postal.Delivery
-				err := job.Unmarshal(&jobDelivery)
-				if err != nil {
-					panic(err)
-				}
+				It("logs an SMTP send error", func() {
+					worker.Deliver(&job)
+					Expect(buffer.String()).To(ContainSubstring("Failed to deliver message due to SMTP error: " + mailClient.SendError.Error()))
+				})
 
-				mailClient.SendError = errors.New("BOOM!")
-				messageID := jobDelivery.MessageID
-				worker.Deliver(&job)
+				It("upserts the StatusFailed to the database", func() {
+					messageID := getMessageIDFromJob(job)
+					worker.Deliver(&job)
 
-				message, err := messagesRepo.FindByID(conn, messageID)
-				if err != nil {
-					panic(err)
-				}
+					message, err := messagesRepo.FindByID(conn, messageID)
+					if err != nil {
+						panic(err)
+					}
 
-				Expect(message.Status).To(Equal(postal.StatusFailed))
+					Expect(message.Status).To(Equal(postal.StatusFailed))
+				})
+
+				Context("when the StatusFailed fails to be upserted into the db", func() {
+					It("logs the failure", func() {
+						messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
+						worker.Deliver(&job)
+						Expect(buffer.String()).To(ContainSubstring("Failed to upsert status '%s' of notification %s to %s. Error: %s",
+							postal.StatusFailed,
+							getMessageIDFromJob(job),
+							fakeUserEmail,
+							messagesRepo.UpsertError.Error()))
+					})
+				})
 			})
 
 			Context("and the error is a connect error", func() {
@@ -389,6 +409,26 @@ var _ = Describe("DeliveryWorker", func() {
 				Expect(buffer.String()).To(ContainSubstring("Not delivering because template failed to pack"))
 			})
 
+			It("upserts the StatusFailed to the database", func() {
+				worker.Deliver(&job)
+				messageID := getMessageIDFromJob(job)
+
+				message, err := messagesRepo.FindByID(conn, messageID)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(message.Status).To(Equal(postal.StatusFailed))
+			})
+
+			Context("when the StatusFailed fails to be upserted into the db", func() {
+				It("logs the failure", func() {
+					messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
+					worker.Deliver(&job)
+					Expect(buffer.String()).To(ContainSubstring("Failed to upsert status '%s' of notification %s (failed to pack). Error: %s",
+						postal.StatusFailed,
+						getMessageIDFromJob(job),
+						messagesRepo.UpsertError.Error()))
+				})
+			})
+
 		})
 
 		Context("when the job contains malformed JSON", func() {
@@ -413,7 +453,13 @@ var _ = Describe("DeliveryWorker", func() {
 			It("logs the failure", func() {
 				messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
 				worker.Deliver(&job)
-				Expect(buffer.String()).To(ContainSubstring("Failed to upsert status of notification randomly-generated-guid to fake-user@example.com"))
+				Expect(buffer.String()).To(ContainSubstring(
+					fmt.Sprintf("Failed to upsert status '%s' of notification %s to %s. Error: %s",
+						postal.StatusDelivered,
+						getMessageIDFromJob(job),
+						fakeUserEmail,
+						messagesRepo.UpsertError.Error(),
+					)))
 			})
 
 			It("still delivers the message", func() {
@@ -435,3 +481,12 @@ var _ = Describe("DeliveryWorker", func() {
 		})
 	})
 })
+
+func getMessageIDFromJob(job gobble.Job) string {
+	var jobDelivery postal.Delivery
+	err := job.Unmarshal(&jobDelivery)
+	if err != nil {
+		panic(err)
+	}
+	return jobDelivery.MessageID
+}

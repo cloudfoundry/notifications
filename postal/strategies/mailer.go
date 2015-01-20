@@ -71,7 +71,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
 		}
 		_, err = mailer.messagesRepo.Upsert(transaction, models.Message{
 			ID:     messageID,
-			Status: "queued",
+			Status: postal.StatusQueued,
 		})
 		if err != nil {
 			transaction.Rollback()

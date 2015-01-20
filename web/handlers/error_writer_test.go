@@ -84,8 +84,8 @@ var _ = Describe("ErrorWriter", func() {
 		Expect(body["errors"]).To(ContainElement("UAA Unknown Error: BOOM!"))
 	})
 
-	It("returns a 500 when there is a template loading error", func() {
-		writer.Write(recorder, postal.TemplateLoadError("BOOM!"))
+	It("returns a 500 and writes the error message when there is a template loading error", func() {
+		writer.Write(recorder, postal.TemplateLoadError("Your template doesn't exist!!!"))
 
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
 
@@ -95,7 +95,7 @@ var _ = Describe("ErrorWriter", func() {
 			panic(err)
 		}
 
-		Expect(body["errors"]).To(ContainElement("An email template could not be loaded"))
+		Expect(body["errors"]).To(ContainElement("Your template doesn't exist!!!"))
 	})
 
 	It("returns a 500 when there is a template create error", func() {
