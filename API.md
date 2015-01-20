@@ -9,6 +9,7 @@
 	- [Send a notification to all users in the system](#post-everyone-guid)
 	- [Send a notification to a UAA-scope](#post-uaa-scopes)
 	- [Send a notification to an email address](#post-emails)
+	- [Check the status of a sent notification](#get-messages)
 - Registering Notifications
 	- [Register client notifications](#put-notifications)
 - Updating Notifications
@@ -486,6 +487,72 @@ X-Cf-Requestid: eb7ee46c-2142-4a74-5b73-e4971eea511a
 | notification_id | Random GUID assigned to notification sent |
 | recipient       | Email address of notification recipient   |
 | status          | Current delivery status of notification   |
+
+
+----
+<a name="get-messages"></a>
+#### Check the status of a sent notification
+
+##### Request
+
+###### Headers
+```
+Authorization: bearer <CLIENT-TOKEN>
+```
+\* The client token requires `emails.write` scope
+
+###### Route
+```
+GET /messages/{messageID}
+```
+###### Query parameters
+
+| Key           | Description                                                             |
+| --------------| ----------------------------------------------------------------------- |
+| messageID\*   | The "notification_id" returned by any of the POST requests listed above |
+
+\* required
+
+
+###### CURL example
+```
+$ curl -i -X GET \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+    http://notifications.example.com/messages/540cf340-03d3-4552-714f-0ec548a6cca9
+
+200 OK
+Connection: close
+Content-Length: 22
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 20 Jan 2015 20:23:38 GMT
+X-Cf-Requestid: 6869ab9a-c867-4271-6edd-d0c966bf7940
+{"status":"delivered"}
+```
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields          | Description                               |
+| --------------- | ----------------------------------------- |
+| status          | Current delivery status of notification   |
+
+Possible `status` values:
+
+| Value        | Meaning                                                                 |
+| ------------ | ----------------------------------------------------------------------- |
+| delivered    | Message delivered to the SMTP server (not necessarily the recipient)    |
+| failed       | Message sending to SMTP server failed.                                  |
+| unavailable  | The SMTP server is unreachable.                                         |
+| queued       | Message has been added to a worker queue and will be processed shortly  |
+
+In the case of "failed" or "unavailable", the system will retry the delivery for up to 24 hours.
+
+If the `messageID` is not known to the system, a `404 Not Found` response will be returned.
+
 
 ## Registering Notifications
 
