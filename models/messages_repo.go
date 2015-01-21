@@ -55,3 +55,15 @@ func (repo MessagesRepo) Upsert(conn ConnectionInterface, message Message) (Mess
 		return message, err
 	}
 }
+
+func (repo MessagesRepo) DeleteBefore(conn ConnectionInterface, threshold time.Time) (int, error) {
+	result, err := conn.Exec("DELETE FROM `messages` WHERE `updated_at` < ?", threshold.UTC())
+	if err != nil {
+		return 0, err
+	}
+	count, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	return int(count), nil
+}

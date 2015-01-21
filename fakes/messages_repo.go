@@ -2,19 +2,23 @@ package fakes
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
 
 type MessagesRepo struct {
-	Messages      map[string]models.Message
-	FindByIDError error
-	UpsertError   error
+	Messages                map[string]models.Message
+	DeleteBeforeError       error
+	FindByIDError           error
+	UpsertError             error
+	DeleteBeforeInvocations []time.Time
 }
 
 func NewMessagesRepo() *MessagesRepo {
 	return &MessagesRepo{
-		Messages: make(map[string]models.Message),
+		Messages:                make(map[string]models.Message),
+		DeleteBeforeInvocations: []time.Time{},
 	}
 }
 
@@ -34,4 +38,16 @@ func (fake MessagesRepo) Upsert(conn models.ConnectionInterface, message models.
 	fake.Messages[message.ID] = message
 
 	return message, fake.UpsertError
+}
+
+func (fake *MessagesRepo) DeleteBefore(conn models.ConnectionInterface, thresholdTime time.Time) (int, error) {
+	count := 0
+	for key, message := range fake.Messages {
+		if message.UpdatedAt.Before(thresholdTime) {
+			delete(fake.Messages, key)
+			count += 1
+		}
+	}
+	fake.DeleteBeforeInvocations = append(fake.DeleteBeforeInvocations, time.Now())
+	return count, fake.DeleteBeforeError
 }

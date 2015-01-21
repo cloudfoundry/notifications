@@ -93,4 +93,36 @@ var _ = Describe("MessagesRepo", func() {
 			})
 		})
 	})
+
+	Describe("DeleteBefore", func() {
+		It("Deletes messages older than the input time", func() {
+			_, err := repo.Create(conn, message)
+			if err != nil {
+				panic(err)
+			}
+
+			itemsDeleted, err := repo.DeleteBefore(conn, time.Now().Add(1*time.Hour))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(itemsDeleted).To(Equal(1))
+
+			_, err = repo.FindByID(conn, message.ID)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+
+		})
+
+		It("Does not delete messages younger than the input time", func() {
+			_, err := repo.Create(conn, message)
+			if err != nil {
+				panic(err)
+			}
+
+			itemsDeleted, err := repo.DeleteBefore(conn, time.Now().Add(-1*time.Hour))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(itemsDeleted).To(Equal(0))
+
+			_, err = repo.FindByID(conn, message.ID)
+			Expect(err).ToNot(HaveOccurred())
+		})
+	})
 })

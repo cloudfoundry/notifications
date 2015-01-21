@@ -38,6 +38,7 @@ func (app Application) Boot() {
 	app.EnableDBLogging()
 	app.UnlockJobs()
 	app.StartWorkers()
+	app.StartMessageGC()
 	app.StartServer()
 }
 
@@ -107,6 +108,16 @@ func (app Application) StartWorkers() {
 			app.mother.Database(), app.env.Sender, app.env.EncryptionKey)
 		worker.Work()
 	}
+}
+
+func (app Application) StartMessageGC() {
+	messageLifetime := 24 * time.Hour
+	db := app.mother.Database()
+	messagesRepo := app.mother.MessagesRepo()
+	pollingInterval := 1 * time.Hour
+	logger := app.mother.Logger()
+	messageGC := postal.NewMessageGC(messageLifetime, db, messagesRepo, pollingInterval, logger)
+	messageGC.Run()
 }
 
 func (app Application) StartServer() {
