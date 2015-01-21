@@ -499,7 +499,7 @@ X-Cf-Requestid: eb7ee46c-2142-4a74-5b73-e4971eea511a
 ```
 Authorization: bearer <CLIENT-TOKEN>
 ```
-\* The client token requires `emails.write` scope
+\* The client token requires either the `emails.write` or the `notifications.write` scope
 
 ###### Route
 ```
