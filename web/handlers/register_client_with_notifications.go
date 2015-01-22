@@ -55,6 +55,7 @@ func (handler RegisterClientWithNotifications) Execute(w http.ResponseWriter, re
 			ID:          notification.ID,
 			Description: notification.Description,
 			Critical:    notification.Critical,
+			TemplateID:  models.DoNotSetTemplateID,
 		})
 	}
 
@@ -64,6 +65,7 @@ func (handler RegisterClientWithNotifications) Execute(w http.ResponseWriter, re
 	client := models.Client{
 		ID:          clientID,
 		Description: parameters.SourceName,
+		TemplateID:  models.DoNotSetTemplateID,
 	}
 
 	kinds, err := handler.ValidateCriticalScopes(token.Claims["scope"], generatedKinds, client)

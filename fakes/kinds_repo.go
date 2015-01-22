@@ -20,18 +20,35 @@ func NewKindsRepo() *KindsRepo {
 }
 
 func (fake *KindsRepo) Create(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
+	if kind.TemplateID == "" {
+		kind.TemplateID = models.DefaultTemplateID
+	}
+
 	key := kind.ID + kind.ClientID
 	if _, ok := fake.Kinds[key]; ok {
 		return kind, models.DuplicateRecordError{}
 	}
+
 	fake.Kinds[key] = kind
 	return kind, nil
 }
 
 func (fake *KindsRepo) Update(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
+	if fake.UpdateError != nil {
+		return kind, fake.UpdateError
+	}
+
+	if kind.TemplateID == "" {
+		existingKind, err := fake.Find(conn, kind.ID, kind.ClientID)
+		if err != nil {
+			return kind, err
+		}
+		kind.TemplateID = existingKind.TemplateID
+	}
+
 	key := kind.ID + kind.ClientID
 	fake.Kinds[key] = kind
-	return kind, fake.UpdateError
+	return kind, nil
 }
 
 func (fake *KindsRepo) Upsert(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
@@ -41,9 +58,12 @@ func (fake *KindsRepo) Upsert(conn models.ConnectionInterface, kind models.Kind)
 }
 
 func (fake *KindsRepo) Find(conn models.ConnectionInterface, id, clientID string) (models.Kind, error) {
+	if fake.FindError != nil {
+		return models.Kind{}, fake.FindError
+	}
 	key := id + clientID
 	if kind, ok := fake.Kinds[key]; ok {
-		return kind, fake.FindError
+		return kind, nil
 	}
 	return models.Kind{}, models.NewRecordNotFoundError("Kind %q %q could not be found", id, clientID)
 }

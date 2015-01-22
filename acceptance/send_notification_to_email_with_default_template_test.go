@@ -12,9 +12,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Send a notification to an email", func() {
+var _ = Describe("Send a notification to an email using default template", func() {
 	It("sends a single notification to an email", func() {
-		var templateID string
 		var response support.NotifyResponse
 		clientID := "notifications-sender"
 		clientToken := GetClientTokenFor(clientID)
@@ -31,26 +30,6 @@ var _ = Describe("Send a notification to an email", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(code).To(Equal(http.StatusNoContent))
-		})
-
-		By("creating a new template", func() {
-			var status int
-			var err error
-			status, templateID, err = client.Templates.Create(clientToken.Access, support.Template{
-				Name:    "Star Trek",
-				Subject: "Boldness {{.Subject}}",
-				HTML:    "<p>Enterprise</p>{{.HTML}}<h1>{{.Endorsement}}</h1>",
-				Text:    "Enterprise\n{{.Text}}\n{{.Endorsement}}",
-			})
-			Expect(err).NotTo(HaveOccurred())
-			Expect(status).To(Equal(http.StatusCreated))
-			Expect(templateID).NotTo(Equal(""))
-		})
-
-		By("assigning the template to a client", func() {
-			status, err := client.Templates.AssignToClient(clientToken.Access, clientID, templateID)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(status).To(Equal(http.StatusNoContent))
 		})
 
 		By("sending a notification to an email address", func() {
@@ -83,9 +62,8 @@ var _ = Describe("Send a notification to an email", func() {
 			data := strings.Split(string(delivery.Data), "\n")
 			Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 			Expect(data).To(ContainElement("X-CF-Notification-ID: " + response.NotificationID))
-			Expect(data).To(ContainElement("Subject: Boldness my-special-subject"))
-			Expect(data).To(ContainElement("        <p>Enterprise</p><header>this is an acceptance test</header><h1>This message was sent directly to your email address.</h1>"))
-			Expect(data).To(ContainElement("Enterprise"))
+			Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
+			Expect(data).To(ContainElement("        <p>This message was sent directly to your email address.</p><header>this is an acceptance test</header>"))
 			Expect(data).To(ContainElement("some text for the email"))
 			Expect(data).To(ContainElement("This message was sent directly to your email address."))
 		})
@@ -98,7 +76,7 @@ var _ = Describe("Send a notification to an email", func() {
 
 			notificationsSender := list[clientID]
 			Expect(notificationsSender.Name).To(Equal("Notifications Sender"))
-			Expect(notificationsSender.Template).To(Equal(templateID))
+			Expect(notificationsSender.Template).To(Equal("default"))
 			Expect(notificationsSender.Notifications).To(HaveLen(1))
 
 			acceptanceNotification := notificationsSender.Notifications["acceptance-test"]

@@ -29,6 +29,7 @@ var _ = Describe("ClientsRepo", func() {
 			client := models.Client{
 				ID:          "my-client",
 				Description: "My Client",
+				TemplateID:  "my-template",
 			}
 
 			client, err := repo.Create(conn, client)
@@ -43,6 +44,29 @@ var _ = Describe("ClientsRepo", func() {
 
 			Expect(client.ID).To(Equal("my-client"))
 			Expect(client.Description).To(Equal("My Client"))
+			Expect(client.TemplateID).To(Equal("my-template"))
+			Expect(client.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+		})
+
+		It("sets the template_id to 'default' when the field is empty", func() {
+			client := models.Client{
+				ID:          "my-client",
+				Description: "My Client",
+			}
+
+			client, err := repo.Create(conn, client)
+			if err != nil {
+				panic(err)
+			}
+
+			client, err = repo.Find(conn, "my-client")
+			if err != nil {
+				panic(err)
+			}
+
+			Expect(client.ID).To(Equal("my-client"))
+			Expect(client.Description).To(Equal("My Client"))
+			Expect(client.TemplateID).To(Equal(models.DefaultTemplateID))
 			Expect(client.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
 		})
 	})
@@ -79,32 +103,84 @@ var _ = Describe("ClientsRepo", func() {
 	})
 
 	Describe("Update", func() {
-		It("updates the record in the database", func() {
-			client := models.Client{
-				ID: "my-client",
-			}
+		Context("when the template id is meant to be updated", func() {
+			It("updates the record in the database", func() {
+				client := models.Client{
+					ID:         "my-client",
+					TemplateID: "my-template",
+				}
 
-			client, err := repo.Create(conn, client)
-			if err != nil {
-				panic(err)
-			}
+				client, err := repo.Create(conn, client)
+				if err != nil {
+					panic(err)
+				}
 
-			client.ID = "my-client"
-			client.Description = "My Client"
+				client.ID = "my-client"
+				client.Description = "My Client"
+				client.TemplateID = "new-template"
 
-			client, err = repo.Update(conn, client)
-			if err != nil {
-				panic(err)
-			}
+				client, err = repo.Update(conn, client)
+				Expect(err).NotTo(HaveOccurred())
 
-			client, err = repo.Find(conn, "my-client")
-			if err != nil {
-				panic(err)
-			}
+				client, err = repo.Find(conn, "my-client")
+				if err != nil {
+					panic(err)
+				}
 
-			Expect(client.ID).To(Equal("my-client"))
-			Expect(client.Description).To(Equal("My Client"))
-			Expect(client.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+				Expect(client.ID).To(Equal("my-client"))
+				Expect(client.Description).To(Equal("My Client"))
+				Expect(client.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+				Expect(client.TemplateID).To(Equal("new-template"))
+			})
+
+			It("returns a record not found error when the record does not exist", func() {
+				client := models.Client{
+					ID:         "my-client",
+					TemplateID: "my-template",
+				}
+
+				_, err := repo.Update(conn, client)
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("something")))
+			})
+		})
+
+		Context("when the template id is not meant to be updated", func() {
+			It("Uses the existing templateID when the field is empty", func() {
+				client := models.Client{
+					ID:         "my-client",
+					TemplateID: "my-template",
+				}
+
+				client, err := repo.Create(conn, client)
+				if err != nil {
+					panic(err)
+				}
+
+				client.TemplateID = models.DoNotSetTemplateID
+				client.Description = "My Client"
+
+				client, err = repo.Update(conn, client)
+				Expect(err).NotTo(HaveOccurred())
+
+				client, err = repo.Find(conn, "my-client")
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(client.ID).To(Equal("my-client"))
+				Expect(client.Description).To(Equal("My Client"))
+				Expect(client.TemplateID).To(Equal("my-template"))
+				Expect(client.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+			})
+
+			It("returns a record not found error when the record does not exist", func() {
+				client := models.Client{
+					ID: "my-client",
+				}
+
+				_, err := repo.Update(conn, client)
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("something")))
+			})
 		})
 	})
 

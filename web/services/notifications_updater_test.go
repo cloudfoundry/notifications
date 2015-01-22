@@ -25,7 +25,7 @@ var _ = Describe("NotificationUpdater", func() {
 	})
 
 	Describe("Update", func() {
-		BeforeEach(func() {
+		It("updates the correct model with the new fields provided", func() {
 			kindsRepo.Kinds[notificationID+clientID] = models.Kind{
 				ID:          notificationID,
 				ClientID:    clientID,
@@ -33,9 +33,7 @@ var _ = Describe("NotificationUpdater", func() {
 				TemplateID:  "my-current-template-id",
 				Critical:    false,
 			}
-		})
 
-		It("updates the correct model with the new fields provided", func() {
 			err := notificationsUpdater.Update(models.Kind{
 				Description: "some-description",
 				Critical:    true,

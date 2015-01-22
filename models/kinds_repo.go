@@ -38,6 +38,10 @@ func (repo KindsRepo) Create(conn ConnectionInterface, kind Kind) (Kind, error) 
 	kind.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
 	kind.UpdatedAt = kind.CreatedAt
 
+	if kind.TemplateID == "" {
+		kind.TemplateID = DefaultTemplateID
+	}
+
 	err := conn.Insert(&kind)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
@@ -90,6 +94,9 @@ func (repo KindsRepo) Update(conn ConnectionInterface, kind Kind) (Kind, error) 
 	kind.Primary = existingKind.Primary
 	kind.CreatedAt = existingKind.CreatedAt
 	kind.UpdatedAt = time.Now().Truncate(1 * time.Second).UTC()
+	if kind.TemplateID == DoNotSetTemplateID {
+		kind.TemplateID = existingKind.TemplateID
+	}
 
 	_, err = conn.Update(&kind)
 	if err != nil {

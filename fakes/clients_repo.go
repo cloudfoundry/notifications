@@ -21,11 +21,23 @@ func (fake *ClientsRepo) Create(conn models.ConnectionInterface, client models.C
 	if _, ok := fake.Clients[client.ID]; ok {
 		return client, models.DuplicateRecordError{}
 	}
+	if client.TemplateID == "" {
+		client.TemplateID = models.DefaultTemplateID
+	}
+
 	fake.Clients[client.ID] = client
 	return client, nil
 }
 
 func (fake *ClientsRepo) Update(conn models.ConnectionInterface, client models.Client) (models.Client, error) {
+	if client.TemplateID == "" {
+		existingClient, err := fake.Find(conn, client.ID)
+		if err != nil {
+			return client, err
+		}
+		client.TemplateID = existingClient.TemplateID
+	}
+
 	fake.Clients[client.ID] = client
 	return client, fake.UpdateError
 }
@@ -36,9 +48,14 @@ func (fake *ClientsRepo) Upsert(conn models.ConnectionInterface, client models.C
 }
 
 func (fake *ClientsRepo) Find(conn models.ConnectionInterface, id string) (models.Client, error) {
-	if client, ok := fake.Clients[id]; ok {
-		return client, fake.FindError
+	if fake.FindError != nil {
+		return models.Client{}, fake.FindError
 	}
+
+	if client, ok := fake.Clients[id]; ok {
+		return client, nil
+	}
+
 	return models.Client{}, models.NewRecordNotFoundError("Client %q could not be found", id)
 }
 

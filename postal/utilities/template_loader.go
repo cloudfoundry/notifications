@@ -39,7 +39,7 @@ func (loader TemplatesLoader) LoadTemplates(clientID, kindID string) (postal.Tem
 			return postal.Templates{}, err
 		}
 
-		if kind.TemplateID != "" {
+		if kind.TemplateID != models.DefaultTemplateID {
 			return loader.loadTemplate(conn, kind.TemplateID)
 		}
 	}
@@ -49,11 +49,7 @@ func (loader TemplatesLoader) LoadTemplates(clientID, kindID string) (postal.Tem
 		return postal.Templates{}, err
 	}
 
-	if client.TemplateID != "" {
-		return loader.loadTemplate(conn, client.TemplateID)
-	}
-
-	return loader.loadTemplate(conn, models.DefaultTemplateID)
+	return loader.loadTemplate(conn, client.TemplateID)
 }
 
 func (loader TemplatesLoader) loadTemplate(conn models.ConnectionInterface, templateID string) (postal.Templates, error) {

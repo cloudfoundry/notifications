@@ -30,8 +30,8 @@ func NewTemplateAssigner(clientsRepo models.ClientsRepoInterface,
 func (assigner TemplateAssigner) AssignToClient(clientID, templateID string) error {
 	conn := assigner.database.Connection()
 
-	if templateID == models.DefaultTemplateID {
-		templateID = ""
+	if templateID == "" {
+		templateID = models.DefaultTemplateID
 	}
 
 	client, err := assigner.clientsRepo.Find(conn, clientID)
@@ -57,8 +57,8 @@ func (assigner TemplateAssigner) AssignToClient(clientID, templateID string) err
 func (assigner TemplateAssigner) AssignToNotification(clientID, notificationID, templateID string) error {
 	conn := assigner.database.Connection()
 
-	if templateID == models.DefaultTemplateID {
-		templateID = ""
+	if templateID == "" {
+		templateID = models.DefaultTemplateID
 	}
 
 	_, err := assigner.clientsRepo.Find(conn, clientID)

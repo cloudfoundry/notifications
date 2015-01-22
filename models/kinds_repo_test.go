@@ -33,6 +33,7 @@ var _ = Describe("KindsRepo", func() {
 				Description: "My Kind",
 				Critical:    false,
 				ClientID:    "my-client",
+				TemplateID:  "my-template",
 			}
 
 			kind, err := repo.Create(conn, kind)
@@ -49,6 +50,7 @@ var _ = Describe("KindsRepo", func() {
 			Expect(kind.Description).To(Equal("My Kind"))
 			Expect(kind.Critical).To(BeFalse())
 			Expect(kind.ClientID).To(Equal("my-client"))
+			Expect(kind.TemplateID).To(Equal("my-template"))
 			Expect(kind.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
 			Expect(kind.UpdatedAt).To(Equal(kind.CreatedAt))
 		})
@@ -82,6 +84,33 @@ var _ = Describe("KindsRepo", func() {
 
 			Expect(firstKind).To(Equal(kind1))
 			Expect(secondKind).To(Equal(kind2))
+		})
+
+		It("sets the template ID to 'default' when the field is empty", func() {
+			kind := models.Kind{
+				ID:          "my-kind",
+				Description: "My Kind",
+				Critical:    false,
+				ClientID:    "my-client",
+			}
+
+			kind, err := repo.Create(conn, kind)
+			if err != nil {
+				panic(err)
+			}
+
+			kind, err = repo.Find(conn, "my-kind", "my-client")
+			if err != nil {
+				panic(err)
+			}
+
+			Expect(kind.ID).To(Equal("my-kind"))
+			Expect(kind.Description).To(Equal("My Kind"))
+			Expect(kind.Critical).To(BeFalse())
+			Expect(kind.ClientID).To(Equal("my-client"))
+			Expect(kind.TemplateID).To(Equal(models.DefaultTemplateID))
+			Expect(kind.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+			Expect(kind.UpdatedAt).To(Equal(kind.CreatedAt))
 		})
 	})
 
@@ -152,11 +181,12 @@ var _ = Describe("KindsRepo", func() {
 	})
 
 	Describe("Update", func() {
-		Context("when the record exists", func() {
+		Context("when the template id is meant to be set", func() {
 			It("updates the record in the database", func() {
 				kind := models.Kind{
-					ID:       "my-kind",
-					ClientID: "my-client",
+					ID:         "my-kind",
+					ClientID:   "my-client",
+					TemplateID: "my-template",
 				}
 
 				kind, err := repo.Create(conn, kind)
@@ -170,6 +200,7 @@ var _ = Describe("KindsRepo", func() {
 				kind.Description = "My Kind"
 				kind.Critical = true
 				kind.Primary = 42069
+				kind.TemplateID = "new-template"
 				kind.CreatedAt = time.Now().Add(-3 * time.Minute)
 
 				kind, err = repo.Update(conn, kind)
@@ -186,14 +217,66 @@ var _ = Describe("KindsRepo", func() {
 				Expect(kind.Description).To(Equal("My Kind"))
 				Expect(kind.Critical).To(BeTrue())
 				Expect(kind.ClientID).To(Equal("my-client"))
+				Expect(kind.TemplateID).To(Equal("new-template"))
 				Expect(kind.UpdatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
 				Expect(kind.CreatedAt).To(Equal(createdAt))
 				Expect(kind.Primary).To(Equal(primary))
 			})
+
+			It("returns a record not found error when the record does not exist", func() {
+				kind := models.Kind{
+					ID:         "my-kind",
+					ClientID:   "my-client",
+					TemplateID: "my-template",
+				}
+				_, err := repo.Update(conn, kind)
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+			})
 		})
 
-		Context("when the record does not exist", func() {
-			It("returns a record not found error", func() {
+		Context("when the template id is not meant to be set", func() {
+			It("updates the record in the database, using the existing template ID", func() {
+				kind := models.Kind{
+					ID:         "my-kind",
+					ClientID:   "my-client",
+					TemplateID: "my-template",
+				}
+
+				kind, err := repo.Create(conn, kind)
+				if err != nil {
+					panic(err)
+				}
+
+				primary := kind.Primary
+				createdAt := kind.CreatedAt
+
+				kind.Description = "My Kind"
+				kind.Critical = true
+				kind.Primary = 42069
+				kind.TemplateID = models.DoNotSetTemplateID
+				kind.CreatedAt = time.Now().Add(-3 * time.Minute)
+
+				kind, err = repo.Update(conn, kind)
+				if err != nil {
+					panic(err)
+				}
+
+				kind, err = repo.Find(conn, "my-kind", "my-client")
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(kind.ID).To(Equal("my-kind"))
+				Expect(kind.Description).To(Equal("My Kind"))
+				Expect(kind.Critical).To(BeTrue())
+				Expect(kind.ClientID).To(Equal("my-client"))
+				Expect(kind.TemplateID).To(Equal("my-template"))
+				Expect(kind.UpdatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+				Expect(kind.CreatedAt).To(Equal(createdAt))
+				Expect(kind.Primary).To(Equal(primary))
+			})
+
+			It("returns a record not found error when the record does not exist", func() {
 				kind := models.Kind{
 					ID:       "my-kind",
 					ClientID: "my-client",

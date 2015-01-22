@@ -2,7 +2,10 @@ package models
 
 import "time"
 
-const DefaultTemplateID = "default"
+const (
+	DefaultTemplateID  = "default"
+	DoNotSetTemplateID = ""
+)
 
 type Template struct {
 	Primary    int       `db:"primary"`

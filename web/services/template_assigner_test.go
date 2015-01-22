@@ -42,6 +42,13 @@ var _ = Describe("TemplateAssigner", func() {
 			}
 
 			_, err = templatesRepo.Create(conn, models.Template{
+				ID: "default",
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			_, err = templatesRepo.Create(conn, models.Template{
 				ID: "my-template",
 			})
 			if err != nil {
@@ -94,7 +101,7 @@ var _ = Describe("TemplateAssigner", func() {
 					panic(err)
 				}
 
-				Expect(client.TemplateID).To(Equal(""))
+				Expect(client.TemplateID).To(Equal(models.DefaultTemplateID))
 			})
 
 			It("allows template id of default template id to reset the assignment", func() {
@@ -106,7 +113,7 @@ var _ = Describe("TemplateAssigner", func() {
 					panic(err)
 				}
 
-				Expect(client.TemplateID).To(Equal(""))
+				Expect(client.TemplateID).To(Equal(models.DefaultTemplateID))
 			})
 		})
 
@@ -146,6 +153,13 @@ var _ = Describe("TemplateAssigner", func() {
 		BeforeEach(func() {
 			client, err := clientsRepo.Create(conn, models.Client{
 				ID: "my-client",
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			_, err = templatesRepo.Create(conn, models.Template{
+				ID: "default",
 			})
 			if err != nil {
 				panic(err)
@@ -218,7 +232,7 @@ var _ = Describe("TemplateAssigner", func() {
 					panic(err)
 				}
 
-				Expect(kind.TemplateID).To(Equal(""))
+				Expect(kind.TemplateID).To(Equal(models.DefaultTemplateID))
 			})
 
 			It("allows template id of default template id to reset the assignment", func() {
@@ -230,7 +244,7 @@ var _ = Describe("TemplateAssigner", func() {
 					panic(err)
 				}
 
-				Expect(kind.TemplateID).To(Equal(""))
+				Expect(kind.TemplateID).To(Equal(models.DefaultTemplateID))
 			})
 		})
 
