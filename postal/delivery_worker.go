@@ -72,10 +72,10 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 		metrics.NewMetric("counter", map[string]interface{}{
 			"name": "notifications.worker.panic.json",
 		}).Log()
-		worker.Retry(job)
+		worker.retry(job)
 	}
 
-	if worker.ShouldDeliver(delivery) {
+	if worker.shouldDeliver(delivery) {
 		message, err := worker.pack(delivery)
 		if err != nil {
 			worker.logger.Printf("Not delivering because template failed to pack")
@@ -91,9 +91,9 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 			return
 		}
 
-		status := worker.SendMail(message)
+		status := worker.sendMail(message)
 		if status != StatusDelivered {
-			worker.Retry(job)
+			worker.retry(job)
 			metrics.NewMetric("counter", map[string]interface{}{
 				"name": "notifications.worker.retry",
 			}).Log()
@@ -116,7 +116,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 
 }
 
-func (worker DeliveryWorker) Retry(job *gobble.Job) {
+func (worker DeliveryWorker) retry(job *gobble.Job) {
 	if job.RetryCount < 10 {
 		duration := time.Duration(int64(math.Pow(2, float64(job.RetryCount))))
 		job.Retry(duration * time.Minute)
@@ -125,7 +125,7 @@ func (worker DeliveryWorker) Retry(job *gobble.Job) {
 	}
 }
 
-func (worker DeliveryWorker) ShouldDeliver(delivery Delivery) bool {
+func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 	conn := worker.database.Connection()
 	if worker.isCritical(conn, delivery.Options.KindID, delivery.ClientID) {
 		return true
@@ -179,7 +179,7 @@ func (worker DeliveryWorker) pack(delivery Delivery) (mail.Message, error) {
 	return message, nil
 }
 
-func (worker DeliveryWorker) SendMail(message mail.Message) string {
+func (worker DeliveryWorker) sendMail(message mail.Message) string {
 	err := worker.mailClient.Connect()
 	if err != nil {
 		worker.logger.Printf("Error Establishing SMTP Connection: %s", err.Error())
