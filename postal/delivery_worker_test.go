@@ -318,6 +318,30 @@ var _ = Describe("DeliveryWorker", func() {
 			})
 		})
 
+		Context("when the recipient hasn't unsubscribed, but doesn't have a valid email address", func() {
+			Context("when the recipient has no emails", func() {
+				It("logs the error", func() {
+					delivery.User.Emails = []string{}
+					job = gobble.NewJob(delivery)
+
+					worker.Deliver(&job)
+
+					Expect(buffer.String()).To(ContainSubstring("Not delivering because recipient has no email addresses"))
+				})
+			})
+
+			Context("when the recipient's first email address is missing an @ symbol", func() {
+				It("logs the error", func() {
+					delivery.User.Emails = []string{"nope", "totally-valid-email@example.com"}
+					job = gobble.NewJob(delivery)
+
+					worker.Deliver(&job)
+
+					Expect(buffer.String()).To(ContainSubstring("Not delivering because recipient's 1st email address is invalid"))
+				})
+			})
+		})
+
 		Context("when recipient has unsubscribed", func() {
 			BeforeEach(func() {
 				_, err := unsubscribesRepo.Create(conn, models.Unsubscribe{

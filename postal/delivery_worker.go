@@ -140,7 +140,17 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 	_, err = worker.unsubscribesRepo.Find(conn, delivery.ClientID, delivery.Options.KindID, delivery.UserGUID)
 	if err != nil {
 		if _, ok := err.(models.RecordNotFoundError); ok {
-			return len(delivery.User.Emails) > 0 && strings.Contains(delivery.User.Emails[0], "@")
+			if len(delivery.User.Emails) == 0 {
+				worker.logger.Printf("Not delivering because recipient has no email addresses")
+				return false
+			}
+
+			if !strings.Contains(delivery.User.Emails[0], "@") {
+				worker.logger.Printf("Not delivering because recipient's 1st email address is invalid")
+				return false
+			}
+
+			return true
 		}
 
 		worker.logger.Printf("Not delivering because: %+v", err)
