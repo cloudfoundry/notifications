@@ -58,7 +58,6 @@ var _ = Describe("LoadOrganization", func() {
 	})
 
 	It("loads the organization from cloud controller", func() {
-
 		org, err := cc.LoadOrganization("org-guid", "notification-token")
 		if err != nil {
 			panic(err)
@@ -72,10 +71,5 @@ var _ = Describe("LoadOrganization", func() {
 		_, err := cc.LoadOrganization("banana", "notification-token")
 
 		Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
-
-		failure := err.(cf.Failure)
-		Expect(failure.Code).To(Equal(http.StatusNotFound))
-		Expect(failure.Message).To(Equal(`{"code": 30003, "description": "The organization could not be found: banana", "error_code": "CF-OrganizationNotFound"}`))
-		Expect(failure.Error()).To(Equal(`CloudController Failure (404): {"code": 30003, "description": "The organization could not be found: banana", "error_code": "CF-OrganizationNotFound"}`))
 	})
 })

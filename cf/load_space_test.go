@@ -72,10 +72,5 @@ var _ = Describe("LoadSpace", func() {
 		_, err := cc.LoadSpace("banana", "notification-token")
 
 		Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
-
-		failure := err.(cf.Failure)
-		Expect(failure.Code).To(Equal(http.StatusNotFound))
-		Expect(failure.Message).To(Equal(`{"code":40004,"description":"The app space could not be found: banana","error_code":"CF-SpaceNotFound"}`))
-		Expect(failure.Error()).To(Equal(`CloudController Failure (404): {"code":40004,"description":"The app space could not be found: banana","error_code":"CF-SpaceNotFound"}`))
 	})
 })

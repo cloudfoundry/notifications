@@ -122,11 +122,6 @@ var _ = Describe("CloudController", func() {
 			_, err := cloudController.GetUsersBySpaceGuid(testSpaceGuid, "bad-token")
 
 			Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
-
-			failure := err.(cf.Failure)
-			Expect(failure.Code).To(Equal(http.StatusUnauthorized))
-			Expect(failure.Message).To(Equal(`{"code":10002,"description":"Authentication error","error_code":"CF-NotAuthenticated"}`))
-			Expect(failure.Error()).To(Equal(`CloudController Failure (401): {"code":10002,"description":"Authentication error","error_code":"CF-NotAuthenticated"}`))
 		})
 	})
 })

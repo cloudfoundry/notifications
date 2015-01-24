@@ -1,21 +1,23 @@
 package cf
 
 import (
-	"encoding/json"
-	"fmt"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 )
 
 func (cc CloudController) GetUsersByOrgGuid(guid, token string) ([]CloudControllerUser, error) {
-	users := make([]CloudControllerUser, 0)
-
+	var ccUsers []CloudControllerUser
 	then := time.Now()
 
-	code, body, err := cc.client.MakeRequest("GET", cc.UsersByOrgGuidPath(guid), token, nil)
+	list, err := cc.client.Organizations.ListUsers(guid, token)
 	if err != nil {
-		return users, err
+		return ccUsers, NewFailure(0, err.Error())
+	}
+
+	users, err := list.AllUsers(token)
+	if err != nil {
+		return ccUsers, NewFailure(0, err.Error())
 	}
 
 	duration := time.Now().Sub(then)
@@ -25,26 +27,11 @@ func (cc CloudController) GetUsersByOrgGuid(guid, token string) ([]CloudControll
 		"value": duration.Seconds(),
 	}).Log()
 
-	if code > 399 {
-		return users, NewFailure(code, string(body))
+	for _, user := range users {
+		ccUsers = append(ccUsers, CloudControllerUser{
+			GUID: user.GUID,
+		})
 	}
 
-	usersResponse := CloudControllerUsersResponse{}
-	err = json.Unmarshal(body, &usersResponse)
-	if err != nil {
-		return users, err
-	}
-
-	for _, resource := range usersResponse.Resources {
-		user := CloudControllerUser{
-			GUID: resource.Metadata.GUID,
-		}
-		users = append(users, user)
-	}
-
-	return users, nil
-}
-
-func (cc CloudController) UsersByOrgGuidPath(guid string) string {
-	return fmt.Sprintf("/v2/organizations/%s/users", guid)
+	return ccUsers, nil
 }

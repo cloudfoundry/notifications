@@ -91,23 +91,10 @@ var _ = Describe("CloudController", func() {
 			}))
 		})
 
-		It("returns an error when the Cloud Controller returns a 400, or 500 status code", func() {
-			_, err := cloudController.GetUsersByOrgGuid(testOrganizationGuid, "bad-token")
-
-			Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
-
-			failure := err.(cf.Failure)
-			Expect(failure.Code).To(Equal(http.StatusUnauthorized))
-			Expect(failure.Message).To(Equal(`{"code":10002,"description":"Authentication error","error_code":"CF-NotAuthenticated"}`))
-			Expect(failure.Error()).To(Equal(`CloudController Failure (401): {"code":10002,"description":"Authentication error","error_code":"CF-NotAuthenticated"}`))
-		})
-
-		It("returns an error when the Cloud Controller returns a 404 status code", func() {
+		It("returns an error when the Cloud Controller returns an error status code", func() {
 			_, err := cloudController.GetUsersByOrgGuid("my-nonexistant-guid", testUAAToken)
 
 			Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
-			failure := err.(cf.Failure)
-			Expect(failure.Code).To(Equal(http.StatusNotFound))
 		})
 	})
 })

@@ -1,37 +1,10 @@
 package cf
 
 import (
-	"bytes"
-	"crypto/tls"
 	"fmt"
-	"io"
-	"net/http"
-	"sync"
+
+	"github.com/pivotal-golang/rainmaker"
 )
-
-var _client *http.Client
-var mutex sync.Mutex
-
-func GetClient(ccClient CloudControllerClient) *http.Client {
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	if _client == nil {
-		_client = &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: ccClient.skipVerifySSL,
-				},
-			},
-		}
-	}
-
-	return _client
-}
-
-type CloudController struct {
-	client CloudControllerClient
-}
 
 type CloudControllerInterface interface {
 	GetUsersBySpaceGuid(string, string) ([]CloudControllerUser, error)
@@ -43,45 +16,32 @@ type CloudControllerInterface interface {
 	LoadOrganization(string, string) (CloudControllerOrganization, error)
 }
 
+type CloudController struct {
+	client rainmaker.Client
+}
+
 func NewCloudController(host string, skipVerifySSL bool) CloudController {
 	return CloudController{
-		client: NewCloudControllerClient(host, skipVerifySSL),
+		client: rainmaker.NewClient(rainmaker.Config{
+			Host:          host,
+			SkipVerifySSL: skipVerifySSL,
+		}),
 	}
 }
 
-type CloudControllerClient struct {
-	host          string
-	skipVerifySSL bool
+type CloudControllerUser struct {
+	GUID string
 }
 
-func NewCloudControllerClient(host string, skipVerifySSL bool) CloudControllerClient {
-	return CloudControllerClient{
-		host:          host,
-		skipVerifySSL: skipVerifySSL,
-	}
+type CloudControllerSpace struct {
+	GUID             string
+	Name             string
+	OrganizationGUID string
 }
 
-func (client CloudControllerClient) MakeRequest(method, path, token string, body io.Reader) (int, []byte, error) {
-	request, err := http.NewRequest(method, client.host+path, body)
-	if err != nil {
-		return 0, []byte{}, err
-	}
-	request.Header.Set("Authorization", "Bearer "+token)
-
-	httpClient := GetClient(client)
-	response, err := httpClient.Do(request)
-	if err != nil {
-		return 0, []byte{}, err
-	}
-	code := response.StatusCode
-
-	buffer := bytes.NewBuffer([]byte{})
-	_, err = buffer.ReadFrom(response.Body)
-	if err != nil {
-		return code, []byte{}, err
-	}
-
-	return code, buffer.Bytes(), nil
+type CloudControllerOrganization struct {
+	GUID string
+	Name string
 }
 
 type Failure struct {
