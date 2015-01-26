@@ -122,6 +122,14 @@
 			"ImportPath": "github.com/ziutek/mymysql/native",
 			"Comment": "v1.5.3-12-g1928d33",
 			"Rev": "1928d3379a32cc58b535ea2d03c017ade9eb2d0d"
+		},
+		{
+			"ImportPath": "gopkg.in/alexcesaro/quotedprintable.v1",
+			"Rev": "dacd4576c5aafefb89134351dfcf4fbe213cd998"
+		},
+		{
+			"ImportPath": "gopkg.in/gomail.v1",
+			"Rev": "d7294067b867578fbea56a07541dcd0c851e5c41"
 		}
 	]
 }
