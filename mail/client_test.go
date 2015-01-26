@@ -90,7 +90,12 @@ var _ = Describe("Mail", func() {
 					From:    "me@example.com",
 					To:      "you@example.com",
 					Subject: "Urgent! Read now!",
-					Body:    "This email is the most important thing you will read all day!",
+					Body: []mail.Part{
+						{
+							ContentType: "text/plain",
+							Content:     "This email is the most important thing you will read all day!",
+						},
+					},
 				}
 			})
 
@@ -141,7 +146,12 @@ var _ = Describe("Mail", func() {
 				From:    "me@example.com",
 				To:      "you@example.com",
 				Subject: "Urgent! Read now!",
-				Body:    "This email is the most important thing you will read all day%40!",
+				Body: []mail.Part{
+					{
+						ContentType: "text/plain",
+						Content:     "This email is the most important thing you will read all day%40!",
+					},
+				},
 			}
 
 			err := client.Send(msg)
@@ -156,7 +166,7 @@ var _ = Describe("Mail", func() {
 
 			Expect(delivery.Sender).To(Equal("me@example.com"))
 			Expect(delivery.Recipient).To(Equal("you@example.com"))
-			Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
+			Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\r\n")))
 			Expect(delivery.UsedTLS).To(BeTrue())
 		})
 
@@ -165,7 +175,12 @@ var _ = Describe("Mail", func() {
 				From:    "me@example.com",
 				To:      "you@example.com",
 				Subject: "Urgent! Read now!",
-				Body:    "This email is the most important thing you will read all day!",
+				Body: []mail.Part{
+					{
+						ContentType: "text/plain",
+						Content:     "This email is the most important thing you will read all day!",
+					},
+				},
 			}
 
 			err := client.Send(firstMsg)
@@ -180,13 +195,18 @@ var _ = Describe("Mail", func() {
 
 			Expect(delivery.Sender).To(Equal("me@example.com"))
 			Expect(delivery.Recipient).To(Equal("you@example.com"))
-			Expect(delivery.Data).To(Equal(strings.Split(firstMsg.Data(), "\n")))
+			Expect(delivery.Data).To(Equal(strings.Split(firstMsg.Data(), "\r\n")))
 
 			secondMsg := mail.Message{
 				From:    "first@example.com",
 				To:      "second@example.com",
 				Subject: "Boring. Do not read.",
-				Body:    "This email is the least important thing you will read all day. Sorry.",
+				Body: []mail.Part{
+					{
+						ContentType: "text/plain",
+						Content:     "This email is the least important thing you will read all day. Sorry.",
+					},
+				},
 			}
 
 			err = client.Send(secondMsg)
@@ -201,7 +221,7 @@ var _ = Describe("Mail", func() {
 
 			Expect(delivery.Sender).To(Equal("first@example.com"))
 			Expect(delivery.Recipient).To(Equal("second@example.com"))
-			Expect(delivery.Data).To(Equal(strings.Split(secondMsg.Data(), "\n")))
+			Expect(delivery.Data).To(Equal(strings.Split(secondMsg.Data(), "\r\n")))
 		})
 
 		Context("when configured to use TLS", func() {
@@ -220,7 +240,12 @@ var _ = Describe("Mail", func() {
 					From:    "me@example.com",
 					To:      "you@example.com",
 					Subject: "Urgent! Read now!",
-					Body:    "This email is the most important thing you will read all day!",
+					Body: []mail.Part{
+						{
+							ContentType: "text/plain",
+							Content:     "This email is the most important thing you will read all day!",
+						},
+					},
 				}
 
 				err := client.Send(msg)
@@ -235,7 +260,7 @@ var _ = Describe("Mail", func() {
 
 				Expect(delivery.Sender).To(Equal("me@example.com"))
 				Expect(delivery.Recipient).To(Equal("you@example.com"))
-				Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
+				Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\r\n")))
 				Expect(delivery.UsedTLS).To(BeTrue())
 			})
 		})
@@ -257,7 +282,12 @@ var _ = Describe("Mail", func() {
 					From:    "me@example.com",
 					To:      "you@example.com",
 					Subject: "Urgent! Read now!",
-					Body:    "This email is the most important thing you will read all day!",
+					Body: []mail.Part{
+						{
+							ContentType: "text/plain",
+							Content:     "This email is the most important thing you will read all day!",
+						},
+					},
 				}
 
 				err := client.Send(msg)
@@ -272,7 +302,7 @@ var _ = Describe("Mail", func() {
 
 				Expect(delivery.Sender).To(Equal("me@example.com"))
 				Expect(delivery.Recipient).To(Equal("you@example.com"))
-				Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
+				Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\r\n")))
 				Expect(delivery.UsedTLS).To(BeFalse())
 			})
 		})

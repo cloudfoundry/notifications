@@ -43,37 +43,32 @@ var _ = Describe("Packager", func() {
 		packager = postal.NewPackager()
 	})
 
-	Describe("CompileBody", func() {
-		It("returns the compiled email containing both the plaintext and html portions, escaping variables for the html portion only", func() {
-			body, err := packager.CompileBody(context)
+	Describe("CompileParts", func() {
+		It("returns the compiled parts containing both the plaintext and html portions, escaping variables for the html portion only", func() {
+			parts, err := packager.CompileParts(context)
 			if err != nil {
 				panic(err)
 			}
 
-			emailBody := `
-This is a multi-part message in MIME format...
-
---our-content-boundary
-Content-type: text/plain
-
-Banana preamble User <supplied> "banana" text 3&3 4'4 user-123
-This is an endorsement for the development space and banana org.
---our-content-boundary
-Content-Type: text/html
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-<!DOCTYPE html>
+			textBody := `Banana preamble User <supplied> "banana" text 3&3 4'4 user-123
+This is an endorsement for the development space and banana org.`
+			htmlBody := `<!DOCTYPE html>
 <head><title>The title</title></head>
 <html>
-    <body class="bananaBody">
-        <header>This is an endorsement for the development space and banana org.</header>
+	<body class="bananaBody">
+		<header>This is an endorsement for the development space and banana org.</header>
 Banana preamble <p>user supplied banana html</p> User &lt;supplied&gt; &#34;banana&#34; text 3&amp;3 4&#39;4 user-123
-    </body>
-</html>
---our-content-boundary--`
+	</body>
+</html>`
 
-			Expect(body).To(Equal(emailBody))
+			Expect(parts).To(ContainElement(mail.Part{
+				ContentType: "text/plain",
+				Content:     textBody,
+			}))
+			Expect(parts).To(ContainElement(mail.Part{
+				ContentType: "text/html",
+				Content:     htmlBody,
+			}))
 		})
 
 		Context("when no html is set", func() {
@@ -81,21 +76,19 @@ Banana preamble <p>user supplied banana html</p> User &lt;supplied&gt; &#34;bana
 				context.HTML = ""
 				packager = postal.NewPackager()
 
-				body, err := packager.CompileBody(context)
+				parts, err := packager.CompileParts(context)
 				if err != nil {
 					panic(err)
 				}
 
-				emailBody := `
-This is a multi-part message in MIME format...
-
---our-content-boundary
-Content-type: text/plain
-
-Banana preamble User <supplied> "banana" text 3&3 4'4 user-123
-This is an endorsement for the development space and banana org.
---our-content-boundary--`
-				Expect(body).To(Equal(emailBody))
+				textBody := `Banana preamble User <supplied> "banana" text 3&3 4'4 user-123
+This is an endorsement for the development space and banana org.`
+				Expect(parts).To(ConsistOf([]mail.Part{
+					{
+						ContentType: "text/plain",
+						Content:     textBody,
+					},
+				}))
 			})
 		})
 
@@ -104,31 +97,26 @@ This is an endorsement for the development space and banana org.
 				context.Text = ""
 				packager = postal.NewPackager()
 
-				body, err := packager.CompileBody(context)
+				parts, err := packager.CompileParts(context)
 				if err != nil {
 					panic(err)
 				}
 
-				emailBody := `
-This is a multi-part message in MIME format...
-
---our-content-boundary
-Content-Type: text/html
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-<!DOCTYPE html>
+				htmlBody := `<!DOCTYPE html>
 <head><title>The title</title></head>
 <html>
-    <body class="bananaBody">
-        <header>This is an endorsement for the development space and banana org.</header>
+	<body class="bananaBody">
+		<header>This is an endorsement for the development space and banana org.</header>
 Banana preamble <p>user supplied banana html</p>  3&amp;3 4&#39;4 user-123
-    </body>
-</html>
---our-content-boundary--`
-				Expect(body).To(Equal(emailBody))
+	</body>
+</html>`
+				Expect(parts).To(ConsistOf([]mail.Part{
+					{
+						ContentType: "text/html",
+						Content:     htmlBody,
+					},
+				}))
 			})
 		})
 	})
-
 })

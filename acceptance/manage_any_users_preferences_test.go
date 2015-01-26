@@ -75,7 +75,8 @@ var _ = Describe("Preferences Endpoint", func() {
 			Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 			Expect(data).To(ContainElement("X-CF-Notification-ID: " + response.NotificationID))
 			Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
-			Expect(data).To(ContainElement("        <p>This message was sent directly to you.</p><p>this is an acceptance test</p>"))
+			Expect(data).To(ContainElement("\t\t<p>This message was sent directly to you.</p><p>this is an acceptance test="))
+			Expect(data).To(ContainElement("</p>"))
 		})
 
 		By("retrieving the current user preferences", func() {
@@ -192,7 +193,8 @@ var _ = Describe("Preferences Endpoint", func() {
 			Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 			Expect(data).To(ContainElement("X-CF-Notification-ID: " + response.NotificationID))
 			Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
-			Expect(data).To(ContainElement("        <p>This message was sent directly to you.</p><p>this is an acceptance test</p>"))
+			Expect(data).To(ContainElement("\t\t<p>This message was sent directly to you.</p><p>this is an acceptance test="))
+			Expect(data).To(ContainElement("</p>"))
 		})
 
 		By("retrieving the current user preferences", func() {

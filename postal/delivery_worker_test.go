@@ -152,7 +152,6 @@ var _ = Describe("DeliveryWorker", func() {
 						fakeUserEmail,
 						messagesRepo.UpsertError.Error(),
 					)))
-
 			})
 		})
 
@@ -164,7 +163,12 @@ var _ = Describe("DeliveryWorker", func() {
 				ReplyTo: "thesender@example.com",
 				To:      "fake-user@example.com",
 				Subject: "the subject",
-				Body:    "\nThis is a multi-part message in MIME format...\n\n--our-content-boundary\nContent-type: text/plain\n\nbody content\n--our-content-boundary--",
+				Body: []mail.Part{
+					{
+						ContentType: "text/plain",
+						Content:     "body content",
+					},
+				},
 				Headers: []string{
 					"X-CF-Client-ID: some-client",
 					"X-CF-Notification-ID: randomly-generated-guid",
@@ -452,7 +456,6 @@ var _ = Describe("DeliveryWorker", func() {
 						messagesRepo.UpsertError.Error()))
 				})
 			})
-
 		})
 
 		Context("when the job contains malformed JSON", func() {
@@ -494,14 +497,18 @@ var _ = Describe("DeliveryWorker", func() {
 					ReplyTo: "thesender@example.com",
 					To:      "fake-user@example.com",
 					Subject: "the subject",
-					Body:    "\nThis is a multi-part message in MIME format...\n\n--our-content-boundary\nContent-type: text/plain\n\nbody content\n--our-content-boundary--",
+					Body: []mail.Part{
+						{
+							ContentType: "text/plain",
+							Content:     "body content",
+						},
+					},
 					Headers: []string{
 						"X-CF-Client-ID: some-client",
 						"X-CF-Notification-ID: randomly-generated-guid",
 					},
 				}))
 			})
-
 		})
 	})
 })

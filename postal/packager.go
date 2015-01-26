@@ -9,6 +9,14 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/mail"
 )
 
+const HTMLWrapperTemplate = `{{.HTMLComponents.Doctype}}
+<head>{{.HTMLComponents.Head}}</head>
+<html>
+	<body {{.HTMLComponents.BodyAttributes}}>
+		{{.HTMLComponents.BodyContent}}
+	</body>
+</html>`
+
 type Packager struct{}
 
 func NewPackager() Packager {
@@ -16,7 +24,7 @@ func NewPackager() Packager {
 }
 
 func (packager Packager) Pack(context MessageContext) (mail.Message, error) {
-	body, err := packager.CompileBody(context)
+	parts, err := packager.CompileParts(context)
 	if err != nil {
 		return mail.Message{}, err
 	}
@@ -31,7 +39,7 @@ func (packager Packager) Pack(context MessageContext) (mail.Message, error) {
 		ReplyTo: context.ReplyTo,
 		To:      context.To,
 		Subject: compiledSubject,
-		Body:    body,
+		Body:    parts,
 		Headers: []string{
 			fmt.Sprintf("X-CF-Client-ID: %s", context.ClientID),
 			fmt.Sprintf("X-CF-Notification-ID: %s", context.MessageID),
@@ -39,51 +47,48 @@ func (packager Packager) Pack(context MessageContext) (mail.Message, error) {
 	}, nil
 }
 
-func (packager Packager) CompileBody(context MessageContext) (string, error) {
-	var plainText string
+func (packager Packager) CompileParts(context MessageContext) ([]mail.Part, error) {
+	var parts []mail.Part
 	var err error
-
-	headerPart := "\nThis is a multi-part message in MIME format...\n\n"
-	plainTextPart := ""
-	htmlPart := ""
-	closingBoundary := "--our-content-boundary--"
 
 	context.Endorsement, err = packager.compileTemplate(context, context.Endorsement, false)
 	if err != nil {
-		return "", err
+		return parts, err
 	}
 
 	if context.Text != "" {
-		plainText, err = packager.compileTemplate(context, context.TextTemplate, false)
+		plainText, err := packager.compileTemplate(context, context.TextTemplate, false)
 		if err != nil {
-			return "", err
+			return parts, err
 		}
 
-		plainTextPart = fmt.Sprintf("--our-content-boundary\nContent-type: text/plain\n\n%s\n", plainText)
+		parts = append(parts, mail.Part{
+			ContentType: "text/plain",
+			Content:     plainText,
+		})
+
 	}
 
-	var html string
 	if context.HTML != "" {
-		html, err = packager.compileTemplate(context, context.HTMLTemplate, true)
-		if err != nil {
-			return "", err
-		}
-		htmlPart = fmt.Sprintf(`--our-content-boundary
-Content-Type: text/html
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+		var err error
 
-%s
-<head>%s</head>
-<html>
-    <body %s>
-        %s
-    </body>
-</html>
-`, context.HTMLComponents.Doctype, context.HTMLComponents.Head, context.HTMLComponents.BodyAttributes, html)
+		context.HTMLComponents.BodyContent, err = packager.compileTemplate(context, context.HTMLTemplate, true)
+		if err != nil {
+			return parts, err
+		}
+
+		htmlPart, err := packager.compileTemplate(context, HTMLWrapperTemplate, true)
+		if err != nil {
+			return parts, err
+		}
+
+		parts = append(parts, mail.Part{
+			ContentType: "text/html",
+			Content:     htmlPart,
+		})
 	}
 
-	return headerPart + plainTextPart + htmlPart + closingBoundary, nil
+	return parts, nil
 }
 
 func (packager Packager) compileTemplate(context MessageContext, theTemplate string, escapeContext bool) (string, error) {
