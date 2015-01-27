@@ -2,25 +2,38 @@ package mail
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
-	"regexp"
-	"sort"
+	"mime"
+	"strings"
 	"text/template"
 
 	"gopkg.in/gomail.v1"
 )
 
-const emailTemplate = "From: {{.From}}\r{{if .ReplyTo}}\nReply-To: {{.ReplyTo}}\r{{end}}\nTo: {{.To}}\r\nSubject: {{.Subject}}\r\n{{range .Headers}}{{.}}\r\n{{end}}{{.CompiledBody}}"
+const emailTemplate = `{{range .Headers}}{{.}}
+{{end}}Date: {{.Date}}
+Mime-Version: {{.MimeVersion}}
+Content-Type: {{.ContentType}}
+{{if .ContentTransferEncoding}}Content-Transfer-Encoding: {{.ContentTransferEncoding}}
+{{end}}From: {{.From}}{{if .ReplyTo}}
+Reply-To: {{.ReplyTo}}{{end}}
+To: {{.To}}
+Subject: {{.Subject}}
+
+{{.CompiledBody}}`
 
 type Message struct {
-	From         string
-	ReplyTo      string
-	To           string
-	Subject      string
-	Body         []Part
-	Headers      []string
-	CompiledBody string
+	Date                    string
+	MimeVersion             string
+	ContentType             string
+	ContentTransferEncoding string
+	From                    string
+	ReplyTo                 string
+	To                      string
+	Subject                 string
+	Body                    []Part
+	Headers                 []string
+	CompiledBody            string
 }
 
 type Part struct {
@@ -52,7 +65,7 @@ func (msg *Message) Data() string {
 func (msg *Message) CompileBody() error {
 	message := gomail.NewMessage()
 	for _, part := range msg.Body {
-		message.AddAlternative(part.ContentType, "\r\n"+part.Content)
+		message.AddAlternative(part.ContentType, part.Content)
 	}
 
 	m := message.Export()
@@ -61,29 +74,20 @@ func (msg *Message) CompileBody() error {
 		panic(err)
 	}
 
-	msg.CompiledBody = string(body)
-
-	var headers []string
-	for key, _ := range m.Header {
-		headers = append(headers, fmt.Sprintf("%s: %s", key, m.Header.Get(key)))
-	}
-
-	sort.Sort(sort.StringSlice(headers))
-
-	msg.Headers = append(msg.Headers, headers...)
+	msg.CompiledBody = strings.Replace(string(body), "\r\n", "\n", -1)
+	msg.Date = m.Header.Get("Date")
+	msg.MimeVersion = m.Header.Get("Mime-Version")
+	msg.ContentType = m.Header.Get("Content-Type")
+	msg.ContentTransferEncoding = m.Header.Get("Content-Transfer-Encoding")
 
 	return nil
 }
 
 func (msg Message) Boundary() string {
-	var boundary string
-
-	for _, header := range msg.Headers {
-		matches := regexp.MustCompile(`boundary=(.*)`).FindStringSubmatch(header)
-		if matches != nil {
-			return matches[1]
-		}
+	_, params, err := mime.ParseMediaType(msg.ContentType)
+	if err != nil {
+		panic(err)
 	}
 
-	return boundary
+	return params["boundary"]
 }

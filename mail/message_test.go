@@ -33,7 +33,7 @@ var _ = Describe("Message", func() {
 		})
 
 		It("returns a populated data mail field as a string", func() {
-			parts := strings.Split(msg.Data(), "\r\n")
+			parts := strings.Split(msg.Data(), "\n")
 			boundary := msg.Boundary()
 
 			Expect(parts).To(ConsistOf([]string{
@@ -43,16 +43,15 @@ var _ = Describe("Message", func() {
 				"Content-Type: multipart/alternative; boundary=" + boundary,
 				"Date: " + time.Now().Format(time.RFC822Z),
 				"Mime-Version: 1.0",
+				"",
 				"--" + boundary,
 				"Content-Type: text/plain; charset=UTF-8",
 				"Content-Transfer-Encoding: quoted-printable",
-				"",
 				"",
 				"Banana",
 				"--" + boundary,
 				"Content-Type: text/html; charset=UTF-8",
 				"Content-Transfer-Encoding: quoted-printable",
-				"",
 				"",
 				"<header>banana</header>",
 				"--" + boundary + "--",
@@ -63,7 +62,7 @@ var _ = Describe("Message", func() {
 		Context("when optional fields are present", func() {
 			It("includes Reply-To in message body", func() {
 				msg.ReplyTo = "banana@chiquita.com"
-				parts := strings.Split(msg.Data(), "\r\n")
+				parts := strings.Split(msg.Data(), "\n")
 				boundary := msg.Boundary()
 
 				Expect(parts).To(ConsistOf([]string{
@@ -74,16 +73,15 @@ var _ = Describe("Message", func() {
 					"Content-Type: multipart/alternative; boundary=" + boundary,
 					"Date: " + time.Now().Format(time.RFC822Z),
 					"Mime-Version: 1.0",
+					"",
 					"--" + boundary,
 					"Content-Type: text/plain; charset=UTF-8",
 					"Content-Transfer-Encoding: quoted-printable",
-					"",
 					"",
 					"Banana",
 					"--" + boundary,
 					"Content-Type: text/html; charset=UTF-8",
 					"Content-Transfer-Encoding: quoted-printable",
-					"",
 					"",
 					"<header>banana</header>",
 					"--" + boundary + "--",
@@ -93,7 +91,7 @@ var _ = Describe("Message", func() {
 
 			It("includes headers in the response if there are any", func() {
 				msg.Headers = append(msg.Headers, "X-ClientID: banana")
-				parts := strings.Split(msg.Data(), "\r\n")
+				parts := strings.Split(msg.Data(), "\n")
 				boundary := msg.Boundary()
 
 				Expect(parts).To(ConsistOf([]string{
@@ -104,16 +102,15 @@ var _ = Describe("Message", func() {
 					"Content-Type: multipart/alternative; boundary=" + boundary,
 					"Date: " + time.Now().Format(time.RFC822Z),
 					"Mime-Version: 1.0",
+					"",
 					"--" + boundary,
 					"Content-Type: text/plain; charset=UTF-8",
 					"Content-Transfer-Encoding: quoted-printable",
-					"",
 					"",
 					"Banana",
 					"--" + boundary,
 					"Content-Type: text/html; charset=UTF-8",
 					"Content-Transfer-Encoding: quoted-printable",
-					"",
 					"",
 					"<header>banana</header>",
 					"--" + boundary + "--",
@@ -129,16 +126,16 @@ var _ = Describe("Message", func() {
 					},
 				}
 
-				parts := strings.Split(msg.Data(), "\r\n")
+				parts := strings.Split(msg.Data(), "\n")
 
 				Expect(parts).To(Equal([]string{
+					"Date: " + time.Now().Format(time.RFC822Z),
+					"Mime-Version: 1.0",
+					"Content-Type: text/html; charset=UTF-8",
+					"Content-Transfer-Encoding: quoted-printable",
 					"From: me@example.com",
 					"To: you@example.com",
 					"Subject: Super Urgent! Read Now!",
-					"Content-Transfer-Encoding: quoted-printable",
-					"Content-Type: text/html; charset=UTF-8",
-					"Date: " + time.Now().Format(time.RFC822Z),
-					"Mime-Version: 1.0",
 					"",
 					"<header>banana</header>",
 				}))
