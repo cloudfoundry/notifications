@@ -41,6 +41,55 @@ var _ = Describe("Validate", func() {
 			Expect(err).To(BeAssignableToTypeOf(valiant.RequiredFieldError{}))
 			Expect(err).To(MatchError("Missing required field 'name'"))
 		})
+
+		Context("when there are extra keys", func() {
+			It("returns an error when an extra field is included", func() {
+				data := strings.NewReader(`{"something": true, "name": "Boshy"}`)
+
+				type Person struct {
+					Name  string `json:"name"    validate-required:"true"`
+					Email bool   `json:"email"   validate-required:"false"`
+				}
+
+				var someone Person
+
+				validator := valiant.NewValidator(data)
+				err := validator.Validate(&someone)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(BeAssignableToTypeOf(valiant.ExtraFieldError{}))
+				Expect(err).To(MatchError(`Extra field "something" is not valid`))
+			})
+
+			It("handles keys with ',omitempty' tags on them", func() {
+				data := strings.NewReader(`{"email": true, "name": "Boshy"}`)
+
+				type Person struct {
+					Name  string `json:"name"            validate-required:"true"`
+					Email bool   `json:"email,omitempty" validate-required:"false"`
+				}
+
+				var someone Person
+
+				validator := valiant.NewValidator(data)
+				err := validator.Validate(&someone)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("handles missing tags", func() {
+				data := strings.NewReader(`{"email": true, "name": "Boshy"}`)
+
+				type Person struct {
+					Name  string `json:"name" validate-required:"true"`
+					Email bool
+				}
+
+				var someone Person
+
+				validator := valiant.NewValidator(data)
+				err := validator.Validate(&someone)
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
 	})
 
 	Context("when the data is nested n levels deep", func() {

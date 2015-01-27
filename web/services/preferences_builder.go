@@ -17,8 +17,8 @@ type ClientMap map[string]Kind
 type ClientsMap map[string]ClientMap
 
 type PreferencesBuilder struct {
-	GlobalUnsubscribe bool       `json:"global_unsubscribe" validate-required:"false"`
-	Clients           ClientsMap `json:"clients"            validate-required:"true"`
+	GlobalUnsubscribe bool       `json:"global_unsubscribe"`
+	Clients           ClientsMap `json:"clients"`
 }
 
 func NewPreferencesBuilder() PreferencesBuilder {

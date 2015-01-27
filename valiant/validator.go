@@ -5,19 +5,11 @@ import (
 	"encoding/json"
 	"io"
 	"reflect"
-	"strconv"
+	"strings"
 )
 
 type Validator struct {
 	input io.Reader
-}
-
-type RequiredFieldError struct {
-	ErrorMessage string
-}
-
-func (err RequiredFieldError) Error() string {
-	return err.ErrorMessage
 }
 
 func NewValidator(input io.Reader) Validator {
@@ -45,7 +37,17 @@ func (validator Validator) Validate(typed interface{}) error {
 		return err
 	}
 
-	return validate(typed, untyped)
+	err = validateRequired(typed, untyped)
+	if err != nil {
+		return err
+	}
+
+	err = reportExtraKeys(typed, untyped)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func reflectedParent(typed interface{}) (reflect.Value, reflect.Type) {
@@ -56,59 +58,13 @@ func reflectedParent(typed interface{}) (reflect.Value, reflect.Type) {
 	return reflect.ValueOf(typed), reflect.TypeOf(typed)
 }
 
-func validate(typed interface{}, untyped interface{}) error {
-	parentValue, parentType := reflectedParent(typed)
-
-	// TODO: Add JSON array type support here
-	parentUntyped := untyped.(map[string]interface{})
-
-	for i := 0; i < parentType.NumField(); i++ {
-		childField := parentType.Field(i)
-		childValue := parentValue.FieldByName(childField.Name)
-
-		err := validateField(childField, parentUntyped)
-		if err != nil {
-			return err
-		}
-
-		if childValue.Kind() == reflect.Struct {
-			err = validate(childValue.Interface(), parentUntyped[childField.Tag.Get("json")])
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func validateField(field reflect.StructField, parentUntyped map[string]interface{}) error {
-	if required(field) {
-		if _, ok := parentUntyped[field.Tag.Get("json")]; !ok {
-			return RequiredFieldError{ErrorMessage: "Missing required field '" + jsonName(field) + "'"}
-		}
-	}
-
-	return nil
-}
-
-func required(field reflect.StructField) bool {
-	if tag := field.Tag.Get("validate-required"); tag != "" {
-		required, err := strconv.ParseBool(tag)
-		if err != nil {
-			panic("we got an error on parsing the validate-required tag")
-		}
-
-		return required
-	}
-
-	return false
-}
-
 func jsonName(field reflect.StructField) string {
 	name := field.Tag.Get("json")
+	name = strings.TrimSuffix(name, ",omitempty")
+
 	if name != "" {
 		return name
 	}
+
 	return field.Name
 }

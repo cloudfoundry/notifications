@@ -214,7 +214,9 @@ var _ = Describe("UpdatePreferences", func() {
 			})
 
 			It("delegates json validation errors to the ErrorWriter", func() {
-				requestBody, err := json.Marshal(struct{}{})
+				requestBody, err := json.Marshal(map[string]interface{}{
+					"something": true,
+				})
 				if err != nil {
 					panic(err)
 				}

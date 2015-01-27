@@ -29,7 +29,7 @@ type Preferences struct {
 
 type PreferenceDocument struct {
 	GlobalUnsubscribe bool                         `json:"global_unsubscribe"`
-	Clients           map[string]ClientPreferences `json:"clients"`
+	Clients           map[string]ClientPreferences `json:"clients,omitempty"`
 }
 
 type ClientPreferences map[string]NotificationPreference
