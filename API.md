@@ -553,6 +553,7 @@ In the case of "failed" or "unavailable", the system will retry the delivery for
 
 If the `messageID` is not known to the system, a `404 Not Found` response will be returned.
 
+*Notification status info is purged approximately 24 hours after notification is first sent.*
 
 ## Registering Notifications
 
