@@ -52,7 +52,7 @@ func (msg *Message) Data() string {
 func (msg *Message) CompileBody() error {
 	message := gomail.NewMessage()
 	for _, part := range msg.Body {
-		message.AddAlternative(part.ContentType, part.Content)
+		message.AddAlternative(part.ContentType, "\r\n"+part.Content)
 	}
 
 	m := message.Export()
