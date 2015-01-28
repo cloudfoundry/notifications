@@ -86,6 +86,7 @@ var _ = Describe("Send a notification to a user", func() {
 			data := strings.Split(string(delivery.Data), "\n")
 			Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 			Expect(data).To(ContainElement("X-CF-Notification-ID: " + response.NotificationID))
+			Expect(data).To(ContainElement("Reply-To: males@example.com"))
 			Expect(data).To(ContainElement("Subject: Awesomeness my-special-subject"))
 			Expect(data).To(ContainElement("\t\t<p>Millenium Falcon</p><p>this is an acceptance%40test</p><b>This message ="))
 			Expect(data).To(ContainElement("was sent directly to you.</b>"))
