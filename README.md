@@ -95,10 +95,8 @@ The Users, Spaces, Organizations, Everyone, and UAA Scopes endpoints expect a js
 | kind_id\*            | a key to identify the type of email to be sent |
 | text\*\*             | the text version of the email                  |
 | html\*\*             | the html version of the email                  |
-| kind_description     | a description of the kind_id                   |
 | subject\*            | the text of the subject                        |
 | reply_to             | the Reply-To address for the email             |
-| source_description   | a description of the sender                    |
 
 \* required
 

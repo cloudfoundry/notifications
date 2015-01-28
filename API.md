@@ -98,10 +98,8 @@ POST /users/{user-guid}
 | kind_id\*          | a key to identify the type of email to be sent |
 | text\*\*           | the text version of the email                  |
 | html\*\*           | the html version of the email                  |
-| kind_description   | a description of the kind_id                   |
 | subject\*          | the text of the subject                        |
 | reply_to           | the Reply-To address for the email             |
-| source_description | a description of the sender                    |
 
 \* required
 
@@ -164,10 +162,8 @@ POST /spaces/{space-guid}
 | kind_id\*          | a key to identify the type of email to be sent |
 | text\*\*           | the text version of the email                  |
 | html\*\*           | the html version of the email                  |
-| kind_description   | a description of the kind_id                   |
 | subject\*          | the text of the subject                        |
 | reply_to           | the Reply-To address for the email             |
-| source_description | a description of the sender                    |
 
 \* required
 
@@ -235,10 +231,8 @@ POST /organizations/{organization-guid}
 | kind_id\*          | a key to identify the type of email to be sent |
 | text\*\*           | the text version of the email                  |
 | html\*\*           | the html version of the email                  |
-| kind_description   | a description of the kind_id                   |
 | subject\*          | the text of the subject                        |
 | reply_to           | the Reply-To address for the email             |
-| source_description | a description of the sender                    |
 
 \* required
 
@@ -306,10 +300,8 @@ POST /everyone
 | kind_id\*          | a key to identify the type of email to be sent |
 | text\*\*           | the text version of the email                  |
 | html\*\*           | the html version of the email                  |
-| kind_description   | a description of the kind_id                   |
 | subject\*          | the text of the subject                        |
 | reply_to           | the Reply-To address for the email             |
-| source_description | a description of the sender                    |
 
 \* required
 
@@ -377,10 +369,8 @@ POST /uaa_scopes/{scope}
 | kind_id\*          | a key to identify the type of email to be sent |
 | text\*\*           | the text version of the email                  |
 | html\*\*           | the html version of the email                  |
-| kind_description   | a description of the kind_id                   |
 | subject\*          | the text of the subject                        |
 | reply_to           | the Reply-To address for the email             |
-| source_description | a description of the sender                    |
 
 \* required
 
