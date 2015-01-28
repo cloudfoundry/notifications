@@ -15,21 +15,9 @@ type Preference struct {
 	SourceDescription       string
 }
 
-type NotificationPreference struct {
-	Count                   int    `json:"count"`
-	Email                   bool   `json:"email"`
-	NotificationDescription string `json:"kind_description"`
-	SourceDescription       string `json:"source_description"`
-}
-
 type Preferences struct {
 	GlobalUnsubscribe       bool
 	NotificationPreferences []Preference
-}
-
-type PreferenceDocument struct {
-	GlobalUnsubscribe bool                         `json:"global_unsubscribe"`
-	Clients           map[string]ClientPreferences `json:"clients,omitempty"`
 }
 
 type ClientPreferences map[string]NotificationPreference

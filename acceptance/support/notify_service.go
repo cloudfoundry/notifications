@@ -11,19 +11,12 @@ type NotifyService struct {
 }
 
 type Notify struct {
-	Subject string
-	HTML    string
-	Text    string
-	KindID  string
-}
-
-type notifyRequest struct {
-	To      string `json:"to,omitempty"`
-	Role    string `json:"role,omitempty"`
-	Subject string `json:"subject"`
-	HTML    string `json:"html"`
-	Text    string `json:"text"`
-	KindID  string `json:"kind_id,omitempty"`
+	Subject           string
+	HTML              string
+	Text              string
+	KindID            string
+	ReplyTo           string
+	SourceDescription string
 }
 
 func (nr notifyRequest) Merge(n Notify) notifyRequest {
@@ -31,14 +24,9 @@ func (nr notifyRequest) Merge(n Notify) notifyRequest {
 	nr.HTML = n.HTML
 	nr.Text = n.Text
 	nr.KindID = n.KindID
+	nr.ReplyTo = n.ReplyTo
 
 	return nr
-}
-
-type NotifyResponse struct {
-	Status         string `json:"status"`
-	Recipient      string `json:"recipient"`
-	NotificationID string `json:"notification_id"`
 }
 
 func (service NotifyService) notify(token, path string, notify Notify, reqBody notifyRequest) (int, []NotifyResponse, error) {

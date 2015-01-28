@@ -61,6 +61,7 @@ var _ = Describe("Send a notification to a user", func() {
 				HTML:    "<p>this is an acceptance%40test</p>",
 				Text:    "hello from the acceptance test",
 				Subject: "my-special-subject",
+				ReplyTo: "males@example.com",
 			})
 
 			Expect(err).NotTo(HaveOccurred())

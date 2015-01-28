@@ -10,28 +10,8 @@ type TemplatesService struct {
 	Default *DefaultTemplateService
 }
 
-type Template struct {
-	Name     string                 `json:"name"`
-	Subject  string                 `json:"subject"`
-	Text     string                 `json:"text"`
-	HTML     string                 `json:"html"`
-	Metadata map[string]interface{} `json:"metadata"`
-}
-
-type TemplateListItem struct {
-	ID   string
-	Name string `json:"name"`
-}
-
-type TemplateAssociation struct {
-	ClientID       string `json:"client"`
-	NotificationID string `json:"notification"`
-}
-
 func (t TemplatesService) Associations(token, templateID string) (int, []TemplateAssociation, error) {
-	var associations struct {
-		Associations []TemplateAssociation `json:"associations"`
-	}
+	var associations TemplateAssociations
 
 	status, body, err := t.client.makeRequest("GET", t.client.server.TemplateAssociations(templateID), nil, token)
 	if err != nil {

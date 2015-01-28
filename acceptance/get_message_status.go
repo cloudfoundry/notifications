@@ -15,6 +15,12 @@ var _ = Describe("Getting a Message's status", func() {
 	var clientToken uaa.Token
 	var client *support.Client
 
+	type MessageReponse struct {
+		Status  int
+		Message support.Message
+		Error   error
+	}
+
 	BeforeEach(func() {
 		clientToken = GetClientTokenFor("notification-sender")
 		client = support.NewClient(Servers.Notifications)
@@ -42,11 +48,17 @@ var _ = Describe("Getting a Message's status", func() {
 		})
 
 		By("polling the messages endpoint", func() {
-			Eventually(func() (support.GetResponse, error) {
-				return client.Messages.Get(clientToken.Access, messageGUID)
-			}, 1*time.Second).Should(Equal(support.GetResponse{
-				HTTPStatus: http.StatusOK,
-				Status:     "delivered",
+			Eventually(func() MessageReponse {
+				status, message, err := client.Messages.Get(clientToken.Access, messageGUID)
+				return MessageReponse{
+					Status:  status,
+					Message: message,
+					Error:   err,
+				}
+			}, 1*time.Second).Should(Equal(MessageReponse{
+				Status:  http.StatusOK,
+				Message: support.Message{Status: "delivered"},
+				Error:   nil,
 			}))
 		})
 	})
