@@ -2,6 +2,7 @@ package mail
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
@@ -151,6 +152,7 @@ func (c *Client) Send(msg Message) error {
 	}
 
 	c.PrintLog("Sending mail data...")
+	c.PrintLog("Message Data: %s", base64.StdEncoding.EncodeToString([]byte(msg.Data())))
 	err = c.Data(msg)
 	if err != nil {
 		return c.Error(err)
