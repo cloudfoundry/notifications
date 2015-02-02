@@ -35,6 +35,32 @@ var _ = Describe("Default Template", func() {
 		}))
 	})
 
+	It("gracefully handles missing metadata for a default-template update", func() {
+		By("setting the default template without a metadata field", func() {
+			status, err := client.Templates.Default.Update(clientToken.Access, support.Template{
+				Name:    "Fail Hard - The Sequel",
+				Subject: "Failed: {{.Subject}}",
+				HTML:    "<h1>THIS IS FAILUREEE!!!</h1>",
+				Text:    "Y U NO Fail!!!",
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNoContent))
+		})
+
+		By("verifying that metadata is defaulted to {}", func() {
+			status, template, err := client.Templates.Default.Get(clientToken.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+			Expect(template).To(Equal(support.Template{
+				Name:     "Fail Hard - The Sequel",
+				Subject:  "Failed: {{.Subject}}",
+				HTML:     "<h1>THIS IS FAILUREEE!!!</h1>",
+				Text:     "Y U NO Fail!!!",
+				Metadata: map[string]interface{}{},
+			}))
+		})
+	})
+
 	It("can edit the default template", func() {
 		By("editing the default template", func() {
 			status, err := client.Templates.Default.Update(clientToken.Access, support.Template{

@@ -66,5 +66,24 @@ var _ = Describe("Template Metadata", func() {
 				"hello": true,
 			}))
 		})
+
+		By("setting a template without metadata field set", func() {
+			status, err := client.Templates.Update(clientToken.Access, templateID, support.Template{
+				Name:    "Flashy Wars",
+				Subject: "ness",
+				HTML:    "<p>Alcon</p>",
+				Text:    "Alcon",
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNoContent))
+		})
+
+		By("verifying the metadata is set to {}", func() {
+			status, response, err := client.Templates.Get(clientToken.Access, templateID)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+			Expect(response.Metadata).To(Equal(map[string]interface{}{}))
+		})
 	})
 })

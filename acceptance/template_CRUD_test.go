@@ -28,11 +28,10 @@ var _ = Describe("Templates CRUD", func() {
 				Metadata: make(map[string]interface{}),
 			},
 			{
-				Name:     "Big Hero 6",
-				Subject:  "Heroes",
-				HTML:     "<h1>Robots!</h1>",
-				Text:     "Robots!",
-				Metadata: make(map[string]interface{}),
+				Name:    "Big Hero 6",
+				Subject: "Heroes",
+				HTML:    "<h1>Robots!</h1>",
+				Text:    "Robots!",
 			},
 			{
 				Name:     "Blah",
@@ -61,17 +60,23 @@ var _ = Describe("Templates CRUD", func() {
 	It("allows a user to retrieve a template", func() {
 		var templateID string
 
-		By("creating a template", func() {
+		By("creating a template without metadata field set", func() {
 			var err error
 			_, templateID, err = client.Templates.Create(clientToken.Access, templates[1])
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		By("verifying that the template can be retrieved", func() {
+		By("verifying that the template can be retrieved, and has metadata set to {}", func() {
 			status, template, err := client.Templates.Get(clientToken.Access, templateID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
-			Expect(template).To(Equal(templates[1]))
+			Expect(template).To(Equal(support.Template{
+				Name:     "Big Hero 6",
+				Subject:  "Heroes",
+				HTML:     "<h1>Robots!</h1>",
+				Text:     "Robots!",
+				Metadata: make(map[string]interface{}),
+			}))
 		})
 	})
 

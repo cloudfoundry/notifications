@@ -17,7 +17,7 @@ type Template struct {
 	Subject  string                 `json:"subject"`
 	Text     string                 `json:"text"`
 	HTML     string                 `json:"html"`
-	Metadata map[string]interface{} `json:"metadata"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 type TemplateListItem struct {
