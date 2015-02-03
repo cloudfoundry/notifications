@@ -42,8 +42,9 @@ func validateRequired(typed interface{}, untyped interface{}) error {
 
 func validateRequiredField(field reflect.StructField, parentUntyped map[string]interface{}) error {
 	if required(field) {
-		if _, ok := parentUntyped[field.Tag.Get("json")]; !ok {
-			return RequiredFieldError{ErrorMessage: "Missing required field '" + jsonName(field) + "'"}
+		fieldName := jsonName(field)
+		if _, ok := parentUntyped[fieldName]; !ok {
+			return RequiredFieldError{ErrorMessage: "Missing required field '" + fieldName + "'"}
 		}
 	}
 

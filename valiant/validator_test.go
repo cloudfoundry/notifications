@@ -60,12 +60,26 @@ var _ = Describe("Validate", func() {
 				Expect(err).To(MatchError(`Extra field "something" is not valid`))
 			})
 
-			It("handles keys with ',omitempty' tags on them", func() {
+			It("handles keys with ',omitempty' tags on them, when they are not required", func() {
 				data := strings.NewReader(`{"email": true, "name": "Boshy"}`)
 
 				type Person struct {
 					Name  string `json:"name"            validate-required:"true"`
 					Email bool   `json:"email,omitempty" validate-required:"false"`
+				}
+
+				var someone Person
+
+				validator := valiant.NewValidator(data)
+				err := validator.Validate(&someone)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("handles keys with ',omitempty' tags, when they are required", func() {
+				data := strings.NewReader(`{"email": true}`)
+
+				type Person struct {
+					Email bool `json:"email,omitempty" validate-required:"true"`
 				}
 
 				var someone Person
