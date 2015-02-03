@@ -543,7 +543,7 @@ In the case of "failed" or "unavailable", the system will retry the delivery for
 
 If the `messageID` is not known to the system, a `404 Not Found` response will be returned.
 
-*Notification status info is purged approximately 24 hours after notification is first sent.*
+*Notification status info will be available for about 24 hours after a notification is first POSTed to this service. After 24 hours, status info is considered "stale" and may be purged by the system. A request for the status of a purged message will return a 404 Not Found error.*
 
 ## Registering Notifications
 
