@@ -127,6 +127,58 @@ var _ = Describe("Receipts Repo", func() {
 		})
 	})
 
+	Describe("Upsert", func() {
+		var receipt models.Receipt
+		userGUID := "user-123"
+		clientID := "client-abc"
+		kindID := "abc-def"
+
+		BeforeEach(func() {
+			receipt = models.Receipt{
+				UserGUID: userGUID,
+				ClientID: clientID,
+				KindID:   kindID,
+			}
+		})
+
+		It("creates a receipt in the database when no matching record exists", func() {
+			err := repo.Upsert(conn, receipt)
+			if err != nil {
+				panic(err)
+			}
+
+			receipt, err = repo.Find(conn, receipt.UserGUID, receipt.ClientID, receipt.KindID)
+			if err != nil {
+				panic(err)
+			}
+
+			Expect(receipt.UserGUID).To(Equal(userGUID))
+			Expect(receipt.ClientID).To(Equal(clientID))
+			Expect(receipt.KindID).To(Equal(kindID))
+			Expect(receipt.Count).To(Equal(1))
+			Expect(receipt.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+		})
+
+		It("auto-increments the count when a record with same user, client, kind is inserted", func() {
+			receipt, err := repo.Create(conn, receipt)
+			if err != nil {
+				panic(err)
+			}
+
+			err = repo.Upsert(conn, receipt)
+			if err != nil {
+				panic(err)
+			}
+
+			reloadedReceipt, err := repo.Find(conn, userGUID, clientID, kindID)
+
+			Expect(receipt.Count).To(Equal(1))
+			Expect(reloadedReceipt.Count).To(Equal(2))
+			Expect(receipt.Primary).To(Equal(reloadedReceipt.Primary))
+			Expect(receipt.CreatedAt).To(Equal(reloadedReceipt.CreatedAt))
+		})
+	})
+
 	Describe("CreateReceipts", func() {
 		var firstUserGUID string
 		var secondUserGUID string
