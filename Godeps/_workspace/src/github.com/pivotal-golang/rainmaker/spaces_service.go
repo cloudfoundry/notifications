@@ -40,16 +40,35 @@ func (service SpacesService) Create(name, orgGUID, token string) (Space, error) 
 		panic(err)
 	}
 
-	return NewSpaceFromResponse(service.config, response), nil
+	return newSpaceFromResponse(service.config, response), nil
 }
 
 func (service SpacesService) Get(guid, token string) (Space, error) {
-	return FetchSpace(service.config, "/v2/spaces/"+guid, token)
+	_, body, err := NewClient(service.config).makeRequest(requestArguments{
+		Method: "GET",
+		Path:   "/v2/spaces/" + guid,
+		Token:  token,
+		AcceptableStatusCodes: []int{http.StatusOK},
+	})
+	if err != nil {
+		return Space{}, err
+	}
+
+	var response documents.SpaceResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		panic(err)
+	}
+
+	return newSpaceFromResponse(service.config, response), nil
 }
 
 func (service SpacesService) ListUsers(guid, token string) (UsersList, error) {
 	query := url.Values{}
 	query.Set("q", fmt.Sprintf("space_guid:%s", guid))
 
-	return FetchUsersList(service.config, NewRequestPlan("/v2/users", query), token)
+	list := NewUsersList(service.config, newRequestPlan("/v2/users", query))
+	err := list.Fetch(token)
+
+	return list, err
 }

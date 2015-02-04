@@ -45,7 +45,7 @@ var _ = Describe("Fetch all the users of an organization", func() {
 		org, err := client.Organizations.Create(NewOrgName("org"), token)
 		Expect(err).NotTo(HaveOccurred())
 
-		for _ = range make([]int, 60, 60) {
+		for _ = range make([]int, 150, 150) {
 			user, err := client.Users.Create(NewGUID("user"), token)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -56,13 +56,13 @@ var _ = Describe("Fetch all the users of an organization", func() {
 		list, err := client.Organizations.ListUsers(org.GUID, token)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(list.TotalResults).To(Equal(60))
-		Expect(list.TotalPages).To(Equal(2))
+		Expect(list.TotalResults).To(Equal(150))
+		Expect(list.TotalPages).To(Equal(3))
 		Expect(list.Users).To(HaveLen(50))
 
 		users, err := list.AllUsers(token)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(users).To(HaveLen(60))
+		Expect(users).To(HaveLen(150))
 	})
 })

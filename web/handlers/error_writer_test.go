@@ -57,7 +57,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 502 when UAA fails to respond", func() {
-		writer.Write(recorder, utilities.UAADownError("Whoops!"))
+		writer.Write(recorder, postal.UAADownError("Whoops!"))
 
 		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 
@@ -71,7 +71,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 502 when UAA fails for unknown reasons", func() {
-		writer.Write(recorder, utilities.UAAGenericError("UAA Unknown Error: BOOM!"))
+		writer.Write(recorder, postal.UAAGenericError("UAA Unknown Error: BOOM!"))
 
 		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 

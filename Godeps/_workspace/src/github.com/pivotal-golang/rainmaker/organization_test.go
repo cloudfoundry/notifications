@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/pivotal-golang/rainmaker"
-	"github.com/pivotal-golang/rainmaker/internal/fakes"
+	"github.com/pivotal-golang/rainmaker/internal/documents"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -13,30 +13,38 @@ import (
 var _ = Describe("Organization", func() {
 	var config rainmaker.Config
 
-	Describe("FetchOrganization", func() {
+	Describe("NewOrganizationFromResponse", func() {
 		BeforeEach(func() {
 			config = rainmaker.Config{
 				Host: fakeCloudController.URL(),
 			}
 		})
 
-		It("retrieves the organization", func() {
-			createdAt := time.Now().Add(-10 * time.Minute).UTC()
-			updatedAt := time.Now().Add(-2 * time.Minute).UTC()
+		It("converts a response into an organization", func() {
+			createdAt := time.Now().Add(-10 * time.Minute)
+			updatedAt := time.Now().Add(-9 * time.Minute)
 
-			fakeCloudController.Organizations.Add(fakes.Organization{
-				GUID:                "org-001",
-				Name:                "rainmaker-organization",
-				Status:              "active",
-				BillingEnabled:      true,
-				QuotaDefinitionGUID: "quota-definition-guid",
-				CreatedAt:           createdAt,
-				UpdatedAt:           updatedAt,
-			})
+			document := documents.OrganizationResponse{}
+			document.Metadata.GUID = "org-001"
+			document.Metadata.URL = "/v2/organizations/org-001"
+			document.Metadata.CreatedAt = &createdAt
+			document.Metadata.UpdatedAt = &updatedAt
+			document.Entity.Name = "rainmaker-organization"
+			document.Entity.BillingEnabled = true
+			document.Entity.Status = "active"
+			document.Entity.QuotaDefinitionGUID = "quota-definition-guid"
+			document.Entity.QuotaDefinitionURL = "/v2/quota_definitions/quota-definition-guid"
+			document.Entity.SpacesURL = "/v2/organizations/org-001/spaces"
+			document.Entity.DomainsURL = "/v2/organizations/org-001/domains"
+			document.Entity.PrivateDomainsURL = "/v2/organizations/org-001/private_domains"
+			document.Entity.UsersURL = "/v2/organizations/org-001/users"
+			document.Entity.ManagersURL = "/v2/organizations/org-001/managers"
+			document.Entity.BillingManagersURL = "/v2/organizations/org-001/billing_managers"
+			document.Entity.AuditorsURL = "/v2/organizations/org-001/auditors"
+			document.Entity.AppEventsURL = "/v2/organizations/org-001/app_events"
+			document.Entity.SpaceQuotaDefinitionsURL = "/v2/organizations/org-001/space_quota_definitions"
 
-			organization, err := rainmaker.FetchOrganization(config, "/v2/organizations/org-001", "token-123")
-			Expect(err).NotTo(HaveOccurred())
-
+			organization := rainmaker.NewOrganizationFromResponse(config, document)
 			expectedOrganization := rainmaker.NewOrganization(config, "org-001")
 			expectedOrganization.Name = "rainmaker-organization"
 			expectedOrganization.URL = "/v2/organizations/org-001"
@@ -57,19 +65,6 @@ var _ = Describe("Organization", func() {
 			expectedOrganization.UpdatedAt = updatedAt
 
 			Expect(organization).To(Equal(expectedOrganization))
-		})
-
-		It("handles NotFound errors", func() {
-			_, err := rainmaker.FetchOrganization(config, "/v2/organizations/something", "token")
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(BeAssignableToTypeOf(rainmaker.NotFoundError{}))
-		})
-
-		It("handles unauthorized use", func() {
-			_, err := rainmaker.FetchOrganization(config, "/v2/organizations/org-001", "")
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(BeAssignableToTypeOf(rainmaker.UnauthorizedError{}))
-
 		})
 	})
 })

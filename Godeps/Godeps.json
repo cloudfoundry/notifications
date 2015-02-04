@@ -94,7 +94,7 @@
 		},
 		{
 			"ImportPath": "github.com/pivotal-golang/rainmaker",
-			"Rev": "ce9ac8e324adc6e9ba91ee4968bbdd39bee15fe6"
+			"Rev": "0060720b1025f3958606b8912b6bce3178636fb0"
 		},
 		{
 			"ImportPath": "github.com/rubenv/sql-migrate",

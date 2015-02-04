@@ -6,7 +6,7 @@ type UnauthorizedError struct {
 	message []byte
 }
 
-func NewUnauthorizedError(message []byte) UnauthorizedError {
+func newUnauthorizedError(message []byte) UnauthorizedError {
 	return UnauthorizedError{
 		message: message,
 	}
@@ -20,7 +20,7 @@ type NotFoundError struct {
 	message []byte
 }
 
-func NewNotFoundError(message []byte) NotFoundError {
+func newNotFoundError(message []byte) NotFoundError {
 	return NotFoundError{
 		message: message,
 	}
@@ -35,7 +35,7 @@ type UnexpectedStatusError struct {
 	message []byte
 }
 
-func NewUnexpectedStatusError(status int, message []byte) UnexpectedStatusError {
+func newUnexpectedStatusError(status int, message []byte) UnexpectedStatusError {
 	return UnexpectedStatusError{
 		status:  status,
 		message: message,
@@ -50,7 +50,7 @@ type ResponseReadError struct {
 	internalError error
 }
 
-func NewResponseReadError(err error) ResponseReadError {
+func newResponseReadError(err error) ResponseReadError {
 	return ResponseReadError{
 		internalError: err,
 	}
@@ -64,7 +64,7 @@ type ResponseBodyUnmarshalError struct {
 	internalError error
 }
 
-func NewResponseBodyUnmarshalError(err error) ResponseBodyUnmarshalError {
+func newResponseBodyUnmarshalError(err error) ResponseBodyUnmarshalError {
 	return ResponseBodyUnmarshalError{
 		internalError: err,
 	}
@@ -78,7 +78,7 @@ type RequestBodyMarshalError struct {
 	internalError error
 }
 
-func NewRequestBodyMarshalError(err error) RequestBodyMarshalError {
+func newRequestBodyMarshalError(err error) RequestBodyMarshalError {
 	return RequestBodyMarshalError{internalError: err}
 }
 
@@ -90,7 +90,7 @@ type RequestConfigurationError struct {
 	internalError error
 }
 
-func NewRequestConfigurationError(err error) RequestConfigurationError {
+func newRequestConfigurationError(err error) RequestConfigurationError {
 	return RequestConfigurationError{internalError: err}
 }
 
@@ -102,7 +102,7 @@ type RequestHTTPError struct {
 	internalError error
 }
 
-func NewRequestHTTPError(err error) RequestHTTPError {
+func newRequestHTTPError(err error) RequestHTTPError {
 	return RequestHTTPError{internalError: err}
 }
 

@@ -1,11 +1,8 @@
-package utilities_test
+package postal_test
 
 import (
-	"bytes"
-	"log"
-
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
+	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -13,7 +10,7 @@ import (
 )
 
 var _ = Describe("UserLoader", func() {
-	var loader utilities.UserLoader
+	var loader postal.UserLoader
 	var token string
 	var uaaClient *fakes.UAAClient
 
@@ -48,8 +45,7 @@ var _ = Describe("UserLoader", func() {
 				},
 			}
 
-			logger := log.New(bytes.NewBufferString(""), "", 0)
-			loader = utilities.NewUserLoader(uaaClient, logger)
+			loader = postal.NewUserLoader(uaaClient)
 		})
 
 		Context("UAA returns a collection of users", func() {
@@ -76,7 +72,7 @@ var _ = Describe("UserLoader", func() {
 
 					_, err := loader.Load([]string{"user-123"}, token)
 
-					Expect(err).To(BeAssignableToTypeOf(utilities.UAADownError("")))
+					Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
 				})
 			})
 
@@ -86,7 +82,7 @@ var _ = Describe("UserLoader", func() {
 
 					_, err := loader.Load([]string{"user-123"}, token)
 
-					Expect(err).To(BeAssignableToTypeOf(utilities.UAAGenericError("")))
+					Expect(err).To(BeAssignableToTypeOf(postal.UAAGenericError("")))
 				})
 			})
 
@@ -96,7 +92,7 @@ var _ = Describe("UserLoader", func() {
 
 					_, err := loader.Load([]string{"user-123"}, token)
 
-					Expect(err).To(BeAssignableToTypeOf(utilities.UAADownError("")))
+					Expect(err).To(BeAssignableToTypeOf(postal.UAADownError("")))
 				})
 			})
 		})

@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("AllUserEmailsAndGUIDs", func() {
+var _ = Describe("AllUserGUIDs", func() {
 	var allUsers utilities.AllUsers
 	var uaaClient *fakes.UAAClient
 	var users []uaa.User
@@ -24,15 +24,15 @@ var _ = Describe("AllUserEmailsAndGUIDs", func() {
 	Context("when the request succeeds", func() {
 		BeforeEach(func() {
 			users = []uaa.User{
-				uaa.User{
+				{
 					Emails: []string{"user-123@example.com"},
 					ID:     "user-123",
 				},
-				uaa.User{
+				{
 					Emails: []string{"user-456@example.com"},
 					ID:     "user-456",
 				},
-				uaa.User{
+				{
 					Emails: []string{"user-999@example.com"},
 					ID:     "user-999",
 				},
@@ -42,31 +42,16 @@ var _ = Describe("AllUserEmailsAndGUIDs", func() {
 		})
 
 		It("returns the UAAUsers, UserGUIDs, and an error", func() {
-			returnedUsers, guids, err := allUsers.AllUserEmailsAndGUIDs()
-			expectedUsers := map[string]uaa.User{
-				"user-123": uaa.User{
-					Emails: []string{"user-123@example.com"},
-					ID:     "user-123",
-				},
-				"user-456": uaa.User{
-					Emails: []string{"user-456@example.com"},
-					ID:     "user-456",
-				},
-				"user-999": uaa.User{
-					Emails: []string{"user-999@example.com"},
-					ID:     "user-999",
-				},
-			}
-			Expect(returnedUsers).To(Equal(expectedUsers))
-			Expect(guids).To(ConsistOf("user-456", "user-999", "user-123"))
+			guids, err := allUsers.AllUserGUIDs()
 			Expect(err).NotTo(HaveOccurred())
+			Expect(guids).To(ConsistOf("user-456", "user-999", "user-123"))
 		})
 	})
 
 	Context("when the request to UAA fails", func() {
 		It("bubbles up the error", func() {
 			uaaClient.AllUsersError = errors.New("BOOM!")
-			_, _, err := allUsers.AllUserEmailsAndGUIDs()
+			_, err := allUsers.AllUserGUIDs()
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(errors.New("BOOM!")))
 		})

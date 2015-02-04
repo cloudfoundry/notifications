@@ -1,8 +1,6 @@
 package rainmaker_test
 
 import (
-	"net/url"
-
 	"github.com/pivotal-golang/rainmaker"
 
 	. "github.com/onsi/ginkgo"
@@ -59,19 +57,19 @@ var _ = Describe("OrganizationsService", func() {
 
 		BeforeEach(func() {
 			var err error
-			usersList := rainmaker.NewUsersList(config, rainmaker.NewRequestPlan("/v2/users", url.Values{}))
+			usersService := rainmaker.NewUsersService(config)
 
-			user1, err = usersList.Create(rainmaker.User{GUID: "user-123"}, token)
+			user1, err = usersService.Create("user-123", token)
 			if err != nil {
 				panic(err)
 			}
 
-			user2, err = usersList.Create(rainmaker.User{GUID: "user-456"}, token)
+			user2, err = usersService.Create("user-456", token)
 			if err != nil {
 				panic(err)
 			}
 
-			user3, err = usersList.Create(rainmaker.User{GUID: "user-789"}, token)
+			user3, err = usersService.Create("user-789", token)
 			if err != nil {
 				panic(err)
 			}

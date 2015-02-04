@@ -5,11 +5,10 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
 type MailerInterface interface {
-	Deliver(models.ConnectionInterface, postal.Templates, map[string]uaa.User, postal.Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string) []Response
+	Deliver(models.ConnectionInterface, []User, postal.Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string) []Response
 }
 
 type Mailer struct {
@@ -30,12 +29,13 @@ func NewMailer(queue gobble.QueueInterface, guidGenerator postal.GUIDGenerationF
 	}
 }
 
-func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.Templates, users map[string]uaa.User,
-	options postal.Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, scope string) []Response {
+func (mailer Mailer) Deliver(conn models.ConnectionInterface, users []User,
+	options postal.Options, space cf.CloudControllerSpace,
+	organization cf.CloudControllerOrganization, clientID, scope string) []Response {
 
 	responses := []Response{}
 	jobsByMessageID := map[string]gobble.Job{}
-	for userGUID, user := range users {
+	for _, user := range users {
 		guid, err := mailer.guidGenerator()
 		if err != nil {
 			panic(err)
@@ -43,21 +43,25 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, templates postal.T
 		messageID := guid.String()
 
 		jobsByMessageID[messageID] = gobble.NewJob(postal.Delivery{
-			User:         user,
 			Options:      options,
-			UserGUID:     userGUID,
+			UserGUID:     user.GUID,
+			Email:        user.Email,
 			Space:        space,
 			Organization: organization,
 			ClientID:     clientID,
-			Templates:    templates,
 			MessageID:    messageID,
 			Scope:        scope,
 		})
 
+		recipient := user.Email
+		if recipient == "" {
+			recipient = user.GUID
+		}
+
 		responses = append(responses, Response{
 			Status:         postal.StatusQueued,
 			NotificationID: messageID,
-			Recipient:      userGUID,
+			Recipient:      recipient,
 		})
 	}
 

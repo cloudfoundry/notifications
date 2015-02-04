@@ -7,7 +7,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,13 +16,10 @@ var _ = Describe("Everyone Strategy", func() {
 	var strategy strategies.EveryoneStrategy
 	var options postal.Options
 	var tokenLoader *fakes.TokenLoader
-	var templatesLoader *fakes.TemplatesLoader
 	var allUsers *fakes.AllUsers
 	var mailer *fakes.Mailer
 	var clientID string
-	var receiptsRepo *fakes.ReceiptsRepo
 	var conn *fakes.DBConn
-	var users map[string]uaa.User
 
 	BeforeEach(func() {
 		clientID = "my-client"
@@ -41,29 +37,11 @@ var _ = Describe("Everyone Strategy", func() {
 		tokenLoader = fakes.NewTokenLoader()
 		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
 
-		receiptsRepo = fakes.NewReceiptsRepo()
-
 		mailer = fakes.NewMailer()
-
-		templatesLoader = fakes.NewTemplatesLoader()
-
-		users = map[string]uaa.User{
-			"user-380": uaa.User{
-				ID:     "user-380",
-				Emails: []string{"user-380@example.com"},
-			},
-			"user-319": uaa.User{
-				ID:     "user-319",
-				Emails: []string{"user-319@example.com"},
-			},
-		}
-
 		allUsers = fakes.NewAllUsers()
-		allUsers.GUIDS = []string{"user-380", "user-319"}
+		allUsers.GUIDs = []string{"user-380", "user-319"}
 
-		allUsers.Users = users
-
-		strategy = strategies.NewEveryoneStrategy(tokenLoader, allUsers, templatesLoader, mailer, receiptsRepo)
+		strategy = strategies.NewEveryoneStrategy(tokenLoader, allUsers, mailer)
 	})
 
 	Describe("Dispatch", func() {
@@ -77,26 +55,7 @@ var _ = Describe("Everyone Strategy", func() {
 			}
 		})
 
-		It("records a receipt for each user", func() {
-			_, err := strategy.Dispatch(clientID, "", options, conn)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(receiptsRepo.CreateUserGUIDs).To(Equal([]string{"user-380", "user-319"}))
-			Expect(receiptsRepo.ClientID).To(Equal(clientID))
-			Expect(receiptsRepo.KindID).To(Equal(options.KindID))
-		})
-
 		It("call mailer.Deliver with the correct arguments for an organization", func() {
-			templates := postal.Templates{
-				Subject: "default-missing-subject",
-				Text:    "default-everyone-text",
-				HTML:    "default-everyone-html",
-			}
-
-			templatesLoader.Templates = templates
-
 			Expect(options.Endorsement).To(BeEmpty())
 			_, err := strategy.Dispatch(clientID, "", options, conn)
 			if err != nil {
@@ -104,14 +63,20 @@ var _ = Describe("Everyone Strategy", func() {
 			}
 
 			options.Endorsement = strategies.EveryoneEndorsement
+			var users []strategies.User
+			for _, guid := range allUsers.GUIDs {
+				users = append(users, strategies.User{GUID: guid})
+			}
 
-			Expect(mailer.DeliverArguments).To(ContainElement(conn))
-			Expect(mailer.DeliverArguments).To(ContainElement(templates))
-			Expect(mailer.DeliverArguments).To(ContainElement(users))
-			Expect(mailer.DeliverArguments).To(ContainElement(options))
-			Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{}))
-			Expect(mailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{}))
-			Expect(mailer.DeliverArguments).To(ContainElement(clientID))
+			Expect(mailer.DeliverArguments).To(Equal(map[string]interface{}{
+				"connection": conn,
+				"users":      users,
+				"options":    options,
+				"space":      cf.CloudControllerSpace{},
+				"org":        cf.CloudControllerOrganization{},
+				"client":     clientID,
+				"scope":      "",
+			}))
 		})
 	})
 
@@ -131,25 +96,6 @@ var _ = Describe("Everyone Strategy", func() {
 				_, err := strategy.Dispatch(clientID, "", options, conn)
 
 				Expect(err).To(Equal(errors.New("BOOM!")))
-			})
-		})
-
-		Context("when templateLoader fails to load templates", func() {
-			It("returns the error", func() {
-				templatesLoader.LoadError = errors.New("BOOM!")
-
-				_, err := strategy.Dispatch(clientID, "", options, conn)
-
-				Expect(err).To(BeAssignableToTypeOf(postal.TemplateLoadError("")))
-			})
-		})
-
-		Context("when create receipts call returns an err", func() {
-			It("returns an error", func() {
-				receiptsRepo.CreateReceiptsError = true
-
-				_, err := strategy.Dispatch(clientID, "", options, conn)
-				Expect(err).ToNot(BeNil())
 			})
 		})
 	})

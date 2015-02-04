@@ -1,31 +1,35 @@
-package utilities
+package postal
 
 import (
-	"log"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
+type uaaUsersInterface interface {
+	uaa.UsersEmailsByIDsInterface
+	uaa.SetTokenInterface
+}
+
 type UserLoader struct {
-	uaaClient UAAInterface
-	logger    *log.Logger
+	uaaClient uaaUsersInterface
 }
 
 type UserLoaderInterface interface {
 	Load([]string, string) (map[string]uaa.User, error)
 }
 
-func NewUserLoader(uaaClient UAAInterface, logger *log.Logger) UserLoader {
+func NewUserLoader(uaaClient uaaUsersInterface) UserLoader {
 	return UserLoader{
 		uaaClient: uaaClient,
-		logger:    logger,
 	}
 }
 
 func (loader UserLoader) Load(guids []string, token string) (map[string]uaa.User, error) {
 	users := make(map[string]uaa.User)
+
+	loader.uaaClient.SetToken(token)
 
 	usersByIDs, err := loader.fetchUsersByIDs(guids)
 	if err != nil {

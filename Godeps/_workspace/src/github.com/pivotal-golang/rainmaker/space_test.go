@@ -3,11 +3,10 @@ package rainmaker_test
 import (
 	"time"
 
-	"github.com/pivotal-golang/rainmaker"
-	"github.com/pivotal-golang/rainmaker/internal/fakes"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pivotal-golang/rainmaker"
+	"github.com/pivotal-golang/rainmaker/internal/documents"
 )
 
 var _ = Describe("Space", func() {
@@ -19,43 +18,43 @@ var _ = Describe("Space", func() {
 		}
 	})
 
-	Describe("FetchSpace", func() {
+	Describe("NewSpaceFromResponse", func() {
 		var createdAt, updatedAt time.Time
+		var document documents.SpaceResponse
 
 		BeforeEach(func() {
-			var err error
-			createdAt, err = time.Parse(time.RFC3339, "2014-10-09T22:02:26+00:00")
-			if err != nil {
-				panic(err)
-			}
-			createdAt = createdAt.UTC()
+			createdAt = time.Now().Add(-15 * time.Minute).UTC()
+			updatedAt = time.Now().Add(-5 * time.Minute).UTC()
 
-			updatedAt, err = time.Parse(time.RFC3339, "2014-11-09T10:54:17+00:00")
-			if err != nil {
-				panic(err)
-			}
-			updatedAt = updatedAt.UTC()
-
-			fakeCloudController.Spaces.Add(fakes.Space{
-				GUID:             "space-001",
-				Name:             "banana",
-				OrganizationGUID: "org-001",
-				CreatedAt:        createdAt,
-				UpdatedAt:        updatedAt,
-			})
+			document = documents.SpaceResponse{}
+			document.Metadata.GUID = "space-001"
+			document.Metadata.URL = "/v2/spaces/space-001"
+			document.Metadata.CreatedAt = &createdAt
+			document.Metadata.UpdatedAt = &updatedAt
+			document.Entity.Name = "banana"
+			document.Entity.OrganizationGUID = "org-001"
+			document.Entity.SpaceQuotaDefinitionGUID = "space-quota-definition-guid"
+			document.Entity.OrganizationURL = "/v2/organizations/org-001"
+			document.Entity.DevelopersURL = "/v2/spaces/space-001/developers"
+			document.Entity.ManagersURL = "/v2/spaces/space-001/managers"
+			document.Entity.AuditorsURL = "/v2/spaces/space-001/auditors"
+			document.Entity.AppsURL = "/v2/spaces/space-001/apps"
+			document.Entity.RoutesURL = "/v2/spaces/space-001/routes"
+			document.Entity.DomainsURL = "/v2/spaces/space-001/domains"
+			document.Entity.ServiceInstancesURL = "/v2/spaces/space-001/service_instances"
+			document.Entity.AppEventsURL = "/v2/spaces/space-001/app_events"
+			document.Entity.EventsURL = "/v2/spaces/space-001/events"
+			document.Entity.SecurityGroupsURL = "/v2/spaces/space-001/security_groups"
 		})
 
-		It("retrieves the space", func() {
-			space, err := rainmaker.FetchSpace(config, "/v2/spaces/space-001", "token-asd")
-			Expect(err).NotTo(HaveOccurred())
+		It("converts a response into a space", func() {
+			space := rainmaker.NewSpaceFromResponse(config, document)
 
 			expectedSpace := rainmaker.NewSpace(config, "space-001")
 			expectedSpace.URL = "/v2/spaces/space-001"
-			expectedSpace.CreatedAt = createdAt
-			expectedSpace.UpdatedAt = updatedAt
 			expectedSpace.Name = "banana"
 			expectedSpace.OrganizationGUID = "org-001"
-			expectedSpace.SpaceQuotaDefinitionGUID = ""
+			expectedSpace.SpaceQuotaDefinitionGUID = "space-quota-definition-guid"
 			expectedSpace.OrganizationURL = "/v2/organizations/org-001"
 			expectedSpace.DevelopersURL = "/v2/spaces/space-001/developers"
 			expectedSpace.ManagersURL = "/v2/spaces/space-001/managers"
@@ -67,16 +66,10 @@ var _ = Describe("Space", func() {
 			expectedSpace.AppEventsURL = "/v2/spaces/space-001/app_events"
 			expectedSpace.EventsURL = "/v2/spaces/space-001/events"
 			expectedSpace.SecurityGroupsURL = "/v2/spaces/space-001/security_groups"
+			expectedSpace.CreatedAt = createdAt
+			expectedSpace.UpdatedAt = updatedAt
 
 			Expect(space).To(Equal(expectedSpace))
-		})
-
-		Context("when errors happen", func() {
-			It("returns the error", func() {
-				config.Host = ""
-				_, err := rainmaker.FetchSpace(config, "/v2/spaces/space-001", "token-asd")
-				Expect(err).To(HaveOccurred())
-			})
 		})
 	})
 })

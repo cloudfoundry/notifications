@@ -11,31 +11,30 @@ const OrganizationEndorsement = "You received this message because you belong to
 const OrganizationRoleEndorsement = "You received this message because you are an {{.OrganizationRole}} in the {{.Organization}} organization."
 
 type OrganizationStrategy struct {
-	tokenLoader        utilities.TokenLoaderInterface
-	userLoader         utilities.UserLoaderInterface
+	tokenLoader        postal.TokenLoaderInterface
 	organizationLoader utilities.OrganizationLoaderInterface
 	findsUserGUIDs     utilities.FindsUserGUIDsInterface
-	templatesLoader    utilities.TemplatesLoaderInterface
 	mailer             MailerInterface
-	receiptsRepo       models.ReceiptsRepoInterface
 }
 
-func NewOrganizationStrategy(tokenLoader utilities.TokenLoaderInterface, userLoader utilities.UserLoaderInterface, organizationLoader utilities.OrganizationLoaderInterface,
-	findsUserGUIDs utilities.FindsUserGUIDsInterface, templatesLoader utilities.TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) OrganizationStrategy {
+func NewOrganizationStrategy(tokenLoader postal.TokenLoaderInterface, organizationLoader utilities.OrganizationLoaderInterface,
+	findsUserGUIDs utilities.FindsUserGUIDsInterface, mailer MailerInterface) OrganizationStrategy {
 
 	return OrganizationStrategy{
 		tokenLoader:        tokenLoader,
-		userLoader:         userLoader,
 		organizationLoader: organizationLoader,
 		findsUserGUIDs:     findsUserGUIDs,
-		templatesLoader:    templatesLoader,
 		mailer:             mailer,
-		receiptsRepo:       receiptsRepo,
 	}
 }
 
 func (strategy OrganizationStrategy) Dispatch(clientID, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
 	responses := []Response{}
+	options.Endorsement = OrganizationEndorsement
+
+	if options.Role != "" {
+		options.Endorsement = OrganizationRoleEndorsement
+	}
 
 	token, err := strategy.tokenLoader.Load()
 	if err != nil {
@@ -52,28 +51,12 @@ func (strategy OrganizationStrategy) Dispatch(clientID, guid string, options pos
 		return responses, err
 	}
 
-	users, err := strategy.userLoader.Load(userGUIDs, token)
-	if err != nil {
-		return responses, err
+	var users []User
+	for _, guid := range userGUIDs {
+		users = append(users, User{GUID: guid})
 	}
 
-	templates, err := strategy.templatesLoader.LoadTemplates(clientID, options.KindID)
-	if err != nil {
-		return responses, postal.TemplateLoadError("An email template could not be loaded. Error: " + err.Error())
-	}
-
-	err = strategy.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)
-	if err != nil {
-		return responses, err
-	}
-
-	options.Endorsement = OrganizationEndorsement
-
-	if options.Role != "" {
-		options.Endorsement = OrganizationRoleEndorsement
-	}
-
-	responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, organization, clientID, "")
+	responses = strategy.mailer.Deliver(conn, users, options, cf.CloudControllerSpace{}, organization, clientID, "")
 
 	return responses, nil
 }

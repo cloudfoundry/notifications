@@ -10,12 +10,9 @@ import (
 const ScopeEndorsement = "You received this message because you have the {{.Scope}} scope."
 
 type UAAScopeStrategy struct {
-	receiptsRepo    models.ReceiptsRepoInterface
-	findsUserGUIDs  utilities.FindsUserGUIDsInterface
-	tokenLoader     utilities.TokenLoaderInterface
-	templatesLoader utilities.TemplatesLoaderInterface
-	mailer          MailerInterface
-	userLoader      utilities.UserLoaderInterface
+	findsUserGUIDs utilities.FindsUserGUIDsInterface
+	tokenLoader    postal.TokenLoaderInterface
+	mailer         MailerInterface
 }
 
 type DefaultScopeError struct{}
@@ -24,27 +21,25 @@ func (d DefaultScopeError) Error() string {
 	return "You cannot send a notification to a default scope"
 }
 
-func NewUAAScopeStrategy(tokenLoader utilities.TokenLoaderInterface, userLoader utilities.UserLoaderInterface,
-	findsUserGUIDs utilities.FindsUserGUIDsInterface, templatesLoader utilities.TemplatesLoaderInterface, mailer MailerInterface, receiptsRepo models.ReceiptsRepoInterface) UAAScopeStrategy {
+func NewUAAScopeStrategy(tokenLoader postal.TokenLoaderInterface, findsUserGUIDs utilities.FindsUserGUIDsInterface,
+	mailer MailerInterface) UAAScopeStrategy {
 
 	return UAAScopeStrategy{
-		receiptsRepo:    receiptsRepo,
-		findsUserGUIDs:  findsUserGUIDs,
-		tokenLoader:     tokenLoader,
-		templatesLoader: templatesLoader,
-		mailer:          mailer,
-		userLoader:      userLoader,
+		findsUserGUIDs: findsUserGUIDs,
+		tokenLoader:    tokenLoader,
+		mailer:         mailer,
 	}
 }
 
 func (strategy UAAScopeStrategy) Dispatch(clientID, scope string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
 	responses := []Response{}
+	options.Endorsement = ScopeEndorsement
 
 	if strategy.scopeIsDefault(scope) {
 		return responses, DefaultScopeError{}
 	}
 
-	token, err := strategy.tokenLoader.Load()
+	_, err := strategy.tokenLoader.Load() // TODO: (rm) this triggers a weird side-effect that is required
 	if err != nil {
 		return responses, err
 	}
@@ -54,31 +49,29 @@ func (strategy UAAScopeStrategy) Dispatch(clientID, scope string, options postal
 		return responses, err
 	}
 
-	users, err := strategy.userLoader.Load(userGUIDs, token)
-	if err != nil {
-		return responses, err
+	var users []User
+	for _, guid := range userGUIDs {
+		users = append(users, User{GUID: guid})
 	}
 
-	templates, err := strategy.templatesLoader.LoadTemplates(clientID, options.KindID)
-	if err != nil {
-		return responses, postal.TemplateLoadError("An email template could not be loaded. Error: " + err.Error())
-	}
-
-	err = strategy.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)
-	if err != nil {
-		return responses, err
-	}
-
-	options.Endorsement = ScopeEndorsement
-
-	responses = strategy.mailer.Deliver(conn, templates, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, scope)
+	responses = strategy.mailer.Deliver(conn, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, scope)
 
 	return responses, nil
 }
 
 func (strategy UAAScopeStrategy) scopeIsDefault(scope string) bool {
-	defaultScopes := []string{"cloud_controller.read", "cloud_controller.write", "openid", "approvals.me",
-		"cloud_controller_service_permissions.read", "scim.me", "uaa.user", "password.write", "scim.userids", "oauth.approvals"}
+	defaultScopes := []string{
+		"cloud_controller.read",
+		"cloud_controller.write",
+		"openid",
+		"approvals.me",
+		"cloud_controller_service_permissions.read",
+		"scim.me",
+		"uaa.user",
+		"password.write",
+		"scim.userids",
+		"oauth.approvals",
+	}
 
 	for _, singleScope := range defaultScopes {
 		if scope == singleScope {

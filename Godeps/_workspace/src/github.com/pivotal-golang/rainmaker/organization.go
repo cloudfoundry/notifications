@@ -1,8 +1,6 @@
 package rainmaker
 
 import (
-	"encoding/json"
-	"net/http"
 	"net/url"
 	"time"
 
@@ -39,14 +37,14 @@ func NewOrganization(config Config, guid string) Organization {
 	return Organization{
 		config:          config,
 		GUID:            guid,
-		Users:           NewUsersList(config, NewRequestPlan("/v2/organizations/"+guid+"/users", url.Values{})),
-		BillingManagers: NewUsersList(config, NewRequestPlan("/v2/organizations/"+guid+"/billing_managers", url.Values{})),
-		Auditors:        NewUsersList(config, NewRequestPlan("/v2/organizations/"+guid+"/auditors", url.Values{})),
-		Managers:        NewUsersList(config, NewRequestPlan("/v2/organizations/"+guid+"/managers", url.Values{})),
+		Users:           NewUsersList(config, newRequestPlan("/v2/organizations/"+guid+"/users", url.Values{})),
+		BillingManagers: NewUsersList(config, newRequestPlan("/v2/organizations/"+guid+"/billing_managers", url.Values{})),
+		Auditors:        NewUsersList(config, newRequestPlan("/v2/organizations/"+guid+"/auditors", url.Values{})),
+		Managers:        NewUsersList(config, newRequestPlan("/v2/organizations/"+guid+"/managers", url.Values{})),
 	}
 }
 
-func NewOrganizationFromResponse(config Config, response documents.OrganizationResponse) Organization {
+func newOrganizationFromResponse(config Config, response documents.OrganizationResponse) Organization {
 	if response.Metadata.CreatedAt == nil {
 		response.Metadata.CreatedAt = &time.Time{}
 	}
@@ -75,24 +73,4 @@ func NewOrganizationFromResponse(config Config, response documents.OrganizationR
 	organization.SpaceQuotaDefinitionsURL = response.Entity.SpaceQuotaDefinitionsURL
 
 	return organization
-}
-
-func FetchOrganization(config Config, path, token string) (Organization, error) {
-	_, body, err := NewClient(config).makeRequest(requestArguments{
-		Method: "GET",
-		Path:   path,
-		Token:  token,
-		AcceptableStatusCodes: []int{http.StatusOK},
-	})
-	if err != nil {
-		return Organization{}, err
-	}
-
-	var response documents.OrganizationResponse
-	err = json.Unmarshal(body, &response)
-	if err != nil {
-		panic(err)
-	}
-
-	return NewOrganizationFromResponse(config, response), nil
 }

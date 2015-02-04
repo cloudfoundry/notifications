@@ -20,6 +20,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+func getMessageIDFromJob(job gobble.Job) string {
+	var jobDelivery postal.Delivery
+	err := job.Unmarshal(&jobDelivery)
+	if err != nil {
+		panic(err)
+	}
+	return jobDelivery.MessageID
+}
+
 var _ = Describe("DeliveryWorker", func() {
 	var mailClient fakes.MailClient
 	var worker postal.DeliveryWorker
@@ -34,8 +43,12 @@ var _ = Describe("DeliveryWorker", func() {
 	var messagesRepo *fakes.MessagesRepo
 	var database *fakes.Database
 	var conn models.ConnectionInterface
+	var userLoader *fakes.UserLoader
 	var userGUID string
 	var fakeUserEmail string
+	var templateLoader *fakes.TemplatesLoader
+	var receiptsRepo *fakes.ReceiptsRepo
+	var tokenLoader *fakes.TokenLoader
 
 	BeforeEach(func() {
 		buffer = bytes.NewBuffer([]byte{})
@@ -53,14 +66,23 @@ var _ = Describe("DeliveryWorker", func() {
 		sender := "from@email.com"
 		sum := md5.Sum([]byte("banana's are so very tasty"))
 		encryptionKey := sum[:]
-		fakeUserEmail = "fake-user@example.com"
+		fakeUserEmail = "user-123@example.com"
+		userLoader = fakes.NewUserLoader()
+		userLoader.Users["user-123"] = uaa.User{Emails: []string{fakeUserEmail}}
+		userLoader.Users["user-456"] = uaa.User{Emails: []string{"user-456@example.com"}}
+		tokenLoader = fakes.NewTokenLoader()
+		templateLoader = fakes.NewTemplatesLoader()
+		templateLoader.Templates = postal.Templates{
+			Text:    "{{.Text}}",
+			HTML:    "<p>{{.HTML}}</p>",
+			Subject: "{{.Subject}}",
+		}
+		receiptsRepo = fakes.NewReceiptsRepo()
 
-		worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo, messagesRepo, database, sender, encryptionKey)
+		worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
+			messagesRepo, database, sender, encryptionKey, userLoader, templateLoader, receiptsRepo, tokenLoader)
 
 		delivery = postal.Delivery{
-			User: uaa.User{
-				Emails: []string{fakeUserEmail},
-			},
 			ClientID: "some-client",
 			UserGUID: userGUID,
 			Options: postal.Options{
@@ -68,10 +90,6 @@ var _ = Describe("DeliveryWorker", func() {
 				Text:    "body content",
 				ReplyTo: "thesender@example.com",
 				KindID:  "some-kind",
-			},
-			Templates: postal.Templates{
-				Text:    "{{.Text}}",
-				Subject: "{{.Subject}}",
 			},
 			MessageID: "randomly-generated-guid",
 		}
@@ -84,9 +102,6 @@ var _ = Describe("DeliveryWorker", func() {
 			worker.Work()
 
 			delivery2 := postal.Delivery{
-				User: uaa.User{
-					Emails: []string{"fake-user@example.com"},
-				},
 				UserGUID: "user-456",
 			}
 			queue.Enqueue(gobble.NewJob(delivery2))
@@ -94,7 +109,7 @@ var _ = Describe("DeliveryWorker", func() {
 			<-time.After(10 * time.Millisecond)
 			worker.Halt()
 
-			Expect(len(mailClient.Messages)).To(Equal(2))
+			Expect(mailClient.Messages).To(HaveLen(2))
 		})
 
 		It("can be halted", func() {
@@ -118,17 +133,17 @@ var _ = Describe("DeliveryWorker", func() {
 
 		It("logs the email address of the recipient", func() {
 			worker.Deliver(&job)
-			Expect(buffer.String()).To(ContainSubstring("Attempting to deliver message to fake-user@example.com"))
+			Expect(buffer.String()).To(ContainSubstring("Attempting to deliver message to user-123@example.com"))
 		})
 
 		It("logs successful delivery", func() {
 			worker.Deliver(&job)
 
 			results := strings.Split(buffer.String(), "\n")
-			Expect(results).To(ContainElement("Message was successfully sent to fake-user@example.com"))
+			Expect(results).To(ContainElement("Message was successfully sent to user-123@example.com"))
 		})
 
-		It("Upserts the StatusDelivered to the database", func() {
+		It("upserts the StatusDelivered to the database", func() {
 			messageID := getMessageIDFromJob(job)
 			worker.Deliver(&job)
 
@@ -138,7 +153,38 @@ var _ = Describe("DeliveryWorker", func() {
 			}
 
 			Expect(message.Status).To(Equal(postal.StatusDelivered))
+		})
 
+		It("creates a reciept for the delivery", func() {
+			worker.Deliver(&job)
+
+			Expect(receiptsRepo.ClientID).To(Equal("some-client"))
+			Expect(receiptsRepo.KindID).To(Equal("some-kind"))
+			Expect(receiptsRepo.CreateUserGUIDs).To(Equal([]string{"user-123"}))
+		})
+
+		Context("when the receipt fails to be created", func() {
+			It("retries the job", func() {
+				receiptsRepo.CreateReceiptsError = true
+				worker.Deliver(&job)
+
+				Expect(job.RetryCount).To(Equal(1))
+			})
+		})
+
+		It("makes a call to getNewClientToken during a delivery", func() {
+			worker.Deliver(&job)
+
+			Expect(tokenLoader.LoadWasCalled).To(BeTrue())
+		})
+
+		Context("when loading a token fails", func() {
+			It("retries the job", func() {
+				tokenLoader.LoadError = errors.New("failed to load a UAA token")
+				worker.Deliver(&job)
+
+				Expect(job.RetryCount).To(Equal(1))
+			})
 		})
 
 		Context("when the StatusDelivered failed to be upserted to the database", func() {
@@ -146,10 +192,9 @@ var _ = Describe("DeliveryWorker", func() {
 				messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
 				worker.Deliver(&job)
 				Expect(buffer.String()).To(ContainSubstring(
-					fmt.Sprintf("Failed to upsert status '%s' of notification %s to %s. Error: %s",
+					fmt.Sprintf("Failed to upsert status '%s' of notification %s. Error: %s",
 						postal.StatusDelivered,
 						getMessageIDFromJob(job),
-						fakeUserEmail,
 						messagesRepo.UpsertError.Error(),
 					)))
 			})
@@ -161,7 +206,7 @@ var _ = Describe("DeliveryWorker", func() {
 			Expect(mailClient.Messages).To(ContainElement(mail.Message{
 				From:    "from@email.com",
 				ReplyTo: "thesender@example.com",
-				To:      "fake-user@example.com",
+				To:      fakeUserEmail,
 				Subject: "the subject",
 				Body: []mail.Part{
 					{
@@ -209,10 +254,9 @@ var _ = Describe("DeliveryWorker", func() {
 					It("logs the failure", func() {
 						messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
 						worker.Deliver(&job)
-						Expect(buffer.String()).To(ContainSubstring("Failed to upsert status '%s' of notification %s to %s. Error: %s",
+						Expect(buffer.String()).To(ContainSubstring("Failed to upsert status '%s' of notification %s. Error: %s",
 							postal.StatusFailed,
 							getMessageIDFromJob(job),
-							fakeUserEmail,
 							messagesRepo.UpsertError.Error()))
 					})
 				})
@@ -314,18 +358,19 @@ var _ = Describe("DeliveryWorker", func() {
 			})
 
 			It("logs that the user has unsubscribed from this notification", func() {
-				Expect(buffer.String()).To(ContainSubstring("Not delivering because fake-user@example.com has unsubscribed"))
+				Expect(buffer.String()).To(ContainSubstring("Not delivering because user-123@example.com has unsubscribed"))
 			})
 
 			It("does not send any non-critical notifications", func() {
-				Expect(len(mailClient.Messages)).To(Equal(0))
+				Expect(mailClient.Messages).To(HaveLen(0))
 			})
 		})
 
 		Context("when the recipient hasn't unsubscribed, but doesn't have a valid email address", func() {
 			Context("when the recipient has no emails", func() {
 				It("logs the error", func() {
-					delivery.User.Emails = []string{}
+					delivery.Email = ""
+					userLoader.Users["user-123"] = uaa.User{}
 					job = gobble.NewJob(delivery)
 
 					worker.Deliver(&job)
@@ -336,12 +381,12 @@ var _ = Describe("DeliveryWorker", func() {
 
 			Context("when the recipient's first email address is missing an @ symbol", func() {
 				It("logs the error", func() {
-					delivery.User.Emails = []string{"nope", "totally-valid-email@example.com"}
+					delivery.Email = "nope"
 					job = gobble.NewJob(delivery)
 
 					worker.Deliver(&job)
 
-					Expect(buffer.String()).To(ContainSubstring("Not delivering because recipient's 1st email address is invalid"))
+					Expect(buffer.String()).To(ContainSubstring("Not delivering because recipient's email address is invalid"))
 				})
 			})
 		})
@@ -360,7 +405,7 @@ var _ = Describe("DeliveryWorker", func() {
 
 			It("logs that the user has unsubscribed from this notification", func() {
 				worker.Deliver(&job)
-				Expect(buffer.String()).To(ContainSubstring("Not delivering because fake-user@example.com has unsubscribed"))
+				Expect(buffer.String()).To(ContainSubstring("Not delivering because user-123@example.com has unsubscribed"))
 			})
 
 			Context("and the notification is not registered", func() {
@@ -413,7 +458,7 @@ var _ = Describe("DeliveryWorker", func() {
 
 		Context("when the template contains syntax errors", func() {
 			BeforeEach(func() {
-				delivery.Templates = postal.Templates{
+				templateLoader.Templates = postal.Templates{
 					Text:    "This message is a test of the endorsement broadcast system. \n\n {{.Text}} \n\n ==Endorsement== \n {{.Endorsement} \n ==End Endorsement==",
 					HTML:    "<h3>This message is a test of the Endorsement Broadcast System</h3><p>{{.HTML}}</p><h3>Endorsement:</h3><p>{.Endorsement}</p>",
 					Subject: "Endorsement Test: {{.Subject}}",
@@ -427,9 +472,9 @@ var _ = Describe("DeliveryWorker", func() {
 				}).ToNot(Panic())
 			})
 
-			It("does not mark the job for retry later", func() {
+			It("marks the job for retry later", func() {
 				worker.Deliver(&job)
-				Expect(job.RetryCount).To(Equal(0))
+				Expect(job.RetryCount).To(Equal(1))
 			})
 
 			It("logs that the packer errored", func() {
@@ -450,7 +495,7 @@ var _ = Describe("DeliveryWorker", func() {
 				It("logs the failure", func() {
 					messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
 					worker.Deliver(&job)
-					Expect(buffer.String()).To(ContainSubstring("Failed to upsert status '%s' of notification %s (failed to pack). Error: %s",
+					Expect(buffer.String()).To(ContainSubstring("Failed to upsert status '%s' of notification %s. Error: %s",
 						postal.StatusFailed,
 						getMessageIDFromJob(job),
 						messagesRepo.UpsertError.Error()))
@@ -481,10 +526,9 @@ var _ = Describe("DeliveryWorker", func() {
 				messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
 				worker.Deliver(&job)
 				Expect(buffer.String()).To(ContainSubstring(
-					fmt.Sprintf("Failed to upsert status '%s' of notification %s to %s. Error: %s",
+					fmt.Sprintf("Failed to upsert status '%s' of notification %s. Error: %s",
 						postal.StatusDelivered,
 						getMessageIDFromJob(job),
-						fakeUserEmail,
 						messagesRepo.UpsertError.Error(),
 					)))
 			})
@@ -495,7 +539,7 @@ var _ = Describe("DeliveryWorker", func() {
 				Expect(mailClient.Messages).To(ContainElement(mail.Message{
 					From:    "from@email.com",
 					ReplyTo: "thesender@example.com",
-					To:      "fake-user@example.com",
+					To:      fakeUserEmail,
 					Subject: "the subject",
 					Body: []mail.Part{
 						{
@@ -512,12 +556,3 @@ var _ = Describe("DeliveryWorker", func() {
 		})
 	})
 })
-
-func getMessageIDFromJob(job gobble.Job) string {
-	var jobDelivery postal.Delivery
-	err := job.Unmarshal(&jobDelivery)
-	if err != nil {
-		panic(err)
-	}
-	return jobDelivery.MessageID
-}

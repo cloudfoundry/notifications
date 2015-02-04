@@ -1,13 +1,12 @@
-package utilities
+package postal
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 )
 
 type TemplatesLoaderInterface interface {
-	LoadTemplates(string, string) (postal.Templates, error)
+	LoadTemplates(string, string) (Templates, error)
 }
 
 type TemplatesLoader struct {
@@ -30,13 +29,13 @@ func NewTemplatesLoader(finder services.TemplateFinderInterface, database models
 	}
 }
 
-func (loader TemplatesLoader) LoadTemplates(clientID, kindID string) (postal.Templates, error) {
+func (loader TemplatesLoader) LoadTemplates(clientID, kindID string) (Templates, error) {
 	conn := loader.database.Connection()
 
 	if kindID != "" {
 		kind, err := loader.kindsRepo.Find(conn, kindID, clientID)
 		if err != nil {
-			return postal.Templates{}, err
+			return Templates{}, err
 		}
 
 		if kind.TemplateID != models.DefaultTemplateID {
@@ -46,19 +45,19 @@ func (loader TemplatesLoader) LoadTemplates(clientID, kindID string) (postal.Tem
 
 	client, err := loader.clientsRepo.Find(conn, clientID)
 	if err != nil {
-		return postal.Templates{}, err
+		return Templates{}, err
 	}
 
 	return loader.loadTemplate(conn, client.TemplateID)
 }
 
-func (loader TemplatesLoader) loadTemplate(conn models.ConnectionInterface, templateID string) (postal.Templates, error) {
+func (loader TemplatesLoader) loadTemplate(conn models.ConnectionInterface, templateID string) (Templates, error) {
 	template, err := loader.templatesRepo.FindByID(conn, templateID)
 	if err != nil {
-		return postal.Templates{}, err
+		return Templates{}, err
 	}
 
-	return postal.Templates{
+	return Templates{
 		Subject: template.Subject,
 		Text:    template.Text,
 		HTML:    template.HTML,

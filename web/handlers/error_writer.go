@@ -30,9 +30,9 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 		writer.write(w, http.StatusBadGateway, []string{err.Error()})
 	case utilities.CCNotFoundError:
 		writer.write(w, http.StatusNotFound, []string{err.Error()})
-	case utilities.UAADownError:
+	case postal.UAADownError:
 		writer.write(w, http.StatusBadGateway, []string{err.Error()})
-	case utilities.UAAGenericError:
+	case postal.UAAGenericError:
 		writer.write(w, http.StatusBadGateway, []string{err.Error()})
 	case postal.TemplateLoadError:
 		writer.write(w, http.StatusInternalServerError, []string{err.Error()})

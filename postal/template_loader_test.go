@@ -1,4 +1,4 @@
-package utilities_test
+package postal_test
 
 import (
 	"errors"
@@ -6,14 +6,13 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("TemplateLoader", func() {
-	var loader utilities.TemplatesLoader
+	var loader postal.TemplatesLoader
 	var finder *fakes.TemplateFinder
 	var clientsRepo *fakes.ClientsRepo
 	var kindsRepo *fakes.KindsRepo
@@ -28,7 +27,7 @@ var _ = Describe("TemplateLoader", func() {
 		templatesRepo = fakes.NewTemplatesRepo()
 		database = fakes.NewDatabase()
 		conn = database.Connection()
-		loader = utilities.NewTemplatesLoader(finder, database, clientsRepo, kindsRepo, templatesRepo)
+		loader = postal.NewTemplatesLoader(finder, database, clientsRepo, kindsRepo, templatesRepo)
 	})
 
 	Describe("LoadTemplates", func() {

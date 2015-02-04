@@ -18,7 +18,7 @@ func NewUsersService(config Config) *UsersService {
 	}
 }
 
-func (service *UsersService) Create(guid, token string) (User, error) {
+func (service UsersService) Create(guid, token string) (User, error) {
 	_, body, err := NewClient(service.config).makeRequest(requestArguments{
 		Method: "POST",
 		Path:   "/v2/users",
@@ -38,9 +38,25 @@ func (service *UsersService) Create(guid, token string) (User, error) {
 		panic(err)
 	}
 
-	return NewUserFromResponse(document), nil
+	return newUserFromResponse(service.config, document), nil
 }
 
 func (service UsersService) Get(guid, token string) (User, error) {
-	return FetchUser(service.config, "/v2/users/"+guid, token)
+	_, body, err := NewClient(service.config).makeRequest(requestArguments{
+		Method: "GET",
+		Path:   "/v2/users/" + guid,
+		Token:  token,
+		AcceptableStatusCodes: []int{http.StatusOK},
+	})
+	if err != nil {
+		return User{}, err
+	}
+
+	var response documents.UserResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		panic(err)
+	}
+
+	return newUserFromResponse(service.config, response), nil
 }

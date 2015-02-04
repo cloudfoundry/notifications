@@ -32,9 +32,8 @@ type MessageContext struct {
 	OrganizationRole  string
 }
 
-func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInterface) MessageContext {
+func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInterface, templates Templates) MessageContext {
 	options := delivery.Options
-	templates := delivery.Templates
 
 	var kindDescription string
 	if options.KindDescription == "" {
@@ -53,7 +52,7 @@ func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInte
 	messageContext := MessageContext{
 		From:              sender,
 		ReplyTo:           options.ReplyTo,
-		To:                delivery.User.Emails[0],
+		To:                delivery.Email,
 		Subject:           options.Subject,
 		Text:              options.Text,
 		HTML:              options.HTML.BodyContent,

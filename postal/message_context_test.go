@@ -4,7 +4,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -46,9 +45,9 @@ var _ = Describe("MessageContext", func() {
 
 		delivery = postal.Delivery{
 			Options:   options,
-			Templates: templates,
 			UserGUID:  "the-user",
 			ClientID:  "the-client-id",
+			Email:     email,
 			MessageID: "message-id",
 			Space: cf.CloudControllerSpace{
 				GUID: "my-lovely-guid",
@@ -57,9 +56,6 @@ var _ = Describe("MessageContext", func() {
 			Organization: cf.CloudControllerOrganization{
 				GUID: "my-super-lovely-guid",
 				Name: "the-org",
-			},
-			User: uaa.User{
-				Emails: []string{email},
 			},
 			Scope: "this.scope",
 		}
@@ -71,7 +67,7 @@ var _ = Describe("MessageContext", func() {
 
 	Describe("NewMessageContext", func() {
 		It("returns the appropriate MessageContext when all options are specified", func() {
-			context := postal.NewMessageContext(delivery, sender, cloak)
+			context := postal.NewMessageContext(delivery, sender, cloak, templates)
 
 			Expect(context.From).To(Equal(sender))
 			Expect(context.ReplyTo).To(Equal(options.ReplyTo))
@@ -101,21 +97,21 @@ var _ = Describe("MessageContext", func() {
 
 		It("falls back to Kind if KindDescription is missing", func() {
 			delivery.Options.KindDescription = ""
-			context := postal.NewMessageContext(delivery, sender, cloak)
+			context := postal.NewMessageContext(delivery, sender, cloak, templates)
 
 			Expect(context.KindDescription).To(Equal("the-kind-id"))
 		})
 
 		It("falls back to clientID when SourceDescription is missing", func() {
 			delivery.Options.SourceDescription = ""
-			context := postal.NewMessageContext(delivery, sender, cloak)
+			context := postal.NewMessageContext(delivery, sender, cloak, templates)
 
 			Expect(context.SourceDescription).To(Equal("the-client-id"))
 		})
 
 		It("fills in subject when subject is not specified", func() {
 			delivery.Options.Subject = ""
-			context := postal.NewMessageContext(delivery, sender, cloak)
+			context := postal.NewMessageContext(delivery, sender, cloak, templates)
 			Expect(context.Subject).To(Equal("[no subject]"))
 		})
 	})
@@ -143,7 +139,7 @@ var _ = Describe("MessageContext", func() {
 		})
 
 		It("html escapes various fields on the message context", func() {
-			context := postal.NewMessageContext(delivery, sender, cloak)
+			context := postal.NewMessageContext(delivery, sender, cloak, templates)
 			context.Escape()
 
 			Expect(context.From).To(Equal("no-reply@notifications.example.com"))

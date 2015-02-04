@@ -26,7 +26,7 @@ func NewUsersList(config Config, plan requestPlan) UsersList {
 	}
 }
 
-func NewUsersListFromResponse(config Config, plan requestPlan, response documents.UsersListResponse) UsersList {
+func newUsersListFromResponse(config Config, plan requestPlan, response documents.UsersListResponse) UsersList {
 	list := NewUsersList(config, plan)
 	list.TotalResults = response.TotalResults
 	list.TotalPages = response.TotalPages
@@ -35,22 +35,10 @@ func NewUsersListFromResponse(config Config, plan requestPlan, response document
 	list.Users = make([]User, 0)
 
 	for _, userResponse := range response.Resources {
-		list.Users = append(list.Users, NewUserFromResponse(userResponse))
+		list.Users = append(list.Users, newUserFromResponse(config, userResponse))
 	}
 
 	return list
-}
-
-func FetchUsersList(config Config, plan requestPlan, token string) (UsersList, error) {
-	list := NewUsersList(config, plan)
-
-	err := list.Fetch(token)
-	if err != nil {
-		return list, err
-	}
-
-	return list, nil
-
 }
 
 func (list UsersList) HasNextPage() bool {
@@ -67,7 +55,10 @@ func (list UsersList) Next(token string) (UsersList, error) {
 		return UsersList{}, err
 	}
 
-	return FetchUsersList(list.config, NewRequestPlan(nextURL.Path, nextURL.Query()), token)
+	nextList := NewUsersList(list.config, newRequestPlan(nextURL.Path, nextURL.Query()))
+	err = nextList.Fetch(token)
+
+	return nextList, err
 }
 
 func (list UsersList) Prev(token string) (UsersList, error) {
@@ -76,7 +67,10 @@ func (list UsersList) Prev(token string) (UsersList, error) {
 		return UsersList{}, err
 	}
 
-	return FetchUsersList(list.config, NewRequestPlan(prevURL.Path, prevURL.Query()), token)
+	prevList := NewUsersList(list.config, newRequestPlan(prevURL.Path, prevURL.Query()))
+	err = prevList.Fetch(token)
+
+	return prevList, err
 }
 
 func (list UsersList) AllUsers(token string) ([]User, error) {
@@ -85,7 +79,7 @@ func (list UsersList) AllUsers(token string) ([]User, error) {
 
 	for l.HasPrevPage() {
 		var err error
-		l, err = list.Prev(token)
+		l, err = l.Prev(token)
 		if err != nil {
 			return []User{}, err
 		}
@@ -97,7 +91,7 @@ func (list UsersList) AllUsers(token string) ([]User, error) {
 
 	for l.HasNextPage() {
 		var err error
-		l, err = list.Next(token)
+		l, err = l.Next(token)
 		if err != nil {
 			return []User{}, err
 		}
@@ -127,7 +121,7 @@ func (list UsersList) Create(user User, token string) (User, error) {
 		panic(err)
 	}
 
-	return NewUserFromResponse(document), nil
+	return newUserFromResponse(list.config, document), nil
 }
 
 func (list UsersList) Associate(userGUID, token string) error {
@@ -159,7 +153,7 @@ func (list *UsersList) Fetch(token string) error {
 		panic(err)
 	}
 
-	updatedList := NewUsersListFromResponse(list.config, list.plan, response)
+	updatedList := newUsersListFromResponse(list.config, list.plan, response)
 	list.TotalResults = updatedList.TotalResults
 	list.TotalPages = updatedList.TotalPages
 	list.NextURL = updatedList.NextURL

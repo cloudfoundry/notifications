@@ -11,8 +11,8 @@ func (fake *CloudController) GetSpaceDevelopers(w http.ResponseWriter, req *http
 	matches := r.FindStringSubmatch(req.URL.Path)
 
 	query := req.URL.Query()
-	pageNum := ParseInt(query.Get("page"), 1)
-	perPage := ParseInt(query.Get("results-per-page"), 10)
+	pageNum := parseInt(query.Get("page"), 1)
+	perPage := parseInt(query.Get("results-per-page"), 10)
 
 	space, ok := fake.Spaces.Get(matches[1])
 	if !ok {

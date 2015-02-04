@@ -27,40 +27,6 @@ var _ = Describe("UsersList", func() {
 		list = rainmaker.NewUsersList(config, rainmaker.NewRequestPlan(path, query))
 	})
 
-	Describe("FetchUsersList", func() {
-		BeforeEach(func() {
-			_, err := list.Create(rainmaker.User{GUID: "user-123"}, token)
-			if err != nil {
-				panic(err)
-			}
-
-			_, err = list.Create(rainmaker.User{GUID: "user-456"}, token)
-			if err != nil {
-				panic(err)
-			}
-		})
-
-		It("returns a UsersList object", func() {
-			var err error
-			list, err = rainmaker.FetchUsersList(config, rainmaker.NewRequestPlan(path, url.Values{}), token)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(list.TotalResults).To(Equal(2))
-			Expect(list.TotalPages).To(Equal(1))
-			Expect(list.PrevURL).To(Equal(""))
-			Expect(list.NextURL).To(Equal(""))
-
-			users := list.Users
-			Expect(users).To(HaveLen(2))
-
-			var userGUIDs []string
-			for _, user := range users {
-				userGUIDs = append(userGUIDs, user.GUID)
-			}
-			Expect(userGUIDs).To(ConsistOf([]string{"user-123", "user-456"}))
-		})
-	})
-
 	Describe("Create", func() {
 		It("adds a user to the list", func() {
 			user, err := list.Create(rainmaker.User{GUID: "user-123"}, token)

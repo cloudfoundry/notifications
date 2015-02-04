@@ -9,7 +9,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -38,35 +37,39 @@ var _ = Describe("Mailer", func() {
 
 	Describe("Deliver", func() {
 		It("returns the correct types of responses for users", func() {
-			users := map[string]uaa.User{
-				"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
-				"user-2": {},
-				"user-3": {ID: "user-3"},
-				"user-4": {ID: "user-4", Emails: []string{"user-4"}},
-			}
-			responses := mailer.Deliver(conn, postal.Templates{}, users, postal.Options{KindID: "the-kind"}, space, org, "the-client", "my.scope")
+			users := []strategies.User{{GUID: "user-1"}, {Email: "user-2@example.com"}, {GUID: "user-3"}, {GUID: "user-4"}}
+			responses := mailer.Deliver(conn, users, postal.Options{KindID: "the-kind"}, space, org, "the-client", "my.scope")
 
-			Expect(len(responses)).To(Equal(4))
-
-			guidsSeen := map[string]string{}
-
-			for _, r := range responses {
-				Expect(r.Status).To(Equal("queued"))
-				Expect(users).To(HaveKey(r.Recipient))
-				Expect(guidsSeen).NotTo(HaveKey(r.NotificationID))
-				guidsSeen[r.NotificationID] = r.NotificationID
-			}
+			Expect(responses).To(HaveLen(4))
+			Expect(responses).To(ConsistOf([]strategies.Response{
+				{
+					Status:         "queued",
+					Recipient:      "user-1",
+					NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
+				},
+				{
+					Status:         "queued",
+					Recipient:      "user-2@example.com",
+					NotificationID: "deadbeef-aabb-ccdd-eeff-001122334456",
+				},
+				{
+					Status:         "queued",
+					Recipient:      "user-3",
+					NotificationID: "deadbeef-aabb-ccdd-eeff-001122334457",
+				},
+				{
+					Status:         "queued",
+					Recipient:      "user-4",
+					NotificationID: "deadbeef-aabb-ccdd-eeff-001122334458",
+				},
+			}))
 		})
 
 		It("enqueues jobs with the deliveries", func() {
-			users := map[string]uaa.User{
-				"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
-				"user-2": {},
-				"user-3": {ID: "user-3"},
-				"user-4": {ID: "user-4", Emails: []string{"user-4"}},
-			}
-			mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
+			users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
+			mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope")
 
+			var deliveries []postal.Delivery
 			for _ = range users {
 				job := <-queue.Reserve("me")
 				var delivery postal.Delivery
@@ -74,39 +77,55 @@ var _ = Describe("Mailer", func() {
 				if err != nil {
 					panic(err)
 				}
+				deliveries = append(deliveries, delivery)
+			}
 
-				user := users[delivery.UserGUID]
-				Expect(delivery).To(Equal(postal.Delivery{
-					User: user,
-					Options: postal.Options{
-						ReplyTo:           "",
-						Subject:           "",
-						KindDescription:   "",
-						SourceDescription: "",
-						Text:              "",
-						HTML:              postal.HTML{},
-						KindID:            "",
-					},
-					UserGUID:     delivery.UserGUID,
+			Expect(deliveries).To(HaveLen(4))
+			Expect(deliveries).To(ConsistOf([]postal.Delivery{
+				{
+					Options:      postal.Options{},
+					UserGUID:     "user-1",
 					Space:        space,
 					Organization: org,
 					ClientID:     "the-client",
-					Templates:    postal.Templates{Subject: "", Text: "", HTML: ""},
-					MessageID:    delivery.MessageID,
+					MessageID:    "deadbeef-aabb-ccdd-eeff-001122334455",
 					Scope:        "my.scope",
-				}))
-			}
+				},
+				{
+					Options:      postal.Options{},
+					UserGUID:     "user-2",
+					Space:        space,
+					Organization: org,
+					ClientID:     "the-client",
+					MessageID:    "deadbeef-aabb-ccdd-eeff-001122334456",
+					Scope:        "my.scope",
+				},
+				{
+					Options:      postal.Options{},
+					UserGUID:     "user-3",
+					Space:        space,
+					Organization: org,
+					ClientID:     "the-client",
+					MessageID:    "deadbeef-aabb-ccdd-eeff-001122334457",
+					Scope:        "my.scope",
+				},
+				{
+					Options:      postal.Options{},
+					UserGUID:     "user-4",
+					Space:        space,
+					Organization: org,
+					ClientID:     "the-client",
+					MessageID:    "deadbeef-aabb-ccdd-eeff-001122334458",
+					Scope:        "my.scope",
+				},
+			}))
 		})
 
 		It("Upserts a StatusQueued for each of the jobs", func() {
-			users := map[string]uaa.User{
-				"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
-				"user-2": {},
-				"user-3": {ID: "user-3"},
-				"user-4": {ID: "user-4", Emails: []string{"user-4"}},
-			}
-			mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
+			users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
+			mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope")
 
+			var statuses []string
 			for _ = range users {
 				job := <-queue.Reserve("me")
 				var delivery postal.Delivery
@@ -116,21 +135,21 @@ var _ = Describe("Mailer", func() {
 				}
 
 				message, err := messagesRepo.FindByID(conn, delivery.MessageID)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(message.Status).To(Equal(postal.StatusQueued))
+				if err != nil {
+					panic(err)
+				}
+
+				statuses = append(statuses, message.Status)
 			}
 
+			Expect(statuses).To(HaveLen(4))
+			Expect(statuses).To(ConsistOf([]string{postal.StatusQueued, postal.StatusQueued, postal.StatusQueued, postal.StatusQueued}))
 		})
 
 		Context("using a transaction", func() {
 			It("commits the transaction when everything goes well", func() {
-				users := map[string]uaa.User{
-					"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
-					"user-2": {},
-					"user-3": {ID: "user-3"},
-					"user-4": {ID: "user-4", Emails: []string{"user-4"}},
-				}
-				responses := mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
+				users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
+				responses := mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope")
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())
@@ -140,11 +159,8 @@ var _ = Describe("Mailer", func() {
 
 			It("rolls back the transaction when there is an error in queueing", func() {
 				queue.EnqueueError = errors.New("BOOM!")
-
-				users := map[string]uaa.User{
-					"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
-				}
-				mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
+				users := []strategies.User{{GUID: "user-1"}}
+				mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope")
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeFalse())
@@ -153,11 +169,8 @@ var _ = Describe("Mailer", func() {
 
 			It("rolls back the transaction when there is an error in message repo upserting", func() {
 				messagesRepo.UpsertError = errors.New("BOOM!")
-
-				users := map[string]uaa.User{
-					"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
-				}
-				mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
+				users := []strategies.User{{GUID: "user-1"}}
+				mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope")
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeFalse())
@@ -166,20 +179,14 @@ var _ = Describe("Mailer", func() {
 
 			It("returns an empty []Response{} if transaction fails", func() {
 				conn.CommitError = "the commit blew up"
-				users := map[string]uaa.User{
-					"user-1": {ID: "user-1", Emails: []string{"user-1@example.com"}},
-					"user-2": {},
-					"user-3": {ID: "user-3"},
-					"user-4": {ID: "user-4", Emails: []string{"user-4"}},
-				}
-				responses := mailer.Deliver(conn, postal.Templates{}, users, postal.Options{}, space, org, "the-client", "my.scope")
+				users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
+				responses := mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope")
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())
 				Expect(conn.RollbackWasCalled).To(BeFalse())
 				Expect(responses).To(Equal([]strategies.Response{}))
 			})
-
 		})
 	})
 })

@@ -42,7 +42,7 @@ func (org Organization) MarshalJSON() ([]byte, error) {
 			"billing_enabled":             org.BillingEnabled,
 			"quota_definition_guid":       org.QuotaDefinitionGUID,
 			"status":                      org.Status,
-			"quota_definition_url":        "/v2/quota_definitions/" + org.QuotaDefinitionGUID,
+			"quota_definition_url":        org.QuotaDefinitionURL(),
 			"spaces_url":                  "/v2/organizations/" + org.GUID + "/spaces",
 			"domains_url":                 "/v2/organizations/" + org.GUID + "/domains",
 			"private_domains_url":         "/v2/organizations/" + org.GUID + "/private_domains",
@@ -54,4 +54,12 @@ func (org Organization) MarshalJSON() ([]byte, error) {
 			"space_quota_definitions_url": "/v2/organizations/" + org.GUID + "/space_quota_definitions",
 		},
 	})
+}
+
+func (org Organization) QuotaDefinitionURL() string {
+	if org.QuotaDefinitionGUID == "" {
+		return ""
+	}
+
+	return "/v2/quota_definitions/" + org.QuotaDefinitionGUID
 }

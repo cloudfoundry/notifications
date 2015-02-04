@@ -1,4 +1,4 @@
-package utilities
+package postal
 
 import (
 	"sync"
@@ -8,18 +8,23 @@ import (
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
+type uaaTokenInterface interface {
+	uaa.SetTokenInterface
+	uaa.GetClientTokenInterface
+}
+
 var token uaa.Token
 var mutex sync.Mutex
 
 type TokenLoader struct {
-	uaaClient UAAInterface
+	uaaClient uaaTokenInterface
 }
 
 type TokenLoaderInterface interface {
 	Load() (string, error)
 }
 
-func NewTokenLoader(uaaClient UAAInterface) TokenLoader {
+func NewTokenLoader(uaaClient uaaTokenInterface) TokenLoader {
 	return TokenLoader{
 		uaaClient: uaaClient,
 	}

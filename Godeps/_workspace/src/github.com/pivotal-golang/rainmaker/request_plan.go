@@ -7,7 +7,7 @@ type requestPlan struct {
 	Query url.Values
 }
 
-func NewRequestPlan(path string, query url.Values) requestPlan {
+func newRequestPlan(path string, query url.Values) requestPlan {
 	return requestPlan{
 		Path:  path,
 		Query: query,

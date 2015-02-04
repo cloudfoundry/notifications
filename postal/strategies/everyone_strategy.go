@@ -10,50 +10,40 @@ import (
 const EveryoneEndorsement = "This message was sent to everyone."
 
 type EveryoneStrategy struct {
-	tokenLoader     utilities.TokenLoaderInterface
-	allUsers        utilities.AllUsersInterface
-	templatesLoader utilities.TemplatesLoaderInterface
-	mailer          MailerInterface
-	receiptsRepo    models.ReceiptsRepoInterface
+	tokenLoader postal.TokenLoaderInterface
+	allUsers    utilities.AllUsersInterface
+	mailer      MailerInterface
 }
 
-func NewEveryoneStrategy(tokenLoader utilities.TokenLoaderInterface, allUsers utilities.AllUsersInterface, templatesLoader utilities.TemplatesLoaderInterface, mailer MailerInterface,
-	receiptsRepo models.ReceiptsRepoInterface) EveryoneStrategy {
+func NewEveryoneStrategy(tokenLoader postal.TokenLoaderInterface, allUsers utilities.AllUsersInterface, mailer MailerInterface) EveryoneStrategy {
 	return EveryoneStrategy{
-		tokenLoader:     tokenLoader,
-		allUsers:        allUsers,
-		templatesLoader: templatesLoader,
-		mailer:          mailer,
-		receiptsRepo:    receiptsRepo,
+		tokenLoader: tokenLoader,
+		allUsers:    allUsers,
+		mailer:      mailer,
 	}
 }
 
 func (strategy EveryoneStrategy) Dispatch(clientID, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
 	responses := []Response{}
+	options.Endorsement = EveryoneEndorsement
 
 	_, err := strategy.tokenLoader.Load()
 	if err != nil {
 		return responses, err
 	}
 
-	userEmails, userGUIDs, err := strategy.allUsers.AllUserEmailsAndGUIDs()
+	// split this up so that it only loads user guids
+	userGUIDs, err := strategy.allUsers.AllUserGUIDs()
 	if err != nil {
 		return responses, err
 	}
 
-	templates, err := strategy.templatesLoader.LoadTemplates(clientID, options.KindID)
-	if err != nil {
-		return responses, postal.TemplateLoadError("An email template could not be loaded. Error: " + err.Error())
+	var users []User
+	for _, guid := range userGUIDs {
+		users = append(users, User{GUID: guid})
 	}
 
-	err = strategy.receiptsRepo.CreateReceipts(conn, userGUIDs, clientID, options.KindID)
-	if err != nil {
-		return responses, err
-	}
-
-	options.Endorsement = EveryoneEndorsement
-
-	responses = strategy.mailer.Deliver(conn, templates, userEmails, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "")
+	responses = strategy.mailer.Deliver(conn, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "")
 
 	return responses, nil
 }

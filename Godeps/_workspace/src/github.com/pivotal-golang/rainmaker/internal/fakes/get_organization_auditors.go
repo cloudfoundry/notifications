@@ -11,8 +11,8 @@ func (fake *CloudController) GetOrganizationAuditors(w http.ResponseWriter, req 
 	matches := r.FindStringSubmatch(req.URL.Path)
 
 	query := req.URL.Query()
-	pageNum := ParseInt(query.Get("page"), 1)
-	perPage := ParseInt(query.Get("results-per-page"), 10)
+	pageNum := parseInt(query.Get("page"), 1)
+	perPage := parseInt(query.Get("results-per-page"), 10)
 
 	org, ok := fake.Organizations.Get(matches[1])
 	if !ok {

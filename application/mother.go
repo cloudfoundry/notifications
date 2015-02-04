@@ -10,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -48,17 +49,7 @@ func (mother *Mother) Queue() gobble.QueueInterface {
 }
 
 func (mother Mother) UserStrategy() strategies.UserStrategy {
-	env := NewEnvironment()
-	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
-	uaaClient.VerifySSL = env.VerifySSL
-
-	tokenLoader := utilities.NewTokenLoader(&uaaClient)
-	userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
-	templatesLoader := mother.TemplatesLoader()
-	mailer := mother.Mailer()
-	receiptsRepo := models.NewReceiptsRepo()
-
-	return strategies.NewUserStrategy(tokenLoader, userLoader, templatesLoader, mailer, receiptsRepo)
+	return strategies.NewUserStrategy(mother.Mailer())
 }
 
 func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
@@ -67,16 +58,13 @@ func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
 	uaaClient.VerifySSL = env.VerifySSL
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-	tokenLoader := utilities.NewTokenLoader(&uaaClient)
-	userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
+	tokenLoader := postal.NewTokenLoader(&uaaClient)
 	spaceLoader := utilities.NewSpaceLoader(cloudController)
 	organizationLoader := utilities.NewOrganizationLoader(cloudController)
-	templatesLoader := mother.TemplatesLoader()
 	mailer := mother.Mailer()
-	receiptsRepo := models.NewReceiptsRepo()
 	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, &uaaClient)
 
-	return strategies.NewSpaceStrategy(tokenLoader, userLoader, spaceLoader, organizationLoader, findsUserGUIDs, templatesLoader, mailer, receiptsRepo)
+	return strategies.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, mailer)
 }
 
 func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
@@ -85,29 +73,23 @@ func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
 	uaaClient.VerifySSL = env.VerifySSL
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-	tokenLoader := utilities.NewTokenLoader(&uaaClient)
-	userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
+	tokenLoader := postal.NewTokenLoader(&uaaClient)
 	organizationLoader := utilities.NewOrganizationLoader(cloudController)
 	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, &uaaClient)
-	templatesLoader := mother.TemplatesLoader()
 	mailer := mother.Mailer()
-	receiptsRepo := models.NewReceiptsRepo()
 
-	return strategies.NewOrganizationStrategy(tokenLoader, userLoader, organizationLoader, findsUserGUIDs, templatesLoader, mailer, receiptsRepo)
+	return strategies.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, mailer)
 }
 
 func (mother Mother) EveryoneStrategy() strategies.EveryoneStrategy {
 	env := NewEnvironment()
 	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
 	uaaClient.VerifySSL = env.VerifySSL
-	tokenLoader := utilities.NewTokenLoader(&uaaClient)
+	tokenLoader := postal.NewTokenLoader(&uaaClient)
 	allUsers := utilities.NewAllUsers(&uaaClient)
-
-	templatesLoader := mother.TemplatesLoader()
 	mailer := mother.Mailer()
-	receiptsRepo := models.NewReceiptsRepo()
 
-	return strategies.NewEveryoneStrategy(tokenLoader, allUsers, templatesLoader, mailer, receiptsRepo)
+	return strategies.NewEveryoneStrategy(tokenLoader, allUsers, mailer)
 }
 
 func (mother Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
@@ -116,18 +98,15 @@ func (mother Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
 	uaaClient.VerifySSL = env.VerifySSL
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-	tokenLoader := utilities.NewTokenLoader(&uaaClient)
-	userLoader := utilities.NewUserLoader(&uaaClient, mother.Logger())
+	tokenLoader := postal.NewTokenLoader(&uaaClient)
 	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, &uaaClient)
-	templatesLoader := mother.TemplatesLoader()
-	receiptsRepo := models.NewReceiptsRepo()
 	mailer := mother.Mailer()
 
-	return strategies.NewUAAScopeStrategy(tokenLoader, userLoader, findsUserGUIDs, templatesLoader, mailer, receiptsRepo)
+	return strategies.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, mailer)
 }
 
 func (mother Mother) EmailStrategy() strategies.EmailStrategy {
-	return strategies.NewEmailStrategy(mother.Mailer(), mother.TemplatesLoader())
+	return strategies.NewEmailStrategy(mother.Mailer())
 }
 
 func (mother Mother) NotificationsFinder() services.NotificationsFinder {
@@ -143,12 +122,29 @@ func (mother Mother) Mailer() strategies.Mailer {
 	return strategies.NewMailer(mother.Queue(), uuid.NewV4, mother.MessagesRepo())
 }
 
-func (mother Mother) TemplatesLoader() utilities.TemplatesLoader {
+func (mother Mother) TemplatesLoader() postal.TemplatesLoader {
 	finder := mother.TemplateFinder()
 	database := mother.Database()
 	clientsRepo, kindsRepo := mother.Repos()
 	templatesRepo := mother.TemplatesRepo()
-	return utilities.NewTemplatesLoader(finder, database, clientsRepo, kindsRepo, templatesRepo)
+
+	return postal.NewTemplatesLoader(finder, database, clientsRepo, kindsRepo, templatesRepo)
+}
+
+func (mother Mother) UserLoader() postal.UserLoader {
+	env := NewEnvironment()
+	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
+	uaaClient.VerifySSL = env.VerifySSL
+
+	return postal.NewUserLoader(&uaaClient)
+}
+
+func (mother Mother) TokenLoader() postal.TokenLoader {
+	env := NewEnvironment()
+	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
+	uaaClient.VerifySSL = env.VerifySSL
+
+	return postal.NewTokenLoader(&uaaClient)
 }
 
 func (mother Mother) MailClient() *mail.Client {
@@ -268,6 +264,10 @@ func (mother Mother) TemplatesRepo() models.TemplatesRepo {
 
 func (mother Mother) MessagesRepo() models.MessagesRepo {
 	return models.NewMessagesRepo()
+}
+
+func (mother Mother) ReceiptsRepo() models.ReceiptsRepo {
+	return models.NewReceiptsRepo()
 }
 
 func (mother Mother) CORS() middleware.CORS {

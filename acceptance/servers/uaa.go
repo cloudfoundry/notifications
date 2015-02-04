@@ -204,7 +204,7 @@ var UAAUsersByScope = map[string]interface{}{
 	},
 }
 
-var UAAUsers = map[string]interface{}{
+var UAAUsers = map[string]map[string]interface{}{
 	"user-111": map[string]interface{}{
 		"id": "user-111",
 		"meta": map[string]interface{}{
@@ -335,10 +335,7 @@ var UAAUsers = map[string]interface{}{
 		"origin":    "uaa",
 		"schemas":   []string{"urn:scim:schemas:core:1.0"},
 	},
-}
-
-var allUsersResponse = []map[string]interface{}{
-	map[string]interface{}{
+	"091b6583-0933-4d17-a5b6-66e54666c88e": map[string]interface{}{
 		"id": "091b6583-0933-4d17-a5b6-66e54666c88e",
 		"meta": map[string]interface{}{
 			"version":      6,
@@ -365,7 +362,7 @@ var allUsersResponse = []map[string]interface{}{
 		"verified":  false,
 		"schemas":   []string{"urn:scim:schemas:core:1.0"},
 	},
-	map[string]interface{}{
+	"943e6076-b1a5-4404-811b-a1ee9253bf56": map[string]interface{}{
 		"id": "943e6076-b1a5-4404-811b-a1ee9253bf56",
 		"meta": map[string]interface{}{
 			"version":      6,
@@ -392,4 +389,9 @@ var allUsersResponse = []map[string]interface{}{
 		"verified":  false,
 		"schemas":   []string{"urn:scim:schemas:core:1.0"},
 	},
+}
+
+var allUsersResponse = []map[string]interface{}{
+	UAAUsers["091b6583-0933-4d17-a5b6-66e54666c88e"],
+	UAAUsers["943e6076-b1a5-4404-811b-a1ee9253bf56"],
 }

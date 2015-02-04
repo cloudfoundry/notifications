@@ -44,12 +44,12 @@ func (client Client) makeRequest(requestArgs requestArguments) (int, []byte, err
 
 	jsonBody, err := json.Marshal(requestArgs.Body)
 	if err != nil {
-		return 0, []byte{}, NewRequestBodyMarshalError(err)
+		return 0, []byte{}, newRequestBodyMarshalError(err)
 	}
 
 	requestURL, err := url.Parse(client.Config.Host)
 	if err != nil {
-		return 0, []byte{}, NewRequestConfigurationError(err)
+		return 0, []byte{}, newRequestConfigurationError(err)
 	}
 
 	requestURL.Path = requestArgs.Path
@@ -57,7 +57,7 @@ func (client Client) makeRequest(requestArgs requestArguments) (int, []byte, err
 
 	request, err := http.NewRequest(requestArgs.Method, requestURL.String(), bytes.NewBuffer(jsonBody))
 	if err != nil {
-		return 0, []byte{}, NewRequestConfigurationError(err)
+		return 0, []byte{}, newRequestConfigurationError(err)
 	}
 
 	request.Header.Set("Authorization", "Bearer "+requestArgs.Token)
@@ -67,22 +67,22 @@ func (client Client) makeRequest(requestArgs requestArguments) (int, []byte, err
 	networkClient := network.GetClient(network.Config{SkipVerifySSL: client.Config.SkipVerifySSL})
 	response, err := networkClient.Do(request)
 	if err != nil {
-		return 0, []byte{}, NewRequestHTTPError(err)
+		return 0, []byte{}, newRequestHTTPError(err)
 	}
 
 	responseBody, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return 0, []byte{}, NewResponseReadError(err)
+		return 0, []byte{}, newResponseReadError(err)
 	}
 
 	client.printResponse(response.StatusCode, responseBody)
 
 	if response.StatusCode == 404 {
-		return 0, []byte{}, NewNotFoundError(responseBody)
+		return 0, []byte{}, newNotFoundError(responseBody)
 	}
 
 	if response.StatusCode == 401 {
-		return 0, []byte{}, NewUnauthorizedError(responseBody)
+		return 0, []byte{}, newUnauthorizedError(responseBody)
 	}
 
 	for _, acceptableCode := range requestArgs.AcceptableStatusCodes {
@@ -91,7 +91,7 @@ func (client Client) makeRequest(requestArgs requestArguments) (int, []byte, err
 		}
 	}
 
-	return response.StatusCode, responseBody, NewUnexpectedStatusError(response.StatusCode, responseBody)
+	return response.StatusCode, responseBody, newUnexpectedStatusError(response.StatusCode, responseBody)
 }
 
 func (client Client) printRequest(request *http.Request) {
@@ -109,7 +109,7 @@ func (client Client) printResponse(status int, body []byte) {
 func (client Client) unmarshal(body []byte, response interface{}) error {
 	err := json.Unmarshal(body, response)
 	if err != nil {
-		return NewResponseBodyUnmarshalError(err)
+		return newResponseBodyUnmarshalError(err)
 	}
 	return nil
 }

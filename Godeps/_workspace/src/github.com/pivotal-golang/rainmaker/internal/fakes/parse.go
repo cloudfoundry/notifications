@@ -1,8 +1,8 @@
-package rainmaker
+package fakes
 
 import "strconv"
 
-func ParseInt(value string, defaultValue int) int {
+func parseInt(value string, defaultValue int) int {
 	if value == "" {
 		return defaultValue
 	}

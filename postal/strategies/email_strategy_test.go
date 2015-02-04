@@ -5,7 +5,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,19 +13,16 @@ import (
 var _ = Describe("EmailStrategy", func() {
 	var emailStrategy strategies.EmailStrategy
 
-	Describe("DispatchMail", func() {
-		var fakeMailer *fakes.Mailer
+	Describe("Dispatch", func() {
+		var mailer *fakes.Mailer
 		var conn *fakes.DBConn
 		var options postal.Options
 		var clientID string
 		var emailID string
-		var templatesLoader fakes.TemplatesLoader
-		var scope string
 
 		BeforeEach(func() {
-			fakeMailer = fakes.NewMailer()
-			templatesLoader = fakes.TemplatesLoader{}
-			emailStrategy = strategies.NewEmailStrategy(fakeMailer, &templatesLoader)
+			mailer = fakes.NewMailer()
+			emailStrategy = strategies.NewEmailStrategy(mailer)
 
 			clientID = "raptors-123"
 			emailID = ""
@@ -37,34 +33,24 @@ var _ = Describe("EmailStrategy", func() {
 			}
 
 			conn = fakes.NewDBConn()
-
-			templatesLoader.Templates = postal.Templates{
-				Name:    "The Name",
-				Subject: "the subject",
-				Text:    "the text",
-				HTML:    "email template",
-			}
 		})
 
 		It("Calls Deliver on it's mailer with proper arguments", func() {
 			Expect(options.Endorsement).To(BeEmpty())
 
 			emailStrategy.Dispatch(clientID, emailID, options, conn)
-
-			users := map[string]uaa.User{options.To: uaa.User{Emails: []string{options.To}}}
-
-			Expect(len(fakeMailer.DeliverArguments)).To(Equal(8))
-
 			options.Endorsement = strategies.EmailEndorsement
 
-			Expect(fakeMailer.DeliverArguments).To(ContainElement(conn))
-			Expect(fakeMailer.DeliverArguments).To(ContainElement(templatesLoader.Templates))
-			Expect(fakeMailer.DeliverArguments).To(ContainElement(users))
-			Expect(fakeMailer.DeliverArguments).To(ContainElement(options))
-			Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerSpace{}))
-			Expect(fakeMailer.DeliverArguments).To(ContainElement(cf.CloudControllerOrganization{}))
-			Expect(fakeMailer.DeliverArguments).To(ContainElement(clientID))
-			Expect(fakeMailer.DeliverArguments).To(ContainElement(scope))
+			users := []strategies.User{{Email: options.To}}
+			Expect(mailer.DeliverArguments).To(Equal(map[string]interface{}{
+				"connection": conn,
+				"users":      users,
+				"options":    options,
+				"space":      cf.CloudControllerSpace{},
+				"org":        cf.CloudControllerOrganization{},
+				"client":     clientID,
+				"scope":      "",
+			}))
 		})
 	})
 })

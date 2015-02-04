@@ -1,8 +1,9 @@
 package fakes
 
 type TokenLoader struct {
-	Token     string
-	LoadError error
+	Token         string
+	LoadError     error
+	LoadWasCalled bool
 }
 
 func NewTokenLoader() *TokenLoader {
@@ -10,5 +11,6 @@ func NewTokenLoader() *TokenLoader {
 }
 
 func (fake *TokenLoader) Load() (string, error) {
+	fake.LoadWasCalled = true
 	return fake.Token, fake.LoadError
 }

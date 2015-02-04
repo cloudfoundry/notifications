@@ -79,7 +79,8 @@ var _ = Describe("Client", func() {
 				requestArgs := rainmaker.NewRequestArguments("GET", "/path", "token", nil, []int{http.StatusOK})
 				_, _, err := client.MakeRequest(requestArgs)
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(rainmaker.NewUnexpectedStatusError(http.StatusTeapot, []byte(`I'm a little teapot`))))
+				Expect(err).To(BeAssignableToTypeOf(rainmaker.UnexpectedStatusError{}))
+				Expect(err).To(MatchError("Rainmaker UnexpectedStatusError: 418 I'm a little teapot"))
 
 				fakeServer.Close()
 			})

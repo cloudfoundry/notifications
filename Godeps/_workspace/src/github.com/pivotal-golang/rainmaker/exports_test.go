@@ -1,5 +1,11 @@
 package rainmaker
 
+import (
+	"net/url"
+
+	"github.com/pivotal-golang/rainmaker/internal/documents"
+)
+
 func NewRequestArguments(method, path, token string, body interface{}, statusCodes []int) requestArguments {
 	return requestArguments{
 		Method: method,
@@ -16,4 +22,16 @@ func (client Client) MakeRequest(requestArgs requestArguments) (int, []byte, err
 
 func (client Client) Unmarshal(body []byte, response interface{}) error {
 	return client.unmarshal(body, response)
+}
+
+func NewRequestPlan(path string, query url.Values) requestPlan {
+	return newRequestPlan(path, query)
+}
+
+func NewOrganizationFromResponse(config Config, document documents.OrganizationResponse) Organization {
+	return newOrganizationFromResponse(config, document)
+}
+
+func NewSpaceFromResponse(config Config, document documents.SpaceResponse) Space {
+	return newSpaceFromResponse(config, document)
 }
