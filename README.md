@@ -59,7 +59,7 @@ If you are unfamiliar with UAA consult the [UAA token overview](https://github.c
 | GOBBLE_MIGRATIONS_DIR\*      | Location of the gobble migrations directory | \<none\> |
 | PORT                         | Port that application will bind to          | 3000     |
 | ROOT_PATH\*                  | Root path of your application               | \<none\> |
-| SMTP_AUTH_MECHANISM\*        | SMTP Authentication (none, plain, cram-md5) | \<none\> |
+| SMTP_AUTH_MECHANISM\*        | SMTP Authentication (none, plain, cram-md5). Most users will want to use `plain`. | \<none\> |
 | SMTP_CRAMMD5_SECRET          | Secret value used for CRAMMD5 SMTP auth     | \<none\> |
 | SMTP_LOGGING_ENABLED         | Logs SMTP interactions when set to true     | \<none\> |
 | SMTP_HOST\*                  | SMTP Host                                   | \<none\> |
