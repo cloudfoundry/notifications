@@ -19,7 +19,7 @@ var _ = Describe("Send a notification to a user", func() {
 		env := application.NewEnvironment()
 		clientID := "notifications-sender"
 		clientToken := GetClientTokenFor(clientID)
-		client := support.NewClient(Servers.Notifications)
+		client := support.NewClient(Servers.Notifications.URL())
 		userID := "user-123"
 
 		By("registering a notification", func() {

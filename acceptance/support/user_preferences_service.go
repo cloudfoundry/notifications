@@ -52,7 +52,7 @@ type UserPreferencesService struct {
 func (service UserPreferencesService) Get(token string) (int, Preferences, error) {
 	var response PreferenceDocument
 
-	status, responseBody, err := service.client.makeRequest("GET", service.client.server.SpecificUserPreferencesPath(service.userGUID), nil, token)
+	status, responseBody, err := service.client.makeRequest("GET", service.client.SpecificUserPreferencesPath(service.userGUID), nil, token)
 	if err != nil {
 		return 0, response.Preferences(), err
 	}
@@ -79,7 +79,7 @@ func (service UserPreferencesService) Unsubscribe(token, clientID, notificationI
 		return 0, err
 	}
 
-	status, _, err := service.client.makeRequest("PATCH", service.client.server.SpecificUserPreferencesPath(service.userGUID), bytes.NewBuffer(body), token)
+	status, _, err := service.client.makeRequest("PATCH", service.client.SpecificUserPreferencesPath(service.userGUID), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}
@@ -95,7 +95,7 @@ func (service UserPreferencesService) GlobalUnsubscribe(token string) (int, erro
 		return 0, err
 	}
 
-	status, _, err := service.client.makeRequest("PATCH", service.client.server.SpecificUserPreferencesPath(service.userGUID), bytes.NewBuffer(body), token)
+	status, _, err := service.client.makeRequest("PATCH", service.client.SpecificUserPreferencesPath(service.userGUID), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}
@@ -111,7 +111,7 @@ func (service UserPreferencesService) GlobalSubscribe(token string) (int, error)
 		return 0, err
 	}
 
-	status, _, err := service.client.makeRequest("PATCH", service.client.server.SpecificUserPreferencesPath(service.userGUID), bytes.NewBuffer(body), token)
+	status, _, err := service.client.makeRequest("PATCH", service.client.SpecificUserPreferencesPath(service.userGUID), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}

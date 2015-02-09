@@ -19,7 +19,7 @@ var _ = Describe("Default Template", func() {
 
 	BeforeEach(func() {
 		clientToken = GetClientTokenFor("notifications-admin")
-		client = support.NewClient(Servers.Notifications)
+		client = support.NewClient(Servers.Notifications.URL())
 	})
 
 	It("can retrieve the default template", func() {

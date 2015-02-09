@@ -17,7 +17,7 @@ var _ = Describe("Sending notifications to users with certain scopes", func() {
 		var templateID string
 		indexedResponses := map[string]support.NotifyResponse{}
 
-		client := support.NewClient(Servers.Notifications)
+		client := support.NewClient(Servers.Notifications.URL())
 		clientID := "notifications-sender"
 		clientToken := GetClientTokenFor(clientID)
 		scope := "this.scope"

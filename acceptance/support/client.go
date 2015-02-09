@@ -7,12 +7,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-
-	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 )
 
 type Client struct {
-	server        servers.Notifications
+	host          string
 	trace         bool
 	Notifications *NotificationsService
 	Templates     *TemplatesService
@@ -21,10 +19,10 @@ type Client struct {
 	Messages      *MessagesService
 }
 
-func NewClient(server servers.Notifications) *Client {
+func NewClient(host string) *Client {
 	client := &Client{
-		server: server,
-		trace:  os.Getenv("TRACE") != "",
+		host:  host,
+		trace: os.Getenv("TRACE") != "",
 	}
 	client.Notifications = &NotificationsService{
 		client: client,
@@ -98,4 +96,72 @@ func (c Client) printResponse(response *http.Response) {
 
 		fmt.Printf("[RES] %s %s\n", response.Status, buffer.String())
 	}
+}
+
+func (c Client) SpacesPath(space string) string {
+	return c.host + "/spaces/" + space
+}
+
+func (c Client) OrganizationsPath(organization string) string {
+	return c.host + "/organizations/" + organization
+}
+
+func (c Client) EveryonePath() string {
+	return c.host + "/everyone"
+}
+
+func (c Client) ScopesPath(scope string) string {
+	return c.host + "/uaa_scopes/" + scope
+}
+
+func (c Client) UsersPath(user string) string {
+	return c.host + "/users/" + user
+}
+
+func (c Client) EmailPath() string {
+	return c.host + "/emails"
+}
+
+func (c Client) NotificationsPath() string {
+	return c.host + "/notifications"
+}
+
+func (c Client) NotificationsUpdatePath(clientID, notificationID string) string {
+	return c.host + "/clients/" + clientID + "/notifications/" + notificationID
+}
+
+func (c Client) UserPreferencesPath() string {
+	return c.host + "/user_preferences"
+}
+
+func (c Client) SpecificUserPreferencesPath(userGUID string) string {
+	return c.host + "/user_preferences/" + userGUID
+}
+
+func (c Client) DefaultTemplatePath() string {
+	return c.host + "/default_template"
+}
+
+func (c Client) TemplatesPath() string {
+	return c.host + "/templates"
+}
+
+func (c Client) TemplatePath(templateID string) string {
+	return c.host + "/templates/" + templateID
+}
+
+func (c Client) TemplateAssociationsPath(templateID string) string {
+	return c.host + "/templates/" + templateID + "/associations"
+}
+
+func (c Client) ClientsTemplatePath(clientID string) string {
+	return c.host + "/clients/" + clientID + "/template"
+}
+
+func (c Client) ClientsNotificationsTemplatePath(clientID, notificationID string) string {
+	return c.host + "/clients/" + clientID + "/notifications/" + notificationID + "/template"
+}
+
+func (c Client) MessagePath(messageID string) string {
+	return c.host + "/messages/" + messageID
 }

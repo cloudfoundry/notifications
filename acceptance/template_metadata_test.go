@@ -13,7 +13,7 @@ var _ = Describe("Template Metadata", func() {
 	It("creates and updates a template with metadata", func() {
 		var templateID string
 		clientToken := GetClientTokenFor("notifications-admin")
-		client := support.NewClient(Servers.Notifications)
+		client := support.NewClient(Servers.Notifications.URL())
 
 		By("creating a template with metadata", func() {
 			var status int

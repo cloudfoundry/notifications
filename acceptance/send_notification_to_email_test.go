@@ -18,7 +18,7 @@ var _ = Describe("Send a notification to an email", func() {
 		var response support.NotifyResponse
 		clientID := "notifications-sender"
 		clientToken := GetClientTokenFor(clientID)
-		client := support.NewClient(Servers.Notifications)
+		client := support.NewClient(Servers.Notifications.URL())
 
 		By("registering a notifications", func() {
 			code, err := client.Notifications.Register(clientToken.Access, support.RegisterClient{

@@ -15,7 +15,7 @@ func (n NotificationsService) Register(token string, clientToRegister RegisterCl
 		return 0, err
 	}
 
-	status, _, err := n.client.makeRequest("PUT", n.client.server.NotificationsPath(), bytes.NewBuffer(content), token)
+	status, _, err := n.client.makeRequest("PUT", n.client.NotificationsPath(), bytes.NewBuffer(content), token)
 	if err != nil {
 		return 0, err
 	}
@@ -26,7 +26,7 @@ func (n NotificationsService) Register(token string, clientToRegister RegisterCl
 func (n NotificationsService) List(token string) (int, NotificationsList, error) {
 	var list NotificationsList
 
-	status, body, err := n.client.makeRequest("GET", n.client.server.NotificationsPath(), nil, token)
+	status, body, err := n.client.makeRequest("GET", n.client.NotificationsPath(), nil, token)
 	if err != nil {
 		return 0, list, err
 	}
@@ -45,7 +45,7 @@ func (n NotificationsService) Update(token, clientID, notificationID string, not
 		return 0, err
 	}
 
-	status, _, err := n.client.makeRequest("PUT", n.client.server.NotificationsUpdatePath(clientID, notificationID), bytes.NewBuffer(content), token)
+	status, _, err := n.client.makeRequest("PUT", n.client.NotificationsUpdatePath(clientID, notificationID), bytes.NewBuffer(content), token)
 	if err != nil {
 		return 0, err
 	}

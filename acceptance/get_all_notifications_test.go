@@ -11,7 +11,7 @@ import (
 
 var _ = Describe("Get a list of all notifications", func() {
 	It("allows a user to get body templates", func() {
-		client := support.NewClient(Servers.Notifications)
+		client := support.NewClient(Servers.Notifications.URL())
 
 		By("setting the notifications for several clients", func() {
 			status, err := client.Notifications.Register(GetClientTokenFor("client-123").Access, support.RegisterClient{

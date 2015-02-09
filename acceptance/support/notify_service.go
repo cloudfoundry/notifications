@@ -54,33 +54,33 @@ func (service NotifyService) notify(token, path string, notify Notify, reqBody n
 }
 
 func (service NotifyService) User(token, userGUID string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.server.UsersPath(userGUID), notify, notifyRequest{})
+	return service.notify(token, service.client.UsersPath(userGUID), notify, notifyRequest{})
 }
 
 func (service NotifyService) AllUsers(token string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.server.EveryonePath(), notify, notifyRequest{})
+	return service.notify(token, service.client.EveryonePath(), notify, notifyRequest{})
 }
 
 func (service NotifyService) Email(token, email string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.server.EmailPath(), notify, notifyRequest{
+	return service.notify(token, service.client.EmailPath(), notify, notifyRequest{
 		To: email,
 	})
 }
 
 func (service NotifyService) OrganizationRole(token, organizationGUID, role string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.server.OrganizationsPath(organizationGUID), notify, notifyRequest{
+	return service.notify(token, service.client.OrganizationsPath(organizationGUID), notify, notifyRequest{
 		Role: role,
 	})
 }
 
 func (service NotifyService) Organization(token, organizationGUID string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.server.OrganizationsPath(organizationGUID), notify, notifyRequest{})
+	return service.notify(token, service.client.OrganizationsPath(organizationGUID), notify, notifyRequest{})
 }
 
 func (service NotifyService) Scope(token, scope string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.server.ScopesPath(scope), notify, notifyRequest{})
+	return service.notify(token, service.client.ScopesPath(scope), notify, notifyRequest{})
 }
 
 func (service NotifyService) Space(token, spaceGUID string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.server.SpacesPath(spaceGUID), notify, notifyRequest{})
+	return service.notify(token, service.client.SpacesPath(spaceGUID), notify, notifyRequest{})
 }

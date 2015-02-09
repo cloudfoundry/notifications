@@ -23,7 +23,7 @@ var _ = Describe("Getting a Message's status", func() {
 
 	BeforeEach(func() {
 		clientToken = GetClientTokenFor("notification-sender")
-		client = support.NewClient(Servers.Notifications)
+		client = support.NewClient(Servers.Notifications.URL())
 	})
 
 	It("Gets a message's status", func() {

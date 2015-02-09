@@ -13,7 +13,7 @@ type TemplatesService struct {
 func (t TemplatesService) Associations(token, templateID string) (int, []TemplateAssociation, error) {
 	var associations TemplateAssociations
 
-	status, body, err := t.client.makeRequest("GET", t.client.server.TemplateAssociations(templateID), nil, token)
+	status, body, err := t.client.makeRequest("GET", t.client.TemplateAssociationsPath(templateID), nil, token)
 	if err != nil {
 		return 0, associations.Associations, err
 	}
@@ -32,7 +32,7 @@ func (t TemplatesService) Create(token string, template Template) (int, string, 
 		return 0, "", err
 	}
 
-	status, responseBody, err := t.client.makeRequest("POST", t.client.server.TemplatesBasePath(), bytes.NewBuffer(body), token)
+	status, responseBody, err := t.client.makeRequest("POST", t.client.TemplatesPath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, "", err
 	}
@@ -52,7 +52,7 @@ func (t TemplatesService) Create(token string, template Template) (int, string, 
 func (t TemplatesService) Get(token, templateID string) (int, Template, error) {
 	var template Template
 
-	status, body, err := t.client.makeRequest("GET", t.client.server.TemplatePath(templateID), nil, token)
+	status, body, err := t.client.makeRequest("GET", t.client.TemplatePath(templateID), nil, token)
 	if err != nil {
 		return 0, template, err
 	}
@@ -71,7 +71,7 @@ func (t TemplatesService) Update(token, id string, template Template) (int, erro
 		return 0, err
 	}
 
-	status, _, err := t.client.makeRequest("PUT", t.client.server.TemplatePath(id), bytes.NewBuffer(body), token)
+	status, _, err := t.client.makeRequest("PUT", t.client.TemplatePath(id), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}
@@ -80,7 +80,7 @@ func (t TemplatesService) Update(token, id string, template Template) (int, erro
 }
 
 func (t TemplatesService) Delete(token, id string) (int, error) {
-	status, _, err := t.client.makeRequest("DELETE", t.client.server.TemplatePath(id), nil, token)
+	status, _, err := t.client.makeRequest("DELETE", t.client.TemplatePath(id), nil, token)
 	if err != nil {
 		return 0, err
 	}
@@ -90,7 +90,7 @@ func (t TemplatesService) Delete(token, id string) (int, error) {
 
 func (t TemplatesService) List(token string) (int, []TemplateListItem, error) {
 	var list []TemplateListItem
-	status, body, err := t.client.makeRequest("GET", t.client.server.TemplatesBasePath(), nil, token)
+	status, body, err := t.client.makeRequest("GET", t.client.TemplatesPath(), nil, token)
 	if err != nil {
 		return 0, list, err
 	}
@@ -117,7 +117,7 @@ func (t TemplatesService) AssignToClient(token, clientID, templateID string) (in
 		return 0, err
 	}
 
-	status, _, err := t.client.makeRequest("PUT", t.client.server.ClientsTemplatePath(clientID), bytes.NewBuffer(body), token)
+	status, _, err := t.client.makeRequest("PUT", t.client.ClientsTemplatePath(clientID), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}
@@ -133,7 +133,7 @@ func (t TemplatesService) AssignToNotification(token, clientID, notificationID, 
 		return 0, err
 	}
 
-	status, _, err := t.client.makeRequest("PUT", t.client.server.ClientsNotificationsTemplatePath(clientID, notificationID), bytes.NewBuffer(body), token)
+	status, _, err := t.client.makeRequest("PUT", t.client.ClientsNotificationsTemplatePath(clientID, notificationID), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}

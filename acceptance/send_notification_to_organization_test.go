@@ -18,7 +18,7 @@ var _ = Describe("Sending notifications to all users in an organization", func()
 		indexedResponses := map[string]support.NotifyResponse{}
 		clientID := "notifications-sender"
 		clientToken := GetClientTokenFor(clientID)
-		client := support.NewClient(Servers.Notifications)
+		client := support.NewClient(Servers.Notifications.URL())
 
 		By("registering a notification", func() {
 			status, err := client.Notifications.Register(clientToken.Access, support.RegisterClient{

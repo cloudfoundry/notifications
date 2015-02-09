@@ -20,7 +20,7 @@ var _ = Describe("Updating A Notification", func() {
 		notificationID = "acceptance-test"
 		clientID = "notifications-admin"
 		clientToken = GetClientTokenFor(clientID)
-		client = support.NewClient(Servers.Notifications)
+		client = support.NewClient(Servers.Notifications.URL())
 	})
 
 	It("can update notifications", func() {

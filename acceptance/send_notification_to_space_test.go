@@ -15,7 +15,7 @@ import (
 var _ = Describe("Sending notifications to all users in a space", func() {
 	It("sends a notification to each user in a space", func() {
 		var templateID string
-		client := support.NewClient(Servers.Notifications)
+		client := support.NewClient(Servers.Notifications.URL())
 		clientID := "notifications-sender"
 		clientToken := GetClientTokenFor(clientID)
 		spaceID := "space-123"

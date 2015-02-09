@@ -12,7 +12,7 @@ type DefaultTemplateService struct {
 func (d DefaultTemplateService) Get(token string) (int, Template, error) {
 	var template Template
 
-	status, body, err := d.client.makeRequest("GET", d.client.server.DefaultTemplatePath(), nil, token)
+	status, body, err := d.client.makeRequest("GET", d.client.DefaultTemplatePath(), nil, token)
 	if err != nil {
 		return 0, template, err
 	}
@@ -31,7 +31,7 @@ func (d DefaultTemplateService) Update(token string, template Template) (int, er
 		return 0, err
 	}
 
-	status, _, err := d.client.makeRequest("PUT", d.client.server.DefaultTemplatePath(), bytes.NewBuffer(body), token)
+	status, _, err := d.client.makeRequest("PUT", d.client.DefaultTemplatePath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}

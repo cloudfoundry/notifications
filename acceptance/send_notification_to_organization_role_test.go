@@ -22,7 +22,7 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 	BeforeEach(func() {
 		clientID = "notifications-sender"
 		clientToken = GetClientTokenFor(clientID)
-		client = support.NewClient(Servers.Notifications)
+		client = support.NewClient(Servers.Notifications.URL())
 		Servers.SMTP.Reset()
 
 		By("registering a notification", func() {

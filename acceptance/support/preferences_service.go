@@ -13,7 +13,7 @@ type PreferencesService struct {
 func (service PreferencesService) Get(token string) (int, Preferences, error) {
 	var response PreferenceDocument
 
-	status, responseBody, err := service.client.makeRequest("GET", service.client.server.UserPreferencesPath(), nil, token)
+	status, responseBody, err := service.client.makeRequest("GET", service.client.UserPreferencesPath(), nil, token)
 	if err != nil {
 		return 0, response.Preferences(), err
 	}
@@ -40,7 +40,7 @@ func (service PreferencesService) Unsubscribe(token, clientID, notificationID st
 		return 0, err
 	}
 
-	status, _, err := service.client.makeRequest("PATCH", service.client.server.UserPreferencesPath(), bytes.NewBuffer(body), token)
+	status, _, err := service.client.makeRequest("PATCH", service.client.UserPreferencesPath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}
@@ -60,7 +60,7 @@ func (service PreferencesService) Subscribe(token, clientID, notificationID stri
 		return 0, err
 	}
 
-	status, _, err := service.client.makeRequest("PATCH", service.client.server.UserPreferencesPath(), bytes.NewBuffer(body), token)
+	status, _, err := service.client.makeRequest("PATCH", service.client.UserPreferencesPath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}
@@ -76,7 +76,7 @@ func (service PreferencesService) GlobalUnsubscribe(token string) (int, error) {
 		return 0, err
 	}
 
-	status, _, err := service.client.makeRequest("PATCH", service.client.server.UserPreferencesPath(), bytes.NewBuffer(body), token)
+	status, _, err := service.client.makeRequest("PATCH", service.client.UserPreferencesPath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}
@@ -92,7 +92,7 @@ func (service PreferencesService) GlobalSubscribe(token string) (int, error) {
 		return 0, err
 	}
 
-	status, _, err := service.client.makeRequest("PATCH", service.client.server.UserPreferencesPath(), bytes.NewBuffer(body), token)
+	status, _, err := service.client.makeRequest("PATCH", service.client.UserPreferencesPath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}

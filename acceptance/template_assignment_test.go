@@ -19,7 +19,7 @@ var _ = Describe("Assign Templates", func() {
 		notificationID = "acceptance-test"
 		clientID = "notifications-admin"
 		clientToken = GetClientTokenFor(clientID)
-		client = support.NewClient(Servers.Notifications)
+		client = support.NewClient(Servers.Notifications.URL())
 	})
 
 	It("Creates a template and then assigns it", func() {

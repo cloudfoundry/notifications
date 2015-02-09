@@ -9,7 +9,7 @@ type MessagesService struct {
 func (m MessagesService) Get(token, messageGUID string) (int, Message, error) {
 	var message Message
 
-	status, body, err := m.client.makeRequest("GET", m.client.server.StatusPath(messageGUID), nil, token)
+	status, body, err := m.client.makeRequest("GET", m.client.MessagePath(messageGUID), nil, token)
 	if err != nil {
 		return status, message, err
 	}

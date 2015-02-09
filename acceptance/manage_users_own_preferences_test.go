@@ -21,7 +21,7 @@ var _ = Describe("Preferences Endpoint", func() {
 	var response support.NotifyResponse
 
 	BeforeEach(func() {
-		client = support.NewClient(Servers.Notifications)
+		client = support.NewClient(Servers.Notifications.URL())
 		clientToken = GetClientTokenFor("notifications-sender")
 		userToken = GetUserTokenFor("user-123-code")
 		userGUID = "user-123"

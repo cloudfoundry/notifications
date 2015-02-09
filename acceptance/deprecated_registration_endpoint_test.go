@@ -21,7 +21,7 @@ var _ = Describe("notifications can be registered, using the deprecated /registr
 		clientID := "notifications-sender"
 		notificationID := "acceptance-test"
 		clientToken := GetClientTokenFor(clientID)
-		client := support.NewClient(Servers.Notifications)
+		client := support.NewClient(Servers.Notifications.URL())
 		userID := "user-123"
 
 		By("registering a notification with the deprecated endpoint", func() {
@@ -38,7 +38,7 @@ var _ = Describe("notifications can be registered, using the deprecated /registr
 				panic(err)
 			}
 
-			request, err := http.NewRequest("PUT", Servers.Notifications.RegistrationPath(), bytes.NewBuffer(body))
+			request, err := http.NewRequest("PUT", Servers.Notifications.URL()+"/registration", bytes.NewBuffer(body))
 			if err != nil {
 				panic(err)
 			}
@@ -140,7 +140,7 @@ var _ = Describe("notifications can be registered, using the deprecated /registr
 				panic(err)
 			}
 
-			request, err := http.NewRequest("PUT", Servers.Notifications.RegistrationPath(), bytes.NewBuffer(body))
+			request, err := http.NewRequest("PUT", Servers.Notifications.URL()+"/registration", bytes.NewBuffer(body))
 			if err != nil {
 				panic(err)
 			}
