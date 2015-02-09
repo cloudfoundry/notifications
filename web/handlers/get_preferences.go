@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
@@ -48,10 +47,5 @@ func (handler GetPreferences) ServeHTTP(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	result, err := json.Marshal(parsed)
-	if err != nil {
-		panic(err)
-	}
-
-	w.Write(result)
+	writeJSON(w, http.StatusOK, parsed)
 }

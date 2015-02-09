@@ -58,9 +58,5 @@ func (handler GetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, 
 		Metadata: metadata,
 	}
 
-	response, err := json.Marshal(templateOutput)
-	if err != nil {
-		panic(err)
-	}
-	w.Write(response)
+	writeJSON(w, http.StatusOK, templateOutput)
 }

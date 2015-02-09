@@ -124,6 +124,7 @@ func (database DB) Seed() {
 		if err != nil {
 			panic(err)
 		}
+
 		return
 	}
 

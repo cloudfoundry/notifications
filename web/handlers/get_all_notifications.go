@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -44,12 +43,7 @@ func (handler GetAllNotifications) ServeHTTP(w http.ResponseWriter, req *http.Re
 
 	notificationsByClient := handler.constructNotifications(clients, notifications)
 
-	response, err := json.Marshal(notificationsByClient)
-	if err != nil {
-		panic(err)
-	}
-
-	w.Write(response)
+	writeJSON(w, http.StatusOK, notificationsByClient)
 }
 
 func (handler GetAllNotifications) constructNotifications(clients []models.Client, notifications []models.Kind) NotificationsByClient {

@@ -172,7 +172,7 @@ func (mother Mother) MailClient() *mail.Client {
 
 	client, err := mail.NewClient(mailConfig, mother.Logger())
 	if err != nil {
-		panic(err)
+		mother.Logger().Panicln(err)
 	}
 
 	return client

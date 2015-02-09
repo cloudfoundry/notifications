@@ -63,7 +63,7 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 	case MissingUserTokenError:
 		writer.write(w, 422, []string{err.Error()})
 	default:
-		panic(err)
+		panic(err) // This panic will trigger the Stack recovery handler
 	}
 }
 

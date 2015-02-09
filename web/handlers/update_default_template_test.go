@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -16,7 +17,6 @@ import (
 )
 
 var _ = Describe("UpdateDefaultTemplate", func() {
-	var err error
 	var handler handlers.UpdateDefaultTemplate
 	var writer *httptest.ResponseRecorder
 	var request *http.Request
@@ -25,25 +25,24 @@ var _ = Describe("UpdateDefaultTemplate", func() {
 	var errorWriter *fakes.ErrorWriter
 
 	BeforeEach(func() {
+		var err error
 		updater = fakes.NewTemplateUpdater()
 		errorWriter = fakes.NewErrorWriter()
 		handler = handlers.NewUpdateDefaultTemplate(updater, errorWriter)
 		writer = httptest.NewRecorder()
-	})
-
-	It("updates the default template", func() {
-		body := `{
+		request, err = http.NewRequest("PUT", "/default_template", strings.NewReader(`{
 			"name": "Defaultish Template",
 			"subject": "{{.Subject}}",
 			"html": "<p>something</p>",
 			"text": "something",
 			"metadata": {"hello": true}
-		}`
-		request, err = http.NewRequest("PUT", "/default_template", strings.NewReader(body))
+		}`))
 		if err != nil {
 			panic(err)
 		}
+	})
 
+	It("updates the default template", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(updater.UpdateArgumentID).To(Equal(models.DefaultTemplateID))
@@ -59,6 +58,7 @@ var _ = Describe("UpdateDefaultTemplate", func() {
 
 	Context("when the request is not valid", func() {
 		It("indicates that fields are missing", func() {
+			var err error
 			body := `{
 				"name": "Defaultish Template",
 				"subject": "{{.Subject}}",
@@ -72,6 +72,16 @@ var _ = Describe("UpdateDefaultTemplate", func() {
 			handler.ServeHTTP(writer, request, context)
 
 			Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
+		})
+	})
+
+	Context("when the updater errors", func() {
+		It("delegates the error handling to the error writer", func() {
+			updater.UpdateError = errors.New("updating default template error")
+
+			handler.ServeHTTP(writer, request, context)
+
+			Expect(errorWriter.Error).To(MatchError(errors.New("updating default template error")))
 		})
 	})
 })

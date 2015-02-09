@@ -6,6 +6,7 @@ import (
 
 type GlobalUnsubscribesRepo struct {
 	unsubscribes []string
+	SetError     error
 }
 
 func NewGlobalUnsubscribesRepo() *GlobalUnsubscribesRepo {
@@ -15,6 +16,10 @@ func NewGlobalUnsubscribesRepo() *GlobalUnsubscribesRepo {
 }
 
 func (fake *GlobalUnsubscribesRepo) Set(conn models.ConnectionInterface, userID string, globalUnsubscribe bool) error {
+	if fake.SetError != nil {
+		return fake.SetError
+	}
+
 	if globalUnsubscribe {
 		fake.unsubscribes = append(fake.unsubscribes, userID)
 	} else {

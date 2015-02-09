@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"regexp"
 
@@ -34,12 +33,8 @@ func (handler ListTemplateAssociations) ServeHTTP(w http.ResponseWriter, req *ht
 		return
 	}
 
-	response, err := json.Marshal(handler.mapToJSON(associations))
-	if err != nil {
-		panic(err)
-	}
-
-	w.Write(response)
+	templateAssociationsDocument := handler.mapToJSON(associations)
+	writeJSON(w, http.StatusOK, templateAssociationsDocument)
 }
 
 func (handler ListTemplateAssociations) parseTemplateID(path string) string {

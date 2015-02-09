@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -37,12 +36,7 @@ func (handler GetPreferencesForUser) ServeHTTP(w http.ResponseWriter, req *http.
 		return
 	}
 
-	result, err := json.Marshal(parsed)
-	if err != nil {
-		panic(err)
-	}
-
-	w.Write(result)
+	writeJSON(w, http.StatusOK, parsed)
 }
 
 func (handler GetPreferencesForUser) parseGUID(path string) string {

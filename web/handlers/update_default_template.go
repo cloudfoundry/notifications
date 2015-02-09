@@ -35,7 +35,7 @@ func (handler UpdateDefaultTemplate) ServeHTTP(w http.ResponseWriter, req *http.
 
 	err = handler.updater.Update(models.DefaultTemplateID, template.ToModel())
 	if err != nil {
-		panic(err)
+		handler.errorWriter.Write(w, err)
 	}
 
 	w.WriteHeader(http.StatusNoContent)

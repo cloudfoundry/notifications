@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -39,14 +38,10 @@ func (handler GetMessages) ServeHTTP(w http.ResponseWriter, req *http.Request, c
 		return
 	}
 
-	var responseStruct struct {
+	var document struct {
 		Status string `json:"status"`
 	}
-	responseStruct.Status = message.Status
+	document.Status = message.Status
 
-	responseBody, err := json.Marshal(responseStruct)
-	if err != nil {
-		panic(err)
-	}
-	w.Write(responseBody)
+	writeJSON(w, http.StatusOK, document)
 }

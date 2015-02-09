@@ -1,7 +1,6 @@
 package application
 
 import (
-	"errors"
 	"log"
 	"time"
 
@@ -54,15 +53,16 @@ func (app Application) ConfigureSMTP() {
 		return
 	}
 
+	logger := app.mother.Logger()
 	mailClient := app.mother.MailClient()
 	err := mailClient.Connect()
 	if err != nil {
-		panic(err)
+		logger.Panicln(err)
 	}
 
 	err = mailClient.Hello()
 	if err != nil {
-		panic(err)
+		logger.Panicln(err)
 	}
 
 	startTLSSupported, _ := mailClient.Extension("STARTTLS")
@@ -70,11 +70,11 @@ func (app Application) ConfigureSMTP() {
 	mailClient.Quit()
 
 	if !startTLSSupported && app.env.SMTPTLS {
-		panic(errors.New(`SMTP TLS configuration mismatch: Configured to use TLS over SMTP, but the mail server does not support the "STARTTLS" extension.`))
+		logger.Panicln(`SMTP TLS configuration mismatch: Configured to use TLS over SMTP, but the mail server does not support the "STARTTLS" extension.`)
 	}
 
 	if startTLSSupported && !app.env.SMTPTLS {
-		panic(errors.New(`SMTP TLS configuration mismatch: Not configured to use TLS over SMTP, but the mail server does support the "STARTTLS" extension.`))
+		logger.Panicln(`SMTP TLS configuration mismatch: Not configured to use TLS over SMTP, but the mail server does support the "STARTTLS" extension.`)
 	}
 }
 
@@ -84,7 +84,7 @@ func (app Application) RetrieveUAAPublicKey() {
 
 	key, err := uaa.GetTokenKey(auth)
 	if err != nil {
-		panic(err)
+		app.mother.Logger().Panicln(err)
 	}
 
 	UAAPublicKey = key
@@ -129,6 +129,6 @@ func (app Application) Crash() {
 	err := recover()
 	if err != nil {
 		time.Sleep(5 * time.Second)
-		panic(err)
+		app.mother.Logger().Panicln(err)
 	}
 }

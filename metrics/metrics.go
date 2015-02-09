@@ -25,5 +25,6 @@ func (metric Metric) Log() {
 	if err != nil {
 		panic(err)
 	}
+
 	Logger.Printf("[METRIC] %s", message)
 }

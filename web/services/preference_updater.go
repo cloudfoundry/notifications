@@ -27,7 +27,7 @@ func NewPreferenceUpdater(globalUnsubscribesRepo models.GlobalUnsubscribesRepoIn
 func (updater PreferenceUpdater) Execute(conn models.ConnectionInterface, preferences []models.Preference, globalUnsubscribe bool, userID string) error {
 	err := updater.globalUnsubscribesRepo.Set(conn, userID, globalUnsubscribe)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	for _, preference := range preferences {

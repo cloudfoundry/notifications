@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
@@ -32,10 +31,5 @@ func (handler ListTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request,
 		return
 	}
 
-	response, err := json.Marshal(templates)
-	if err != nil {
-		panic(err)
-	}
-
-	w.Write(response)
+	writeJSON(w, http.StatusOK, templates)
 }

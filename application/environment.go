@@ -1,7 +1,6 @@
 package application
 
 import (
-	"errors"
 	"fmt"
 	"net/url"
 	"path"
@@ -74,7 +73,7 @@ func (env *Environment) parseDatabaseURL() {
 	databaseURL = strings.TrimPrefix(databaseURL, "mysql2://")
 	parsedURL, err := url.Parse("tcp://" + databaseURL)
 	if err != nil {
-		panic(errors.New(fmt.Sprintf("Could not parse DATABASE_URL %q, it does not fit format %q", env.DatabaseURL, "tcp://user:pass@host/dname")))
+		panic(fmt.Sprintf("Could not parse DATABASE_URL %q, it does not fit format %q", env.DatabaseURL, "tcp://user:pass@host/dname"))
 	}
 
 	password, _ := parsedURL.User.Password()
@@ -88,5 +87,5 @@ func (env *Environment) validateSMTPAuthMechanism() {
 		}
 	}
 
-	panic(errors.New(fmt.Sprintf("Could not parse SMTP_AUTH_MECHANISM %q, it is not one of the allowed values: %+v", env.SMTPAuthMechanism, SMTPAuthMechanisms)))
+	panic(fmt.Sprintf("Could not parse SMTP_AUTH_MECHANISM %q, it is not one of the allowed values: %+v", env.SMTPAuthMechanism, SMTPAuthMechanisms))
 }

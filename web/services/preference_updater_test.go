@@ -1,6 +1,8 @@
 package services_test
 
 import (
+	"errors"
+
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
@@ -47,6 +49,15 @@ var _ = Describe("PreferenceUpdater", func() {
 				}
 
 				Expect(globallyUnsubscribed).To(BeFalse())
+			})
+
+			Context("when the global unsubscribe repo errors", func() {
+				It("returns the error", func() {
+					fakeGlobalUnsubscribesRepo.SetError = errors.New("global unsubscribe db error")
+
+					err := updater.Execute(conn, []models.Preference{}, true, "user-guid")
+					Expect(err).To(MatchError(errors.New("global unsubscribe db error")))
+				})
 			})
 		})
 
@@ -253,7 +264,5 @@ var _ = Describe("PreferenceUpdater", func() {
 				Expect(err).To(Equal(services.CriticalKindError("The kind 'hungry' for the 'raptors' client is critical and cannot be unsubscribed from")))
 			})
 		})
-
 	})
-
 })
