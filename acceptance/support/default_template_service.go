@@ -9,10 +9,10 @@ type DefaultTemplateService struct {
 	client *Client
 }
 
-func (d DefaultTemplateService) Get(token string) (int, Template, error) {
+func (s DefaultTemplateService) Get(token string) (int, Template, error) {
 	var template Template
 
-	status, body, err := d.client.makeRequest("GET", d.client.DefaultTemplatePath(), nil, token)
+	status, body, err := s.client.makeRequest("GET", s.client.DefaultTemplatePath(), nil, token)
 	if err != nil {
 		return 0, template, err
 	}
@@ -25,13 +25,13 @@ func (d DefaultTemplateService) Get(token string) (int, Template, error) {
 	return status, template, nil
 }
 
-func (d DefaultTemplateService) Update(token string, template Template) (int, error) {
+func (s DefaultTemplateService) Update(token string, template Template) (int, error) {
 	body, err := json.Marshal(template)
 	if err != nil {
 		return 0, err
 	}
 
-	status, _, err := d.client.makeRequest("PUT", d.client.DefaultTemplatePath(), bytes.NewBuffer(body), token)
+	status, _, err := s.client.makeRequest("PUT", s.client.DefaultTemplatePath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}

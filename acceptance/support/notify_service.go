@@ -29,7 +29,7 @@ func (nr notifyRequest) Merge(n Notify) notifyRequest {
 	return nr
 }
 
-func (service NotifyService) notify(token, path string, notify Notify, reqBody notifyRequest) (int, []NotifyResponse, error) {
+func (s NotifyService) notify(token, path string, notify Notify, reqBody notifyRequest) (int, []NotifyResponse, error) {
 	var responses []NotifyResponse
 
 	reqBody = reqBody.Merge(notify)
@@ -38,7 +38,7 @@ func (service NotifyService) notify(token, path string, notify Notify, reqBody n
 		return 0, responses, err
 	}
 
-	status, responseBody, err := service.client.makeRequest("POST", path, bytes.NewBuffer(body), token)
+	status, responseBody, err := s.client.makeRequest("POST", path, bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, responses, err
 	}
@@ -53,34 +53,34 @@ func (service NotifyService) notify(token, path string, notify Notify, reqBody n
 	return status, responses, nil
 }
 
-func (service NotifyService) User(token, userGUID string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.UsersPath(userGUID), notify, notifyRequest{})
+func (s NotifyService) User(token, userGUID string, notify Notify) (int, []NotifyResponse, error) {
+	return s.notify(token, s.client.UsersPath(userGUID), notify, notifyRequest{})
 }
 
-func (service NotifyService) AllUsers(token string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.EveryonePath(), notify, notifyRequest{})
+func (s NotifyService) AllUsers(token string, notify Notify) (int, []NotifyResponse, error) {
+	return s.notify(token, s.client.EveryonePath(), notify, notifyRequest{})
 }
 
-func (service NotifyService) Email(token, email string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.EmailPath(), notify, notifyRequest{
+func (s NotifyService) Email(token, email string, notify Notify) (int, []NotifyResponse, error) {
+	return s.notify(token, s.client.EmailPath(), notify, notifyRequest{
 		To: email,
 	})
 }
 
-func (service NotifyService) OrganizationRole(token, organizationGUID, role string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.OrganizationsPath(organizationGUID), notify, notifyRequest{
+func (s NotifyService) OrganizationRole(token, organizationGUID, role string, notify Notify) (int, []NotifyResponse, error) {
+	return s.notify(token, s.client.OrganizationsPath(organizationGUID), notify, notifyRequest{
 		Role: role,
 	})
 }
 
-func (service NotifyService) Organization(token, organizationGUID string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.OrganizationsPath(organizationGUID), notify, notifyRequest{})
+func (s NotifyService) Organization(token, organizationGUID string, notify Notify) (int, []NotifyResponse, error) {
+	return s.notify(token, s.client.OrganizationsPath(organizationGUID), notify, notifyRequest{})
 }
 
-func (service NotifyService) Scope(token, scope string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.ScopesPath(scope), notify, notifyRequest{})
+func (s NotifyService) Scope(token, scope string, notify Notify) (int, []NotifyResponse, error) {
+	return s.notify(token, s.client.ScopesPath(scope), notify, notifyRequest{})
 }
 
-func (service NotifyService) Space(token, spaceGUID string, notify Notify) (int, []NotifyResponse, error) {
-	return service.notify(token, service.client.SpacesPath(spaceGUID), notify, notifyRequest{})
+func (s NotifyService) Space(token, spaceGUID string, notify Notify) (int, []NotifyResponse, error) {
+	return s.notify(token, s.client.SpacesPath(spaceGUID), notify, notifyRequest{})
 }

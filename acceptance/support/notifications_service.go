@@ -9,13 +9,13 @@ type NotificationsService struct {
 	client *Client
 }
 
-func (n NotificationsService) Register(token string, clientToRegister RegisterClient) (int, error) {
+func (s NotificationsService) Register(token string, clientToRegister RegisterClient) (int, error) {
 	content, err := json.Marshal(clientToRegister)
 	if err != nil {
 		return 0, err
 	}
 
-	status, _, err := n.client.makeRequest("PUT", n.client.NotificationsPath(), bytes.NewBuffer(content), token)
+	status, _, err := s.client.makeRequest("PUT", s.client.NotificationsPath(), bytes.NewBuffer(content), token)
 	if err != nil {
 		return 0, err
 	}
@@ -23,10 +23,10 @@ func (n NotificationsService) Register(token string, clientToRegister RegisterCl
 	return status, nil
 }
 
-func (n NotificationsService) List(token string) (int, NotificationsList, error) {
+func (s NotificationsService) List(token string) (int, NotificationsList, error) {
 	var list NotificationsList
 
-	status, body, err := n.client.makeRequest("GET", n.client.NotificationsPath(), nil, token)
+	status, body, err := s.client.makeRequest("GET", s.client.NotificationsPath(), nil, token)
 	if err != nil {
 		return 0, list, err
 	}
@@ -39,13 +39,13 @@ func (n NotificationsService) List(token string) (int, NotificationsList, error)
 	return status, list, nil
 }
 
-func (n NotificationsService) Update(token, clientID, notificationID string, notification Notification) (int, error) {
+func (s NotificationsService) Update(token, clientID, notificationID string, notification Notification) (int, error) {
 	content, err := json.Marshal(notification)
 	if err != nil {
 		return 0, err
 	}
 
-	status, _, err := n.client.makeRequest("PUT", n.client.NotificationsUpdatePath(clientID, notificationID), bytes.NewBuffer(content), token)
+	status, _, err := s.client.makeRequest("PUT", s.client.NotificationsUpdatePath(clientID, notificationID), bytes.NewBuffer(content), token)
 	if err != nil {
 		return 0, err
 	}

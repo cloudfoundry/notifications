@@ -10,10 +10,10 @@ type PreferencesService struct {
 	client *Client
 }
 
-func (service PreferencesService) Get(token string) (int, Preferences, error) {
+func (s PreferencesService) Get(token string) (int, Preferences, error) {
 	var response PreferenceDocument
 
-	status, responseBody, err := service.client.makeRequest("GET", service.client.UserPreferencesPath(), nil, token)
+	status, responseBody, err := s.client.makeRequest("GET", s.client.UserPreferencesPath(), nil, token)
 	if err != nil {
 		return 0, response.Preferences(), err
 	}
@@ -28,7 +28,7 @@ func (service PreferencesService) Get(token string) (int, Preferences, error) {
 	return status, response.Preferences(), nil
 }
 
-func (service PreferencesService) Unsubscribe(token, clientID, notificationID string) (int, error) {
+func (s PreferencesService) Unsubscribe(token, clientID, notificationID string) (int, error) {
 	body, err := json.Marshal(PreferenceDocument{
 		Clients: map[string]ClientPreferences{
 			clientID: {
@@ -40,7 +40,7 @@ func (service PreferencesService) Unsubscribe(token, clientID, notificationID st
 		return 0, err
 	}
 
-	status, _, err := service.client.makeRequest("PATCH", service.client.UserPreferencesPath(), bytes.NewBuffer(body), token)
+	status, _, err := s.client.makeRequest("PATCH", s.client.UserPreferencesPath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}
@@ -48,7 +48,7 @@ func (service PreferencesService) Unsubscribe(token, clientID, notificationID st
 	return status, nil
 }
 
-func (service PreferencesService) Subscribe(token, clientID, notificationID string) (int, error) {
+func (s PreferencesService) Subscribe(token, clientID, notificationID string) (int, error) {
 	body, err := json.Marshal(PreferenceDocument{
 		Clients: map[string]ClientPreferences{
 			clientID: {
@@ -60,7 +60,7 @@ func (service PreferencesService) Subscribe(token, clientID, notificationID stri
 		return 0, err
 	}
 
-	status, _, err := service.client.makeRequest("PATCH", service.client.UserPreferencesPath(), bytes.NewBuffer(body), token)
+	status, _, err := s.client.makeRequest("PATCH", s.client.UserPreferencesPath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}
@@ -68,7 +68,7 @@ func (service PreferencesService) Subscribe(token, clientID, notificationID stri
 	return status, nil
 }
 
-func (service PreferencesService) GlobalUnsubscribe(token string) (int, error) {
+func (s PreferencesService) GlobalUnsubscribe(token string) (int, error) {
 	body, err := json.Marshal(PreferenceDocument{
 		GlobalUnsubscribe: true,
 	})
@@ -76,7 +76,7 @@ func (service PreferencesService) GlobalUnsubscribe(token string) (int, error) {
 		return 0, err
 	}
 
-	status, _, err := service.client.makeRequest("PATCH", service.client.UserPreferencesPath(), bytes.NewBuffer(body), token)
+	status, _, err := s.client.makeRequest("PATCH", s.client.UserPreferencesPath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}
@@ -84,7 +84,7 @@ func (service PreferencesService) GlobalUnsubscribe(token string) (int, error) {
 	return status, nil
 }
 
-func (service PreferencesService) GlobalSubscribe(token string) (int, error) {
+func (s PreferencesService) GlobalSubscribe(token string) (int, error) {
 	body, err := json.Marshal(PreferenceDocument{
 		GlobalUnsubscribe: false,
 	})
@@ -92,7 +92,7 @@ func (service PreferencesService) GlobalSubscribe(token string) (int, error) {
 		return 0, err
 	}
 
-	status, _, err := service.client.makeRequest("PATCH", service.client.UserPreferencesPath(), bytes.NewBuffer(body), token)
+	status, _, err := s.client.makeRequest("PATCH", s.client.UserPreferencesPath(), bytes.NewBuffer(body), token)
 	if err != nil {
 		return 0, err
 	}
@@ -100,9 +100,9 @@ func (service PreferencesService) GlobalSubscribe(token string) (int, error) {
 	return status, nil
 }
 
-func (service PreferencesService) User(userGUID string) UserPreferencesService {
+func (s PreferencesService) User(userGUID string) UserPreferencesService {
 	return UserPreferencesService{
-		client:   service.client,
+		client:   s.client,
 		userGUID: userGUID,
 	}
 }
