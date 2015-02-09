@@ -17,6 +17,7 @@ import (
 var _ = Describe("notifications can be registered, using the deprecated /registration endpoint", func() {
 	It("registers a notification", func() {
 		var templateID string
+		var response support.NotifyResponse
 		clientID := "notifications-sender"
 		notificationID := "acceptance-test"
 		clientToken := GetClientTokenFor(clientID)
@@ -52,8 +53,6 @@ var _ = Describe("notifications can be registered, using the deprecated /registr
 			// Confirm response status code looks ok
 			Expect(response.StatusCode).To(Equal(http.StatusOK))
 		})
-
-		var response support.NotifyResponse
 
 		By("sending a notifications to a user", func() {
 			status, responses, err := client.Notify.User(clientToken.Access, userID, support.Notify{

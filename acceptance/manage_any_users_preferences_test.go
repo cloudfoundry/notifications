@@ -17,6 +17,7 @@ var _ = Describe("Preferences Endpoint", func() {
 	var clientToken uaa.Token
 	var userGUID string
 	var client *support.Client
+	var response support.NotifyResponse
 
 	BeforeEach(func() {
 		client = support.NewClient(Servers.Notifications)
@@ -39,10 +40,6 @@ var _ = Describe("Preferences Endpoint", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNoContent))
 		})
-	})
-
-	It("allows a user to unsubscribe from a notification", func() {
-		var response support.NotifyResponse
 
 		By("sending a notification to the user", func() {
 			status, responses, err := client.Notify.User(clientToken.Access, userGUID, support.Notify{
@@ -78,7 +75,9 @@ var _ = Describe("Preferences Endpoint", func() {
 			Expect(data).To(ContainElement("\t\t<p>This message was sent directly to you.</p><p>this is an acceptance test="))
 			Expect(data).To(ContainElement("</p>"))
 		})
+	})
 
+	It("allows a user to unsubscribe from a notification", func() {
 		By("retrieving the current user preferences", func() {
 			status, preferences, err := client.Preferences.User(userGUID).Get(clientToken.Access)
 			Expect(err).NotTo(HaveOccurred())
@@ -160,43 +159,6 @@ var _ = Describe("Preferences Endpoint", func() {
 	})
 
 	It("allows a user to globally unsubscribe from notifications", func() {
-		var response support.NotifyResponse
-
-		By("sending a notification to the user", func() {
-			status, responses, err := client.Notify.User(clientToken.Access, userGUID, support.Notify{
-				KindID:  "unsubscribe-acceptance-test",
-				HTML:    "<p>this is an acceptance test</p>",
-				Subject: "my-special-subject",
-			})
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(status).To(Equal(http.StatusOK))
-			Expect(responses).To(HaveLen(1))
-
-			response = responses[0]
-			Expect(response.Status).To(Equal("queued"))
-			Expect(response.Recipient).To(Equal(userGUID))
-			Expect(GUIDRegex.MatchString(response.NotificationID)).To(BeTrue())
-		})
-
-		By("confirming that the messages were sent", func() {
-			Eventually(func() int {
-				return len(Servers.SMTP.Deliveries)
-			}, 1*time.Second).Should(Equal(1))
-			delivery := Servers.SMTP.Deliveries[0]
-
-			env := application.NewEnvironment()
-			Expect(delivery.Sender).To(Equal(env.Sender))
-			Expect(delivery.Recipients).To(Equal([]string{"user-123@example.com"}))
-
-			data := strings.Split(string(delivery.Data), "\n")
-			Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
-			Expect(data).To(ContainElement("X-CF-Notification-ID: " + response.NotificationID))
-			Expect(data).To(ContainElement("Subject: CF Notification: my-special-subject"))
-			Expect(data).To(ContainElement("\t\t<p>This message was sent directly to you.</p><p>this is an acceptance test="))
-			Expect(data).To(ContainElement("</p>"))
-		})
-
 		By("retrieving the current user preferences", func() {
 			status, preferences, err := client.Preferences.User(userGUID).Get(clientToken.Access)
 			Expect(err).NotTo(HaveOccurred())
