@@ -79,10 +79,9 @@ func (app Application) ConfigureSMTP() {
 }
 
 func (app Application) RetrieveUAAPublicKey() {
-	auth := uaa.NewUAA("", app.env.UAAHost, app.env.UAAClientID, app.env.UAAClientSecret, "")
-	auth.VerifySSL = app.env.VerifySSL
+	uaaClient := app.mother.UAAClient()
 
-	key, err := uaa.GetTokenKey(auth)
+	key, err := uaa.GetTokenKey(*uaaClient)
 	if err != nil {
 		app.mother.Logger().Panicln(err)
 	}

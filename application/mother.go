@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"sync"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
@@ -22,132 +23,145 @@ import (
 )
 
 type Mother struct {
-	logger *log.Logger
-	queue  *gobble.Queue
+	logger    *log.Logger
+	queue     *gobble.Queue
+	uaaClient *uaa.UAA
+	mutex     sync.Mutex
 }
 
 func NewMother() *Mother {
 	return &Mother{}
 }
 
-func (mother *Mother) Logger() *log.Logger {
-	if mother.logger == nil {
-		mother.logger = log.New(os.Stdout, "[WEB] ", log.LstdFlags)
+func (m *Mother) Logger() *log.Logger {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if m.logger == nil {
+		m.logger = log.New(os.Stdout, "[WEB] ", log.LstdFlags)
 	}
-	return mother.logger
+	return m.logger
 }
 
-func (mother *Mother) Queue() gobble.QueueInterface {
-	env := NewEnvironment()
-	if mother.queue == nil {
-		mother.queue = gobble.NewQueue(gobble.Config{
+func (m *Mother) Queue() gobble.QueueInterface {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if m.queue == nil {
+		env := NewEnvironment()
+		m.queue = gobble.NewQueue(gobble.Config{
 			WaitMaxDuration: time.Duration(env.GobbleWaitMaxDuration) * time.Millisecond,
 		})
 	}
 
-	return mother.queue
+	return m.queue
 }
 
-func (mother Mother) UserStrategy() strategies.UserStrategy {
-	return strategies.NewUserStrategy(mother.Mailer())
+func (m Mother) UserStrategy() strategies.UserStrategy {
+	return strategies.NewUserStrategy(m.Mailer())
 }
 
-func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
+func (m Mother) UAAClient() *uaa.UAA {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if m.uaaClient == nil {
+		env := NewEnvironment()
+		client := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
+		client.VerifySSL = env.VerifySSL
+		m.uaaClient = &client
+	}
+
+	return m.uaaClient
+}
+
+func (m Mother) SpaceStrategy() strategies.SpaceStrategy {
 	env := NewEnvironment()
-	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
-	uaaClient.VerifySSL = env.VerifySSL
+	uaaClient := m.UAAClient()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-	tokenLoader := postal.NewTokenLoader(&uaaClient)
+	tokenLoader := postal.NewTokenLoader(uaaClient)
 	spaceLoader := utilities.NewSpaceLoader(cloudController)
 	organizationLoader := utilities.NewOrganizationLoader(cloudController)
-	mailer := mother.Mailer()
-	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, &uaaClient)
+	mailer := m.Mailer()
+	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, uaaClient)
 
 	return strategies.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, mailer)
 }
 
-func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
+func (m Mother) OrganizationStrategy() strategies.OrganizationStrategy {
 	env := NewEnvironment()
-	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
-	uaaClient.VerifySSL = env.VerifySSL
+	uaaClient := m.UAAClient()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-	tokenLoader := postal.NewTokenLoader(&uaaClient)
+	tokenLoader := postal.NewTokenLoader(uaaClient)
 	organizationLoader := utilities.NewOrganizationLoader(cloudController)
-	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, &uaaClient)
-	mailer := mother.Mailer()
+	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, uaaClient)
+	mailer := m.Mailer()
 
 	return strategies.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, mailer)
 }
 
-func (mother Mother) EveryoneStrategy() strategies.EveryoneStrategy {
-	env := NewEnvironment()
-	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
-	uaaClient.VerifySSL = env.VerifySSL
-	tokenLoader := postal.NewTokenLoader(&uaaClient)
-	allUsers := utilities.NewAllUsers(&uaaClient)
-	mailer := mother.Mailer()
+func (m Mother) EveryoneStrategy() strategies.EveryoneStrategy {
+	uaaClient := m.UAAClient()
+	tokenLoader := postal.NewTokenLoader(uaaClient)
+	allUsers := utilities.NewAllUsers(uaaClient)
+	mailer := m.Mailer()
 
 	return strategies.NewEveryoneStrategy(tokenLoader, allUsers, mailer)
 }
 
-func (mother Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
+func (m Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
 	env := NewEnvironment()
-	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
-	uaaClient.VerifySSL = env.VerifySSL
+	uaaClient := m.UAAClient()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-	tokenLoader := postal.NewTokenLoader(&uaaClient)
-	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, &uaaClient)
-	mailer := mother.Mailer()
+	tokenLoader := postal.NewTokenLoader(uaaClient)
+	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, uaaClient)
+	mailer := m.Mailer()
 
 	return strategies.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, mailer)
 }
 
-func (mother Mother) EmailStrategy() strategies.EmailStrategy {
-	return strategies.NewEmailStrategy(mother.Mailer())
+func (m Mother) EmailStrategy() strategies.EmailStrategy {
+	return strategies.NewEmailStrategy(m.Mailer())
 }
 
-func (mother Mother) NotificationsFinder() services.NotificationsFinder {
-	clientsRepo, kindsRepo := mother.Repos()
-	return services.NewNotificationsFinder(clientsRepo, kindsRepo, mother.Database())
+func (m Mother) NotificationsFinder() services.NotificationsFinder {
+	clientsRepo, kindsRepo := m.Repos()
+	return services.NewNotificationsFinder(clientsRepo, kindsRepo, m.Database())
 }
-func (mother Mother) NotificationsUpdater() services.NotificationsUpdater {
-	_, kindsRepo := mother.Repos()
-	return services.NewNotificationsUpdater(kindsRepo, mother.Database())
-}
-
-func (mother Mother) Mailer() strategies.Mailer {
-	return strategies.NewMailer(mother.Queue(), uuid.NewV4, mother.MessagesRepo())
+func (m Mother) NotificationsUpdater() services.NotificationsUpdater {
+	_, kindsRepo := m.Repos()
+	return services.NewNotificationsUpdater(kindsRepo, m.Database())
 }
 
-func (mother Mother) TemplatesLoader() postal.TemplatesLoader {
-	finder := mother.TemplateFinder()
-	database := mother.Database()
-	clientsRepo, kindsRepo := mother.Repos()
-	templatesRepo := mother.TemplatesRepo()
+func (m Mother) Mailer() strategies.Mailer {
+	return strategies.NewMailer(m.Queue(), uuid.NewV4, m.MessagesRepo())
+}
+
+func (m Mother) TemplatesLoader() postal.TemplatesLoader {
+	finder := m.TemplateFinder()
+	database := m.Database()
+	clientsRepo, kindsRepo := m.Repos()
+	templatesRepo := m.TemplatesRepo()
 
 	return postal.NewTemplatesLoader(finder, database, clientsRepo, kindsRepo, templatesRepo)
 }
 
-func (mother Mother) UserLoader() postal.UserLoader {
-	env := NewEnvironment()
-	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
-	uaaClient.VerifySSL = env.VerifySSL
+func (m Mother) UserLoader() postal.UserLoader {
+	uaaClient := m.UAAClient()
 
-	return postal.NewUserLoader(&uaaClient)
+	return postal.NewUserLoader(uaaClient)
 }
 
-func (mother Mother) TokenLoader() postal.TokenLoader {
-	env := NewEnvironment()
-	uaaClient := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
-	uaaClient.VerifySSL = env.VerifySSL
+func (m Mother) TokenLoader() postal.TokenLoader {
+	uaaClient := m.UAAClient()
 
-	return postal.NewTokenLoader(&uaaClient)
+	return postal.NewTokenLoader(uaaClient)
 }
 
-func (mother Mother) MailClient() *mail.Client {
+func (m Mother) MailClient() *mail.Client {
 	env := NewEnvironment()
 	mailConfig := mail.Config{
 		User:           env.SMTPUser,
@@ -170,36 +184,36 @@ func (mother Mother) MailClient() *mail.Client {
 		mailConfig.AuthMechanism = mail.AuthCRAMMD5
 	}
 
-	client, err := mail.NewClient(mailConfig, mother.Logger())
+	client, err := mail.NewClient(mailConfig, m.Logger())
 	if err != nil {
-		mother.Logger().Panicln(err)
+		m.Logger().Panicln(err)
 	}
 
 	return client
 }
 
-func (mother Mother) Repos() (models.ClientsRepo, models.KindsRepo) {
-	return models.NewClientsRepo(), mother.KindsRepo()
+func (m Mother) Repos() (models.ClientsRepo, models.KindsRepo) {
+	return models.NewClientsRepo(), m.KindsRepo()
 }
 
-func (mother Mother) Logging() stack.Middleware {
-	return stack.NewLogging(mother.Logger())
+func (m Mother) Logging() stack.Middleware {
+	return stack.NewLogging(m.Logger())
 }
 
-func (mother Mother) ErrorWriter() handlers.ErrorWriter {
+func (m Mother) ErrorWriter() handlers.ErrorWriter {
 	return handlers.NewErrorWriter()
 }
 
-func (mother Mother) Authenticator(scopes ...string) middleware.Authenticator {
+func (m Mother) Authenticator(scopes ...string) middleware.Authenticator {
 	return middleware.NewAuthenticator(UAAPublicKey, scopes...)
 }
 
-func (mother Mother) Registrar() services.Registrar {
-	clientsRepo, kindsRepo := mother.Repos()
+func (m Mother) Registrar() services.Registrar {
+	clientsRepo, kindsRepo := m.Repos()
 	return services.NewRegistrar(clientsRepo, kindsRepo)
 }
 
-func (mother Mother) Database() models.DatabaseInterface {
+func (m Mother) Database() models.DatabaseInterface {
 	env := NewEnvironment()
 	return models.NewDatabase(models.Config{
 		DatabaseURL:         env.DatabaseURL,
@@ -208,34 +222,34 @@ func (mother Mother) Database() models.DatabaseInterface {
 	})
 }
 
-func (mother Mother) PreferencesFinder() *services.PreferencesFinder {
-	return services.NewPreferencesFinder(models.NewPreferencesRepo(), mother.GlobalUnsubscribesRepo(), mother.Database())
+func (m Mother) PreferencesFinder() *services.PreferencesFinder {
+	return services.NewPreferencesFinder(models.NewPreferencesRepo(), m.GlobalUnsubscribesRepo(), m.Database())
 }
 
-func (mother Mother) PreferenceUpdater() services.PreferenceUpdater {
-	return services.NewPreferenceUpdater(mother.GlobalUnsubscribesRepo(), mother.UnsubscribesRepo(), mother.KindsRepo())
+func (m Mother) PreferenceUpdater() services.PreferenceUpdater {
+	return services.NewPreferenceUpdater(m.GlobalUnsubscribesRepo(), m.UnsubscribesRepo(), m.KindsRepo())
 }
 
-func (mother Mother) TemplateFinder() services.TemplateFinder {
-	database := mother.Database()
-	templatesRepo := mother.TemplatesRepo()
+func (m Mother) TemplateFinder() services.TemplateFinder {
+	database := m.Database()
+	templatesRepo := m.TemplatesRepo()
 
 	return services.NewTemplateFinder(templatesRepo, database)
 }
 
-func (mother Mother) MessageFinder() services.MessageFinder {
-	database := mother.Database()
-	messagesRepo := mother.MessagesRepo()
+func (m Mother) MessageFinder() services.MessageFinder {
+	database := m.Database()
+	messagesRepo := m.MessagesRepo()
 
 	return services.NewMessageFinder(messagesRepo, database)
 }
 
-func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
+func (m Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
 	services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister) {
 
-	database := mother.Database()
-	clientsRepo, kindsRepo := mother.Repos()
-	templatesRepo := mother.TemplatesRepo()
+	database := m.Database()
+	clientsRepo, kindsRepo := m.Repos()
+	templatesRepo := m.TemplatesRepo()
 
 	return services.NewTemplateCreator(templatesRepo, database),
 		services.NewTemplateFinder(templatesRepo, database),
@@ -246,31 +260,31 @@ func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, service
 		services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo, database)
 }
 
-func (mother Mother) KindsRepo() models.KindsRepo {
+func (m Mother) KindsRepo() models.KindsRepo {
 	return models.NewKindsRepo()
 }
 
-func (mother Mother) UnsubscribesRepo() models.UnsubscribesRepo {
+func (m Mother) UnsubscribesRepo() models.UnsubscribesRepo {
 	return models.NewUnsubscribesRepo()
 }
 
-func (mother Mother) GlobalUnsubscribesRepo() models.GlobalUnsubscribesRepo {
+func (m Mother) GlobalUnsubscribesRepo() models.GlobalUnsubscribesRepo {
 	return models.NewGlobalUnsubscribesRepo()
 }
 
-func (mother Mother) TemplatesRepo() models.TemplatesRepo {
+func (m Mother) TemplatesRepo() models.TemplatesRepo {
 	return models.NewTemplatesRepo()
 }
 
-func (mother Mother) MessagesRepo() models.MessagesRepo {
+func (m Mother) MessagesRepo() models.MessagesRepo {
 	return models.NewMessagesRepo()
 }
 
-func (mother Mother) ReceiptsRepo() models.ReceiptsRepo {
+func (m Mother) ReceiptsRepo() models.ReceiptsRepo {
 	return models.NewReceiptsRepo()
 }
 
-func (mother Mother) CORS() middleware.CORS {
+func (m Mother) CORS() middleware.CORS {
 	env := NewEnvironment()
 	return middleware.NewCORS(env.CORSOrigin)
 }
