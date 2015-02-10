@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/valiant"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
@@ -27,10 +26,6 @@ func NewUpdatePreferences(preferenceUpdater services.PreferenceUpdaterInterface,
 }
 
 func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.web.preferences.update",
-	}).Log()
-
 	connection := handler.database.Connection()
 	handler.Execute(w, req, connection, context)
 }

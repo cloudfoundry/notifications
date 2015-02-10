@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
 )
@@ -22,10 +21,6 @@ func NewDeleteTemplates(deleter services.TemplateDeleterInterface, errorWriter E
 }
 
 func (handler DeleteTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, stack stack.Context) {
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.web.templates.delete",
-	}).Log()
-
 	templateID := strings.Split(req.URL.Path, "/templates/")[1]
 
 	err := handler.deleter.Delete(templateID)

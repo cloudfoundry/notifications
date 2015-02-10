@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
 )
@@ -26,10 +25,6 @@ func NewGetMessages(messageFinder MessageFinderInterface, errorWriter ErrorWrite
 }
 
 func (handler GetMessages) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.web.messages.get",
-	}).Log()
-
 	messageID := strings.Split(req.URL.Path, "/messages/")[1]
 
 	message, err := handler.Finder.Find(messageID)

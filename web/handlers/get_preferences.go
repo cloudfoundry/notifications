@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
@@ -28,10 +27,6 @@ func (e MissingUserTokenError) Error() string {
 }
 
 func (handler GetPreferences) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.web.preferences.get",
-	}).Log()
-
 	token := context.Get("token").(*jwt.Token)
 
 	if _, ok := token.Claims["user_id"]; !ok {

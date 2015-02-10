@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
 )
@@ -24,10 +23,6 @@ func NewGetPreferencesForUser(preferencesFinder services.PreferencesFinderInterf
 }
 
 func (handler GetPreferencesForUser) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.web.preferences.get",
-	}).Log()
-
 	handler.UserGUID = handler.parseGUID(req.URL.Path)
 
 	parsed, err := handler.PreferencesFinder.Find(handler.UserGUID)

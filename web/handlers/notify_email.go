@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
@@ -27,10 +26,6 @@ func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, st
 }
 
 func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.web.emails",
-	}).Log()
-
 	connection := handler.database.Connection()
 	err := handler.Execute(w, req, connection, context)
 	if err != nil {

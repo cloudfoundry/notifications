@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
 )
@@ -21,10 +20,6 @@ func NewListTemplates(templateLister services.TemplateListerInterface, errorWrit
 }
 
 func (handler ListTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.web.templates.list",
-	}).Log()
-
 	templates, err := handler.Lister.List()
 	if err != nil {
 		handler.ErrorWriter.Write(w, err)
