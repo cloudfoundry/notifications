@@ -34,8 +34,7 @@ func (ware RequestCounter) ServeHTTP(w http.ResponseWriter, req *http.Request, c
 	metrics.NewMetric("counter", map[string]interface{}{
 		"name": "notifications.web",
 		"tags": map[string]string{
-			"method": req.Method,
-			"path":   path,
+			"endpoint": req.Method + path,
 		},
 	}).Log()
 

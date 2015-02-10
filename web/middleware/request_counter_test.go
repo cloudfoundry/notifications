@@ -54,8 +54,7 @@ var _ = Describe("RequestCounter", func() {
 			"payload": {
 				"name": "notifications.web",
 				"tags": {
-					"method": "GET",
-					"path": "/clients/:client_id/notifications/:notification_id"
+					"endpoint": "GET/clients/:client_id/notifications/:notification_id"
 				}
 			}
 		}`))
