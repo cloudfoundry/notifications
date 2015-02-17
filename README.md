@@ -26,7 +26,7 @@ notifications-client-name:
   scope: uaa.none
   resource_ids: none
   authorized_grant_types: client_credentials
-  authorities: notifications.write critical_notifications.write emails.write
+  authorities: notifications.write,critical_notifications.write,emails.write
   autoapprove:
 ```
 
@@ -37,9 +37,9 @@ A client with notification_preferences.admin scope has the ability to retrieve a
 
 ```yaml
 notifications-client-name:
-  scope: notification_preferences.read notification_preferences.write openid
+  scope: notification_preferences.read,notification_preferences.write,openid
   resource_ids: none
-  authorized_grant_types: authorization_code client_credentials refresh_token
+  authorized_grant_types: authorization_code,client_credentials,refresh_token
   redirect_uri: http://example.com/sessions/create
   authorities: notification_preferences.admin
   autoapprove:
