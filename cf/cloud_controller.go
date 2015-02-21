@@ -3,7 +3,7 @@ package cf
 import (
 	"fmt"
 
-	"github.com/pivotal-golang/rainmaker"
+	"github.com/pivotal-cf-experimental/rainmaker"
 )
 
 type CloudControllerInterface interface {

@@ -85,16 +85,16 @@
 			"Rev": "a78ae492d53aad5a7a232d0d0462c14c400e3ee7"
 		},
 		{
+			"ImportPath": "github.com/pivotal-cf-experimental/rainmaker",
+			"Rev": "4d942cc08bd37d504bb60356a83c560968bb6338"
+		},
+		{
 			"ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",
 			"Rev": "0b91e8ad4bb6b9e71a6316e1bb6de7414c0e01b2"
 		},
 		{
 			"ImportPath": "github.com/pivotal-golang/conceal",
 			"Rev": "31656578115c62eb24f14f2a2946b018807cb6d2"
-		},
-		{
-			"ImportPath": "github.com/pivotal-golang/rainmaker",
-			"Rev": "0060720b1025f3958606b8912b6bce3178636fb0"
 		},
 		{
 			"ImportPath": "github.com/rubenv/sql-migrate",
