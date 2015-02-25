@@ -1621,7 +1621,7 @@ Authorization: bearer <CLIENT-TOKEN>
 
 ###### Route
 ```
-GET /default_template
+GET /templates/:template_id/associations
 ```
 ###### CURL example
 ```
