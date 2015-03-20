@@ -434,11 +434,12 @@ POST /emails
 
 | Key                | Description                                    |
 | ------------------ | ---------------------------------------------- |
-| to\*          | The email address (and possibly full name) of the intended recipient in SMTP compatible format. |
-| subject\* | The desired subject line of the notification.  The final subject may be prefixed, suffixed, or truncated by the notifier, all dependent on the templates.|
-| reply_to | The email address to be included as the Reply-To address of the outgoing message. |
-| text\*\* | The message body, in plain text  (required if html is absent) |
-| html\*\* | The message body, in HTML  (required if text is absent) |
+| kind_id            | a key to identify the type of email to be sent |
+| to\*               | The email address (and possibly full name) of the intended recipient in SMTP compatible format. |
+| subject\*          | The desired subject line of the notification.  The final subject may be prefixed, suffixed, or truncated by the notifier, all dependent on the templates.|
+| reply_to           | The email address to be included as the Reply-To address of the outgoing message. |
+| text\*\*           | The message body, in plain text  (required if html is absent) |
+| html\*\*           | The message body, in HTML  (required if text is absent) |
 
 \* required
 
@@ -448,7 +449,7 @@ POST /emails
 ```
 $ curl -i -X POST \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"to":"user@example.com", "subject":"what it is all about", "html":"this is a test"}' \
+  -d '{"to":"user@example.com", "subject":"what it is all about", "html":"this is a test","kind_id":"my-notification"}' \
   http://notifications.example.com/emails
 
 HTTP/1.1 200 OK
