@@ -15,7 +15,6 @@ export SMTP_USER=user
 export UAA_CLIENT_ID=notifications
 export UAA_CLIENT_SECRET=secret
 export UAA_HOST=http://uaa.example.com
-export PORT=3001
 export VCAP_APPLICATION='{"instance_index":0}'
 export GOBBLE_MIGRATIONS_DIR=$ROOT_PATH/gobble/migrations
 export GOBBLE_WAIT_MAX_DURATION=100

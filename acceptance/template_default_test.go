@@ -93,6 +93,7 @@ var _ = Describe("Default Template", func() {
 
 		By("restarting the notifications service", func() {
 			Servers.Notifications.Restart()
+			client = support.NewClient(Servers.Notifications.URL())
 		})
 
 		By("verifying that the default template still displays the overridden values", func() {

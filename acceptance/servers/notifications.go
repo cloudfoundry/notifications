@@ -1,18 +1,23 @@
 package servers
 
 import (
+	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
+	"github.com/onsi/ginkgo"
 )
 
 type Notifications struct {
-	cmd *exec.Cmd
-	env application.Environment
+	cmd  *exec.Cmd
+	env  application.Environment
+	port string
 }
 
 func NewNotifications() Notifications {
@@ -48,9 +53,13 @@ func (s Notifications) Destroy() {
 }
 
 func (s *Notifications) Boot() {
+	s.port = freePort()
+	environment := append(os.Environ(), fmt.Sprintf("PORT=%s", s.port))
+
 	cmd := exec.Cmd{
 		Path: path.Join(s.env.RootPath, "bin", "notifications"),
 		Dir:  s.env.RootPath,
+		Env:  environment,
 	}
 	if os.Getenv("TRACE") != "" {
 		cmd.Stdout = os.Stdout
@@ -73,7 +82,7 @@ func (s Notifications) Ping() {
 		case <-timeout:
 			panic("Failed to boot!")
 		case <-timer:
-			_, err := http.Get("http://localhost:" + s.env.Port + "/info")
+			_, err := http.Get("http://localhost:" + s.port + "/info")
 			if err == nil {
 				return
 			}
@@ -96,5 +105,17 @@ func (s *Notifications) Restart() {
 }
 
 func (s Notifications) URL() string {
-	return "http://localhost:" + s.env.Port
+	return "http://localhost:" + s.port
+}
+
+func freePort() string {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		ginkgo.Fail(err.Error(), 1)
+	}
+	defer listener.Close()
+
+	address := listener.Addr().String()
+	addressParts := strings.SplitN(address, ":", 2)
+	return addressParts[1]
 }
