@@ -6,7 +6,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 )
 
-const SpaceEndorsement = "You received this message because you belong to the {{.Space}} space in the {{.Organization}} organization."
+const SpaceEndorsement = `You received this message because you belong to the "{{.Space}}" space in the "{{.Organization}}" organization.`
 
 type SpaceStrategy struct {
 	tokenLoader        postal.TokenLoaderInterface
