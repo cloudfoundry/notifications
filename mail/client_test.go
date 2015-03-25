@@ -306,6 +306,39 @@ var _ = Describe("Mail", func() {
 				Expect(delivery.UsedTLS).To(BeFalse())
 			})
 		})
+
+		Context("when a message fails to send", func() {
+			It("quits the SMTP connection", func() {
+				msg := mail.Message{
+					From:    "me@example.com",
+					To:      "you@example.com",
+					Subject: "Urgent! Read now!",
+					Body: []mail.Part{
+						{
+							ContentType: "text/plain",
+							Content:     "This email is the most important thing you will read all day!",
+						},
+					},
+				}
+				mailServer.FailsHello = true
+				err := client.Send(msg)
+				Expect(err).To(HaveOccurred())
+
+				mailServer.FailsHello = false
+				err = client.Send(msg)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(func() int {
+					return len(mailServer.Deliveries)
+				}).Should(Equal(1))
+
+				delivery := mailServer.Deliveries[0]
+
+				Expect(delivery.Sender).To(Equal("me@example.com"))
+				Expect(delivery.Recipient).To(Equal("you@example.com"))
+				Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
+			})
+		})
 	})
 
 	Describe("Connect", func() {

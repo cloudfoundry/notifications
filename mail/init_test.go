@@ -85,6 +85,7 @@ type SMTPServer struct {
 	ConnectWait     time.Duration
 	halt            chan bool
 	ConnectionState string
+	FailsHello      bool
 }
 
 type Delivery struct {
@@ -190,6 +191,13 @@ func (server *SMTPServer) Broadcast(output *bufio.Writer) {
 }
 
 func (server *SMTPServer) RespondToEHLO(output *bufio.Writer) {
+	if server.FailsHello {
+		output.WriteString("550-FOOBAR\n")
+		output.WriteString("550 CRAZYBANANA\r\n")
+		output.Flush()
+		return
+	}
+
 	output.WriteString("250-localhost Hello\n")
 	if server.SupportsTLS {
 		output.WriteString("250-STARTTLS\n")

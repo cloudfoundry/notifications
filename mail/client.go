@@ -245,18 +245,17 @@ func (c *Client) Data(msg Message) error {
 
 func (c *Client) Quit() error {
 	err := c.client.Quit()
+	c.client = nil
 	if err != nil {
 		return err
 	}
-
-	c.client = nil
 
 	return nil
 }
 
 func (c *Client) Error(err error) error {
 	if c.client != nil {
-		failure := c.client.Quit()
+		failure := c.Quit()
 		if failure != nil {
 			return failure
 		}
