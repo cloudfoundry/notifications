@@ -1,6 +1,7 @@
 # Notifications
 
-A notifications component that parts of CF can use to send email to end users
+A notifications component that parts of CF can use to send email to end users.
+There is a [walkthrough](https://github.com/cloudfoundry-incubator/notifications/blob/master/walkthrough.md) of using the Notifications Service which will show how to set it up and use it.
 
 ## UAA Client
 Notifications itself needs the following UAA client in order to retrieve arbitrary users' email addresses and check the members of  arbitrary spaces:
