@@ -2,6 +2,7 @@ package models_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/application"
+	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -162,6 +163,18 @@ var _ = Describe("Database", func() {
 				Expect(template.Metadata).To(Equal(`{"test": true}`))
 				Expect(template.Overridden).To(BeTrue())
 			})
+		})
+	})
+
+	Describe("ConfigureDB", func() {
+		It("sets the max open connections on the db object", func() {
+			fakeDB := fakes.SQLDatabase{}
+			config := models.Config{
+				MaxOpenConnections: 24,
+			}
+
+			models.ConfigureDB(&fakeDB, config)
+			Expect(fakeDB.MaxOpenConnections).To(Equal(24))
 		})
 	})
 

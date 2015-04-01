@@ -28,6 +28,10 @@ type DatabaseInterface interface {
 	Seed()
 }
 
+type configurableDB interface {
+	SetMaxOpenConns(int)
+}
+
 func NewDatabase(config Config) *DB {
 	if _database != nil {
 		return _database
@@ -39,6 +43,8 @@ func NewDatabase(config Config) *DB {
 	if err != nil {
 		panic(err)
 	}
+
+	ConfigureDB(db, config)
 
 	err = db.Ping()
 	if err != nil {
@@ -63,6 +69,10 @@ func NewDatabase(config Config) *DB {
 	_database.migrate(config.MigrationsPath)
 
 	return _database
+}
+
+func ConfigureDB(db configurableDB, config Config) {
+	db.SetMaxOpenConns(config.MaxOpenConnections)
 }
 
 func (database DB) migrate(migrationsPath string) {

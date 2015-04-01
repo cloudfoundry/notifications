@@ -16,6 +16,7 @@ var _ = Describe("Environment", func() {
 		"CORS_ORIGIN",
 		"DATABASE_URL",
 		"DB_LOGGING_ENABLED",
+		"DB_MAX_OPEN_CONNS",
 		"ENCRYPTION_KEY",
 		"GOBBLE_WAIT_MAX_DURATION",
 		"PORT",
@@ -77,6 +78,20 @@ var _ = Describe("Environment", func() {
 					application.NewEnvironment()
 				}).To(Panic())
 			})
+		})
+	})
+
+	Describe("Database max open connections", func() {
+		It("defaults to 0", func() {
+			os.Setenv("DB_MAX_OPEN_CONNS", "")
+			env := application.NewEnvironment()
+			Expect(env.DBMaxOpenConns).To(Equal(0))
+		})
+
+		It("can be configured", func() {
+			os.Setenv("DB_MAX_OPEN_CONNS", "15")
+			env := application.NewEnvironment()
+			Expect(env.DBMaxOpenConns).To(Equal(15))
 		})
 	})
 

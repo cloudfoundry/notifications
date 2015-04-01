@@ -25,3 +25,11 @@ func (fake Database) TraceOn(prefix string, logger gorp.GorpLogger) {}
 func (fake *Database) Seed() {
 	fake.SeedWasCalled = true
 }
+
+type SQLDatabase struct {
+	MaxOpenConnections int
+}
+
+func (fake *SQLDatabase) SetMaxOpenConns(n int) {
+	fake.MaxOpenConnections = n
+}

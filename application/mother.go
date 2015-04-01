@@ -219,6 +219,7 @@ func (m Mother) Database() models.DatabaseInterface {
 		DatabaseURL:         env.DatabaseURL,
 		MigrationsPath:      env.ModelMigrationsDir,
 		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
+		MaxOpenConnections:  env.DBMaxOpenConns,
 	})
 }
 

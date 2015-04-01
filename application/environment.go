@@ -23,6 +23,7 @@ type Environment struct {
 	CCHost                string `env:"CC_HOST"                     env-required:"true"`
 	CORSOrigin            string `env:"CORS_ORIGIN"                 env-default:"*"`
 	DBLoggingEnabled      bool   `env:"DB_LOGGING_ENABLED"`
+	DBMaxOpenConns        int    `env:"DB_MAX_OPEN_CONNS"`
 	DatabaseURL           string `env:"DATABASE_URL"                env-required:"true"`
 	EncryptionKey         []byte `env:"ENCRYPTION_KEY"              env-required:"true"`
 	GobbleWaitMaxDuration int    `env:"GOBBLE_WAIT_MAX_DURATION"    env-default:"5000"`
