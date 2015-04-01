@@ -55,6 +55,7 @@ If you are unfamiliar with UAA consult the [UAA token overview](https://github.c
 | CC_HOST\*                    | Cloud Controller Host                       | \<none\> |
 | CORS_ORIGIN                  | Value to use for CORS Origin Header         | *        |
 | DB_LOGGING_ENABLED           | Logs DB interactions when set to true       | false    |
+| DB_MAX_OPEN_CONNS            | Maximum number of open DB connections       | 0 (unlimited) |
 | DATABASE_URL\*               | URL to your Database                        | \<none\> |
 | ENCRYPTION_KEY\*             | Key used to encrypt the unsubscribe ID      | \<none\> |
 | GOBBLE_MIGRATIONS_DIR\*      | Location of the gobble migrations directory | \<none\> |
