@@ -15,24 +15,13 @@
 			"Rev": "e885648f5ad6e48f7d7532b9c0b21767333d50ab"
 		},
 		{
-			"ImportPath": "code.google.com/p/cascadia",
-			"Comment": "null-30",
-			"Rev": "4f03c71bc42ba0015a68bea86422f0ecbb71bf70"
-		},
-		{
-			"ImportPath": "code.google.com/p/go-uuid/uuid",
-			"Comment": "null-15",
-			"Rev": "35bc42037350f0078e3c974c6ea690f1926603ab"
-		},
-		{
-			"ImportPath": "code.google.com/p/go.net/html",
-			"Comment": "null-126",
-			"Rev": "53130366067a9f0b47893ae8a81677391fdd0f42"
-		},
-		{
 			"ImportPath": "github.com/PuerkitoBio/goquery",
 			"Comment": "v0.3.2-22-ga3fdc62",
 			"Rev": "a3fdc62e311a44c5199b0ef323ee5e056c527ef1"
+		},
+		{
+			"ImportPath": "github.com/andybalholm/cascadia",
+			"Rev": "54abbbf07a45a3ef346ebe903e0715d9a3c19352"
 		},
 		{
 			"ImportPath": "github.com/coopernurse/gorp",
@@ -122,6 +111,10 @@
 			"ImportPath": "github.com/ziutek/mymysql/native",
 			"Comment": "v1.5.3-12-g1928d33",
 			"Rev": "1928d3379a32cc58b535ea2d03c017ade9eb2d0d"
+		},
+		{
+			"ImportPath": "golang.org/x/net/html",
+			"Rev": "7dbad50ab5b31073856416cdcfeb2796d682f844"
 		},
 		{
 			"ImportPath": "gopkg.in/alexcesaro/quotedprintable.v1",

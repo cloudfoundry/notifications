@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"time"
 
-	"code.google.com/p/go-uuid/uuid"
+	"github.com/nu7hatch/gouuid"
 )
 
 type TemplatesRepoInterface interface {
@@ -66,7 +66,12 @@ func (repo TemplatesRepo) ListIDsAndNames(conn ConnectionInterface) ([]Template,
 }
 
 func (repo TemplatesRepo) Create(conn ConnectionInterface, template Template) (Template, error) {
-	template.ID = uuid.New()
+	guid, err := uuid.NewV4()
+	if err != nil {
+		return template, err
+	}
+
+	template.ID = guid.String()
 
 	return repo.create(conn, template)
 }
