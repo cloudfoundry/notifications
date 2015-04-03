@@ -67,13 +67,8 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, users []User,
 
 	transaction := conn.Transaction()
 	transaction.Begin()
-	for messageID, job := range jobsByMessageID {
-		_, err := mailer.queue.Enqueue(job)
-		if err != nil {
-			transaction.Rollback()
-			return []Response{}
-		}
-		_, err = mailer.messagesRepo.Upsert(transaction, models.Message{
+	for messageID, _ := range jobsByMessageID {
+		_, err := mailer.messagesRepo.Upsert(transaction, models.Message{
 			ID:     messageID,
 			Status: postal.StatusQueued,
 		})
@@ -85,6 +80,13 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, users []User,
 	err := transaction.Commit()
 	if err != nil {
 		return []Response{}
+	}
+
+	for _, job := range jobsByMessageID {
+		_, err := mailer.queue.Enqueue(job)
+		if err != nil {
+			return []Response{}
+		}
 	}
 
 	return responses

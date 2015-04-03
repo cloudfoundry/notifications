@@ -157,16 +157,6 @@ var _ = Describe("Mailer", func() {
 				Expect(responses).ToNot(BeEmpty())
 			})
 
-			It("rolls back the transaction when there is an error in queueing", func() {
-				queue.EnqueueError = errors.New("BOOM!")
-				users := []strategies.User{{GUID: "user-1"}}
-				mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope")
-
-				Expect(conn.BeginWasCalled).To(BeTrue())
-				Expect(conn.CommitWasCalled).To(BeFalse())
-				Expect(conn.RollbackWasCalled).To(BeTrue())
-			})
-
 			It("rolls back the transaction when there is an error in message repo upserting", func() {
 				messagesRepo.UpsertError = errors.New("BOOM!")
 				users := []strategies.User{{GUID: "user-1"}}
