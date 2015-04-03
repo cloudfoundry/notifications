@@ -15,13 +15,13 @@ import (
 )
 
 type Delivery struct {
+	MessageID    string
 	Options      Options
 	UserGUID     string
 	Email        string
 	Space        cf.CloudControllerSpace
 	Organization cf.CloudControllerOrganization
 	ClientID     string
-	MessageID    string
 	Scope        string
 }
 
@@ -83,26 +83,26 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 			"name": "notifications.worker.panic.json",
 		}).Log()
 
-		worker.retry(job)
+		worker.retry("UNKNOWN", job)
 		return
 	}
 
 	err = worker.receiptsRepo.CreateReceipts(worker.database.Connection(), []string{delivery.UserGUID}, delivery.ClientID, delivery.Options.KindID)
 	if err != nil {
-		worker.retry(job)
+		worker.retry(delivery.MessageID, job)
 		return
 	}
 
 	if delivery.Email == "" {
 		token, err := worker.tokenLoader.Load()
 		if err != nil {
-			worker.retry(job)
+			worker.retry(delivery.MessageID, job)
 			return
 		}
 
 		users, err := worker.userLoader.Load([]string{delivery.UserGUID}, token)
 		if err != nil || len(users) < 1 {
-			worker.retry(job)
+			worker.retry(delivery.MessageID, job)
 			return
 		}
 
@@ -116,7 +116,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 		status := worker.deliver(delivery)
 
 		if status != StatusDelivered {
-			worker.retry(job)
+			worker.retry(delivery.MessageID, job)
 			return
 		} else {
 			metrics.NewMetric("counter", map[string]interface{}{
@@ -133,12 +133,12 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 func (worker DeliveryWorker) deliver(delivery Delivery) string {
 	message, err := worker.pack(delivery)
 	if err != nil {
-		worker.Logf("Not delivering because template failed to pack")
+		worker.Logf(delivery.MessageID, "Not delivering because template failed to pack")
 		worker.updateMessageStatus(delivery.MessageID, StatusFailed)
 		return StatusFailed
 	}
 
-	status := worker.sendMail(message)
+	status := worker.sendMail(delivery.MessageID, message)
 	worker.updateMessageStatus(delivery.MessageID, status)
 
 	return status
@@ -147,16 +147,16 @@ func (worker DeliveryWorker) deliver(delivery Delivery) string {
 func (worker DeliveryWorker) updateMessageStatus(messageID, status string) {
 	_, err := worker.messagesRepo.Upsert(worker.database.Connection(), models.Message{ID: messageID, Status: status})
 	if err != nil {
-		worker.Logf("Failed to upsert status '%s' of notification %s. Error: %s", status, messageID, err.Error())
+		worker.Logf(messageID, "Failed to upsert status '%s'. Error: %s", status, err.Error())
 	}
 }
 
-func (worker DeliveryWorker) retry(job *gobble.Job) {
+func (worker DeliveryWorker) retry(messageID string, job *gobble.Job) {
 	if job.RetryCount < 10 {
 		duration := time.Duration(int64(math.Pow(2, float64(job.RetryCount))))
 		job.Retry(duration * time.Minute)
 		layout := "Jan 2, 2006 at 3:04pm (MST)"
-		worker.Logf("Message failed to send, retrying at: %s", job.ActiveAt.Format(layout))
+		worker.Logf(messageID, "Message failed to send, retrying at: %s", job.ActiveAt.Format(layout))
 	}
 
 	metrics.NewMetric("counter", map[string]interface{}{
@@ -172,7 +172,7 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 
 	globallyUnsubscribed, err := worker.globalUnsubscribesRepo.Get(conn, delivery.UserGUID)
 	if err != nil || globallyUnsubscribed {
-		worker.Logf("Not delivering because %s has unsubscribed", delivery.Email)
+		worker.Logf(delivery.MessageID, "Not delivering because %s has unsubscribed", delivery.Email)
 		return false
 	}
 
@@ -180,23 +180,23 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 	if err != nil {
 		if _, ok := err.(models.RecordNotFoundError); ok {
 			if delivery.Email == "" {
-				worker.Logf("Not delivering because recipient has no email addresses")
+				worker.Logf(delivery.MessageID, "Not delivering because recipient has no email addresses")
 				return false
 			}
 
 			if !strings.Contains(delivery.Email, "@") {
-				worker.Logf("Not delivering because recipient's email address is invalid")
+				worker.Logf(delivery.MessageID, "Not delivering because recipient's email address is invalid")
 				return false
 			}
 
 			return true
 		}
 
-		worker.Logf("Not delivering because: %+v", err)
+		worker.Logf(delivery.MessageID, "Not delivering because: %+v", err)
 		return false
 	}
 
-	worker.Logf("Not delivering because %s has unsubscribed", delivery.Email)
+	worker.Logf(delivery.MessageID, "Not delivering because %s has unsubscribed", delivery.Email)
 	return false
 }
 
@@ -233,27 +233,27 @@ func (worker DeliveryWorker) pack(delivery Delivery) (mail.Message, error) {
 	return message, nil
 }
 
-func (worker DeliveryWorker) sendMail(message mail.Message) string {
+func (worker DeliveryWorker) sendMail(messageID string, message mail.Message) string {
 	err := worker.mailClient.Connect()
 	if err != nil {
-		worker.Logf("Error Establishing SMTP Connection: %s", err.Error())
+		worker.Logf(messageID, "Error Establishing SMTP Connection: %s", err.Error())
 		return StatusUnavailable
 	}
 
-	worker.Logf("Attempting to deliver message to %s", message.To)
+	worker.Logf(messageID, "Attempting to deliver message to %s", message.To)
 	err = worker.mailClient.Send(message)
 	if err != nil {
-		worker.Logf("Failed to deliver message due to SMTP error: %s", err.Error())
+		worker.Logf(messageID, "Failed to deliver message due to SMTP error: %s", err.Error())
 		return StatusFailed
 	}
 
-	worker.Logf("Message was successfully sent to %s", message.To)
+	worker.Logf(messageID, "Message was successfully sent to %s", message.To)
 
 	return StatusDelivered
 }
 
-func (worker DeliveryWorker) Logf(format string, v ...interface{}) {
-	format = "Worker %d: " + format
-	v = append([]interface{}{worker.identifier}, v...)
+func (worker DeliveryWorker) Logf(messageID, format string, v ...interface{}) {
+	format = "Worker[%d] [%s]: " + format
+	v = append([]interface{}{worker.identifier, messageID}, v...)
 	worker.logger.Printf(format, v...)
 }
