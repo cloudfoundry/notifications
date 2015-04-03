@@ -88,6 +88,9 @@ var _ = Describe("DeliveryWorker", func() {
 			},
 			MessageID: messageID,
 		}
+
+		_, err := messagesRepo.Upsert(database.Connection(), models.Message{ID: messageID, Status: postal.StatusQueued})
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Describe("Work", func() {
@@ -355,29 +358,60 @@ var _ = Describe("DeliveryWorker", func() {
 			It("does not send any non-critical notifications", func() {
 				Expect(mailClient.Messages).To(HaveLen(0))
 			})
+
+			It("upserts the StatusUndeliverable to the database", func() {
+				message, err := messagesRepo.FindByID(conn, messageID)
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(message.Status).To(Equal(postal.StatusUndeliverable))
+			})
 		})
 
 		Context("when the recipient hasn't unsubscribed, but doesn't have a valid email address", func() {
 			Context("when the recipient has no emails", func() {
-				It("logs the error", func() {
+				BeforeEach(func() {
 					delivery.Email = ""
 					userLoader.Users["user-123"] = uaa.User{}
 					job = gobble.NewJob(delivery)
 
 					worker.Deliver(&job)
+				})
 
+				It("logs the error", func() {
 					Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Not delivering because recipient has no email addresses"))
+				})
+
+				It("upserts the StatusUndeliverable to the database", func() {
+					message, err := messagesRepo.FindByID(conn, messageID)
+					if err != nil {
+						panic(err)
+					}
+
+					Expect(message.Status).To(Equal(postal.StatusUndeliverable))
 				})
 			})
 
 			Context("when the recipient's first email address is missing an @ symbol", func() {
-				It("logs the error", func() {
+				BeforeEach(func() {
 					delivery.Email = "nope"
 					job = gobble.NewJob(delivery)
 
 					worker.Deliver(&job)
+				})
 
+				It("logs the error", func() {
 					Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Not delivering because recipient's email address is invalid"))
+				})
+
+				It("upserts the StatusUndeliverable to the database", func() {
+					message, err := messagesRepo.FindByID(conn, messageID)
+					if err != nil {
+						panic(err)
+					}
+
+					Expect(message.Status).To(Equal(postal.StatusUndeliverable))
 				})
 			})
 		})
@@ -397,6 +431,16 @@ var _ = Describe("DeliveryWorker", func() {
 			It("logs that the user has unsubscribed from this notification", func() {
 				worker.Deliver(&job)
 				Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Not delivering because user-123@example.com has unsubscribed"))
+			})
+
+			It("upserts the StatusUndeliverable to the database", func() {
+				worker.Deliver(&job)
+				message, err := messagesRepo.FindByID(conn, messageID)
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(message.Status).To(Equal(postal.StatusUndeliverable))
 			})
 
 			Context("and the notification is not registered", func() {

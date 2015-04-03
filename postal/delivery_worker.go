@@ -173,6 +173,7 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 	globallyUnsubscribed, err := worker.globalUnsubscribesRepo.Get(conn, delivery.UserGUID)
 	if err != nil || globallyUnsubscribed {
 		worker.Logf(delivery.MessageID, "Not delivering because %s has unsubscribed", delivery.Email)
+		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
 		return false
 	}
 
@@ -181,11 +182,13 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 		if _, ok := err.(models.RecordNotFoundError); ok {
 			if delivery.Email == "" {
 				worker.Logf(delivery.MessageID, "Not delivering because recipient has no email addresses")
+				worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
 				return false
 			}
 
 			if !strings.Contains(delivery.Email, "@") {
 				worker.Logf(delivery.MessageID, "Not delivering because recipient's email address is invalid")
+				worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
 				return false
 			}
 
@@ -193,10 +196,12 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 		}
 
 		worker.Logf(delivery.MessageID, "Not delivering because: %+v", err)
+		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
 		return false
 	}
 
 	worker.Logf(delivery.MessageID, "Not delivering because %s has unsubscribed", delivery.Email)
+	worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
 	return false
 }
 

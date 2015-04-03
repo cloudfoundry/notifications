@@ -3,10 +3,11 @@ package postal
 import "github.com/nu7hatch/gouuid"
 
 const (
-	StatusUnavailable = "unavailable"
-	StatusFailed      = "failed"
-	StatusDelivered   = "delivered"
-	StatusQueued      = "queued"
+	StatusUnavailable   = "unavailable"
+	StatusFailed        = "failed"
+	StatusDelivered     = "delivered"
+	StatusQueued        = "queued"
+	StatusUndeliverable = "undeliverable"
 )
 
 type Templates struct {
