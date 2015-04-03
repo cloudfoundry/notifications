@@ -16,8 +16,8 @@
 		},
 		{
 			"ImportPath": "github.com/PuerkitoBio/goquery",
-			"Comment": "v0.3.2-22-ga3fdc62",
-			"Rev": "a3fdc62e311a44c5199b0ef323ee5e056c527ef1"
+			"Comment": "v0.3.2-72-g269246d",
+			"Rev": "269246d9e7d42d74e1cf929336d128d2ef53e7a5"
 		},
 		{
 			"ImportPath": "github.com/andybalholm/cascadia",
