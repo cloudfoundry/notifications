@@ -133,7 +133,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 func (worker DeliveryWorker) deliver(delivery Delivery) string {
 	message, err := worker.pack(delivery)
 	if err != nil {
-		worker.Log("Not delivering because template failed to pack")
+		worker.Logf("Not delivering because template failed to pack")
 		worker.updateMessageStatus(delivery.MessageID, StatusFailed)
 		return StatusFailed
 	}
@@ -147,7 +147,7 @@ func (worker DeliveryWorker) deliver(delivery Delivery) string {
 func (worker DeliveryWorker) updateMessageStatus(messageID, status string) {
 	_, err := worker.messagesRepo.Upsert(worker.database.Connection(), models.Message{ID: messageID, Status: status})
 	if err != nil {
-		worker.Log("Failed to upsert status '%s' of notification %s. Error: %s", status, messageID, err.Error())
+		worker.Logf("Failed to upsert status '%s' of notification %s. Error: %s", status, messageID, err.Error())
 	}
 }
 
@@ -156,7 +156,7 @@ func (worker DeliveryWorker) retry(job *gobble.Job) {
 		duration := time.Duration(int64(math.Pow(2, float64(job.RetryCount))))
 		job.Retry(duration * time.Minute)
 		layout := "Jan 2, 2006 at 3:04pm (MST)"
-		worker.Log("Message failed to send, retrying at: %s", job.ActiveAt.Format(layout))
+		worker.Logf("Message failed to send, retrying at: %s", job.ActiveAt.Format(layout))
 	}
 
 	metrics.NewMetric("counter", map[string]interface{}{
@@ -172,7 +172,7 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 
 	globallyUnsubscribed, err := worker.globalUnsubscribesRepo.Get(conn, delivery.UserGUID)
 	if err != nil || globallyUnsubscribed {
-		worker.Log("Not delivering because %s has unsubscribed", delivery.Email)
+		worker.Logf("Not delivering because %s has unsubscribed", delivery.Email)
 		return false
 	}
 
@@ -180,23 +180,23 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 	if err != nil {
 		if _, ok := err.(models.RecordNotFoundError); ok {
 			if delivery.Email == "" {
-				worker.Log("Not delivering because recipient has no email addresses")
+				worker.Logf("Not delivering because recipient has no email addresses")
 				return false
 			}
 
 			if !strings.Contains(delivery.Email, "@") {
-				worker.Log("Not delivering because recipient's email address is invalid")
+				worker.Logf("Not delivering because recipient's email address is invalid")
 				return false
 			}
 
 			return true
 		}
 
-		worker.Log("Not delivering because: %+v", err)
+		worker.Logf("Not delivering because: %+v", err)
 		return false
 	}
 
-	worker.Log("Not delivering because %s has unsubscribed", delivery.Email)
+	worker.Logf("Not delivering because %s has unsubscribed", delivery.Email)
 	return false
 }
 
@@ -236,23 +236,23 @@ func (worker DeliveryWorker) pack(delivery Delivery) (mail.Message, error) {
 func (worker DeliveryWorker) sendMail(message mail.Message) string {
 	err := worker.mailClient.Connect()
 	if err != nil {
-		worker.Log("Error Establishing SMTP Connection: %s", err.Error())
+		worker.Logf("Error Establishing SMTP Connection: %s", err.Error())
 		return StatusUnavailable
 	}
 
-	worker.Log("Attempting to deliver message to %s", message.To)
+	worker.Logf("Attempting to deliver message to %s", message.To)
 	err = worker.mailClient.Send(message)
 	if err != nil {
-		worker.Log("Failed to deliver message due to SMTP error: %s", err.Error())
+		worker.Logf("Failed to deliver message due to SMTP error: %s", err.Error())
 		return StatusFailed
 	}
 
-	worker.Log("Message was successfully sent to %s", message.To)
+	worker.Logf("Message was successfully sent to %s", message.To)
 
 	return StatusDelivered
 }
 
-func (worker DeliveryWorker) Log(format string, v ...interface{}) {
+func (worker DeliveryWorker) Logf(format string, v ...interface{}) {
 	format = "Worker %d: " + format
 	v = append([]interface{}{worker.identifier}, v...)
 	worker.logger.Printf(format, v...)
