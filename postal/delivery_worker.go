@@ -43,6 +43,7 @@ type DeliveryWorker struct {
 	database               models.DatabaseInterface
 	sender                 string
 	encryptionKey          []byte
+	identifier             int
 	gobble.Worker
 }
 
@@ -53,6 +54,7 @@ func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterfa
 	templatesLoader TemplatesLoaderInterface, receiptsRepo models.ReceiptsRepoInterface, tokenLoader TokenLoaderInterface) DeliveryWorker {
 
 	worker := DeliveryWorker{
+		identifier:             id,
 		logger:                 logger,
 		mailClient:             mailClient,
 		globalUnsubscribesRepo: globalUnsubscribesRepo,
@@ -131,7 +133,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 func (worker DeliveryWorker) deliver(delivery Delivery) string {
 	message, err := worker.pack(delivery)
 	if err != nil {
-		worker.logger.Printf("Not delivering because template failed to pack")
+		worker.Log("Not delivering because template failed to pack")
 		worker.updateMessageStatus(delivery.MessageID, StatusFailed)
 		return StatusFailed
 	}
@@ -145,7 +147,7 @@ func (worker DeliveryWorker) deliver(delivery Delivery) string {
 func (worker DeliveryWorker) updateMessageStatus(messageID, status string) {
 	_, err := worker.messagesRepo.Upsert(worker.database.Connection(), models.Message{ID: messageID, Status: status})
 	if err != nil {
-		worker.logger.Printf("Failed to upsert status '%s' of notification %s. Error: %s", status, messageID, err.Error())
+		worker.Log("Failed to upsert status '%s' of notification %s. Error: %s", status, messageID, err.Error())
 	}
 }
 
@@ -154,7 +156,7 @@ func (worker DeliveryWorker) retry(job *gobble.Job) {
 		duration := time.Duration(int64(math.Pow(2, float64(job.RetryCount))))
 		job.Retry(duration * time.Minute)
 		layout := "Jan 2, 2006 at 3:04pm (MST)"
-		worker.logger.Printf("Message failed to send, retrying at: %s", job.ActiveAt.Format(layout))
+		worker.Log("Message failed to send, retrying at: %s", job.ActiveAt.Format(layout))
 	}
 
 	metrics.NewMetric("counter", map[string]interface{}{
@@ -170,7 +172,7 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 
 	globallyUnsubscribed, err := worker.globalUnsubscribesRepo.Get(conn, delivery.UserGUID)
 	if err != nil || globallyUnsubscribed {
-		worker.logger.Printf("Not delivering because %s has unsubscribed", delivery.Email)
+		worker.Log("Not delivering because %s has unsubscribed", delivery.Email)
 		return false
 	}
 
@@ -178,23 +180,23 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 	if err != nil {
 		if _, ok := err.(models.RecordNotFoundError); ok {
 			if delivery.Email == "" {
-				worker.logger.Printf("Not delivering because recipient has no email addresses")
+				worker.Log("Not delivering because recipient has no email addresses")
 				return false
 			}
 
 			if !strings.Contains(delivery.Email, "@") {
-				worker.logger.Printf("Not delivering because recipient's email address is invalid")
+				worker.Log("Not delivering because recipient's email address is invalid")
 				return false
 			}
 
 			return true
 		}
 
-		worker.logger.Printf("Not delivering because: %+v", err)
+		worker.Log("Not delivering because: %+v", err)
 		return false
 	}
 
-	worker.logger.Printf("Not delivering because %s has unsubscribed", delivery.Email)
+	worker.Log("Not delivering because %s has unsubscribed", delivery.Email)
 	return false
 }
 
@@ -234,18 +236,24 @@ func (worker DeliveryWorker) pack(delivery Delivery) (mail.Message, error) {
 func (worker DeliveryWorker) sendMail(message mail.Message) string {
 	err := worker.mailClient.Connect()
 	if err != nil {
-		worker.logger.Printf("Error Establishing SMTP Connection: %s", err.Error())
+		worker.Log("Error Establishing SMTP Connection: %s", err.Error())
 		return StatusUnavailable
 	}
 
-	worker.logger.Printf("Attempting to deliver message to %s", message.To)
+	worker.Log("Attempting to deliver message to %s", message.To)
 	err = worker.mailClient.Send(message)
 	if err != nil {
-		worker.logger.Printf("Failed to deliver message due to SMTP error: %s", err.Error())
+		worker.Log("Failed to deliver message due to SMTP error: %s", err.Error())
 		return StatusFailed
 	}
 
-	worker.logger.Printf("Message was successfully sent to %s", message.To)
+	worker.Log("Message was successfully sent to %s", message.To)
 
 	return StatusDelivered
+}
+
+func (worker DeliveryWorker) Log(format string, v ...interface{}) {
+	format = "Worker %d: " + format
+	v = append([]interface{}{worker.identifier}, v...)
+	worker.logger.Printf(format, v...)
 }
