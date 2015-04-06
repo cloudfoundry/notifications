@@ -42,10 +42,7 @@ var _ = Describe("Mail", func() {
 			panic(err)
 		}
 
-		client, err = mail.NewClient(config, logger)
-		if err != nil {
-			panic(err)
-		}
+		client = mail.NewClient(config, logger)
 	})
 
 	AfterEach(func() {
@@ -54,14 +51,9 @@ var _ = Describe("Mail", func() {
 
 	Describe("NewClient", func() {
 		It("defaults the ConnectTimeout to 15 seconds", func() {
-			var err error
-
 			config.ConnectTimeout = 0
 
-			client, err = mail.NewClient(config, logger)
-			if err != nil {
-				panic(err)
-			}
+			client = mail.NewClient(config, logger)
 
 			Expect(client.ConnectTimeout()).To(Equal(15 * time.Second))
 		})
@@ -81,10 +73,7 @@ var _ = Describe("Mail", func() {
 				}
 
 				config.TestMode = true
-				client, err = mail.NewClient(config, logger)
-				if err != nil {
-					panic(err)
-				}
+				client = mail.NewClient(config, logger)
 
 				msg = mail.Message{
 					From:    "me@example.com",
@@ -135,10 +124,7 @@ var _ = Describe("Mail", func() {
 			if err != nil {
 				panic(err)
 			}
-			client, err = mail.NewClient(config, logger)
-			if err != nil {
-				panic(err)
-			}
+			client = mail.NewClient(config, logger)
 		})
 
 		It("can send mail", func() {
@@ -226,13 +212,8 @@ var _ = Describe("Mail", func() {
 
 		Context("when configured to use TLS", func() {
 			BeforeEach(func() {
-				var err error
-
 				config.SkipVerifySSL = true
-				client, err = mail.NewClient(config, logger)
-				if err != nil {
-					panic(err)
-				}
+				client = mail.NewClient(config, logger)
 			})
 
 			It("communicates over TLS", func() {
@@ -267,14 +248,9 @@ var _ = Describe("Mail", func() {
 
 		Context("when configured to not use TLS", func() {
 			BeforeEach(func() {
-				var err error
-
 				mailServer.SupportsTLS = false
 				config.DisableTLS = true
-				client, err = mail.NewClient(config, logger)
-				if err != nil {
-					panic(err)
-				}
+				client = mail.NewClient(config, logger)
 			})
 
 			It("does not authenticate", func() {
@@ -351,12 +327,9 @@ var _ = Describe("Mail", func() {
 					panic(err)
 				}
 				config.TestMode = true
-				client, err = mail.NewClient(config, logger)
-				if err != nil {
-					panic(err)
-				}
-				err = client.Connect()
+				client = mail.NewClient(config, logger)
 
+				err = client.Connect()
 				Expect(err).To(BeNil())
 			})
 		})
@@ -372,13 +345,9 @@ var _ = Describe("Mail", func() {
 				panic(err)
 			}
 
-			client, err = mail.NewClient(config, logger)
-			if err != nil {
-				panic(err)
-			}
+			client = mail.NewClient(config, logger)
 
 			err = client.Connect()
-
 			Expect(err).ToNot(BeNil())
 			Expect(err.Error()).To(ContainSubstring("server timeout"))
 		})
@@ -393,10 +362,8 @@ var _ = Describe("Mail", func() {
 			if err != nil {
 				panic(err)
 			}
-			client, err = mail.NewClient(config, logger)
-			if err != nil {
-				panic(err)
-			}
+
+			client = mail.NewClient(config, logger)
 		})
 
 		It("returns a bool, representing presence of, and parameters for a given SMTP extension", func() {
@@ -423,13 +390,8 @@ var _ = Describe("Mail", func() {
 	Describe("AuthMechanism", func() {
 		Context("when configured to use PLAIN auth", func() {
 			BeforeEach(func() {
-				var err error
-
 				config.AuthMechanism = mail.AuthPlain
-				client, err = mail.NewClient(config, logger)
-				if err != nil {
-					panic(err)
-				}
+				client = mail.NewClient(config, logger)
 			})
 
 			It("creates a PlainAuth strategy", func() {
@@ -442,13 +404,8 @@ var _ = Describe("Mail", func() {
 
 		Context("when configured to use CRAMMD5 auth", func() {
 			BeforeEach(func() {
-				var err error
-
 				config.AuthMechanism = mail.AuthCRAMMD5
-				client, err = mail.NewClient(config, logger)
-				if err != nil {
-					panic(err)
-				}
+				client = mail.NewClient(config, logger)
 			})
 
 			It("creates a CRAMMD5Auth strategy", func() {
@@ -461,13 +418,8 @@ var _ = Describe("Mail", func() {
 
 		Context("when configured to use no auth", func() {
 			BeforeEach(func() {
-				var err error
-
 				config.AuthMechanism = mail.AuthNone
-				client, err = mail.NewClient(config, logger)
-				if err != nil {
-					panic(err)
-				}
+				client = mail.NewClient(config, logger)
 			})
 
 			It("creates a CRAMMD5Auth strategy", func() {
@@ -503,13 +455,8 @@ var _ = Describe("Mail", func() {
 	Describe("PrintLog", func() {
 		Context("when the client is configured to log", func() {
 			BeforeEach(func() {
-				var err error
-
 				config.LoggingEnabled = true
-				client, err = mail.NewClient(config, logger)
-				if err != nil {
-					panic(err)
-				}
+				client = mail.NewClient(config, logger)
 			})
 
 			It("writes to the logger", func() {
@@ -521,13 +468,8 @@ var _ = Describe("Mail", func() {
 
 		Context("when the client is not configured to log", func() {
 			BeforeEach(func() {
-				var err error
-
 				config.LoggingEnabled = false
-				client, err = mail.NewClient(config, logger)
-				if err != nil {
-					panic(err)
-				}
+				client = mail.NewClient(config, logger)
 			})
 
 			It("does not write to the logger", func() {

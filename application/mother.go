@@ -23,7 +23,6 @@ import (
 )
 
 type Mother struct {
-	logger    *log.Logger
 	queue     *gobble.Queue
 	uaaClient *uaa.UAA
 	mutex     sync.Mutex
@@ -31,16 +30,6 @@ type Mother struct {
 
 func NewMother() *Mother {
 	return &Mother{}
-}
-
-func (m *Mother) Logger() *log.Logger {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	if m.logger == nil {
-		m.logger = log.New(os.Stdout, "[WEB] ", log.LstdFlags)
-	}
-	return m.logger
 }
 
 func (m *Mother) Queue() gobble.QueueInterface {
@@ -184,12 +173,7 @@ func (m Mother) MailClient() *mail.Client {
 		mailConfig.AuthMechanism = mail.AuthCRAMMD5
 	}
 
-	client, err := mail.NewClient(mailConfig, m.Logger())
-	if err != nil {
-		m.Logger().Panicln(err)
-	}
-
-	return client
+	return mail.NewClient(mailConfig, log.New(os.Stdout, "", 0))
 }
 
 func (m Mother) Repos() (models.ClientsRepo, models.KindsRepo) {
@@ -197,7 +181,7 @@ func (m Mother) Repos() (models.ClientsRepo, models.KindsRepo) {
 }
 
 func (m Mother) Logging() stack.Middleware {
-	return stack.NewLogging(m.Logger())
+	return stack.NewLogging(log.New(os.Stdout, "", 0))
 }
 
 func (m Mother) ErrorWriter() handlers.ErrorWriter {

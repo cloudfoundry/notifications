@@ -50,7 +50,7 @@ type connection struct {
 	err    error
 }
 
-func NewClient(config Config, logger *log.Logger) (*Client, error) {
+func NewClient(config Config, logger *log.Logger) *Client {
 	client := &Client{
 		config: config,
 		logger: logger,
@@ -60,7 +60,7 @@ func NewClient(config Config, logger *log.Logger) (*Client, error) {
 		client.config.ConnectTimeout = 15 * time.Second
 	}
 
-	return client, nil
+	return client
 }
 
 func (c *Client) Connect() error {

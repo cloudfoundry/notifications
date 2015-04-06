@@ -2,6 +2,7 @@ package application
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -29,10 +30,14 @@ func NewApplication() Application {
 	}
 }
 
-func (app Application) Boot() {
-	app.PrintConfiguration()
-	app.ConfigureSMTP()
-	app.RetrieveUAAPublicKey()
+func BootLogger() *log.Logger {
+	return log.New(os.Stdout, "[BOOT] ", 0)
+}
+
+func (app Application) Boot(logger *log.Logger) {
+	app.PrintConfiguration(logger)
+	app.ConfigureSMTP(logger)
+	app.RetrieveUAAPublicKey(logger)
 	app.migrator.Migrate()
 	app.EnableDBLogging()
 	app.UnlockJobs()
@@ -41,19 +46,17 @@ func (app Application) Boot() {
 	app.StartServer()
 }
 
-func (app Application) PrintConfiguration() {
-	logger := app.mother.Logger()
+func (app Application) PrintConfiguration(logger *log.Logger) {
 	logger.Println("Booting with configuration:")
 
 	viron.Print(app.env, logger)
 }
 
-func (app Application) ConfigureSMTP() {
+func (app Application) ConfigureSMTP(logger *log.Logger) {
 	if app.env.TestMode {
 		return
 	}
 
-	logger := app.mother.Logger()
 	mailClient := app.mother.MailClient()
 	err := mailClient.Connect()
 	if err != nil {
@@ -78,12 +81,12 @@ func (app Application) ConfigureSMTP() {
 	}
 }
 
-func (app Application) RetrieveUAAPublicKey() {
+func (app Application) RetrieveUAAPublicKey(logger *log.Logger) {
 	uaaClient := app.mother.UAAClient()
 
 	key, err := uaa.GetTokenKey(*uaaClient)
 	if err != nil {
-		app.mother.Logger().Panicln(err)
+		logger.Panicln(err)
 	}
 
 	UAAPublicKey = key
@@ -96,13 +99,14 @@ func (app Application) UnlockJobs() {
 
 func (app Application) EnableDBLogging() {
 	if app.env.DBLoggingEnabled {
-		app.mother.Database().TraceOn("[DB]", app.mother.Logger())
+		app.mother.Database().TraceOn("[DB]", log.New(os.Stdout, "", 0))
 	}
 }
 
 func (app Application) StartWorkers() {
+	logger := log.New(os.Stdout, "", 0)
 	for i := 0; i < WorkerCount; i++ {
-		worker := postal.NewDeliveryWorker(i+1, app.mother.Logger(), app.mother.MailClient(), app.mother.Queue(),
+		worker := postal.NewDeliveryWorker(i+1, logger, app.mother.MailClient(), app.mother.Queue(),
 			app.mother.GlobalUnsubscribesRepo(), app.mother.UnsubscribesRepo(), app.mother.KindsRepo(), app.mother.MessagesRepo(),
 			app.mother.Database(), app.env.Sender, app.env.EncryptionKey, app.mother.UserLoader(), app.mother.TemplatesLoader(), app.mother.ReceiptsRepo(), app.mother.TokenLoader())
 		worker.Work()
@@ -114,7 +118,8 @@ func (app Application) StartMessageGC() {
 	db := app.mother.Database()
 	messagesRepo := app.mother.MessagesRepo()
 	pollingInterval := 1 * time.Hour
-	logger := app.mother.Logger()
+
+	logger := log.New(os.Stdout, "", 0)
 	messageGC := postal.NewMessageGC(messageLifetime, db, messagesRepo, pollingInterval, logger)
 	messageGC.Run()
 }
@@ -124,10 +129,10 @@ func (app Application) StartServer() {
 }
 
 // This is a hack to get the logs output to the loggregator before the process exits
-func (app Application) Crash() {
+func (app Application) Crash(logger *log.Logger) {
 	err := recover()
 	if err != nil {
 		time.Sleep(5 * time.Second)
-		app.mother.Logger().Panicln(err)
+		logger.Panicln(err)
 	}
 }
