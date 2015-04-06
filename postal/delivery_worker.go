@@ -187,7 +187,7 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 			}
 
 			if !strings.Contains(delivery.Email, "@") {
-				worker.Logf(delivery.MessageID, "Not delivering because recipient's email address is invalid")
+				worker.Logf(delivery.MessageID, "Not delivering because recipient's email address (%s) is invalid", delivery.Email)
 				worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
 				return false
 			}

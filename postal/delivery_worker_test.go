@@ -402,7 +402,7 @@ var _ = Describe("DeliveryWorker", func() {
 				})
 
 				It("logs the error", func() {
-					Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Not delivering because recipient's email address is invalid"))
+					Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Not delivering because recipient's email address (nope) is invalid"))
 				})
 
 				It("upserts the StatusUndeliverable to the database", func() {
