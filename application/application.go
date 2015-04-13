@@ -105,12 +105,16 @@ func (app Application) EnableDBLogging() {
 
 func (app Application) StartWorkers() {
 	logger := log.New(os.Stdout, "", 0)
-	for i := 0; i < WorkerCount; i++ {
-		worker := postal.NewDeliveryWorker(i+1, logger, app.mother.MailClient(), app.mother.Queue(),
+
+	WorkerGenerator{
+		InstanceIndex: app.env.VCAPApplication.InstanceIndex,
+		Count:         WorkerCount,
+	}.Work(func(i int) Worker {
+		worker := postal.NewDeliveryWorker(i, logger, app.mother.MailClient(), app.mother.Queue(),
 			app.mother.GlobalUnsubscribesRepo(), app.mother.UnsubscribesRepo(), app.mother.KindsRepo(), app.mother.MessagesRepo(),
 			app.mother.Database(), app.env.Sender, app.env.EncryptionKey, app.mother.UserLoader(), app.mother.TemplatesLoader(), app.mother.ReceiptsRepo(), app.mother.TokenLoader())
-		worker.Work()
-	}
+		return &worker
+	})
 }
 
 func (app Application) StartMessageGC() {
