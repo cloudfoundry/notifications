@@ -15,7 +15,6 @@ type QueueInterface interface {
 	Reserve(string) <-chan Job
 	Dequeue(Job)
 	Requeue(Job)
-	Unlock()
 }
 
 type Queue struct {
@@ -93,17 +92,12 @@ func (queue *Queue) Dequeue(job Job) {
 	}
 }
 
-func (queue Queue) Unlock() {
-	_, err := queue.database.Connection.Exec("UPDATE `jobs` set `worker_id` = \"\" WHERE `worker_id` != \"\"")
-	if err != nil {
-		panic(err)
-	}
-}
-
 func (queue *Queue) findJob() Job {
 	job := Job{}
 	for job.ID == 0 {
-		err := queue.database.Connection.SelectOne(&job, "SELECT * FROM `jobs` WHERE `worker_id` = \"\" AND `active_at` <= ? LIMIT 1", time.Now())
+		now := time.Now()
+		expired := now.Add(-2 * time.Minute)
+		err := queue.database.Connection.SelectOne(&job, "SELECT * FROM `jobs` WHERE ( `worker_id` = \"\" AND `active_at` <= ? ) OR `active_at` <= ? LIMIT 1", now, expired)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				job = Job{}
@@ -118,6 +112,7 @@ func (queue *Queue) findJob() Job {
 
 func (queue *Queue) updateJob(job Job, workerID string) (Job, error) {
 	job.WorkerID = workerID
+	job.ActiveAt = time.Now()
 	_, err := queue.database.Connection.Update(&job)
 	if err != nil {
 		return job, err

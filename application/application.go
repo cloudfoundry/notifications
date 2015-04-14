@@ -40,7 +40,6 @@ func (app Application) Boot(logger *log.Logger) {
 	app.RetrieveUAAPublicKey(logger)
 	app.migrator.Migrate()
 	app.EnableDBLogging()
-	app.UnlockJobs()
 	app.StartWorkers()
 	app.StartMessageGC()
 	app.StartServer()
@@ -91,10 +90,6 @@ func (app Application) RetrieveUAAPublicKey(logger *log.Logger) {
 
 	UAAPublicKey = key
 	log.Printf("UAA Public Key: %s", UAAPublicKey)
-}
-
-func (app Application) UnlockJobs() {
-	app.mother.Queue().Unlock()
 }
 
 func (app Application) EnableDBLogging() {

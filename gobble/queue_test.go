@@ -89,36 +89,7 @@ var _ = Describe("Queue", func() {
 			reservedJob := <-jobChannel
 
 			Expect(reservedJob.ID).To(Equal(job.ID))
-		})
-
-		It("reserves the next available job", func() {
-			job1 := gobble.Job{
-				Payload: "first",
-			}
-			job2 := gobble.Job{
-				Payload: "second",
-			}
-
-			job1, err := queue.Enqueue(job1)
-			if err != nil {
-				panic(err)
-			}
-
-			job2, err = queue.Enqueue(job1)
-			if err != nil {
-				panic(err)
-			}
-
-			jobChannel := queue.Reserve("1")
-			var reservedJob1 gobble.Job
-			Eventually(jobChannel).Should(Receive(&reservedJob1))
-
-			jobChannel = queue.Reserve("1")
-			var reservedJob2 gobble.Job
-			Eventually(jobChannel).Should(Receive(&reservedJob2))
-
-			Expect(reservedJob1.ID).To(Equal(job1.ID))
-			Expect(reservedJob2.ID).To(Equal(job2.ID))
+			Expect(reservedJob.ActiveAt).To(BeTemporally("~", time.Now(), 100*time.Millisecond))
 		})
 
 		It("keeps trying to reserve a job until one becomes available", func() {
@@ -181,6 +152,63 @@ var _ = Describe("Queue", func() {
 
 			Expect(job.ID).To(Equal(job2.ID))
 		})
+
+		Context("when the worker id is set", func() {
+			Context("when active_at is in the future", func() {
+				It("should not grab the job", func() {
+					_, err := queue.Enqueue(gobble.Job{
+						WorkerID: "some-worker",
+						ActiveAt: time.Now().Add(1 * time.Minute),
+					})
+					Expect(err).NotTo(HaveOccurred())
+					Consistently(queue.Reserve("some-other-worker")).ShouldNot(Receive())
+				})
+			})
+
+			Context("when active_at is a little bit in the past", func() {
+				It("should not grab the job", func() {
+					_, err := queue.Enqueue(gobble.Job{
+						WorkerID: "some-worker",
+						ActiveAt: time.Now().Add(-1 * time.Minute),
+					})
+					Expect(err).NotTo(HaveOccurred())
+					Consistently(queue.Reserve("some-other-worker")).ShouldNot(Receive())
+				})
+			})
+
+			Context("when active_at is very far in the past", func() {
+				It("should grab the job", func() {
+					_, err := queue.Enqueue(gobble.Job{
+						WorkerID: "some-worker",
+						ActiveAt: time.Now().Add(-2 * time.Minute),
+					})
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(queue.Reserve("some-other-worker")).Should(Receive())
+				})
+			})
+		})
+
+		Context("when the worker id is not set", func() {
+			Context("when active_at is in the future", func() {
+				It("should not grab the job", func() {
+					_, err := queue.Enqueue(gobble.Job{
+						ActiveAt: time.Now().Add(1 * time.Minute),
+					})
+					Expect(err).NotTo(HaveOccurred())
+					Consistently(queue.Reserve("some-other-worker")).ShouldNot(Receive())
+				})
+			})
+
+			Context("when active_at is in the past", func() {
+				It("should grab the job", func() {
+					_, err := queue.Enqueue(gobble.Job{
+						ActiveAt: time.Now().Add(-1 * time.Minute),
+					})
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(queue.Reserve("some-other-worker")).Should(Receive())
+				})
+			})
+		})
 	})
 
 	Describe("Dequeue", func() {
@@ -201,31 +229,6 @@ var _ = Describe("Queue", func() {
 				panic(err)
 			}
 			Expect(results).To(HaveLen(0))
-		})
-	})
-
-	Describe("Unlock", func() {
-		It("clears the workerID values for any jobs in the queue", func() {
-			queue.Enqueue(gobble.Job{})
-			results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
-			if err != nil {
-				panic(err)
-			}
-			Expect(results).To(HaveLen(1))
-
-			<-queue.Reserve("my-worker")
-			results, err = gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
-			if err != nil {
-				panic(err)
-			}
-			Expect(results).To(HaveLen(0))
-
-			queue.Unlock()
-			results, err = gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
-			if err != nil {
-				panic(err)
-			}
-			Expect(results).To(HaveLen(1))
 		})
 	})
 })
