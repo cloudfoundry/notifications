@@ -19,7 +19,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
-	"github.com/ryanmoran/stack"
 )
 
 type Mother struct {
@@ -180,8 +179,8 @@ func (m Mother) Repos() (models.ClientsRepo, models.KindsRepo) {
 	return models.NewClientsRepo(), m.KindsRepo()
 }
 
-func (m Mother) Logging() stack.Middleware {
-	return stack.NewLogging(log.New(os.Stdout, "", 0))
+func (m Mother) Logging() middleware.RequestLogging {
+	return middleware.NewRequestLogging(os.Stdout)
 }
 
 func (m Mother) ErrorWriter() handlers.ErrorWriter {

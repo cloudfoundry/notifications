@@ -6,7 +6,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
-	"github.com/ryanmoran/stack"
 )
 
 type Mother struct{}
@@ -73,8 +72,8 @@ func (mother Mother) Database() models.DatabaseInterface {
 	return NewDatabase()
 }
 
-func (mother Mother) Logging() stack.Middleware {
-	return stack.Logging{}
+func (mother Mother) Logging() middleware.RequestLogging {
+	return middleware.RequestLogging{}
 }
 
 func (mother Mother) ErrorWriter() handlers.ErrorWriter {
