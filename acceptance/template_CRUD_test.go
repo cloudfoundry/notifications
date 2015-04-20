@@ -57,6 +57,17 @@ var _ = Describe("Templates CRUD", func() {
 		Expect(templateID).NotTo(BeNil())
 	})
 
+	It("errors when a bad template variable is used", func() {
+		status, _, err := client.Templates.Create(clientToken.Access, support.Template{
+			Name:    "Bad Template",
+			Subject: "This is a bad template",
+			HTML:    "<p>{{some-bad-arg}}</p>",
+			Text:    "hello {{some-bad-arg}}",
+		})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(status).To(Equal(422))
+	})
+
 	It("allows a user to retrieve a template", func() {
 		var templateID string
 
