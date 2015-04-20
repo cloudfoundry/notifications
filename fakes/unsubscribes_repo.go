@@ -1,42 +1,28 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+	"fmt"
+
+	"github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type UnsubscribesRepo struct {
-	Unsubscribes map[string]models.Unsubscribe
+	store map[string]bool
 }
 
 func NewUnsubscribesRepo() *UnsubscribesRepo {
 	return &UnsubscribesRepo{
-		Unsubscribes: map[string]models.Unsubscribe{},
+		store: make(map[string]bool),
 	}
 }
 
-func (fake *UnsubscribesRepo) Create(conn models.ConnectionInterface, unsubscribe models.Unsubscribe) (models.Unsubscribe, error) {
-	key := unsubscribe.ClientID + unsubscribe.KindID + unsubscribe.UserID
-	if _, ok := fake.Unsubscribes[key]; ok {
-		return unsubscribe, models.DuplicateRecordError{}
-	}
-	fake.Unsubscribes[key] = unsubscribe
-	return unsubscribe, nil
+func (fake *UnsubscribesRepo) Set(conn models.ConnectionInterface, userID, clientID, kindID string, unsubscribe bool) error {
+	key := fmt.Sprintf("%s|%s|%s", userID, clientID, kindID)
+	fake.store[key] = unsubscribe
+	return nil
 }
 
-func (fake *UnsubscribesRepo) Upsert(conn models.ConnectionInterface, unsubscribe models.Unsubscribe) (models.Unsubscribe, error) {
-	key := unsubscribe.ClientID + unsubscribe.KindID + unsubscribe.UserID
-	fake.Unsubscribes[key] = unsubscribe
-	return unsubscribe, nil
-}
-
-func (fake *UnsubscribesRepo) Find(conn models.ConnectionInterface, clientID string, kindID string, userID string) (models.Unsubscribe, error) {
-	key := clientID + kindID + userID
-	if unsubscribe, ok := fake.Unsubscribes[key]; ok {
-		return unsubscribe, nil
-	}
-	return models.Unsubscribe{}, models.NewRecordNotFoundError("Unsubscribe %q, %q, %q could not be found", clientID, kindID, userID)
-}
-
-func (fake *UnsubscribesRepo) Destroy(conn models.ConnectionInterface, unsubscribe models.Unsubscribe) (int, error) {
-	key := unsubscribe.ClientID + unsubscribe.KindID + unsubscribe.UserID
-	delete(fake.Unsubscribes, key)
-	return 0, nil
+func (fake *UnsubscribesRepo) Get(conn models.ConnectionInterface, userID, clientID, kindID string) (bool, error) {
+	key := fmt.Sprintf("%s|%s|%s", userID, clientID, kindID)
+	return fake.store[key], nil
 }

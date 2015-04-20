@@ -7,10 +7,8 @@ import (
 )
 
 type UnsubscribesRepoInterface interface {
-	Create(ConnectionInterface, Unsubscribe) (Unsubscribe, error)
-	Upsert(ConnectionInterface, Unsubscribe) (Unsubscribe, error)
-	Find(ConnectionInterface, string, string, string) (Unsubscribe, error)
-	Destroy(ConnectionInterface, Unsubscribe) (int, error)
+	Set(ConnectionInterface, string, string, string, bool) error
+	Get(ConnectionInterface, string, string, string) (bool, error)
 }
 
 type UnsubscribesRepo struct{}
@@ -19,7 +17,52 @@ func NewUnsubscribesRepo() UnsubscribesRepo {
 	return UnsubscribesRepo{}
 }
 
-func (repo UnsubscribesRepo) Create(conn ConnectionInterface, unsubscribe Unsubscribe) (Unsubscribe, error) {
+func (repo UnsubscribesRepo) Get(conn ConnectionInterface, userID, clientID, kindID string) (bool, error) {
+	err := conn.SelectOne(&Unsubscribe{}, "SELECT * FROM `unsubscribes` WHERE `client_id` = ? AND `kind_id` = ? AND `user_id` = ?", clientID, kindID, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (repo UnsubscribesRepo) Set(conn ConnectionInterface, userID, clientID, kindID string, unsubscribe bool) error {
+	var record Unsubscribe
+	err := conn.SelectOne(&record, "SELECT * FROM `unsubscribes` WHERE `client_id` = ? AND `kind_id` = ? AND `user_id` = ?", clientID, kindID, userID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return err
+		}
+
+		record = Unsubscribe{
+			UserID:   userID,
+			ClientID: clientID,
+			KindID:   kindID,
+		}
+	}
+
+	switch {
+	case unsubscribe && record.Primary == 0:
+		_, err = repo.create(conn, record)
+		if err != nil {
+			return err
+		}
+
+	case !unsubscribe && record.Primary != 0:
+		_, err = repo.delete(conn, record)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (repo UnsubscribesRepo) create(conn ConnectionInterface, unsubscribe Unsubscribe) (Unsubscribe, error) {
 	unsubscribe.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
 	err := conn.Insert(&unsubscribe)
 	if err != nil {
@@ -31,27 +74,9 @@ func (repo UnsubscribesRepo) Create(conn ConnectionInterface, unsubscribe Unsubs
 	return unsubscribe, nil
 }
 
-func (repo UnsubscribesRepo) Find(conn ConnectionInterface, clientID string, kindID string, userID string) (Unsubscribe, error) {
-	unsubscribe := Unsubscribe{}
-	err := conn.SelectOne(&unsubscribe, "SELECT * FROM `unsubscribes` WHERE `client_id` = ? AND `kind_id` = ? AND `user_id` = ?", clientID, kindID, userID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			err = NewRecordNotFoundError("Unsubscribe for user %q of client %q and notification %q could not be found", userID, clientID, kindID)
-		}
-		return unsubscribe, err
-	}
-	return unsubscribe, nil
-}
-
-func (repo UnsubscribesRepo) Upsert(conn ConnectionInterface, unsubscribe Unsubscribe) (Unsubscribe, error) {
-	_, err := repo.Find(conn, unsubscribe.ClientID, unsubscribe.KindID, unsubscribe.UserID)
-	if err != nil {
-		if _, ok := err.(RecordNotFoundError); ok {
-			return repo.Create(conn, unsubscribe)
-		}
-		return unsubscribe, err
-	}
-	return unsubscribe, nil
+func (repo UnsubscribesRepo) delete(conn ConnectionInterface, unsubscribe Unsubscribe) (int, error) {
+	rowsAffected, err := conn.Delete(&unsubscribe)
+	return int(rowsAffected), err
 }
 
 func (repo UnsubscribesRepo) FindAllByUserID(conn ConnectionInterface, userID string) ([]Unsubscribe, error) {
@@ -66,16 +91,4 @@ func (repo UnsubscribesRepo) FindAllByUserID(conn ConnectionInterface, userID st
 	}
 
 	return unsubscribes, nil
-}
-
-func (repo UnsubscribesRepo) Destroy(conn ConnectionInterface, unsubscribe Unsubscribe) (int, error) {
-	unsubscribe, err := repo.Find(conn, unsubscribe.ClientID, unsubscribe.KindID, unsubscribe.UserID)
-	if err != nil {
-		if _, ok := err.(RecordNotFoundError); ok {
-			return 0, nil
-		}
-		return 0, err
-	}
-	rowsAffected, err := conn.Delete(&unsubscribe)
-	return int(rowsAffected), err
 }

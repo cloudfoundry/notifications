@@ -102,35 +102,16 @@ var _ = Describe("PreferenceUpdater", func() {
 					},
 				}, false, "the-user")
 
-				Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(2))
-				Expect(unsubscribesRepo.Unsubscribes).To(ContainElement(doorOpen))
-				Expect(unsubscribesRepo.Unsubscribes).To(ContainElement(barking))
+				unsubscribed, err := unsubscribesRepo.Get(conn, "the-user", "raptors", "door-open")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(unsubscribed).To(BeTrue())
+
+				unsubscribed, err = unsubscribesRepo.Get(conn, "the-user", "dogs", "barking")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(unsubscribed).To(BeTrue())
 			})
 
-			It("does not insert duplicate unsubscribes", func() {
-				_, err := unsubscribesRepo.Create(conn, models.Unsubscribe{
-					UserID:   "my-user",
-					ClientID: "raptors",
-					KindID:   "door-open",
-				})
-				if err != nil {
-					panic(err)
-				}
-				Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(1))
-
-				err = updater.Execute(conn, []models.Preference{
-					{
-						ClientID: "raptors",
-						KindID:   "door-open",
-						Email:    false,
-					},
-				}, false, "my-user")
-
-				Expect(err).To(BeNil())
-				Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(1))
-			})
-
-			It("Does not add resubscriptions to the unsubscribes Repo", func() {
+			It("does not add resubscriptions to the unsubscribes Repo", func() {
 				updater.Execute(conn, []models.Preference{
 					{
 						ClientID: "dogs",
@@ -139,19 +120,14 @@ var _ = Describe("PreferenceUpdater", func() {
 					},
 				}, false, "the-user")
 
-				Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(0))
+				unsubscribed, err := unsubscribesRepo.Get(conn, "the-user", "dogs", "barking")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(unsubscribed).To(BeFalse())
 			})
 
 			It("removes unsubscribes when they are resubscribed", func() {
-				_, err := unsubscribesRepo.Create(conn, models.Unsubscribe{
-					UserID:   "my-user",
-					ClientID: "raptors",
-					KindID:   "door-open",
-				})
-				if err != nil {
-					panic(err)
-				}
-				Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(1))
+				err := unsubscribesRepo.Set(conn, "my-user", "raptors", "door-open", true)
+				Expect(err).NotTo(HaveOccurred())
 
 				err = updater.Execute(conn, []models.Preference{
 					{
@@ -160,9 +136,11 @@ var _ = Describe("PreferenceUpdater", func() {
 						Email:    true,
 					},
 				}, false, "my-user")
+				Expect(err).NotTo(HaveOccurred())
 
-				Expect(err).To(BeNil())
-				Expect(len(unsubscribesRepo.Unsubscribes)).To(Equal(0))
+				unsubscribed, err := unsubscribesRepo.Get(conn, "my-user", "raptors", "door-open")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(unsubscribed).To(BeFalse())
 			})
 		})
 

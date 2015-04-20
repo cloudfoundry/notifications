@@ -130,18 +130,15 @@ var _ = Describe("PreferencesRepo", func() {
 			})
 
 			It("Returns a slice of non-critical notifications for this user", func() {
-				unsubscribeRepo.Create(conn, models.Unsubscribe{
-					UserID:   "correct-user",
-					ClientID: "raptors",
-					KindID:   "sleepy",
-				})
+				err := unsubscribeRepo.Set(conn, "correct-user", "raptors", "sleepy", true)
+				Expect(err).NotTo(HaveOccurred())
 
 				results, err := repo.FindNonCriticalPreferences(conn, "correct-user")
 				if err != nil {
 					panic(err)
 				}
 
-				Expect(len(results)).To(Equal(3))
+				Expect(results).To(HaveLen(3))
 
 				Expect(results).To(ContainElement(models.Preference{
 					ClientID:          "raptors",

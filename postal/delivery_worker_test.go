@@ -418,14 +418,8 @@ var _ = Describe("DeliveryWorker", func() {
 
 		Context("when recipient has unsubscribed", func() {
 			BeforeEach(func() {
-				_, err := unsubscribesRepo.Create(conn, models.Unsubscribe{
-					UserID:   userGUID,
-					ClientID: "some-client",
-					KindID:   "some-kind",
-				})
-				if err != nil {
-					panic(err)
-				}
+				err := unsubscribesRepo.Set(conn, userGUID, "some-client", "some-kind", true)
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("logs that the user has unsubscribed from this notification", func() {

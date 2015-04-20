@@ -177,32 +177,26 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 		return false
 	}
 
-	_, err = worker.unsubscribesRepo.Find(conn, delivery.ClientID, delivery.Options.KindID, delivery.UserGUID)
-	if err != nil {
-		if _, ok := err.(models.RecordNotFoundError); ok {
-			if delivery.Email == "" {
-				worker.Logf(delivery.MessageID, "Not delivering because recipient has no email addresses")
-				worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
-				return false
-			}
-
-			if !strings.Contains(delivery.Email, "@") {
-				worker.Logf(delivery.MessageID, "Not delivering because recipient's email address (%s) is invalid", delivery.Email)
-				worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
-				return false
-			}
-
-			return true
-		}
-
-		worker.Logf(delivery.MessageID, "Not delivering because: %+v", err)
+	isUnsubscribed, err := worker.unsubscribesRepo.Get(conn, delivery.UserGUID, delivery.ClientID, delivery.Options.KindID)
+	if err != nil || isUnsubscribed {
+		worker.Logf(delivery.MessageID, "Not delivering because %s has unsubscribed", delivery.Email)
 		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
 		return false
 	}
 
-	worker.Logf(delivery.MessageID, "Not delivering because %s has unsubscribed", delivery.Email)
-	worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
-	return false
+	if delivery.Email == "" {
+		worker.Logf(delivery.MessageID, "Not delivering because recipient has no email addresses")
+		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
+		return false
+	}
+
+	if !strings.Contains(delivery.Email, "@") {
+		worker.Logf(delivery.MessageID, "Not delivering because recipient's email address (%s) is invalid", delivery.Email)
+		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
+		return false
+	}
+
+	return true
 }
 
 func (worker DeliveryWorker) isCritical(conn models.ConnectionInterface, kindID, clientID string) bool {

@@ -2,6 +2,7 @@ package application_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/application"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -20,8 +21,14 @@ var _ = Describe("WorkerGenerator", func() {
 		)
 
 		BeforeEach(func() {
+			workerIDs = make([]int, 0)
 			worker = mockWorker(0)
-			application.WorkerGenerator{Count: 5, InstanceIndex: 2}.Work(func(id int) application.Worker {
+			generator := application.WorkerGenerator{
+				Count:         5,
+				InstanceIndex: 2,
+			}
+
+			generator.Work(func(id int) application.Worker {
 				workerIDs = append(workerIDs, id)
 				return &worker
 			})
