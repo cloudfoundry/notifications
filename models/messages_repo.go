@@ -13,7 +13,6 @@ func NewMessagesRepo() MessagesRepo {
 }
 
 func (repo MessagesRepo) Create(conn ConnectionInterface, message Message) (Message, error) {
-	message.UpdatedAt = time.Now().Truncate(1 * time.Second).UTC()
 	err := conn.Insert(&message)
 	if err != nil {
 		return Message{}, err
@@ -34,7 +33,6 @@ func (repo MessagesRepo) FindByID(conn ConnectionInterface, messageID string) (M
 }
 
 func (repo MessagesRepo) Update(conn ConnectionInterface, message Message) (Message, error) {
-	message.UpdatedAt = time.Now().Truncate(1 * time.Second).UTC()
 	_, err := conn.Update(&message)
 	if err != nil {
 		return message, err

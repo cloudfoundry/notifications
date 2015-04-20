@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/coopernurse/gorp"
+)
 
 type Client struct {
 	Primary     int       `db:"primary"`
@@ -16,4 +20,14 @@ func (c Client) TemplateToUse() string {
 	}
 
 	return DefaultTemplateID
+}
+
+func (c *Client) PreInsert(s gorp.SqlExecutor) error {
+	c.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
+
+	if c.TemplateID == "" {
+		c.TemplateID = DefaultTemplateID
+	}
+
+	return nil
 }

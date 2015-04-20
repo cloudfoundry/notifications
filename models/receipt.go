@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/coopernurse/gorp"
+)
 
 type Receipt struct {
 	Primary   int       `db:"primary"`
@@ -9,4 +13,14 @@ type Receipt struct {
 	KindID    string    `db:"kind_id"`
 	Count     int       `db:"count"`
 	CreatedAt time.Time `db:"created_at"`
+}
+
+func (r *Receipt) PreInsert(s gorp.SqlExecutor) error {
+	r.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
+
+	if r.Count == 0 {
+		r.Count = 1
+	}
+
+	return nil
 }

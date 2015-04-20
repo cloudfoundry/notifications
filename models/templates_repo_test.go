@@ -65,11 +65,10 @@ var _ = Describe("TemplatesRepo", func() {
 	Describe("#Create", func() {
 		It("inserts a template into the database", func() {
 			newTemplate := models.Template{
-				Name:      "A Nice Template",
-				Subject:   "Kind Words",
-				Text:      "Some kind of compliment.",
-				HTML:      "<h1>Genuine Smile</h1>",
-				CreatedAt: createdAt,
+				Name:    "A Nice Template",
+				Subject: "Kind Words",
+				Text:    "Some kind of compliment.",
+				HTML:    "<h1>Genuine Smile</h1>",
 			}
 
 			createdTemplate, err := repo.Create(conn, newTemplate)
@@ -80,13 +79,15 @@ var _ = Describe("TemplatesRepo", func() {
 				panic(err)
 			}
 
+			regularExpression := `^[[:xdigit:]]{8}\-[[:xdigit:]]{4}\-[[:xdigit:]]{4}\-[[:xdigit:]]{4}\-[[:xdigit:]]{12}$`
+			Expect(foundTemplate.ID).To(MatchRegexp(regularExpression))
 			Expect(foundTemplate.ID).To(Equal(createdTemplate.ID))
 			Expect(foundTemplate.Name).To(Equal(newTemplate.Name))
 			Expect(foundTemplate.Subject).To(Equal(newTemplate.Subject))
 			Expect(foundTemplate.Text).To(Equal(newTemplate.Text))
 			Expect(foundTemplate.HTML).To(Equal(newTemplate.HTML))
-			Expect(foundTemplate.CreatedAt).To(Equal(createdAt))
-			Expect(foundTemplate.UpdatedAt).To(Equal(createdAt))
+			Expect(foundTemplate.CreatedAt).To(BeTemporally("~", time.Now().UTC(), 1*time.Second))
+			Expect(foundTemplate.UpdatedAt).To(BeTemporally("~", time.Now().UTC(), 1*time.Second))
 		})
 	})
 

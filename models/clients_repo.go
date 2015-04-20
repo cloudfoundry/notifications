@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql"
 	"strings"
-	"time"
 )
 
 type ClientsRepo struct{}
@@ -22,10 +21,6 @@ func NewClientsRepo() ClientsRepo {
 }
 
 func (repo ClientsRepo) Create(conn ConnectionInterface, client Client) (Client, error) {
-	client.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
-	if client.TemplateID == "" {
-		client.TemplateID = DefaultTemplateID
-	}
 	err := conn.Insert(&client)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
@@ -64,6 +59,7 @@ func (repo ClientsRepo) Update(conn ConnectionInterface, client Client) (Client,
 		if err != nil {
 			return client, err
 		}
+
 		client.TemplateID = existingClient.TemplateID
 	}
 

@@ -3,8 +3,6 @@ package models
 import (
 	"database/sql"
 	"time"
-
-	"github.com/nu7hatch/gouuid"
 )
 
 type TemplatesRepoInterface interface {
@@ -66,31 +64,12 @@ func (repo TemplatesRepo) ListIDsAndNames(conn ConnectionInterface) ([]Template,
 }
 
 func (repo TemplatesRepo) Create(conn ConnectionInterface, template Template) (Template, error) {
-	guid, err := uuid.NewV4()
-	if err != nil {
-		return template, err
-	}
-
-	template.ID = guid.String()
-
-	return repo.create(conn, template)
-}
-
-func (repo TemplatesRepo) create(conn ConnectionInterface, template Template) (Template, error) {
-	setTemplateTimestamps(&template)
 	err := conn.Insert(&template)
 	if err != nil {
 		return Template{}, err
 	}
 
 	return template, nil
-}
-
-func setTemplateTimestamps(template *Template) {
-	if (template.CreatedAt == time.Time{}) {
-		template.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
-	}
-	template.UpdatedAt = template.CreatedAt
 }
 
 func (repo TemplatesRepo) Destroy(conn ConnectionInterface, templateID string) error {

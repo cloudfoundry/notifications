@@ -3,7 +3,6 @@ package models
 import (
 	"database/sql"
 	"strings"
-	"time"
 )
 
 type UnsubscribesRepoInterface interface {
@@ -63,7 +62,6 @@ func (repo UnsubscribesRepo) Set(conn ConnectionInterface, userID, clientID, kin
 }
 
 func (repo UnsubscribesRepo) create(conn ConnectionInterface, unsubscribe Unsubscribe) (Unsubscribe, error) {
-	unsubscribe.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
 	err := conn.Insert(&unsubscribe)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {

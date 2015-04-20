@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/coopernurse/gorp"
+)
 
 type Kind struct {
 	Primary     int       `db:"primary"`
@@ -19,4 +23,16 @@ func (k Kind) TemplateToUse() string {
 	}
 
 	return DefaultTemplateID
+}
+
+func (k *Kind) PreInsert(s gorp.SqlExecutor) error {
+	now := time.Now().Truncate(1 * time.Second).UTC()
+	k.CreatedAt = now
+	k.UpdatedAt = now
+
+	if k.TemplateID == "" {
+		k.TemplateID = DefaultTemplateID
+	}
+
+	return nil
 }

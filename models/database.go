@@ -123,7 +123,7 @@ func (database DB) Seed() {
 			panic(err)
 		}
 
-		_, err = repo.create(conn, Template{
+		_, err = repo.Create(conn, Template{
 			ID:       DefaultTemplateID,
 			Name:     template.Name,
 			Subject:  template.Subject,

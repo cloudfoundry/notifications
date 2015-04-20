@@ -1,9 +1,9 @@
 package models
 
 import (
-    "database/sql"
-    "strings"
-    "time"
+	"database/sql"
+	"strings"
+	"time"
 )
 
 type ReceiptsRepo struct{}
@@ -17,10 +17,6 @@ func NewReceiptsRepo() ReceiptsRepo {
 }
 
 func (repo ReceiptsRepo) Create(conn ConnectionInterface, receipt Receipt) (Receipt, error) {
-	receipt.CreatedAt = time.Now().Truncate(1 * time.Second).UTC()
-	if receipt.Count == 0 {
-		receipt.Count = 1
-	}
 	err := conn.Insert(&receipt)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
@@ -54,26 +50,26 @@ func (repo ReceiptsRepo) Update(conn ConnectionInterface, receipt Receipt) (Rece
 }
 
 func (repo ReceiptsRepo) Upsert(conn ConnectionInterface, receipt Receipt) error {
-    query := "INSERT INTO `receipts` (`user_guid`, `client_id`, `kind_id`, `count`, `created_at`) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `count`=`count`+1"
-    _, err := conn.Exec(query, receipt.UserGUID, receipt.ClientID, receipt.KindID, 1, time.Now().Truncate(1*time.Second).UTC())
-    if err != nil {
-        return err
-    }
+	query := "INSERT INTO `receipts` (`user_guid`, `client_id`, `kind_id`, `count`, `created_at`) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `count`=`count`+1"
+	_, err := conn.Exec(query, receipt.UserGUID, receipt.ClientID, receipt.KindID, 1, time.Now().Truncate(1*time.Second).UTC())
+	if err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 func (repo ReceiptsRepo) CreateReceipts(conn ConnectionInterface, userGUIDs []string, clientID, kindID string) error {
-    for _, guid := range userGUIDs {
-        receipt := Receipt{
-            UserGUID: guid,
-            ClientID: clientID,
-            KindID:   kindID,
-        }
-        err := repo.Upsert(conn, receipt)
-        if err != nil {
-            return err
-        }
-    }
-    return nil
+	for _, guid := range userGUIDs {
+		receipt := Receipt{
+			UserGUID: guid,
+			ClientID: clientID,
+			KindID:   kindID,
+		}
+		err := repo.Upsert(conn, receipt)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
