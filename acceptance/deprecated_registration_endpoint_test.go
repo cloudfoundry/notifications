@@ -18,6 +18,7 @@ var _ = Describe("notifications can be registered, using the deprecated /registr
 	It("registers a notification", func() {
 		var templateID string
 		var response support.NotifyResponse
+
 		clientID := "notifications-sender"
 		notificationID := "acceptance-test"
 		clientToken := GetClientTokenFor(clientID)

@@ -11,9 +11,13 @@ import (
 )
 
 var _ = Describe("Assign Templates", func() {
-	var templateID, notificationID, clientID string
-	var clientToken uaa.Token
-	var client *support.Client
+	var (
+		templateID     string
+		notificationID string
+		clientID       string
+		clientToken    uaa.Token
+		client         *support.Client
+	)
 
 	BeforeEach(func() {
 		notificationID = "acceptance-test"

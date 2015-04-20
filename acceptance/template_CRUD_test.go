@@ -11,9 +11,11 @@ import (
 )
 
 var _ = Describe("Templates CRUD", func() {
-	var templates []support.Template
-	var client *support.Client
-	var clientToken uaa.Token
+	var (
+		templates   []support.Template
+		client      *support.Client
+		clientToken uaa.Token
+	)
 
 	BeforeEach(func() {
 		clientToken = GetClientTokenFor("notifications-admin")

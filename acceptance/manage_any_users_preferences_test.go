@@ -14,10 +14,12 @@ import (
 )
 
 var _ = Describe("Preferences Endpoint", func() {
-	var clientToken uaa.Token
-	var userGUID string
-	var client *support.Client
-	var response support.NotifyResponse
+	var (
+		clientToken uaa.Token
+		userGUID    string
+		client      *support.Client
+		response    support.NotifyResponse
+	)
 
 	BeforeEach(func() {
 		client = support.NewClient(Servers.Notifications.URL())

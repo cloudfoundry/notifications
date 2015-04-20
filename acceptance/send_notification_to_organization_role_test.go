@@ -14,10 +14,12 @@ import (
 )
 
 var _ = Describe("Sending notifications to users with certain roles in an organization", func() {
-	var templateID string
-	var clientID string
-	var clientToken uaa.Token
-	var client *support.Client
+	var (
+		templateID  string
+		clientID    string
+		clientToken uaa.Token
+		client      *support.Client
+	)
 
 	BeforeEach(func() {
 		clientID = "notifications-sender"

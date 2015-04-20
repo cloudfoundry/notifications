@@ -11,10 +11,12 @@ import (
 )
 
 var _ = Describe("Updating A Notification", func() {
-	var client *support.Client
-	var clientToken uaa.Token
-	var notificationID string
-	var clientID string
+	var (
+		client         *support.Client
+		clientToken    uaa.Token
+		notificationID string
+		clientID       string
+	)
 
 	BeforeEach(func() {
 		notificationID = "acceptance-test"
@@ -63,7 +65,6 @@ var _ = Describe("Updating A Notification", func() {
 			Expect(clientNotifications[notificationID].Description).To(Equal("Acceptance Test With Modified Description"))
 			Expect(clientNotifications[notificationID].Template).To(Equal("New Template"))
 			Expect(clientNotifications[notificationID].Critical).To(Equal(true))
-
 		})
 	})
 })
