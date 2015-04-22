@@ -2,7 +2,6 @@ package models_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -17,32 +16,11 @@ var _ = Describe("Database", func() {
 	BeforeEach(func() {
 		TruncateTables()
 		env = application.NewEnvironment()
-		models.ClearDB()
-		db = models.NewDatabase(models.Config{
-			DatabaseURL:         env.DatabaseURL,
+		db = models.NewDatabase(sqlDB, models.Config{
 			MigrationsPath:      env.ModelMigrationsDir,
 			DefaultTemplatePath: env.RootPath + "/templates/default.json",
 		})
 		connection = db.Connection().(*models.Connection)
-	})
-
-	Describe("acting as a singleton", func() {
-		It("returns a connection to the database", func() {
-			err := connection.Db.Ping()
-			Expect(err).To(BeNil())
-
-			_, err = connection.Db.Query("SHOW TABLES")
-			Expect(err).To(BeNil())
-		})
-
-		It("returns a single connection only", func() {
-			db2 := models.NewDatabase(models.Config{
-				DatabaseURL:    env.DatabaseURL,
-				MigrationsPath: env.ModelMigrationsDir,
-			})
-
-			Expect(db).To(Equal(db2))
-		})
 	})
 
 	Describe("migrating the database", func() {
@@ -163,18 +141,6 @@ var _ = Describe("Database", func() {
 				Expect(template.Metadata).To(Equal(`{"test": true}`))
 				Expect(template.Overridden).To(BeTrue())
 			})
-		})
-	})
-
-	Describe("ConfigureDB", func() {
-		It("sets the max open connections on the db object", func() {
-			fakeDB := fakes.SQLDatabase{}
-			config := models.Config{
-				MaxOpenConnections: 24,
-			}
-
-			models.ConfigureDB(&fakeDB, config)
-			Expect(fakeDB.MaxOpenConnections).To(Equal(24))
 		})
 	})
 

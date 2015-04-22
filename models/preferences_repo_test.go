@@ -20,8 +20,7 @@ var _ = Describe("PreferencesRepo", func() {
 		TruncateTables()
 
 		env := application.NewEnvironment()
-		db := models.NewDatabase(models.Config{
-			DatabaseURL:    env.DatabaseURL,
+		db := models.NewDatabase(sqlDB, models.Config{
 			MigrationsPath: env.ModelMigrationsDir,
 		})
 

@@ -18,8 +18,7 @@ var _ = Describe("ClientsRepo", func() {
 		TruncateTables()
 		repo = models.NewClientsRepo()
 		env := application.NewEnvironment()
-		conn = models.NewDatabase(models.Config{
-			DatabaseURL:    env.DatabaseURL,
+		conn = models.NewDatabase(sqlDB, models.Config{
 			MigrationsPath: env.ModelMigrationsDir,
 		}).Connection()
 	})

@@ -18,8 +18,7 @@ var _ = Describe("KindsRepo", func() {
 		TruncateTables()
 		repo = models.NewKindsRepo()
 		env := application.NewEnvironment()
-		db := models.NewDatabase(models.Config{
-			DatabaseURL:    env.DatabaseURL,
+		db := models.NewDatabase(sqlDB, models.Config{
 			MigrationsPath: env.ModelMigrationsDir,
 		})
 

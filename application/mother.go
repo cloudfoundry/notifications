@@ -1,6 +1,7 @@
 package application
 
 import (
+	"database/sql"
 	"log"
 	"os"
 	"path"
@@ -198,11 +199,19 @@ func (m Mother) Registrar() services.Registrar {
 
 func (m Mother) Database() models.DatabaseInterface {
 	env := NewEnvironment()
-	return models.NewDatabase(models.Config{
-		DatabaseURL:         env.DatabaseURL,
+	sqlDB, err := sql.Open("mysql", env.DatabaseURL)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := sqlDB.Ping(); err != nil {
+		panic(err)
+	}
+	sqlDB.SetMaxOpenConns(env.DBMaxOpenConns)
+
+	return models.NewDatabase(sqlDB, models.Config{
 		MigrationsPath:      env.ModelMigrationsDir,
 		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
-		MaxOpenConnections:  env.DBMaxOpenConns,
 	})
 }
 

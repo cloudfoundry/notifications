@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"database/sql"
 	"path"
 	"regexp"
 	"testing"
@@ -64,12 +65,12 @@ var _ = BeforeEach(func() {
 
 func TruncateTables() {
 	env := application.NewEnvironment()
-	config := models.Config{
-		DatabaseURL:         env.DatabaseURL,
+	sqlDB, err := sql.Open("mysql", env.DatabaseURL)
+	Expect(err).NotTo(HaveOccurred())
+	database := models.NewDatabase(sqlDB, models.Config{
 		MigrationsPath:      env.ModelMigrationsDir,
 		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
-	}
-	database := models.NewDatabase(config)
+	})
 	database.Connection().(*models.Connection).TruncateTables()
 	gobble.Database().Connection.TruncateTables()
 

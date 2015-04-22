@@ -15,8 +15,7 @@ var _ = Describe("Transaction", func() {
 	BeforeEach(func() {
 		TruncateTables()
 		env := application.NewEnvironment()
-		db := models.NewDatabase(models.Config{
-			DatabaseURL:    env.DatabaseURL,
+		db := models.NewDatabase(sqlDB, models.Config{
 			MigrationsPath: env.ModelMigrationsDir,
 		})
 		conn = db.Connection()

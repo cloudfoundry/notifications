@@ -19,8 +19,7 @@ var _ = Describe("Receipts Repo", func() {
 		repo = models.NewReceiptsRepo()
 
 		env := application.NewEnvironment()
-		db := models.NewDatabase(models.Config{
-			DatabaseURL:    env.DatabaseURL,
+		db := models.NewDatabase(sqlDB, models.Config{
 			MigrationsPath: env.ModelMigrationsDir,
 		})
 

@@ -19,8 +19,7 @@ var _ = Describe("MessagesRepo", func() {
 		TruncateTables()
 		repo = models.NewMessagesRepo()
 		env := application.NewEnvironment()
-		conn = models.NewDatabase(models.Config{
-			DatabaseURL:    env.DatabaseURL,
+		conn = models.NewDatabase(sqlDB, models.Config{
 			MigrationsPath: env.ModelMigrationsDir,
 		}).Connection()
 		message = models.Message{

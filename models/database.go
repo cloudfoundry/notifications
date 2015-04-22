@@ -6,16 +6,11 @@ import (
 	"io/ioutil"
 	"time"
 
-	"sync"
-
 	"github.com/coopernurse/gorp"
 	sql_migrate "github.com/rubenv/sql-migrate"
 
 	_ "github.com/go-sql-driver/mysql"
 )
-
-var _database *DB
-var mutex sync.Mutex
 
 type DB struct {
 	connection *Connection
@@ -28,29 +23,7 @@ type DatabaseInterface interface {
 	Seed()
 }
 
-type configurableDB interface {
-	SetMaxOpenConns(int)
-}
-
-func NewDatabase(config Config) *DB {
-	if _database != nil {
-		return _database
-	}
-
-	mutex.Lock()
-	defer mutex.Unlock()
-	db, err := sql.Open("mysql", config.DatabaseURL)
-	if err != nil {
-		panic(err)
-	}
-
-	ConfigureDB(db, config)
-
-	err = db.Ping()
-	if err != nil {
-		panic(err)
-	}
-
+func NewDatabase(db *sql.DB, config Config) *DB {
 	connection := &Connection{
 		DbMap: &gorp.DbMap{
 			Db: db,
@@ -61,18 +34,14 @@ func NewDatabase(config Config) *DB {
 		},
 	}
 
-	_database = &DB{
+	database := &DB{
 		config:     config,
 		connection: connection,
 	}
 
-	_database.migrate(config.MigrationsPath)
+	database.migrate(config.MigrationsPath)
 
-	return _database
-}
-
-func ConfigureDB(db configurableDB, config Config) {
-	db.SetMaxOpenConns(config.MaxOpenConnections)
+	return database
 }
 
 func (database DB) migrate(migrationsPath string) {

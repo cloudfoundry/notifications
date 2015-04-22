@@ -1,6 +1,7 @@
 package models_test
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
@@ -15,10 +16,19 @@ func TestModelsSuite(t *testing.T) {
 	RunSpecs(t, "Models Suite")
 }
 
+var sqlDB *sql.DB
+
+var _ = BeforeEach(func() {
+	env := application.NewEnvironment()
+
+	var err error
+	sqlDB, err = sql.Open("mysql", env.DatabaseURL)
+	Expect(err).NotTo(HaveOccurred())
+})
+
 func TruncateTables() {
 	env := application.NewEnvironment()
-	db := models.NewDatabase(models.Config{
-		DatabaseURL:    env.DatabaseURL,
+	db := models.NewDatabase(sqlDB, models.Config{
 		MigrationsPath: env.ModelMigrationsDir,
 	})
 
