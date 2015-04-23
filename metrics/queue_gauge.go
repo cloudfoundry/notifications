@@ -32,12 +32,14 @@ func (g QueueGauge) Run() {
 
 		for number, value := range retryCounts {
 			NewMetric("gauge", map[string]interface{}{
-				fmt.Sprintf("queue-retry-counts.%d", number): value,
+				"name":  fmt.Sprintf("queue-retry-counts.%d", number),
+				"value": value,
 			}).LogWith(g.logger)
 		}
 
 		NewMetric("gauge", map[string]interface{}{
-			"queue-length": length,
+			"name":  "queue-length",
+			"value": length,
 		}).LogWith(g.logger)
 	}
 }

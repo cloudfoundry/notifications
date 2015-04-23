@@ -40,7 +40,7 @@ var _ = Describe("QueueGauge", func() {
 		Eventually(func() []string {
 			return strings.Split(buffer.String(), "\n")
 		}).Should(Equal([]string{
-			`[METRIC] {"kind":"gauge","payload":{"queue-length":0}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":0}}`,
 			"",
 		}))
 
@@ -51,9 +51,9 @@ var _ = Describe("QueueGauge", func() {
 		Eventually(func() []string {
 			return strings.Split(buffer.String(), "\n")
 		}).Should(Equal([]string{
-			`[METRIC] {"kind":"gauge","payload":{"queue-length":0}}`,
-			`[METRIC] {"kind":"gauge","payload":{"queue-retry-counts.0":1}}`,
-			`[METRIC] {"kind":"gauge","payload":{"queue-length":1}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":0}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"queue-retry-counts.0","value":1}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":1}}`,
 			"",
 		}))
 
@@ -63,10 +63,10 @@ var _ = Describe("QueueGauge", func() {
 		Eventually(func() []string {
 			return strings.Split(buffer.String(), "\n")
 		}).Should(Equal([]string{
-			`[METRIC] {"kind":"gauge","payload":{"queue-length":0}}`,
-			`[METRIC] {"kind":"gauge","payload":{"queue-retry-counts.0":1}}`,
-			`[METRIC] {"kind":"gauge","payload":{"queue-length":1}}`,
-			`[METRIC] {"kind":"gauge","payload":{"queue-length":0}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":0}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"queue-retry-counts.0","value":1}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":1}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":0}}`,
 			"",
 		}))
 	})
@@ -89,9 +89,9 @@ var _ = Describe("QueueGauge", func() {
 		Eventually(func() []string {
 			return strings.Split(buffer.String(), "\n")
 		}).Should(ConsistOf([]string{
-			`[METRIC] {"kind":"gauge","payload":{"queue-length":4}}`,
-			`[METRIC] {"kind":"gauge","payload":{"queue-retry-counts.4":1}}`,
-			`[METRIC] {"kind":"gauge","payload":{"queue-retry-counts.1":3}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":4}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"queue-retry-counts.4","value":1}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"queue-retry-counts.1","value":3}}`,
 			"",
 		}))
 	})
