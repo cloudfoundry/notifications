@@ -40,7 +40,7 @@ var _ = Describe("QueueGauge", func() {
 		Eventually(func() []string {
 			return strings.Split(buffer.String(), "\n")
 		}).Should(Equal([]string{
-			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":0}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"notifications.queue.length","value":0}}`,
 			"",
 		}))
 
@@ -51,9 +51,9 @@ var _ = Describe("QueueGauge", func() {
 		Eventually(func() []string {
 			return strings.Split(buffer.String(), "\n")
 		}).Should(Equal([]string{
-			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":0}}`,
-			`[METRIC] {"kind":"gauge","payload":{"name":"queue-retry-counts.0","value":1}}`,
-			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":1}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"notifications.queue.length","value":0}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"notifications.queue.retry","tags":{"count":"0"},"value":1}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"notifications.queue.length","value":1}}`,
 			"",
 		}))
 
@@ -63,10 +63,10 @@ var _ = Describe("QueueGauge", func() {
 		Eventually(func() []string {
 			return strings.Split(buffer.String(), "\n")
 		}).Should(Equal([]string{
-			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":0}}`,
-			`[METRIC] {"kind":"gauge","payload":{"name":"queue-retry-counts.0","value":1}}`,
-			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":1}}`,
-			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":0}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"notifications.queue.length","value":0}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"notifications.queue.retry","tags":{"count":"0"},"value":1}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"notifications.queue.length","value":1}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"notifications.queue.length","value":0}}`,
 			"",
 		}))
 	})
@@ -89,9 +89,9 @@ var _ = Describe("QueueGauge", func() {
 		Eventually(func() []string {
 			return strings.Split(buffer.String(), "\n")
 		}).Should(ConsistOf([]string{
-			`[METRIC] {"kind":"gauge","payload":{"name":"queue-length","value":4}}`,
-			`[METRIC] {"kind":"gauge","payload":{"name":"queue-retry-counts.4","value":1}}`,
-			`[METRIC] {"kind":"gauge","payload":{"name":"queue-retry-counts.1","value":3}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"notifications.queue.length","value":4}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"notifications.queue.retry","tags":{"count":"4"},"value":1}}`,
+			`[METRIC] {"kind":"gauge","payload":{"name":"notifications.queue.retry","tags":{"count":"1"},"value":3}}`,
 			"",
 		}))
 	})

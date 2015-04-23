@@ -1,8 +1,8 @@
 package metrics
 
 import (
-	"fmt"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -32,13 +32,16 @@ func (g QueueGauge) Run() {
 
 		for number, value := range retryCounts {
 			NewMetric("gauge", map[string]interface{}{
-				"name":  fmt.Sprintf("queue-retry-counts.%d", number),
+				"name": "notifications.queue.retry",
+				"tags": map[string]interface{}{
+					"count": strconv.Itoa(number),
+				},
 				"value": value,
 			}).LogWith(g.logger)
 		}
 
 		NewMetric("gauge", map[string]interface{}{
-			"name":  "queue-length",
+			"name":  "notifications.queue.length",
 			"value": length,
 		}).LogWith(g.logger)
 	}
