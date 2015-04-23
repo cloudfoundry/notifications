@@ -13,10 +13,12 @@ var _ = Describe("Migrator", func() {
 		var migrator application.Migrator
 		var provider *fakes.PersistenceProvider
 		var database *fakes.Database
+		var gobbleDatabase *fakes.GobbleDatabase
 
 		BeforeEach(func() {
 			database = fakes.NewDatabase()
-			provider = fakes.NewPersistenceProvider(database)
+			gobbleDatabase = &fakes.GobbleDatabase{}
+			provider = fakes.NewPersistenceProvider(database, gobbleDatabase)
 		})
 
 		Context("when configured to run migrations", func() {
@@ -30,10 +32,16 @@ var _ = Describe("Migrator", func() {
 				Expect(provider.DatabaseWasCalled).To(BeTrue())
 			})
 
-			It("calls the Queue function on the persistence provider", func() {
+			It("calls the GobbleDatabase function on the persistence provider", func() {
 				migrator.Migrate()
 
-				Expect(provider.QueueWasCalled).To(BeTrue())
+				Expect(provider.GobbleDatabaseWasCalled).To(BeTrue())
+			})
+
+			It("migrates the gobble database", func() {
+				migrator.Migrate()
+
+				Expect(gobbleDatabase.MigrateWasCalled).To(BeTrue())
 			})
 
 			It("seeds the database", func() {
@@ -54,10 +62,16 @@ var _ = Describe("Migrator", func() {
 				Expect(provider.DatabaseWasCalled).To(BeFalse())
 			})
 
-			It("skips the Queue function on the persistence provider", func() {
+			It("skips the GobbleDatabase function on the persistence provider", func() {
 				migrator.Migrate()
 
-				Expect(provider.QueueWasCalled).To(BeFalse())
+				Expect(provider.GobbleDatabaseWasCalled).To(BeFalse())
+			})
+
+			It("does not migrate the gobble database", func() {
+				migrator.Migrate()
+
+				Expect(gobbleDatabase.MigrateWasCalled).To(BeFalse())
 			})
 
 			It("does not seed the database", func() {

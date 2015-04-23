@@ -23,8 +23,8 @@ import (
 )
 
 type Mother struct {
-	queue     *gobble.Queue
 	uaaClient *uaa.UAA
+	sqlDB     *sql.DB
 	mutex     sync.Mutex
 }
 
@@ -32,18 +32,16 @@ func NewMother() *Mother {
 	return &Mother{}
 }
 
+func (m Mother) GobbleDatabase() gobble.DatabaseInterface {
+	return gobble.NewDatabase(m.SQLDatabase())
+}
+
 func (m *Mother) Queue() gobble.QueueInterface {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+	env := NewEnvironment()
 
-	if m.queue == nil {
-		env := NewEnvironment()
-		m.queue = gobble.NewQueue(gobble.Config{
-			WaitMaxDuration: time.Duration(env.GobbleWaitMaxDuration) * time.Millisecond,
-		})
-	}
-
-	return m.queue
+	return gobble.NewQueue(m.GobbleDatabase(), gobble.Config{
+		WaitMaxDuration: time.Duration(env.GobbleWaitMaxDuration) * time.Millisecond,
+	})
 }
 
 func (m Mother) UserStrategy() strategies.UserStrategy {
@@ -197,19 +195,35 @@ func (m Mother) Registrar() services.Registrar {
 	return services.NewRegistrar(clientsRepo, kindsRepo)
 }
 
-func (m Mother) Database() models.DatabaseInterface {
+func (m *Mother) SQLDatabase() *sql.DB {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	if m.sqlDB != nil {
+		return m.sqlDB
+	}
+
 	env := NewEnvironment()
-	sqlDB, err := sql.Open("mysql", env.DatabaseURL)
+
+	var err error
+	m.sqlDB, err = sql.Open("mysql", env.DatabaseURL)
 	if err != nil {
 		panic(err)
 	}
 
-	if err := sqlDB.Ping(); err != nil {
+	if err := m.sqlDB.Ping(); err != nil {
 		panic(err)
 	}
-	sqlDB.SetMaxOpenConns(env.DBMaxOpenConns)
 
-	return models.NewDatabase(sqlDB, models.Config{
+	m.sqlDB.SetMaxOpenConns(env.DBMaxOpenConns)
+
+	return m.sqlDB
+}
+
+func (m Mother) Database() models.DatabaseInterface {
+	env := NewEnvironment()
+
+	return models.NewDatabase(m.SQLDatabase(), models.Config{
 		MigrationsPath:      env.ModelMigrationsDir,
 		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
 	})

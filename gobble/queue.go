@@ -23,13 +23,13 @@ type Queue struct {
 	closed   bool
 }
 
-func NewQueue(config Config) *Queue {
+func NewQueue(database DatabaseInterface, config Config) *Queue {
 	if config.WaitMaxDuration == 0 {
 		config.WaitMaxDuration = WaitMaxDuration
 	}
 
 	return &Queue{
-		database: Database(),
+		database: database.(*DB),
 		config:   config,
 	}
 }

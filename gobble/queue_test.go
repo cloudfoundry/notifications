@@ -10,12 +10,16 @@ import (
 )
 
 var _ = Describe("Queue", func() {
-	var queue *gobble.Queue
+	var (
+		queue    *gobble.Queue
+		database *gobble.DB
+	)
 
 	BeforeEach(func() {
 		TruncateTables()
+		database = gobble.NewDatabase(sqlDB)
 
-		queue = gobble.NewQueue(gobble.Config{
+		queue = gobble.NewQueue(database, gobble.Config{
 			WaitMaxDuration: 50 * time.Millisecond,
 		})
 	})
@@ -33,7 +37,7 @@ var _ = Describe("Queue", func() {
 			job, err := queue.Enqueue(job)
 			Expect(err).NotTo(HaveOccurred())
 
-			results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
+			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
 			if err != nil {
 				panic(err)
 			}
@@ -64,7 +68,7 @@ var _ = Describe("Queue", func() {
 			queue.Requeue(job)
 
 			reloadedJob := gobble.Job{}
-			err = gobble.Database().Connection.SelectOne(&reloadedJob, "SELECT * FROM `jobs` where id = ?", job.ID)
+			err = database.Connection.SelectOne(&reloadedJob, "SELECT * FROM `jobs` where id = ?", job.ID)
 			if err != nil {
 				panic(err)
 			}
@@ -80,7 +84,7 @@ var _ = Describe("Queue", func() {
 				Payload: "something",
 			}
 
-			err := gobble.Database().Connection.Insert(&job)
+			err := database.Connection.Insert(&job)
 			if err != nil {
 				panic(err)
 			}
@@ -131,7 +135,7 @@ var _ = Describe("Queue", func() {
 			Eventually(done, 1*time.Second).Should(Receive())
 			Eventually(done, 1*time.Second).Should(Receive())
 
-			results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
+			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
 			if err != nil {
 				panic(err)
 			}
@@ -217,14 +221,14 @@ var _ = Describe("Queue", func() {
 			if err != nil {
 				panic(err)
 			}
-			results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
+			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
 			if err != nil {
 				panic(err)
 			}
 			Expect(results).To(HaveLen(1))
 
 			queue.Dequeue(job)
-			results, err = gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
+			results, err = database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
 			if err != nil {
 				panic(err)
 			}

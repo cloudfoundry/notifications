@@ -6,14 +6,16 @@ import (
 )
 
 type PersistenceProvider struct {
-	database          *Database
-	DatabaseWasCalled bool
-	QueueWasCalled    bool
+	database                *Database
+	gobbleDatabase          *GobbleDatabase
+	DatabaseWasCalled       bool
+	GobbleDatabaseWasCalled bool
 }
 
-func NewPersistenceProvider(database *Database) *PersistenceProvider {
+func NewPersistenceProvider(database *Database, gobbleDatabase *GobbleDatabase) *PersistenceProvider {
 	return &PersistenceProvider{
-		database: database,
+		database:       database,
+		gobbleDatabase: gobbleDatabase,
 	}
 }
 
@@ -22,7 +24,15 @@ func (pp *PersistenceProvider) Database() models.DatabaseInterface {
 	return pp.database
 }
 
-func (pp *PersistenceProvider) Queue() gobble.QueueInterface {
-	pp.QueueWasCalled = true
-	return NewQueue()
+func (pp *PersistenceProvider) GobbleDatabase() gobble.DatabaseInterface {
+	pp.GobbleDatabaseWasCalled = true
+	return pp.gobbleDatabase
+}
+
+type GobbleDatabase struct {
+	MigrateWasCalled bool
+}
+
+func (gd *GobbleDatabase) Migrate() {
+	gd.MigrateWasCalled = true
 }

@@ -1,12 +1,14 @@
 package goose
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/kylelemons/go-gypsy/yaml"
-	"github.com/lib/pq"
 	"os"
 	"path/filepath"
+
+	"github.com/kylelemons/go-gypsy/yaml"
+	"github.com/lib/pq"
 )
 
 // DBDriver encapsulates the info needed to work with
@@ -22,10 +24,11 @@ type DBConf struct {
 	MigrationsDir string
 	Env           string
 	Driver        DBDriver
+	PgSchema      string
 }
 
 // extract configuration details from the given file
-func NewDBConf(p, env string) (*DBConf, error) {
+func NewDBConf(p, env string, pgschema string) (*DBConf, error) {
 
 	cfgFile := filepath.Join(p, "dbconf.yml")
 
@@ -38,6 +41,7 @@ func NewDBConf(p, env string) (*DBConf, error) {
 	if err != nil {
 		return nil, err
 	}
+	drv = os.ExpandEnv(drv)
 
 	open, err := f.Get(fmt.Sprintf("%s.open", env))
 	if err != nil {
@@ -74,6 +78,7 @@ func NewDBConf(p, env string) (*DBConf, error) {
 		MigrationsDir: filepath.Join(p, "migrations"),
 		Env:           env,
 		Driver:        d,
+		PgSchema:      pgschema,
 	}, nil
 }
 
@@ -96,6 +101,10 @@ func newDBDriver(name, open string) DBDriver {
 		d.Import = "github.com/ziutek/mymysql/godrv"
 		d.Dialect = &MySqlDialect{}
 
+	case "mysql":
+		d.Import = "github.com/go-sql-driver/mysql"
+		d.Dialect = &MySqlDialect{}
+
 	case "sqlite3":
 		d.Import = "github.com/mattn/go-sqlite3"
 		d.Dialect = &Sqlite3Dialect{}
@@ -107,4 +116,24 @@ func newDBDriver(name, open string) DBDriver {
 // ensure we have enough info about this driver
 func (drv *DBDriver) IsValid() bool {
 	return len(drv.Import) > 0 && drv.Dialect != nil
+}
+
+// OpenDBFromDBConf wraps database/sql.DB.Open() and configures
+// the newly opened DB based on the given DBConf.
+//
+// Callers must Close() the returned DB.
+func OpenDBFromDBConf(conf *DBConf) (*sql.DB, error) {
+	db, err := sql.Open(conf.Driver.Name, conf.Driver.OpenStr)
+	if err != nil {
+		return nil, err
+	}
+
+	// if a postgres schema has been specified, apply it
+	if conf.Driver.Name == "postgres" && conf.PgSchema != "" {
+		if _, err := db.Exec("SET search_path TO " + conf.PgSchema); err != nil {
+			return nil, err
+		}
+	}
+
+	return db, nil
 }

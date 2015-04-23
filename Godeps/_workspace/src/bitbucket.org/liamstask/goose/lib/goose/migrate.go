@@ -4,9 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	_ "github.com/lib/pq"
-	_ "github.com/ziutek/mymysql/godrv"
-	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"os"
 	"path/filepath"
@@ -15,6 +12,11 @@ import (
 	"strings"
 	"text/template"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/ziutek/mymysql/godrv"
 )
 
 var (
@@ -48,12 +50,17 @@ func newMigration(v int64, src string) *Migration {
 
 func RunMigrations(conf *DBConf, migrationsDir string, target int64) (err error) {
 
-	db, err := sql.Open(conf.Driver.Name, conf.Driver.OpenStr)
+	db, err := OpenDBFromDBConf(conf)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
+	return RunMigrationsOnDb(conf, migrationsDir, target, db)
+}
+
+// Runs migration on a specific database instance.
+func RunMigrationsOnDb(conf *DBConf, migrationsDir string, target int64, db *sql.DB) (err error) {
 	current, err := EnsureDBVersion(conf, db)
 	if err != nil {
 		return err
@@ -138,13 +145,12 @@ func versionFilter(v, current, target int64) bool {
 }
 
 func (ms migrationSorter) Sort(direction bool) {
-	sort.Sort(ms)
 
-	// reverse order if needed
-	if direction == false {
-		for i, j := 0, len(ms)-1; i < j; i, j = i+1, j-1 {
-			ms[i], ms[j] = ms[j], ms[i]
-		}
+	// sort ascending or descending by version
+	if direction {
+		sort.Sort(ms)
+	} else {
+		sort.Sort(sort.Reverse(ms))
 	}
 
 	// now that we're sorted in the appropriate direction,
@@ -218,16 +224,17 @@ func EnsureDBVersion(conf *DBConf, db *sql.DB) (int64, error) {
 			}
 		}
 
-		// if version has been applied and not marked to be skipped, we're done
-		if row.IsApplied && !skip {
+		if skip {
+			continue
+		}
+
+		// if version has been applied we're done
+		if row.IsApplied {
 			return row.VersionId, nil
 		}
 
-		// version is either not applied, or we've already seen a more
-		// recent version of it that was not applied.
-		if !skip {
-			toSkip = append(toSkip, row.VersionId)
-		}
+		// latest version of migration has not been applied.
+		toSkip = append(toSkip, row.VersionId)
 	}
 
 	panic("failure in EnsureDBVersion()")
@@ -262,7 +269,7 @@ func createVersionTable(conf *DBConf, db *sql.DB) error {
 // their own DB instance
 func GetDBVersion(conf *DBConf) (version int64, err error) {
 
-	db, err := sql.Open(conf.Driver.Name, conf.Driver.OpenStr)
+	db, err := OpenDBFromDBConf(conf)
 	if err != nil {
 		return -1, err
 	}
@@ -318,6 +325,9 @@ func GetMostRecentDBVersion(dirpath string) (version int64, err error) {
 	version = -1
 
 	filepath.Walk(dirpath, func(name string, info os.FileInfo, walkerr error) error {
+		if walkerr != nil {
+			return walkerr
+		}
 
 		if !info.IsDir() {
 			if v, e := NumericComponent(name); e == nil {
@@ -358,6 +368,20 @@ func CreateMigration(name, migrationType, dir string, t time.Time) (path string,
 	path, err = writeTemplateToFile(fpath, tmpl, timestamp)
 
 	return
+}
+
+// Update the version table for the given migration,
+// and finalize the transaction.
+func FinalizeMigration(conf *DBConf, txn *sql.Tx, direction bool, v int64) error {
+
+	// XXX: drop goose_db_version table on some minimum version number?
+	stmt := conf.Driver.Dialect.insertVersionSql()
+	if _, err := txn.Exec(stmt, v, direction); err != nil {
+		txn.Rollback()
+		return err
+	}
+
+	return txn.Commit()
 }
 
 var goMigrationTemplate = template.Must(template.New("goose.go-migration").Parse(`

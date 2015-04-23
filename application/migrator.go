@@ -7,7 +7,7 @@ import (
 
 type PersistenceProvider interface {
 	Database() models.DatabaseInterface
-	Queue() gobble.QueueInterface
+	GobbleDatabase() gobble.DatabaseInterface
 }
 
 type Migrator struct {
@@ -25,6 +25,6 @@ func NewMigrator(provider PersistenceProvider, shouldMigrate bool) Migrator {
 func (m Migrator) Migrate() {
 	if m.shouldMigrate {
 		m.provider.Database().Seed()
-		m.provider.Queue()
+		m.provider.GobbleDatabase().Migrate()
 	}
 }

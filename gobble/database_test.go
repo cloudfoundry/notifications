@@ -1,8 +1,6 @@
 package gobble_test
 
 import (
-	"reflect"
-
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 
 	. "github.com/onsi/ginkgo"
@@ -16,7 +14,9 @@ type Column struct {
 
 var _ = Describe("Database", func() {
 	It("has a jobs table", func() {
-		rows, err := gobble.Database().Connection.Db.Query("SHOW TABLES")
+		database := gobble.NewDatabase(sqlDB)
+
+		rows, err := database.Connection.Db.Query("SHOW TABLES")
 		if err != nil {
 			panic(err)
 		}
@@ -33,7 +33,7 @@ var _ = Describe("Database", func() {
 
 		Expect(tables).To(ContainElement("jobs"))
 
-		rows, err = gobble.Database().Connection.Db.Query("SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'jobs'")
+		rows, err = database.Connection.Db.Query("SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'jobs'")
 		if err != nil {
 			panic(err)
 		}
@@ -75,12 +75,5 @@ var _ = Describe("Database", func() {
 			Field: "active_at",
 			Type:  "timestamp",
 		}))
-	})
-
-	It("only ever instantiates a single DB object", func() {
-		db1 := reflect.ValueOf(gobble.Database()).Pointer()
-		db2 := reflect.ValueOf(gobble.Database()).Pointer()
-
-		Expect(db1).To(Equal(db2))
 	})
 })

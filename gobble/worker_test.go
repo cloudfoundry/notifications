@@ -10,10 +10,13 @@ import (
 )
 
 var _ = Describe("Worker", func() {
-	var queue *gobble.Queue
-	var worker gobble.Worker
-	var callbackWasCalledWith gobble.Job
-	var callback func(*gobble.Job)
+	var (
+		queue                 *gobble.Queue
+		worker                gobble.Worker
+		callbackWasCalledWith gobble.Job
+		callback              func(*gobble.Job)
+		database              *gobble.DB
+	)
 
 	BeforeEach(func() {
 		TruncateTables()
@@ -21,8 +24,9 @@ var _ = Describe("Worker", func() {
 		callback = func(job *gobble.Job) {
 			callbackWasCalledWith = *job
 		}
+		database = gobble.NewDatabase(sqlDB)
 
-		queue = gobble.NewQueue(gobble.Config{})
+		queue = gobble.NewQueue(database, gobble.Config{})
 		worker = gobble.NewWorker(1, queue, callback)
 	})
 
@@ -43,7 +47,7 @@ var _ = Describe("Worker", func() {
 
 			Expect(callbackWasCalledWith.ID).To(Equal(job.ID))
 
-			results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
+			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
 			if err != nil {
 				panic(err)
 			}
@@ -64,7 +68,7 @@ var _ = Describe("Worker", func() {
 
 			worker.Perform()
 
-			results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
+			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
 			if err != nil {
 				panic(err)
 			}
@@ -86,7 +90,7 @@ var _ = Describe("Worker", func() {
 				Payload: "the-payload",
 			})
 
-			results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
+			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
 			if err != nil {
 				panic(err)
 			}
@@ -96,7 +100,7 @@ var _ = Describe("Worker", func() {
 			worker.Work()
 
 			Eventually(func() int {
-				results, err := gobble.Database().Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
+				results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
 				if err != nil {
 					panic(err)
 				}

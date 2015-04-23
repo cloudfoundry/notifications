@@ -72,7 +72,8 @@ func TruncateTables() {
 		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
 	})
 	database.Connection().(*models.Connection).TruncateTables()
-	gobble.Database().Connection.TruncateTables()
+
+	gobble.NewDatabase(sqlDB).Connection.TruncateTables()
 
 	database.Seed()
 }

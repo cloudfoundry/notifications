@@ -12,7 +12,7 @@
 		},
 		{
 			"ImportPath": "bitbucket.org/liamstask/goose/lib/goose",
-			"Rev": "e885648f5ad6e48f7d7532b9c0b21767333d50ab"
+			"Rev": "8488cc47d90c8a502b1c41a462a6d9cc8ee0a895"
 		},
 		{
 			"ImportPath": "github.com/PuerkitoBio/goquery",
