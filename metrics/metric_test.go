@@ -16,12 +16,12 @@ var _ = Describe("Metric", func() {
 
 	BeforeEach(func() {
 		buffer = bytes.NewBuffer([]byte{})
-		packageLogger = metrics.Logger
-		metrics.Logger = log.New(buffer, "", 0)
+		packageLogger = metrics.DefaultLogger
+		metrics.DefaultLogger = metrics.NewLogger(buffer)
 	})
 
 	AfterEach(func() {
-		metrics.Logger = packageLogger
+		metrics.DefaultLogger = packageLogger
 	})
 
 	It("can log itself", func() {

@@ -15,6 +15,7 @@ type QueueInterface interface {
 	Reserve(string) <-chan Job
 	Dequeue(Job)
 	Requeue(Job)
+	Len() (int, error)
 }
 
 type Queue struct {
@@ -57,6 +58,11 @@ func (queue *Queue) Reserve(workerID string) <-chan Job {
 	return channel
 }
 
+func (queue *Queue) Len() (int, error) {
+	length, err := queue.database.Connection.SelectInt("SELECT COUNT(*) FROM `jobs`")
+	return int(length), err
+}
+
 func (queue *Queue) Close() {
 	queue.closed = true
 }
@@ -67,6 +73,10 @@ func (queue *Queue) reserve(channel chan Job, workerID string) {
 		var err error
 
 		job = queue.findJob()
+		if queue.closed {
+			return
+		}
+
 		job, err = queue.updateJob(job, workerID)
 		if err != nil {
 			if _, ok := err.(gorp.OptimisticLockError); ok {
@@ -77,6 +87,7 @@ func (queue *Queue) reserve(channel chan Job, workerID string) {
 			}
 		}
 	}
+
 	if queue.closed {
 		queue.updateJob(job, "")
 		return

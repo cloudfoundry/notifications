@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -100,6 +101,9 @@ func (app Application) EnableDBLogging() {
 
 func (app Application) StartWorkers() {
 	logger := log.New(os.Stdout, "", 0)
+
+	queueGauge := metrics.NewQueueGauge(app.mother.Queue(), metrics.DefaultLogger, time.Tick(1*time.Second))
+	go queueGauge.Run()
 
 	WorkerGenerator{
 		InstanceIndex: app.env.VCAPApplication.InstanceIndex,

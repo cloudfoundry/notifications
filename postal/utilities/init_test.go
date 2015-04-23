@@ -16,11 +16,11 @@ func TestUtilitiesSuite(t *testing.T) {
 	fakes.RegisterFastTokenSigningMethod()
 
 	buffer := bytes.NewBuffer([]byte{})
-	metricsLogger := metrics.Logger
-	metrics.Logger = log.New(buffer, "", 0)
+	metricsLogger := metrics.DefaultLogger
+	metrics.DefaultLogger = log.New(buffer, "", 0)
 
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Postal Utilities Suite")
 
-	metrics.Logger = metricsLogger
+	metrics.DefaultLogger = metricsLogger
 }

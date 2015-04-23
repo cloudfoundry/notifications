@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"log"
 	"net/http"
 	"strings"
 
@@ -15,11 +16,13 @@ type routeMatcher interface {
 
 type RequestCounter struct {
 	matcher routeMatcher
+	logger  *log.Logger
 }
 
-func NewRequestCounter(matcher routeMatcher) RequestCounter {
+func NewRequestCounter(matcher routeMatcher, logger *log.Logger) RequestCounter {
 	return RequestCounter{
 		matcher: matcher,
+		logger:  logger,
 	}
 }
 
@@ -31,12 +34,13 @@ func (ware RequestCounter) ServeHTTP(w http.ResponseWriter, req *http.Request, c
 		path = convertNameToMetricPath(name)
 	}
 
-	metrics.NewMetric("counter", map[string]interface{}{
+	m := metrics.NewMetric("counter", map[string]interface{}{
 		"name": "notifications.web",
 		"tags": map[string]string{
 			"endpoint": req.Method + path,
 		},
-	}).Log()
+	})
+	m.LogWith(ware.logger)
 
 	return true
 }

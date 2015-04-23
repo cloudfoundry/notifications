@@ -3,41 +3,59 @@ package fakes
 import "github.com/cloudfoundry-incubator/notifications/gobble"
 
 type Queue struct {
-	jobs         chan gobble.Job
-	pk           int
-	EnqueueError error
+	jobs          map[int]gobble.Job
+	availableJobs chan gobble.Job
+	pk            int
+	EnqueueError  error
 }
 
 func NewQueue() *Queue {
 	return &Queue{
-		jobs: make(chan gobble.Job),
+		jobs:          make(map[int]gobble.Job),
+		availableJobs: make(chan gobble.Job),
 	}
 }
 
-func (fake *Queue) Enqueue(job gobble.Job) (gobble.Job, error) {
-	if fake.EnqueueError != nil {
-		return job, fake.EnqueueError
+func (q *Queue) Enqueue(job gobble.Job) (gobble.Job, error) {
+	if q.EnqueueError != nil {
+		return job, q.EnqueueError
 	}
-	fake.pk++
-	job.ID = fake.pk
-	go func(job gobble.Job) {
-		fake.jobs <- job
-	}(job)
+
+	if job.ID == 0 {
+		q.pk++
+		job.ID = q.pk
+	}
+
+	go func() {
+		q.availableJobs <- job
+	}()
+
+	q.jobs[job.ID] = job
 
 	return job, nil
 }
 
-func (fake *Queue) Reserve(string) <-chan gobble.Job {
-	return fake.jobs
+func (q *Queue) Reserve(string) <-chan gobble.Job {
+	jobs := make(chan gobble.Job, 1)
+
+	go func() {
+		job := <-q.availableJobs
+		jobs <- job
+	}()
+
+	return jobs
 }
 
-func (fake *Queue) Dequeue(job gobble.Job) {
+func (q *Queue) Dequeue(job gobble.Job) {
+	delete(q.jobs, job.ID)
 }
 
-func (fake *Queue) Requeue(job gobble.Job) {
-	go func(job gobble.Job) {
-		fake.jobs <- job
-	}(job)
+func (q *Queue) Requeue(job gobble.Job) {
+	q.Enqueue(job)
 }
 
-func (fake *Queue) Unlock() {}
+func (q *Queue) Unlock() {}
+
+func (q *Queue) Len() (int, error) {
+	return len(q.jobs), nil
+}

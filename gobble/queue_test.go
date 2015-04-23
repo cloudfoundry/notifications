@@ -218,21 +218,34 @@ var _ = Describe("Queue", func() {
 	Describe("Dequeue", func() {
 		It("deletes the job from the queue", func() {
 			job, err := queue.Enqueue(gobble.Job{})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
+
 			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 			Expect(results).To(HaveLen(1))
 
 			queue.Dequeue(job)
+
 			results, err = database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 			Expect(results).To(HaveLen(0))
+		})
+	})
+
+	Describe("Len", func() {
+		It("returns the length of the queue", func() {
+			job, err := queue.Enqueue(gobble.Job{})
+			Expect(err).NotTo(HaveOccurred())
+
+			length, err := queue.Len()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(length).To(Equal(1))
+
+			queue.Dequeue(job)
+
+			length, err = queue.Len()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(length).To(Equal(0))
 		})
 	})
 })

@@ -3,6 +3,7 @@ package web
 import (
 	"strings"
 
+	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -67,7 +68,7 @@ func NewRouter(mother MotherInterface) Router {
 	database := mother.Database()
 	cors := mother.CORS()
 	router := mux.NewRouter()
-	requestCounter := middleware.NewRequestCounter(router)
+	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
 	return Router{
 		router: router,
