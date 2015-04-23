@@ -32,7 +32,7 @@ func NewMother() *Mother {
 	return &Mother{}
 }
 
-func (m Mother) GobbleDatabase() gobble.DatabaseInterface {
+func (m *Mother) GobbleDatabase() gobble.DatabaseInterface {
 	return gobble.NewDatabase(m.SQLDatabase())
 }
 
@@ -220,7 +220,7 @@ func (m *Mother) SQLDatabase() *sql.DB {
 	return m.sqlDB
 }
 
-func (m Mother) Database() models.DatabaseInterface {
+func (m *Mother) Database() models.DatabaseInterface {
 	env := NewEnvironment()
 
 	return models.NewDatabase(m.SQLDatabase(), models.Config{
