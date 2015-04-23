@@ -16,6 +16,7 @@ type QueueInterface interface {
 	Dequeue(Job)
 	Requeue(Job)
 	Len() (int, error)
+	RetryQueueLengths() (map[int]int, error)
 }
 
 type Queue struct {
@@ -61,6 +62,27 @@ func (queue *Queue) Reserve(workerID string) <-chan Job {
 func (queue *Queue) Len() (int, error) {
 	length, err := queue.database.Connection.SelectInt("SELECT COUNT(*) FROM `jobs`")
 	return int(length), err
+}
+
+func (queue *Queue) RetryQueueLengths() (map[int]int, error) {
+	lengths := map[int]int{}
+
+	type QueueLength struct {
+		RetryCount int `db:"retry_count"`
+		Count      int `db:"count"`
+	}
+
+	records, err := queue.database.Connection.Select(QueueLength{}, "SELECT retry_count, COUNT(*) AS count FROM `jobs` GROUP BY retry_count")
+	if err != nil {
+		return lengths, err
+	}
+
+	for _, value := range records {
+		length := value.(*QueueLength)
+		lengths[length.RetryCount] = length.Count
+	}
+
+	return lengths, nil
 }
 
 func (queue *Queue) Close() {

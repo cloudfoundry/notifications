@@ -59,3 +59,13 @@ func (q *Queue) Unlock() {}
 func (q *Queue) Len() (int, error) {
 	return len(q.jobs), nil
 }
+
+func (q *Queue) RetryQueueLengths() (map[int]int, error) {
+	lengths := map[int]int{}
+
+	for _, job := range q.jobs {
+		lengths[job.RetryCount] = lengths[job.RetryCount] + 1
+	}
+
+	return lengths, nil
+}
