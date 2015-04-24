@@ -30,19 +30,19 @@ func (g QueueGauge) Run() {
 		length, _ := g.queue.Len()
 		retryCounts, _ := g.queue.RetryQueueLengths()
 
-		for number, value := range retryCounts {
-			NewMetric("gauge", map[string]interface{}{
-				"name": "notifications.queue.retry",
-				"tags": map[string]interface{}{
-					"count": strconv.Itoa(number),
-				},
-				"value": value,
-			}).LogWith(g.logger)
-		}
-
 		NewMetric("gauge", map[string]interface{}{
 			"name":  "notifications.queue.length",
 			"value": length,
 		}).LogWith(g.logger)
+
+		for index := range make([]int, 11) {
+			NewMetric("gauge", map[string]interface{}{
+				"name": "notifications.queue.retry",
+				"tags": map[string]interface{}{
+					"count": strconv.Itoa(index),
+				},
+				"value": retryCounts[index],
+			}).LogWith(g.logger)
+		}
 	}
 }
