@@ -2,6 +2,7 @@ package acceptance
 
 import (
 	"database/sql"
+	"os"
 	"path"
 	"regexp"
 	"testing"
@@ -36,6 +37,8 @@ func TestAcceptanceSuite(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
+	os.Setenv("VCAP_APPLICATION", `{"instance_index": -1}`)
+
 	Servers.SMTP = servers.NewSMTP()
 	Servers.SMTP.Boot()
 
@@ -59,21 +62,23 @@ var _ = AfterSuite(func() {
 })
 
 var _ = BeforeEach(func() {
-	TruncateTables()
+	ResetDatabase()
 	Servers.SMTP.Reset()
 })
 
-func TruncateTables() {
+func ResetDatabase() {
 	env := application.NewEnvironment()
 	sqlDB, err := sql.Open("mysql", env.DatabaseURL)
 	Expect(err).NotTo(HaveOccurred())
-	database := models.NewDatabase(sqlDB, models.Config{
-		MigrationsPath:      env.ModelMigrationsDir,
-		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
-	})
+
+	database := models.NewDatabase(sqlDB, models.Config{DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json")})
+	database.Migrate(env.ModelMigrationsPath)
+	database.Setup()
 	database.Connection().(*models.Connection).TruncateTables()
 
-	gobble.NewDatabase(sqlDB).Connection.TruncateTables()
+	gobbleDB := gobble.NewDatabase(sqlDB)
+	gobbleDB.Migrate(env.GobbleMigrationsPath)
+	gobbleDB.Connection.TruncateTables()
 
 	database.Seed()
 }

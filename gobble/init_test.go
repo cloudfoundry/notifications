@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 
 	. "github.com/onsi/ginkgo"
@@ -25,8 +26,9 @@ var _ = BeforeSuite(func() {
 	var err error
 	sqlDB, err = instantiateDBConnection()
 	Expect(err).NotTo(HaveOccurred())
+	env := application.NewEnvironment()
 
-	gobble.NewDatabase(sqlDB).Migrate()
+	gobble.NewDatabase(sqlDB).Migrate(env.GobbleMigrationsPath)
 })
 
 var _ = BeforeEach(func() {

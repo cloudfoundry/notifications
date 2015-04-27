@@ -3,7 +3,6 @@ package models_test
 import (
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -19,10 +18,8 @@ var _ = Describe("TemplatesRepo", func() {
 	BeforeEach(func() {
 		TruncateTables()
 		repo = models.NewTemplatesRepo()
-		env := application.NewEnvironment()
-		db := models.NewDatabase(sqlDB, models.Config{
-			MigrationsPath: env.ModelMigrationsDir,
-		})
+		db := models.NewDatabase(sqlDB, models.Config{})
+		db.Setup()
 		conn = db.Connection()
 		createdAt = time.Now().Add(-1 * time.Hour).Truncate(1 * time.Second).UTC()
 

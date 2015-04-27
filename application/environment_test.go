@@ -99,7 +99,15 @@ var _ = Describe("Environment", func() {
 		It("infers the right location", func() {
 			os.Setenv("ROOT_PATH", "/tmp/foo")
 			env := application.NewEnvironment()
-			Expect(env.ModelMigrationsDir).To(Equal("/tmp/foo/models/migrations"))
+			Expect(env.ModelMigrationsPath).To(Equal("/tmp/foo/models/migrations"))
+		})
+	})
+
+	Describe("Gobble Migrations Path", func() {
+		It("infers the right location", func() {
+			os.Setenv("ROOT_PATH", "/tmp/foo")
+			env := application.NewEnvironment()
+			Expect(env.GobbleMigrationsPath).To(Equal("/tmp/foo/gobble/migrations"))
 		})
 	})
 

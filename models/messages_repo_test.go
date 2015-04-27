@@ -3,7 +3,6 @@ package models_test
 import (
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	. "github.com/onsi/ginkgo"
@@ -18,10 +17,9 @@ var _ = Describe("MessagesRepo", func() {
 	BeforeEach(func() {
 		TruncateTables()
 		repo = models.NewMessagesRepo()
-		env := application.NewEnvironment()
-		conn = models.NewDatabase(sqlDB, models.Config{
-			MigrationsPath: env.ModelMigrationsDir,
-		}).Connection()
+		db := models.NewDatabase(sqlDB, models.Config{})
+		conn = db.Connection()
+		db.Setup()
 		message = models.Message{
 			ID:     "message-id-123",
 			Status: postal.StatusDelivered,

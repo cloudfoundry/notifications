@@ -223,10 +223,11 @@ func (m *Mother) SQLDatabase() *sql.DB {
 func (m *Mother) Database() models.DatabaseInterface {
 	env := NewEnvironment()
 
-	return models.NewDatabase(m.SQLDatabase(), models.Config{
-		MigrationsPath:      env.ModelMigrationsDir,
+	database := models.NewDatabase(m.SQLDatabase(), models.Config{
 		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
 	})
+	database.Setup()
+	return database
 }
 
 func (m Mother) PreferencesFinder() *services.PreferencesFinder {

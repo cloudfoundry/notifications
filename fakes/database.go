@@ -6,8 +6,10 @@ import (
 )
 
 type Database struct {
-	Conn          *DBConn
-	SeedWasCalled bool
+	Conn             *DBConn
+	SeedWasCalled    bool
+	MigrateWasCalled bool
+	MigrationsPath   string
 }
 
 func NewDatabase() *Database {
@@ -24,6 +26,14 @@ func (fake Database) TraceOn(prefix string, logger gorp.GorpLogger) {}
 
 func (fake *Database) Seed() {
 	fake.SeedWasCalled = true
+}
+
+func (fake *Database) Migrate(migrationsPath string) {
+	fake.MigrationsPath = migrationsPath
+	fake.MigrateWasCalled = true
+}
+
+func (*Database) Setup() {
 }
 
 type SQLDatabase struct {

@@ -27,10 +27,10 @@ var _ = BeforeEach(func() {
 })
 
 func TruncateTables() {
+	db := models.NewDatabase(sqlDB, models.Config{})
 	env := application.NewEnvironment()
-	db := models.NewDatabase(sqlDB, models.Config{
-		MigrationsPath: env.ModelMigrationsDir,
-	})
+	db.Migrate(env.ModelMigrationsPath)
+	db.Setup()
 
 	connection := db.Connection().(*models.Connection)
 	err := connection.TruncateTables()

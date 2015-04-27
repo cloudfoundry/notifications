@@ -2,7 +2,6 @@ package gobble
 
 import (
 	"database/sql"
-	"os"
 
 	"bitbucket.org/liamstask/goose/lib/goose"
 	"github.com/coopernurse/gorp"
@@ -11,7 +10,7 @@ import (
 )
 
 type DatabaseInterface interface {
-	Migrate()
+	Migrate(string)
 }
 
 type DB struct {
@@ -32,8 +31,7 @@ func NewDatabase(db *sql.DB) *DB {
 	return &DB{Connection: conn}
 }
 
-func (db DB) Migrate() {
-	migrationsDir := os.Getenv("GOBBLE_MIGRATIONS_DIR")
+func (db DB) Migrate(migrationsDir string) {
 	dbConf := &goose.DBConf{
 		MigrationsDir: migrationsDir,
 		Env:           "notifications",

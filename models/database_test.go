@@ -9,17 +9,16 @@ import (
 )
 
 var _ = Describe("Database", func() {
-	var env application.Environment
 	var db *models.DB
 	var connection *models.Connection
 
 	BeforeEach(func() {
 		TruncateTables()
-		env = application.NewEnvironment()
+		env := application.NewEnvironment()
 		db = models.NewDatabase(sqlDB, models.Config{
-			MigrationsPath:      env.ModelMigrationsDir,
 			DefaultTemplatePath: env.RootPath + "/templates/default.json",
 		})
+		db.Setup()
 		connection = db.Connection().(*models.Connection)
 	})
 

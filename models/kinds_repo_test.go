@@ -3,7 +3,6 @@ package models_test
 import (
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -17,11 +16,8 @@ var _ = Describe("KindsRepo", func() {
 	BeforeEach(func() {
 		TruncateTables()
 		repo = models.NewKindsRepo()
-		env := application.NewEnvironment()
-		db := models.NewDatabase(sqlDB, models.Config{
-			MigrationsPath: env.ModelMigrationsDir,
-		})
-
+		db := models.NewDatabase(sqlDB, models.Config{})
+		db.Setup()
 		conn = db.Connection().(*models.Connection)
 	})
 

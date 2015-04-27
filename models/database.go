@@ -21,6 +21,8 @@ type DatabaseInterface interface {
 	Connection() ConnectionInterface
 	TraceOn(string, gorp.GorpLogger)
 	Seed()
+	Migrate(string)
+	Setup()
 }
 
 func NewDatabase(db *sql.DB, config Config) *DB {
@@ -39,12 +41,10 @@ func NewDatabase(db *sql.DB, config Config) *DB {
 		connection: connection,
 	}
 
-	database.migrate(config.MigrationsPath)
-
 	return database
 }
 
-func (database DB) migrate(migrationsPath string) {
+func (database DB) Migrate(migrationsPath string) {
 	sql_migrate.SetTable("notifications_model_migrations")
 
 	migrations := &sql_migrate.FileMigrationSource{
@@ -55,7 +55,9 @@ func (database DB) migrate(migrationsPath string) {
 	if err != nil {
 		panic(err)
 	}
+}
 
+func (database DB) Setup() {
 	database.connection.AddTableWithName(Client{}, "clients").SetKeys(true, "Primary").ColMap("ID").SetUnique(true)
 	database.connection.AddTableWithName(Kind{}, "kinds").SetKeys(true, "Primary").SetUniqueTogether("id", "client_id")
 	database.connection.AddTableWithName(Receipt{}, "receipts").SetKeys(true, "Primary").SetUniqueTogether("user_guid", "client_id", "kind_id")

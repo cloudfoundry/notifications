@@ -1,7 +1,6 @@
 package models_test
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -14,10 +13,8 @@ var _ = Describe("Transaction", func() {
 
 	BeforeEach(func() {
 		TruncateTables()
-		env := application.NewEnvironment()
-		db := models.NewDatabase(sqlDB, models.Config{
-			MigrationsPath: env.ModelMigrationsDir,
-		})
+		db := models.NewDatabase(sqlDB, models.Config{})
+		db.Setup()
 		conn = db.Connection()
 		transaction = conn.Transaction()
 	})

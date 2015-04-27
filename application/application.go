@@ -27,7 +27,7 @@ func NewApplication() Application {
 	return Application{
 		env:      env,
 		mother:   mother,
-		migrator: NewMigrator(mother, env.VCAPApplication.InstanceIndex == 0),
+		migrator: NewMigrator(mother, env.VCAPApplication.InstanceIndex == 0, env.ModelMigrationsPath, env.GobbleMigrationsPath),
 	}
 }
 

@@ -6,10 +6,8 @@ import (
 )
 
 type PersistenceProvider struct {
-	database                *Database
-	gobbleDatabase          *GobbleDatabase
-	DatabaseWasCalled       bool
-	GobbleDatabaseWasCalled bool
+	database       *Database
+	gobbleDatabase *GobbleDatabase
 }
 
 func NewPersistenceProvider(database *Database, gobbleDatabase *GobbleDatabase) *PersistenceProvider {
@@ -20,19 +18,19 @@ func NewPersistenceProvider(database *Database, gobbleDatabase *GobbleDatabase) 
 }
 
 func (pp *PersistenceProvider) Database() models.DatabaseInterface {
-	pp.DatabaseWasCalled = true
 	return pp.database
 }
 
 func (pp *PersistenceProvider) GobbleDatabase() gobble.DatabaseInterface {
-	pp.GobbleDatabaseWasCalled = true
 	return pp.gobbleDatabase
 }
 
 type GobbleDatabase struct {
 	MigrateWasCalled bool
+	MigrationsDir    string
 }
 
-func (gd *GobbleDatabase) Migrate() {
+func (gd *GobbleDatabase) Migrate(migrationsDir string) {
 	gd.MigrateWasCalled = true
+	gd.MigrationsDir = migrationsDir
 }

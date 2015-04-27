@@ -27,7 +27,8 @@ type Environment struct {
 	DatabaseURL           string `env:"DATABASE_URL"                env-required:"true"`
 	EncryptionKey         []byte `env:"ENCRYPTION_KEY"              env-required:"true"`
 	GobbleWaitMaxDuration int    `env:"GOBBLE_WAIT_MAX_DURATION"    env-default:"5000"`
-	ModelMigrationsDir    string
+	ModelMigrationsPath   string
+	GobbleMigrationsPath  string
 	Port                  string `env:"PORT"                        env-default:"3000"`
 	RootPath              string `env:"ROOT_PATH"`
 	SMTPAuthMechanism     string `env:"SMTP_AUTH_MECHANISM"         env-required:"true"`
@@ -57,12 +58,13 @@ func NewEnvironment() Environment {
 	}
 	env.parseDatabaseURL()
 	env.validateSMTPAuthMechanism()
-	env.inferModelMigrationsDir()
+	env.inferMigrationsDirs()
 	return env
 }
 
-func (env *Environment) inferModelMigrationsDir() {
-	env.ModelMigrationsDir = path.Join(env.RootPath, "models", "migrations")
+func (env *Environment) inferMigrationsDirs() {
+	env.ModelMigrationsPath = path.Join(env.RootPath, "models", "migrations")
+	env.GobbleMigrationsPath = path.Join(env.RootPath, "gobble", "migrations")
 }
 
 func (env *Environment) parseDatabaseURL() {
