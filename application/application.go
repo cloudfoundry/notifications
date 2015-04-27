@@ -43,7 +43,7 @@ func (app Application) Boot(logger *log.Logger) {
 	app.EnableDBLogging()
 	app.StartWorkers()
 	app.StartMessageGC()
-	app.StartServer()
+	app.StartServer(logger)
 }
 
 func (app Application) PrintConfiguration(logger *log.Logger) {
@@ -127,8 +127,8 @@ func (app Application) StartMessageGC() {
 	messageGC.Run()
 }
 
-func (app Application) StartServer() {
-	web.NewServer().Run(app.env.Port, app.mother)
+func (app Application) StartServer(logger *log.Logger) {
+	web.NewServer().Run(app.env.Port, app.mother, logger)
 }
 
 // This is a hack to get the logs output to the loggregator before the process exits

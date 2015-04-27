@@ -12,9 +12,9 @@ func NewServer() Server {
 	return Server{}
 }
 
-func (s Server) Run(port string, mother MotherInterface) {
+func (s Server) Run(port string, mother MotherInterface, logger *log.Logger) {
 	router := NewRouter(mother)
-	log.Printf("Listening on localhost:%s\n", port)
+	logger.Printf("Listening on localhost:%s\n", port)
 
 	http.ListenAndServe(":"+port, router.Routes())
 }
