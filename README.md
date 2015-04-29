@@ -83,11 +83,11 @@ If you are unfamiliar with UAA consult the [UAA token overview](https://github.c
 
 Notifications currently supports several different types of messages.  Messages can be sent to:
 
- - Users via the `/users/id` endpoint
- - Spaces via the `/spaces/id` endpoint
- - Organizations via the `/organizations/id` endpoint
+ - Users via the `/users/:id` endpoint
+ - Spaces via the `/spaces/:id` endpoint
+ - Organizations via the `/organizations/:id` endpoint
  - All users in the system via the `/everyone` endpoint
- - UAA Scopes via the `/uaa_scopes/scope` endpoint
+ - UAA Scopes via the `/uaa_scopes/:scope` endpoint
  - Emails via the `/emails` endpoint
 
 The Users, Spaces, Organizations, Everyone, and UAA Scopes endpoints expect a json body to be posted with following keys:
