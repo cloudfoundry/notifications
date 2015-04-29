@@ -39,6 +39,8 @@ func TestAcceptanceSuite(t *testing.T) {
 var _ = BeforeSuite(func() {
 	os.Setenv("VCAP_APPLICATION", `{"instance_index": -1}`)
 
+	MigrateDatabase()
+
 	Servers.SMTP = servers.NewSMTP()
 	Servers.SMTP.Boot()
 
@@ -66,21 +68,33 @@ var _ = BeforeEach(func() {
 	Servers.SMTP.Reset()
 })
 
-func ResetDatabase() {
+func FetchDatabases() (*models.DB, *gobble.DB) {
 	env := application.NewEnvironment()
 	sqlDB, err := sql.Open("mysql", env.DatabaseURL)
 	Expect(err).NotTo(HaveOccurred())
 
 	database := models.NewDatabase(sqlDB, models.Config{DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json")})
+	gobbleDB := gobble.NewDatabase(sqlDB)
+
+	return database, gobbleDB
+}
+
+func MigrateDatabase() {
+	env := application.NewEnvironment()
+	database, gobbleDB := FetchDatabases()
+
 	database.Migrate(env.ModelMigrationsPath)
+	gobbleDB.Migrate(env.GobbleMigrationsPath)
+}
+
+func ResetDatabase() {
+	database, gobbleDB := FetchDatabases()
+
 	database.Setup()
 	database.Connection().(*models.Connection).TruncateTables()
-
-	gobbleDB := gobble.NewDatabase(sqlDB)
-	gobbleDB.Migrate(env.GobbleMigrationsPath)
-	gobbleDB.Connection.TruncateTables()
-
 	database.Seed()
+
+	gobbleDB.Connection.TruncateTables()
 }
 
 func GetClientTokenFor(clientID string) uaa.Token {
