@@ -83,6 +83,22 @@ var _ = Describe("Send a notification to an email", func() {
 			data := strings.Split(string(delivery.Data), "\n")
 			Expect(data).To(ContainElement("X-CF-Client-ID: notifications-sender"))
 			Expect(data).To(ContainElement("X-CF-Notification-ID: " + response.NotificationID))
+			Expect(data).To(ContainElement(ContainSubstring("X-CF-Notification-Timestamp: ")))
+
+			var timestampString string
+			prefix := "X-CF-Notification-Timestamp: "
+			for _, line := range data {
+				if !strings.Contains(line, prefix) {
+					continue
+				}
+				timestampString = strings.TrimPrefix(line, prefix)
+			}
+			Expect(timestampString).NotTo(BeEmpty())
+
+			timestampDate, err := time.Parse(time.RFC3339, timestampString)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(timestampDate).To(BeTemporally("~", time.Now(), 15*time.Second))
+
 			Expect(data).To(ContainElement("Subject: Boldness my-special-subject"))
 			Expect(data).To(ContainElement("\t\t<p>Enterprise</p><header>this is an acceptance test</header><h1>This messa="))
 			Expect(data).To(ContainElement("ge was sent directly to your email address.</h1>"))

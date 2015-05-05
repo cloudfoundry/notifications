@@ -199,22 +199,34 @@ var _ = Describe("DeliveryWorker", func() {
 		It("ensures message delivery", func() {
 			worker.Deliver(&job)
 
-			Expect(mailClient.Messages).To(ContainElement(mail.Message{
-				From:    "from@email.com",
-				ReplyTo: "thesender@example.com",
-				To:      fakeUserEmail,
-				Subject: "the subject",
-				Body: []mail.Part{
-					{
-						ContentType: "text/plain",
-						Content:     "body content",
-					},
-				},
-				Headers: []string{
-					"X-CF-Client-ID: some-client",
-					"X-CF-Notification-ID: randomly-generated-guid",
+			Expect(mailClient.Messages).To(HaveLen(1))
+			msg := mailClient.Messages[0]
+			Expect(msg.From).To(Equal("from@email.com"))
+			Expect(msg.ReplyTo).To(Equal("thesender@example.com"))
+			Expect(msg.To).To(Equal(fakeUserEmail))
+			Expect(msg.Subject).To(Equal("the subject"))
+			Expect(msg.Body).To(ConsistOf([]mail.Part{
+				{
+					ContentType: "text/plain",
+					Content:     "body content",
 				},
 			}))
+			Expect(msg.Headers).To(ContainElement("X-CF-Client-ID: some-client"))
+			Expect(msg.Headers).To(ContainElement("X-CF-Notification-ID: randomly-generated-guid"))
+
+			var formattedTimestamp string
+			prefix := "X-CF-Notification-Timestamp: "
+			for _, header := range msg.Headers {
+				if strings.Contains(header, prefix) {
+					formattedTimestamp = strings.TrimPrefix(header, prefix)
+					break
+				}
+			}
+			Expect(formattedTimestamp).NotTo(BeEmpty())
+
+			timestamp, err := time.Parse(time.RFC3339, formattedTimestamp)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(timestamp).To(BeTemporally("~", time.Now(), 2*time.Second))
 		})
 
 		Context("when the delivery fails to be sent", func() {
@@ -562,22 +574,8 @@ var _ = Describe("DeliveryWorker", func() {
 			It("still delivers the message", func() {
 				worker.Deliver(&job)
 
-				Expect(mailClient.Messages).To(ContainElement(mail.Message{
-					From:    "from@email.com",
-					ReplyTo: "thesender@example.com",
-					To:      fakeUserEmail,
-					Subject: "the subject",
-					Body: []mail.Part{
-						{
-							ContentType: "text/plain",
-							Content:     "body content",
-						},
-					},
-					Headers: []string{
-						"X-CF-Client-ID: some-client",
-						"X-CF-Notification-ID: randomly-generated-guid",
-					},
-				}))
+				Expect(mailClient.Messages).To(HaveLen(1))
+				Expect(mailClient.Messages[0].To).To(Equal(fakeUserEmail))
 			})
 		})
 	})
