@@ -1,8 +1,11 @@
 package models_test
 
 import (
+	"database/sql"
+	"errors"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -344,6 +347,26 @@ var _ = Describe("KindsRepo", func() {
 				Expect(kind.Critical).To(BeTrue())
 				Expect(kind.ClientID).To(Equal("my-client"))
 				Expect(kind.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+			})
+		})
+
+		Context("when the record comes into existence after the Find, but before we create it", func() {
+			It("updates the record in the database", func() {
+				kind := models.Kind{
+					ID:          "my-kind",
+					Description: "My Kind",
+					Critical:    true,
+					ClientID:    "my-client",
+				}
+
+				conn := fakes.NewDBConn()
+				conn.SelectOneCall.Returns = kind
+				conn.SelectOneCall.Errs = []error{sql.ErrNoRows, nil, nil}
+				conn.InsertCall.Err = errors.New("Duplicate entry")
+
+				kind, err := repo.Upsert(conn, kind)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(conn.UpdateCall.List[0].(*models.Kind).ID).To(Equal(kind.ID))
 			})
 		})
 	})

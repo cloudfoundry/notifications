@@ -22,6 +22,20 @@ type DBConn struct {
 	CommitWasCalled   bool
 	RollbackWasCalled bool
 	CommitError       string
+
+	SelectOneCall struct {
+		Returns   interface{}
+		Errs      []error
+		CallCount int
+	}
+
+	InsertCall struct {
+		Err error
+	}
+
+	UpdateCall struct {
+		List []interface{}
+	}
 }
 
 func NewDBConn() *DBConn {
@@ -55,18 +69,27 @@ func (conn DBConn) Delete(list ...interface{}) (int64, error) {
 }
 
 func (conn DBConn) Insert(list ...interface{}) error {
-	return nil
+	return conn.InsertCall.Err
 }
 
 func (conn DBConn) Select(i interface{}, query string, args ...interface{}) ([]interface{}, error) {
 	return []interface{}{}, nil
 }
 
-func (conn DBConn) SelectOne(i interface{}, query string, args ...interface{}) error {
-	return nil
+func (conn *DBConn) SelectOne(i interface{}, query string, args ...interface{}) error {
+	switch returns := conn.SelectOneCall.Returns.(type) {
+	case models.Client:
+		*i.(*models.Client) = returns
+	case models.Kind:
+		*i.(*models.Kind) = returns
+	}
+	call := conn.SelectOneCall.CallCount
+	conn.SelectOneCall.CallCount++
+	return conn.SelectOneCall.Errs[call]
 }
 
-func (conn DBConn) Update(list ...interface{}) (int64, error) {
+func (conn *DBConn) Update(list ...interface{}) (int64, error) {
+	conn.UpdateCall.List = list
 	return 0, nil
 }
 

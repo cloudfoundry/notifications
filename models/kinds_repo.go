@@ -106,7 +106,12 @@ func (repo KindsRepo) Upsert(conn ConnectionInterface, kind Kind) (Kind, error) 
 
 	switch err.(type) {
 	case RecordNotFoundError:
-		return repo.Create(conn, kind)
+		kind, err := repo.Create(conn, kind)
+		if _, ok := err.(DuplicateRecordError); ok {
+			return repo.Update(conn, kind)
+		}
+
+		return kind, err
 	case nil:
 		return repo.Update(conn, kind)
 	default:

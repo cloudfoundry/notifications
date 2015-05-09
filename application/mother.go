@@ -226,6 +226,9 @@ func (m *Mother) Database() models.DatabaseInterface {
 	database := models.NewDatabase(m.SQLDatabase(), models.Config{
 		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
 	})
+	if env.DBLoggingEnabled {
+		database.TraceOn("[DB]", log.New(os.Stdout, "", 0))
+	}
 	database.Setup()
 	return database
 }

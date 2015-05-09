@@ -78,7 +78,12 @@ func (repo ClientsRepo) Upsert(conn ConnectionInterface, client Client) (Client,
 
 	switch err.(type) {
 	case RecordNotFoundError:
-		return repo.Create(conn, client)
+		client, err := repo.Create(conn, client)
+		if _, ok := err.(DuplicateRecordError); ok {
+			return repo.Update(conn, client)
+		}
+
+		return client, err
 	case nil:
 		return repo.Update(conn, client)
 	default:

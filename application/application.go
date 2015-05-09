@@ -40,7 +40,6 @@ func (app Application) Boot(logger *log.Logger) {
 	app.ConfigureSMTP(logger)
 	app.RetrieveUAAPublicKey(logger)
 	app.migrator.Migrate()
-	app.EnableDBLogging()
 	app.StartWorkers()
 	app.StartMessageGC()
 	app.StartServer(logger)
@@ -91,12 +90,6 @@ func (app Application) RetrieveUAAPublicKey(logger *log.Logger) {
 
 	UAAPublicKey = key
 	log.Printf("UAA Public Key: %s", UAAPublicKey)
-}
-
-func (app Application) EnableDBLogging() {
-	if app.env.DBLoggingEnabled {
-		app.mother.Database().TraceOn("[DB]", log.New(os.Stdout, "", 0))
-	}
 }
 
 func (app Application) StartWorkers() {

@@ -1,8 +1,11 @@
 package models_test
 
 import (
+	"database/sql"
+	"errors"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -226,6 +229,25 @@ var _ = Describe("ClientsRepo", func() {
 				Expect(client.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
 			})
 		})
+
+		Context("when the record comes into existence after the Find, but before we create it", func() {
+			It("updates the record in the database", func() {
+				client := models.Client{
+					ID:          "my-client",
+					Description: "My Client",
+					TemplateID:  "some-template-id",
+				}
+
+				conn := fakes.NewDBConn()
+				conn.SelectOneCall.Returns = client
+				conn.SelectOneCall.Errs = []error{sql.ErrNoRows, nil, nil}
+				conn.InsertCall.Err = errors.New("Duplicate entry")
+
+				client, err := repo.Upsert(conn, client)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(conn.UpdateCall.List[0]).To(Equal(&client))
+			})
+		})
 	})
 
 	Describe("FindAllByTemplateID", func() {
@@ -237,7 +259,6 @@ var _ = Describe("ClientsRepo", func() {
 			if err != nil {
 				panic(err)
 			}
-
 			_, err = repo.Create(conn, models.Client{
 				ID: "i-dont-have-a-template",
 			})
