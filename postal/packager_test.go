@@ -79,7 +79,7 @@ var _ = Describe("Packager", func() {
 			}
 			Expect(formattedTimestamp).NotTo(BeEmpty())
 
-			timestamp, err := time.Parse(time.RFC3339, formattedTimestamp)
+			timestamp, err := time.Parse(time.RFC3339Nano, formattedTimestamp)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(timestamp).To(BeTemporally("~", time.Now(), 2*time.Second))
 		})
