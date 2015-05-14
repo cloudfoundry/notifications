@@ -3,9 +3,9 @@ package main
 import "github.com/cloudfoundry-incubator/notifications/application"
 
 func main() {
-	app := application.NewApplication()
-	logger := application.BootLogger()
-	defer app.Crash(logger)
+	mother := application.NewMother()
+	app := application.NewApplication(mother)
+	defer app.Crash()
 
-	app.Boot(logger)
+	app.Boot()
 }

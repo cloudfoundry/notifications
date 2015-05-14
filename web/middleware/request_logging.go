@@ -1,22 +1,18 @@
 package middleware
 
 import (
-	"fmt"
-	"io"
-	"log"
 	"net/http"
 
+	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
 )
 
 type RequestLogging struct {
-	logWriter io.Writer
+	logger lager.Logger
 }
 
-func NewRequestLogging(logWriter io.Writer) RequestLogging {
-	return RequestLogging{
-		logWriter: logWriter,
-	}
+func NewRequestLogging(logger lager.Logger) RequestLogging {
+	return RequestLogging{logger}
 }
 
 func (r RequestLogging) ServeHTTP(response http.ResponseWriter, request *http.Request, context stack.Context) bool {
@@ -25,11 +21,16 @@ func (r RequestLogging) ServeHTTP(response http.ResponseWriter, request *http.Re
 		requestID = "UNKNOWN"
 	}
 
-	logPrefix := fmt.Sprintf("[WEB] request-id: %s | ", requestID)
-	logger := log.New(r.logWriter, logPrefix, 0)
-	logger.Printf("%s %s\n", request.Method, request.URL.Path)
+	logSession := r.logger.Session("request", lager.Data{
+		"vcap-request-id": requestID,
+	})
 
-	context.Set("logger", logger)
+	logSession.Info("incoming", lager.Data{
+		"method": request.Method,
+		"path":   request.URL.Path,
+	})
+
+	context.Set("logger", logSession)
 
 	return true
 }

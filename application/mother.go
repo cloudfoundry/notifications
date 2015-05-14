@@ -20,6 +20,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
+	"github.com/pivotal-golang/lager"
 )
 
 type Mother struct {
@@ -178,8 +179,15 @@ func (m Mother) Repos() (models.ClientsRepo, models.KindsRepo) {
 	return models.NewClientsRepo(), m.KindsRepo()
 }
 
+func (m Mother) Logger() lager.Logger {
+	logger := lager.NewLogger("notifications")
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+
+	return logger
+}
+
 func (m Mother) Logging() middleware.RequestLogging {
-	return middleware.NewRequestLogging(os.Stdout)
+	return middleware.NewRequestLogging(m.Logger())
 }
 
 func (m Mother) ErrorWriter() handlers.ErrorWriter {

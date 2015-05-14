@@ -22,8 +22,7 @@ type Application struct {
 	migrator Migrator
 }
 
-func NewApplication() Application {
-	mother := NewMother()
+func NewApplication(mother *Mother) Application {
 	env := NewEnvironment()
 
 	return Application{
@@ -33,21 +32,16 @@ func NewApplication() Application {
 	}
 }
 
-func BootLogger() lager.Logger {
-	logger := lager.NewLogger("notifications")
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+func (app Application) Boot() {
+	session := app.mother.Logger().Session("boot")
 
-	return logger.Session("boot")
-}
-
-func (app Application) Boot(logger lager.Logger) {
-	app.PrintConfiguration(logger)
-	app.ConfigureSMTP(logger)
-	app.RetrieveUAAPublicKey(logger)
+	app.PrintConfiguration(session)
+	app.ConfigureSMTP(session)
+	app.RetrieveUAAPublicKey(session)
 	app.migrator.Migrate()
 	app.StartWorkers()
 	app.StartMessageGC()
-	app.StartServer(logger)
+	app.StartServer(session)
 }
 
 func (app Application) PrintConfiguration(logger lager.Logger) {
@@ -130,7 +124,9 @@ func (app Application) StartServer(logger lager.Logger) {
 }
 
 // This is a hack to get the logs output to the loggregator before the process exits
-func (app Application) Crash(logger lager.Logger) {
+func (app Application) Crash() {
+	logger := app.mother.Logger()
+
 	err := recover()
 	switch err.(type) {
 	case error:
