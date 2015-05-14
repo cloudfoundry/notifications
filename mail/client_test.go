@@ -237,11 +237,8 @@ var _ = Describe("Mail", func() {
 				Eventually(func() int {
 					return len(mailServer.Deliveries)
 				}).Should(Equal(1))
-				delivery := mailServer.Deliveries[0]
 
-				Expect(delivery.Sender).To(Equal("me@example.com"))
-				Expect(delivery.Recipient).To(Equal("you@example.com"))
-				Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
+				delivery := mailServer.Deliveries[0]
 				Expect(delivery.UsedTLS).To(BeTrue())
 			})
 		})
@@ -275,10 +272,6 @@ var _ = Describe("Mail", func() {
 					return len(mailServer.Deliveries)
 				}).Should(Equal(1))
 				delivery := mailServer.Deliveries[0]
-
-				Expect(delivery.Sender).To(Equal("me@example.com"))
-				Expect(delivery.Recipient).To(Equal("you@example.com"))
-				Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
 				Expect(delivery.UsedTLS).To(BeFalse())
 			})
 		})
@@ -300,6 +293,10 @@ var _ = Describe("Mail", func() {
 				err := client.Send(msg)
 				Expect(err).To(HaveOccurred())
 
+				Consistently(func() int {
+					return len(mailServer.Deliveries)
+				}).Should(Equal(0))
+
 				mailServer.FailsHello = false
 				err = client.Send(msg)
 				Expect(err).NotTo(HaveOccurred())
@@ -307,12 +304,6 @@ var _ = Describe("Mail", func() {
 				Eventually(func() int {
 					return len(mailServer.Deliveries)
 				}).Should(Equal(1))
-
-				delivery := mailServer.Deliveries[0]
-
-				Expect(delivery.Sender).To(Equal("me@example.com"))
-				Expect(delivery.Recipient).To(Equal("you@example.com"))
-				Expect(delivery.Data).To(Equal(strings.Split(msg.Data(), "\n")))
 			})
 		})
 	})
