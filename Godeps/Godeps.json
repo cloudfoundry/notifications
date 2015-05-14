@@ -86,6 +86,10 @@
 			"Rev": "31656578115c62eb24f14f2a2946b018807cb6d2"
 		},
 		{
+			"ImportPath": "github.com/pivotal-golang/lager",
+			"Rev": "c88fa6d6c4d2f8a21a4599785211e41777750d34"
+		},
+		{
 			"ImportPath": "github.com/rubenv/sql-migrate",
 			"Rev": "f1ae5df07e10d6ba6c8d0cf26615607a2c14cd7a"
 		},
