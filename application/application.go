@@ -1,6 +1,7 @@
 package application
 
 import (
+	"errors"
 	"log"
 	"os"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
+	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/viron"
 )
 
@@ -31,11 +33,14 @@ func NewApplication() Application {
 	}
 }
 
-func BootLogger() *log.Logger {
-	return log.New(os.Stdout, "[BOOT] ", 0)
+func BootLogger() lager.Logger {
+	logger := lager.NewLogger("notifications")
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+
+	return logger.Session("boot")
 }
 
-func (app Application) Boot(logger *log.Logger) {
+func (app Application) Boot(logger lager.Logger) {
 	app.PrintConfiguration(logger)
 	app.ConfigureSMTP(logger)
 	app.RetrieveUAAPublicKey(logger)
@@ -45,13 +50,11 @@ func (app Application) Boot(logger *log.Logger) {
 	app.StartServer(logger)
 }
 
-func (app Application) PrintConfiguration(logger *log.Logger) {
-	logger.Println("Booting with configuration:")
-
-	viron.Print(app.env, logger)
+func (app Application) PrintConfiguration(logger lager.Logger) {
+	viron.Print(app.env, vironCompatibleLogger{logger})
 }
 
-func (app Application) ConfigureSMTP(logger *log.Logger) {
+func (app Application) ConfigureSMTP(logger lager.Logger) {
 	if app.env.TestMode {
 		return
 	}
@@ -59,12 +62,12 @@ func (app Application) ConfigureSMTP(logger *log.Logger) {
 	mailClient := app.mother.MailClient()
 	err := mailClient.Connect()
 	if err != nil {
-		logger.Panicln(err)
+		logger.Fatal("smtp-connect-errored", err)
 	}
 
 	err = mailClient.Hello()
 	if err != nil {
-		logger.Panicln(err)
+		logger.Fatal("smtp-hello-errored", err)
 	}
 
 	startTLSSupported, _ := mailClient.Extension("STARTTLS")
@@ -72,24 +75,26 @@ func (app Application) ConfigureSMTP(logger *log.Logger) {
 	mailClient.Quit()
 
 	if !startTLSSupported && app.env.SMTPTLS {
-		logger.Panicln(`SMTP TLS configuration mismatch: Configured to use TLS over SMTP, but the mail server does not support the "STARTTLS" extension.`)
+		logger.Fatal("smtp-config-mismatch", errors.New(`SMTP TLS configuration mismatch: Configured to use TLS over SMTP, but the mail server does not support the "STARTTLS" extension.`))
 	}
 
 	if startTLSSupported && !app.env.SMTPTLS {
-		logger.Panicln(`SMTP TLS configuration mismatch: Not configured to use TLS over SMTP, but the mail server does support the "STARTTLS" extension.`)
+		logger.Fatal("smtp-config-mismatch", errors.New(`SMTP TLS configuration mismatch: Not configured to use TLS over SMTP, but the mail server does support the "STARTTLS" extension.`))
 	}
 }
 
-func (app Application) RetrieveUAAPublicKey(logger *log.Logger) {
+func (app Application) RetrieveUAAPublicKey(logger lager.Logger) {
 	uaaClient := app.mother.UAAClient()
 
 	key, err := uaa.GetTokenKey(*uaaClient)
 	if err != nil {
-		logger.Panicln(err)
+		logger.Fatal("uaa-get-token-key-errored", err)
 	}
 
 	UAAPublicKey = key
-	log.Printf("UAA Public Key: %s", UAAPublicKey)
+	logger.Info("uaa-public-key", lager.Data{
+		"key": UAAPublicKey,
+	})
 }
 
 func (app Application) StartWorkers() {
@@ -120,15 +125,35 @@ func (app Application) StartMessageGC() {
 	messageGC.Run()
 }
 
-func (app Application) StartServer(logger *log.Logger) {
+func (app Application) StartServer(logger lager.Logger) {
 	web.NewServer().Run(app.env.Port, app.mother, logger)
 }
 
 // This is a hack to get the logs output to the loggregator before the process exits
-func (app Application) Crash(logger *log.Logger) {
+func (app Application) Crash(logger lager.Logger) {
 	err := recover()
-	if err != nil {
+	switch err.(type) {
+	case error:
 		time.Sleep(5 * time.Second)
-		logger.Panicln(err)
+		logger.Fatal("crash", err.(error))
+	case nil:
+		return
+	default:
+		time.Sleep(5 * time.Second)
+		logger.Fatal("crash", nil)
+	}
+}
+
+type vironCompatibleLogger struct {
+	logger lager.Logger
+}
+
+func (l vironCompatibleLogger) Printf(format string, v ...interface{}) {
+	if len(v) == 2 {
+		key, ok := v[0].(string)
+		value := v[1]
+		if ok {
+			l.logger.Info("viron", lager.Data{key: value})
+		}
 	}
 }

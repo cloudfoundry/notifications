@@ -1,9 +1,7 @@
 package viron_test
 
 import (
-	"bytes"
-	"log"
-	"strings"
+	"fmt"
 
 	"github.com/ryanmoran/viron"
 
@@ -11,17 +9,23 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+type fakeLogger struct {
+	Lines []string
+}
+
+func (l *fakeLogger) Printf(format string, v ...interface{}) {
+	l.Lines = append(l.Lines, fmt.Sprintf(format, v...))
+}
+
 var _ = Describe("Print", func() {
 	It("prints the configuration object to the logger", func() {
-		buffer := bytes.NewBuffer([]byte{})
-		logger := log.New(buffer, "", 0)
+		logger := &fakeLogger{}
 
 		viron.Print(Environment{
 			Int32: int32(16),
 		}, logger)
 
-		lines := strings.Split(buffer.String(), "\n")
-		Expect(lines).To(Equal([]string{
+		Expect(logger.Lines).To(Equal([]string{
 			"Bool      -> false",
 			"String    -> ",
 			"Int       -> 0",
@@ -42,7 +46,6 @@ var _ = Describe("Print", func() {
 			"NonTagged -> {}",
 			"Required  -> ",
 			"Default   -> ",
-			"",
 		}))
 	})
 })

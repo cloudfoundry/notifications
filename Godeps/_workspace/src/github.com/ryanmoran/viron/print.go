@@ -1,7 +1,6 @@
 package viron
 
 import (
-	"log"
 	"reflect"
 	"strconv"
 )
@@ -11,7 +10,11 @@ type printableField struct {
 	Value interface{}
 }
 
-func Print(env interface{}, logger *log.Logger) {
+type logger interface {
+	Printf(format string, v ...interface{})
+}
+
+func Print(env interface{}, l logger) {
 	t := reflect.TypeOf(env)
 	v := reflect.ValueOf(env)
 	maxFieldNameLength := 0
@@ -33,6 +36,6 @@ func Print(env interface{}, logger *log.Logger) {
 	}
 
 	for _, field := range fields {
-		logger.Printf("%-"+strconv.Itoa(maxFieldNameLength)+"s -> %+v", field.Name, field.Value)
+		l.Printf("%-"+strconv.Itoa(maxFieldNameLength)+"s -> %+v", field.Name, field.Value)
 	}
 }
