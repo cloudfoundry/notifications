@@ -8,25 +8,36 @@ import (
 )
 
 type Mailer struct {
-	DeliverArguments map[string]interface{}
-	Responses        []strategies.Response
+	DeliverCall struct {
+		Args struct {
+			Connection    models.ConnectionInterface
+			Users         []strategies.User
+			Options       postal.Options
+			Space         cf.CloudControllerSpace
+			Org           cf.CloudControllerOrganization
+			Client        string
+			Scope         string
+			VCAPRequestID string
+		}
+		Responses []strategies.Response
+	}
 }
 
 func NewMailer() *Mailer {
 	return &Mailer{}
 }
 
-func (fake *Mailer) Deliver(conn models.ConnectionInterface, users []strategies.User, options postal.Options, space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, scope, vcapRequestID string) []strategies.Response {
-	fake.DeliverArguments = map[string]interface{}{
-		"connection":      conn,
-		"users":           users,
-		"options":         options,
-		"space":           space,
-		"org":             org,
-		"client":          client,
-		"scope":           scope,
-		"vcap-request-id": vcapRequestID,
-	}
+func (m *Mailer) Deliver(conn models.ConnectionInterface, users []strategies.User, options postal.Options,
+	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, scope, vcapRequestID string) []strategies.Response {
 
-	return fake.Responses
+	m.DeliverCall.Args.Connection = conn
+	m.DeliverCall.Args.Users = users
+	m.DeliverCall.Args.Options = options
+	m.DeliverCall.Args.Space = space
+	m.DeliverCall.Args.Org = org
+	m.DeliverCall.Args.Client = client
+	m.DeliverCall.Args.Scope = scope
+	m.DeliverCall.Args.VCAPRequestID = vcapRequestID
+
+	return m.DeliverCall.Responses
 }

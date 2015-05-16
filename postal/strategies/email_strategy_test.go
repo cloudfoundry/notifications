@@ -43,19 +43,18 @@ var _ = Describe("EmailStrategy", func() {
 			Expect(options.Endorsement).To(BeEmpty())
 
 			emailStrategy.Dispatch(clientID, emailID, vcapRequestID, options, conn)
-			options.Endorsement = strategies.EmailEndorsement
 
+			options.Endorsement = strategies.EmailEndorsement
 			users := []strategies.User{{Email: options.To}}
-			Expect(mailer.DeliverArguments).To(Equal(map[string]interface{}{
-				"connection":      conn,
-				"users":           users,
-				"options":         options,
-				"space":           cf.CloudControllerSpace{},
-				"org":             cf.CloudControllerOrganization{},
-				"client":          clientID,
-				"scope":           "",
-				"vcap-request-id": vcapRequestID,
-			}))
+
+			Expect(mailer.DeliverCall.Args.Connection).To(Equal(conn))
+			Expect(mailer.DeliverCall.Args.Users).To(Equal(users))
+			Expect(mailer.DeliverCall.Args.Options).To(Equal(options))
+			Expect(mailer.DeliverCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(mailer.DeliverCall.Args.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(mailer.DeliverCall.Args.Client).To(Equal(clientID))
+			Expect(mailer.DeliverCall.Args.Scope).To(Equal(""))
+			Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal(vcapRequestID))
 		})
 	})
 })

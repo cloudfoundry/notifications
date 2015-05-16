@@ -87,23 +87,21 @@ var _ = Describe("Space Strategy", func() {
 				users := []strategies.User{{GUID: "user-123"}, {GUID: "user-456"}}
 
 				options.Endorsement = strategies.SpaceEndorsement
-				Expect(mailer.DeliverArguments).To(Equal(map[string]interface{}{
-					"connection": conn,
-					"users":      users,
-					"options":    options,
-					"space": cf.CloudControllerSpace{
-						GUID:             "space-001",
-						Name:             "production",
-						OrganizationGUID: "org-001",
-					},
-					"org": cf.CloudControllerOrganization{
-						Name: "the-org",
-						GUID: "org-001",
-					},
-					"client":          clientID,
-					"scope":           "",
-					"vcap-request-id": vcapRequestID,
+				Expect(mailer.DeliverCall.Args.Connection).To(Equal(conn))
+				Expect(mailer.DeliverCall.Args.Users).To(Equal(users))
+				Expect(mailer.DeliverCall.Args.Options).To(Equal(options))
+				Expect(mailer.DeliverCall.Args.Space).To(Equal(cf.CloudControllerSpace{
+					GUID:             "space-001",
+					Name:             "production",
+					OrganizationGUID: "org-001",
 				}))
+				Expect(mailer.DeliverCall.Args.Org).To(Equal(cf.CloudControllerOrganization{
+					Name: "the-org",
+					GUID: "org-001",
+				}))
+				Expect(mailer.DeliverCall.Args.Client).To(Equal(clientID))
+				Expect(mailer.DeliverCall.Args.Scope).To(Equal(""))
+				Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal(vcapRequestID))
 			})
 		})
 
