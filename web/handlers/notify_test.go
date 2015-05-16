@@ -33,7 +33,7 @@ var _ = Describe("Notify", func() {
 				client        models.Client
 				kind          models.Kind
 				conn          *fakes.DBConn
-				strategy      *fakes.MailStrategy
+				strategy      *fakes.Strategy
 				context       stack.Context
 				tokenHeader   map[string]interface{}
 				tokenClaims   map[string]interface{}
@@ -96,7 +96,7 @@ var _ = Describe("Notify", func() {
 				conn = fakes.NewDBConn()
 
 				handler = handlers.NewNotify(finder, registrar)
-				strategy = fakes.NewMailStrategy()
+				strategy = fakes.NewStrategy()
 				validator = &fakes.Validator{}
 			})
 

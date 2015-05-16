@@ -24,14 +24,14 @@ var _ = Describe("NotifyEveryone", func() {
 			notify      *fakes.Notify
 			context     stack.Context
 			connection  *fakes.DBConn
-			strategy    *fakes.MailStrategy
+			strategy    *fakes.Strategy
 		)
 
 		BeforeEach(func() {
 			errorWriter = fakes.NewErrorWriter()
 			writer = httptest.NewRecorder()
 			request = &http.Request{}
-			strategy = fakes.NewMailStrategy()
+			strategy = fakes.NewStrategy()
 
 			context = stack.NewContext()
 			context.Set(handlers.VCAPRequestIDKey, "some-request-id")

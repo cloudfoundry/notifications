@@ -24,13 +24,13 @@ var _ = Describe("NotifyOrganization", func() {
 			notify     *fakes.Notify
 			context    stack.Context
 			connection *fakes.DBConn
-			strategy   *fakes.MailStrategy
+			strategy   *fakes.Strategy
 		)
 
 		BeforeEach(func() {
 			writer = httptest.NewRecorder()
 			request = &http.Request{URL: &url.URL{Path: "/organizations/org-001"}}
-			strategy = fakes.NewMailStrategy()
+			strategy = fakes.NewStrategy()
 
 			context = stack.NewContext()
 			context.Set(handlers.VCAPRequestIDKey, "some-request-id")

@@ -24,7 +24,7 @@ var _ = Describe("NotifyEmail", func() {
 			context     stack.Context
 			connection  *fakes.DBConn
 			request     *http.Request
-			strategy    *fakes.MailStrategy
+			strategy    *fakes.Strategy
 		)
 
 		BeforeEach(func() {
@@ -32,7 +32,7 @@ var _ = Describe("NotifyEmail", func() {
 			writer = httptest.NewRecorder()
 			connection = fakes.NewDBConn()
 			request = &http.Request{}
-			strategy = fakes.NewMailStrategy()
+			strategy = fakes.NewStrategy()
 
 			context = stack.NewContext()
 			context.Set(handlers.VCAPRequestIDKey, "some-request-id")

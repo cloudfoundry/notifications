@@ -6,20 +6,20 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 )
 
-type MailStrategy struct {
+type Strategy struct {
 	DispatchArguments []interface{}
 	Responses         []strategies.Response
 	Error             error
 	TrimCalled        bool
 }
 
-func NewMailStrategy() *MailStrategy {
-	return &MailStrategy{}
+func NewStrategy() *Strategy {
+	return &Strategy{}
 }
 
-func (fake *MailStrategy) Dispatch(clientID, guid, vcapRequestID string,
+func (s *Strategy) Dispatch(clientID, guid, vcapRequestID string,
 	options postal.Options, conn models.ConnectionInterface) ([]strategies.Response, error) {
 
-	fake.DispatchArguments = []interface{}{clientID, guid, vcapRequestID, options}
-	return fake.Responses, fake.Error
+	s.DispatchArguments = []interface{}{clientID, guid, vcapRequestID, options}
+	return s.Responses, s.Error
 }
