@@ -14,11 +14,14 @@ var _ = Describe("EmailStrategy", func() {
 	var emailStrategy strategies.EmailStrategy
 
 	Describe("Dispatch", func() {
-		var mailer *fakes.Mailer
-		var conn *fakes.DBConn
-		var options postal.Options
-		var clientID string
-		var emailID string
+		var (
+			mailer        *fakes.Mailer
+			conn          *fakes.DBConn
+			options       postal.Options
+			clientID      string
+			emailID       string
+			vcapRequestID string
+		)
 
 		BeforeEach(func() {
 			mailer = fakes.NewMailer()
@@ -26,6 +29,7 @@ var _ = Describe("EmailStrategy", func() {
 
 			clientID = "raptors-123"
 			emailID = ""
+			vcapRequestID = "some-request-id"
 
 			options = postal.Options{
 				Text: "email text",
@@ -35,21 +39,22 @@ var _ = Describe("EmailStrategy", func() {
 			conn = fakes.NewDBConn()
 		})
 
-		It("Calls Deliver on it's mailer with proper arguments", func() {
+		It("calls Deliver on it's mailer with proper arguments", func() {
 			Expect(options.Endorsement).To(BeEmpty())
 
-			emailStrategy.Dispatch(clientID, emailID, options, conn)
+			emailStrategy.Dispatch(clientID, emailID, vcapRequestID, options, conn)
 			options.Endorsement = strategies.EmailEndorsement
 
 			users := []strategies.User{{Email: options.To}}
 			Expect(mailer.DeliverArguments).To(Equal(map[string]interface{}{
-				"connection": conn,
-				"users":      users,
-				"options":    options,
-				"space":      cf.CloudControllerSpace{},
-				"org":        cf.CloudControllerOrganization{},
-				"client":     clientID,
-				"scope":      "",
+				"connection":      conn,
+				"users":           users,
+				"options":         options,
+				"space":           cf.CloudControllerSpace{},
+				"org":             cf.CloudControllerOrganization{},
+				"client":          clientID,
+				"scope":           "",
+				"vcap-request-id": vcapRequestID,
 			}))
 		})
 	})

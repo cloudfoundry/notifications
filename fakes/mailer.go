@@ -16,15 +16,16 @@ func NewMailer() *Mailer {
 	return &Mailer{}
 }
 
-func (fake *Mailer) Deliver(conn models.ConnectionInterface, users []strategies.User, options postal.Options, space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, scope string) []strategies.Response {
+func (fake *Mailer) Deliver(conn models.ConnectionInterface, users []strategies.User, options postal.Options, space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, scope, vcapRequestID string) []strategies.Response {
 	fake.DeliverArguments = map[string]interface{}{
-		"connection": conn,
-		"users":      users,
-		"options":    options,
-		"space":      space,
-		"org":        org,
-		"client":     client,
-		"scope":      scope,
+		"connection":      conn,
+		"users":           users,
+		"options":         options,
+		"space":           space,
+		"org":             org,
+		"client":          client,
+		"scope":           scope,
+		"vcap-request-id": vcapRequestID,
 	}
 
 	return fake.Responses

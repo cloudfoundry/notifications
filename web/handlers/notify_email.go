@@ -34,8 +34,11 @@ func (handler NotifyEmail) ServeHTTP(w http.ResponseWriter, req *http.Request, c
 	}
 }
 
-func (handler NotifyEmail) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) error {
-	output, err := handler.notify.Execute(connection, req, context, "", handler.strategy, params.EmailValidator{})
+func (handler NotifyEmail) Execute(w http.ResponseWriter, req *http.Request,
+	connection models.ConnectionInterface, context stack.Context) error {
+
+	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
+	output, err := handler.notify.Execute(connection, req, context, "", handler.strategy, params.EmailValidator{}, vcapRequestID)
 	if err != nil {
 		return err
 	}

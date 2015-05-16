@@ -18,9 +18,9 @@ func NewEmailStrategy(mailer MailerInterface) EmailStrategy {
 	}
 }
 
-func (strategy EmailStrategy) Dispatch(clientID, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy EmailStrategy) Dispatch(clientID, guid, vcapRequestID string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
 	options.Endorsement = EmailEndorsement
-	responses := strategy.mailer.Deliver(conn, []User{{Email: options.To}}, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "")
+	responses := strategy.mailer.Deliver(conn, []User{{Email: options.To}}, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "", vcapRequestID)
 
 	return responses, nil
 }

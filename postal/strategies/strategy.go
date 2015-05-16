@@ -6,5 +6,5 @@ import (
 )
 
 type StrategyInterface interface {
-	Dispatch(clientID string, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error)
+	Dispatch(clientID, guid, vcapRequestID string, options postal.Options, conn models.ConnectionInterface) ([]Response, error)
 }

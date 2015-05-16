@@ -4,10 +4,12 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/cloudfoundry-incubator/notifications/web/params"
+	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,47 +17,57 @@ import (
 
 var _ = Describe("NotifyUAAScope", func() {
 	Describe("Execute", func() {
-		var notify *fakes.Notify
-		var handler handlers.NotifyUAAScope
-		var writer *httptest.ResponseRecorder
-		var request *http.Request
+		var (
+			notify     *fakes.Notify
+			handler    handlers.NotifyUAAScope
+			writer     *httptest.ResponseRecorder
+			request    *http.Request
+			context    stack.Context
+			connection *fakes.DBConn
+			strategy   *fakes.MailStrategy
+		)
 
 		BeforeEach(func() {
-			var err error
-
 			writer = httptest.NewRecorder()
-			request, err = http.NewRequest("POST", "/uaa_scopes/great.scope", nil)
-			if err != nil {
-				panic(err)
-			}
+			request = &http.Request{URL: &url.URL{Path: "/uaa_scopes/great.scope"}}
+			strategy = fakes.NewMailStrategy()
+
+			context = stack.NewContext()
+			context.Set(handlers.VCAPRequestIDKey, "some-request-id")
 
 			notify = fakes.NewNotify()
-			fakeDatabase := fakes.NewDatabase()
-			handler = handlers.NewNotifyUAAScope(notify, nil, nil, fakeDatabase)
+			handler = handlers.NewNotifyUAAScope(notify, nil, strategy, nil)
 		})
 
 		Context("when the notify.Execute returns a successful response", func() {
 			It("returns the JSON representation of the response", func() {
-				notify.Response = []byte("whatever")
-				strategy := strategies.UAAScopeStrategy{}
+				notify.ExecuteCall.Response = []byte("whatever")
 
-				handler.Execute(writer, request, nil, nil, strategy)
+				handler.Execute(writer, request, connection, context)
 
 				Expect(writer.Code).To(Equal(http.StatusOK))
-				Expect(notify.GUID).To(Equal("great.scope"))
+				Expect(writer.Body.String()).To(Equal("whatever"))
+			})
 
-				body := string(writer.Body.Bytes())
-				Expect(body).To(Equal("whatever"))
+			It("delegates to the Notify object with the correct arguments", func() {
+				handler.Execute(writer, request, connection, context)
+
+				Expect(notify.ExecuteCall.Args.Connection).To(Equal(connection))
+				Expect(notify.ExecuteCall.Args.Request).To(Equal(request))
+				Expect(notify.ExecuteCall.Args.Context).To(Equal(context))
+				Expect(notify.ExecuteCall.Args.GUID).To(Equal("great.scope"))
+				Expect(notify.ExecuteCall.Args.Strategy).To(Equal(strategy))
+				Expect(notify.ExecuteCall.Args.Validator).To(BeAssignableToTypeOf(params.GUIDValidator{}))
+				Expect(notify.ExecuteCall.Args.VCAPRequestID).To(Equal("some-request-id"))
 			})
 		})
 
 		Context("when notify.Execute returns an error", func() {
 			It("Propagates the error", func() {
-				notify.Error = errors.New("the error")
-				strategy := strategies.UAAScopeStrategy{}
+				notify.ExecuteCall.Error = errors.New("the error")
 
-				err := handler.Execute(writer, request, nil, nil, strategy)
-				Expect(err).To(Equal(notify.Error))
+				err := handler.Execute(writer, request, connection, context)
+				Expect(err).To(Equal(notify.ExecuteCall.Error))
 			})
 		})
 	})

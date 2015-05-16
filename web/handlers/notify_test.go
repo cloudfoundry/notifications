@@ -23,19 +23,22 @@ import (
 var _ = Describe("Notify", func() {
 	Describe("Execute", func() {
 		Context("When Emailing a user or a group", func() {
-			var handler handlers.Notify
-			var finder *fakes.NotificationsFinder
-			var validator *fakes.Validator
-			var registrar *fakes.Registrar
-			var request *http.Request
-			var rawToken string
-			var client models.Client
-			var kind models.Kind
-			var conn *fakes.DBConn
-			var strategy *fakes.MailStrategy
-			var context stack.Context
-			var tokenHeader map[string]interface{}
-			var tokenClaims map[string]interface{}
+			var (
+				handler       handlers.Notify
+				finder        *fakes.NotificationsFinder
+				validator     *fakes.Validator
+				registrar     *fakes.Registrar
+				request       *http.Request
+				rawToken      string
+				client        models.Client
+				kind          models.Kind
+				conn          *fakes.DBConn
+				strategy      *fakes.MailStrategy
+				context       stack.Context
+				tokenHeader   map[string]interface{}
+				tokenClaims   map[string]interface{}
+				vcapRequestID string
+			)
 
 			BeforeEach(func() {
 				client = models.Client{
@@ -88,6 +91,8 @@ var _ = Describe("Notify", func() {
 				context = stack.NewContext()
 				context.Set("token", token)
 
+				vcapRequestID = "some-request-id"
+
 				conn = fakes.NewDBConn()
 
 				handler = handlers.NewNotify(finder, registrar)
@@ -96,7 +101,7 @@ var _ = Describe("Notify", func() {
 			})
 
 			It("delegates to the mailStrategy", func() {
-				_, err := handler.Execute(conn, request, context, "space-001", strategy, validator)
+				_, err := handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
 				if err != nil {
 					panic(err)
 				}
@@ -104,6 +109,7 @@ var _ = Describe("Notify", func() {
 				Expect(strategy.DispatchArguments).To(Equal([]interface{}{
 					"mister-client",
 					"space-001",
+					"some-request-id",
 					postal.Options{
 						ReplyTo:           "me@example.com",
 						Subject:           "Your instance is down",
@@ -117,7 +123,7 @@ var _ = Describe("Notify", func() {
 			})
 
 			It("registers the client and kind", func() {
-				_, err := handler.Execute(conn, request, context, "space-001", strategy, validator)
+				_, err := handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
 				if err != nil {
 					panic(err)
 				}
@@ -152,7 +158,7 @@ var _ = Describe("Notify", func() {
 						}
 						request.Header.Set("Authorization", "Bearer "+rawToken)
 
-						_, err = handler.Execute(conn, request, context, "space-001", strategy, validator)
+						_, err = handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
 
 						Expect(err).ToNot(BeNil())
 						validationErr := err.(params.ValidationError)
@@ -166,7 +172,7 @@ var _ = Describe("Notify", func() {
 						}
 						request.Header.Set("Authorization", "Bearer "+rawToken)
 
-						_, err = handler.Execute(conn, request, context, "space-001", strategy, validator)
+						_, err = handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
 
 						Expect(err).To(Equal(params.ParseError{}))
 					})
@@ -176,7 +182,7 @@ var _ = Describe("Notify", func() {
 					It("returns the error", func() {
 						strategy.Error = errors.New("BOOM!")
 
-						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator)
+						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
 
 						Expect(err).To(Equal(errors.New("BOOM!")))
 					})
@@ -186,7 +192,7 @@ var _ = Describe("Notify", func() {
 					It("returns the error", func() {
 						finder.ClientAndKindError = errors.New("BOOM!")
 
-						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator)
+						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
 
 						Expect(err).To(Equal(errors.New("BOOM!")))
 					})
@@ -196,7 +202,7 @@ var _ = Describe("Notify", func() {
 					It("returns the error", func() {
 						registrar.RegisterError = errors.New("BOOM!")
 
-						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator)
+						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
 
 						Expect(err).To(Equal(errors.New("BOOM!")))
 					})
@@ -212,7 +218,7 @@ var _ = Describe("Notify", func() {
 
 						context.Set("token", token)
 
-						_, err = handler.Execute(conn, request, context, "user-123", strategy, validator)
+						_, err = handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
 
 						Expect(err).To(BeAssignableToTypeOf(postal.NewCriticalNotificationError("test_email")))
 					})

@@ -13,18 +13,22 @@ import (
 )
 
 var _ = Describe("Space Strategy", func() {
-	var strategy strategies.SpaceStrategy
-	var options postal.Options
-	var tokenLoader *fakes.TokenLoader
-	var spaceLoader *fakes.SpaceLoader
-	var organizationLoader *fakes.OrganizationLoader
-	var mailer *fakes.Mailer
-	var clientID string
-	var conn *fakes.DBConn
-	var findsUserGUIDs *fakes.FindsUserGUIDs
+	var (
+		strategy           strategies.SpaceStrategy
+		options            postal.Options
+		tokenLoader        *fakes.TokenLoader
+		spaceLoader        *fakes.SpaceLoader
+		organizationLoader *fakes.OrganizationLoader
+		mailer             *fakes.Mailer
+		clientID           string
+		conn               *fakes.DBConn
+		findsUserGUIDs     *fakes.FindsUserGUIDs
+		vcapRequestID      string
+	)
 
 	BeforeEach(func() {
 		clientID = "mister-client"
+		vcapRequestID = "some-request-id"
 		conn = fakes.NewDBConn()
 
 		tokenHeader := map[string]interface{}{
@@ -75,7 +79,7 @@ var _ = Describe("Space Strategy", func() {
 			It("calls mailer.Deliver with the correct arguments for a space", func() {
 				Expect(options.Endorsement).To(BeEmpty())
 
-				_, err := strategy.Dispatch(clientID, "space-001", options, conn)
+				_, err := strategy.Dispatch(clientID, "space-001", vcapRequestID, options, conn)
 				if err != nil {
 					panic(err)
 				}
@@ -96,8 +100,9 @@ var _ = Describe("Space Strategy", func() {
 						Name: "the-org",
 						GUID: "org-001",
 					},
-					"client": clientID,
-					"scope":  "",
+					"client":          clientID,
+					"scope":           "",
+					"vcap-request-id": vcapRequestID,
 				}))
 			})
 		})
@@ -106,7 +111,7 @@ var _ = Describe("Space Strategy", func() {
 			Context("when token loader fails to return a token", func() {
 				It("returns an error", func() {
 					tokenLoader.LoadError = errors.New("BOOM!")
-					_, err := strategy.Dispatch(clientID, "space-001", options, conn)
+					_, err := strategy.Dispatch(clientID, "space-001", vcapRequestID, options, conn)
 
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
@@ -115,7 +120,7 @@ var _ = Describe("Space Strategy", func() {
 			Context("when spaceLoader fails to load a space", func() {
 				It("returns an error", func() {
 					spaceLoader.LoadError = errors.New("BOOM!")
-					_, err := strategy.Dispatch(clientID, "space-000", options, conn)
+					_, err := strategy.Dispatch(clientID, "space-000", vcapRequestID, options, conn)
 
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
@@ -125,7 +130,7 @@ var _ = Describe("Space Strategy", func() {
 				It("returns an error", func() {
 					findsUserGUIDs.UserGUIDsBelongingToSpaceError = errors.New("BOOM!")
 
-					_, err := strategy.Dispatch(clientID, "space-001", options, conn)
+					_, err := strategy.Dispatch(clientID, "space-001", vcapRequestID, options, conn)
 					Expect(err).To(Equal(findsUserGUIDs.UserGUIDsBelongingToSpaceError))
 				})
 			})

@@ -28,17 +28,18 @@ func NewNotifyUAAScope(notify NotifyInterface, errorWriter ErrorWriterInterface,
 
 func (handler NotifyUAAScope) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	connection := handler.database.Connection()
-	err := handler.Execute(w, req, connection, context, handler.strategy)
+	err := handler.Execute(w, req, connection, context)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return
 	}
 }
 
-func (handler NotifyUAAScope) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context, strategy strategies.StrategyInterface) error {
+func (handler NotifyUAAScope) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) error {
 	scope := strings.TrimPrefix(req.URL.Path, "/uaa_scopes/")
+	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
 
-	output, err := handler.notify.Execute(connection, req, context, scope, strategy, params.GUIDValidator{})
+	output, err := handler.notify.Execute(connection, req, context, scope, handler.strategy, params.GUIDValidator{}, vcapRequestID)
 	if err != nil {
 		return err
 	}

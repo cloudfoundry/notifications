@@ -31,7 +31,7 @@ func NewUAAScopeStrategy(tokenLoader postal.TokenLoaderInterface, findsUserGUIDs
 	}
 }
 
-func (strategy UAAScopeStrategy) Dispatch(clientID, scope string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy UAAScopeStrategy) Dispatch(clientID, scope, vcapRequestID string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
 	responses := []Response{}
 	options.Endorsement = ScopeEndorsement
 
@@ -54,7 +54,7 @@ func (strategy UAAScopeStrategy) Dispatch(clientID, scope string, options postal
 		users = append(users, User{GUID: guid})
 	}
 
-	responses = strategy.mailer.Deliver(conn, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, scope)
+	responses = strategy.mailer.Deliver(conn, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, scope, vcapRequestID)
 
 	return responses, nil
 }

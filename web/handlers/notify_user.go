@@ -28,7 +28,7 @@ func NewNotifyUser(notify NotifyInterface, errorWriter ErrorWriterInterface, str
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	connection := handler.database.Connection()
-	err := handler.Execute(w, req, connection, context, handler.strategy)
+	err := handler.Execute(w, req, connection, context)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return
@@ -36,10 +36,12 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 }
 
 func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request,
-	connection models.ConnectionInterface, context stack.Context, strategy strategies.StrategyInterface) error {
-	userGUID := strings.TrimPrefix(req.URL.Path, "/users/")
+	connection models.ConnectionInterface, context stack.Context) error {
 
-	output, err := handler.notify.Execute(connection, req, context, userGUID, strategy, params.GUIDValidator{})
+	userGUID := strings.TrimPrefix(req.URL.Path, "/users/")
+	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
+
+	output, err := handler.notify.Execute(connection, req, context, userGUID, handler.strategy, params.GUIDValidator{}, vcapRequestID)
 	if err != nil {
 		return err
 	}

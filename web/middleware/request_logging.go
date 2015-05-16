@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
 )
@@ -22,7 +23,7 @@ func (r RequestLogging) ServeHTTP(response http.ResponseWriter, request *http.Re
 	}
 
 	logSession := r.logger.Session("request", lager.Data{
-		"vcap-request-id": requestID,
+		handlers.VCAPRequestIDKey: requestID,
 	})
 
 	logSession.Info("incoming", lager.Data{
@@ -31,6 +32,7 @@ func (r RequestLogging) ServeHTTP(response http.ResponseWriter, request *http.Re
 	})
 
 	context.Set("logger", logSession)
+	context.Set(handlers.VCAPRequestIDKey, requestID)
 
 	return true
 }

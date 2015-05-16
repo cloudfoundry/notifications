@@ -38,7 +38,7 @@ var _ = Describe("Mailer", func() {
 	Describe("Deliver", func() {
 		It("returns the correct types of responses for users", func() {
 			users := []strategies.User{{GUID: "user-1"}, {Email: "user-2@example.com"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			responses := mailer.Deliver(conn, users, postal.Options{KindID: "the-kind"}, space, org, "the-client", "my.scope")
+			responses := mailer.Deliver(conn, users, postal.Options{KindID: "the-kind"}, space, org, "the-client", "my.scope", "some-request-id")
 
 			Expect(responses).To(HaveLen(4))
 			Expect(responses).To(ConsistOf([]strategies.Response{
@@ -67,7 +67,7 @@ var _ = Describe("Mailer", func() {
 
 		It("enqueues jobs with the deliveries", func() {
 			users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope")
+			mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id")
 
 			var deliveries []postal.Delivery
 			for _ = range users {
@@ -83,47 +83,51 @@ var _ = Describe("Mailer", func() {
 			Expect(deliveries).To(HaveLen(4))
 			Expect(deliveries).To(ConsistOf([]postal.Delivery{
 				{
-					Options:      postal.Options{},
-					UserGUID:     "user-1",
-					Space:        space,
-					Organization: org,
-					ClientID:     "the-client",
-					MessageID:    "deadbeef-aabb-ccdd-eeff-001122334455",
-					Scope:        "my.scope",
+					Options:       postal.Options{},
+					UserGUID:      "user-1",
+					Space:         space,
+					Organization:  org,
+					ClientID:      "the-client",
+					MessageID:     "deadbeef-aabb-ccdd-eeff-001122334455",
+					Scope:         "my.scope",
+					VCAPRequestID: "some-request-id",
 				},
 				{
-					Options:      postal.Options{},
-					UserGUID:     "user-2",
-					Space:        space,
-					Organization: org,
-					ClientID:     "the-client",
-					MessageID:    "deadbeef-aabb-ccdd-eeff-001122334456",
-					Scope:        "my.scope",
+					Options:       postal.Options{},
+					UserGUID:      "user-2",
+					Space:         space,
+					Organization:  org,
+					ClientID:      "the-client",
+					MessageID:     "deadbeef-aabb-ccdd-eeff-001122334456",
+					Scope:         "my.scope",
+					VCAPRequestID: "some-request-id",
 				},
 				{
-					Options:      postal.Options{},
-					UserGUID:     "user-3",
-					Space:        space,
-					Organization: org,
-					ClientID:     "the-client",
-					MessageID:    "deadbeef-aabb-ccdd-eeff-001122334457",
-					Scope:        "my.scope",
+					Options:       postal.Options{},
+					UserGUID:      "user-3",
+					Space:         space,
+					Organization:  org,
+					ClientID:      "the-client",
+					MessageID:     "deadbeef-aabb-ccdd-eeff-001122334457",
+					Scope:         "my.scope",
+					VCAPRequestID: "some-request-id",
 				},
 				{
-					Options:      postal.Options{},
-					UserGUID:     "user-4",
-					Space:        space,
-					Organization: org,
-					ClientID:     "the-client",
-					MessageID:    "deadbeef-aabb-ccdd-eeff-001122334458",
-					Scope:        "my.scope",
+					Options:       postal.Options{},
+					UserGUID:      "user-4",
+					Space:         space,
+					Organization:  org,
+					ClientID:      "the-client",
+					MessageID:     "deadbeef-aabb-ccdd-eeff-001122334458",
+					Scope:         "my.scope",
+					VCAPRequestID: "some-request-id",
 				},
 			}))
 		})
 
 		It("Upserts a StatusQueued for each of the jobs", func() {
 			users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope")
+			mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id")
 
 			var statuses []string
 			for _ = range users {
@@ -149,7 +153,7 @@ var _ = Describe("Mailer", func() {
 		Context("using a transaction", func() {
 			It("commits the transaction when everything goes well", func() {
 				users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-				responses := mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope")
+				responses := mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id")
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())
@@ -160,7 +164,7 @@ var _ = Describe("Mailer", func() {
 			It("rolls back the transaction when there is an error in message repo upserting", func() {
 				messagesRepo.UpsertError = errors.New("BOOM!")
 				users := []strategies.User{{GUID: "user-1"}}
-				mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope")
+				mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id")
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeFalse())
@@ -170,7 +174,7 @@ var _ = Describe("Mailer", func() {
 			It("returns an empty []Response{} if transaction fails", func() {
 				conn.CommitError = "the commit blew up"
 				users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-				responses := mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope")
+				responses := mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id")
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())

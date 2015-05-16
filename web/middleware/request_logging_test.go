@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
@@ -80,6 +81,17 @@ var _ = Describe("RequestLogging", func() {
 		Expect(line.Message).To(Equal("my-app.request.hello"))
 		Expect(line.LogLevel).To(Equal(int(lager.DEBUG)))
 		Expect(line.Data).To(HaveKeyWithValue("vcap-request-id", "some-request-id"))
+	})
+
+	It("adds the request id to the context", func() {
+		request.Header.Set("X-Vcap-Request-Id", "some-request-id")
+
+		result := ware.ServeHTTP(writer, request, context)
+		Expect(result).To(BeTrue())
+
+		requestID, ok := context.Get(handlers.VCAPRequestIDKey).(string)
+		Expect(ok).To(BeTrue())
+		Expect(requestID).To(Equal("some-request-id"))
 	})
 
 	Context("when the request id is unknown", func() {

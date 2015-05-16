@@ -15,14 +15,15 @@ import (
 )
 
 type Delivery struct {
-	MessageID    string
-	Options      Options
-	UserGUID     string
-	Email        string
-	Space        cf.CloudControllerSpace
-	Organization cf.CloudControllerOrganization
-	ClientID     string
-	Scope        string
+	MessageID     string
+	Options       Options
+	UserGUID      string
+	Email         string
+	Space         cf.CloudControllerSpace
+	Organization  cf.CloudControllerOrganization
+	ClientID      string
+	Scope         string
+	VCAPRequestID string
 }
 
 type MessagesRepoInterface interface {

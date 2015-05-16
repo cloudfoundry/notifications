@@ -28,7 +28,7 @@ func NewSpaceStrategy(tokenLoader postal.TokenLoaderInterface, spaceLoader utili
 	}
 }
 
-func (strategy SpaceStrategy) Dispatch(clientID, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy SpaceStrategy) Dispatch(clientID, guid, vcapRequestID string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
 	responses := []Response{}
 	options.Endorsement = SpaceEndorsement
 
@@ -57,7 +57,7 @@ func (strategy SpaceStrategy) Dispatch(clientID, guid string, options postal.Opt
 		return responses, err
 	}
 
-	responses = strategy.mailer.Deliver(conn, users, options, space, org, clientID, "")
+	responses = strategy.mailer.Deliver(conn, users, options, space, org, clientID, "", vcapRequestID)
 
 	return responses, nil
 }

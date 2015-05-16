@@ -28,7 +28,7 @@ func NewNotifyOrganization(notify NotifyInterface, errorWriter ErrorWriterInterf
 
 func (handler NotifyOrganization) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	connection := handler.database.Connection()
-	err := handler.Execute(w, req, connection, context, handler.strategy)
+	err := handler.Execute(w, req, connection, context)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return
@@ -36,11 +36,13 @@ func (handler NotifyOrganization) ServeHTTP(w http.ResponseWriter, req *http.Req
 }
 
 func (handler NotifyOrganization) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface,
-	context stack.Context, strategy strategies.StrategyInterface) error {
+	context stack.Context) error {
 
 	organizationGUID := strings.TrimPrefix(req.URL.Path, "/organizations/")
 
-	output, err := handler.notify.Execute(connection, req, context, organizationGUID, strategy, params.GUIDValidator{})
+	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
+
+	output, err := handler.notify.Execute(connection, req, context, organizationGUID, handler.strategy, params.GUIDValidator{}, vcapRequestID)
 	if err != nil {
 		return err
 	}

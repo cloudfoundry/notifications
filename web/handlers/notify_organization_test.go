@@ -4,10 +4,12 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/cloudfoundry-incubator/notifications/web/params"
+	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,47 +17,57 @@ import (
 
 var _ = Describe("NotifyOrganization", func() {
 	Describe("Execute", func() {
-		var handler handlers.NotifyOrganization
-		var writer *httptest.ResponseRecorder
-		var request *http.Request
-		var notify *fakes.Notify
+		var (
+			handler    handlers.NotifyOrganization
+			writer     *httptest.ResponseRecorder
+			request    *http.Request
+			notify     *fakes.Notify
+			context    stack.Context
+			connection *fakes.DBConn
+			strategy   *fakes.MailStrategy
+		)
 
 		BeforeEach(func() {
-			var err error
-
 			writer = httptest.NewRecorder()
-			request, err = http.NewRequest("POST", "/organizations/org-001", nil)
-			if err != nil {
-				panic(err)
-			}
+			request = &http.Request{URL: &url.URL{Path: "/organizations/org-001"}}
+			strategy = fakes.NewMailStrategy()
+
+			context = stack.NewContext()
+			context.Set(handlers.VCAPRequestIDKey, "some-request-id")
 
 			notify = fakes.NewNotify()
-			fakeDatabase := fakes.NewDatabase()
-			handler = handlers.NewNotifyOrganization(notify, nil, nil, fakeDatabase)
+			handler = handlers.NewNotifyOrganization(notify, nil, strategy, nil)
 		})
 
 		Context("when the notify.Execute returns a successful response", func() {
 			It("returns the JSON representation of the response", func() {
-				notify.Response = []byte("whatever")
-				strategy := strategies.OrganizationStrategy{}
+				notify.ExecuteCall.Response = []byte("whatever")
 
-				handler.Execute(writer, request, nil, nil, strategy)
+				handler.Execute(writer, request, nil, context)
 
 				Expect(writer.Code).To(Equal(http.StatusOK))
-				Expect(notify.GUID).To(Equal("org-001"))
+				Expect(writer.Body.String()).To(Equal("whatever"))
+			})
 
-				body := string(writer.Body.Bytes())
-				Expect(body).To(Equal("whatever"))
+			It("delegates to the Notify object with the correct arguments", func() {
+				handler.Execute(writer, request, connection, context)
+
+				Expect(notify.ExecuteCall.Args.Connection).To(Equal(connection))
+				Expect(notify.ExecuteCall.Args.Request).To(Equal(request))
+				Expect(notify.ExecuteCall.Args.Context).To(Equal(context))
+				Expect(notify.ExecuteCall.Args.GUID).To(Equal("org-001"))
+				Expect(notify.ExecuteCall.Args.Strategy).To(Equal(strategy))
+				Expect(notify.ExecuteCall.Args.Validator).To(BeAssignableToTypeOf(params.GUIDValidator{}))
+				Expect(notify.ExecuteCall.Args.VCAPRequestID).To(Equal("some-request-id"))
 			})
 		})
 
 		Context("when the notify.Execute returns an error", func() {
 			It("propagates the error", func() {
-				notify.Error = errors.New("the error")
-				strategy := strategies.OrganizationStrategy{}
+				notify.ExecuteCall.Error = errors.New("the error")
 
-				err := handler.Execute(writer, request, nil, nil, strategy)
-				Expect(err).To(Equal(notify.Error))
+				err := handler.Execute(writer, request, nil, context)
+				Expect(err).To(Equal(notify.ExecuteCall.Error))
 			})
 		})
 	})

@@ -13,16 +13,20 @@ import (
 )
 
 var _ = Describe("Everyone Strategy", func() {
-	var strategy strategies.EveryoneStrategy
-	var options postal.Options
-	var tokenLoader *fakes.TokenLoader
-	var allUsers *fakes.AllUsers
-	var mailer *fakes.Mailer
-	var clientID string
-	var conn *fakes.DBConn
+	var (
+		strategy      strategies.EveryoneStrategy
+		options       postal.Options
+		tokenLoader   *fakes.TokenLoader
+		allUsers      *fakes.AllUsers
+		mailer        *fakes.Mailer
+		clientID      string
+		conn          *fakes.DBConn
+		vcapRequestID string
+	)
 
 	BeforeEach(func() {
 		clientID = "my-client"
+		vcapRequestID = "some-request-id"
 		conn = fakes.NewDBConn()
 
 		tokenHeader := map[string]interface{}{
@@ -57,7 +61,7 @@ var _ = Describe("Everyone Strategy", func() {
 
 		It("call mailer.Deliver with the correct arguments for an organization", func() {
 			Expect(options.Endorsement).To(BeEmpty())
-			_, err := strategy.Dispatch(clientID, "", options, conn)
+			_, err := strategy.Dispatch(clientID, "", vcapRequestID, options, conn)
 			if err != nil {
 				panic(err)
 			}
@@ -69,13 +73,14 @@ var _ = Describe("Everyone Strategy", func() {
 			}
 
 			Expect(mailer.DeliverArguments).To(Equal(map[string]interface{}{
-				"connection": conn,
-				"users":      users,
-				"options":    options,
-				"space":      cf.CloudControllerSpace{},
-				"org":        cf.CloudControllerOrganization{},
-				"client":     clientID,
-				"scope":      "",
+				"connection":      conn,
+				"users":           users,
+				"options":         options,
+				"space":           cf.CloudControllerSpace{},
+				"org":             cf.CloudControllerOrganization{},
+				"client":          clientID,
+				"scope":           "",
+				"vcap-request-id": vcapRequestID,
 			}))
 		})
 	})
@@ -84,7 +89,7 @@ var _ = Describe("Everyone Strategy", func() {
 		Context("when token loader fails to return a token", func() {
 			It("returns an error", func() {
 				tokenLoader.LoadError = errors.New("BOOM!")
-				_, err := strategy.Dispatch(clientID, "", options, conn)
+				_, err := strategy.Dispatch(clientID, "", vcapRequestID, options, conn)
 
 				Expect(err).To(Equal(errors.New("BOOM!")))
 			})
@@ -93,7 +98,7 @@ var _ = Describe("Everyone Strategy", func() {
 		Context("when allUsers fails to load users", func() {
 			It("returns the error", func() {
 				allUsers.LoadError = errors.New("BOOM!")
-				_, err := strategy.Dispatch(clientID, "", options, conn)
+				_, err := strategy.Dispatch(clientID, "", vcapRequestID, options, conn)
 
 				Expect(err).To(Equal(errors.New("BOOM!")))
 			})

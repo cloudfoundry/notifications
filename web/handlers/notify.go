@@ -14,7 +14,7 @@ import (
 )
 
 type NotifyInterface interface {
-	Execute(models.ConnectionInterface, *http.Request, stack.Context, string, strategies.StrategyInterface, ValidatorInterface) ([]byte, error)
+	Execute(models.ConnectionInterface, *http.Request, stack.Context, string, strategies.StrategyInterface, ValidatorInterface, string) ([]byte, error)
 }
 
 type Notify struct {
@@ -34,7 +34,7 @@ type ValidatorInterface interface {
 }
 
 func (handler Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
-	guid string, strategy strategies.StrategyInterface, validator ValidatorInterface) ([]byte, error) {
+	guid string, strategy strategies.StrategyInterface, validator ValidatorInterface, vcapRequestID string) ([]byte, error) {
 	parameters, err := params.NewNotify(req.Body)
 	if err != nil {
 		return []byte{}, err
@@ -44,7 +44,7 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 		return []byte{}, params.ValidationError(parameters.Errors)
 	}
 
-	token := context.Get("token").(*jwt.Token)
+	token := context.Get("token").(*jwt.Token) // TODO: (rm) get rid of the context object, just pass in the token
 	clientID := token.Claims["client_id"].(string)
 
 	client, kind, err := handler.finder.ClientAndKind(clientID, parameters.KindID)
@@ -63,7 +63,7 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 
 	var responses []strategies.Response
 
-	responses, err = strategy.Dispatch(clientID, guid, parameters.ToOptions(client, kind), connection)
+	responses, err = strategy.Dispatch(clientID, guid, vcapRequestID, parameters.ToOptions(client, kind), connection)
 	if err != nil {
 		return []byte{}, err
 	}

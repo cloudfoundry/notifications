@@ -23,7 +23,7 @@ func NewEveryoneStrategy(tokenLoader postal.TokenLoaderInterface, allUsers utili
 	}
 }
 
-func (strategy EveryoneStrategy) Dispatch(clientID, guid string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy EveryoneStrategy) Dispatch(clientID, guid, vcapRequestID string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
 	responses := []Response{}
 	options.Endorsement = EveryoneEndorsement
 
@@ -43,7 +43,7 @@ func (strategy EveryoneStrategy) Dispatch(clientID, guid string, options postal.
 		users = append(users, User{GUID: guid})
 	}
 
-	responses = strategy.mailer.Deliver(conn, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "")
+	responses = strategy.mailer.Deliver(conn, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "", vcapRequestID)
 
 	return responses, nil
 }

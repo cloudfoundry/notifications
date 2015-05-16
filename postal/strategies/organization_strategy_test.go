@@ -13,17 +13,21 @@ import (
 )
 
 var _ = Describe("Organization Strategy", func() {
-	var strategy strategies.OrganizationStrategy
-	var options postal.Options
-	var tokenLoader *fakes.TokenLoader
-	var organizationLoader *fakes.OrganizationLoader
-	var mailer *fakes.Mailer
-	var clientID string
-	var conn *fakes.DBConn
-	var findsUserGUIDs *fakes.FindsUserGUIDs
+	var (
+		strategy           strategies.OrganizationStrategy
+		options            postal.Options
+		tokenLoader        *fakes.TokenLoader
+		organizationLoader *fakes.OrganizationLoader
+		mailer             *fakes.Mailer
+		clientID           string
+		conn               *fakes.DBConn
+		findsUserGUIDs     *fakes.FindsUserGUIDs
+		vcapRequestID      string
+	)
 
 	BeforeEach(func() {
 		clientID = "mister-client"
+		vcapRequestID = "some-request-id"
 		conn = fakes.NewDBConn()
 
 		tokenHeader := map[string]interface{}{
@@ -67,7 +71,7 @@ var _ = Describe("Organization Strategy", func() {
 			It("call mailer.Deliver with the correct arguments for an organization", func() {
 				Expect(options.Endorsement).To(BeEmpty())
 
-				_, err := strategy.Dispatch(clientID, "org-001", options, conn)
+				_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, options, conn)
 				if err != nil {
 					panic(err)
 				}
@@ -84,8 +88,9 @@ var _ = Describe("Organization Strategy", func() {
 						Name: "my-org",
 						GUID: "org-001",
 					},
-					"client": clientID,
-					"scope":  "",
+					"client":          clientID,
+					"scope":           "",
+					"vcap-request-id": vcapRequestID,
 				}))
 			})
 
@@ -95,7 +100,7 @@ var _ = Describe("Organization Strategy", func() {
 
 					Expect(options.Endorsement).To(BeEmpty())
 
-					_, err := strategy.Dispatch(clientID, "org-001", options, conn)
+					_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, options, conn)
 					if err != nil {
 						panic(err)
 					}
@@ -111,7 +116,7 @@ var _ = Describe("Organization Strategy", func() {
 			Context("when token loader fails to return a token", func() {
 				It("returns an error", func() {
 					tokenLoader.LoadError = errors.New("BOOM!")
-					_, err := strategy.Dispatch(clientID, "org-001", options, conn)
+					_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, options, conn)
 
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
@@ -120,7 +125,7 @@ var _ = Describe("Organization Strategy", func() {
 			Context("when organizationLoader fails to load an organization", func() {
 				It("returns the error", func() {
 					organizationLoader.LoadError = errors.New("BOOM!")
-					_, err := strategy.Dispatch(clientID, "org-009", options, conn)
+					_, err := strategy.Dispatch(clientID, "org-009", vcapRequestID, options, conn)
 
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
@@ -130,7 +135,7 @@ var _ = Describe("Organization Strategy", func() {
 				It("returns an error", func() {
 					findsUserGUIDs.UserGUIDsBelongingToOrganizationError = errors.New("BOOM!")
 
-					_, err := strategy.Dispatch(clientID, "org-001", options, conn)
+					_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, options, conn)
 					Expect(err).ToNot(BeNil())
 				})
 			})

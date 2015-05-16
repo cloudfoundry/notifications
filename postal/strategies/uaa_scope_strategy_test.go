@@ -13,18 +13,22 @@ import (
 )
 
 var _ = Describe("UAA Scope Strategy", func() {
-	var strategy strategies.UAAScopeStrategy
-	var options postal.Options
-	var tokenLoader *fakes.TokenLoader
-	var mailer *fakes.Mailer
-	var clientID string
-	var conn *fakes.DBConn
-	var findsUserGUIDs *fakes.FindsUserGUIDs
-	var scope string
+	var (
+		strategy       strategies.UAAScopeStrategy
+		options        postal.Options
+		tokenLoader    *fakes.TokenLoader
+		mailer         *fakes.Mailer
+		clientID       string
+		conn           *fakes.DBConn
+		findsUserGUIDs *fakes.FindsUserGUIDs
+		scope          string
+		vcapRequestID  string
+	)
 
 	BeforeEach(func() {
 		scope = "great.scope"
 		clientID = "mister-client"
+		vcapRequestID = "some-request-id"
 		conn = fakes.NewDBConn()
 
 		tokenHeader := map[string]interface{}{
@@ -62,7 +66,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 			It("call mailer.Deliver with the correct arguments for an UAA Scope", func() {
 				Expect(options.Endorsement).To(BeEmpty())
 
-				_, err := strategy.Dispatch(clientID, "great.scope", options, conn)
+				_, err := strategy.Dispatch(clientID, "great.scope", vcapRequestID, options, conn)
 				if err != nil {
 					panic(err)
 				}
@@ -71,13 +75,14 @@ var _ = Describe("UAA Scope Strategy", func() {
 				users := []strategies.User{{GUID: "user-311"}}
 
 				Expect(mailer.DeliverArguments).To(Equal(map[string]interface{}{
-					"connection": conn,
-					"users":      users,
-					"options":    options,
-					"space":      cf.CloudControllerSpace{},
-					"org":        cf.CloudControllerOrganization{},
-					"client":     clientID,
-					"scope":      scope,
+					"connection":      conn,
+					"users":           users,
+					"options":         options,
+					"space":           cf.CloudControllerSpace{},
+					"org":             cf.CloudControllerOrganization{},
+					"client":          clientID,
+					"scope":           scope,
+					"vcap-request-id": vcapRequestID,
 				}))
 			})
 		})
@@ -86,7 +91,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 			Context("when token loader fails to return a token", func() {
 				It("returns an error", func() {
 					tokenLoader.LoadError = errors.New("BOOM!")
-					_, err := strategy.Dispatch(clientID, "great.scope", options, conn)
+					_, err := strategy.Dispatch(clientID, "great.scope", vcapRequestID, options, conn)
 
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
@@ -96,7 +101,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 				It("returns an error", func() {
 					findsUserGUIDs.UserGUIDsBelongingToScopeError = errors.New("BOOM!")
 
-					_, err := strategy.Dispatch(clientID, "great.scope", options, conn)
+					_, err := strategy.Dispatch(clientID, "great.scope", vcapRequestID, options, conn)
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -106,7 +111,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 					defaultScopes := []string{"cloud_controller.read", "cloud_controller.write", "openid", "approvals.me",
 						"cloud_controller_service_permissions.read", "scim.me", "uaa.user", "password.write", "scim.userids", "oauth.approvals"}
 					for _, scope := range defaultScopes {
-						_, err := strategy.Dispatch(clientID, scope, options, conn)
+						_, err := strategy.Dispatch(clientID, scope, vcapRequestID, options, conn)
 						Expect(err).To(HaveOccurred())
 						Expect(err).To(MatchError(strategies.DefaultScopeError{}))
 					}
