@@ -1,7 +1,6 @@
 package postal
 
 import (
-	"log"
 	"math"
 	"strings"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/pivotal-golang/conceal"
+	"github.com/pivotal-golang/lager"
 )
 
 type Delivery struct {
@@ -31,7 +31,8 @@ type MessagesRepoInterface interface {
 }
 
 type DeliveryWorker struct {
-	logger                 *log.Logger
+	baseLogger             lager.Logger
+	logger                 lager.Logger
 	mailClient             mail.ClientInterface
 	globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface
 	unsubscribesRepo       models.UnsubscribesRepoInterface
@@ -48,14 +49,17 @@ type DeliveryWorker struct {
 	gobble.Worker
 }
 
-func NewDeliveryWorker(id int, logger *log.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
+func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
 	globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface, unsubscribesRepo models.UnsubscribesRepoInterface,
 	kindsRepo models.KindsRepoInterface, messagesRepo MessagesRepoInterface,
 	database models.DatabaseInterface, sender string, encryptionKey []byte, userLoader UserLoaderInterface,
 	templatesLoader TemplatesLoaderInterface, receiptsRepo models.ReceiptsRepoInterface, tokenLoader TokenLoaderInterface) DeliveryWorker {
 
+	logger = logger.Session("worker", lager.Data{"worker_id": id})
+
 	worker := DeliveryWorker{
 		identifier:             id,
+		baseLogger:             logger,
 		logger:                 logger,
 		mailClient:             mailClient,
 		globalUnsubscribesRepo: globalUnsubscribesRepo,
@@ -84,26 +88,31 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 			"name": "notifications.worker.panic.json",
 		}).Log()
 
-		worker.retry("UNKNOWN", job)
+		worker.retry("UNKNOWN", "UNKNOWN", job)
 		return
 	}
 
+	worker.logger = worker.logger.WithData(lager.Data{
+		"message_id":      delivery.MessageID,
+		"vcap_request_id": delivery.VCAPRequestID,
+	})
+
 	err = worker.receiptsRepo.CreateReceipts(worker.database.Connection(), []string{delivery.UserGUID}, delivery.ClientID, delivery.Options.KindID)
 	if err != nil {
-		worker.retry(delivery.MessageID, job)
+		worker.retry(delivery.MessageID, delivery.Email, job)
 		return
 	}
 
 	if delivery.Email == "" {
 		token, err := worker.tokenLoader.Load()
 		if err != nil {
-			worker.retry(delivery.MessageID, job)
+			worker.retry(delivery.MessageID, delivery.Email, job)
 			return
 		}
 
 		users, err := worker.userLoader.Load([]string{delivery.UserGUID}, token)
 		if err != nil || len(users) < 1 {
-			worker.retry(delivery.MessageID, job)
+			worker.retry(delivery.MessageID, delivery.Email, job)
 			return
 		}
 
@@ -113,11 +122,15 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 		}
 	}
 
+	worker.logger = worker.logger.WithData(lager.Data{
+		"recipient": delivery.Email,
+	})
+
 	if worker.shouldDeliver(delivery) {
 		status := worker.deliver(delivery)
 
 		if status != StatusDelivered {
-			worker.retry(delivery.MessageID, job)
+			worker.retry(delivery.MessageID, delivery.Email, job)
 			return
 		} else {
 			metrics.NewMetric("counter", map[string]interface{}{
@@ -134,30 +147,35 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 func (worker DeliveryWorker) deliver(delivery Delivery) string {
 	message, err := worker.pack(delivery)
 	if err != nil {
-		worker.Logf(delivery.MessageID, "Not delivering because template failed to pack")
-		worker.updateMessageStatus(delivery.MessageID, StatusFailed)
+		worker.logger.Info("template-pack-failed")
+		worker.updateMessageStatus(delivery.MessageID, StatusFailed, delivery.Email)
 		return StatusFailed
 	}
 
 	status := worker.sendMail(delivery.MessageID, message)
-	worker.updateMessageStatus(delivery.MessageID, status)
+	worker.updateMessageStatus(delivery.MessageID, status, delivery.Email)
 
 	return status
 }
 
-func (worker DeliveryWorker) updateMessageStatus(messageID, status string) {
+func (worker DeliveryWorker) updateMessageStatus(messageID, status, recipient string) {
 	_, err := worker.messagesRepo.Upsert(worker.database.Connection(), models.Message{ID: messageID, Status: status})
 	if err != nil {
-		worker.Logf(messageID, "Failed to upsert status '%s'. Error: %s", status, err.Error())
+		worker.logger.Error("failed-message-status-upsert", err, lager.Data{
+			"status": status,
+		})
 	}
 }
 
-func (worker DeliveryWorker) retry(messageID string, job *gobble.Job) {
+func (worker DeliveryWorker) retry(messageID, recipient string, job *gobble.Job) {
 	if job.RetryCount < 10 {
 		duration := time.Duration(int64(math.Pow(2, float64(job.RetryCount))))
 		job.Retry(duration * time.Minute)
-		layout := "Jan 2, 2006 at 3:04pm (MST)"
-		worker.Logf(messageID, "Message failed to send, retrying at: %s", job.ActiveAt.Format(layout))
+
+		worker.logger.Info("delivery-failed-retrying", lager.Data{
+			"retry_count": job.RetryCount,
+			"active_at":   job.ActiveAt.Format(time.RFC3339),
+		})
 	}
 
 	metrics.NewMetric("counter", map[string]interface{}{
@@ -173,27 +191,27 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 
 	globallyUnsubscribed, err := worker.globalUnsubscribesRepo.Get(conn, delivery.UserGUID)
 	if err != nil || globallyUnsubscribed {
-		worker.Logf(delivery.MessageID, "Not delivering because %s has unsubscribed", delivery.Email)
-		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
+		worker.logger.Info("user-unsubscribed")
+		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable, delivery.Email)
 		return false
 	}
 
 	isUnsubscribed, err := worker.unsubscribesRepo.Get(conn, delivery.UserGUID, delivery.ClientID, delivery.Options.KindID)
 	if err != nil || isUnsubscribed {
-		worker.Logf(delivery.MessageID, "Not delivering because %s has unsubscribed", delivery.Email)
-		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
+		worker.logger.Info("user-unsubscribed")
+		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable, delivery.Email)
 		return false
 	}
 
 	if delivery.Email == "" {
-		worker.Logf(delivery.MessageID, "Not delivering because recipient has no email addresses")
-		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
+		worker.logger.Info("no-email-address-for-user")
+		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable, delivery.Email)
 		return false
 	}
 
 	if !strings.Contains(delivery.Email, "@") {
-		worker.Logf(delivery.MessageID, "Not delivering because recipient's email address (%s) is invalid", delivery.Email)
-		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable)
+		worker.logger.Info("malformatted-email-address")
+		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable, delivery.Email)
 		return false
 	}
 
@@ -236,24 +254,19 @@ func (worker DeliveryWorker) pack(delivery Delivery) (mail.Message, error) {
 func (worker DeliveryWorker) sendMail(messageID string, message mail.Message) string {
 	err := worker.mailClient.Connect()
 	if err != nil {
-		worker.Logf(messageID, "Error Establishing SMTP Connection: %s", err.Error())
+		worker.logger.Error("smtp-connection-error", err)
 		return StatusUnavailable
 	}
 
-	worker.Logf(messageID, "Attempting to deliver message to %s", message.To)
+	worker.logger.Info("delivery-start")
+
 	err = worker.mailClient.Send(message)
 	if err != nil {
-		worker.Logf(messageID, "Failed to deliver message due to SMTP error: %s", err.Error())
+		worker.logger.Error("delivery-failed-smtp-error", err)
 		return StatusFailed
 	}
 
-	worker.Logf(messageID, "Message was successfully sent to %s", message.To)
+	worker.logger.Info("message-sent")
 
 	return StatusDelivered
-}
-
-func (worker DeliveryWorker) Logf(messageID, format string, v ...interface{}) {
-	format = "Worker[%d] [%s]: " + format
-	v = append([]interface{}{worker.identifier, messageID}, v...)
-	worker.logger.Printf(format, v...)
 }

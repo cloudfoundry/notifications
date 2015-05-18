@@ -3,9 +3,8 @@ package postal_test
 import (
 	"bytes"
 	"crypto/md5"
+	"encoding/json"
 	"errors"
-	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -15,17 +14,44 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
+	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
+
+type logLine struct {
+	Source   string                 `json:"source"`
+	Message  string                 `json:"message"`
+	LogLevel int                    `json:"log_level"`
+	Data     map[string]interface{} `json:"data"`
+}
+
+func parseLogLines(b []byte) ([]logLine, error) {
+	var lines []logLine
+	for _, line := range bytes.Split(b, []byte("\n")) {
+		if len(line) == 0 {
+			continue
+		}
+
+		var ll logLine
+		err := json.Unmarshal(line, &ll)
+		if err != nil {
+			return lines, err
+		}
+
+		lines = append(lines, ll)
+	}
+
+	return lines, nil
+}
 
 var _ = Describe("DeliveryWorker", func() {
 	var (
 		mailClient             fakes.MailClient
 		worker                 postal.DeliveryWorker
 		id                     int
-		logger                 *log.Logger
+		logger                 lager.Logger
 		buffer                 *bytes.Buffer
 		delivery               postal.Delivery
 		queue                  *fakes.Queue
@@ -47,7 +73,8 @@ var _ = Describe("DeliveryWorker", func() {
 	BeforeEach(func() {
 		buffer = bytes.NewBuffer([]byte{})
 		id = 1234
-		logger = log.New(buffer, "", 0)
+		logger = lager.NewLogger("notifications")
+		logger.RegisterSink(lager.NewWriterSink(buffer, lager.DEBUG))
 		mailClient = fakes.NewMailClient()
 		queue = fakes.NewQueue()
 		unsubscribesRepo = fakes.NewUnsubscribesRepo()
@@ -86,7 +113,8 @@ var _ = Describe("DeliveryWorker", func() {
 				ReplyTo: "thesender@example.com",
 				KindID:  "some-kind",
 			},
-			MessageID: messageID,
+			MessageID:     messageID,
+			VCAPRequestID: "some-request-id",
 		}
 
 		_, err := messagesRepo.Upsert(database.Connection(), models.Message{ID: messageID, Status: postal.StatusQueued})
@@ -131,14 +159,42 @@ var _ = Describe("DeliveryWorker", func() {
 
 		It("logs the email address of the recipient", func() {
 			worker.Deliver(&job)
-			Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Attempting to deliver message to user-123@example.com"))
+
+			lines, err := parseLogLines(buffer.Bytes())
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(lines).To(ContainElement(logLine{
+				Source:   "notifications",
+				Message:  "notifications.worker.delivery-start",
+				LogLevel: int(lager.INFO),
+				Data: map[string]interface{}{
+					"session":         "1",
+					"recipient":       "user-123@example.com",
+					"worker_id":       float64(1234),
+					"message_id":      "randomly-generated-guid",
+					"vcap_request_id": "some-request-id",
+				},
+			}))
 		})
 
 		It("logs successful delivery", func() {
 			worker.Deliver(&job)
 
-			results := strings.Split(buffer.String(), "\n")
-			Expect(results).To(ContainElement("Worker[1234] [randomly-generated-guid]: Message was successfully sent to user-123@example.com"))
+			lines, err := parseLogLines(buffer.Bytes())
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(lines).To(ContainElement(logLine{
+				Source:   "notifications",
+				Message:  "notifications.worker.message-sent",
+				LogLevel: int(lager.INFO),
+				Data: map[string]interface{}{
+					"session":         "1",
+					"recipient":       "user-123@example.com",
+					"worker_id":       float64(1234),
+					"message_id":      "randomly-generated-guid",
+					"vcap_request_id": "some-request-id",
+				},
+			}))
 		})
 
 		It("upserts the StatusDelivered to the database", func() {
@@ -185,14 +241,27 @@ var _ = Describe("DeliveryWorker", func() {
 		})
 
 		Context("when the StatusDelivered failed to be upserted to the database", func() {
-			It("Logs the error", func() {
+			It("logs the error", func() {
 				messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
 				worker.Deliver(&job)
-				Expect(buffer.String()).To(ContainSubstring(
-					fmt.Sprintf("Worker[1234] [randomly-generated-guid]: Failed to upsert status '%s'. Error: %s",
-						postal.StatusDelivered,
-						messagesRepo.UpsertError.Error(),
-					)))
+
+				lines, err := parseLogLines(buffer.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(lines).To(ContainElement(logLine{
+					Source:   "notifications",
+					Message:  "notifications.worker.failed-message-status-upsert",
+					LogLevel: int(lager.ERROR),
+					Data: map[string]interface{}{
+						"session":         "1",
+						"error":           messagesRepo.UpsertError.Error(),
+						"recipient":       "user-123@example.com",
+						"worker_id":       float64(1234),
+						"message_id":      "randomly-generated-guid",
+						"status":          postal.StatusDelivered,
+						"vcap_request_id": "some-request-id",
+					},
+				}))
 			})
 		})
 
@@ -243,7 +312,23 @@ var _ = Describe("DeliveryWorker", func() {
 
 				It("logs an SMTP send error", func() {
 					worker.Deliver(&job)
-					Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Failed to deliver message due to SMTP error: " + mailClient.SendError.Error()))
+
+					lines, err := parseLogLines(buffer.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lines).To(ContainElement(logLine{
+						Source:   "notifications",
+						Message:  "notifications.worker.delivery-failed-smtp-error",
+						LogLevel: int(lager.ERROR),
+						Data: map[string]interface{}{
+							"session":         "1",
+							"error":           mailClient.SendError.Error(),
+							"recipient":       "user-123@example.com",
+							"worker_id":       float64(1234),
+							"message_id":      "randomly-generated-guid",
+							"vcap_request_id": "some-request-id",
+						},
+					}))
 				})
 
 				It("upserts the StatusFailed to the database", func() {
@@ -261,25 +346,49 @@ var _ = Describe("DeliveryWorker", func() {
 					It("logs the failure", func() {
 						messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
 						worker.Deliver(&job)
-						Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Failed to upsert status '%s'. Error: %s",
-							postal.StatusFailed,
-							messagesRepo.UpsertError.Error()))
+
+						lines, err := parseLogLines(buffer.Bytes())
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(lines).To(ContainElement(logLine{
+							Source:   "notifications",
+							Message:  "notifications.worker.failed-message-status-upsert",
+							LogLevel: int(lager.ERROR),
+							Data: map[string]interface{}{
+								"session":         "1",
+								"error":           messagesRepo.UpsertError.Error(),
+								"recipient":       "user-123@example.com",
+								"worker_id":       float64(1234),
+								"message_id":      "randomly-generated-guid",
+								"status":          postal.StatusFailed,
+								"vcap_request_id": "some-request-id",
+							},
+						}))
 					})
 				})
 			})
 
 			Context("and the error is a connect error", func() {
-				It("logs an SMTP timeout error", func() {
+				It("logs an SMTP connection error", func() {
 					mailClient.ConnectError = errors.New("server timeout")
 					worker.Deliver(&job)
-					Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Error Establishing SMTP Connection: server timeout"))
-				})
 
-				It("logs other connect errors", func() {
-					mailClient.ConnectError = errors.New("BOOM!")
-					worker.Deliver(&job)
-					Expect(buffer.String()).ToNot(ContainSubstring("server timeout"))
-					Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Error Establishing SMTP Connection: BOOM!"))
+					lines, err := parseLogLines(buffer.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lines).To(ContainElement(logLine{
+						Source:   "notifications",
+						Message:  "notifications.worker.smtp-connection-error",
+						LogLevel: int(lager.ERROR),
+						Data: map[string]interface{}{
+							"session":         "1",
+							"error":           mailClient.ConnectError.Error(),
+							"recipient":       "user-123@example.com",
+							"worker_id":       float64(1234),
+							"message_id":      "randomly-generated-guid",
+							"vcap_request_id": "some-request-id",
+						},
+					}))
 				})
 
 				It("upserts the StatusUnavailable to the database", func() {
@@ -304,12 +413,28 @@ var _ = Describe("DeliveryWorker", func() {
 				It("sets the retry duration using an exponential backoff algorithm", func() {
 					mailClient.ConnectError = errors.New("BOOM!")
 					worker.Deliver(&job)
-					layout := "Jan 2, 2006 at 3:04pm (MST)"
-					retryString := fmt.Sprintf("Worker[1234] [randomly-generated-guid]: Message failed to send, retrying at: %s", job.ActiveAt.Format(layout))
 
 					Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 10*time.Second))
-					Expect(buffer.String()).To(ContainSubstring(retryString))
 					Expect(job.RetryCount).To(Equal(1))
+
+					lines, err := parseLogLines(buffer.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					line := lines[1]
+					Expect(line.Source).To(Equal("notifications"))
+					Expect(line.Message).To(Equal("notifications.worker.delivery-failed-retrying"))
+					Expect(line.LogLevel).To(Equal(int(lager.INFO)))
+					Expect(line.Data).To(HaveKeyWithValue("session", "1"))
+					Expect(line.Data).To(HaveKeyWithValue("recipient", "user-123@example.com"))
+					Expect(line.Data).To(HaveKeyWithValue("worker_id", float64(1234)))
+					Expect(line.Data).To(HaveKeyWithValue("message_id", "randomly-generated-guid"))
+					Expect(line.Data).To(HaveKeyWithValue("retry_count", float64(1)))
+					Expect(line.Data).To(HaveKeyWithValue("vcap_request_id", "some-request-id"))
+
+					Expect(line.Data).To(HaveKey("active_at"))
+					activeAt, err := time.Parse(time.RFC3339, line.Data["active_at"].(string))
+					Expect(err).NotTo(HaveOccurred())
+					Expect(activeAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 10*time.Second))
 
 					worker.Deliver(&job)
 					Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(2*time.Minute), 10*time.Second))
@@ -364,7 +489,21 @@ var _ = Describe("DeliveryWorker", func() {
 			})
 
 			It("logs that the user has unsubscribed from this notification", func() {
-				Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Not delivering because user-123@example.com has unsubscribed"))
+				lines, err := parseLogLines(buffer.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(lines).To(ContainElement(logLine{
+					Source:   "notifications",
+					Message:  "notifications.worker.user-unsubscribed",
+					LogLevel: int(lager.INFO),
+					Data: map[string]interface{}{
+						"session":         "1",
+						"recipient":       "user-123@example.com",
+						"worker_id":       float64(1234),
+						"message_id":      "randomly-generated-guid",
+						"vcap_request_id": "some-request-id",
+					},
+				}))
 			})
 
 			It("does not send any non-critical notifications", func() {
@@ -391,8 +530,22 @@ var _ = Describe("DeliveryWorker", func() {
 					worker.Deliver(&job)
 				})
 
-				It("logs the error", func() {
-					Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Not delivering because recipient has no email addresses"))
+				It("logs the info", func() {
+					lines, err := parseLogLines(buffer.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lines).To(ContainElement(logLine{
+						Source:   "notifications",
+						Message:  "notifications.worker.no-email-address-for-user",
+						LogLevel: int(lager.INFO),
+						Data: map[string]interface{}{
+							"session":         "1",
+							"recipient":       "",
+							"worker_id":       float64(1234),
+							"message_id":      "randomly-generated-guid",
+							"vcap_request_id": "some-request-id",
+						},
+					}))
 				})
 
 				It("upserts the StatusUndeliverable to the database", func() {
@@ -413,8 +566,22 @@ var _ = Describe("DeliveryWorker", func() {
 					worker.Deliver(&job)
 				})
 
-				It("logs the error", func() {
-					Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Not delivering because recipient's email address (nope) is invalid"))
+				It("logs the info", func() {
+					lines, err := parseLogLines(buffer.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lines).To(ContainElement(logLine{
+						Source:   "notifications",
+						Message:  "notifications.worker.malformatted-email-address",
+						LogLevel: int(lager.INFO),
+						Data: map[string]interface{}{
+							"session":         "1",
+							"recipient":       "nope",
+							"worker_id":       float64(1234),
+							"message_id":      "randomly-generated-guid",
+							"vcap_request_id": "some-request-id",
+						},
+					}))
 				})
 
 				It("upserts the StatusUndeliverable to the database", func() {
@@ -436,7 +603,22 @@ var _ = Describe("DeliveryWorker", func() {
 
 			It("logs that the user has unsubscribed from this notification", func() {
 				worker.Deliver(&job)
-				Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Not delivering because user-123@example.com has unsubscribed"))
+
+				lines, err := parseLogLines(buffer.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(lines).To(ContainElement(logLine{
+					Source:   "notifications",
+					Message:  "notifications.worker.user-unsubscribed",
+					LogLevel: int(lager.INFO),
+					Data: map[string]interface{}{
+						"session":         "1",
+						"recipient":       "user-123@example.com",
+						"worker_id":       float64(1234),
+						"message_id":      "randomly-generated-guid",
+						"vcap_request_id": "some-request-id",
+					},
+				}))
 			})
 
 			It("upserts the StatusUndeliverable to the database", func() {
@@ -520,7 +702,22 @@ var _ = Describe("DeliveryWorker", func() {
 
 			It("logs that the packer errored", func() {
 				worker.Deliver(&job)
-				Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Not delivering because template failed to pack"))
+
+				lines, err := parseLogLines(buffer.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(lines).To(ContainElement(logLine{
+					Source:   "notifications",
+					Message:  "notifications.worker.template-pack-failed",
+					LogLevel: int(lager.INFO),
+					Data: map[string]interface{}{
+						"session":         "1",
+						"recipient":       "user-123@example.com",
+						"worker_id":       float64(1234),
+						"message_id":      "randomly-generated-guid",
+						"vcap_request_id": "some-request-id",
+					},
+				}))
 			})
 
 			It("upserts the StatusFailed to the database", func() {
@@ -535,9 +732,24 @@ var _ = Describe("DeliveryWorker", func() {
 				It("logs the failure", func() {
 					messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
 					worker.Deliver(&job)
-					Expect(buffer.String()).To(ContainSubstring("Worker[1234] [randomly-generated-guid]: Failed to upsert status '%s'. Error: %s",
-						postal.StatusFailed,
-						messagesRepo.UpsertError.Error()))
+
+					lines, err := parseLogLines(buffer.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lines).To(ContainElement(logLine{
+						Source:   "notifications",
+						Message:  "notifications.worker.failed-message-status-upsert",
+						LogLevel: int(lager.ERROR),
+						Data: map[string]interface{}{
+							"session":         "1",
+							"error":           messagesRepo.UpsertError.Error(),
+							"recipient":       "user-123@example.com",
+							"worker_id":       float64(1234),
+							"message_id":      "randomly-generated-guid",
+							"status":          postal.StatusFailed,
+							"vcap_request_id": "some-request-id",
+						},
+					}))
 				})
 			})
 		})
@@ -564,11 +776,24 @@ var _ = Describe("DeliveryWorker", func() {
 			It("logs the failure", func() {
 				messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
 				worker.Deliver(&job)
-				Expect(buffer.String()).To(ContainSubstring(
-					fmt.Sprintf("Worker[1234] [randomly-generated-guid]: Failed to upsert status '%s'. Error: %s",
-						postal.StatusDelivered,
-						messagesRepo.UpsertError.Error(),
-					)))
+
+				lines, err := parseLogLines(buffer.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(lines).To(ContainElement(logLine{
+					Source:   "notifications",
+					Message:  "notifications.worker.failed-message-status-upsert",
+					LogLevel: int(lager.ERROR),
+					Data: map[string]interface{}{
+						"session":         "1",
+						"error":           messagesRepo.UpsertError.Error(),
+						"recipient":       "user-123@example.com",
+						"worker_id":       float64(1234),
+						"message_id":      "randomly-generated-guid",
+						"status":          postal.StatusDelivered,
+						"vcap_request_id": "some-request-id",
+					},
+				}))
 			})
 
 			It("still delivers the message", func() {

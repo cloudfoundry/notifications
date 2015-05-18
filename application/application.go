@@ -92,8 +92,6 @@ func (app Application) RetrieveUAAPublicKey(logger lager.Logger) {
 }
 
 func (app Application) StartWorkers() {
-	logger := log.New(os.Stdout, "", 0)
-
 	queueGauge := metrics.NewQueueGauge(app.mother.Queue(), metrics.DefaultLogger, time.Tick(1*time.Second))
 	go queueGauge.Run()
 
@@ -101,7 +99,7 @@ func (app Application) StartWorkers() {
 		InstanceIndex: app.env.VCAPApplication.InstanceIndex,
 		Count:         WorkerCount,
 	}.Work(func(i int) Worker {
-		worker := postal.NewDeliveryWorker(i, logger, app.mother.MailClient(), app.mother.Queue(),
+		worker := postal.NewDeliveryWorker(i, app.mother.Logger(), app.mother.MailClient(), app.mother.Queue(),
 			app.mother.GlobalUnsubscribesRepo(), app.mother.UnsubscribesRepo(), app.mother.KindsRepo(), app.mother.MessagesRepo(),
 			app.mother.Database(), app.env.Sender, app.env.EncryptionKey, app.mother.UserLoader(), app.mother.TemplatesLoader(), app.mother.ReceiptsRepo(), app.mother.TokenLoader())
 		return &worker
