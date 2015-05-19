@@ -118,7 +118,11 @@ func (app Application) StartMessageGC() {
 }
 
 func (app Application) StartServer(logger lager.Logger) {
-	web.NewServer().Run(app.env.Port, app.mother, logger)
+	web.NewServer().Run(app.mother, web.Config{
+		Port:             app.env.Port,
+		Logger:           logger,
+		DBLoggingEnabled: app.env.DBLoggingEnabled,
+	})
 }
 
 // This is a hack to get the logs output to the loggregator before the process exits

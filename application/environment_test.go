@@ -115,13 +115,13 @@ var _ = Describe("Environment", func() {
 		It("loads the value when it is set", func() {
 			os.Setenv("PORT", "5001")
 			env := application.NewEnvironment()
-			Expect(env.Port).To(Equal("5001"))
+			Expect(env.Port).To(Equal(5001))
 		})
 
 		It("sets the value to 3000 when it is not set", func() {
 			os.Setenv("PORT", "")
 			env := application.NewEnvironment()
-			Expect(env.Port).To(Equal("3000"))
+			Expect(env.Port).To(Equal(3000))
 		})
 	})
 

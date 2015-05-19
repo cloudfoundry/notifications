@@ -1,6 +1,8 @@
 package fakes
 
 import (
+	"database/sql"
+
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -70,6 +72,10 @@ func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, service
 
 func (mother Mother) Database() models.DatabaseInterface {
 	return NewDatabase()
+}
+
+func (mother Mother) SQLDatabase() *sql.DB {
+	return &sql.DB{}
 }
 
 func (mother Mother) Logging() middleware.RequestLogging {

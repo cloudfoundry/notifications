@@ -29,7 +29,7 @@ type Environment struct {
 	GobbleWaitMaxDuration int    `env:"GOBBLE_WAIT_MAX_DURATION"    env-default:"5000"`
 	ModelMigrationsPath   string
 	GobbleMigrationsPath  string
-	Port                  string `env:"PORT"                        env-default:"3000"`
+	Port                  int    `env:"PORT"                        env-default:"3000"`
 	RootPath              string `env:"ROOT_PATH"`
 	SMTPAuthMechanism     string `env:"SMTP_AUTH_MECHANISM"         env-required:"true"`
 	SMTPCRAMMD5Secret     string `env:"SMTP_CRAMMD5_SECRET"`
