@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
@@ -32,7 +33,8 @@ func (handler AssignNotificationTemplate) ServeHTTP(w http.ResponseWriter, req *
 		return
 	}
 
-	err = handler.templateAssigner.AssignToNotification(clientID, notificationID, templateAssignment.Template)
+	database := context.Get("database").(models.DatabaseInterface)
+	err = handler.templateAssigner.AssignToNotification(database, clientID, notificationID, templateAssignment.Template)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

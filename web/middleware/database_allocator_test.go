@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -62,6 +63,9 @@ var _ = Describe("Database Allocator", func() {
 		connection, ok := database.Connection().(*models.Connection)
 		Expect(ok).To(BeTrue())
 		Expect(connection.DbMap.Db).To(Equal(sqlDB))
+
+		_, err := connection.DbMap.TableFor(reflect.TypeOf(models.Client{}), false)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Context("when db logging is enabled", func() {

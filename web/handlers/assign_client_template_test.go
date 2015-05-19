@@ -10,20 +10,28 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
+	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("AssignClientTemplate", func() {
-	var handler handlers.AssignClientTemplate
-	var templateAssigner *fakes.TemplateAssigner
-	var errorWriter *fakes.ErrorWriter
+	var (
+		handler          handlers.AssignClientTemplate
+		templateAssigner *fakes.TemplateAssigner
+		errorWriter      *fakes.ErrorWriter
+		context          stack.Context
+		database         *fakes.Database
+	)
 
 	BeforeEach(func() {
 		templateAssigner = fakes.NewTemplateAssigner()
 		errorWriter = fakes.NewErrorWriter()
 		handler = handlers.NewAssignClientTemplate(templateAssigner, errorWriter)
+		database = fakes.NewDatabase()
+		context = stack.NewContext()
+		context.Set("database", database)
 	})
 
 	It("associates a template with a client", func() {
@@ -40,11 +48,11 @@ var _ = Describe("AssignClientTemplate", func() {
 			panic(err)
 		}
 
-		handler.ServeHTTP(w, request, nil)
+		handler.ServeHTTP(w, request, context)
 
 		Expect(w.Code).To(Equal(http.StatusNoContent))
 
-		Expect(templateAssigner.AssignToClientArguments).To(Equal([]string{"my-client", "my-template"}))
+		Expect(templateAssigner.AssignToClientArguments).To(Equal([]interface{}{database, "my-client", "my-template"}))
 	})
 
 	It("delegates to the error writer when the assigner errors", func() {
@@ -62,7 +70,7 @@ var _ = Describe("AssignClientTemplate", func() {
 			panic(err)
 		}
 
-		handler.ServeHTTP(w, request, nil)
+		handler.ServeHTTP(w, request, context)
 		Expect(errorWriter.Error).To(Equal(errors.New("banana")))
 	})
 
@@ -75,7 +83,7 @@ var _ = Describe("AssignClientTemplate", func() {
 			panic(err)
 		}
 
-		handler.ServeHTTP(w, request, nil)
+		handler.ServeHTTP(w, request, context)
 		Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
 	})
 })
