@@ -3,14 +3,13 @@ package fakes
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type TemplatesRepo struct {
-	Templates       map[string]models.Template
-	TemplatesList   []models.Template
-	FindError       error
-	CreateError     error
-	UpdateError     error
-	ListError       error
-	DestroyArgument string
-	DestroyError    error
+	Templates     map[string]models.Template
+	TemplatesList []models.Template
+	FindError     error
+	CreateError   error
+	UpdateError   error
+	ListError     error
+	DestroyError  error
 }
 
 func NewTemplatesRepo() *TemplatesRepo {
@@ -37,7 +36,7 @@ func (fake TemplatesRepo) ListIDsAndNames(conn models.ConnectionInterface) ([]mo
 }
 
 func (fake *TemplatesRepo) Destroy(conn models.ConnectionInterface, templateID string) error {
-	fake.DestroyArgument = templateID
+	delete(fake.Templates, templateID)
 	return fake.DestroyError
 }
 

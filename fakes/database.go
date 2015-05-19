@@ -6,10 +6,11 @@ import (
 )
 
 type Database struct {
-	Conn             *DBConn
-	SeedWasCalled    bool
-	MigrateWasCalled bool
-	MigrationsPath   string
+	Conn                *DBConn
+	ConnectionWasCalled bool
+	SeedWasCalled       bool
+	MigrateWasCalled    bool
+	MigrationsPath      string
 }
 
 func NewDatabase() *Database {
@@ -18,7 +19,8 @@ func NewDatabase() *Database {
 	}
 }
 
-func (fake Database) Connection() models.ConnectionInterface {
+func (fake *Database) Connection() models.ConnectionInterface {
+	fake.ConnectionWasCalled = true
 	return fake.Conn
 }
 

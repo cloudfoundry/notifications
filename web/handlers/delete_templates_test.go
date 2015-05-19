@@ -15,37 +15,43 @@ import (
 )
 
 var _ = Describe("DeleteTemplates", func() {
-	var handler handlers.DeleteTemplates
-	var errorWriter *fakes.ErrorWriter
-	var writer *httptest.ResponseRecorder
-	var request *http.Request
-	var context stack.Context
-	var deleter *fakes.TemplateDeleter
-	var err error
+	var (
+		handler     handlers.DeleteTemplates
+		errorWriter *fakes.ErrorWriter
+		writer      *httptest.ResponseRecorder
+		request     *http.Request
+		context     stack.Context
+		deleter     *fakes.TemplateDeleter
+		err         error
+		database    *fakes.Database
+	)
 
 	Describe("ServeHTTP", func() {
 		BeforeEach(func() {
 			deleter = fakes.NewTemplateDeleter()
 			errorWriter = fakes.NewErrorWriter()
-			handler = handlers.NewDeleteTemplates(deleter, errorWriter)
+			database = fakes.NewDatabase()
 			writer = httptest.NewRecorder()
 			request, err = http.NewRequest("DELETE", "/templates/template-id-123", bytes.NewBuffer([]byte{}))
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
+
+			context = stack.NewContext()
+			context.Set("database", database)
+
+			handler = handlers.NewDeleteTemplates(deleter, errorWriter)
 		})
 
 		It("calls delete on the repo", func() {
 			handler.ServeHTTP(writer, request, context)
-			Expect(deleter.DeleteArgument).To(Equal("template-id-123"))
+			Expect(deleter.DeleteCall.Arguments).To(ConsistOf([]interface{}{database, "template-id-123"}))
 			Expect(writer.Code).To(Equal(http.StatusNoContent))
 		})
 
 		Context("When the deleter errors", func() {
 			It("writes the error to the errorWriter", func() {
-				deleter.DeleteError = errors.New("BOOM!")
+				deleter.DeleteCall.Error = errors.New("BOOM!")
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(Equal(deleter.DeleteError))
+				Expect(errorWriter.Error).To(Equal(deleter.DeleteCall.Error))
 			})
 		})
 	})
