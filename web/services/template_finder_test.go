@@ -12,14 +12,18 @@ import (
 )
 
 var _ = Describe("Finder", func() {
-	var finder services.TemplateFinder
-	var templatesRepo *fakes.TemplatesRepo
+	var (
+		finder        services.TemplateFinder
+		templatesRepo *fakes.TemplatesRepo
+		database      *fakes.Database
+	)
 
 	Describe("#FindByID", func() {
 		BeforeEach(func() {
 			templatesRepo = fakes.NewTemplatesRepo()
+			database = fakes.NewDatabase()
 
-			finder = services.NewTemplateFinder(templatesRepo, fakes.NewDatabase())
+			finder = services.NewTemplateFinder(templatesRepo)
 		})
 
 		Context("when the finder returns a template", func() {
@@ -38,9 +42,11 @@ var _ = Describe("Finder", func() {
 				})
 
 				It("returns the requested template", func() {
-					template, err := finder.FindByID("awesome-template-id")
+					template, err := finder.FindByID(database, "awesome-template-id")
 					Expect(err).ToNot(HaveOccurred())
 					Expect(template).To(Equal(expectedTemplate))
+
+					Expect(database.ConnectionWasCalled).To(BeTrue())
 				})
 			})
 
@@ -55,7 +61,7 @@ var _ = Describe("Finder", func() {
 					Text:    "throwing errors template",
 					HTML:    "<h1>Wow you are a throwing errors!</h1>",
 				}
-				_, err := finder.FindByID("some-template-id")
+				_, err := finder.FindByID(database, "some-template-id")
 				Expect(err.Error()).To(Equal("some-error"))
 			})
 		})

@@ -8,15 +8,20 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("GetDefaultTemplate", func() {
-	var handler handlers.GetDefaultTemplate
-	var templateFinder *fakes.TemplateFinder
-	var errorWriter *fakes.ErrorWriter
+	var (
+		handler        handlers.GetDefaultTemplate
+		templateFinder *fakes.TemplateFinder
+		errorWriter    *fakes.ErrorWriter
+		database       *fakes.Database
+		context        stack.Context
+	)
 
 	BeforeEach(func() {
 		errorWriter = fakes.NewErrorWriter()
@@ -29,6 +34,9 @@ var _ = Describe("GetDefaultTemplate", func() {
 			HTML:     "<p>Default Template</p> {{.HTML}}",
 			Metadata: "{}",
 		}
+		database = fakes.NewDatabase()
+		context = stack.NewContext()
+		context.Set("database", database)
 
 		handler = handlers.NewGetDefaultTemplate(templateFinder, errorWriter)
 	})
@@ -40,7 +48,7 @@ var _ = Describe("GetDefaultTemplate", func() {
 		}
 		writer := httptest.NewRecorder()
 
-		handler.ServeHTTP(writer, request, nil)
+		handler.ServeHTTP(writer, request, context)
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body).To(MatchJSON(`{
@@ -50,10 +58,12 @@ var _ = Describe("GetDefaultTemplate", func() {
 			"html": "<p>Default Template</p> {{.HTML}}",
 			"metadata": {}
 		}`))
+
+		Expect(templateFinder.FindByIDCall.Arguments).To(ConsistOf([]interface{}{database, models.DefaultTemplateID}))
 	})
 
 	It("delegates error handling to the error writer", func() {
-		templateFinder.FindError = errors.New("BANANA!!!")
+		templateFinder.FindByIDCall.Error = errors.New("BANANA!!!")
 
 		request, err := http.NewRequest("GET", "/default_template", nil)
 		if err != nil {
@@ -61,7 +71,7 @@ var _ = Describe("GetDefaultTemplate", func() {
 		}
 		writer := httptest.NewRecorder()
 
-		handler.ServeHTTP(writer, request, nil)
+		handler.ServeHTTP(writer, request, context)
 
 		Expect(errorWriter.Error).To(MatchError(errors.New("BANANA!!!")))
 	})

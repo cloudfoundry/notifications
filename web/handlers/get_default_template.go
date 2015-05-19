@@ -22,7 +22,7 @@ func NewGetDefaultTemplate(finder services.TemplateFinderInterface, errorWriter 
 }
 
 func (handler GetDefaultTemplate) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	template, err := handler.finder.FindByID(models.DefaultTemplateID)
+	template, err := handler.finder.FindByID(context.Get("database").(models.DatabaseInterface), models.DefaultTemplateID)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

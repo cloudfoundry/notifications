@@ -17,12 +17,15 @@ import (
 )
 
 var _ = Describe("GetTemplates", func() {
-	var handler handlers.GetTemplates
-	var request *http.Request
-	var writer *httptest.ResponseRecorder
-	var context stack.Context
-	var finder *fakes.TemplateFinder
-	var errorWriter *fakes.ErrorWriter
+	var (
+		handler     handlers.GetTemplates
+		request     *http.Request
+		writer      *httptest.ResponseRecorder
+		context     stack.Context
+		finder      *fakes.TemplateFinder
+		errorWriter *fakes.ErrorWriter
+		database    *fakes.Database
+	)
 
 	Describe("ServeHTTP", func() {
 		var templateID string
@@ -40,22 +43,23 @@ var _ = Describe("GetTemplates", func() {
 			}
 			writer = httptest.NewRecorder()
 			errorWriter = fakes.NewErrorWriter()
+			database = fakes.NewDatabase()
+			context = stack.NewContext()
+			context.Set("database", database)
+
 			handler = handlers.NewGetTemplates(finder, errorWriter)
 		})
 
-		Context("When the finder does not error", func() {
+		Context("when the finder does not error", func() {
 			BeforeEach(func() {
-
 				var err error
 				request, err = http.NewRequest("GET", "/templates/"+templateID, bytes.NewBuffer([]byte{}))
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("Calls find on its finder with appropriate arguments", func() {
+			It("calls find on its finder with appropriate arguments", func() {
 				handler.ServeHTTP(writer, request, context)
-				Expect(finder.TemplateID).To(Equal(templateID))
+				Expect(finder.FindByIDCall.Arguments).To(ConsistOf([]interface{}{database, templateID}))
 			})
 
 			It("writes out the finder's response", func() {
@@ -78,9 +82,9 @@ var _ = Describe("GetTemplates", func() {
 			})
 		})
 
-		Context("When the finder errors", func() {
+		Context("when the finder errors", func() {
 			BeforeEach(func() {
-				finder.FindError = errors.New("BOOM!")
+				finder.FindByIDCall.Error = errors.New("BOOM!")
 
 				var err error
 				request, err = http.NewRequest("GET", "/templates/someTemplateID", bytes.NewBuffer([]byte{}))
