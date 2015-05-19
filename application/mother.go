@@ -270,7 +270,7 @@ func (m Mother) TemplateServiceObjects() (services.TemplateCreator, services.Tem
 	clientsRepo, kindsRepo := m.Repos()
 	templatesRepo := m.TemplatesRepo()
 
-	return services.NewTemplateCreator(templatesRepo, database),
+	return services.NewTemplateCreator(templatesRepo),
 		services.NewTemplateFinder(templatesRepo, database),
 		services.NewTemplateUpdater(templatesRepo, database),
 		services.NewTemplateDeleter(templatesRepo, database),
