@@ -8,18 +8,24 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
+	"github.com/ryanmoran/stack"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("GetMessages", func() {
-	var handler handlers.GetMessages
-	var errorWriter *fakes.ErrorWriter
-	var writer *httptest.ResponseRecorder
-	var request *http.Request
-	var messageID string
-	var err error
-	var messageFinder *fakes.MessageFinder
+	var (
+		handler       handlers.GetMessages
+		errorWriter   *fakes.ErrorWriter
+		writer        *httptest.ResponseRecorder
+		request       *http.Request
+		messageID     string
+		err           error
+		messageFinder *fakes.MessageFinder
+		database      *fakes.Database
+		context       stack.Context
+	)
 
 	BeforeEach(func() {
 		errorWriter = fakes.NewErrorWriter()
@@ -27,6 +33,9 @@ var _ = Describe("GetMessages", func() {
 		handler = handlers.NewGetMessages(messageFinder, errorWriter)
 		writer = httptest.NewRecorder()
 		messageID = "message-123"
+		database = fakes.NewDatabase()
+		context = stack.NewContext()
+		context.Set("database", database)
 
 		request, err = http.NewRequest("GET", "/messages/"+messageID, nil)
 		if err != nil {
@@ -41,19 +50,22 @@ var _ = Describe("GetMessages", func() {
 				Status: "The generic status returned",
 			}
 
-			handler.ServeHTTP(writer, request, nil)
+			handler.ServeHTTP(writer, request, context)
 
 			Expect(writer.Code).To(Equal(http.StatusOK))
 			Expect(writer.Body.Bytes()).To(MatchJSON(`{
 				"status": "The generic status returned"
 			}`))
+
+			Expect(messageFinder.FindCall.Arguments).To(ConsistOf([]interface{}{database, messageID}))
 		})
 
 		Context("When the finder errors", func() {
 			It("Delegates to the error writer", func() {
 				findError := errors.New("The finder returns a generic error")
-				messageFinder.FindError = findError
-				handler.ServeHTTP(writer, request, nil)
+				messageFinder.FindCall.Error = findError
+
+				handler.ServeHTTP(writer, request, context)
 				Expect(errorWriter.Error).To(Equal(findError))
 			})
 		})

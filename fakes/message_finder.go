@@ -1,10 +1,17 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/web/services"
+import (
+	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/web/services"
+)
 
 type MessageFinder struct {
-	Messages  map[string]services.Message
-	FindError error
+	Messages map[string]services.Message
+
+	FindCall struct {
+		Arguments []interface{}
+		Error     error
+	}
 }
 
 func NewMessageFinder() *MessageFinder {
@@ -13,6 +20,7 @@ func NewMessageFinder() *MessageFinder {
 	}
 }
 
-func (finder MessageFinder) Find(messageID string) (services.Message, error) {
-	return finder.Messages[messageID], finder.FindError
+func (finder *MessageFinder) Find(database models.DatabaseInterface, messageID string) (services.Message, error) {
+	finder.FindCall.Arguments = []interface{}{database, messageID}
+	return finder.Messages[messageID], finder.FindCall.Error
 }

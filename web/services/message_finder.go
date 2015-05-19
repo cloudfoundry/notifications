@@ -11,19 +11,17 @@ type MessagesRepoInterface interface {
 }
 
 type MessageFinder struct {
-	repo     MessagesRepoInterface
-	database models.DatabaseInterface
+	repo MessagesRepoInterface
 }
 
-func NewMessageFinder(repo MessagesRepoInterface, database models.DatabaseInterface) MessageFinder {
+func NewMessageFinder(repo MessagesRepoInterface) MessageFinder {
 	return MessageFinder{
-		repo:     repo,
-		database: database,
+		repo: repo,
 	}
 }
 
-func (finder MessageFinder) Find(messageID string) (Message, error) {
-	message, err := finder.repo.FindByID(finder.database.Connection(), messageID)
+func (finder MessageFinder) Find(database models.DatabaseInterface, messageID string) (Message, error) {
+	message, err := finder.repo.FindByID(database.Connection(), messageID)
 	if err != nil {
 		return Message{}, err
 	}

@@ -250,16 +250,11 @@ func (m Mother) PreferenceUpdater() services.PreferenceUpdater {
 }
 
 func (m Mother) TemplateFinder() services.TemplateFinder {
-	templatesRepo := m.TemplatesRepo()
-
-	return services.NewTemplateFinder(templatesRepo)
+	return services.NewTemplateFinder(m.TemplatesRepo())
 }
 
 func (m Mother) MessageFinder() services.MessageFinder {
-	database := m.Database()
-	messagesRepo := m.MessagesRepo()
-
-	return services.NewMessageFinder(messagesRepo, database)
+	return services.NewMessageFinder(m.MessagesRepo())
 }
 
 func (m Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
