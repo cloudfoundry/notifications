@@ -1,3 +1,3 @@
 package handlers
 
-const VCAPRequestIDKey = "vcap-request-id"
+const VCAPRequestIDKey = "vcap_request_id"

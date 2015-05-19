@@ -58,7 +58,7 @@ var _ = Describe("RequestLogging", func() {
 		Expect(line.Source).To(Equal("my-app"))
 		Expect(line.Message).To(Equal("my-app.request.incoming"))
 		Expect(line.LogLevel).To(Equal(int(lager.DEBUG)))
-		Expect(line.Data).To(HaveKeyWithValue("vcap-request-id", "UNKNOWN"))
+		Expect(line.Data).To(HaveKeyWithValue("vcap_request_id", "UNKNOWN"))
 		Expect(line.Data).To(HaveKeyWithValue("method", "GET"))
 		Expect(line.Data).To(HaveKeyWithValue("path", "/some/path"))
 	})
@@ -80,7 +80,7 @@ var _ = Describe("RequestLogging", func() {
 		Expect(line.Source).To(Equal("my-app"))
 		Expect(line.Message).To(Equal("my-app.request.hello"))
 		Expect(line.LogLevel).To(Equal(int(lager.DEBUG)))
-		Expect(line.Data).To(HaveKeyWithValue("vcap-request-id", "some-request-id"))
+		Expect(line.Data).To(HaveKeyWithValue("vcap_request_id", "some-request-id"))
 	})
 
 	It("adds the request id to the context", func() {
@@ -110,7 +110,7 @@ var _ = Describe("RequestLogging", func() {
 			Expect(line.Source).To(Equal("my-app"))
 			Expect(line.Message).To(Equal("my-app.request.hello"))
 			Expect(line.LogLevel).To(Equal(int(lager.DEBUG)))
-			Expect(line.Data).To(HaveKeyWithValue("vcap-request-id", "UNKNOWN"))
+			Expect(line.Data).To(HaveKeyWithValue("vcap_request_id", "UNKNOWN"))
 		})
 	})
 })
