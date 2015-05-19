@@ -12,21 +12,19 @@ import (
 type GetPreferencesForUser struct {
 	PreferencesFinder services.PreferencesFinderInterface
 	ErrorWriter       ErrorWriterInterface
-	UserGUID          string
 }
 
 func NewGetPreferencesForUser(preferencesFinder services.PreferencesFinderInterface, errorWriter ErrorWriterInterface) GetPreferencesForUser {
 	return GetPreferencesForUser{
 		PreferencesFinder: preferencesFinder,
 		ErrorWriter:       errorWriter,
-		UserGUID:          "",
 	}
 }
 
 func (handler GetPreferencesForUser) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	handler.UserGUID = handler.parseGUID(req.URL.Path)
+	userGUID := handler.parseGUID(req.URL.Path)
 
-	parsed, err := handler.PreferencesFinder.Find(context.Get("database").(models.DatabaseInterface), handler.UserGUID)
+	parsed, err := handler.PreferencesFinder.Find(context.Get("database").(models.DatabaseInterface), userGUID)
 	if err != nil {
 		handler.ErrorWriter.Write(w, err)
 		return
