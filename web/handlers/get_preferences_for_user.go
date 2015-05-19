@@ -10,23 +10,23 @@ import (
 )
 
 type GetPreferencesForUser struct {
-	PreferencesFinder services.PreferencesFinderInterface
-	ErrorWriter       ErrorWriterInterface
+	preferencesFinder services.PreferencesFinderInterface
+	errorWriter       ErrorWriterInterface
 }
 
 func NewGetPreferencesForUser(preferencesFinder services.PreferencesFinderInterface, errorWriter ErrorWriterInterface) GetPreferencesForUser {
 	return GetPreferencesForUser{
-		PreferencesFinder: preferencesFinder,
-		ErrorWriter:       errorWriter,
+		preferencesFinder: preferencesFinder,
+		errorWriter:       errorWriter,
 	}
 }
 
 func (handler GetPreferencesForUser) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	userGUID := handler.parseGUID(req.URL.Path)
 
-	parsed, err := handler.PreferencesFinder.Find(context.Get("database").(models.DatabaseInterface), userGUID)
+	parsed, err := handler.preferencesFinder.Find(context.Get("database").(models.DatabaseInterface), userGUID)
 	if err != nil {
-		handler.ErrorWriter.Write(w, err)
+		handler.errorWriter.Write(w, err)
 		return
 	}
 
