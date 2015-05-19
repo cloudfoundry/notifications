@@ -1,11 +1,17 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/web/services"
+import (
+	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/web/services"
+)
 
 type PreferencesFinder struct {
 	ReturnValue services.PreferencesBuilder
-	FindError   error
-	UserGUID    string
+
+	FindCall struct {
+		Arguments []interface{}
+		Error     error
+	}
 }
 
 func NewPreferencesFinder(returnValue services.PreferencesBuilder) *PreferencesFinder {
@@ -14,7 +20,7 @@ func NewPreferencesFinder(returnValue services.PreferencesBuilder) *PreferencesF
 	}
 }
 
-func (fake *PreferencesFinder) Find(userGUID string) (services.PreferencesBuilder, error) {
-	fake.UserGUID = userGUID
-	return fake.ReturnValue, fake.FindError
+func (fake *PreferencesFinder) Find(database models.DatabaseInterface, userGUID string) (services.PreferencesBuilder, error) {
+	fake.FindCall.Arguments = []interface{}{database, userGUID}
+	return fake.ReturnValue, fake.FindCall.Error
 }

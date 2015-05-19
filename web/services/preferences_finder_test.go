@@ -12,9 +12,12 @@ import (
 )
 
 var _ = Describe("PreferencesFinder", func() {
-	var finder *services.PreferencesFinder
-	var preferencesRepo *fakes.PreferencesRepo
-	var preferences []models.Preference
+	var (
+		finder          *services.PreferencesFinder
+		preferencesRepo *fakes.PreferencesRepo
+		preferences     []models.Preference
+		database        *fakes.Database
+	)
 
 	BeforeEach(func() {
 		preferences = []models.Preference{
@@ -39,8 +42,9 @@ var _ = Describe("PreferencesFinder", func() {
 		fakeGlobalUnsubscribesRepo := fakes.NewGlobalUnsubscribesRepo()
 		fakeGlobalUnsubscribesRepo.Set(fakes.NewDBConn(), "correct-user", true)
 		preferencesRepo = fakes.NewPreferencesRepo(preferences)
-		fakeDatabase := fakes.NewDatabase()
-		finder = services.NewPreferencesFinder(preferencesRepo, fakeGlobalUnsubscribesRepo, fakeDatabase)
+		database = fakes.NewDatabase()
+
+		finder = services.NewPreferencesFinder(preferencesRepo, fakeGlobalUnsubscribesRepo)
 	})
 
 	Describe("Find", func() {
@@ -50,19 +54,18 @@ var _ = Describe("PreferencesFinder", func() {
 			expectedResult.Add(preferences[1])
 			expectedResult.GlobalUnsubscribe = true
 
-			resultPreferences, err := finder.Find("correct-user")
-			if err != nil {
-				panic(err)
-			}
-
+			resultPreferences, err := finder.Find(database, "correct-user")
+			Expect(err).NotTo(HaveOccurred())
 			Expect(resultPreferences).To(Equal(expectedResult))
+
+			Expect(database.ConnectionWasCalled).To(BeTrue())
 		})
 
 		Context("when the preferences repo returns an error", func() {
 			It("should propagate the error", func() {
 				preferencesRepo.FindError = errors.New("BOOM!")
-				_, err := finder.Find("correct-user")
 
+				_, err := finder.Find(database, "correct-user")
 				Expect(err).To(Equal(preferencesRepo.FindError))
 			})
 		})

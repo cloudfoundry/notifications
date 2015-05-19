@@ -20,15 +20,19 @@ import (
 )
 
 var _ = Describe("GetPreferences", func() {
-	var handler handlers.GetPreferences
-	var writer *httptest.ResponseRecorder
-	var request *http.Request
-	var preferencesFinder *fakes.PreferencesFinder
-	var errorWriter *fakes.ErrorWriter
-	var builder services.PreferencesBuilder
-	var context stack.Context
-	var TRUE = true
-	var FALSE = false
+	var (
+		handler           handlers.GetPreferences
+		writer            *httptest.ResponseRecorder
+		request           *http.Request
+		preferencesFinder *fakes.PreferencesFinder
+		errorWriter       *fakes.ErrorWriter
+		builder           services.PreferencesBuilder
+		context           stack.Context
+		database          *fakes.Database
+
+		TRUE  = true
+		FALSE = false
+	)
 
 	BeforeEach(func() {
 		errorWriter = fakes.NewErrorWriter()
@@ -58,8 +62,12 @@ var _ = Describe("GetPreferences", func() {
 		token, err := jwt.Parse(fakes.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
 			return []byte(application.UAAPublicKey), nil
 		})
+
+		database = fakes.NewDatabase()
+
 		context = stack.NewContext()
 		context.Set("token", token)
+		context.Set("database", database)
 
 		builder = services.NewPreferencesBuilder()
 		builder.Add(models.Preference{
@@ -78,13 +86,13 @@ var _ = Describe("GetPreferences", func() {
 		handler = handlers.NewGetPreferences(preferencesFinder, errorWriter)
 	})
 
-	It("Passes the proper user guid into execute", func() {
+	It("passes the proper user guid into execute", func() {
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(preferencesFinder.UserGUID).To(Equal("correct-user"))
+		Expect(preferencesFinder.FindCall.Arguments).To(ConsistOf([]interface{}{database, "correct-user"}))
 	})
 
-	It("Returns a proper JSON response when the Preference object does not error", func() {
+	It("returns a proper JSON response when the Preference object does not error", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
@@ -104,9 +112,9 @@ var _ = Describe("GetPreferences", func() {
 
 	Context("when there is an error returned from the finder", func() {
 		It("writes the error to the error writer", func() {
-			preferencesFinder.FindError = errors.New("boom!")
+			preferencesFinder.FindCall.Error = errors.New("boom!")
 			handler.ServeHTTP(writer, request, context)
-			Expect(errorWriter.Error).To(Equal(preferencesFinder.FindError))
+			Expect(errorWriter.Error).To(Equal(preferencesFinder.FindCall.Error))
 		})
 	})
 

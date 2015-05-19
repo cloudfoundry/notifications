@@ -5,23 +5,21 @@ import "github.com/cloudfoundry-incubator/notifications/models"
 type PreferencesFinder struct {
 	preferencesRepo        models.PreferencesRepoInterface
 	globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface
-	database               models.DatabaseInterface
 }
 
 type PreferencesFinderInterface interface {
-	Find(string) (PreferencesBuilder, error)
+	Find(models.DatabaseInterface, string) (PreferencesBuilder, error)
 }
 
-func NewPreferencesFinder(preferencesRepo models.PreferencesRepoInterface, globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface, database models.DatabaseInterface) *PreferencesFinder {
+func NewPreferencesFinder(preferencesRepo models.PreferencesRepoInterface, globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface) *PreferencesFinder {
 	return &PreferencesFinder{
 		preferencesRepo:        preferencesRepo,
 		globalUnsubscribesRepo: globalUnsubscribesRepo,
-		database:               database,
 	}
 }
 
-func (finder PreferencesFinder) Find(userGUID string) (PreferencesBuilder, error) {
-	conn := finder.database.Connection()
+func (finder PreferencesFinder) Find(database models.DatabaseInterface, userGUID string) (PreferencesBuilder, error) {
+	conn := database.Connection()
 	builder := NewPreferencesBuilder()
 
 	globallyUnsubscribed, err := finder.globalUnsubscribesRepo.Get(conn, userGUID)

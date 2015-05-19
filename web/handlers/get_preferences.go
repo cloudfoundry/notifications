@@ -3,19 +3,20 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 )
 
 type GetPreferences struct {
-	PreferencesFinder services.PreferencesFinderInterface
+	preferencesFinder services.PreferencesFinderInterface
 	errorWriter       ErrorWriterInterface
 }
 
 func NewGetPreferences(preferencesFinder services.PreferencesFinderInterface, errorWriter ErrorWriterInterface) GetPreferences {
 	return GetPreferences{
-		PreferencesFinder: preferencesFinder,
+		preferencesFinder: preferencesFinder,
 		errorWriter:       errorWriter,
 	}
 }
@@ -36,7 +37,7 @@ func (handler GetPreferences) ServeHTTP(w http.ResponseWriter, req *http.Request
 
 	userID := token.Claims["user_id"].(string)
 
-	parsed, err := handler.PreferencesFinder.Find(userID)
+	parsed, err := handler.preferencesFinder.Find(context.Get("database").(models.DatabaseInterface), userID)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

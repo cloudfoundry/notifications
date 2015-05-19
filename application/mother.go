@@ -242,7 +242,7 @@ func (m *Mother) Database() models.DatabaseInterface {
 }
 
 func (m Mother) PreferencesFinder() *services.PreferencesFinder {
-	return services.NewPreferencesFinder(models.NewPreferencesRepo(), m.GlobalUnsubscribesRepo(), m.Database())
+	return services.NewPreferencesFinder(models.NewPreferencesRepo(), m.GlobalUnsubscribesRepo())
 }
 
 func (m Mother) PreferenceUpdater() services.PreferenceUpdater {
