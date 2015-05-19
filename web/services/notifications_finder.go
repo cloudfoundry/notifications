@@ -9,29 +9,28 @@ type NotificationsFinder struct {
 }
 
 type NotificationsFinderInterface interface {
-	AllClientsAndNotifications() ([]models.Client, []models.Kind, error)
-	ClientAndKind(string, string) (models.Client, models.Kind, error)
+	AllClientsAndNotifications(models.DatabaseInterface) ([]models.Client, []models.Kind, error)
+	ClientAndKind(models.DatabaseInterface, string, string) (models.Client, models.Kind, error)
 }
 
-func NewNotificationsFinder(clientsRepo models.ClientsRepoInterface, kindsRepo models.KindsRepoInterface, database models.DatabaseInterface) NotificationsFinder {
+func NewNotificationsFinder(clientsRepo models.ClientsRepoInterface, kindsRepo models.KindsRepoInterface) NotificationsFinder {
 	return NotificationsFinder{
 		clientsRepo: clientsRepo,
 		kindsRepo:   kindsRepo,
-		database:    database,
 	}
 }
 
-func (finder NotificationsFinder) AllClientsAndNotifications() ([]models.Client, []models.Kind, error) {
+func (finder NotificationsFinder) AllClientsAndNotifications(database models.DatabaseInterface) ([]models.Client, []models.Kind, error) {
 	var clients []models.Client
 	var notifications []models.Kind
 	var err error
 
-	clients, err = finder.clientsRepo.FindAll(finder.database.Connection())
+	clients, err = finder.clientsRepo.FindAll(database.Connection())
 	if err != nil {
 		return clients, notifications, err
 	}
 
-	notifications, err = finder.kindsRepo.FindAll(finder.database.Connection())
+	notifications, err = finder.kindsRepo.FindAll(database.Connection())
 	if err != nil {
 		return clients, notifications, err
 	}
@@ -39,13 +38,13 @@ func (finder NotificationsFinder) AllClientsAndNotifications() ([]models.Client,
 	return clients, notifications, nil
 }
 
-func (finder NotificationsFinder) ClientAndKind(clientID, kindID string) (models.Client, models.Kind, error) {
-	client, err := finder.client(clientID)
+func (finder NotificationsFinder) ClientAndKind(database models.DatabaseInterface, clientID, kindID string) (models.Client, models.Kind, error) {
+	client, err := finder.client(database, clientID)
 	if err != nil {
 		return models.Client{}, models.Kind{}, err
 	}
 
-	kind, err := finder.kind(clientID, kindID)
+	kind, err := finder.kind(database, clientID, kindID)
 	if err != nil {
 		return client, models.Kind{}, err
 	}
@@ -53,8 +52,8 @@ func (finder NotificationsFinder) ClientAndKind(clientID, kindID string) (models
 	return client, kind, nil
 }
 
-func (finder NotificationsFinder) client(clientID string) (models.Client, error) {
-	client, err := finder.clientsRepo.Find(finder.database.Connection(), clientID)
+func (finder NotificationsFinder) client(database models.DatabaseInterface, clientID string) (models.Client, error) {
+	client, err := finder.clientsRepo.Find(database.Connection(), clientID)
 	if err != nil {
 		if _, ok := err.(models.RecordNotFoundError); ok {
 			return models.Client{ID: clientID}, nil
@@ -65,8 +64,8 @@ func (finder NotificationsFinder) client(clientID string) (models.Client, error)
 	return client, nil
 }
 
-func (finder NotificationsFinder) kind(clientID, kindID string) (models.Kind, error) {
-	kind, err := finder.kindsRepo.Find(finder.database.Connection(), kindID, clientID)
+func (finder NotificationsFinder) kind(database models.DatabaseInterface, clientID, kindID string) (models.Kind, error) {
+	kind, err := finder.kindsRepo.Find(database.Connection(), kindID, clientID)
 	if err != nil {
 		if _, ok := err.(models.RecordNotFoundError); ok {
 			return models.Kind{ID: kindID, ClientID: clientID}, nil

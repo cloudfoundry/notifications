@@ -35,7 +35,7 @@ func NewGetAllNotifications(notificationsFinder services.NotificationsFinderInte
 }
 
 func (handler GetAllNotifications) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	clients, notifications, err := handler.finder.AllClientsAndNotifications()
+	clients, notifications, err := handler.finder.AllClientsAndNotifications(context.Get("database").(models.DatabaseInterface))
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

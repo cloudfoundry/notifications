@@ -117,7 +117,7 @@ func (m Mother) EmailStrategy() strategies.EmailStrategy {
 
 func (m Mother) NotificationsFinder() services.NotificationsFinder {
 	clientsRepo, kindsRepo := m.Repos()
-	return services.NewNotificationsFinder(clientsRepo, kindsRepo, m.Database())
+	return services.NewNotificationsFinder(clientsRepo, kindsRepo)
 }
 func (m Mother) NotificationsUpdater() services.NotificationsUpdater {
 	_, kindsRepo := m.Repos()

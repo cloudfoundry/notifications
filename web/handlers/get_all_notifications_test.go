@@ -8,27 +8,33 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("GetAllNotifications", func() {
-	var handler handlers.GetAllNotifications
-	var writer *httptest.ResponseRecorder
-	var request *http.Request
-	var errorWriter *fakes.ErrorWriter
-	var notificationsFinder *fakes.NotificationsFinder
-	var err error
+	var (
+		handler             handlers.GetAllNotifications
+		writer              *httptest.ResponseRecorder
+		request             *http.Request
+		errorWriter         *fakes.ErrorWriter
+		notificationsFinder *fakes.NotificationsFinder
+		err                 error
+		database            *fakes.Database
+		context             stack.Context
+	)
 
 	BeforeEach(func() {
 		errorWriter = fakes.NewErrorWriter()
 		writer = httptest.NewRecorder()
+		database = fakes.NewDatabase()
+		context = stack.NewContext()
+		context.Set("database", database)
 
 		request, err = http.NewRequest("GET", "/notifications", nil)
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
 
 		notificationsFinder = fakes.NewNotificationsFinder()
 		handler = handlers.NewGetAllNotifications(notificationsFinder, errorWriter)
@@ -74,7 +80,7 @@ var _ = Describe("GetAllNotifications", func() {
 				},
 			}
 
-			handler.ServeHTTP(writer, request, nil)
+			handler.ServeHTTP(writer, request, context)
 
 			Expect(errorWriter.Error).To(BeNil())
 			Expect(writer.Code).To(Equal(http.StatusOK))
@@ -112,13 +118,15 @@ var _ = Describe("GetAllNotifications", func() {
 					}
 				}
 			}`))
+
+			Expect(notificationsFinder.AllClientsAndNotificationsCall.Arguments).To(ConsistOf([]interface{}{database}))
 		})
 
 		Context("when the notifications finder errors", func() {
 			It("delegates to the error writer", func() {
-				notificationsFinder.AllClientsAndNotificationsError = errors.New("BANANA!!!")
+				notificationsFinder.AllClientsAndNotificationsCall.Error = errors.New("BANANA!!!")
 
-				handler.ServeHTTP(writer, request, nil)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).To(Equal(errors.New("BANANA!!!")))
 			})

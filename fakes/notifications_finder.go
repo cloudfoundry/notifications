@@ -3,10 +3,18 @@ package fakes
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type NotificationsFinder struct {
-	Clients                         map[string]models.Client
-	Kinds                           map[string]models.Kind
-	ClientAndKindError              error
-	AllClientsAndNotificationsError error
+	Clients map[string]models.Client
+	Kinds   map[string]models.Kind
+
+	AllClientsAndNotificationsCall struct {
+		Arguments []interface{}
+		Error     error
+	}
+
+	ClientAndKindCall struct {
+		Arguments []interface{}
+		Error     error
+	}
 }
 
 func NewNotificationsFinder() *NotificationsFinder {
@@ -16,9 +24,14 @@ func NewNotificationsFinder() *NotificationsFinder {
 	}
 }
 
-func (finder *NotificationsFinder) AllClientsAndNotifications() ([]models.Client, []models.Kind, error) {
-	var clients []models.Client
-	var kinds []models.Kind
+func (finder *NotificationsFinder) AllClientsAndNotifications(database models.DatabaseInterface) ([]models.Client, []models.Kind, error) {
+	var (
+		clients []models.Client
+		kinds   []models.Kind
+	)
+
+	finder.AllClientsAndNotificationsCall.Arguments = []interface{}{database}
+
 	for _, client := range finder.Clients {
 		clients = append(clients, client)
 	}
@@ -27,9 +40,10 @@ func (finder *NotificationsFinder) AllClientsAndNotifications() ([]models.Client
 		kinds = append(kinds, kind)
 	}
 
-	return clients, kinds, finder.AllClientsAndNotificationsError
+	return clients, kinds, finder.AllClientsAndNotificationsCall.Error
 }
 
-func (finder *NotificationsFinder) ClientAndKind(clientID, kindID string) (models.Client, models.Kind, error) {
-	return finder.Clients[clientID], finder.Kinds[kindID+"|"+clientID], finder.ClientAndKindError
+func (finder *NotificationsFinder) ClientAndKind(database models.DatabaseInterface, clientID, kindID string) (models.Client, models.Kind, error) {
+	finder.ClientAndKindCall.Arguments = []interface{}{database, clientID, kindID}
+	return finder.Clients[clientID], finder.Kinds[kindID+"|"+clientID], finder.ClientAndKindCall.Error
 }

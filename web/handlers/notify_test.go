@@ -38,6 +38,7 @@ var _ = Describe("Notify", func() {
 				tokenHeader   map[string]interface{}
 				tokenClaims   map[string]interface{}
 				vcapRequestID string
+				database      *fakes.Database
 			)
 
 			BeforeEach(func() {
@@ -88,8 +89,11 @@ var _ = Describe("Notify", func() {
 					return []byte(application.UAAPublicKey), nil
 				})
 
+				database = fakes.NewDatabase()
+
 				context = stack.NewContext()
 				context.Set("token", token)
+				context.Set("database", database)
 
 				vcapRequestID = "some-request-id"
 
@@ -124,9 +128,9 @@ var _ = Describe("Notify", func() {
 
 			It("registers the client and kind", func() {
 				_, err := handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(finder.ClientAndKindCall.Arguments).To(ConsistOf([]interface{}{database, "mister-client", "test_email"}))
 
 				Expect(registrar.RegisterArguments).To(Equal([]interface{}{
 					conn,
@@ -190,7 +194,7 @@ var _ = Describe("Notify", func() {
 
 				Context("when the finder return errors", func() {
 					It("returns the error", func() {
-						finder.ClientAndKindError = errors.New("BOOM!")
+						finder.ClientAndKindCall.Error = errors.New("BOOM!")
 
 						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
 

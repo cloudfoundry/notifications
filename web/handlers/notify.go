@@ -47,7 +47,7 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 	token := context.Get("token").(*jwt.Token) // TODO: (rm) get rid of the context object, just pass in the token
 	clientID := token.Claims["client_id"].(string)
 
-	client, kind, err := handler.finder.ClientAndKind(clientID, parameters.KindID)
+	client, kind, err := handler.finder.ClientAndKind(context.Get("database").(models.DatabaseInterface), clientID, parameters.KindID)
 	if err != nil {
 		return []byte{}, err
 	}
