@@ -12,16 +12,21 @@ import (
 )
 
 var _ = Describe("NotificationUpdater", func() {
-	var notificationsUpdater services.NotificationsUpdater
-	var kindsRepo *fakes.KindsRepo
-	var clientID string
-	var notificationID string
+	var (
+		notificationsUpdater services.NotificationsUpdater
+		kindsRepo            *fakes.KindsRepo
+		database             *fakes.Database
+		clientID             string
+		notificationID       string
+	)
 
 	BeforeEach(func() {
 		kindsRepo = fakes.NewKindsRepo()
-		notificationsUpdater = services.NewNotificationsUpdater(kindsRepo, fakes.NewDatabase())
+		database = fakes.NewDatabase()
 		clientID = "my-current-client-id"
 		notificationID = "my-current-kind-id"
+
+		notificationsUpdater = services.NewNotificationsUpdater(kindsRepo)
 	})
 
 	Describe("Update", func() {
@@ -34,7 +39,7 @@ var _ = Describe("NotificationUpdater", func() {
 				Critical:    false,
 			}
 
-			err := notificationsUpdater.Update(models.Kind{
+			err := notificationsUpdater.Update(database, models.Kind{
 				Description: "some-description",
 				Critical:    true,
 				TemplateID:  "a-brand-new-template",
@@ -50,12 +55,14 @@ var _ = Describe("NotificationUpdater", func() {
 			Expect(updatedKind.Critical).To(BeTrue())
 			Expect(updatedKind.ID).To(Equal(notificationID))
 			Expect(updatedKind.ClientID).To(Equal(clientID))
+
+			Expect(database.ConnectionWasCalled).To(BeTrue())
 		})
 
 		It("propagates errors returned by the repo", func() {
 			boomError := errors.New("Boom")
 			kindsRepo.UpdateError = boomError
-			err := notificationsUpdater.Update(models.Kind{})
+			err := notificationsUpdater.Update(database, models.Kind{})
 
 			Expect(err).To(Equal(boomError))
 		})

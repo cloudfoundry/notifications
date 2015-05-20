@@ -4,18 +4,16 @@ import "github.com/cloudfoundry-incubator/notifications/models"
 
 type NotificationsUpdater struct {
 	kindsRepo models.KindsRepoInterface
-	database  models.DatabaseInterface
 }
 
-func NewNotificationsUpdater(kindsRepo models.KindsRepoInterface, database models.DatabaseInterface) NotificationsUpdater {
+func NewNotificationsUpdater(kindsRepo models.KindsRepoInterface) NotificationsUpdater {
 	return NotificationsUpdater{
 		kindsRepo: kindsRepo,
-		database:  database,
 	}
 }
 
-func (updater NotificationsUpdater) Update(notification models.Kind) error {
-	_, err := updater.kindsRepo.Update(updater.database.Connection(), notification)
+func (updater NotificationsUpdater) Update(database models.DatabaseInterface, notification models.Kind) error {
+	_, err := updater.kindsRepo.Update(database.Connection(), notification)
 	if err != nil {
 		return err
 	}

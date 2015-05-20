@@ -121,7 +121,7 @@ func (m Mother) NotificationsFinder() services.NotificationsFinder {
 }
 func (m Mother) NotificationsUpdater() services.NotificationsUpdater {
 	_, kindsRepo := m.Repos()
-	return services.NewNotificationsUpdater(kindsRepo, m.Database())
+	return services.NewNotificationsUpdater(kindsRepo)
 }
 
 func (m Mother) Mailer() strategies.Mailer {

@@ -17,13 +17,16 @@ import (
 )
 
 var _ = Describe("UpdateNotifications", func() {
-	var err error
-	var handler handlers.UpdateNotifications
-	var writer *httptest.ResponseRecorder
-	var request *http.Request
-	var context stack.Context
-	var updater *fakes.NotificationUpdater
-	var errorWriter *fakes.ErrorWriter
+	var (
+		err         error
+		handler     handlers.UpdateNotifications
+		writer      *httptest.ResponseRecorder
+		request     *http.Request
+		context     stack.Context
+		updater     *fakes.NotificationUpdater
+		errorWriter *fakes.ErrorWriter
+		database    *fakes.Database
+	)
 
 	Describe("ServeHTTP", func() {
 		BeforeEach(func() {
@@ -33,26 +36,29 @@ var _ = Describe("UpdateNotifications", func() {
 			writer = httptest.NewRecorder()
 			body := []byte(`{"description": "test kind", "critical": false, "template": "template-name"}`)
 			request, err = http.NewRequest("PUT", "/clients/this-client/notifications/this-kind", bytes.NewBuffer(body))
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
+
+			database = fakes.NewDatabase()
+			context = stack.NewContext()
+			context.Set("database", database)
 		})
 
 		It("calls update on its updater with appropriate arguments", func() {
 			handler.ServeHTTP(writer, request, context)
-			Expect(updater.Notification).To(Equal(models.Kind{
+			Expect(writer.Code).To(Equal(http.StatusNoContent))
+
+			Expect(updater.UpdateCall.Arguments).To(ConsistOf([]interface{}{database, models.Kind{
 				Description: "test kind",
 				Critical:    false,
 				TemplateID:  "template-name",
 				ClientID:    "this-client",
 				ID:          "this-kind",
-			}))
-			Expect(writer.Code).To(Equal(http.StatusNoContent))
+			}}))
 		})
 
 		Context("when an error occurs", func() {
 			It("propagates the error returned from the updater into the error writer", func() {
-				updater.Error = errors.New("error occurred while updating notification")
+				updater.UpdateCall.Error = errors.New("error occurred while updating notification")
 				handler.ServeHTTP(writer, request, context)
 				Expect(errorWriter.Error).To(MatchError(errors.New("error occurred while updating notification")))
 			})
@@ -60,9 +66,7 @@ var _ = Describe("UpdateNotifications", func() {
 			It("writes a params validation error when the request is semantically invalid", func() {
 				body := []byte(`{"description": "test kind", "template": "template-name"}`)
 				request, err = http.NewRequest("PUT", "/clients/this-client/notifications/this-kind", bytes.NewBuffer(body))
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				handler.ServeHTTP(writer, request, context)
 				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
