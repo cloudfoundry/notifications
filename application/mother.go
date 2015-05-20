@@ -268,7 +268,7 @@ func (m Mother) TemplateServiceObjects() (services.TemplateCreator, services.Tem
 		m.TemplateFinder(),
 		services.NewTemplateUpdater(templatesRepo, database),
 		services.NewTemplateDeleter(templatesRepo),
-		services.NewTemplateLister(templatesRepo, database),
+		services.NewTemplateLister(templatesRepo),
 		services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo),
 		services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo)
 }

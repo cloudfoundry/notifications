@@ -3,26 +3,27 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
 )
 
 type ListTemplates struct {
-	Lister      services.TemplateListerInterface
-	ErrorWriter ErrorWriterInterface
+	lister      services.TemplateListerInterface
+	errorWriter ErrorWriterInterface
 }
 
 func NewListTemplates(templateLister services.TemplateListerInterface, errorWriter ErrorWriterInterface) ListTemplates {
 	return ListTemplates{
-		Lister:      templateLister,
-		ErrorWriter: errorWriter,
+		lister:      templateLister,
+		errorWriter: errorWriter,
 	}
 }
 
 func (handler ListTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	templates, err := handler.Lister.List()
+	templates, err := handler.lister.List(context.Get("database").(models.DatabaseInterface))
 	if err != nil {
-		handler.ErrorWriter.Write(w, err)
+		handler.errorWriter.Write(w, err)
 		return
 	}
 

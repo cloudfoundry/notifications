@@ -12,12 +12,18 @@ import (
 )
 
 var _ = Describe("TemplateLister", func() {
-	var lister services.TemplateLister
-	var templatesRepo *fakes.TemplatesRepo
-	var expectedTemplates map[string]services.TemplateSummary
+	var (
+		lister            services.TemplateLister
+		templatesRepo     *fakes.TemplatesRepo
+		expectedTemplates map[string]services.TemplateSummary
+		database          *fakes.Database
+	)
+
 	BeforeEach(func() {
 		templatesRepo = fakes.NewTemplatesRepo()
-		lister = services.NewTemplateLister(templatesRepo, fakes.NewDatabase())
+		database = fakes.NewDatabase()
+
+		lister = services.NewTemplateLister(templatesRepo)
 	})
 
 	Describe("List", func() {
@@ -70,16 +76,18 @@ var _ = Describe("TemplateLister", func() {
 			})
 
 			It("returns a list of guids and template names", func() {
-				templates, err := lister.List()
+				templates, err := lister.List(database)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(templates).To(Equal(expectedTemplates))
+
+				Expect(database.ConnectionWasCalled).To(BeTrue())
 			})
 		})
 
 		Context("the lister has an error", func() {
 			It("propagates the error", func() {
 				templatesRepo.ListError = errors.New("some-error")
-				_, err := lister.List()
+				_, err := lister.List(database)
 				Expect(err.Error()).To(Equal("some-error"))
 			})
 		})

@@ -9,22 +9,20 @@ type TemplateSummary struct {
 }
 
 type TemplateListerInterface interface {
-	List() (map[string]TemplateSummary, error)
+	List(models.DatabaseInterface) (map[string]TemplateSummary, error)
 }
 type TemplateLister struct {
 	templatesRepo models.TemplatesRepoInterface
-	database      models.DatabaseInterface
 }
 
-func NewTemplateLister(repo models.TemplatesRepoInterface, database models.DatabaseInterface) TemplateLister {
+func NewTemplateLister(repo models.TemplatesRepoInterface) TemplateLister {
 	return TemplateLister{
 		templatesRepo: repo,
-		database:      database,
 	}
 }
 
-func (lister TemplateLister) List() (map[string]TemplateSummary, error) {
-	templates, err := lister.templatesRepo.ListIDsAndNames(lister.database.Connection())
+func (lister TemplateLister) List(database models.DatabaseInterface) (map[string]TemplateSummary, error) {
+	templates, err := lister.templatesRepo.ListIDsAndNames(database.Connection())
 	if err != nil {
 		return map[string]TemplateSummary{}, err
 	}

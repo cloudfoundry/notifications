@@ -1,18 +1,24 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/web/services"
+import (
+	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/web/services"
+)
 
 type TemplateLister struct {
-	ListWasCalled bool
-	Templates     map[string]services.TemplateSummary
-	ListError     error
+	Templates map[string]services.TemplateSummary
+
+	ListCall struct {
+		Arguments []interface{}
+		Error     error
+	}
 }
 
 func NewTemplateLister() *TemplateLister {
 	return &TemplateLister{}
 }
 
-func (lister *TemplateLister) List() (map[string]services.TemplateSummary, error) {
-	lister.ListWasCalled = true
-	return lister.Templates, lister.ListError
+func (lister *TemplateLister) List(database models.DatabaseInterface) (map[string]services.TemplateSummary, error) {
+	lister.ListCall.Arguments = []interface{}{database}
+	return lister.Templates, lister.ListCall.Error
 }

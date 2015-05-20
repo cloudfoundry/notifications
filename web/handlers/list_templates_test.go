@@ -17,17 +17,19 @@ import (
 )
 
 var _ = Describe("ListTemplates", func() {
-	var handler handlers.ListTemplates
-	var request *http.Request
-	var writer *httptest.ResponseRecorder
-	var context stack.Context
-	var lister *fakes.TemplateLister
-	var errorWriter *fakes.ErrorWriter
-	var testTemplates map[string]services.TemplateSummary
+	var (
+		handler       handlers.ListTemplates
+		request       *http.Request
+		writer        *httptest.ResponseRecorder
+		context       stack.Context
+		lister        *fakes.TemplateLister
+		errorWriter   *fakes.ErrorWriter
+		testTemplates map[string]services.TemplateSummary
+		database      *fakes.Database
+	)
 
 	Describe("ServeHTTP", func() {
 		BeforeEach(func() {
-
 			testTemplates = map[string]services.TemplateSummary{
 				"chewbaca-guid": {
 					Name: "Star Wars",
@@ -49,20 +51,22 @@ var _ = Describe("ListTemplates", func() {
 			writer = httptest.NewRecorder()
 			errorWriter = fakes.NewErrorWriter()
 			handler = handlers.NewListTemplates(lister, errorWriter)
+
+			database = fakes.NewDatabase()
+			context = stack.NewContext()
+			context.Set("database", database)
 		})
 
-		Context("When the lister does not error", func() {
+		Context("when the lister does not error", func() {
 			BeforeEach(func() {
 				var err error
 				request, err = http.NewRequest("GET", "/templates", bytes.NewBuffer([]byte{}))
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("Calls list on its lister", func() {
+			It("calls list on its lister", func() {
 				handler.ServeHTTP(writer, request, context)
-				Expect(lister.ListWasCalled).To(BeTrue())
+				Expect(lister.ListCall.Arguments).To(ConsistOf([]interface{}{database}))
 			})
 
 			It("writes out the lister's response", func() {
@@ -72,9 +76,7 @@ var _ = Describe("ListTemplates", func() {
 				var templates map[string]services.TemplateSummary
 
 				err := json.Unmarshal(writer.Body.Bytes(), &templates)
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(len(templates)).To(Equal(4))
 				Expect(templates).To(Equal(testTemplates))
@@ -82,15 +84,13 @@ var _ = Describe("ListTemplates", func() {
 
 		})
 
-		Context("When the lister errors", func() {
+		Context("when the lister errors", func() {
 			BeforeEach(func() {
-				lister.ListError = errors.New("BOOM!")
+				lister.ListCall.Error = errors.New("BOOM!")
 
 				var err error
 				request, err = http.NewRequest("GET", "/templates", bytes.NewBuffer([]byte{}))
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("writes the error to the errorWriter", func() {
