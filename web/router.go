@@ -77,7 +77,7 @@ func NewRouter(mother MotherInterface, config Config) Router {
 		router: router,
 		stacks: map[string]stack.Stack{
 			"GET /info":                                                         stack.NewStack(handlers.NewGetInfo()).Use(logging, requestCounter, databaseAllocator),
-			"POST /users/{user_id}":                                             stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, userStrategy, database)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
+			"POST /users/{user_id}":                                             stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, userStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
 			"POST /spaces/{space_id}":                                           stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, spaceStrategy, database)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
 			"POST /organizations/{org_id}":                                      stack.NewStack(handlers.NewNotifyOrganization(notify, errorWriter, organizationStrategy, database)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
 			"POST /everyone":                                                    stack.NewStack(handlers.NewNotifyEveryone(notify, errorWriter, everyoneStrategy, database)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),

@@ -14,40 +14,28 @@ type NotifyUser struct {
 	errorWriter ErrorWriterInterface
 	notify      NotifyInterface
 	strategy    strategies.StrategyInterface
-	database    models.DatabaseInterface
 }
 
-func NewNotifyUser(notify NotifyInterface, errorWriter ErrorWriterInterface, strategy strategies.StrategyInterface, database models.DatabaseInterface) NotifyUser {
+func NewNotifyUser(notify NotifyInterface, errorWriter ErrorWriterInterface, strategy strategies.StrategyInterface) NotifyUser {
 	return NotifyUser{
 		errorWriter: errorWriter,
 		notify:      notify,
 		strategy:    strategy,
-		database:    database,
 	}
 }
 
 func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	connection := handler.database.Connection()
-	err := handler.Execute(w, req, connection, context)
-	if err != nil {
-		handler.errorWriter.Write(w, err)
-		return
-	}
-}
-
-func (handler NotifyUser) Execute(w http.ResponseWriter, req *http.Request,
-	connection models.ConnectionInterface, context stack.Context) error {
+	connection := context.Get("database").(models.DatabaseInterface).Connection()
 
 	userGUID := strings.TrimPrefix(req.URL.Path, "/users/")
 	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
 
 	output, err := handler.notify.Execute(connection, req, context, userGUID, handler.strategy, params.GUIDValidator{}, vcapRequestID)
 	if err != nil {
-		return err
+		handler.errorWriter.Write(w, err)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(output)
-
-	return nil
 }
