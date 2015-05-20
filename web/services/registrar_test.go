@@ -16,7 +16,7 @@ var _ = Describe("Registrar", func() {
 		registrar   services.Registrar
 		clientsRepo *fakes.ClientsRepo
 		kindsRepo   *fakes.KindsRepo
-		conn        *fakes.DBConn
+		conn        *fakes.Connection
 		kinds       []models.Kind
 	)
 
@@ -24,7 +24,7 @@ var _ = Describe("Registrar", func() {
 		clientsRepo = fakes.NewClientsRepo()
 		kindsRepo = fakes.NewKindsRepo()
 		registrar = services.NewRegistrar(clientsRepo, kindsRepo)
-		conn = fakes.NewDBConn()
+		conn = fakes.NewConnection()
 	})
 
 	Describe("Register", func() {

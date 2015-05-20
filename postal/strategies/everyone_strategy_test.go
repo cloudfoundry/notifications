@@ -20,14 +20,14 @@ var _ = Describe("Everyone Strategy", func() {
 		allUsers      *fakes.AllUsers
 		mailer        *fakes.Mailer
 		clientID      string
-		conn          *fakes.DBConn
+		conn          *fakes.Connection
 		vcapRequestID string
 	)
 
 	BeforeEach(func() {
 		clientID = "my-client"
 		vcapRequestID = "some-request-id"
-		conn = fakes.NewDBConn()
+		conn = fakes.NewConnection()
 
 		tokenHeader := map[string]interface{}{
 			"alg": "FAST",

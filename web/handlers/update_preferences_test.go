@@ -29,12 +29,12 @@ var _ = Describe("UpdatePreferences", func() {
 			request     *http.Request
 			updater     *fakes.PreferenceUpdater
 			errorWriter *fakes.ErrorWriter
-			conn        *fakes.DBConn
+			conn        *fakes.Connection
 			context     stack.Context
 		)
 
 		BeforeEach(func() {
-			conn = fakes.NewDBConn()
+			conn = fakes.NewConnection()
 			database := fakes.NewDatabase()
 			database.Conn = conn
 			builder := services.NewPreferencesBuilder()

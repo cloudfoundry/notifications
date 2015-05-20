@@ -18,11 +18,11 @@ var _ = Describe("PreferenceUpdater", func() {
 		var unsubscribesRepo *fakes.UnsubscribesRepo
 		var kindsRepo *fakes.KindsRepo
 		var fakeGlobalUnsubscribesRepo *fakes.GlobalUnsubscribesRepo
-		var conn *fakes.DBConn
+		var conn *fakes.Connection
 		var updater services.PreferenceUpdater
 
 		BeforeEach(func() {
-			conn = fakes.NewDBConn()
+			conn = fakes.NewConnection()
 			unsubscribesRepo = fakes.NewUnsubscribesRepo()
 			kindsRepo = fakes.NewKindsRepo()
 			fakeGlobalUnsubscribesRepo = fakes.NewGlobalUnsubscribesRepo()

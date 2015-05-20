@@ -1,6 +1,8 @@
 package strategies_test
 
 import (
+	"reflect"
+
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -16,13 +18,14 @@ var _ = Describe("UserStrategy", func() {
 		options       postal.Options
 		mailer        *fakes.Mailer
 		clientID      string
-		conn          *fakes.DBConn
+		conn          *fakes.Connection
 		vcapRequestID string
 	)
 
 	BeforeEach(func() {
 		clientID = "mister-client"
 		vcapRequestID = "some-request-id"
+		conn = fakes.NewConnection()
 
 		mailer = fakes.NewMailer()
 		strategy = strategies.NewUserStrategy(mailer)
@@ -51,7 +54,7 @@ var _ = Describe("UserStrategy", func() {
 			users := []strategies.User{{GUID: "user-123"}}
 			options.Endorsement = strategies.UserEndorsement
 
-			Expect(mailer.DeliverCall.Args.Connection).To(Equal(conn))
+			Expect(reflect.ValueOf(mailer.DeliverCall.Args.Connection).Pointer()).To(Equal(reflect.ValueOf(conn).Pointer()))
 			Expect(mailer.DeliverCall.Args.Users).To(Equal(users))
 			Expect(mailer.DeliverCall.Args.Options).To(Equal(options))
 			Expect(mailer.DeliverCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))

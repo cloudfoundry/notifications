@@ -24,7 +24,7 @@ var _ = Describe("NotifyEveryone", func() {
 			errorWriter *fakes.ErrorWriter
 			notify      *fakes.Notify
 			context     stack.Context
-			connection  *fakes.DBConn
+			connection  *fakes.Connection
 			strategy    *fakes.Strategy
 		)
 
@@ -33,7 +33,7 @@ var _ = Describe("NotifyEveryone", func() {
 			writer = httptest.NewRecorder()
 			request = &http.Request{}
 			strategy = fakes.NewStrategy()
-			connection = fakes.NewDBConn()
+			connection = fakes.NewConnection()
 			database := fakes.NewDatabase()
 			database.Conn = connection
 

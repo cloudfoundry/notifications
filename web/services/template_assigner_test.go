@@ -16,11 +16,11 @@ var _ = Describe("TemplateAssigner", func() {
 	var kindsRepo *fakes.KindsRepo
 	var clientsRepo *fakes.ClientsRepo
 	var templatesRepo *fakes.TemplatesRepo
-	var conn *fakes.DBConn
+	var conn *fakes.Connection
 	var database *fakes.Database
 
 	BeforeEach(func() {
-		conn = fakes.NewDBConn()
+		conn = fakes.NewConnection()
 		database = fakes.NewDatabase()
 		clientsRepo = fakes.NewClientsRepo()
 		kindsRepo = fakes.NewKindsRepo()

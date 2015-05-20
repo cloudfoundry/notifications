@@ -19,7 +19,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 		tokenLoader    *fakes.TokenLoader
 		mailer         *fakes.Mailer
 		clientID       string
-		conn           *fakes.DBConn
+		conn           *fakes.Connection
 		findsUserGUIDs *fakes.FindsUserGUIDs
 		scope          string
 		vcapRequestID  string
@@ -29,7 +29,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 		scope = "great.scope"
 		clientID = "mister-client"
 		vcapRequestID = "some-request-id"
-		conn = fakes.NewDBConn()
+		conn = fakes.NewConnection()
 
 		tokenHeader := map[string]interface{}{
 			"alg": "FAST",

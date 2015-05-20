@@ -17,7 +17,7 @@ func (fake DBResult) RowsAffected() (int64, error) {
 	return 0, nil
 }
 
-type DBConn struct {
+type Connection struct {
 	BeginWasCalled    bool
 	CommitWasCalled   bool
 	RollbackWasCalled bool
@@ -38,16 +38,16 @@ type DBConn struct {
 	}
 }
 
-func NewDBConn() *DBConn {
-	return &DBConn{}
+func NewConnection() *Connection {
+	return &Connection{}
 }
 
-func (conn *DBConn) Begin() error {
+func (conn *Connection) Begin() error {
 	conn.BeginWasCalled = true
 	return nil
 }
 
-func (conn *DBConn) Commit() error {
+func (conn *Connection) Commit() error {
 	conn.CommitWasCalled = true
 	if conn.CommitError != "" {
 		return errors.New(conn.CommitError)
@@ -55,28 +55,28 @@ func (conn *DBConn) Commit() error {
 	return nil
 }
 
-func (conn *DBConn) Rollback() error {
+func (conn *Connection) Rollback() error {
 	conn.RollbackWasCalled = true
 	return nil
 }
 
-func (conn *DBConn) Exec(query string, args ...interface{}) (sql.Result, error) {
+func (conn *Connection) Exec(query string, args ...interface{}) (sql.Result, error) {
 	return DBResult{}, nil
 }
 
-func (conn DBConn) Delete(list ...interface{}) (int64, error) {
+func (conn Connection) Delete(list ...interface{}) (int64, error) {
 	return 0, nil
 }
 
-func (conn DBConn) Insert(list ...interface{}) error {
+func (conn Connection) Insert(list ...interface{}) error {
 	return conn.InsertCall.Err
 }
 
-func (conn DBConn) Select(i interface{}, query string, args ...interface{}) ([]interface{}, error) {
+func (conn Connection) Select(i interface{}, query string, args ...interface{}) ([]interface{}, error) {
 	return []interface{}{}, nil
 }
 
-func (conn *DBConn) SelectOne(i interface{}, query string, args ...interface{}) error {
+func (conn *Connection) SelectOne(i interface{}, query string, args ...interface{}) error {
 	switch returns := conn.SelectOneCall.Returns.(type) {
 	case models.Client:
 		*i.(*models.Client) = returns
@@ -88,11 +88,11 @@ func (conn *DBConn) SelectOne(i interface{}, query string, args ...interface{}) 
 	return conn.SelectOneCall.Errs[call]
 }
 
-func (conn *DBConn) Update(list ...interface{}) (int64, error) {
+func (conn *Connection) Update(list ...interface{}) (int64, error) {
 	conn.UpdateCall.List = list
 	return 0, nil
 }
 
-func (conn *DBConn) Transaction() models.TransactionInterface {
+func (conn *Connection) Transaction() models.TransactionInterface {
 	return conn
 }

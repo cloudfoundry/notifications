@@ -24,7 +24,7 @@ var _ = Describe("NotifyOrganization", func() {
 			request     *http.Request
 			notify      *fakes.Notify
 			context     stack.Context
-			connection  *fakes.DBConn
+			connection  *fakes.Connection
 			errorWriter *fakes.ErrorWriter
 			strategy    *fakes.Strategy
 		)
@@ -33,7 +33,7 @@ var _ = Describe("NotifyOrganization", func() {
 			writer = httptest.NewRecorder()
 			request = &http.Request{URL: &url.URL{Path: "/organizations/org-001"}}
 			strategy = fakes.NewStrategy()
-			connection = fakes.NewDBConn()
+			connection = fakes.NewConnection()
 			database := fakes.NewDatabase()
 			database.Conn = connection
 			errorWriter = fakes.NewErrorWriter()

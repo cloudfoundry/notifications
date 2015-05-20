@@ -16,7 +16,7 @@ var _ = Describe("EmailStrategy", func() {
 	Describe("Dispatch", func() {
 		var (
 			mailer        *fakes.Mailer
-			conn          *fakes.DBConn
+			conn          *fakes.Connection
 			options       postal.Options
 			clientID      string
 			emailID       string
@@ -36,7 +36,7 @@ var _ = Describe("EmailStrategy", func() {
 				To:   "dr@strangelove.com",
 			}
 
-			conn = fakes.NewDBConn()
+			conn = fakes.NewConnection()
 		})
 
 		It("calls Deliver on it's mailer with proper arguments", func() {

@@ -19,7 +19,7 @@ var _ = Describe("Mailer", func() {
 	var logger *log.Logger
 	var buffer *bytes.Buffer
 	var queue *fakes.Queue
-	var conn *fakes.DBConn
+	var conn *fakes.Connection
 	var space cf.CloudControllerSpace
 	var org cf.CloudControllerOrganization
 	var messagesRepo *fakes.MessagesRepo
@@ -28,7 +28,7 @@ var _ = Describe("Mailer", func() {
 		buffer = bytes.NewBuffer([]byte{})
 		logger = log.New(buffer, "", 0)
 		queue = fakes.NewQueue()
-		conn = fakes.NewDBConn()
+		conn = fakes.NewConnection()
 		messagesRepo = fakes.NewMessagesRepo()
 		mailer = strategies.NewMailer(queue, fakes.NewIncrementingGUIDGenerator().Generate, messagesRepo)
 		space = cf.CloudControllerSpace{Name: "the-space"}

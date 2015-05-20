@@ -6,7 +6,7 @@ import (
 )
 
 type Database struct {
-	Conn                *DBConn
+	Conn                *Connection
 	ConnectionWasCalled bool
 	SeedWasCalled       bool
 	MigrateWasCalled    bool
@@ -15,7 +15,7 @@ type Database struct {
 
 func NewDatabase() *Database {
 	return &Database{
-		Conn: NewDBConn(),
+		Conn: NewConnection(),
 	}
 }
 

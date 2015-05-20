@@ -27,7 +27,7 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
 			handler     handlers.UpdateSpecificUserPreferences
 			writer      *httptest.ResponseRecorder
 			request     *http.Request
-			connection  *fakes.DBConn
+			connection  *fakes.Connection
 			context     stack.Context
 			updater     *fakes.PreferenceUpdater
 			userGUID    string
@@ -35,7 +35,7 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
 		)
 
 		BeforeEach(func() {
-			connection = fakes.NewDBConn()
+			connection = fakes.NewConnection()
 			database := fakes.NewDatabase()
 			database.Conn = connection
 

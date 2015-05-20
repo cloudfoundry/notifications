@@ -359,7 +359,7 @@ var _ = Describe("KindsRepo", func() {
 					ClientID:    "my-client",
 				}
 
-				conn := fakes.NewDBConn()
+				conn := fakes.NewConnection()
 				conn.SelectOneCall.Returns = kind
 				conn.SelectOneCall.Errs = []error{sql.ErrNoRows, nil, nil}
 				conn.InsertCall.Err = errors.New("Duplicate entry")

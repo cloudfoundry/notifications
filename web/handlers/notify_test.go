@@ -32,7 +32,7 @@ var _ = Describe("Notify", func() {
 				rawToken      string
 				client        models.Client
 				kind          models.Kind
-				conn          *fakes.DBConn
+				conn          *fakes.Connection
 				strategy      *fakes.Strategy
 				context       stack.Context
 				tokenHeader   map[string]interface{}
@@ -97,7 +97,7 @@ var _ = Describe("Notify", func() {
 
 				vcapRequestID = "some-request-id"
 
-				conn = fakes.NewDBConn()
+				conn = fakes.NewConnection()
 
 				handler = handlers.NewNotify(finder, registrar)
 				strategy = fakes.NewStrategy()

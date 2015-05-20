@@ -238,7 +238,7 @@ var _ = Describe("ClientsRepo", func() {
 					TemplateID:  "some-template-id",
 				}
 
-				conn := fakes.NewDBConn()
+				conn := fakes.NewConnection()
 				conn.SelectOneCall.Returns = client
 				conn.SelectOneCall.Errs = []error{sql.ErrNoRows, nil, nil}
 				conn.InsertCall.Err = errors.New("Duplicate entry")

@@ -24,7 +24,7 @@ var _ = Describe("NotifySpace", func() {
 			request     *http.Request
 			notify      *fakes.Notify
 			context     stack.Context
-			connection  *fakes.DBConn
+			connection  *fakes.Connection
 			strategy    *fakes.Strategy
 			errorWriter *fakes.ErrorWriter
 		)
@@ -34,7 +34,7 @@ var _ = Describe("NotifySpace", func() {
 			request = &http.Request{URL: &url.URL{Path: "/spaces/space-001"}}
 			strategy = fakes.NewStrategy()
 			database := fakes.NewDatabase()
-			connection = fakes.NewDBConn()
+			connection = fakes.NewConnection()
 			database.Conn = connection
 			errorWriter = fakes.NewErrorWriter()
 

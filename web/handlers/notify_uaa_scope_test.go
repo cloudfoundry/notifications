@@ -24,7 +24,7 @@ var _ = Describe("NotifyUAAScope", func() {
 			writer      *httptest.ResponseRecorder
 			request     *http.Request
 			context     stack.Context
-			connection  *fakes.DBConn
+			connection  *fakes.Connection
 			errorWriter *fakes.ErrorWriter
 			strategy    *fakes.Strategy
 		)
@@ -33,7 +33,7 @@ var _ = Describe("NotifyUAAScope", func() {
 			writer = httptest.NewRecorder()
 			request = &http.Request{URL: &url.URL{Path: "/uaa_scopes/great.scope"}}
 			strategy = fakes.NewStrategy()
-			connection = fakes.NewDBConn()
+			connection = fakes.NewConnection()
 			database := fakes.NewDatabase()
 			database.Conn = connection
 			errorWriter = fakes.NewErrorWriter()

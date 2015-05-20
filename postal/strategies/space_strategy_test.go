@@ -21,7 +21,7 @@ var _ = Describe("Space Strategy", func() {
 		organizationLoader *fakes.OrganizationLoader
 		mailer             *fakes.Mailer
 		clientID           string
-		conn               *fakes.DBConn
+		conn               *fakes.Connection
 		findsUserGUIDs     *fakes.FindsUserGUIDs
 		vcapRequestID      string
 	)
@@ -29,7 +29,7 @@ var _ = Describe("Space Strategy", func() {
 	BeforeEach(func() {
 		clientID = "mister-client"
 		vcapRequestID = "some-request-id"
-		conn = fakes.NewDBConn()
+		conn = fakes.NewConnection()
 
 		tokenHeader := map[string]interface{}{
 			"alg": "FAST",
