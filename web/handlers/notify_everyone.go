@@ -13,36 +13,26 @@ type NotifyEveryone struct {
 	errorWriter ErrorWriterInterface
 	notify      NotifyInterface
 	strategy    strategies.StrategyInterface
-	database    models.DatabaseInterface
 }
 
-func NewNotifyEveryone(notify NotifyInterface, errorWriter ErrorWriterInterface,
-	strategy strategies.StrategyInterface, database models.DatabaseInterface) NotifyEveryone {
+func NewNotifyEveryone(notify NotifyInterface, errorWriter ErrorWriterInterface, strategy strategies.StrategyInterface) NotifyEveryone {
 	return NotifyEveryone{
 		errorWriter: errorWriter,
 		notify:      notify,
 		strategy:    strategy,
-		database:    database,
 	}
 }
 
 func (handler NotifyEveryone) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	connection := handler.database.Connection()
-	err := handler.Execute(w, req, connection, context)
+	connection := context.Get("database").(models.DatabaseInterface).Connection()
+	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
+
+	output, err := handler.notify.Execute(connection, req, context, "", handler.strategy, params.GUIDValidator{}, vcapRequestID)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return
 	}
-}
-
-func (handler NotifyEveryone) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) error {
-	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
-	output, err := handler.notify.Execute(connection, req, context, "", handler.strategy, params.GUIDValidator{}, vcapRequestID)
-	if err != nil {
-		return err
-	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(output)
-	return nil
 }

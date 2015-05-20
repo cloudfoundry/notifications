@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
@@ -32,29 +33,32 @@ var _ = Describe("NotifyEveryone", func() {
 			writer = httptest.NewRecorder()
 			request = &http.Request{}
 			strategy = fakes.NewStrategy()
+			connection = fakes.NewDBConn()
+			database := fakes.NewDatabase()
+			database.Conn = connection
 
 			context = stack.NewContext()
+			context.Set("database", database)
 			context.Set(handlers.VCAPRequestIDKey, "some-request-id")
 
 			notify = fakes.NewNotify()
-			handler = handlers.NewNotifyEveryone(notify, errorWriter, strategy, nil)
+			handler = handlers.NewNotifyEveryone(notify, errorWriter, strategy)
 		})
 
 		Context("when notify.Execute returns a successful response", func() {
 			It("returns the JSON representation of the response", func() {
 				notify.ExecuteCall.Response = []byte("hello")
 
-				handler.Execute(writer, request, nil, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(writer.Code).To(Equal(http.StatusOK))
-				body := string(writer.Body.Bytes())
-				Expect(body).To(Equal("hello"))
+				Expect(writer.Body.String()).To(Equal("hello"))
 			})
 
 			It("delegates to the Notify object with the correct arguments", func() {
-				handler.Execute(writer, request, connection, context)
+				handler.ServeHTTP(writer, request, context)
 
-				Expect(notify.ExecuteCall.Args.Connection).To(Equal(connection))
+				Expect(reflect.ValueOf(notify.ExecuteCall.Args.Connection).Pointer()).To(Equal(reflect.ValueOf(connection).Pointer()))
 				Expect(notify.ExecuteCall.Args.Request).To(Equal(request))
 				Expect(notify.ExecuteCall.Args.Context).To(Equal(context))
 				Expect(notify.ExecuteCall.Args.GUID).To(Equal(""))
@@ -68,9 +72,8 @@ var _ = Describe("NotifyEveryone", func() {
 			It("propagates the error", func() {
 				notify.ExecuteCall.Error = errors.New("BOOM!")
 
-				err := handler.Execute(writer, request, nil, context)
-
-				Expect(err).To(Equal(notify.ExecuteCall.Error))
+				handler.ServeHTTP(writer, request, context)
+				Expect(errorWriter.Error).To(Equal(notify.ExecuteCall.Error))
 			})
 		})
 	})
