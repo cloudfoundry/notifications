@@ -14,23 +14,18 @@ import (
 type RegisterClientWithNotifications struct {
 	registrar   services.RegistrarInterface
 	errorWriter ErrorWriterInterface
-	database    models.DatabaseInterface
 }
 
-func NewRegisterClientWithNotifications(registrar services.RegistrarInterface, errorWriter ErrorWriterInterface, database models.DatabaseInterface) RegisterClientWithNotifications {
+func NewRegisterClientWithNotifications(registrar services.RegistrarInterface, errorWriter ErrorWriterInterface) RegisterClientWithNotifications {
 	return RegisterClientWithNotifications{
 		registrar:   registrar,
 		errorWriter: errorWriter,
-		database:    database,
 	}
 }
 
 func (handler RegisterClientWithNotifications) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	handler.Execute(w, req, handler.database.Connection(), context)
-}
-
-func (handler RegisterClientWithNotifications) Execute(w http.ResponseWriter, req *http.Request,
-	connection models.ConnectionInterface, context stack.Context) {
+	database := context.Get("database").(models.DatabaseInterface)
+	connection := database.Connection()
 
 	parameters, err := params.NewClientRegistration(req.Body)
 	if err != nil {

@@ -23,22 +23,25 @@ import (
 )
 
 var _ = Describe("RegisterClientWithNotifications", func() {
-	var handler handlers.RegisterClientWithNotifications
-	var writer *httptest.ResponseRecorder
-	var request *http.Request
-	var errorWriter *fakes.ErrorWriter
-	var conn *fakes.DBConn
-	var registrar *fakes.Registrar
-	var client models.Client
-	var kinds []models.Kind
-	var context stack.Context
+	var (
+		handler     handlers.RegisterClientWithNotifications
+		writer      *httptest.ResponseRecorder
+		request     *http.Request
+		errorWriter *fakes.ErrorWriter
+		conn        *fakes.DBConn
+		registrar   *fakes.Registrar
+		client      models.Client
+		kinds       []models.Kind
+		context     stack.Context
+	)
 
 	BeforeEach(func() {
 		conn = fakes.NewDBConn()
+		database := fakes.NewDatabase()
+		database.Conn = conn
 		errorWriter = fakes.NewErrorWriter()
 		registrar = fakes.NewRegistrar()
-		fakeDatabase := fakes.NewDatabase()
-		handler = handlers.NewRegisterClientWithNotifications(registrar, errorWriter, fakeDatabase)
+		handler = handlers.NewRegisterClientWithNotifications(registrar, errorWriter)
 		writer = httptest.NewRecorder()
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"source_name": "Raptor Containment Unit",
@@ -52,14 +55,11 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 				},
 			},
 		})
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
 
 		request, err = http.NewRequest("PUT", "/notifications", bytes.NewBuffer(requestBody))
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
+
 		tokenHeader := map[string]interface{}{
 			"alg": "FAST",
 		}
@@ -74,8 +74,10 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 			return []byte(application.UAAPublicKey), nil
 		})
+		Expect(err).NotTo(HaveOccurred())
 		context = stack.NewContext()
 		context.Set("token", token)
+		context.Set("database", database)
 
 		client = models.Client{
 			ID:          "raptors",
@@ -99,11 +101,9 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 
 	Describe("Execute", func() {
 		It("passes the correct arguments to Register", func() {
-			handler.Execute(writer, request, conn, context)
+			handler.ServeHTTP(writer, request, context)
 
-			Expect(registrar.RegisterArguments[0]).To(Equal(conn))
-			Expect(registrar.RegisterArguments[1]).To(Equal(client))
-			Expect(registrar.RegisterArguments[2]).To(ConsistOf(kinds))
+			Expect(registrar.RegisterArguments).To(ConsistOf([]interface{}{conn, client, kinds}))
 
 			Expect(conn.BeginWasCalled).To(BeTrue())
 			Expect(conn.CommitWasCalled).To(BeTrue())
@@ -111,11 +111,9 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 		})
 
 		It("passes the correct arguments to Prune", func() {
-			handler.Execute(writer, request, conn, context)
+			handler.ServeHTTP(writer, request, context)
 
-			Expect(registrar.PruneArguments[0]).To(Equal(conn))
-			Expect(registrar.PruneArguments[1]).To(Equal(client))
-			Expect(registrar.PruneArguments[2]).To(ConsistOf(kinds))
+			Expect(registrar.PruneArguments).To(ConsistOf([]interface{}{conn, client, kinds}))
 
 			Expect(conn.BeginWasCalled).To(BeTrue())
 			Expect(conn.CommitWasCalled).To(BeTrue())
@@ -126,12 +124,11 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 			requestBody, err := json.Marshal(map[string]interface{}{
 				"source_name": "Raptor Containment Unit",
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
+
 			request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
-			handler.Execute(writer, request, conn, context)
+			handler.ServeHTTP(writer, request, context)
 
 			Expect(registrar.PruneArguments).To(BeNil())
 
@@ -155,14 +152,11 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 						},
 					},
 				})
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				request, err = http.NewRequest("PUT", "/notifications", bytes.NewBuffer(requestBody))
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
+
 				tokenHeader := map[string]interface{}{
 					"alg": "FAST",
 				}
@@ -177,14 +171,11 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 				token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 					return []byte(application.UAAPublicKey), nil
 				})
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
-				context = stack.NewContext()
 				context.Set("token", token)
 
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 				Expect(errorWriter.Error).To(BeAssignableToTypeOf(postal.UAAScopesError("waaaaat")))
 
 				Expect(conn.BeginWasCalled).To(BeFalse())
@@ -193,13 +184,10 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 			})
 
 			It("delegates parsing errors to the ErrorWriter", func() {
-				var err error
-				request, err = http.NewRequest("PUT", "/notifications", strings.NewReader("this is not valid JSON"))
-				if err != nil {
-					panic(err)
-				}
+				request, err := http.NewRequest("PUT", "/notifications", strings.NewReader("this is not valid JSON"))
+				Expect(err).NotTo(HaveOccurred())
 
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
 
@@ -210,15 +198,11 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 
 			It("delegates validation errors to the ErrorWriter", func() {
 				requestBody, err := json.Marshal(map[string]interface{}{})
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 				request, err = http.NewRequest("PUT", "/notifications", bytes.NewBuffer(requestBody))
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
 
@@ -230,7 +214,7 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 			It("delegates registrar register errors to the ErrorWriter", func() {
 				registrar.RegisterError = errors.New("BOOM!")
 
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
 
@@ -242,7 +226,7 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 			It("delegates registrar prune errors to the ErrorWriter", func() {
 				registrar.PruneError = errors.New("BOOM!")
 
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
 
@@ -253,7 +237,7 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 
 			It("delegates transaction errors to the ErrorWriter", func() {
 				conn.CommitError = "transaction commit error"
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())
