@@ -73,7 +73,7 @@ func NewRouter(mother MotherInterface, config Config) Router {
 	return Router{
 		router: router,
 		stacks: map[string]stack.Stack{
-			"GET /info":                                                         stack.NewStack(handlers.NewGetInfo()).Use(logging, requestCounter, databaseAllocator),
+			"GET /info":                                                         stack.NewStack(handlers.NewGetInfo()).Use(logging, requestCounter),
 			"POST /users/{user_id}":                                             stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, userStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
 			"POST /spaces/{space_id}":                                           stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, spaceStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
 			"POST /organizations/{org_id}":                                      stack.NewStack(handlers.NewNotifyOrganization(notify, errorWriter, organizationStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
@@ -83,8 +83,8 @@ func NewRouter(mother MotherInterface, config Config) Router {
 			"PUT /registration":                                                 stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
 			"PUT /notifications":                                                stack.NewStack(handlers.NewRegisterClientWithNotifications(registrar, errorWriter)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
 			"GET /notifications":                                                stack.NewStack(handlers.NewGetAllNotifications(notificationsFinder, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
-			"OPTIONS /user_preferences":                                         stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors, databaseAllocator),
-			"OPTIONS /user_preferences/{user_id}":                               stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors, databaseAllocator),
+			"OPTIONS /user_preferences":                                         stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors),
+			"OPTIONS /user_preferences/{user_id}":                               stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors),
 			"GET /user_preferences":                                             stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesReadAuthenticator, databaseAllocator),
 			"GET /user_preferences/{user_id}":                                   stack.NewStack(handlers.NewGetPreferencesForUser(preferencesFinder, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesAdminAuthenticator, databaseAllocator),
 			"PATCH /user_preferences":                                           stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesWriteAuthenticator, databaseAllocator),

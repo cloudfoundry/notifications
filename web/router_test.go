@@ -34,7 +34,7 @@ var _ = Describe("Router", func() {
 	It("routes GET /info", func() {
 		s := router.Routes().Get("GET /info").GetHandler().(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetInfo{}))
-		ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.DatabaseAllocator{})
+		ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{})
 	})
 
 	It("routes POST /users/{user_id}", func() {
@@ -157,7 +157,7 @@ var _ = Describe("Router", func() {
 	It("routes OPTIONS /user_preferences", func() {
 		s := router.Routes().Get("OPTIONS /user_preferences").GetHandler().(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.OptionsPreferences{}))
-		ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{}, middleware.DatabaseAllocator{})
+		ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{})
 	})
 
 	It("routes PATCH /user_preferences/{user_id}", func() {
@@ -172,7 +172,7 @@ var _ = Describe("Router", func() {
 	It("routes OPTIONS /user_preferences/{user_id}", func() {
 		s := router.Routes().Get("OPTIONS /user_preferences/{user_id}").GetHandler().(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(handlers.OptionsPreferences{}))
-		ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{}, middleware.DatabaseAllocator{})
+		ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{})
 	})
 
 	It("routes POST /templates", func() {
