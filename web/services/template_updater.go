@@ -3,23 +3,21 @@ package services
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type TemplateUpdaterInterface interface {
-	Update(string, models.Template) error
+	Update(models.DatabaseInterface, string, models.Template) error
 }
 
 type TemplateUpdater struct {
-	repo     models.TemplatesRepoInterface
-	database models.DatabaseInterface
+	repo models.TemplatesRepoInterface
 }
 
-func NewTemplateUpdater(repo models.TemplatesRepoInterface, database models.DatabaseInterface) TemplateUpdater {
+func NewTemplateUpdater(repo models.TemplatesRepoInterface) TemplateUpdater {
 	return TemplateUpdater{
-		repo:     repo,
-		database: database,
+		repo: repo,
 	}
 }
 
-func (updater TemplateUpdater) Update(templateID string, template models.Template) error {
-	_, err := updater.repo.Update(updater.database.Connection(), templateID, template)
+func (updater TemplateUpdater) Update(database models.DatabaseInterface, templateID string, template models.Template) error {
+	_, err := updater.repo.Update(database.Connection(), templateID, template)
 	if err != nil {
 		return err
 	}

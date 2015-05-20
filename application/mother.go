@@ -260,13 +260,12 @@ func (m Mother) MessageFinder() services.MessageFinder {
 func (m Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
 	services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister) {
 
-	database := m.Database()
 	clientsRepo, kindsRepo := m.Repos()
 	templatesRepo := m.TemplatesRepo()
 
 	return services.NewTemplateCreator(templatesRepo),
 		m.TemplateFinder(),
-		services.NewTemplateUpdater(templatesRepo, database),
+		services.NewTemplateUpdater(templatesRepo),
 		services.NewTemplateDeleter(templatesRepo),
 		services.NewTemplateLister(templatesRepo),
 		services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo),

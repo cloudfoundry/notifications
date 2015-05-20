@@ -28,7 +28,7 @@ func (handler UpdateDefaultTemplate) ServeHTTP(w http.ResponseWriter, req *http.
 		return
 	}
 
-	err = handler.updater.Update(models.DefaultTemplateID, template.ToModel())
+	err = handler.updater.Update(context.Get("database").(models.DatabaseInterface), models.DefaultTemplateID, template.ToModel())
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 	}

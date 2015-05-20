@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
@@ -30,7 +31,7 @@ func (handler UpdateTemplates) ServeHTTP(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	err = handler.updater.Update(templateID, templateParams.ToModel())
+	err = handler.updater.Update(context.Get("database").(models.DatabaseInterface), templateID, templateParams.ToModel())
 	if err != nil {
 		handler.ErrorWriter.Write(w, err)
 		return

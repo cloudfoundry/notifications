@@ -17,12 +17,15 @@ import (
 )
 
 var _ = Describe("UpdateDefaultTemplate", func() {
-	var handler handlers.UpdateDefaultTemplate
-	var writer *httptest.ResponseRecorder
-	var request *http.Request
-	var context stack.Context
-	var updater *fakes.TemplateUpdater
-	var errorWriter *fakes.ErrorWriter
+	var (
+		handler     handlers.UpdateDefaultTemplate
+		writer      *httptest.ResponseRecorder
+		request     *http.Request
+		context     stack.Context
+		updater     *fakes.TemplateUpdater
+		errorWriter *fakes.ErrorWriter
+		database    *fakes.Database
+	)
 
 	BeforeEach(func() {
 		var err error
@@ -37,37 +40,35 @@ var _ = Describe("UpdateDefaultTemplate", func() {
 			"text": "something",
 			"metadata": {"hello": true}
 		}`))
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
+
+		database = fakes.NewDatabase()
+		context = stack.NewContext()
+		context.Set("database", database)
 	})
 
 	It("updates the default template", func() {
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(updater.UpdateArgumentID).To(Equal(models.DefaultTemplateID))
-		Expect(updater.UpdateArgumentBody).To(Equal(models.Template{
+		Expect(writer.Code).To(Equal(http.StatusNoContent))
+		Expect(updater.UpdateCall.Arguments).To(ConsistOf([]interface{}{database, models.DefaultTemplateID, models.Template{
 			Name:     "Defaultish Template",
 			Subject:  "{{.Subject}}",
 			HTML:     "<p>something</p>",
 			Text:     "something",
 			Metadata: `{"hello": true}`,
-		}))
-		Expect(writer.Code).To(Equal(http.StatusNoContent))
+		}}))
 	})
 
 	Context("when the request is not valid", func() {
 		It("indicates that fields are missing", func() {
-			var err error
 			body := `{
 				"name": "Defaultish Template",
 				"subject": "{{.Subject}}",
 				"metadata": {}
 			}`
-			request, err = http.NewRequest("PUT", "/default_template", strings.NewReader(body))
-			if err != nil {
-				panic(err)
-			}
+			request, err := http.NewRequest("PUT", "/default_template", strings.NewReader(body))
+			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
 
@@ -77,7 +78,7 @@ var _ = Describe("UpdateDefaultTemplate", func() {
 
 	Context("when the updater errors", func() {
 		It("delegates the error handling to the error writer", func() {
-			updater.UpdateError = errors.New("updating default template error")
+			updater.UpdateCall.Error = errors.New("updating default template error")
 
 			handler.ServeHTTP(writer, request, context)
 
