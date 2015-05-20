@@ -132,11 +132,9 @@ var _ = Describe("Notify", func() {
 
 				Expect(finder.ClientAndKindCall.Arguments).To(ConsistOf([]interface{}{database, "mister-client", "test_email"}))
 
-				Expect(registrar.RegisterArguments).To(Equal([]interface{}{
-					conn,
-					client,
-					[]models.Kind{kind},
-				}))
+				Expect(registrar.RegisterCall.Arguments.Connection).To(Equal(conn))
+				Expect(registrar.RegisterCall.Arguments.Client).To(Equal(client))
+				Expect(registrar.RegisterCall.Arguments.Kinds).To(ConsistOf([]models.Kind{kind}))
 			})
 
 			Context("failure cases", func() {
@@ -204,7 +202,7 @@ var _ = Describe("Notify", func() {
 
 				Context("when the registrar returns errors", func() {
 					It("returns the error", func() {
-						registrar.RegisterError = errors.New("BOOM!")
+						registrar.RegisterCall.Error = errors.New("BOOM!")
 
 						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
 

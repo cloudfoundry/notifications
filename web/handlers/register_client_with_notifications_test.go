@@ -75,6 +75,7 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 			return []byte(application.UAAPublicKey), nil
 		})
 		Expect(err).NotTo(HaveOccurred())
+
 		context = stack.NewContext()
 		context.Set("token", token)
 		context.Set("database", database)
@@ -103,7 +104,9 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 		It("passes the correct arguments to Register", func() {
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(registrar.RegisterArguments).To(ConsistOf([]interface{}{conn, client, kinds}))
+			Expect(registrar.RegisterCall.Arguments.Connection).To(Equal(conn))
+			Expect(registrar.RegisterCall.Arguments.Client).To(Equal(client))
+			Expect(registrar.RegisterCall.Arguments.Kinds).To(ConsistOf(kinds))
 
 			Expect(conn.BeginWasCalled).To(BeTrue())
 			Expect(conn.CommitWasCalled).To(BeTrue())
@@ -113,7 +116,9 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 		It("passes the correct arguments to Prune", func() {
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(registrar.PruneArguments).To(ConsistOf([]interface{}{conn, client, kinds}))
+			Expect(registrar.PruneCall.Arguments.Connection).To(Equal(conn))
+			Expect(registrar.PruneCall.Arguments.Client).To(Equal(client))
+			Expect(registrar.PruneCall.Arguments.Kinds).To(ConsistOf(kinds))
 
 			Expect(conn.BeginWasCalled).To(BeTrue())
 			Expect(conn.CommitWasCalled).To(BeTrue())
@@ -130,7 +135,7 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(registrar.PruneArguments).To(BeNil())
+			Expect(registrar.PruneCall.Called).To(BeFalse())
 
 			Expect(conn.BeginWasCalled).To(BeTrue())
 			Expect(conn.CommitWasCalled).To(BeTrue())
@@ -212,7 +217,7 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 			})
 
 			It("delegates registrar register errors to the ErrorWriter", func() {
-				registrar.RegisterError = errors.New("BOOM!")
+				registrar.RegisterCall.Error = errors.New("BOOM!")
 
 				handler.ServeHTTP(writer, request, context)
 
@@ -224,7 +229,7 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 			})
 
 			It("delegates registrar prune errors to the ErrorWriter", func() {
-				registrar.PruneError = errors.New("BOOM!")
+				registrar.PruneCall.Error = errors.New("BOOM!")
 
 				handler.ServeHTTP(writer, request, context)
 
