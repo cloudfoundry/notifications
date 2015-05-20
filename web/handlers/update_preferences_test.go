@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
@@ -22,16 +23,20 @@ import (
 
 var _ = Describe("UpdatePreferences", func() {
 	Describe("Execute", func() {
-		var handler handlers.UpdatePreferences
-		var writer *httptest.ResponseRecorder
-		var request *http.Request
-		var updater *fakes.PreferenceUpdater
-		var errorWriter *fakes.ErrorWriter
-		var conn *fakes.DBConn
-		var context stack.Context
+		var (
+			handler     handlers.UpdatePreferences
+			writer      *httptest.ResponseRecorder
+			request     *http.Request
+			updater     *fakes.PreferenceUpdater
+			errorWriter *fakes.ErrorWriter
+			conn        *fakes.DBConn
+			context     stack.Context
+		)
 
 		BeforeEach(func() {
 			conn = fakes.NewDBConn()
+			database := fakes.NewDatabase()
+			database.Conn = conn
 			builder := services.NewPreferencesBuilder()
 
 			builder.Add(models.Preference{
@@ -52,14 +57,10 @@ var _ = Describe("UpdatePreferences", func() {
 			builder.GlobalUnsubscribe = true
 
 			body, err := json.Marshal(builder)
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			request, err = http.NewRequest("PATCH", "/user_preferences", bytes.NewBuffer(body))
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			tokenHeader := map[string]interface{}{
 				"alg": "FAST",
@@ -75,22 +76,25 @@ var _ = Describe("UpdatePreferences", func() {
 			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 				return []byte(application.UAAPublicKey), nil
 			})
+			Expect(err).NotTo(HaveOccurred())
 
 			context = stack.NewContext()
 			context.Set("token", token)
+			context.Set("database", database)
 
 			errorWriter = fakes.NewErrorWriter()
 			updater = fakes.NewPreferenceUpdater()
-			fakeDatabase := fakes.NewDatabase()
-			handler = handlers.NewUpdatePreferences(updater, errorWriter, fakeDatabase)
+			handler = handlers.NewUpdatePreferences(updater, errorWriter)
 			writer = httptest.NewRecorder()
 		})
 
 		It("Passes The Correct Arguments to PreferenceUpdater Execute", func() {
-			handler.Execute(writer, request, conn, context)
-			Expect(len(updater.ExecuteArguments)).To(Equal(3))
+			handler.ServeHTTP(writer, request, context)
+			Expect(len(updater.ExecuteArguments)).To(Equal(4))
 
-			preferencesArguments := updater.ExecuteArguments[0]
+			Expect(reflect.ValueOf(updater.ExecuteArguments[0]).Pointer()).To(Equal(reflect.ValueOf(conn).Pointer()))
+
+			preferencesArguments := updater.ExecuteArguments[1]
 
 			Expect(preferencesArguments).To(ContainElement(models.Preference{
 				ClientID: "raptors",
@@ -108,12 +112,12 @@ var _ = Describe("UpdatePreferences", func() {
 				Email:    false,
 			}))
 
-			Expect(updater.ExecuteArguments[1]).To(BeTrue())
-			Expect(updater.ExecuteArguments[2]).To(Equal("correct-user"))
+			Expect(updater.ExecuteArguments[2]).To(BeTrue())
+			Expect(updater.ExecuteArguments[3]).To(Equal("correct-user"))
 		})
 
 		It("Returns a 204 status code when the Preference object does not error", func() {
-			handler.Execute(writer, request, conn, context)
+			handler.ServeHTTP(writer, request, context)
 
 			Expect(writer.Code).To(Equal(http.StatusNoContent))
 		})
@@ -123,9 +127,7 @@ var _ = Describe("UpdatePreferences", func() {
 				jsonBody := `{"raptor-client": {"containment-unit-breach": {"email": false}}}`
 
 				request, err := http.NewRequest("PATCH", "/user_preferences", bytes.NewBuffer([]byte(jsonBody)))
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				tokenHeader := map[string]interface{}{
 					"alg": "FAST",
@@ -138,7 +140,7 @@ var _ = Describe("UpdatePreferences", func() {
 				rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
 				request.Header.Set("Authorization", "Bearer "+rawToken)
 
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).ToNot(BeNil())
 				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
@@ -157,15 +159,13 @@ var _ = Describe("UpdatePreferences", func() {
 						tokenClaims := map[string]interface{}{}
 
 						request, err := http.NewRequest("PATCH", "/user_preferences", nil)
-						if err != nil {
-							panic(err)
-						}
+						Expect(err).NotTo(HaveOccurred())
 
 						token, err := jwt.Parse(fakes.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
 							return []byte(application.UAAPublicKey), nil
 						})
+						Expect(err).NotTo(HaveOccurred())
 
-						context = stack.NewContext()
 						context.Set("token", token)
 
 						handler.ServeHTTP(writer, request, context)
@@ -179,7 +179,7 @@ var _ = Describe("UpdatePreferences", func() {
 				It("delegates MissingKindOrClientErrors as params.ValidationError to the ErrorWriter", func() {
 					updater.ExecuteError = services.MissingKindOrClientError("BOOM!")
 
-					handler.Execute(writer, request, conn, context)
+					handler.ServeHTTP(writer, request, context)
 
 					Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{"BOOM!"})))
 
@@ -191,7 +191,7 @@ var _ = Describe("UpdatePreferences", func() {
 				It("delegates CriticalKindErrors as params.ValidationError to the ErrorWriter", func() {
 					updater.ExecuteError = services.CriticalKindError("BOOM!")
 
-					handler.Execute(writer, request, conn, context)
+					handler.ServeHTTP(writer, request, context)
 
 					Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{"BOOM!"})))
 
@@ -203,7 +203,7 @@ var _ = Describe("UpdatePreferences", func() {
 				It("delegates other errors to the ErrorWriter", func() {
 					updater.ExecuteError = errors.New("BOOM!")
 
-					handler.Execute(writer, request, conn, context)
+					handler.ServeHTTP(writer, request, context)
 
 					Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
 
@@ -217,16 +217,12 @@ var _ = Describe("UpdatePreferences", func() {
 				requestBody, err := json.Marshal(map[string]interface{}{
 					"something": true,
 				})
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				request, err = http.NewRequest("PATCH", "/user_preferences", bytes.NewBuffer(requestBody))
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
 				Expect(conn.BeginWasCalled).To(BeFalse())
@@ -242,16 +238,12 @@ var _ = Describe("UpdatePreferences", func() {
 						},
 					},
 				})
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				request, err = http.NewRequest("PATCH", "/user_preferences", bytes.NewBuffer(requestBody))
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
 				Expect(conn.BeginWasCalled).To(BeFalse())
@@ -261,7 +253,7 @@ var _ = Describe("UpdatePreferences", func() {
 
 			It("delegates transaction errors to the error writer", func() {
 				conn.CommitError = "transaction error, oh no"
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).To(BeAssignableToTypeOf(models.NewTransactionCommitError("transaction error, oh no")))
 				Expect(conn.BeginWasCalled).To(BeTrue())

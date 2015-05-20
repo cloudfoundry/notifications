@@ -14,23 +14,19 @@ import (
 type UpdatePreferences struct {
 	preferenceUpdater services.PreferenceUpdaterInterface
 	errorWriter       ErrorWriterInterface
-	database          models.DatabaseInterface
 }
 
-func NewUpdatePreferences(preferenceUpdater services.PreferenceUpdaterInterface, errorWriter ErrorWriterInterface, database models.DatabaseInterface) UpdatePreferences {
+func NewUpdatePreferences(preferenceUpdater services.PreferenceUpdaterInterface, errorWriter ErrorWriterInterface) UpdatePreferences {
 	return UpdatePreferences{
 		preferenceUpdater: preferenceUpdater,
 		errorWriter:       errorWriter,
-		database:          database,
 	}
 }
 
 func (handler UpdatePreferences) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	connection := handler.database.Connection()
-	handler.Execute(w, req, connection, context)
-}
+	database := context.Get("database").(models.DatabaseInterface)
+	connection := database.Connection()
 
-func (handler UpdatePreferences) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) {
 	token := context.Get("token").(*jwt.Token)
 
 	if _, ok := token.Claims["user_id"]; !ok {

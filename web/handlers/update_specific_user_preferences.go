@@ -14,23 +14,19 @@ import (
 type UpdateSpecificUserPreferences struct {
 	preferenceUpdater services.PreferenceUpdaterInterface
 	errorWriter       ErrorWriterInterface
-	database          models.DatabaseInterface
 }
 
-func NewUpdateSpecificUserPreferences(preferenceUpdater services.PreferenceUpdaterInterface, errorWriter ErrorWriterInterface, database models.DatabaseInterface) UpdateSpecificUserPreferences {
+func NewUpdateSpecificUserPreferences(preferenceUpdater services.PreferenceUpdaterInterface, errorWriter ErrorWriterInterface) UpdateSpecificUserPreferences {
 	return UpdateSpecificUserPreferences{
 		preferenceUpdater: preferenceUpdater,
 		errorWriter:       errorWriter,
-		database:          database,
 	}
 }
 
 func (handler UpdateSpecificUserPreferences) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	connection := handler.database.Connection()
-	handler.Execute(w, req, connection, context)
-}
+	database := context.Get("database").(models.DatabaseInterface)
+	connection := database.Connection()
 
-func (handler UpdateSpecificUserPreferences) Execute(w http.ResponseWriter, req *http.Request, conn models.ConnectionInterface, context stack.Context) {
 	userGUID := handler.parseGUID(req.URL.Path)
 
 	builder := services.NewPreferencesBuilder()
@@ -47,7 +43,7 @@ func (handler UpdateSpecificUserPreferences) Execute(w http.ResponseWriter, req 
 		return
 	}
 
-	transaction := conn.Transaction()
+	transaction := connection.Transaction()
 	transaction.Begin()
 	err = handler.preferenceUpdater.Execute(transaction, preferences, builder.GlobalUnsubscribe, userGUID)
 	if err != nil {

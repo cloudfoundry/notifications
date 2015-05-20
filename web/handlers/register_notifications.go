@@ -14,22 +14,19 @@ import (
 type RegisterNotifications struct {
 	registrar   services.RegistrarInterface
 	errorWriter ErrorWriterInterface
-	database    models.DatabaseInterface
 }
 
-func NewRegisterNotifications(registrar services.RegistrarInterface, errorWriter ErrorWriterInterface, database models.DatabaseInterface) RegisterNotifications {
+func NewRegisterNotifications(registrar services.RegistrarInterface, errorWriter ErrorWriterInterface) RegisterNotifications {
 	return RegisterNotifications{
 		registrar:   registrar,
 		errorWriter: errorWriter,
-		database:    database,
 	}
 }
 
 func (handler RegisterNotifications) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	handler.Execute(w, req, handler.database.Connection(), context)
-}
+	database := context.Get("database").(models.DatabaseInterface)
+	connection := database.Connection()
 
-func (handler RegisterNotifications) Execute(w http.ResponseWriter, req *http.Request, connection models.ConnectionInterface, context stack.Context) {
 	parameters, err := params.NewRegistration(req.Body)
 	if err != nil {
 		handler.errorWriter.Write(w, err)

@@ -12,6 +12,6 @@ func NewPreferenceUpdater() *PreferenceUpdater {
 }
 
 func (fake *PreferenceUpdater) Execute(conn models.ConnectionInterface, preferences []models.Preference, globalUnsubscribe bool, userID string) error {
-	fake.ExecuteArguments = append(fake.ExecuteArguments, preferences, globalUnsubscribe, userID)
+	fake.ExecuteArguments = append(fake.ExecuteArguments, conn, preferences, globalUnsubscribe, userID)
 	return fake.ExecuteError
 }

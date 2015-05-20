@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
@@ -22,18 +23,22 @@ import (
 
 var _ = Describe("UpdateSpecificUserPreferences", func() {
 	Describe("Execute", func() {
-
-		var handler handlers.UpdateSpecificUserPreferences
-		var writer *httptest.ResponseRecorder
-		var request *http.Request
-		var conn *fakes.DBConn
-		var context stack.Context
-		var updater *fakes.PreferenceUpdater
-		var userGUID string
-		var errorWriter *fakes.ErrorWriter
+		var (
+			handler     handlers.UpdateSpecificUserPreferences
+			writer      *httptest.ResponseRecorder
+			request     *http.Request
+			connection  *fakes.DBConn
+			context     stack.Context
+			updater     *fakes.PreferenceUpdater
+			userGUID    string
+			errorWriter *fakes.ErrorWriter
+		)
 
 		BeforeEach(func() {
-			conn = fakes.NewDBConn()
+			connection = fakes.NewDBConn()
+			database := fakes.NewDatabase()
+			database.Conn = connection
+
 			builder := services.NewPreferencesBuilder()
 			builder.Add(models.Preference{
 				ClientID: "raptors",
@@ -53,15 +58,11 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
 			builder.GlobalUnsubscribe = true
 
 			body, err := json.Marshal(builder)
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			userGUID = "the-correct-user"
 			request, err = http.NewRequest("PATCH", "domain/user_preferences/"+userGUID, bytes.NewBuffer(body))
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			tokenHeader := map[string]interface{}{
 				"alg": "FAST",
@@ -76,22 +77,24 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
 			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 				return []byte(application.UAAPublicKey), nil
 			})
+			Expect(err).NotTo(HaveOccurred())
 
 			context = stack.NewContext()
 			context.Set("token", token)
+			context.Set("database", database)
 
 			updater = fakes.NewPreferenceUpdater()
 			errorWriter = fakes.NewErrorWriter()
-			fakeDatabase := fakes.NewDatabase()
-			handler = handlers.NewUpdateSpecificUserPreferences(updater, errorWriter, fakeDatabase)
+			handler = handlers.NewUpdateSpecificUserPreferences(updater, errorWriter)
 			writer = httptest.NewRecorder()
 		})
 
 		It("Passes the correct arguments to PreferenceUpdater Execute", func() {
-			handler.Execute(writer, request, conn, context)
-			Expect(len(updater.ExecuteArguments)).To(Equal(3))
+			handler.ServeHTTP(writer, request, context)
+			Expect(len(updater.ExecuteArguments)).To(Equal(4))
 
-			preferencesArguments := updater.ExecuteArguments[0]
+			Expect(reflect.ValueOf(updater.ExecuteArguments[0]).Pointer()).To(Equal(reflect.ValueOf(connection).Pointer()))
+			preferencesArguments := updater.ExecuteArguments[1]
 
 			Expect(preferencesArguments).To(ContainElement(models.Preference{
 				ClientID: "raptors",
@@ -109,12 +112,12 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
 				Email:    false,
 			}))
 
-			Expect(updater.ExecuteArguments[1]).To(BeTrue())
-			Expect(updater.ExecuteArguments[2]).To(Equal(userGUID))
+			Expect(updater.ExecuteArguments[2]).To(BeTrue())
+			Expect(updater.ExecuteArguments[3]).To(Equal(userGUID))
 		})
 
 		It("Returns a 204 status code when the Preference object does not error", func() {
-			handler.Execute(writer, request, conn, context)
+			handler.ServeHTTP(writer, request, context)
 
 			Expect(writer.Code).To(Equal(http.StatusNoContent))
 		})
@@ -126,9 +129,7 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
 					jsonBody := `{"raptor-client": {"containment-unit-breach": {"email": false}}}`
 
 					request, err := http.NewRequest("PATCH", "domain/user_preferences/"+userGUID, bytes.NewBuffer([]byte(jsonBody)))
-					if err != nil {
-						panic(err)
-					}
+					Expect(err).NotTo(HaveOccurred())
 
 					tokenHeader := map[string]interface{}{
 						"alg": "FAST",
@@ -140,61 +141,62 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
 					rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
 					request.Header.Set("Authorization", "Bearer "+rawToken)
 
-					handler.Execute(writer, request, conn, context)
+					handler.ServeHTTP(writer, request, context)
 
 					Expect(errorWriter.Error).ToNot(BeNil())
 					Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
-					Expect(conn.BeginWasCalled).To(BeFalse())
-					Expect(conn.CommitWasCalled).To(BeFalse())
-					Expect(conn.RollbackWasCalled).To(BeFalse())
+					Expect(connection.BeginWasCalled).To(BeFalse())
+					Expect(connection.CommitWasCalled).To(BeFalse())
+					Expect(connection.RollbackWasCalled).To(BeFalse())
 				})
 			})
 
 			It("delegates MissingKindOrClientErrors as params.ValidationError to the ErrorWriter", func() {
 				updater.ExecuteError = services.MissingKindOrClientError("BOOM!")
 
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{"BOOM!"})))
 
-				Expect(conn.BeginWasCalled).To(BeTrue())
-				Expect(conn.CommitWasCalled).To(BeFalse())
-				Expect(conn.RollbackWasCalled).To(BeTrue())
+				Expect(connection.BeginWasCalled).To(BeTrue())
+				Expect(connection.CommitWasCalled).To(BeFalse())
+				Expect(connection.RollbackWasCalled).To(BeTrue())
 			})
 
 			It("delegates CriticalKindErrors as params.ValidationError to the ErrorWriter", func() {
 				updater.ExecuteError = services.CriticalKindError("BOOM!")
 
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{"BOOM!"})))
 
-				Expect(conn.BeginWasCalled).To(BeTrue())
-				Expect(conn.CommitWasCalled).To(BeFalse())
-				Expect(conn.RollbackWasCalled).To(BeTrue())
+				Expect(connection.BeginWasCalled).To(BeTrue())
+				Expect(connection.CommitWasCalled).To(BeFalse())
+				Expect(connection.RollbackWasCalled).To(BeTrue())
 			})
 
 			It("delegates other errors to the ErrorWriter", func() {
 				updater.ExecuteError = errors.New("BOOM!")
 
-				handler.Execute(writer, request, conn, context)
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
 
-				Expect(conn.BeginWasCalled).To(BeTrue())
-				Expect(conn.CommitWasCalled).To(BeFalse())
-				Expect(conn.RollbackWasCalled).To(BeTrue())
+				Expect(connection.BeginWasCalled).To(BeTrue())
+				Expect(connection.CommitWasCalled).To(BeFalse())
+				Expect(connection.RollbackWasCalled).To(BeTrue())
 			})
 
 			It("delegates transaction errors to the error writer", func() {
-				conn.CommitError = "transaction error!!!"
-				handler.Execute(writer, request, conn, context)
+				connection.CommitError = "transaction error!!!"
+
+				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.Error).To(BeAssignableToTypeOf(models.NewTransactionCommitError("transaction error!!!")))
 
-				Expect(conn.BeginWasCalled).To(BeTrue())
-				Expect(conn.CommitWasCalled).To(BeTrue())
-				Expect(conn.RollbackWasCalled).To(BeFalse())
+				Expect(connection.BeginWasCalled).To(BeTrue())
+				Expect(connection.CommitWasCalled).To(BeTrue())
+				Expect(connection.RollbackWasCalled).To(BeFalse())
 			})
 		})
 	})
