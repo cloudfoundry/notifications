@@ -11,8 +11,8 @@ import (
 )
 
 type GetTemplates struct {
-	Finder      services.TemplateFinderInterface
-	ErrorWriter ErrorWriterInterface
+	finder      services.TemplateFinderInterface
+	errorWriter ErrorWriterInterface
 }
 
 type TemplateOutput struct {
@@ -25,24 +25,24 @@ type TemplateOutput struct {
 
 func NewGetTemplates(templateFinder services.TemplateFinderInterface, errorWriter ErrorWriterInterface) GetTemplates {
 	return GetTemplates{
-		Finder:      templateFinder,
-		ErrorWriter: errorWriter,
+		finder:      templateFinder,
+		errorWriter: errorWriter,
 	}
 }
 
 func (handler GetTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	templateID := strings.Split(req.URL.Path, "/templates/")[1]
 
-	template, err := handler.Finder.FindByID(context.Get("database").(models.DatabaseInterface), templateID)
+	template, err := handler.finder.FindByID(context.Get("database").(models.DatabaseInterface), templateID)
 	if err != nil {
-		handler.ErrorWriter.Write(w, err)
+		handler.errorWriter.Write(w, err)
 		return
 	}
 
 	var metadata map[string]interface{}
 	err = json.Unmarshal([]byte(template.Metadata), &metadata)
 	if err != nil {
-		handler.ErrorWriter.Write(w, err)
+		handler.errorWriter.Write(w, err)
 		return
 	}
 

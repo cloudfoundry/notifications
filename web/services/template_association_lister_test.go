@@ -12,13 +12,15 @@ import (
 )
 
 var _ = Describe("TemplateAssociationLister", func() {
-	var lister services.TemplateAssociationLister
-	var expectedAssociations []services.TemplateAssociation
-	var templateID string
-	var clientsRepo *fakes.ClientsRepo
-	var kindsRepo *fakes.KindsRepo
-	var templatesRepo *fakes.TemplatesRepo
-	var database *fakes.Database
+	var (
+		lister               services.TemplateAssociationLister
+		expectedAssociations []services.TemplateAssociation
+		templateID           string
+		clientsRepo          *fakes.ClientsRepo
+		kindsRepo            *fakes.KindsRepo
+		templatesRepo        *fakes.TemplatesRepo
+		database             *fakes.Database
+	)
 
 	Describe("List", func() {
 		BeforeEach(func() {
@@ -31,11 +33,8 @@ var _ = Describe("TemplateAssociationLister", func() {
 			_, err := templatesRepo.Create(database.Connection(), models.Template{
 				ID: templateID,
 			})
-			if err != nil {
-				panic(err)
-			}
-
-			lister = services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo, database)
+			Expect(err).NotTo(HaveOccurred())
+			lister = services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo)
 		})
 
 		Context("when a template has been associated to some clients and notifications", func() {
@@ -82,9 +81,11 @@ var _ = Describe("TemplateAssociationLister", func() {
 			})
 
 			It("returns the full list of associations", func() {
-				associations, err := lister.List(templateID)
+				associations, err := lister.List(database, templateID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(associations).To(ConsistOf(expectedAssociations))
+
+				Expect(database.ConnectionWasCalled).To(BeTrue())
 			})
 		})
 
@@ -93,7 +94,7 @@ var _ = Describe("TemplateAssociationLister", func() {
 				It("returns the underlying error", func() {
 					clientsRepo.FindAllByTemplateIDError = errors.New("something bad happened")
 
-					_, err := lister.List(templateID)
+					_, err := lister.List(database, templateID)
 					Expect(err).To(MatchError(errors.New("something bad happened")))
 				})
 			})
@@ -102,7 +103,7 @@ var _ = Describe("TemplateAssociationLister", func() {
 				It("returns the underlying error", func() {
 					kindsRepo.FindAllByTemplateIDError = errors.New("more bad happened")
 
-					_, err := lister.List(templateID)
+					_, err := lister.List(database, templateID)
 					Expect(err).To(MatchError(errors.New("more bad happened")))
 				})
 			})
@@ -111,7 +112,7 @@ var _ = Describe("TemplateAssociationLister", func() {
 				It("returns the underlying error", func() {
 					templatesRepo.FindError = errors.New("something terrible happened")
 
-					_, err := lister.List(templateID)
+					_, err := lister.List(database, templateID)
 					Expect(err).To(MatchError(errors.New("something terrible happened")))
 				})
 			})

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
 )
@@ -27,7 +28,7 @@ func NewListTemplateAssociations(lister services.TemplateAssociationListerInterf
 
 func (handler ListTemplateAssociations) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	templateID := handler.parseTemplateID(req.URL.Path)
-	associations, err := handler.lister.List(templateID)
+	associations, err := handler.lister.List(context.Get("database").(models.DatabaseInterface), templateID)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

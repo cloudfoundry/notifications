@@ -1,10 +1,17 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/web/services"
+import (
+	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/web/services"
+)
 
 type TemplateAssociationLister struct {
 	Associations map[string][]services.TemplateAssociation
-	ListError    error
+
+	ListCall struct {
+		Arguments []interface{}
+		Error     error
+	}
 }
 
 func NewTemplateAssociationLister() *TemplateAssociationLister {
@@ -13,6 +20,7 @@ func NewTemplateAssociationLister() *TemplateAssociationLister {
 	}
 }
 
-func (lister *TemplateAssociationLister) List(templateID string) ([]services.TemplateAssociation, error) {
-	return lister.Associations[templateID], lister.ListError
+func (lister *TemplateAssociationLister) List(database models.DatabaseInterface, templateID string) ([]services.TemplateAssociation, error) {
+	lister.ListCall.Arguments = []interface{}{database, templateID}
+	return lister.Associations[templateID], lister.ListCall.Error
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
+	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -20,12 +21,16 @@ type TemplateAssociation struct {
 }
 
 var _ = Describe("ListTemplateAssociations", func() {
-	var handler handlers.ListTemplateAssociations
-	var templateID string
-	var writer *httptest.ResponseRecorder
-	var request *http.Request
-	var lister *fakes.TemplateAssociationLister
-	var errorWriter *fakes.ErrorWriter
+	var (
+		handler     handlers.ListTemplateAssociations
+		templateID  string
+		writer      *httptest.ResponseRecorder
+		request     *http.Request
+		lister      *fakes.TemplateAssociationLister
+		errorWriter *fakes.ErrorWriter
+		database    *fakes.Database
+		context     stack.Context
+	)
 
 	BeforeEach(func() {
 		var err error
@@ -51,13 +56,15 @@ var _ = Describe("ListTemplateAssociations", func() {
 
 		writer = httptest.NewRecorder()
 		request, err = http.NewRequest("GET", "/templates/"+templateID+"/associations", nil)
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
+
+		database = fakes.NewDatabase()
+		context = stack.NewContext()
+		context.Set("database", database)
 	})
 
 	It("returns a list of clients and notifications associated to the given template", func() {
-		handler.ServeHTTP(writer, request, nil)
+		handler.ServeHTTP(writer, request, context)
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 
@@ -65,9 +72,8 @@ var _ = Describe("ListTemplateAssociations", func() {
 			Associations []TemplateAssociation
 		}
 		err := json.Unmarshal(writer.Body.Bytes(), &assoc)
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
+
 		associations := assoc.Associations
 
 		Expect(associations).To(HaveLen(3))
@@ -82,14 +88,16 @@ var _ = Describe("ListTemplateAssociations", func() {
 			Client:       "another-client",
 			Notification: "another-notification",
 		}))
+
+		Expect(lister.ListCall.Arguments).To(ConsistOf([]interface{}{database, templateID}))
 	})
 
 	Context("when errors occur", func() {
 		Context("when the lister service returns an error", func() {
 			It("delegates to the error handler", func() {
-				lister.ListError = errors.New("db failed or something")
+				lister.ListCall.Error = errors.New("db failed or something")
 
-				handler.ServeHTTP(writer, request, nil)
+				handler.ServeHTTP(writer, request, context)
 				Expect(errorWriter.Error).To(MatchError(errors.New("db failed or something")))
 			})
 		})

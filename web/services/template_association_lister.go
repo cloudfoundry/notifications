@@ -8,39 +8,38 @@ type TemplateAssociation struct {
 }
 
 type TemplateAssociationListerInterface interface {
-	List(string) ([]TemplateAssociation, error)
+	List(models.DatabaseInterface, string) ([]TemplateAssociation, error)
 }
 
 type TemplateAssociationLister struct {
 	clientsRepo   models.ClientsRepoInterface
 	kindsRepo     models.KindsRepoInterface
 	templatesRepo models.TemplatesRepoInterface
-	database      models.DatabaseInterface
 }
 
-func NewTemplateAssociationLister(clientsRepo models.ClientsRepoInterface, kindsRepo models.KindsRepoInterface, templatesRepo models.TemplatesRepoInterface, database models.DatabaseInterface) TemplateAssociationLister {
+func NewTemplateAssociationLister(clientsRepo models.ClientsRepoInterface, kindsRepo models.KindsRepoInterface, templatesRepo models.TemplatesRepoInterface) TemplateAssociationLister {
 	return TemplateAssociationLister{
 		clientsRepo:   clientsRepo,
 		kindsRepo:     kindsRepo,
 		templatesRepo: templatesRepo,
-		database:      database,
 	}
 }
 
-func (lister TemplateAssociationLister) List(templateID string) ([]TemplateAssociation, error) {
+func (lister TemplateAssociationLister) List(database models.DatabaseInterface, templateID string) ([]TemplateAssociation, error) {
 	associations := []TemplateAssociation{}
+	conn := database.Connection()
 
-	_, err := lister.templatesRepo.FindByID(lister.database.Connection(), templateID)
+	_, err := lister.templatesRepo.FindByID(conn, templateID)
 	if err != nil {
 		return associations, err
 	}
 
-	clients, err := lister.clientsRepo.FindAllByTemplateID(lister.database.Connection(), templateID)
+	clients, err := lister.clientsRepo.FindAllByTemplateID(conn, templateID)
 	if err != nil {
 		return associations, err
 	}
 
-	kinds, err := lister.kindsRepo.FindAllByTemplateID(lister.database.Connection(), templateID)
+	kinds, err := lister.kindsRepo.FindAllByTemplateID(conn, templateID)
 	if err != nil {
 		return associations, err
 	}

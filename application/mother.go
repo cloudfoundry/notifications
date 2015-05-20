@@ -270,7 +270,7 @@ func (m Mother) TemplateServiceObjects() (services.TemplateCreator, services.Tem
 		services.NewTemplateDeleter(templatesRepo),
 		services.NewTemplateLister(templatesRepo, database),
 		services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo),
-		services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo, database)
+		services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo)
 }
 
 func (m Mother) KindsRepo() models.KindsRepo {
