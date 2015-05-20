@@ -12,11 +12,13 @@ import (
 )
 
 var _ = Describe("Registrar", func() {
-	var registrar services.Registrar
-	var clientsRepo *fakes.ClientsRepo
-	var kindsRepo *fakes.KindsRepo
-	var conn *fakes.DBConn
-	var kinds []models.Kind
+	var (
+		registrar   services.Registrar
+		clientsRepo *fakes.ClientsRepo
+		kindsRepo   *fakes.KindsRepo
+		conn        *fakes.DBConn
+		kinds       []models.Kind
+	)
 
 	BeforeEach(func() {
 		clientsRepo = fakes.NewClientsRepo()
