@@ -1,8 +1,10 @@
 package fakes
 
 type AllUsers struct {
-	LoadError error
-	GUIDs     []string
+	AllUserGUIDsCall struct {
+		Returns []string
+		Error   error
+	}
 }
 
 func NewAllUsers() *AllUsers {
@@ -10,5 +12,5 @@ func NewAllUsers() *AllUsers {
 }
 
 func (fake *AllUsers) AllUserGUIDs() ([]string, error) {
-	return fake.GUIDs, fake.LoadError
+	return fake.AllUserGUIDsCall.Returns, fake.AllUserGUIDsCall.Error
 }

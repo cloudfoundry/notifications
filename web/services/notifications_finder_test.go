@@ -82,7 +82,7 @@ var _ = Describe("NotificationsFinder", func() {
 
 		Context("when the repo returns an error other than RecordNotFoundError", func() {
 			It("returns the error", func() {
-				clientsRepo.FindError = errors.New("BOOM!")
+				clientsRepo.FindCall.Error = errors.New("BOOM!")
 				_, _, err := finder.ClientAndKind(database, "raptors", "perimeter_breach")
 				Expect(err).To(Equal(errors.New("BOOM!")))
 			})

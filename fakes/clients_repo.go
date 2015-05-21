@@ -3,12 +3,24 @@ package fakes
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type ClientsRepo struct {
-	Clients                  map[string]models.Client
-	AllClients               []models.Client
-	UpsertError              error
-	FindError                error
-	UpdateError              error
-	FindAllByTemplateIDError error
+	Clients    map[string]models.Client
+	AllClients []models.Client
+
+	UpsertCall struct {
+		Error error
+	}
+
+	FindCall struct {
+		Error error
+	}
+
+	UpdateCall struct {
+		Error error
+	}
+
+	FindAllByTemplateIDCall struct {
+		Error error
+	}
 }
 
 func NewClientsRepo() *ClientsRepo {
@@ -39,17 +51,17 @@ func (fake *ClientsRepo) Update(conn models.ConnectionInterface, client models.C
 	}
 
 	fake.Clients[client.ID] = client
-	return client, fake.UpdateError
+	return client, fake.UpdateCall.Error
 }
 
 func (fake *ClientsRepo) Upsert(conn models.ConnectionInterface, client models.Client) (models.Client, error) {
 	fake.Clients[client.ID] = client
-	return client, fake.UpsertError
+	return client, fake.UpsertCall.Error
 }
 
 func (fake *ClientsRepo) Find(conn models.ConnectionInterface, id string) (models.Client, error) {
-	if fake.FindError != nil {
-		return models.Client{}, fake.FindError
+	if fake.FindCall.Error != nil {
+		return models.Client{}, fake.FindCall.Error
 	}
 
 	if client, ok := fake.Clients[id]; ok {
@@ -70,5 +82,5 @@ func (fake *ClientsRepo) FindAllByTemplateID(conn models.ConnectionInterface, te
 			clients = append(clients, client)
 		}
 	}
-	return clients, fake.FindAllByTemplateIDError
+	return clients, fake.FindAllByTemplateIDCall.Error
 }

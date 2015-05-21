@@ -120,7 +120,7 @@ var _ = Describe("TemplateAssigner", func() {
 		Context("when it gets an error it doesn't understand", func() {
 			Context("on finding the client", func() {
 				It("returns any errors it doesn't understand", func() {
-					clientsRepo.FindError = errors.New("database connection failure")
+					clientsRepo.FindCall.Error = errors.New("database connection failure")
 					err := assigner.AssignToClient(database, "my-client", "my-template")
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal("database connection failure"))
@@ -138,7 +138,7 @@ var _ = Describe("TemplateAssigner", func() {
 
 			Context("on updating the client", func() {
 				It("Returns the error", func() {
-					clientsRepo.UpdateError = errors.New("database fail")
+					clientsRepo.UpdateCall.Error = errors.New("database fail")
 					err := assigner.AssignToClient(database, "my-client", "my-template")
 					Expect(err).To(HaveOccurred())
 				})
@@ -251,7 +251,7 @@ var _ = Describe("TemplateAssigner", func() {
 		Context("when it gets an error it doesn't understand", func() {
 			Context("on finding the client", func() {
 				It("returns any errors it doesn't understand", func() {
-					clientsRepo.FindError = errors.New("database connection failure")
+					clientsRepo.FindCall.Error = errors.New("database connection failure")
 					err := assigner.AssignToNotification(database, "my-client", "my-kind", "my-template")
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal("database connection failure"))

@@ -154,7 +154,7 @@ var _ = Describe("Registrar", func() {
 
 		Context("error cases", func() {
 			It("returns the errors from the clients repo", func() {
-				clientsRepo.UpsertError = errors.New("BOOM!")
+				clientsRepo.UpsertCall.Error = errors.New("BOOM!")
 
 				err := registrar.Register(conn, models.Client{}, []models.Kind{})
 

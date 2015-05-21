@@ -164,7 +164,7 @@ var _ = Describe("TemplateLoader", func() {
 
 		Context("when the clients repo has an error", func() {
 			BeforeEach(func() {
-				clientsRepo.FindError = errors.New("BOOM!")
+				clientsRepo.FindCall.Error = errors.New("BOOM!")
 			})
 
 			It("bubbles up the error", func() {

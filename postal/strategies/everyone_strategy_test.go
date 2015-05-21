@@ -43,7 +43,7 @@ var _ = Describe("Everyone Strategy", func() {
 
 		mailer = fakes.NewMailer()
 		allUsers = fakes.NewAllUsers()
-		allUsers.GUIDs = []string{"user-380", "user-319"}
+		allUsers.AllUserGUIDsCall.Returns = []string{"user-380", "user-319"}
 
 		strategy = strategies.NewEveryoneStrategy(tokenLoader, allUsers, mailer)
 	})
@@ -68,7 +68,7 @@ var _ = Describe("Everyone Strategy", func() {
 
 			options.Endorsement = strategies.EveryoneEndorsement
 			var users []strategies.User
-			for _, guid := range allUsers.GUIDs {
+			for _, guid := range allUsers.AllUserGUIDsCall.Returns {
 				users = append(users, strategies.User{GUID: guid})
 			}
 
@@ -95,7 +95,7 @@ var _ = Describe("Everyone Strategy", func() {
 
 		Context("when allUsers fails to load users", func() {
 			It("returns the error", func() {
-				allUsers.LoadError = errors.New("BOOM!")
+				allUsers.AllUserGUIDsCall.Error = errors.New("BOOM!")
 				_, err := strategy.Dispatch(clientID, "", vcapRequestID, options, conn)
 
 				Expect(err).To(Equal(errors.New("BOOM!")))
