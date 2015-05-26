@@ -252,7 +252,7 @@ func (worker DeliveryWorker) pack(delivery Delivery) (mail.Message, error) {
 }
 
 func (worker DeliveryWorker) sendMail(messageID string, message mail.Message) string {
-	err := worker.mailClient.Connect()
+	err := worker.mailClient.Connect(worker.logger)
 	if err != nil {
 		worker.logger.Error("smtp-connection-error", err)
 		return StatusUnavailable
@@ -260,7 +260,7 @@ func (worker DeliveryWorker) sendMail(messageID string, message mail.Message) st
 
 	worker.logger.Info("delivery-start")
 
-	err = worker.mailClient.Send(message)
+	err = worker.mailClient.Send(message, worker.logger)
 	if err != nil {
 		worker.logger.Error("delivery-failed-smtp-error", err)
 		return StatusFailed

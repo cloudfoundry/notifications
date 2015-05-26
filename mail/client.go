@@ -5,11 +5,12 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"net/smtp"
 	"strings"
 	"time"
+
+	"github.com/pivotal-golang/lager"
 )
 
 const (
@@ -23,7 +24,6 @@ type AuthMechanism int
 type Client struct {
 	config Config
 	client *smtp.Client
-	logger *log.Logger
 }
 
 type Config struct {
@@ -41,8 +41,8 @@ type Config struct {
 }
 
 type ClientInterface interface {
-	Connect() error
-	Send(Message) error
+	Connect(lager.Logger) error
+	Send(Message, lager.Logger) error
 }
 
 type connection struct {
@@ -50,11 +50,8 @@ type connection struct {
 	err    error
 }
 
-func NewClient(config Config, logger *log.Logger) *Client {
-	client := &Client{
-		config: config,
-		logger: logger,
-	}
+func NewClient(config Config) *Client {
+	client := &Client{config: config}
 
 	if client.config.ConnectTimeout == 0 {
 		client.config.ConnectTimeout = 15 * time.Second
@@ -63,28 +60,28 @@ func NewClient(config Config, logger *log.Logger) *Client {
 	return client
 }
 
-func (c *Client) Connect() error {
-	c.PrintLog("Connecting...")
+func (c *Client) Connect(logger lager.Logger) error {
+	c.PrintLog(logger, "Connecting...")
 	if c.config.TestMode {
-		c.PrintLog("Test Mode enabled, not connected")
+		c.PrintLog(logger, "Test Mode enabled, not connected")
 		return nil
 	}
 
 	if c.client != nil {
-		c.PrintLog("Already connected.")
+		c.PrintLog(logger, "Already connected.")
 		return nil
 	}
 
 	select {
 	case connection := <-c.connect():
-		c.PrintLog("Connected")
+		c.PrintLog(logger, "Connected")
 		if connection.err != nil {
 			return connection.err
 		}
 
 		c.client = connection.client
 	case <-time.After(c.config.ConnectTimeout):
-		c.PrintLog("Timed out after %+v", c.config.ConnectTimeout)
+		c.PrintLog(logger, "Timed out after %+v", c.config.ConnectTimeout)
 		return errors.New("server timeout")
 	}
 
@@ -105,66 +102,66 @@ func (c *Client) connect() chan connection {
 	return channel
 }
 
-func (c *Client) Send(msg Message) error {
+func (c *Client) Send(msg Message, logger lager.Logger) error {
 	if c.config.TestMode {
-		c.logger.Println("TEST_MODE is enabled, emails not being sent")
+		logger.Info("TEST_MODE is enabled, emails not being sent")
 		return nil
 	}
 
-	err := c.Connect()
+	err := c.Connect(logger)
 	if err != nil {
-		return c.Error(err)
+		return c.Error(logger, err)
 	}
 
-	c.PrintLog("Initiating hello...")
+	c.PrintLog(logger, "Initiating hello...")
 	err = c.Hello()
 	if err != nil {
-		return c.Error(err)
+		return c.Error(logger, err)
 	}
-	c.PrintLog("Hello complete.")
+	c.PrintLog(logger, "Hello complete.")
 
 	if !c.config.DisableTLS {
-		c.PrintLog("Starting TLS...")
+		c.PrintLog(logger, "Starting TLS...")
 		err = c.StartTLS()
 		if err != nil {
-			return c.Error(err)
+			return c.Error(logger, err)
 		}
-		c.PrintLog("TLS connection opened.")
+		c.PrintLog(logger, "TLS connection opened.")
 
-		c.PrintLog("Starting authentication...")
-		err = c.Auth()
+		c.PrintLog(logger, "Starting authentication...")
+		err = c.Auth(logger)
 		if err != nil {
-			return c.Error(err)
+			return c.Error(logger, err)
 		}
-		c.PrintLog("Authenticated.")
+		c.PrintLog(logger, "Authenticated.")
 	}
 
-	c.PrintLog("Sending mail from: %s", msg.From)
+	c.PrintLog(logger, "Sending mail from: %s", msg.From)
 	err = c.client.Mail(msg.From)
 	if err != nil {
-		return c.Error(err)
+		return c.Error(logger, err)
 	}
 
-	c.PrintLog("Sending mail to: %s", msg.To)
+	c.PrintLog(logger, "Sending mail to: %s", msg.To)
 	err = c.client.Rcpt(msg.To)
 	if err != nil {
-		return c.Error(err)
+		return c.Error(logger, err)
 	}
 
-	c.PrintLog("Sending mail data...")
-	c.PrintLog("Message Data: %s", base64.StdEncoding.EncodeToString([]byte(msg.Data())))
+	c.PrintLog(logger, "Sending mail data...")
+	c.PrintLog(logger, "Message Data: %s", base64.StdEncoding.EncodeToString([]byte(msg.Data())))
 	err = c.Data(msg)
 	if err != nil {
-		return c.Error(err)
+		return c.Error(logger, err)
 	}
-	c.PrintLog("Mail data sent.")
+	c.PrintLog(logger, "Mail data sent.")
 
-	c.PrintLog("Quitting...")
+	c.PrintLog(logger, "Quitting...")
 	err = c.Quit()
 	if err != nil {
-		return c.Error(err)
+		return c.Error(logger, err)
 	}
-	c.PrintLog("Goodbye.")
+	c.PrintLog(logger, "Goodbye.")
 
 	return nil
 }
@@ -196,9 +193,9 @@ func (c *Client) StartTLS() error {
 	return nil
 }
 
-func (c *Client) Auth() error {
+func (c *Client) Auth(logger lager.Logger) error {
 	if ok, _ := c.Extension("AUTH"); ok {
-		if mechanism := c.AuthMechanism(); mechanism != nil {
+		if mechanism := c.AuthMechanism(logger); mechanism != nil {
 			err := c.client.Auth(mechanism)
 			if err != nil {
 				return err
@@ -209,16 +206,16 @@ func (c *Client) Auth() error {
 	return nil
 }
 
-func (c *Client) AuthMechanism() smtp.Auth {
+func (c *Client) AuthMechanism(logger lager.Logger) smtp.Auth {
 	switch c.config.AuthMechanism {
 	case AuthCRAMMD5:
-		c.PrintLog("Using CRAMMD5 to authenticate")
+		c.PrintLog(logger, "Using CRAMMD5 to authenticate")
 		return smtp.CRAMMD5Auth(c.config.User, c.config.Secret)
 	case AuthPlain:
-		c.PrintLog("Using PLAIN to authenticate")
+		c.PrintLog(logger, "Using PLAIN to authenticate")
 		return smtp.PlainAuth("", c.config.User, c.config.Pass, c.config.Host)
 	default:
-		c.PrintLog("No authentication mechanism configured")
+		c.PrintLog(logger, "No authentication mechanism configured")
 		return nil
 	}
 }
@@ -253,7 +250,7 @@ func (c *Client) Quit() error {
 	return nil
 }
 
-func (c *Client) Error(err error) error {
+func (c *Client) Error(logger lager.Logger, err error) error {
 	if c.client != nil {
 		failure := c.Quit()
 		if failure != nil {
@@ -261,13 +258,13 @@ func (c *Client) Error(err error) error {
 		}
 	}
 
-	c.logger.Printf("SMTP Error: %s", err.Error())
+	logger.Error("SMTP", err)
 
 	return err
 }
 
-func (c *Client) PrintLog(format string, arguments ...interface{}) {
+func (c *Client) PrintLog(logger lager.Logger, format string, arguments ...interface{}) {
 	if c.config.LoggingEnabled {
-		c.logger.Printf("[SMTP] "+format, arguments...)
+		logger.Info(fmt.Sprintf("[SMTP] "+format, arguments...))
 	}
 }

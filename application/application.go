@@ -54,7 +54,7 @@ func (app Application) ConfigureSMTP(logger lager.Logger) {
 	}
 
 	mailClient := app.mother.MailClient()
-	err := mailClient.Connect()
+	err := mailClient.Connect(logger)
 	if err != nil {
 		logger.Fatal("smtp-connect-errored", err)
 	}

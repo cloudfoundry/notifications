@@ -1,25 +1,32 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/mail"
+import (
+	"github.com/cloudfoundry-incubator/notifications/mail"
+	"github.com/pivotal-golang/lager"
+)
 
 type MailClient struct {
-	Messages     []mail.Message
-	SendError    error
-	ConnectError error
+	Messages      []mail.Message
+	SendLogger    lager.Logger
+	SendError     error
+	ConnectLogger lager.Logger
+	ConnectError  error
 }
 
-func NewMailClient() MailClient {
-	return MailClient{}
+func NewMailClient() *MailClient {
+	return &MailClient{}
 }
 
-func (fake *MailClient) Connect() error {
+func (fake *MailClient) Connect(logger lager.Logger) error {
+	fake.ConnectLogger = logger
 	return fake.ConnectError
 }
 
-func (fake *MailClient) Send(msg mail.Message) error {
-	err := fake.Connect()
-	if err != nil {
-		return err
+func (fake *MailClient) Send(msg mail.Message, logger lager.Logger) error {
+	fake.SendLogger = logger
+
+	if fake.ConnectError != nil {
+		return fake.ConnectError
 	}
 
 	if fake.SendError != nil {

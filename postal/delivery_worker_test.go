@@ -48,7 +48,7 @@ func parseLogLines(b []byte) ([]logLine, error) {
 
 var _ = Describe("DeliveryWorker", func() {
 	var (
-		mailClient             fakes.MailClient
+		mailClient             *fakes.MailClient
 		worker                 postal.DeliveryWorker
 		id                     int
 		logger                 lager.Logger
@@ -100,7 +100,7 @@ var _ = Describe("DeliveryWorker", func() {
 		}
 		receiptsRepo = fakes.NewReceiptsRepo()
 
-		worker = postal.NewDeliveryWorker(id, logger, &mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
+		worker = postal.NewDeliveryWorker(id, logger, mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
 			messagesRepo, database, sender, encryptionKey, userLoader, templateLoader, receiptsRepo, tokenLoader)
 
 		messageID = "randomly-generated-guid"
@@ -296,6 +296,12 @@ var _ = Describe("DeliveryWorker", func() {
 			timestamp, err := time.Parse(time.RFC3339, formattedTimestamp)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(timestamp).To(BeTemporally("~", time.Now(), 2*time.Second))
+		})
+
+		It("should connect and send the message with the worker's logger session", func() {
+			worker.Deliver(&job)
+			Expect(mailClient.ConnectLogger.SessionName()).To(Equal("notifications.worker"))
+			Expect(mailClient.SendLogger.SessionName()).To(Equal("notifications.worker"))
 		})
 
 		Context("when the delivery fails to be sent", func() {

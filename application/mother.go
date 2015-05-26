@@ -172,7 +172,7 @@ func (m Mother) MailClient() *mail.Client {
 		mailConfig.AuthMechanism = mail.AuthCRAMMD5
 	}
 
-	return mail.NewClient(mailConfig, log.New(os.Stdout, "", 0))
+	return mail.NewClient(mailConfig)
 }
 
 func (m Mother) Repos() (models.ClientsRepo, models.KindsRepo) {

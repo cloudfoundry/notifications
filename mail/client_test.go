@@ -3,13 +3,13 @@ package mail_test
 import (
 	"bytes"
 	"errors"
-	"log"
 	"net"
 	"net/smtp"
 	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/mail"
+	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,15 +18,16 @@ import (
 var _ = Describe("Mail", func() {
 	var mailServer *SMTPServer
 	var client *mail.Client
-	var logger *log.Logger
+	var logger lager.Logger
 	var buffer *bytes.Buffer
 	var config mail.Config
 
 	BeforeEach(func() {
 		var err error
 
-		buffer = bytes.NewBuffer([]byte{})
-		logger = log.New(buffer, "", 0)
+		buffer = &bytes.Buffer{}
+		logger = lager.NewLogger("notifications")
+		logger.RegisterSink(lager.NewWriterSink(buffer, 0))
 		mailServer = NewSMTPServer("user", "pass")
 
 		config = mail.Config{
@@ -42,7 +43,7 @@ var _ = Describe("Mail", func() {
 			panic(err)
 		}
 
-		client = mail.NewClient(config, logger)
+		client = mail.NewClient(config)
 	})
 
 	AfterEach(func() {
@@ -53,13 +54,23 @@ var _ = Describe("Mail", func() {
 		It("defaults the ConnectTimeout to 15 seconds", func() {
 			config.ConnectTimeout = 0
 
-			client = mail.NewClient(config, logger)
+			client = mail.NewClient(config)
 
 			Expect(client.ConnectTimeout()).To(Equal(15 * time.Second))
 		})
 	})
 
 	Describe("Send", func() {
+		It("should use the provided logger when logging", func() {
+			config.LoggingEnabled = true
+			client = mail.NewClient(config)
+			err := client.Send(mail.Message{}, logger)
+			if err != nil {
+				panic(err)
+			}
+			Expect(buffer.String()).To(ContainSubstring("Initiating hello..."))
+		})
+
 		Context("when in Testmode", func() {
 			var msg mail.Message
 
@@ -73,7 +84,7 @@ var _ = Describe("Mail", func() {
 				}
 
 				config.TestMode = true
-				client = mail.NewClient(config, logger)
+				client = mail.NewClient(config)
 
 				msg = mail.Message{
 					From:    "me@example.com",
@@ -89,7 +100,7 @@ var _ = Describe("Mail", func() {
 			})
 
 			It("does not connect to the smtp server", func() {
-				err := client.Send(msg)
+				err := client.Send(msg, logger)
 				if err != nil {
 					panic(err)
 				}
@@ -100,7 +111,7 @@ var _ = Describe("Mail", func() {
 			})
 
 			It("logs that it is in test mode", func() {
-				err := client.Send(msg)
+				err := client.Send(msg, logger)
 				if err != nil {
 					panic(err)
 				}
@@ -110,7 +121,7 @@ var _ = Describe("Mail", func() {
 					panic(err)
 				}
 
-				Expect(line).To(Equal("TEST_MODE is enabled, emails not being sent\n"))
+				Expect(line).To(ContainSubstring("TEST_MODE is enabled, emails not being sent"))
 			})
 		})
 	})
@@ -124,7 +135,7 @@ var _ = Describe("Mail", func() {
 			if err != nil {
 				panic(err)
 			}
-			client = mail.NewClient(config, logger)
+			client = mail.NewClient(config)
 		})
 
 		It("can send mail", func() {
@@ -140,7 +151,7 @@ var _ = Describe("Mail", func() {
 				},
 			}
 
-			err := client.Send(msg)
+			err := client.Send(msg, logger)
 			if err != nil {
 				panic(err)
 			}
@@ -169,7 +180,7 @@ var _ = Describe("Mail", func() {
 				},
 			}
 
-			err := client.Send(firstMsg)
+			err := client.Send(firstMsg, logger)
 			if err != nil {
 				panic(err)
 			}
@@ -195,7 +206,7 @@ var _ = Describe("Mail", func() {
 				},
 			}
 
-			err = client.Send(secondMsg)
+			err = client.Send(secondMsg, logger)
 			if err != nil {
 				panic(err)
 			}
@@ -213,7 +224,7 @@ var _ = Describe("Mail", func() {
 		Context("when configured to use TLS", func() {
 			BeforeEach(func() {
 				config.SkipVerifySSL = true
-				client = mail.NewClient(config, logger)
+				client = mail.NewClient(config)
 			})
 
 			It("communicates over TLS", func() {
@@ -229,7 +240,7 @@ var _ = Describe("Mail", func() {
 					},
 				}
 
-				err := client.Send(msg)
+				err := client.Send(msg, logger)
 				if err != nil {
 					panic(err)
 				}
@@ -247,7 +258,7 @@ var _ = Describe("Mail", func() {
 			BeforeEach(func() {
 				mailServer.SupportsTLS = false
 				config.DisableTLS = true
-				client = mail.NewClient(config, logger)
+				client = mail.NewClient(config)
 			})
 
 			It("does not authenticate", func() {
@@ -263,7 +274,7 @@ var _ = Describe("Mail", func() {
 					},
 				}
 
-				err := client.Send(msg)
+				err := client.Send(msg, logger)
 				if err != nil {
 					panic(err)
 				}
@@ -290,7 +301,7 @@ var _ = Describe("Mail", func() {
 					},
 				}
 				mailServer.FailsHello = true
-				err := client.Send(msg)
+				err := client.Send(msg, logger)
 				Expect(err).To(HaveOccurred())
 
 				Consistently(func() int {
@@ -298,7 +309,7 @@ var _ = Describe("Mail", func() {
 				}).Should(Equal(0))
 
 				mailServer.FailsHello = false
-				err = client.Send(msg)
+				err = client.Send(msg, logger)
 				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(func() int {
@@ -309,6 +320,16 @@ var _ = Describe("Mail", func() {
 	})
 
 	Describe("Connect", func() {
+		It("should use the provided logger when logging", func() {
+			config.LoggingEnabled = true
+			client = mail.NewClient(config)
+			err := client.Connect(logger)
+			if err != nil {
+				panic(err)
+			}
+			Expect(buffer.String()).To(ContainSubstring("Connecting..."))
+		})
+
 		Context("when in test mode", func() {
 			It("does not connect to the smtp server", func() {
 				var err error
@@ -318,9 +339,9 @@ var _ = Describe("Mail", func() {
 					panic(err)
 				}
 				config.TestMode = true
-				client = mail.NewClient(config, logger)
+				client = mail.NewClient(config)
 
-				err = client.Connect()
+				err = client.Connect(logger)
 				Expect(err).To(BeNil())
 			})
 		})
@@ -336,9 +357,9 @@ var _ = Describe("Mail", func() {
 				panic(err)
 			}
 
-			client = mail.NewClient(config, logger)
+			client = mail.NewClient(config)
 
-			err = client.Connect()
+			err = client.Connect(logger)
 			Expect(err).ToNot(BeNil())
 			Expect(err.Error()).To(ContainSubstring("server timeout"))
 		})
@@ -354,11 +375,11 @@ var _ = Describe("Mail", func() {
 				panic(err)
 			}
 
-			client = mail.NewClient(config, logger)
+			client = mail.NewClient(config)
 		})
 
 		It("returns a bool, representing presence of, and parameters for a given SMTP extension", func() {
-			err := client.Connect()
+			err := client.Connect(logger)
 			if err != nil {
 				panic(err)
 			}
@@ -382,12 +403,12 @@ var _ = Describe("Mail", func() {
 		Context("when configured to use PLAIN auth", func() {
 			BeforeEach(func() {
 				config.AuthMechanism = mail.AuthPlain
-				client = mail.NewClient(config, logger)
+				client = mail.NewClient(config)
 			})
 
 			It("creates a PlainAuth strategy", func() {
 				auth := smtp.PlainAuth("", config.User, config.Pass, config.Host)
-				mechanism := client.AuthMechanism()
+				mechanism := client.AuthMechanism(logger)
 
 				Expect(mechanism).To(BeAssignableToTypeOf(auth))
 			})
@@ -396,12 +417,12 @@ var _ = Describe("Mail", func() {
 		Context("when configured to use CRAMMD5 auth", func() {
 			BeforeEach(func() {
 				config.AuthMechanism = mail.AuthCRAMMD5
-				client = mail.NewClient(config, logger)
+				client = mail.NewClient(config)
 			})
 
 			It("creates a CRAMMD5Auth strategy", func() {
 				auth := smtp.CRAMMD5Auth(config.User, config.Secret)
-				mechanism := client.AuthMechanism()
+				mechanism := client.AuthMechanism(logger)
 
 				Expect(mechanism).To(BeAssignableToTypeOf(auth))
 			})
@@ -410,11 +431,11 @@ var _ = Describe("Mail", func() {
 		Context("when configured to use no auth", func() {
 			BeforeEach(func() {
 				config.AuthMechanism = mail.AuthNone
-				client = mail.NewClient(config, logger)
+				client = mail.NewClient(config)
 			})
 
 			It("creates a CRAMMD5Auth strategy", func() {
-				mechanism := client.AuthMechanism()
+				mechanism := client.AuthMechanism(logger)
 
 				Expect(mechanism).To(BeNil())
 			})
@@ -425,20 +446,20 @@ var _ = Describe("Mail", func() {
 		It("logs the error and returns it", func() {
 			err := errors.New("BOOM!")
 
-			otherErr := client.Error(err)
+			otherErr := client.Error(logger, err)
 
 			Expect(otherErr).To(Equal(err))
 
-			Expect(buffer.String()).To(ContainSubstring("SMTP Error: BOOM!"))
+			Expect(buffer.String()).To(ContainSubstring("BOOM!"))
 		})
 
 		It("quits the current connection when an error occurs", func() {
 			Expect(mailServer.ConnectionState).To(Equal(StateUnknown))
 
-			client.Connect()
+			client.Connect(logger)
 			Expect(mailServer.ConnectionState).To(Equal(StateConnected))
 
-			client.Error(errors.New("BOOM!!"))
+			client.Error(logger, errors.New("BOOM!!"))
 			Expect(mailServer.ConnectionState).To(Equal(StateClosed))
 		})
 	})
@@ -447,11 +468,11 @@ var _ = Describe("Mail", func() {
 		Context("when the client is configured to log", func() {
 			BeforeEach(func() {
 				config.LoggingEnabled = true
-				client = mail.NewClient(config, logger)
+				client = mail.NewClient(config)
 			})
 
 			It("writes to the logger", func() {
-				client.PrintLog("banana %s", "panic")
+				client.PrintLog(logger, "banana %s", "panic")
 
 				Expect(buffer.String()).To(ContainSubstring("banana panic"))
 			})
@@ -460,11 +481,11 @@ var _ = Describe("Mail", func() {
 		Context("when the client is not configured to log", func() {
 			BeforeEach(func() {
 				config.LoggingEnabled = false
-				client = mail.NewClient(config, logger)
+				client = mail.NewClient(config)
 			})
 
 			It("does not write to the logger", func() {
-				client.PrintLog("banana %s", "panic")
+				client.PrintLog(logger, "banana %s", "panic")
 
 				Expect(buffer.String()).NotTo(ContainSubstring("banana panic"))
 			})
