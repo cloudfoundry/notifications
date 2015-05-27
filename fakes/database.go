@@ -11,6 +11,8 @@ type Database struct {
 	SeedWasCalled       bool
 	MigrateWasCalled    bool
 	MigrationsPath      string
+	TracePrefix         string
+	TraceLogger         gorp.GorpLogger
 }
 
 func NewDatabase() *Database {
@@ -24,7 +26,10 @@ func (fake *Database) Connection() models.ConnectionInterface {
 	return fake.Conn
 }
 
-func (fake Database) TraceOn(prefix string, logger gorp.GorpLogger) {}
+func (fake *Database) TraceOn(prefix string, logger gorp.GorpLogger) {
+	fake.TracePrefix = prefix
+	fake.TraceLogger = logger
+}
 
 func (fake *Database) Seed() {
 	fake.SeedWasCalled = true

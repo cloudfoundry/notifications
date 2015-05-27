@@ -101,7 +101,7 @@ var _ = Describe("DeliveryWorker", func() {
 		receiptsRepo = fakes.NewReceiptsRepo()
 
 		worker = postal.NewDeliveryWorker(id, logger, mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
-			messagesRepo, database, sender, encryptionKey, userLoader, templateLoader, receiptsRepo, tokenLoader)
+			messagesRepo, database, false, sender, encryptionKey, userLoader, templateLoader, receiptsRepo, tokenLoader)
 
 		messageID = "randomly-generated-guid"
 		delivery = postal.Delivery{
@@ -195,6 +195,38 @@ var _ = Describe("DeliveryWorker", func() {
 					"vcap_request_id": "some-request-id",
 				},
 			}))
+		})
+
+		It("logs database operations when database traces are enabled", func() {
+			sum := md5.Sum([]byte("banana's are so very tasty"))
+			encryptionKey := sum[:]
+			worker = postal.NewDeliveryWorker(id, logger, mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
+				messagesRepo, database, true, "from@email.com", encryptionKey, userLoader, templateLoader, receiptsRepo, tokenLoader)
+			worker.Deliver(&job)
+			database.TraceLogger.Printf("some statement")
+
+			Expect(database.TracePrefix).To(BeEmpty())
+			lines, err := parseLogLines(buffer.Bytes())
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(lines).To(ContainElement(logLine{
+				Source:   "notifications",
+				Message:  "notifications.worker.db",
+				LogLevel: int(lager.INFO),
+				Data: map[string]interface{}{
+					"session":         "2",
+					"statement":       "some statement",
+					"worker_id":       float64(1234),
+					"message_id":      "randomly-generated-guid",
+					"vcap_request_id": "some-request-id",
+				},
+			}))
+		})
+
+		It("does not log database operations when database traces are disabled", func() {
+			worker.Deliver(&job)
+			Expect(database.TraceLogger).To(BeNil())
+			Expect(database.TracePrefix).To(BeEmpty())
 		})
 
 		It("upserts the StatusDelivered to the database", func() {

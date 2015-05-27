@@ -101,7 +101,7 @@ func (app Application) StartWorkers() {
 	}.Work(func(i int) Worker {
 		worker := postal.NewDeliveryWorker(i, app.mother.Logger(), app.mother.MailClient(), app.mother.Queue(),
 			app.mother.GlobalUnsubscribesRepo(), app.mother.UnsubscribesRepo(), app.mother.KindsRepo(), app.mother.MessagesRepo(),
-			app.mother.Database(), app.env.Sender, app.env.EncryptionKey, app.mother.UserLoader(), app.mother.TemplatesLoader(), app.mother.ReceiptsRepo(), app.mother.TokenLoader())
+			app.mother.Database(), app.env.DBLoggingEnabled, app.env.Sender, app.env.EncryptionKey, app.mother.UserLoader(), app.mother.TemplatesLoader(), app.mother.ReceiptsRepo(), app.mother.TokenLoader())
 		return &worker
 	})
 }

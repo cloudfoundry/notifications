@@ -1,6 +1,7 @@
 package postal
 
 import (
+	"fmt"
 	"math"
 	"strings"
 	"time"
@@ -43,6 +44,7 @@ type DeliveryWorker struct {
 	messagesRepo           MessagesRepoInterface
 	receiptsRepo           models.ReceiptsRepoInterface
 	database               models.DatabaseInterface
+	dbTrace                bool
 	sender                 string
 	encryptionKey          []byte
 	identifier             int
@@ -52,7 +54,7 @@ type DeliveryWorker struct {
 func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
 	globalUnsubscribesRepo models.GlobalUnsubscribesRepoInterface, unsubscribesRepo models.UnsubscribesRepoInterface,
 	kindsRepo models.KindsRepoInterface, messagesRepo MessagesRepoInterface,
-	database models.DatabaseInterface, sender string, encryptionKey []byte, userLoader UserLoaderInterface,
+	database models.DatabaseInterface, dbTrace bool, sender string, encryptionKey []byte, userLoader UserLoaderInterface,
 	templatesLoader TemplatesLoaderInterface, receiptsRepo models.ReceiptsRepoInterface, tokenLoader TokenLoaderInterface) DeliveryWorker {
 
 	logger = logger.Session("worker", lager.Data{"worker_id": id})
@@ -67,6 +69,7 @@ func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterf
 		kindsRepo:              kindsRepo,
 		messagesRepo:           messagesRepo,
 		database:               database,
+		dbTrace:                dbTrace,
 		sender:                 sender,
 		encryptionKey:          encryptionKey,
 		userLoader:             userLoader,
@@ -96,6 +99,10 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 		"message_id":      delivery.MessageID,
 		"vcap_request_id": delivery.VCAPRequestID,
 	})
+
+	if worker.dbTrace {
+		worker.database.TraceOn("", gorpCompatibleLogger{worker.logger})
+	}
 
 	err = worker.receiptsRepo.CreateReceipts(worker.database.Connection(), []string{delivery.UserGUID}, delivery.ClientID, delivery.Options.KindID)
 	if err != nil {
@@ -269,4 +276,14 @@ func (worker DeliveryWorker) sendMail(messageID string, message mail.Message) st
 	worker.logger.Info("message-sent")
 
 	return StatusDelivered
+}
+
+type gorpCompatibleLogger struct {
+	logger lager.Logger
+}
+
+func (g gorpCompatibleLogger) Printf(format string, v ...interface{}) {
+	g.logger.Info("db", lager.Data{
+		"statement": fmt.Sprintf(format, v...),
+	})
 }
