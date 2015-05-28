@@ -12,6 +12,7 @@ import (
 type Client struct {
 	host          string
 	trace         bool
+	hasNoRouter   bool
 	Notifications *NotificationsService
 	Templates     *TemplatesService
 	Notify        *NotifyService
@@ -21,8 +22,9 @@ type Client struct {
 
 func NewClient(host string) *Client {
 	client := &Client{
-		host:  host,
-		trace: os.Getenv("TRACE") != "",
+		host:        host,
+		trace:       os.Getenv("TRACE") != "",
+		hasNoRouter: os.Getenv("HAS_NO_ROUTER") != "",
 	}
 	client.Notifications = &NotificationsService{
 		client: client,
@@ -54,7 +56,9 @@ func (c Client) makeRequest(method, path string, content io.Reader, token string
 	c.printRequest(request)
 
 	request.Header.Set("Authorization", "Bearer "+token)
-	request.Header.Set("X-Vcap-Request-Id", "some-totally-fake-vcap-request-id")
+	if c.hasNoRouter {
+		request.Header.Set("X-Vcap-Request-Id", "some-totally-fake-vcap-request-id")
+	}
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {

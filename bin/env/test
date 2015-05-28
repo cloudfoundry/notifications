@@ -19,3 +19,4 @@ export VCAP_APPLICATION='{"instance_index":0}'
 export GOBBLE_MIGRATIONS_DIR=$ROOT_PATH/gobble/migrations
 export GOBBLE_WAIT_MAX_DURATION=100
 export ENCRYPTION_KEY=sixteenbytes!!!!
+export HAS_NO_ROUTER=true
