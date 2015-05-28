@@ -74,11 +74,13 @@ var _ = Describe("Send a notification to all users of UAA", func() {
 			Expect(responseItem.Recipient).To(Equal("091b6583-0933-4d17-a5b6-66e54666c88e"))
 			Expect(responseItem.Status).To(Equal("queued"))
 			Expect(GUIDRegex.MatchString(responseItem.NotificationID)).To(BeTrue())
+			Expect(responseItem.VCAPRequestID).To(Equal("some-totally-fake-vcap-request-id"))
 
 			responseItem = indexedResponses["943e6076-b1a5-4404-811b-a1ee9253bf56"]
 			Expect(responseItem.Recipient).To(Equal("943e6076-b1a5-4404-811b-a1ee9253bf56"))
 			Expect(responseItem.Status).To(Equal("queued"))
 			Expect(GUIDRegex.MatchString(responseItem.NotificationID)).To(BeTrue())
+			Expect(responseItem.VCAPRequestID).To(Equal("some-totally-fake-vcap-request-id"))
 		})
 
 		By("confirming the messages were sent", func() {

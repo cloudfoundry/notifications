@@ -54,6 +54,7 @@ func (c Client) makeRequest(method, path string, content io.Reader, token string
 	c.printRequest(request)
 
 	request.Header.Set("Authorization", "Bearer "+token)
+	request.Header.Set("X-Vcap-Request-Id", "some-totally-fake-vcap-request-id")
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {

@@ -80,6 +80,7 @@ var _ = Describe("Sending notifications to users with certain roles in an organi
 			Expect(response.Recipient).To(Equal("user-456"))
 			Expect(response.Status).To(Equal("queued"))
 			Expect(GUIDRegex.MatchString(response.NotificationID)).To(BeTrue())
+			Expect(response.VCAPRequestID).To(Equal("some-totally-fake-vcap-request-id"))
 		})
 
 		By("confirming the messages were sent", func() {

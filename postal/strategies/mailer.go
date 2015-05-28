@@ -63,6 +63,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, users []User,
 			Status:         postal.StatusQueued,
 			NotificationID: messageID,
 			Recipient:      recipient,
+			VCAPRequestID:  vcapRequestID,
 		})
 	}
 

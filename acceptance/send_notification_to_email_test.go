@@ -67,6 +67,7 @@ var _ = Describe("Send a notification to an email", func() {
 			response = responses[0]
 			Expect(response.Status).To(Equal("queued"))
 			Expect(response.Recipient).To(Equal("user@example.com"))
+			Expect(response.VCAPRequestID).To(Equal("some-totally-fake-vcap-request-id"))
 			Expect(GUIDRegex.MatchString(response.NotificationID)).To(BeTrue())
 		})
 

@@ -47,6 +47,7 @@ var _ = Describe("Send a notification to an email using default template", func(
 			Expect(response.Status).To(Equal("queued"))
 			Expect(response.Recipient).To(Equal("user@example.com"))
 			Expect(GUIDRegex.MatchString(response.NotificationID)).To(BeTrue())
+			Expect(response.VCAPRequestID).To(Equal("some-totally-fake-vcap-request-id"))
 		})
 
 		By("verifying the message was sent", func() {

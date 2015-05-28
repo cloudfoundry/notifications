@@ -72,16 +72,19 @@ var _ = Describe("Sending notifications to all users in an organization", func()
 			Expect(response.Recipient).To(Equal("user-456"))
 			Expect(response.Status).To(Equal("queued"))
 			Expect(GUIDRegex.MatchString(response.NotificationID)).To(BeTrue())
+			Expect(response.VCAPRequestID).To(Equal("some-totally-fake-vcap-request-id"))
 
 			response = indexedResponses["user-789"]
 			Expect(response.Recipient).To(Equal("user-789"))
 			Expect(response.Status).To(Equal("queued"))
 			Expect(GUIDRegex.MatchString(response.NotificationID)).To(BeTrue())
+			Expect(response.VCAPRequestID).To(Equal("some-totally-fake-vcap-request-id"))
 
 			response = indexedResponses["user-000"]
 			Expect(response.Recipient).To(Equal("user-000"))
 			Expect(response.Status).To(Equal("queued"))
 			Expect(GUIDRegex.MatchString(response.NotificationID)).To(BeTrue())
+			Expect(response.VCAPRequestID).To(Equal("some-totally-fake-vcap-request-id"))
 		})
 
 		By("confirming the messages were sent", func() {

@@ -46,21 +46,25 @@ var _ = Describe("Mailer", func() {
 					Status:         "queued",
 					Recipient:      "user-1",
 					NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
+					VCAPRequestID:  "some-request-id",
 				},
 				{
 					Status:         "queued",
 					Recipient:      "user-2@example.com",
 					NotificationID: "deadbeef-aabb-ccdd-eeff-001122334456",
+					VCAPRequestID:  "some-request-id",
 				},
 				{
 					Status:         "queued",
 					Recipient:      "user-3",
 					NotificationID: "deadbeef-aabb-ccdd-eeff-001122334457",
+					VCAPRequestID:  "some-request-id",
 				},
 				{
 					Status:         "queued",
 					Recipient:      "user-4",
 					NotificationID: "deadbeef-aabb-ccdd-eeff-001122334458",
+					VCAPRequestID:  "some-request-id",
 				},
 			}))
 		})

@@ -78,6 +78,7 @@ var _ = Describe("Sending notifications to users with certain scopes", func() {
 			Expect(response.Recipient).To(Equal("user-369"))
 			Expect(response.Status).To(Equal("queued"))
 			Expect(GUIDRegex.MatchString(response.NotificationID)).To(BeTrue())
+			Expect(response.VCAPRequestID).To(Equal("some-totally-fake-vcap-request-id"))
 
 			Eventually(func() int {
 				return len(Servers.SMTP.Deliveries)
