@@ -2,6 +2,7 @@ package mail_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"net"
 	"net/smtp"
@@ -15,12 +16,40 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+type logLine struct {
+	Source   string                 `json:"source"`
+	Message  string                 `json:"message"`
+	LogLevel int                    `json:"log_level"`
+	Data     map[string]interface{} `json:"data"`
+}
+
+func parseLogLines(b []byte) ([]logLine, error) {
+	var lines []logLine
+	for _, line := range bytes.Split(b, []byte("\n")) {
+		if len(line) == 0 {
+			continue
+		}
+
+		var ll logLine
+		err := json.Unmarshal(line, &ll)
+		if err != nil {
+			return lines, err
+		}
+
+		lines = append(lines, ll)
+	}
+
+	return lines, nil
+}
+
 var _ = Describe("Mail", func() {
-	var mailServer *SMTPServer
-	var client *mail.Client
-	var logger lager.Logger
-	var buffer *bytes.Buffer
-	var config mail.Config
+	var (
+		mailServer *SMTPServer
+		client     *mail.Client
+		logger     lager.Logger
+		buffer     *bytes.Buffer
+		config     mail.Config
+	)
 
 	BeforeEach(func() {
 		var err error
@@ -65,10 +94,19 @@ var _ = Describe("Mail", func() {
 			config.LoggingEnabled = true
 			client = mail.NewClient(config)
 			err := client.Send(mail.Message{}, logger)
-			if err != nil {
-				panic(err)
-			}
-			Expect(buffer.String()).To(ContainSubstring("Initiating hello..."))
+			Expect(err).NotTo(HaveOccurred())
+
+			lines, err := parseLogLines(buffer.Bytes())
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(lines).To(ContainElement(logLine{
+				Source:   "notifications",
+				Message:  "notifications.smtp.hello-initiating",
+				LogLevel: int(lager.INFO),
+				Data: map[string]interface{}{
+					"session": "1",
+				},
+			}))
 		})
 
 		Context("when in Testmode", func() {
@@ -112,16 +150,18 @@ var _ = Describe("Mail", func() {
 
 			It("logs that it is in test mode", func() {
 				err := client.Send(msg, logger)
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
-				line, err := buffer.ReadString('\n')
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(line).To(ContainSubstring("TEST_MODE is enabled, emails not being sent"))
+				lines, err := parseLogLines(buffer.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lines).To(ContainElement(logLine{
+					Source:   "notifications",
+					Message:  "notifications.smtp.test-mode",
+					LogLevel: int(lager.INFO),
+					Data: map[string]interface{}{
+						"session": "1",
+					},
+				}))
 			})
 		})
 	})
@@ -324,10 +364,18 @@ var _ = Describe("Mail", func() {
 			config.LoggingEnabled = true
 			client = mail.NewClient(config)
 			err := client.Connect(logger)
-			if err != nil {
-				panic(err)
-			}
-			Expect(buffer.String()).To(ContainSubstring("Connecting..."))
+			Expect(err).NotTo(HaveOccurred())
+
+			lines, err := parseLogLines(buffer.Bytes())
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lines).To(ContainElement(logLine{
+				Source:   "notifications",
+				Message:  "notifications.smtp.connecting",
+				LogLevel: int(lager.INFO),
+				Data: map[string]interface{}{
+					"session": "1",
+				},
+			}))
 		})
 
 		Context("when in test mode", func() {
@@ -472,9 +520,18 @@ var _ = Describe("Mail", func() {
 			})
 
 			It("writes to the logger", func() {
-				client.PrintLog(logger, "banana %s", "panic")
+				client.PrintLog(logger, "banana", lager.Data{"type": "panic"})
 
-				Expect(buffer.String()).To(ContainSubstring("banana panic"))
+				lines, err := parseLogLines(buffer.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lines).To(ContainElement(logLine{
+					Source:   "notifications",
+					Message:  "notifications.banana",
+					LogLevel: int(lager.INFO),
+					Data: map[string]interface{}{
+						"type": "panic",
+					},
+				}))
 			})
 		})
 
@@ -485,9 +542,18 @@ var _ = Describe("Mail", func() {
 			})
 
 			It("does not write to the logger", func() {
-				client.PrintLog(logger, "banana %s", "panic")
+				client.PrintLog(logger, "banana", lager.Data{"type": "panic"})
 
-				Expect(buffer.String()).NotTo(ContainSubstring("banana panic"))
+				lines, err := parseLogLines(buffer.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lines).NotTo(ContainElement(logLine{
+					Source:   "notifications",
+					Message:  "notifications.banana",
+					LogLevel: int(lager.INFO),
+					Data: map[string]interface{}{
+						"type": "panic",
+					},
+				}))
 			})
 		})
 	})

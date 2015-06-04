@@ -60,28 +60,38 @@ func NewClient(config Config) *Client {
 	return client
 }
 
+func (c Client) createLoggerSession(logger lager.Logger) lager.Logger {
+	if strings.HasSuffix(logger.SessionName(), ".smtp") {
+		return logger
+	}
+
+	return logger.Session("smtp")
+}
+
 func (c *Client) Connect(logger lager.Logger) error {
-	c.PrintLog(logger, "Connecting...")
+	logger = c.createLoggerSession(logger)
+
+	c.PrintLog(logger, "connecting")
 	if c.config.TestMode {
-		c.PrintLog(logger, "Test Mode enabled, not connected")
+		c.PrintLog(logger, "test-mode-not-connected")
 		return nil
 	}
 
 	if c.client != nil {
-		c.PrintLog(logger, "Already connected.")
+		c.PrintLog(logger, "existing-connection")
 		return nil
 	}
 
 	select {
 	case connection := <-c.connect():
-		c.PrintLog(logger, "Connected")
+		c.PrintLog(logger, "connected")
 		if connection.err != nil {
 			return connection.err
 		}
 
 		c.client = connection.client
 	case <-time.After(c.config.ConnectTimeout):
-		c.PrintLog(logger, "Timed out after %+v", c.config.ConnectTimeout)
+		c.PrintLog(logger, "connection-timeout", lager.Data{"timeout-duration": c.config.ConnectTimeout})
 		return errors.New("server timeout")
 	}
 
@@ -103,8 +113,10 @@ func (c *Client) connect() chan connection {
 }
 
 func (c *Client) Send(msg Message, logger lager.Logger) error {
+	logger = c.createLoggerSession(logger)
+
 	if c.config.TestMode {
-		logger.Info("TEST_MODE is enabled, emails not being sent")
+		logger.Info("test-mode")
 		return nil
 	}
 
@@ -113,55 +125,54 @@ func (c *Client) Send(msg Message, logger lager.Logger) error {
 		return c.Error(logger, err)
 	}
 
-	c.PrintLog(logger, "Initiating hello...")
+	c.PrintLog(logger, "hello-initiating")
 	err = c.Hello()
 	if err != nil {
 		return c.Error(logger, err)
 	}
-	c.PrintLog(logger, "Hello complete.")
+	c.PrintLog(logger, "hello-complete")
 
 	if !c.config.DisableTLS {
-		c.PrintLog(logger, "Starting TLS...")
+		c.PrintLog(logger, "tls-starting")
 		err = c.StartTLS()
 		if err != nil {
 			return c.Error(logger, err)
 		}
-		c.PrintLog(logger, "TLS connection opened.")
+		c.PrintLog(logger, "tls-connected")
 
-		c.PrintLog(logger, "Starting authentication...")
+		c.PrintLog(logger, "authentication-starting")
 		err = c.Auth(logger)
 		if err != nil {
 			return c.Error(logger, err)
 		}
-		c.PrintLog(logger, "Authenticated.")
+		c.PrintLog(logger, "authenticated")
 	}
 
-	c.PrintLog(logger, "Sending mail from: %s", msg.From)
+	c.PrintLog(logger, "setting-msg-from", lager.Data{"from": msg.From})
 	err = c.client.Mail(msg.From)
 	if err != nil {
 		return c.Error(logger, err)
 	}
 
-	c.PrintLog(logger, "Sending mail to: %s", msg.To)
+	c.PrintLog(logger, "setting-msg-to", lager.Data{"to": msg.To})
 	err = c.client.Rcpt(msg.To)
 	if err != nil {
 		return c.Error(logger, err)
 	}
 
-	c.PrintLog(logger, "Sending mail data...")
-	c.PrintLog(logger, "Message Data: %s", base64.StdEncoding.EncodeToString([]byte(msg.Data())))
+	c.PrintLog(logger, "setting-msg-data", lager.Data{"mesage-data": base64.StdEncoding.EncodeToString([]byte(msg.Data()))})
 	err = c.Data(msg)
 	if err != nil {
 		return c.Error(logger, err)
 	}
-	c.PrintLog(logger, "Mail data sent.")
+	c.PrintLog(logger, "msg-data-sent")
 
-	c.PrintLog(logger, "Quitting...")
+	c.PrintLog(logger, "quiting")
 	err = c.Quit()
 	if err != nil {
 		return c.Error(logger, err)
 	}
-	c.PrintLog(logger, "Goodbye.")
+	c.PrintLog(logger, "disconnected")
 
 	return nil
 }
@@ -209,13 +220,13 @@ func (c *Client) Auth(logger lager.Logger) error {
 func (c *Client) AuthMechanism(logger lager.Logger) smtp.Auth {
 	switch c.config.AuthMechanism {
 	case AuthCRAMMD5:
-		c.PrintLog(logger, "Using CRAMMD5 to authenticate")
+		c.PrintLog(logger, "crammd5-authentication")
 		return smtp.CRAMMD5Auth(c.config.User, c.config.Secret)
 	case AuthPlain:
-		c.PrintLog(logger, "Using PLAIN to authenticate")
+		c.PrintLog(logger, "plain-authentication")
 		return smtp.PlainAuth("", c.config.User, c.config.Pass, c.config.Host)
 	default:
-		c.PrintLog(logger, "No authentication mechanism configured")
+		c.PrintLog(logger, "no-authentication")
 		return nil
 	}
 }
@@ -258,13 +269,13 @@ func (c *Client) Error(logger lager.Logger, err error) error {
 		}
 	}
 
-	logger.Error("SMTP", err)
+	logger.Error("failed", err)
 
 	return err
 }
 
-func (c *Client) PrintLog(logger lager.Logger, format string, arguments ...interface{}) {
+func (c *Client) PrintLog(logger lager.Logger, action string, data ...lager.Data) {
 	if c.config.LoggingEnabled {
-		logger.Info(fmt.Sprintf("[SMTP] "+format, arguments...))
+		logger.Info(action, data...)
 	}
 }
