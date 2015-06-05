@@ -160,7 +160,7 @@ func (c *Client) Send(msg Message, logger lager.Logger) error {
 		return c.Error(logger, err)
 	}
 
-	c.PrintLog(logger, "setting-msg-data", lager.Data{"mesage-data": base64.StdEncoding.EncodeToString([]byte(msg.Data()))})
+	c.PrintLog(logger, "setting-msg-data", lager.Data{"message-data": base64.StdEncoding.EncodeToString([]byte(msg.Data()))})
 	err = c.Data(msg)
 	if err != nil {
 		return c.Error(logger, err)
