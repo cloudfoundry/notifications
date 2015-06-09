@@ -1,6 +1,8 @@
 package strategies
 
 import (
+	"time"
+
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
@@ -28,7 +30,7 @@ func NewSpaceStrategy(tokenLoader postal.TokenLoaderInterface, spaceLoader utili
 	}
 }
 
-func (strategy SpaceStrategy) Dispatch(clientID, guid, vcapRequestID string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy SpaceStrategy) Dispatch(clientID, guid, vcapRequestID string, requestTime time.Time, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
 	responses := []Response{}
 	options.Endorsement = SpaceEndorsement
 
@@ -57,7 +59,7 @@ func (strategy SpaceStrategy) Dispatch(clientID, guid, vcapRequestID string, opt
 		return responses, err
 	}
 
-	responses = strategy.mailer.Deliver(conn, users, options, space, org, clientID, "", vcapRequestID)
+	responses = strategy.mailer.Deliver(conn, users, options, space, org, clientID, "", vcapRequestID, requestTime)
 
 	return responses, nil
 }

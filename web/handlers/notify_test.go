@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
@@ -24,21 +25,22 @@ var _ = Describe("Notify", func() {
 	Describe("Execute", func() {
 		Context("When Emailing a user or a group", func() {
 			var (
-				handler       handlers.Notify
-				finder        *fakes.NotificationsFinder
-				validator     *fakes.Validator
-				registrar     *fakes.Registrar
-				request       *http.Request
-				rawToken      string
-				client        models.Client
-				kind          models.Kind
-				conn          *fakes.Connection
-				strategy      *fakes.Strategy
-				context       stack.Context
-				tokenHeader   map[string]interface{}
-				tokenClaims   map[string]interface{}
-				vcapRequestID string
-				database      *fakes.Database
+				handler         handlers.Notify
+				finder          *fakes.NotificationsFinder
+				validator       *fakes.Validator
+				registrar       *fakes.Registrar
+				request         *http.Request
+				rawToken        string
+				client          models.Client
+				kind            models.Kind
+				conn            *fakes.Connection
+				strategy        *fakes.Strategy
+				context         stack.Context
+				tokenHeader     map[string]interface{}
+				tokenClaims     map[string]interface{}
+				vcapRequestID   string
+				database        *fakes.Database
+				reqReceivedTime time.Time
 			)
 
 			BeforeEach(func() {
@@ -91,9 +93,12 @@ var _ = Describe("Notify", func() {
 
 				database = fakes.NewDatabase()
 
+				reqReceivedTime, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:32:11.660762586-07:00")
+
 				context = stack.NewContext()
 				context.Set("token", token)
 				context.Set("database", database)
+				context.Set(handlers.RequestReceivedTime, reqReceivedTime)
 
 				vcapRequestID = "some-request-id"
 
@@ -114,6 +119,7 @@ var _ = Describe("Notify", func() {
 					"mister-client",
 					"space-001",
 					"some-request-id",
+					reqReceivedTime,
 					postal.Options{
 						ReplyTo:           "me@example.com",
 						Subject:           "Your instance is down",

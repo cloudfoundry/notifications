@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
@@ -92,6 +93,15 @@ var _ = Describe("RequestLogging", func() {
 		requestID, ok := context.Get(handlers.VCAPRequestIDKey).(string)
 		Expect(ok).To(BeTrue())
 		Expect(requestID).To(Equal("some-request-id"))
+	})
+
+	It("adds the current time to the context", func() {
+		result := ware.ServeHTTP(writer, request, context)
+		Expect(result).To(BeTrue())
+
+		requestReceivedTime, ok := context.Get(handlers.RequestReceivedTime).(time.Time)
+		Expect(ok).To(BeTrue())
+		Expect(requestReceivedTime).To(BeTemporally("~", time.Now()))
 	})
 
 	Context("when the request id is unknown", func() {

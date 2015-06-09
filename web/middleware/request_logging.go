@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/pivotal-golang/lager"
@@ -33,6 +34,7 @@ func (r RequestLogging) ServeHTTP(response http.ResponseWriter, request *http.Re
 
 	context.Set("logger", logSession)
 	context.Set(handlers.VCAPRequestIDKey, requestID)
+	context.Set(handlers.RequestReceivedTime, time.Now().UTC())
 
 	return true
 }

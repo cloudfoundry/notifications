@@ -1,6 +1,8 @@
 package strategies_test
 
 import (
+	"time"
+
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -15,12 +17,13 @@ var _ = Describe("EmailStrategy", func() {
 
 	Describe("Dispatch", func() {
 		var (
-			mailer        *fakes.Mailer
-			conn          *fakes.Connection
-			options       postal.Options
-			clientID      string
-			emailID       string
-			vcapRequestID string
+			mailer          *fakes.Mailer
+			conn            *fakes.Connection
+			options         postal.Options
+			clientID        string
+			emailID         string
+			vcapRequestID   string
+			requestReceived time.Time
 		)
 
 		BeforeEach(func() {
@@ -37,12 +40,13 @@ var _ = Describe("EmailStrategy", func() {
 			}
 
 			conn = fakes.NewConnection()
+			requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
 		})
 
 		It("calls Deliver on it's mailer with proper arguments", func() {
 			Expect(options.Endorsement).To(BeEmpty())
 
-			emailStrategy.Dispatch(clientID, emailID, vcapRequestID, options, conn)
+			emailStrategy.Dispatch(clientID, emailID, vcapRequestID, requestReceived, options, conn)
 
 			options.Endorsement = strategies.EmailEndorsement
 			users := []strategies.User{{Email: options.To}}
@@ -55,6 +59,7 @@ var _ = Describe("EmailStrategy", func() {
 			Expect(mailer.DeliverCall.Args.Client).To(Equal(clientID))
 			Expect(mailer.DeliverCall.Args.Scope).To(Equal(""))
 			Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal(vcapRequestID))
+			Expect(mailer.DeliverCall.Args.RequestReceived).To(Equal(requestReceived))
 		})
 	})
 })

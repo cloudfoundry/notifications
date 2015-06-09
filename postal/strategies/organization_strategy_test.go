@@ -2,6 +2,7 @@ package strategies_test
 
 import (
 	"errors"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
@@ -23,11 +24,13 @@ var _ = Describe("Organization Strategy", func() {
 		conn               *fakes.Connection
 		findsUserGUIDs     *fakes.FindsUserGUIDs
 		vcapRequestID      string
+		requestReceived    time.Time
 	)
 
 	BeforeEach(func() {
 		clientID = "mister-client"
 		vcapRequestID = "some-request-id"
+		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:38:03.180764129-07:00")
 		conn = fakes.NewConnection()
 
 		tokenHeader := map[string]interface{}{
@@ -71,7 +74,7 @@ var _ = Describe("Organization Strategy", func() {
 			It("call mailer.Deliver with the correct arguments for an organization", func() {
 				Expect(options.Endorsement).To(BeEmpty())
 
-				_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, options, conn)
+				_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, requestReceived, options, conn)
 				if err != nil {
 					panic(err)
 				}
@@ -90,6 +93,7 @@ var _ = Describe("Organization Strategy", func() {
 				Expect(mailer.DeliverCall.Args.Client).To(Equal(clientID))
 				Expect(mailer.DeliverCall.Args.Scope).To(Equal(""))
 				Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal(vcapRequestID))
+				Expect(mailer.DeliverCall.Args.RequestReceived).To(Equal(requestReceived))
 			})
 
 			Context("when the org role field is set", func() {
@@ -98,7 +102,7 @@ var _ = Describe("Organization Strategy", func() {
 
 					Expect(options.Endorsement).To(BeEmpty())
 
-					_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, options, conn)
+					_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, requestReceived, options, conn)
 					if err != nil {
 						panic(err)
 					}
@@ -114,7 +118,7 @@ var _ = Describe("Organization Strategy", func() {
 			Context("when token loader fails to return a token", func() {
 				It("returns an error", func() {
 					tokenLoader.LoadError = errors.New("BOOM!")
-					_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, options, conn)
+					_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, requestReceived, options, conn)
 
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
@@ -123,7 +127,7 @@ var _ = Describe("Organization Strategy", func() {
 			Context("when organizationLoader fails to load an organization", func() {
 				It("returns the error", func() {
 					organizationLoader.LoadError = errors.New("BOOM!")
-					_, err := strategy.Dispatch(clientID, "org-009", vcapRequestID, options, conn)
+					_, err := strategy.Dispatch(clientID, "org-009", vcapRequestID, requestReceived, options, conn)
 
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
@@ -133,7 +137,7 @@ var _ = Describe("Organization Strategy", func() {
 				It("returns an error", func() {
 					findsUserGUIDs.UserGUIDsBelongingToOrganizationError = errors.New("BOOM!")
 
-					_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, options, conn)
+					_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, requestReceived, options, conn)
 					Expect(err).ToNot(BeNil())
 				})
 			})

@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -44,6 +45,10 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 		return []byte{}, params.ValidationError(parameters.Errors)
 	}
 
+	requestReceivedTime, ok := context.Get(RequestReceivedTime).(time.Time)
+	if !ok {
+		panic("programmer error: missing handlers.RequestReceivedTime in http context")
+	}
 	token := context.Get("token").(*jwt.Token) // TODO: (rm) get rid of the context object, just pass in the token
 	clientID := token.Claims["client_id"].(string)
 
@@ -63,7 +68,7 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 
 	var responses []strategies.Response
 
-	responses, err = strategy.Dispatch(clientID, guid, vcapRequestID, parameters.ToOptions(client, kind), connection)
+	responses, err = strategy.Dispatch(clientID, guid, vcapRequestID, requestReceivedTime, parameters.ToOptions(client, kind), connection)
 	if err != nil {
 		return []byte{}, err
 	}

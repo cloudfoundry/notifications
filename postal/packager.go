@@ -45,6 +45,7 @@ func (packager Packager) Pack(context MessageContext) (mail.Message, error) {
 			fmt.Sprintf("X-CF-Client-ID: %s", context.ClientID),
 			fmt.Sprintf("X-CF-Notification-ID: %s", context.MessageID),
 			fmt.Sprintf("X-CF-Notification-Timestamp: %s", time.Now().Format(time.RFC3339Nano)),
+			fmt.Sprintf("X-CF-Notification-Request-Received: %s", context.RequestReceived.Format(time.RFC3339Nano)),
 		},
 	}, nil
 }

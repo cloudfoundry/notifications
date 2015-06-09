@@ -1,6 +1,8 @@
 package strategies
 
 import (
+	"time"
+
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -8,7 +10,7 @@ import (
 )
 
 type MailerInterface interface {
-	Deliver(models.ConnectionInterface, []User, postal.Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string, string) []Response
+	Deliver(models.ConnectionInterface, []User, postal.Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string, string, time.Time) []Response
 }
 
 type Mailer struct {
@@ -31,7 +33,7 @@ func NewMailer(queue gobble.QueueInterface, guidGenerator postal.GUIDGenerationF
 
 func (mailer Mailer) Deliver(conn models.ConnectionInterface, users []User,
 	options postal.Options, space cf.CloudControllerSpace,
-	organization cf.CloudControllerOrganization, clientID, scope, vcapRequestID string) []Response {
+	organization cf.CloudControllerOrganization, clientID, scope, vcapRequestID string, reqReceived time.Time) []Response {
 
 	responses := []Response{}
 	jobsByMessageID := map[string]gobble.Job{}
@@ -43,15 +45,16 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, users []User,
 		messageID := guid.String()
 
 		jobsByMessageID[messageID] = gobble.NewJob(postal.Delivery{
-			Options:       options,
-			UserGUID:      user.GUID,
-			Email:         user.Email,
-			Space:         space,
-			Organization:  organization,
-			ClientID:      clientID,
-			MessageID:     messageID,
-			Scope:         scope,
-			VCAPRequestID: vcapRequestID,
+			Options:         options,
+			UserGUID:        user.GUID,
+			Email:           user.Email,
+			Space:           space,
+			Organization:    organization,
+			ClientID:        clientID,
+			MessageID:       messageID,
+			Scope:           scope,
+			VCAPRequestID:   vcapRequestID,
+			RequestReceived: reqReceived,
 		})
 
 		recipient := user.Email

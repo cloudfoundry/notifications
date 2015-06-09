@@ -2,6 +2,7 @@ package strategies_test
 
 import (
 	"errors"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
@@ -14,19 +15,21 @@ import (
 
 var _ = Describe("Everyone Strategy", func() {
 	var (
-		strategy      strategies.EveryoneStrategy
-		options       postal.Options
-		tokenLoader   *fakes.TokenLoader
-		allUsers      *fakes.AllUsers
-		mailer        *fakes.Mailer
-		clientID      string
-		conn          *fakes.Connection
-		vcapRequestID string
+		strategy            strategies.EveryoneStrategy
+		options             postal.Options
+		tokenLoader         *fakes.TokenLoader
+		allUsers            *fakes.AllUsers
+		mailer              *fakes.Mailer
+		clientID            string
+		conn                *fakes.Connection
+		vcapRequestID       string
+		requestReceivedTime time.Time
 	)
 
 	BeforeEach(func() {
 		clientID = "my-client"
 		vcapRequestID = "some-request-id"
+		requestReceivedTime, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:38:03.180764129-07:00")
 		conn = fakes.NewConnection()
 
 		tokenHeader := map[string]interface{}{
@@ -61,7 +64,7 @@ var _ = Describe("Everyone Strategy", func() {
 
 		It("call mailer.Deliver with the correct arguments for an organization", func() {
 			Expect(options.Endorsement).To(BeEmpty())
-			_, err := strategy.Dispatch(clientID, "", vcapRequestID, options, conn)
+			_, err := strategy.Dispatch(clientID, "", vcapRequestID, requestReceivedTime, options, conn)
 			if err != nil {
 				panic(err)
 			}
@@ -80,6 +83,7 @@ var _ = Describe("Everyone Strategy", func() {
 			Expect(mailer.DeliverCall.Args.Client).To(Equal(clientID))
 			Expect(mailer.DeliverCall.Args.Scope).To(Equal(""))
 			Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal(vcapRequestID))
+			Expect(mailer.DeliverCall.Args.RequestReceived).To(Equal(requestReceivedTime))
 		})
 	})
 
@@ -87,7 +91,7 @@ var _ = Describe("Everyone Strategy", func() {
 		Context("when token loader fails to return a token", func() {
 			It("returns an error", func() {
 				tokenLoader.LoadError = errors.New("BOOM!")
-				_, err := strategy.Dispatch(clientID, "", vcapRequestID, options, conn)
+				_, err := strategy.Dispatch(clientID, "", vcapRequestID, requestReceivedTime, options, conn)
 
 				Expect(err).To(Equal(errors.New("BOOM!")))
 			})
@@ -96,7 +100,7 @@ var _ = Describe("Everyone Strategy", func() {
 		Context("when allUsers fails to load users", func() {
 			It("returns the error", func() {
 				allUsers.AllUserGUIDsCall.Error = errors.New("BOOM!")
-				_, err := strategy.Dispatch(clientID, "", vcapRequestID, options, conn)
+				_, err := strategy.Dispatch(clientID, "", vcapRequestID, requestReceivedTime, options, conn)
 
 				Expect(err).To(Equal(errors.New("BOOM!")))
 			})

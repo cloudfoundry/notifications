@@ -1,6 +1,8 @@
 package strategies
 
 import (
+	"time"
+
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -18,9 +20,9 @@ func NewUserStrategy(mailer MailerInterface) UserStrategy {
 	}
 }
 
-func (strategy UserStrategy) Dispatch(clientID, guid, vcapRequestID string, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy UserStrategy) Dispatch(clientID, guid, vcapRequestID string, requestTime time.Time, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
 	options.Endorsement = UserEndorsement
-	responses := strategy.mailer.Deliver(conn, []User{{GUID: guid}}, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "", vcapRequestID)
+	responses := strategy.mailer.Deliver(conn, []User{{GUID: guid}}, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "", vcapRequestID, requestTime)
 
 	return responses, nil
 }

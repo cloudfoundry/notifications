@@ -2,6 +2,7 @@ package strategies_test
 
 import (
 	"errors"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
@@ -14,21 +15,23 @@ import (
 
 var _ = Describe("UAA Scope Strategy", func() {
 	var (
-		strategy       strategies.UAAScopeStrategy
-		options        postal.Options
-		tokenLoader    *fakes.TokenLoader
-		mailer         *fakes.Mailer
-		clientID       string
-		conn           *fakes.Connection
-		findsUserGUIDs *fakes.FindsUserGUIDs
-		scope          string
-		vcapRequestID  string
+		strategy        strategies.UAAScopeStrategy
+		options         postal.Options
+		tokenLoader     *fakes.TokenLoader
+		mailer          *fakes.Mailer
+		clientID        string
+		conn            *fakes.Connection
+		findsUserGUIDs  *fakes.FindsUserGUIDs
+		scope           string
+		vcapRequestID   string
+		requestReceived time.Time
 	)
 
 	BeforeEach(func() {
 		scope = "great.scope"
 		clientID = "mister-client"
 		vcapRequestID = "some-request-id"
+		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
 		conn = fakes.NewConnection()
 
 		tokenHeader := map[string]interface{}{
@@ -66,7 +69,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 			It("call mailer.Deliver with the correct arguments for an UAA Scope", func() {
 				Expect(options.Endorsement).To(BeEmpty())
 
-				_, err := strategy.Dispatch(clientID, "great.scope", vcapRequestID, options, conn)
+				_, err := strategy.Dispatch(clientID, "great.scope", vcapRequestID, requestReceived, options, conn)
 				if err != nil {
 					panic(err)
 				}
@@ -82,6 +85,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 				Expect(mailer.DeliverCall.Args.Client).To(Equal(clientID))
 				Expect(mailer.DeliverCall.Args.Scope).To(Equal(scope))
 				Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal(vcapRequestID))
+				Expect(mailer.DeliverCall.Args.RequestReceived).To(Equal(requestReceived))
 			})
 		})
 
@@ -89,7 +93,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 			Context("when token loader fails to return a token", func() {
 				It("returns an error", func() {
 					tokenLoader.LoadError = errors.New("BOOM!")
-					_, err := strategy.Dispatch(clientID, "great.scope", vcapRequestID, options, conn)
+					_, err := strategy.Dispatch(clientID, "great.scope", vcapRequestID, requestReceived, options, conn)
 
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
@@ -99,7 +103,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 				It("returns an error", func() {
 					findsUserGUIDs.UserGUIDsBelongingToScopeError = errors.New("BOOM!")
 
-					_, err := strategy.Dispatch(clientID, "great.scope", vcapRequestID, options, conn)
+					_, err := strategy.Dispatch(clientID, "great.scope", vcapRequestID, requestReceived, options, conn)
 					Expect(err).To(HaveOccurred())
 				})
 			})
@@ -109,7 +113,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 					defaultScopes := []string{"cloud_controller.read", "cloud_controller.write", "openid", "approvals.me",
 						"cloud_controller_service_permissions.read", "scim.me", "uaa.user", "password.write", "scim.userids", "oauth.approvals"}
 					for _, scope := range defaultScopes {
-						_, err := strategy.Dispatch(clientID, scope, vcapRequestID, options, conn)
+						_, err := strategy.Dispatch(clientID, scope, vcapRequestID, requestReceived, options, conn)
 						Expect(err).To(HaveOccurred())
 						Expect(err).To(MatchError(strategies.DefaultScopeError{}))
 					}

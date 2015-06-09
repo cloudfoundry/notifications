@@ -1,6 +1,8 @@
 package postal_test
 
 import (
+	"time"
+
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -16,6 +18,7 @@ var _ = Describe("MessageContext", func() {
 	var html postal.HTML
 	var delivery postal.Delivery
 	var cloak *fakes.Cloak
+	var reqReceived time.Time
 
 	BeforeEach(func() {
 		email = "bounce@example.com"
@@ -43,6 +46,8 @@ var _ = Describe("MessageContext", func() {
 			Role:              "OrgRole",
 		}
 
+		reqReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:40:12.207187819-07:00")
+
 		delivery = postal.Delivery{
 			Options:   options,
 			UserGUID:  "the-user",
@@ -57,7 +62,8 @@ var _ = Describe("MessageContext", func() {
 				GUID: "my-super-lovely-guid",
 				Name: "the-org",
 			},
-			Scope: "this.scope",
+			Scope:           "this.scope",
+			RequestReceived: reqReceived,
 		}
 
 		cloak = &fakes.Cloak{
@@ -93,6 +99,7 @@ var _ = Describe("MessageContext", func() {
 			Expect(cloak.DataToEncrypt).To(Equal([]byte("the-user|the-client-id|the-kind-id")))
 			Expect(context.Endorsement).To(Equal("this is the endorsement"))
 			Expect(context.OrganizationRole).To(Equal("OrgRole"))
+			Expect(context.RequestReceived).To(Equal(reqReceived))
 		})
 
 		It("falls back to Kind if KindDescription is missing", func() {

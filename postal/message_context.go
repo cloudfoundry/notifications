@@ -2,6 +2,7 @@ package postal
 
 import (
 	"html"
+	"time"
 
 	"github.com/pivotal-golang/conceal"
 )
@@ -30,6 +31,7 @@ type MessageContext struct {
 	Scope             string
 	Endorsement       string
 	OrganizationRole  string
+	RequestReceived   time.Time
 }
 
 func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInterface, templates Templates) MessageContext {
@@ -72,6 +74,7 @@ func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInte
 		Scope:             delivery.Scope,
 		Endorsement:       options.Endorsement,
 		OrganizationRole:  options.Role,
+		RequestReceived:   delivery.RequestReceived,
 	}
 
 	if messageContext.Subject == "" {

@@ -27,6 +27,8 @@ var _ = Describe("Packager", func() {
 			Doctype:        "<!DOCTYPE html>",
 		}
 
+		requestReceivedTime, _ := time.Parse(time.RFC3339Nano, "2015-06-08T14:38:03.180764129-07:00")
+
 		context = postal.MessageContext{
 			From:            "banana man",
 			ReplyTo:         "awesomeness",
@@ -44,6 +46,7 @@ var _ = Describe("Packager", func() {
 			HTMLTemplate:    "<header>{{.Endorsement}}</header>\nBanana preamble {{.HTML}} {{.Text}} {{.ClientID}} {{.MessageID}} {{.UserGUID}}",
 			SubjectTemplate: "The Subject: {{.Subject}}",
 			Endorsement:     "This is an endorsement for the {{.Space}} space and {{.Organization}} org.",
+			RequestReceived: requestReceivedTime,
 		}
 		packager = postal.NewPackager()
 	})
@@ -68,6 +71,7 @@ var _ = Describe("Packager", func() {
 			}))
 			Expect(msg.Headers).To(ContainElement("X-CF-Client-ID: 3&3"))
 			Expect(msg.Headers).To(ContainElement("X-CF-Notification-ID: 4'4"))
+			Expect(msg.Headers).To(ContainElement("X-CF-Notification-Request-Received: 2015-06-08T14:38:03.180764129-07:00"))
 
 			var formattedTimestamp string
 			prefix := "X-CF-Notification-Timestamp: "

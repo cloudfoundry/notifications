@@ -1,6 +1,8 @@
 package fakes
 
 import (
+	"time"
+
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
@@ -17,9 +19,9 @@ func NewStrategy() *Strategy {
 	return &Strategy{}
 }
 
-func (s *Strategy) Dispatch(clientID, guid, vcapRequestID string,
+func (s *Strategy) Dispatch(clientID, guid, vcapRequestID string, requestReceived time.Time,
 	options postal.Options, conn models.ConnectionInterface) ([]strategies.Response, error) {
 
-	s.DispatchArguments = []interface{}{clientID, guid, vcapRequestID, options}
+	s.DispatchArguments = []interface{}{clientID, guid, vcapRequestID, requestReceived, options}
 	return s.Responses, s.Error
 }
