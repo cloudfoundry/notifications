@@ -42,32 +42,39 @@ func (s CC) Close() {
 }
 
 var CCGetSpace = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	json := `{
-       "metadata": {
-          "guid": "space-123",
-          "url": "/v2/spaces/space-123",
-          "created_at": "2014-08-01T17:36:18+00:00",
-          "updated_at": null
-       },
-       "entity": {
-          "name": "notifications-service",
-          "organization_guid": "org-123",
-          "organization_url": "/v2/organizations/org-123",
-          "developers_url": "/v2/spaces/space-123/developers",
-          "managers_url": "/v2/spaces/space-123/managers",
-          "auditors_url": "/v2/spaces/space-123/auditors",
-          "apps_url": "/v2/spaces/space-123/apps",
-          "routes_url": "/v2/spaces/space-123/routes",
-          "domains_url": "/v2/spaces/space-123/domains",
-          "service_instances_url": "/v2/spaces/space-123/service_instances",
-          "app_events_url": "/v2/spaces/space-123/app_events",
-          "events_url": "/v2/spaces/space-123/events",
-          "security_groups_url": "/v2/spaces/space-123/security_groups"
-       }
-    }`
+	vars := mux.Vars(req)
+	guid := vars["guid"]
+	if guid == "space-123" {
+		json := `{
+		   "metadata": {
+			  "guid": "space-123",
+			  "url": "/v2/spaces/space-123",
+			  "created_at": "2014-08-01T17:36:18+00:00",
+			  "updated_at": null
+		   },
+		   "entity": {
+			  "name": "notifications-service",
+			  "organization_guid": "org-123",
+			  "organization_url": "/v2/organizations/org-123",
+			  "developers_url": "/v2/spaces/space-123/developers",
+			  "managers_url": "/v2/spaces/space-123/managers",
+			  "auditors_url": "/v2/spaces/space-123/auditors",
+			  "apps_url": "/v2/spaces/space-123/apps",
+			  "routes_url": "/v2/spaces/space-123/routes",
+			  "domains_url": "/v2/spaces/space-123/domains",
+			  "service_instances_url": "/v2/spaces/space-123/service_instances",
+			  "app_events_url": "/v2/spaces/space-123/app_events",
+			  "events_url": "/v2/spaces/space-123/events",
+			  "security_groups_url": "/v2/spaces/space-123/security_groups"
+		   }
+		}`
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(json))
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(json))
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"code":40004,"description":"The app space could not be found","error_code":"CF-SpaceNotFound"}`))
+	}
 })
 
 var CCGetOrg = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {

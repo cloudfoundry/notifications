@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/pivotal-cf-experimental/rainmaker"
 )
 
 func (cc CloudController) LoadSpace(spaceGuid, token string) (CloudControllerSpace, error) {
@@ -11,7 +12,12 @@ func (cc CloudController) LoadSpace(spaceGuid, token string) (CloudControllerSpa
 
 	space, err := cc.client.Spaces.Get(spaceGuid, token)
 	if err != nil {
-		return CloudControllerSpace{}, NewFailure(0, err.Error())
+		_, ok := err.(rainmaker.NotFoundError)
+		if ok {
+			return CloudControllerSpace{}, NewFailure(404, err.Error())
+		} else {
+			return CloudControllerSpace{}, NewFailure(0, err.Error())
+		}
 	}
 
 	duration := time.Now().Sub(then)

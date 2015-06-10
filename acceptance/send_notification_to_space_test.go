@@ -113,4 +113,35 @@ var _ = Describe("Sending notifications to all users in a space", func() {
 			Expect(data).To(ContainElement(`space in the "notifications-service" organization.`))
 		})
 	})
+
+	It("returns a 404 if the space cannot be found", func() {
+		client := support.NewClient(Servers.Notifications.URL())
+		clientID := "notifications-sender"
+		clientToken := GetClientTokenFor(clientID)
+		spaceID := "banana"
+
+		By("registering a client with a notification", func() {
+			status, err := client.Notifications.Register(clientToken.Access, support.RegisterClient{
+				SourceName: "Notifications Sender",
+				Notifications: map[string]support.RegisterNotification{
+					"space-test": {
+						Description: "Space Test",
+					},
+				},
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNoContent))
+		})
+
+		status, _, err := client.Notify.Space(clientToken.Access, spaceID, support.Notify{
+			KindID:  "space-test",
+			HTML:    "this is a space test",
+			Text:    "this is a space test",
+			Subject: "space-subject",
+		})
+
+		Expect(err).NotTo(HaveOccurred())
+		Expect(status).To(Equal(http.StatusNotFound))
+	})
 })

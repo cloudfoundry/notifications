@@ -12,7 +12,11 @@ import (
 )
 
 var SpacesEndpoint = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	if req.URL.Path != "/v2/spaces/space-guid" {
+	if req.URL.Path == "/v2/spaces/nacho-space" {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`{"code":1234,"description":"This is not allowed.","error_code":"CF-SpaceNotFound"}`))
+		return
+	} else if req.URL.Path != "/v2/spaces/space-guid" {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"code":40004,"description":"The app space could not be found: ` + strings.TrimPrefix(req.URL.Path, "/v2/spaces/") + `","error_code":"CF-SpaceNotFound"}`))
 		return
@@ -68,9 +72,14 @@ var _ = Describe("LoadSpace", func() {
 		Expect(space.OrganizationGUID).To(Equal("first-rate"))
 	})
 
-	It("returns a Failure instance when the space cannot be found", func() {
+	It("returns a 404 error code when the space cannot be found", func() {
 		_, err := cc.LoadSpace("banana", "notification-token")
-
 		Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
+		Expect(err.(cf.Failure).Code).To(Equal(404))
+	})
+	It("returns a 0 error code for any other error", func() {
+		_, err := cc.LoadSpace("nacho-space", "notification-token")
+		Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
+		Expect(err.(cf.Failure).Code).To(Equal(0))
 	})
 })
