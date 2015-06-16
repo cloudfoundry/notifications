@@ -76,6 +76,7 @@ var _ = Describe("LoadSpace", func() {
 		_, err := cc.LoadSpace("banana", "notification-token")
 		Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
 		Expect(err.(cf.Failure).Code).To(Equal(404))
+		Expect(err.Error()).To(Equal(`CloudController Failure (404): Space "banana" could not be found`))
 	})
 	It("returns a 0 error code for any other error", func() {
 		_, err := cc.LoadSpace("nacho-space", "notification-token")

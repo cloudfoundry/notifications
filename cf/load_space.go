@@ -1,6 +1,7 @@
 package cf
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
@@ -14,7 +15,7 @@ func (cc CloudController) LoadSpace(spaceGuid, token string) (CloudControllerSpa
 	if err != nil {
 		_, ok := err.(rainmaker.NotFoundError)
 		if ok {
-			return CloudControllerSpace{}, NewFailure(404, err.Error())
+			return CloudControllerSpace{}, NewFailure(404, fmt.Sprintf("Space %q could not be found", spaceGuid))
 		} else {
 			return CloudControllerSpace{}, NewFailure(0, err.Error())
 		}

@@ -141,7 +141,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 404 when the space cannot be found", func() {
-		writer.Write(recorder, utilities.CCNotFoundError("Organization could not be found"))
+		writer.Write(recorder, utilities.CCNotFoundError("Space could not be found"))
 
 		Expect(recorder.Code).To(Equal(http.StatusNotFound))
 
@@ -151,7 +151,7 @@ var _ = Describe("ErrorWriter", func() {
 			panic(err)
 		}
 
-		Expect(body["errors"]).To(ContainElement("CloudController Error: Organization could not be found"))
+		Expect(body["errors"]).To(ContainElement("CloudController Error: Space could not be found"))
 	})
 
 	It("returns a 400 when the params cannot be parsed due to syntatically invalid JSON", func() {
