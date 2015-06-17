@@ -24,44 +24,22 @@ func NewErrorWriter() ErrorWriter {
 
 func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 	switch err.(type) {
-	case postal.UAAScopesError:
+	case postal.UAAScopesError, postal.CriticalNotificationError, services.TemplateAssignmentError, MissingUserTokenError:
 		writer.write(w, 422, []string{err.Error()})
-	case utilities.CCDownError:
-		writer.write(w, http.StatusBadGateway, []string{err.Error()})
-	case utilities.CCNotFoundError:
-		writer.write(w, http.StatusNotFound, []string{err.Error()})
-	case postal.UAADownError:
-		writer.write(w, http.StatusBadGateway, []string{err.Error()})
-	case postal.UAAGenericError:
-		writer.write(w, http.StatusBadGateway, []string{err.Error()})
-	case postal.TemplateLoadError:
-		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
-	case params.TemplateCreateError:
-		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
-	case models.TemplateFindError:
-		writer.write(w, http.StatusNotFound, []string{err.Error()})
-	case models.TemplateUpdateError:
-		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
-	case params.ParseError:
-		writer.write(w, http.StatusBadRequest, []string{err.Error()})
 	case params.ValidationError:
 		writer.write(w, 422, err.(params.ValidationError).Errors())
-	case params.SchemaError:
+	case utilities.CCDownError, postal.UAADownError, postal.UAAGenericError:
+		writer.write(w, http.StatusBadGateway, []string{err.Error()})
+	case utilities.CCNotFoundError, models.TemplateFindError, models.RecordNotFoundError:
+		writer.write(w, http.StatusNotFound, []string{err.Error()})
+	case postal.TemplateLoadError, params.TemplateCreateError, models.TemplateUpdateError, models.TransactionCommitError:
+		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
+	case params.ParseError, params.SchemaError:
 		writer.write(w, http.StatusBadRequest, []string{err.Error()})
-	case postal.CriticalNotificationError:
-		writer.write(w, 422, []string{err.Error()})
 	case models.DuplicateRecordError:
 		writer.write(w, http.StatusConflict, []string{err.Error()})
-	case models.RecordNotFoundError:
-		writer.write(w, http.StatusNotFound, []string{err.Error()})
-	case models.TransactionCommitError:
-		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
 	case strategies.DefaultScopeError:
 		writer.write(w, http.StatusNotAcceptable, []string{err.Error()})
-	case services.TemplateAssignmentError:
-		writer.write(w, 422, []string{err.Error()})
-	case MissingUserTokenError:
-		writer.write(w, 422, []string{err.Error()})
 	default:
 		panic(err) // This panic will trigger the Stack recovery handler
 	}
