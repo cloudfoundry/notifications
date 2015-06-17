@@ -72,7 +72,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, users []User,
 
 	transaction := conn.Transaction()
 	transaction.Begin()
-	for messageID, _ := range jobsByMessageID {
+	for messageID := range jobsByMessageID {
 		_, err := mailer.messagesRepo.Upsert(transaction, models.Message{
 			ID:     messageID,
 			Status: postal.StatusQueued,

@@ -145,11 +145,11 @@ var _ = Describe("TemplatesRepo", func() {
 				conn.Insert(&secondTemplate)
 
 				expectedMetadata := []models.Template{
-					models.Template{
+					{
 						ID:   "raptor_template",
 						Name: "Raptors On The Run",
 					},
-					models.Template{
+					{
 						ID:   "star_template",
 						Name: "Shooting Stars",
 					},

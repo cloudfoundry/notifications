@@ -205,7 +205,7 @@ var UAAUsersByScope = map[string]interface{}{
 }
 
 var UAAUsers = map[string]map[string]interface{}{
-	"user-111": map[string]interface{}{
+	"user-111": {
 		"id": "user-111",
 		"meta": map[string]interface{}{
 			"version":      4,
@@ -230,7 +230,7 @@ var UAAUsers = map[string]map[string]interface{}{
 		"origin":    "uaa",
 		"schemas":   []string{"urn:scim:schemas:core:1.0"},
 	},
-	"user-123": map[string]interface{}{
+	"user-123": {
 		"id": "user-123",
 		"meta": map[string]interface{}{
 			"version":      4,
@@ -255,7 +255,7 @@ var UAAUsers = map[string]map[string]interface{}{
 		"origin":    "uaa",
 		"schemas":   []string{"urn:scim:schemas:core:1.0"},
 	},
-	"user-456": map[string]interface{}{
+	"user-456": {
 		"id": "user-456",
 		"meta": map[string]interface{}{
 			"version":      4,
@@ -280,7 +280,7 @@ var UAAUsers = map[string]map[string]interface{}{
 		"origin":    "uaa",
 		"schemas":   []string{"urn:scim:schemas:core:1.0"},
 	},
-	"user-789": map[string]interface{}{
+	"user-789": {
 		"id": "user-789",
 		"meta": map[string]interface{}{
 			"version":      4,
@@ -305,7 +305,7 @@ var UAAUsers = map[string]map[string]interface{}{
 		"origin":    "uaa",
 		"schemas":   []string{"urn:scim:schemas:core:1.0"},
 	},
-	"user-369": map[string]interface{}{
+	"user-369": {
 		"id": "user-369",
 		"meta": map[string]interface{}{
 			"version":      4,
@@ -335,7 +335,7 @@ var UAAUsers = map[string]map[string]interface{}{
 		"origin":    "uaa",
 		"schemas":   []string{"urn:scim:schemas:core:1.0"},
 	},
-	"091b6583-0933-4d17-a5b6-66e54666c88e": map[string]interface{}{
+	"091b6583-0933-4d17-a5b6-66e54666c88e": {
 		"id": "091b6583-0933-4d17-a5b6-66e54666c88e",
 		"meta": map[string]interface{}{
 			"version":      6,
@@ -362,7 +362,7 @@ var UAAUsers = map[string]map[string]interface{}{
 		"verified":  false,
 		"schemas":   []string{"urn:scim:schemas:core:1.0"},
 	},
-	"943e6076-b1a5-4404-811b-a1ee9253bf56": map[string]interface{}{
+	"943e6076-b1a5-4404-811b-a1ee9253bf56": {
 		"id": "943e6076-b1a5-4404-811b-a1ee9253bf56",
 		"meta": map[string]interface{}{
 			"version":      6,

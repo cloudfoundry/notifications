@@ -47,8 +47,8 @@ var _ = Describe("FindsUserGUIDs", func() {
 	Context("when looking for GUIDs belonging to a space", func() {
 		BeforeEach(func() {
 			cc.UsersBySpaceGuid["space-001"] = []cf.CloudControllerUser{
-				cf.CloudControllerUser{GUID: "user-123"},
-				cf.CloudControllerUser{GUID: "user-789"},
+				{GUID: "user-123"},
+				{GUID: "user-789"},
 			}
 		})
 
@@ -75,8 +75,8 @@ var _ = Describe("FindsUserGUIDs", func() {
 	Context("when looking for GUIDs belonging to an organization", func() {
 		BeforeEach(func() {
 			cc.UsersByOrganizationGuid["org-001"] = []cf.CloudControllerUser{
-				cf.CloudControllerUser{GUID: "user-456"},
-				cf.CloudControllerUser{GUID: "user-001"},
+				{GUID: "user-456"},
+				{GUID: "user-001"},
 			}
 		})
 
@@ -102,8 +102,8 @@ var _ = Describe("FindsUserGUIDs", func() {
 		Context("when the role is OrgManager", func() {
 			BeforeEach(func() {
 				cc.ManagersByOrganization["org-001"] = []cf.CloudControllerUser{
-					cf.CloudControllerUser{GUID: "user-678"},
-					cf.CloudControllerUser{GUID: "user-xxx"},
+					{GUID: "user-678"},
+					{GUID: "user-xxx"},
 				}
 			})
 
@@ -118,8 +118,8 @@ var _ = Describe("FindsUserGUIDs", func() {
 		Context("when the role is OrgAuditor", func() {
 			BeforeEach(func() {
 				cc.AuditorsByOrganization["org-001"] = []cf.CloudControllerUser{
-					cf.CloudControllerUser{GUID: "user-abc"},
-					cf.CloudControllerUser{GUID: "user-zzz"},
+					{GUID: "user-abc"},
+					{GUID: "user-zzz"},
 				}
 			})
 
@@ -134,8 +134,8 @@ var _ = Describe("FindsUserGUIDs", func() {
 		Context("when the role is BillingManager", func() {
 			BeforeEach(func() {
 				cc.BillingManagersByOrganization["org-001"] = []cf.CloudControllerUser{
-					cf.CloudControllerUser{GUID: "user-jkl"},
-					cf.CloudControllerUser{GUID: "user-aaa"},
+					{GUID: "user-jkl"},
+					{GUID: "user-aaa"},
 				}
 			})
 

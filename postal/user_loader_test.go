@@ -31,15 +31,15 @@ var _ = Describe("UserLoader", func() {
 				Access: token,
 			}
 			uaaClient.UsersByID = map[string]uaa.User{
-				"user-123": uaa.User{
+				"user-123": {
 					Emails: []string{"user-123@example.com"},
 					ID:     "user-123",
 				},
-				"user-456": uaa.User{
+				"user-456": {
 					Emails: []string{"user-456@example.com"},
 					ID:     "user-456",
 				},
-				"user-999": uaa.User{
+				"user-999": {
 					Emails: []string{"user-999@example.com"},
 					ID:     "user-999",
 				},
