@@ -20,7 +20,7 @@ var _ = Describe("SpaceLoader", func() {
 		BeforeEach(func() {
 			cc = fakes.NewCloudController()
 			cc.Spaces = map[string]cf.CloudControllerSpace{
-				"space-001": cf.CloudControllerSpace{
+				"space-001": {
 					GUID:             "space-001",
 					Name:             "space-name",
 					OrganizationGUID: "org-001",

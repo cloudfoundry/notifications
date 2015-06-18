@@ -22,7 +22,7 @@ func reportExtraKeys(typed interface{}, untyped interface{}) error {
 		expectedTags = append(expectedTags, jsonName(parentType.Field(i)))
 	}
 
-	for key, _ := range parentUntyped {
+	for key := range parentUntyped {
 		actualTags = append(actualTags, key)
 	}
 

@@ -30,35 +30,35 @@ var _ = Describe("TemplateLister", func() {
 		Context("when the templates exists in the database", func() {
 			BeforeEach(func() {
 				testTemplates := []models.Template{
-					models.Template{
+					{
 						ID:      "starwarr-guid",
 						Name:    "Star Wars",
 						Subject: "Awesomeness",
 						HTML:    "<p>Millenium Falcon</p>",
 						Text:    "Millenium Falcon",
 					},
-					models.Template{
+					{
 						ID:      models.DefaultTemplateID,
 						Name:    "default name",
 						Subject: "default subject",
 						HTML:    "<h1>default</h1>",
 						Text:    "defaults!",
 					},
-					models.Template{
+					{
 						ID:      "robot-guid",
 						Name:    "Big Hero 6",
 						Subject: "Heroes",
 						HTML:    "<h1>Robots!</h1>",
 						Text:    "Robots!",
 					},
-					models.Template{
+					{
 						ID:      "boring-guid",
 						Name:    "Blah",
 						Subject: "More Blah",
 						HTML:    "<h1>This is blahblah</h1>",
 						Text:    "Blah even more",
 					},
-					models.Template{
+					{
 						ID:      "starvation-guid",
 						Name:    "Hungry Play",
 						Subject: "Dystopian",

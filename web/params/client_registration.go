@@ -35,7 +35,7 @@ func NewClientRegistration(body io.Reader) (ClientRegistration, error) {
 		return clientRegistration, err
 	}
 
-	for id, _ := range clientRegistration.Notifications {
+	for id := range clientRegistration.Notifications {
 		clientRegistration.Notifications[id].ID = id
 	}
 
@@ -49,7 +49,7 @@ func strictValidateJSON(bytes []byte) error {
 		return err
 	}
 
-	for key, _ := range untypedClientRegistration {
+	for key := range untypedClientRegistration {
 		if key == "source_name" {
 			continue
 		} else if key == "notifications" {
@@ -62,7 +62,7 @@ func strictValidateJSON(bytes []byte) error {
 					return SchemaError(fmt.Sprintf(`notification must not be null`))
 				}
 				notificationMap := notificationData.(map[string]interface{})
-				for propertyName, _ := range notificationMap {
+				for propertyName := range notificationMap {
 					if propertyName == "description" || propertyName == "critical" {
 						continue
 					} else {

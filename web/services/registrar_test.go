@@ -146,7 +146,7 @@ var _ = Describe("Registrar", func() {
 
 		Context("when kind is an empty record", func() {
 			It("does nothing", func() {
-				err := registrar.Register(conn, models.Client{}, []models.Kind{models.Kind{}})
+				err := registrar.Register(conn, models.Client{}, []models.Kind{{}})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(kindsRepo.Kinds).To(HaveLen(0))
 			})

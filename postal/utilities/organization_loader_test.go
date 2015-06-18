@@ -20,10 +20,11 @@ var _ = Describe("OrganizationLoader", func() {
 		BeforeEach(func() {
 			cc = fakes.NewCloudController()
 			cc.Orgs = map[string]cf.CloudControllerOrganization{
-				"org-001": cf.CloudControllerOrganization{
+				"org-001": {
 					GUID: "org-001",
 					Name: "org-name",
-				}, "org-123": cf.CloudControllerOrganization{
+				},
+				"org-123": {
 					GUID: "org-123",
 					Name: "org-piggies",
 				},

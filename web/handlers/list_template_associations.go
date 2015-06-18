@@ -47,7 +47,7 @@ func (handler ListTemplateAssociations) parseTemplateID(path string) string {
 
 func (handler ListTemplateAssociations) mapToJSON(associations []services.TemplateAssociation) map[string][]TemplateAssociation {
 	structure := map[string][]TemplateAssociation{
-		"associations": []TemplateAssociation{},
+		"associations": {},
 	}
 
 	for _, association := range associations {
