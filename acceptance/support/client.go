@@ -18,6 +18,7 @@ type Client struct {
 	Notify        *NotifyService
 	Preferences   *PreferencesService
 	Messages      *MessagesService
+	HTTPClient    *http.Client
 }
 
 func NewClient(host string) *Client {
@@ -44,6 +45,7 @@ func NewClient(host string) *Client {
 	client.Messages = &MessagesService{
 		client: client,
 	}
+	client.HTTPClient = http.DefaultClient
 
 	return client
 }
@@ -60,7 +62,7 @@ func (c Client) makeRequest(method, path string, content io.Reader, token string
 		request.Header.Set("X-Vcap-Request-Id", "some-totally-fake-vcap-request-id")
 	}
 
-	response, err := http.DefaultClient.Do(request)
+	response, err := c.HTTPClient.Do(request)
 	if err != nil {
 		return 0, nil, err
 	}
