@@ -70,38 +70,65 @@ func NewRouter(mother MotherInterface, config Config) Router {
 	router := mux.NewRouter()
 	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
+	infoStack := map[string]stack.Stack{
+		"GET /info": stack.NewStack(handlers.NewGetInfo()).Use(logging, requestCounter),
+	}
+
+	notificationsStack := map[string]stack.Stack{
+		"POST /users/{user_id}":        stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, userStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
+		"POST /spaces/{space_id}":      stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, spaceStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
+		"POST /organizations/{org_id}": stack.NewStack(handlers.NewNotifyOrganization(notify, errorWriter, organizationStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
+		"POST /everyone":               stack.NewStack(handlers.NewNotifyEveryone(notify, errorWriter, everyoneStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
+		"POST /uaa_scopes/{scope}":     stack.NewStack(handlers.NewNotifyUAAScope(notify, errorWriter, uaaScopeStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
+		"POST /emails":                 stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailStrategy)).Use(logging, requestCounter, emailsWriteAuthenticator, databaseAllocator),
+	}
+
+	registrationStack := map[string]stack.Stack{
+		"PUT /registration":  stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
+		"PUT /notifications": stack.NewStack(handlers.NewRegisterClientWithNotifications(registrar, errorWriter)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
+		"GET /notifications": stack.NewStack(handlers.NewGetAllNotifications(notificationsFinder, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
+	}
+
+	userPreferencesStack := map[string]stack.Stack{
+		"OPTIONS /user_preferences":           stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors),
+		"OPTIONS /user_preferences/{user_id}": stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors),
+		"GET /user_preferences":               stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesReadAuthenticator, databaseAllocator),
+		"GET /user_preferences/{user_id}":     stack.NewStack(handlers.NewGetPreferencesForUser(preferencesFinder, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesAdminAuthenticator, databaseAllocator),
+		"PATCH /user_preferences":             stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesWriteAuthenticator, databaseAllocator),
+		"PATCH /user_preferences/{user_id}":   stack.NewStack(handlers.NewUpdateSpecificUserPreferences(preferenceUpdater, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesAdminAuthenticator, databaseAllocator),
+	}
+
+	templatesStack := map[string]stack.Stack{
+		"GET /default_template":                     stack.NewStack(handlers.NewGetDefaultTemplate(templateFinder, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator),
+		"PUT /default_template":                     stack.NewStack(handlers.NewUpdateDefaultTemplate(templateUpdater, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator),
+		"POST /templates":                           stack.NewStack(handlers.NewCreateTemplate(templateCreator, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator),
+		"GET /templates/{template_id}":              stack.NewStack(handlers.NewGetTemplates(templateFinder, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator),
+		"PUT /templates/{template_id}":              stack.NewStack(handlers.NewUpdateTemplates(templateUpdater, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator),
+		"DELETE /templates/{template_id}":           stack.NewStack(handlers.NewDeleteTemplates(templateDeleter, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator),
+		"GET /templates/{template_id}/associations": stack.NewStack(handlers.NewListTemplateAssociations(templateAssociationLister, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
+		"GET /templates":                            stack.NewStack(handlers.NewListTemplates(templateLister, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator),
+	}
+
+	clientsStack := map[string]stack.Stack{
+		"PUT /clients/{client_id}/template":                                 stack.NewStack(handlers.NewAssignClientTemplate(templateAssigner, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
+		"PUT /clients/{client_id}/notifications/{notification_id}":          stack.NewStack(handlers.NewUpdateNotifications(notificationsUpdater, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
+		"PUT /clients/{client_id}/notifications/{notification_id}/template": stack.NewStack(handlers.NewAssignNotificationTemplate(templateAssigner, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
+	}
+
+	messagesStack := map[string]stack.Stack{
+		"GET /messages/{message_id}": stack.NewStack(handlers.NewGetMessages(messageFinder, errorWriter)).Use(logging, requestCounter, notificationsWriteOrEmailsWriteAuthenticator, databaseAllocator),
+	}
+
+	stacks := make(map[string]stack.Stack)
+	for _, s := range []map[string]stack.Stack{infoStack, notificationsStack, registrationStack, userPreferencesStack, templatesStack, clientsStack, messagesStack} {
+		for route, handler := range s {
+			stacks[route] = handler
+		}
+	}
+
 	return Router{
 		router: router,
-		stacks: map[string]stack.Stack{
-			"GET /info":                                                         stack.NewStack(handlers.NewGetInfo()).Use(logging, requestCounter),
-			"POST /users/{user_id}":                                             stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, userStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
-			"POST /spaces/{space_id}":                                           stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, spaceStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
-			"POST /organizations/{org_id}":                                      stack.NewStack(handlers.NewNotifyOrganization(notify, errorWriter, organizationStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
-			"POST /everyone":                                                    stack.NewStack(handlers.NewNotifyEveryone(notify, errorWriter, everyoneStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
-			"POST /uaa_scopes/{scope}":                                          stack.NewStack(handlers.NewNotifyUAAScope(notify, errorWriter, uaaScopeStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
-			"POST /emails":                                                      stack.NewStack(handlers.NewNotifyEmail(notify, errorWriter, emailStrategy)).Use(logging, requestCounter, emailsWriteAuthenticator, databaseAllocator),
-			"PUT /registration":                                                 stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
-			"PUT /notifications":                                                stack.NewStack(handlers.NewRegisterClientWithNotifications(registrar, errorWriter)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator),
-			"GET /notifications":                                                stack.NewStack(handlers.NewGetAllNotifications(notificationsFinder, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
-			"OPTIONS /user_preferences":                                         stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors),
-			"OPTIONS /user_preferences/{user_id}":                               stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors),
-			"GET /user_preferences":                                             stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesReadAuthenticator, databaseAllocator),
-			"GET /user_preferences/{user_id}":                                   stack.NewStack(handlers.NewGetPreferencesForUser(preferencesFinder, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesAdminAuthenticator, databaseAllocator),
-			"PATCH /user_preferences":                                           stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesWriteAuthenticator, databaseAllocator),
-			"PATCH /user_preferences/{user_id}":                                 stack.NewStack(handlers.NewUpdateSpecificUserPreferences(preferenceUpdater, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesAdminAuthenticator, databaseAllocator),
-			"GET /default_template":                                             stack.NewStack(handlers.NewGetDefaultTemplate(templateFinder, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator),
-			"PUT /default_template":                                             stack.NewStack(handlers.NewUpdateDefaultTemplate(templateUpdater, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator),
-			"POST /templates":                                                   stack.NewStack(handlers.NewCreateTemplate(templateCreator, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator),
-			"GET /templates/{template_id}":                                      stack.NewStack(handlers.NewGetTemplates(templateFinder, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator),
-			"PUT /templates/{template_id}":                                      stack.NewStack(handlers.NewUpdateTemplates(templateUpdater, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator),
-			"DELETE /templates/{template_id}":                                   stack.NewStack(handlers.NewDeleteTemplates(templateDeleter, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator),
-			"GET /templates/{template_id}/associations":                         stack.NewStack(handlers.NewListTemplateAssociations(templateAssociationLister, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
-			"GET /templates":                                                    stack.NewStack(handlers.NewListTemplates(templateLister, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator),
-			"PUT /clients/{client_id}/template":                                 stack.NewStack(handlers.NewAssignClientTemplate(templateAssigner, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
-			"PUT /clients/{client_id}/notifications/{notification_id}":          stack.NewStack(handlers.NewUpdateNotifications(notificationsUpdater, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
-			"PUT /clients/{client_id}/notifications/{notification_id}/template": stack.NewStack(handlers.NewAssignNotificationTemplate(templateAssigner, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
-			"GET /messages/{message_id}":                                        stack.NewStack(handlers.NewGetMessages(messageFinder, errorWriter)).Use(logging, requestCounter, notificationsWriteOrEmailsWriteAuthenticator, databaseAllocator),
-		},
+		stacks: stacks,
 	}
 }
 
