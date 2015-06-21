@@ -39,6 +39,7 @@ func (app Application) Boot() {
 	app.ConfigureSMTP(session)
 	app.RetrieveUAAPublicKey(session)
 	app.migrator.Migrate()
+	app.StartQueueGauge()
 	app.StartWorkers()
 	app.StartMessageGC()
 	app.StartServer(session)
@@ -91,10 +92,16 @@ func (app Application) RetrieveUAAPublicKey(logger lager.Logger) {
 	})
 }
 
-func (app Application) StartWorkers() {
+func (app Application) StartQueueGauge() {
+	if app.env.VCAPApplication.InstanceIndex != 0 {
+		return
+	}
+
 	queueGauge := metrics.NewQueueGauge(app.mother.Queue(), metrics.DefaultLogger, time.Tick(1*time.Second))
 	go queueGauge.Run()
+}
 
+func (app Application) StartWorkers() {
 	WorkerGenerator{
 		InstanceIndex: app.env.VCAPApplication.InstanceIndex,
 		Count:         WorkerCount,
