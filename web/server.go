@@ -13,8 +13,7 @@ type Config struct {
 	DBLoggingEnabled bool
 }
 
-type Server struct {
-}
+type Server struct{}
 
 func NewServer() Server {
 	return Server{}
