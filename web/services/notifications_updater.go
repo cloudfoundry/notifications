@@ -2,6 +2,10 @@ package services
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
+type NotificationsUpdaterInterface interface {
+	Update(models.DatabaseInterface, models.Kind) error
+}
+
 type NotificationsUpdater struct {
 	kindsRepo models.KindsRepoInterface
 }

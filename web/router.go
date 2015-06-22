@@ -40,6 +40,8 @@ type Router struct {
 }
 
 func NewRouter(mother MotherInterface, config Config) Router {
+	router := mux.NewRouter()
+
 	registrar := mother.Registrar()
 	notificationsFinder := mother.NotificationsFinder()
 	emailStrategy := mother.EmailStrategy()
@@ -67,19 +69,25 @@ func NewRouter(mother MotherInterface, config Config) Router {
 	notificationsWriteOrEmailsWriteAuthenticator := mother.Authenticator("notifications.write", "emails.write")
 	databaseAllocator := middleware.NewDatabaseAllocator(mother.SQLDatabase(), config.DBLoggingEnabled)
 	cors := mother.CORS()
-	router := mux.NewRouter()
 	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
-	infoStack := newInfoStack(logging, requestCounter)
-	notificationsStack := newNotificationsStack(notify, errorWriter, userStrategy, logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator, spaceStrategy, organizationStrategy, everyoneStrategy, uaaScopeStrategy, emailStrategy, emailsWriteAuthenticator)
+	userPreferencesRouter := NewUserPreferencesRouter(logging, cors, preferencesFinder, errorWriter, notificationPreferencesReadAuthenticator, databaseAllocator, notificationPreferencesAdminAuthenticator, preferenceUpdater, notificationPreferencesWriteAuthenticator)
+	clientsRouter := NewClientsRouter(templateAssigner, errorWriter, logging, notificationsManageAuthenticator, databaseAllocator, notificationsUpdater)
+	messagesRouter := NewMessagesRouter(messageFinder, errorWriter, logging, notificationsWriteOrEmailsWriteAuthenticator, databaseAllocator)
+	templatesRouter := NewTemplatesRouter(templateFinder, errorWriter, logging, notificationsTemplateReadAuthenticator, notificationsTemplateWriteAuthenticator, databaseAllocator, templateUpdater, templateCreator, templateDeleter, templateAssociationLister, notificationsManageAuthenticator, templateLister)
+
+	router.Handle("/info", NewInfoRouter(logging))
+	router.Handle("/user_preferences{anything:.*}", userPreferencesRouter)
+	router.Handle("/clients{anything:.*}", clientsRouter)
+	router.Handle("/messages{anything:.*}", messagesRouter)
+	router.Handle("/default_template{anything:.*}", templatesRouter)
+	router.Handle("/templates{anything:.*}", templatesRouter)
+
 	registrationStack := newRegistrationStack(registrar, errorWriter, logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator, notificationsFinder, notificationsManageAuthenticator)
-	userPreferencesStack := newUserPreferencesStack(logging, requestCounter, cors, preferencesFinder, errorWriter, notificationPreferencesReadAuthenticator, databaseAllocator, notificationPreferencesAdminAuthenticator, preferenceUpdater, notificationPreferencesWriteAuthenticator)
-	templatesStack := newTemplateStack(templateFinder, errorWriter, logging, requestCounter, notificationsTemplateReadAuthenticator, notificationsTemplateWriteAuthenticator, databaseAllocator, templateUpdater, templateCreator, templateDeleter, templateAssociationLister, notificationsManageAuthenticator, templateLister)
-	clientsStack := newClientsStack(templateAssigner, errorWriter, logging, requestCounter, notificationsManageAuthenticator, databaseAllocator, notificationsUpdater)
-	messagesStack := newMessagesStack(messageFinder, errorWriter, logging, requestCounter, notificationsWriteOrEmailsWriteAuthenticator, databaseAllocator)
+	notificationsStack := newNotificationsStack(notify, errorWriter, userStrategy, logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator, spaceStrategy, organizationStrategy, everyoneStrategy, uaaScopeStrategy, emailStrategy, emailsWriteAuthenticator)
 
 	stacks := make(map[string]stack.Stack)
-	for _, s := range []map[string]stack.Stack{infoStack, notificationsStack, registrationStack, userPreferencesStack, templatesStack, clientsStack, messagesStack} {
+	for _, s := range []map[string]stack.Stack{notificationsStack, registrationStack} {
 		for route, handler := range s {
 			stacks[route] = handler
 		}
@@ -89,13 +97,6 @@ func NewRouter(mother MotherInterface, config Config) Router {
 		router: router,
 		stacks: stacks,
 	}
-}
-
-func newInfoStack(logging middleware.RequestLogging, requestCounter middleware.RequestCounter) map[string]stack.Stack {
-	return map[string]stack.Stack{
-		"GET /info": stack.NewStack(handlers.NewGetInfo()).Use(logging, requestCounter),
-	}
-
 }
 
 func newNotificationsStack(notify handlers.Notify, errorWriter handlers.ErrorWriter, userStrategy strategies.UserStrategy, logging middleware.RequestLogging, requestCounter middleware.RequestCounter, notificationsWriteAuthenticator middleware.Authenticator, databaseAllocator middleware.DatabaseAllocator, spaceStrategy strategies.SpaceStrategy, organizationStrategy strategies.OrganizationStrategy, everyoneStrategy strategies.EveryoneStrategy, uaaScopeStrategy strategies.UAAScopeStrategy, emailStrategy strategies.EmailStrategy, emailsWriteAuthenticator middleware.Authenticator) map[string]stack.Stack {
@@ -117,49 +118,12 @@ func newRegistrationStack(registrar services.Registrar, errorWriter handlers.Err
 	}
 }
 
-func newUserPreferencesStack(logging middleware.RequestLogging, requestCounter middleware.RequestCounter, cors middleware.CORS, preferencesFinder services.PreferencesFinderInterface, errorWriter handlers.ErrorWriter, notificationPreferencesReadAuthenticator middleware.Authenticator, databaseAllocator middleware.DatabaseAllocator, notificationPreferencesAdminAuthenticator middleware.Authenticator, preferenceUpdater services.PreferenceUpdaterInterface, notificationPreferencesWriteAuthenticator middleware.Authenticator) map[string]stack.Stack {
-	return map[string]stack.Stack{
-		"OPTIONS /user_preferences":           stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors),
-		"OPTIONS /user_preferences/{user_id}": stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors),
-		"GET /user_preferences":               stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesReadAuthenticator, databaseAllocator),
-		"GET /user_preferences/{user_id}":     stack.NewStack(handlers.NewGetPreferencesForUser(preferencesFinder, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesAdminAuthenticator, databaseAllocator),
-		"PATCH /user_preferences":             stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesWriteAuthenticator, databaseAllocator),
-		"PATCH /user_preferences/{user_id}":   stack.NewStack(handlers.NewUpdateSpecificUserPreferences(preferenceUpdater, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesAdminAuthenticator, databaseAllocator),
-	}
-}
-
-func newTemplateStack(templateFinder services.TemplateFinderInterface, errorWriter handlers.ErrorWriter, logging middleware.RequestLogging, requestCounter middleware.RequestCounter, notificationsTemplateReadAuthenticator middleware.Authenticator, notificationsTemplateWriteAuthenticator middleware.Authenticator, databaseAllocator middleware.DatabaseAllocator, templateUpdater services.TemplateUpdaterInterface, templateCreator services.TemplateCreatorInterface, templateDeleter services.TemplateDeleterInterface, templateAssociationLister services.TemplateAssociationListerInterface, notificationsManageAuthenticator middleware.Authenticator, templateLister services.TemplateListerInterface) map[string]stack.Stack {
-	return map[string]stack.Stack{
-		"GET /default_template":                     stack.NewStack(handlers.NewGetDefaultTemplate(templateFinder, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator),
-		"PUT /default_template":                     stack.NewStack(handlers.NewUpdateDefaultTemplate(templateUpdater, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator),
-		"POST /templates":                           stack.NewStack(handlers.NewCreateTemplate(templateCreator, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator),
-		"GET /templates/{template_id}":              stack.NewStack(handlers.NewGetTemplates(templateFinder, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator),
-		"PUT /templates/{template_id}":              stack.NewStack(handlers.NewUpdateTemplates(templateUpdater, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator),
-		"DELETE /templates/{template_id}":           stack.NewStack(handlers.NewDeleteTemplates(templateDeleter, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator),
-		"GET /templates/{template_id}/associations": stack.NewStack(handlers.NewListTemplateAssociations(templateAssociationLister, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
-		"GET /templates":                            stack.NewStack(handlers.NewListTemplates(templateLister, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator),
-	}
-}
-
-func newClientsStack(templateAssigner services.TemplateAssigner, errorWriter handlers.ErrorWriter, logging middleware.RequestLogging, requestCounter middleware.RequestCounter, notificationsManageAuthenticator middleware.Authenticator, databaseAllocator middleware.DatabaseAllocator, notificationsUpdater services.NotificationsUpdater) map[string]stack.Stack {
-	return map[string]stack.Stack{
-		"PUT /clients/{client_id}/template":                                 stack.NewStack(handlers.NewAssignClientTemplate(templateAssigner, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
-		"PUT /clients/{client_id}/notifications/{notification_id}":          stack.NewStack(handlers.NewUpdateNotifications(notificationsUpdater, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
-		"PUT /clients/{client_id}/notifications/{notification_id}/template": stack.NewStack(handlers.NewAssignNotificationTemplate(templateAssigner, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator),
-	}
-}
-
-func newMessagesStack(messageFinder services.MessageFinder, errorWriter handlers.ErrorWriter, logging middleware.RequestLogging, requestCounter middleware.RequestCounter, notificationsWriteOrEmailsWriteAuthenticator middleware.Authenticator, databaseAllocator middleware.DatabaseAllocator) map[string]stack.Stack {
-	return map[string]stack.Stack{
-		"GET /messages/{message_id}": stack.NewStack(handlers.NewGetMessages(messageFinder, errorWriter)).Use(logging, requestCounter, notificationsWriteOrEmailsWriteAuthenticator, databaseAllocator),
-	}
-}
-
-func (router Router) Routes() *mux.Router {
-	for methodPath, stack := range router.stacks {
+func (r Router) Routes() *mux.Router {
+	for methodPath, stack := range r.stacks {
 		var name = methodPath
 		parts := strings.SplitN(methodPath, " ", 2)
-		router.router.Handle(parts[1], stack).Methods(parts[0]).Name(name)
+		r.router.Handle(parts[1], stack).Methods(parts[0]).Name(name)
 	}
-	return router.router
+
+	return r.router
 }

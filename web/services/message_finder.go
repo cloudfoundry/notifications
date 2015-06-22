@@ -10,6 +10,10 @@ type MessagesRepoInterface interface {
 	FindByID(models.ConnectionInterface, string) (models.Message, error)
 }
 
+type MessageFinderInterface interface {
+	Find(models.DatabaseInterface, string) (Message, error)
+}
+
 type MessageFinder struct {
 	repo MessagesRepoInterface
 }
