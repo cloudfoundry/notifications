@@ -20,10 +20,9 @@ func NewServer() Server {
 }
 
 func (s Server) Run(mother MotherInterface, config Config) {
-	router := NewRouter(mother, config)
 	config.Logger.Info("listen-and-serve", lager.Data{
 		"port": config.Port,
 	})
 
-	http.ListenAndServe(":"+strconv.Itoa(config.Port), router.Routes())
+	http.ListenAndServe(":"+strconv.Itoa(config.Port), NewRouter(mother, config))
 }

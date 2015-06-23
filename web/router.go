@@ -2,14 +2,13 @@ package web
 
 import (
 	"database/sql"
-	"strings"
+	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/gorilla/mux"
-	"github.com/ryanmoran/stack"
 )
 
 type MotherInterface interface {
@@ -33,12 +32,7 @@ type MotherInterface interface {
 	SQLDatabase() *sql.DB
 }
 
-type Router struct {
-	stacks map[string]stack.Stack
-	router *mux.Router
-}
-
-func NewRouter(mother MotherInterface, config Config) Router {
+func NewRouter(mother MotherInterface, config Config) http.Handler {
 	registrar := mother.Registrar()
 	notificationsFinder := mother.NotificationsFinder()
 	emailStrategy := mother.EmailStrategy()
@@ -85,25 +79,5 @@ func NewRouter(mother MotherInterface, config Config) Router {
 	router.Handle("/notifications", notificationsRouter)
 	router.Handle("/{anything:.*}", notifyRouter)
 
-	stacks := make(map[string]stack.Stack)
-	for _, s := range []map[string]stack.Stack{} {
-		for route, handler := range s {
-			stacks[route] = handler
-		}
-	}
-
-	return Router{
-		router: router,
-		stacks: stacks,
-	}
-}
-
-func (r Router) Routes() *mux.Router {
-	for methodPath, stack := range r.stacks {
-		var name = methodPath
-		parts := strings.SplitN(methodPath, " ", 2)
-		r.router.Handle(parts[1], stack).Methods(parts[0]).Name(name)
-	}
-
-	return r.router
+	return router
 }
