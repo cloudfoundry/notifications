@@ -8,7 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/services"
-	"github.com/gorilla/mux"
 )
 
 type MotherInterface interface {
@@ -68,16 +67,14 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	notificationsRouter := NewNotificationsRouter(registrar, errorWriter, logging, notificationsWriteAuthenticator, databaseAllocator, notificationsFinder, notificationsManageAuthenticator)
 	notifyRouter := NewNotifyRouter(notify, errorWriter, userStrategy, logging, notificationsWriteAuthenticator, databaseAllocator, spaceStrategy, organizationStrategy, everyoneStrategy, uaaScopeStrategy, emailStrategy, emailsWriteAuthenticator)
 
-	router := mux.NewRouter()
-	router.Handle("/info", NewInfoRouter(logging))
-	router.Handle("/user_preferences{anything:.*}", userPreferencesRouter)
-	router.Handle("/clients{anything:.*}", clientsRouter)
-	router.Handle("/messages{anything:.*}", messagesRouter)
-	router.Handle("/default_template{anything:.*}", templatesRouter)
-	router.Handle("/templates{anything:.*}", templatesRouter)
-	router.Handle("/registration", notificationsRouter)
-	router.Handle("/notifications", notificationsRouter)
-	router.Handle("/{anything:.*}", notifyRouter)
+	pool := NewRouterPool()
+	pool.AddMux(NewInfoRouter(logging))
+	pool.AddMux(userPreferencesRouter)
+	pool.AddMux(clientsRouter)
+	pool.AddMux(messagesRouter)
+	pool.AddMux(templatesRouter)
+	pool.AddMux(notificationsRouter)
+	pool.AddMux(notifyRouter)
 
-	return router
+	return pool
 }

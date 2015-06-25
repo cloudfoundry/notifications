@@ -12,8 +12,10 @@ import (
 )
 
 var _ = Describe("Getting a Message's status", func() {
-	var clientToken uaa.Token
-	var client *support.Client
+	var (
+		clientToken uaa.Token
+		client      *support.Client
+	)
 
 	type MessageReponse struct {
 		Status  int
