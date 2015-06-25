@@ -12,5 +12,5 @@ func TestWebMiddlewareSuite(t *testing.T) {
 	fakes.RegisterFastTokenSigningMethod()
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web Middleware Suite")
+	RunSpecs(t, "Middleware Suite")
 }

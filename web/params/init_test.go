@@ -9,5 +9,5 @@ import (
 
 func TestWebHandlersParamsSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web Handlers Params Suite")
+	RunSpecs(t, "Params Suite")
 }

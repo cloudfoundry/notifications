@@ -2,9 +2,9 @@ package web
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
-	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )

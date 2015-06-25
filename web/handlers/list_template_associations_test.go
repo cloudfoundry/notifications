@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 
 	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"

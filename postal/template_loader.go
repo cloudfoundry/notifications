@@ -2,7 +2,7 @@ package postal
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/web/services"
+	"github.com/cloudfoundry-incubator/notifications/services"
 )
 
 type TemplatesLoaderInterface interface {

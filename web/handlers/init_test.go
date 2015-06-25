@@ -20,7 +20,7 @@ func TestWebHandlersSuite(t *testing.T) {
 	metrics.DefaultLogger = log.New(buffer, "", 0)
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web Handlers Suite")
+	RunSpecs(t, "Handlers Suite")
 
 	metrics.DefaultLogger = metricsLogger
 }

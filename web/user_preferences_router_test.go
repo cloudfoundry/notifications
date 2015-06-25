@@ -2,10 +2,10 @@ package web_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
-	"github.com/cloudfoundry-incubator/notifications/web/services"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 

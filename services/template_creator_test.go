@@ -5,47 +5,46 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/web/services"
+	"github.com/cloudfoundry-incubator/notifications/services"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Updater", func() {
-	Describe("Update", func() {
+var _ = Describe("Creator", func() {
+	Describe("Create", func() {
 		var (
 			templatesRepo *fakes.TemplatesRepo
 			template      models.Template
-			updater       services.TemplateUpdater
+			creator       services.TemplateCreator
 			database      *fakes.Database
 		)
 
 		BeforeEach(func() {
 			templatesRepo = fakes.NewTemplatesRepo()
 			template = models.Template{
-				Name: "gobble template",
-				Text: "gobble",
-				HTML: "<p>gobble</p>",
+				Name:    "Big Hero 6 Template",
+				Text:    "Adorable robot.",
+				HTML:    "<p>Many heroes.</p>",
+				Subject: "Robots and Heroes",
 			}
 			database = fakes.NewDatabase()
-
-			updater = services.NewTemplateUpdater(templatesRepo)
+			creator = services.NewTemplateCreator(templatesRepo)
 		})
 
-		It("Inserts templates into the templates repo", func() {
+		It("Creates a new template via the templates repo", func() {
 			Expect(templatesRepo.Templates).ToNot(ContainElement(template))
 
-			err := updater.Update(database, "my-awesome-id", template)
+			_, err := creator.Create(database, template)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(templatesRepo.Templates).To(ContainElement(template))
-			Expect(database.ConnectionWasCalled).To(BeTrue())
 		})
 
 		It("propagates errors from repo", func() {
 			expectedErr := errors.New("Boom!")
+			templatesRepo.CreateError = expectedErr
 
-			templatesRepo.UpdateError = expectedErr
-			err := updater.Update(database, "unimportant", template)
+			_, err := creator.Create(database, template)
 
 			Expect(err).To(Equal(expectedErr))
 		})

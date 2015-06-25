@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/web/services"
+	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/ryanmoran/stack"
 )
 

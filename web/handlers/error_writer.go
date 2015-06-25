@@ -8,8 +8,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
+	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
-	"github.com/cloudfoundry-incubator/notifications/web/services"
 )
 
 type ErrorWriterInterface interface {
