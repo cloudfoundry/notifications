@@ -5,21 +5,21 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
+	"github.com/cloudfoundry-incubator/notifications/services"
 )
 
 const SpaceEndorsement = `You received this message because you belong to the "{{.Space}}" space in the "{{.Organization}}" organization.`
 
 type SpaceStrategy struct {
 	tokenLoader        postal.TokenLoaderInterface
-	spaceLoader        utilities.SpaceLoaderInterface
-	organizationLoader utilities.OrganizationLoaderInterface
-	findsUserGUIDs     utilities.FindsUserGUIDsInterface
+	spaceLoader        services.SpaceLoaderInterface
+	organizationLoader services.OrganizationLoaderInterface
+	findsUserGUIDs     services.FindsUserGUIDsInterface
 	mailer             MailerInterface
 }
 
-func NewSpaceStrategy(tokenLoader postal.TokenLoaderInterface, spaceLoader utilities.SpaceLoaderInterface, organizationLoader utilities.OrganizationLoaderInterface,
-	findsUserGUIDs utilities.FindsUserGUIDsInterface, mailer MailerInterface) SpaceStrategy {
+func NewSpaceStrategy(tokenLoader postal.TokenLoaderInterface, spaceLoader services.SpaceLoaderInterface, organizationLoader services.OrganizationLoaderInterface,
+	findsUserGUIDs services.FindsUserGUIDsInterface, mailer MailerInterface) SpaceStrategy {
 
 	return SpaceStrategy{
 		tokenLoader:        tokenLoader,

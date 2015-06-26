@@ -6,7 +6,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
+	"github.com/cloudfoundry-incubator/notifications/services"
 )
 
 const (
@@ -16,13 +16,13 @@ const (
 
 type OrganizationStrategy struct {
 	tokenLoader        postal.TokenLoaderInterface
-	organizationLoader utilities.OrganizationLoaderInterface
-	findsUserGUIDs     utilities.FindsUserGUIDsInterface
+	organizationLoader services.OrganizationLoaderInterface
+	findsUserGUIDs     services.FindsUserGUIDsInterface
 	mailer             MailerInterface
 }
 
-func NewOrganizationStrategy(tokenLoader postal.TokenLoaderInterface, organizationLoader utilities.OrganizationLoaderInterface,
-	findsUserGUIDs utilities.FindsUserGUIDsInterface, mailer MailerInterface) OrganizationStrategy {
+func NewOrganizationStrategy(tokenLoader postal.TokenLoaderInterface, organizationLoader services.OrganizationLoaderInterface,
+	findsUserGUIDs services.FindsUserGUIDsInterface, mailer MailerInterface) OrganizationStrategy {
 
 	return OrganizationStrategy{
 		tokenLoader:        tokenLoader,

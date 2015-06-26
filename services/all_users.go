@@ -1,14 +1,20 @@
-package utilities
+package services
+
+import "github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 type AllUsersInterface interface {
 	AllUserGUIDs() ([]string, error)
 }
 
 type AllUsers struct {
-	uaa UAAInterface
+	uaa uaaAllUsersInterface
 }
 
-func NewAllUsers(uaa UAAInterface) AllUsers {
+type uaaAllUsersInterface interface {
+	AllUsers() ([]uaa.User, error)
+}
+
+func NewAllUsers(uaa uaaAllUsersInterface) AllUsers {
 	return AllUsers{
 		uaa: uaa,
 	}

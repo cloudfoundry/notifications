@@ -1,4 +1,4 @@
-package utilities
+package services
 
 import "github.com/cloudfoundry-incubator/notifications/cf"
 

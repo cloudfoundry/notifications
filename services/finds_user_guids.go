@@ -1,10 +1,14 @@
-package utilities
+package services
 
 import "github.com/cloudfoundry-incubator/notifications/cf"
 
 type FindsUserGUIDs struct {
 	cloudController cf.CloudControllerInterface
-	uaa             UAAInterface
+	uaa             uaaUsersGUIDsByScopeInterface
+}
+
+type uaaUsersGUIDsByScopeInterface interface {
+	UsersGUIDsByScope(scope string) ([]string, error)
 }
 
 type FindsUserGUIDsInterface interface {
@@ -13,7 +17,7 @@ type FindsUserGUIDsInterface interface {
 	UserGUIDsBelongingToScope(string) ([]string, error)
 }
 
-func NewFindsUserGUIDs(cloudController cf.CloudControllerInterface, uaa UAAInterface) FindsUserGUIDs {
+func NewFindsUserGUIDs(cloudController cf.CloudControllerInterface, uaa uaaUsersGUIDsByScopeInterface) FindsUserGUIDs {
 	return FindsUserGUIDs{
 		cloudController: cloudController,
 		uaa:             uaa,

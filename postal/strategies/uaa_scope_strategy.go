@@ -6,13 +6,13 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
+	"github.com/cloudfoundry-incubator/notifications/services"
 )
 
 const ScopeEndorsement = "You received this message because you have the {{.Scope}} scope."
 
 type UAAScopeStrategy struct {
-	findsUserGUIDs utilities.FindsUserGUIDsInterface
+	findsUserGUIDs services.FindsUserGUIDsInterface
 	tokenLoader    postal.TokenLoaderInterface
 	mailer         MailerInterface
 }
@@ -23,7 +23,7 @@ func (d DefaultScopeError) Error() string {
 	return "You cannot send a notification to a default scope"
 }
 
-func NewUAAScopeStrategy(tokenLoader postal.TokenLoaderInterface, findsUserGUIDs utilities.FindsUserGUIDsInterface,
+func NewUAAScopeStrategy(tokenLoader postal.TokenLoaderInterface, findsUserGUIDs services.FindsUserGUIDsInterface,
 	mailer MailerInterface) UAAScopeStrategy {
 
 	return UAAScopeStrategy{

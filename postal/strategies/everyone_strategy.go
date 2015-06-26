@@ -6,18 +6,18 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
+	"github.com/cloudfoundry-incubator/notifications/services"
 )
 
 const EveryoneEndorsement = "This message was sent to everyone."
 
 type EveryoneStrategy struct {
 	tokenLoader postal.TokenLoaderInterface
-	allUsers    utilities.AllUsersInterface
+	allUsers    services.AllUsersInterface
 	mailer      MailerInterface
 }
 
-func NewEveryoneStrategy(tokenLoader postal.TokenLoaderInterface, allUsers utilities.AllUsersInterface, mailer MailerInterface) EveryoneStrategy {
+func NewEveryoneStrategy(tokenLoader postal.TokenLoaderInterface, allUsers services.AllUsersInterface, mailer MailerInterface) EveryoneStrategy {
 	return EveryoneStrategy{
 		tokenLoader: tokenLoader,
 		allUsers:    allUsers,

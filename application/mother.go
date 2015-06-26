@@ -14,7 +14,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
-	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
@@ -69,10 +68,10 @@ func (m Mother) SpaceStrategy() strategies.SpaceStrategy {
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
 	tokenLoader := postal.NewTokenLoader(uaaClient)
-	spaceLoader := utilities.NewSpaceLoader(cloudController)
-	organizationLoader := utilities.NewOrganizationLoader(cloudController)
+	spaceLoader := services.NewSpaceLoader(cloudController)
+	organizationLoader := services.NewOrganizationLoader(cloudController)
 	mailer := m.Mailer()
-	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, uaaClient)
+	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 
 	return strategies.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, mailer)
 }
@@ -83,8 +82,8 @@ func (m Mother) OrganizationStrategy() strategies.OrganizationStrategy {
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
 	tokenLoader := postal.NewTokenLoader(uaaClient)
-	organizationLoader := utilities.NewOrganizationLoader(cloudController)
-	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, uaaClient)
+	organizationLoader := services.NewOrganizationLoader(cloudController)
+	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 	mailer := m.Mailer()
 
 	return strategies.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, mailer)
@@ -93,7 +92,7 @@ func (m Mother) OrganizationStrategy() strategies.OrganizationStrategy {
 func (m Mother) EveryoneStrategy() strategies.EveryoneStrategy {
 	uaaClient := m.UAAClient()
 	tokenLoader := postal.NewTokenLoader(uaaClient)
-	allUsers := utilities.NewAllUsers(uaaClient)
+	allUsers := services.NewAllUsers(uaaClient)
 	mailer := m.Mailer()
 
 	return strategies.NewEveryoneStrategy(tokenLoader, allUsers, mailer)
@@ -105,7 +104,7 @@ func (m Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
 	tokenLoader := postal.NewTokenLoader(uaaClient)
-	findsUserGUIDs := utilities.NewFindsUserGUIDs(cloudController, uaaClient)
+	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 	mailer := m.Mailer()
 
 	return strategies.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, mailer)

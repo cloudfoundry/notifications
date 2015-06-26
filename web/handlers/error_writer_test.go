@@ -9,7 +9,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
-	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
@@ -43,7 +42,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 502 when CloudController fails to respond", func() {
-		writer.Write(recorder, utilities.CCDownError("Bad things happened!"))
+		writer.Write(recorder, services.CCDownError("Bad things happened!"))
 
 		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 
@@ -141,7 +140,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 404 when the space cannot be found", func() {
-		writer.Write(recorder, utilities.CCNotFoundError("Space could not be found"))
+		writer.Write(recorder, services.CCNotFoundError("Space could not be found"))
 
 		Expect(recorder.Code).To(Equal(http.StatusNotFound))
 

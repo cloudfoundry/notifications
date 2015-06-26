@@ -1,25 +1,25 @@
-package utilities_test
+package services_test
 
 import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
+	"github.com/cloudfoundry-incubator/notifications/services"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("FindsUserGUIDs", func() {
-	var finder utilities.FindsUserGUIDs
+	var finder services.FindsUserGUIDs
 	var cc *fakes.CloudController
 	var uaa *fakes.UAAClient
 
 	BeforeEach(func() {
 		cc = fakes.NewCloudController()
 		uaa = fakes.NewUAAClient()
-		finder = utilities.NewFindsUserGUIDs(cc, uaa)
+		finder = services.NewFindsUserGUIDs(cc, uaa)
 	})
 
 	Context("when looking for GUIDs that have a scope", func() {

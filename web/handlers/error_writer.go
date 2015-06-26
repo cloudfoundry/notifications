@@ -7,7 +7,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
-	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 )
@@ -28,9 +27,9 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 		writer.write(w, 422, []string{err.Error()})
 	case params.ValidationError:
 		writer.write(w, 422, err.(params.ValidationError).Errors())
-	case utilities.CCDownError, postal.UAADownError, postal.UAAGenericError:
+	case services.CCDownError, postal.UAADownError, postal.UAAGenericError:
 		writer.write(w, http.StatusBadGateway, []string{err.Error()})
-	case utilities.CCNotFoundError, models.TemplateFindError, models.RecordNotFoundError:
+	case services.CCNotFoundError, models.TemplateFindError, models.RecordNotFoundError:
 		writer.write(w, http.StatusNotFound, []string{err.Error()})
 	case postal.TemplateLoadError, params.TemplateCreateError, models.TemplateUpdateError, models.TransactionCommitError:
 		writer.write(w, http.StatusInternalServerError, []string{err.Error()})

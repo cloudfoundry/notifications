@@ -1,10 +1,10 @@
-package utilities_test
+package services_test
 
 import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal/utilities"
+	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -12,13 +12,13 @@ import (
 )
 
 var _ = Describe("AllUserGUIDs", func() {
-	var allUsers utilities.AllUsers
+	var allUsers services.AllUsers
 	var uaaClient *fakes.UAAClient
 	var users []uaa.User
 
 	BeforeEach(func() {
 		uaaClient = fakes.NewUAAClient()
-		allUsers = utilities.NewAllUsers(uaaClient)
+		allUsers = services.NewAllUsers(uaaClient)
 	})
 
 	Context("when the request succeeds", func() {
