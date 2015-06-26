@@ -14,6 +14,6 @@ func (s MessagesService) Get(token, messageGUID string) (int, Message, error) {
 		return status, message, err
 	}
 
-	err = json.NewDecoder(body).Decode(&message)
+	err = json.Unmarshal(body, &message)
 	return status, message, err
 }

@@ -20,7 +20,7 @@ func (s UserPreferencesService) Get(token string) (int, Preferences, error) {
 	}
 
 	if status == http.StatusOK {
-		err = json.NewDecoder(responseBody).Decode(&response)
+		err = json.Unmarshal(responseBody, &response)
 		if err != nil {
 			return 0, response.Preferences(), err
 		}

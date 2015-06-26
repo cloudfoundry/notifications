@@ -44,7 +44,7 @@ func (s NotifyService) notify(token, path string, notify Notify, reqBody notifyR
 	}
 
 	if status == http.StatusOK {
-		err = json.NewDecoder(responseBody).Decode(&responses)
+		err = json.Unmarshal(responseBody, &responses)
 		if err != nil {
 			return 0, responses, err
 		}

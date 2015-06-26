@@ -17,7 +17,7 @@ func (s DefaultTemplateService) Get(token string) (int, Template, error) {
 		return 0, template, err
 	}
 
-	err = json.NewDecoder(body).Decode(&template)
+	err = json.Unmarshal(body, &template)
 	if err != nil {
 		return 0, template, err
 	}

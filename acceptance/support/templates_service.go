@@ -18,7 +18,7 @@ func (s TemplatesService) Associations(token, templateID string) (int, []Templat
 		return 0, associations.Associations, err
 	}
 
-	err = json.NewDecoder(body).Decode(&associations)
+	err = json.Unmarshal(body, &associations)
 	if err != nil {
 		return 0, associations.Associations, err
 	}
@@ -41,7 +41,7 @@ func (s TemplatesService) Create(token string, template Template) (int, string, 
 		TemplateID string `json:"template_id"`
 	}
 
-	err = json.NewDecoder(responseBody).Decode(&JSON)
+	err = json.Unmarshal(responseBody, &JSON)
 	if err != nil {
 		return 0, "", err
 	}
@@ -57,7 +57,7 @@ func (s TemplatesService) Get(token, templateID string) (int, Template, error) {
 		return 0, template, err
 	}
 
-	err = json.NewDecoder(body).Decode(&template)
+	err = json.Unmarshal(body, &template)
 	if err != nil {
 		return 0, template, err
 	}
@@ -96,7 +96,7 @@ func (s TemplatesService) List(token string) (int, []TemplateListItem, error) {
 	}
 
 	var templates map[string]TemplateListItem
-	err = json.NewDecoder(body).Decode(&templates)
+	err = json.Unmarshal(body, &templates)
 	if err != nil {
 		panic(err)
 	}

@@ -31,7 +31,7 @@ func (s NotificationsService) List(token string) (int, NotificationsList, error)
 		return 0, list, err
 	}
 
-	err = json.NewDecoder(body).Decode(&list)
+	err = json.Unmarshal(body, &list)
 	if err != nil {
 		return 0, list, err
 	}

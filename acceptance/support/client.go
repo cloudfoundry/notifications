@@ -50,10 +50,10 @@ func NewClient(host string) *Client {
 	return client
 }
 
-func (c Client) makeRequest(method, path string, content io.Reader, token string) (int, io.Reader, error) {
+func (c Client) makeRequest(method, path string, content io.Reader, token string) (int, []byte, error) {
 	request, err := http.NewRequest(method, path, content)
 	if err != nil {
-		return 0, nil, err
+		return 0, []byte{}, err
 	}
 	c.printRequest(request)
 
@@ -64,11 +64,18 @@ func (c Client) makeRequest(method, path string, content io.Reader, token string
 
 	response, err := c.HTTPClient.Do(request)
 	if err != nil {
-		return 0, nil, err
+		return 0, []byte{}, err
 	}
+	defer response.Body.Close()
+
 	c.printResponse(response)
 
-	return response.StatusCode, response.Body, nil
+	responseBody, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return 0, []byte{}, err
+	}
+
+	return response.StatusCode, responseBody, nil
 }
 
 func (c Client) printRequest(request *http.Request) {
