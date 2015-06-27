@@ -1,9 +1,6 @@
 package strategies
 
 import (
-	"time"
-
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
 )
@@ -30,16 +27,32 @@ func NewSpaceStrategy(tokenLoader postal.TokenLoaderInterface, spaceLoader servi
 	}
 }
 
-func (strategy SpaceStrategy) Dispatch(clientID, guid, vcapRequestID string, requestTime time.Time, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy SpaceStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 	responses := []Response{}
-	options.Endorsement = SpaceEndorsement
+	options := postal.Options{
+		To:                dispatch.Message.To,
+		ReplyTo:           dispatch.Message.ReplyTo,
+		Subject:           dispatch.Message.Subject,
+		KindID:            dispatch.Kind.ID,
+		KindDescription:   dispatch.Kind.Description,
+		SourceDescription: dispatch.Client.Description,
+		Endorsement:       SpaceEndorsement,
+		Text:              dispatch.Message.Text,
+		Role:              dispatch.Role,
+		HTML: postal.HTML{
+			BodyContent:    dispatch.Message.HTML.BodyContent,
+			BodyAttributes: dispatch.Message.HTML.BodyAttributes,
+			Head:           dispatch.Message.HTML.Head,
+			Doctype:        dispatch.Message.HTML.Doctype,
+		},
+	}
 
 	token, err := strategy.tokenLoader.Load()
 	if err != nil {
 		return responses, err
 	}
 
-	userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToSpace(guid, token)
+	userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToSpace(dispatch.GUID, token)
 	if err != nil {
 		return responses, err
 	}
@@ -49,7 +62,7 @@ func (strategy SpaceStrategy) Dispatch(clientID, guid, vcapRequestID string, req
 		users = append(users, User{GUID: guid})
 	}
 
-	space, err := strategy.spaceLoader.Load(guid, token)
+	space, err := strategy.spaceLoader.Load(dispatch.GUID, token)
 	if err != nil {
 		return responses, err
 	}
@@ -59,7 +72,7 @@ func (strategy SpaceStrategy) Dispatch(clientID, guid, vcapRequestID string, req
 		return responses, err
 	}
 
-	responses = strategy.mailer.Deliver(conn, users, options, space, org, clientID, "", vcapRequestID, requestTime)
+	responses = strategy.mailer.Deliver(dispatch.Connection, users, options, space, org, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

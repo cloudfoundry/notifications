@@ -1,10 +1,7 @@
 package strategies
 
 import (
-	"time"
-
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
 )
@@ -33,11 +30,26 @@ func NewUAAScopeStrategy(tokenLoader postal.TokenLoaderInterface, findsUserGUIDs
 	}
 }
 
-func (strategy UAAScopeStrategy) Dispatch(clientID, scope, vcapRequestID string, requestTime time.Time, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy UAAScopeStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 	responses := []Response{}
-	options.Endorsement = ScopeEndorsement
+	options := postal.Options{
+		ReplyTo:           dispatch.Message.ReplyTo,
+		Subject:           dispatch.Message.Subject,
+		To:                dispatch.Message.To,
+		Endorsement:       ScopeEndorsement,
+		KindID:            dispatch.Kind.ID,
+		KindDescription:   dispatch.Kind.Description,
+		SourceDescription: dispatch.Client.Description,
+		Text:              dispatch.Message.Text,
+		HTML: postal.HTML{
+			BodyContent:    dispatch.Message.HTML.BodyContent,
+			BodyAttributes: dispatch.Message.HTML.BodyAttributes,
+			Head:           dispatch.Message.HTML.Head,
+			Doctype:        dispatch.Message.HTML.Doctype,
+		},
+	}
 
-	if strategy.scopeIsDefault(scope) {
+	if strategy.scopeIsDefault(dispatch.GUID) {
 		return responses, DefaultScopeError{}
 	}
 
@@ -46,7 +58,7 @@ func (strategy UAAScopeStrategy) Dispatch(clientID, scope, vcapRequestID string,
 		return responses, err
 	}
 
-	userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToScope(scope)
+	userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToScope(dispatch.GUID)
 	if err != nil {
 		return responses, err
 	}
@@ -56,7 +68,7 @@ func (strategy UAAScopeStrategy) Dispatch(clientID, scope, vcapRequestID string,
 		users = append(users, User{GUID: guid})
 	}
 
-	responses = strategy.mailer.Deliver(conn, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, scope, vcapRequestID, requestTime)
+	responses = strategy.mailer.Deliver(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.GUID, dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

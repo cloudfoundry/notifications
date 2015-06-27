@@ -68,7 +68,35 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 
 	var responses []strategies.Response
 
-	responses, err = strategy.Dispatch(clientID, guid, vcapRequestID, requestReceivedTime, parameters.ToOptions(client, kind), connection)
+	responses, err = strategy.Dispatch(strategies.Dispatch{
+		GUID:       guid,
+		Connection: connection,
+		Role:       parameters.Role,
+		Client: strategies.Client{
+			ID:          clientID,
+			Description: client.Description,
+		},
+		Kind: strategies.Kind{
+			ID:          parameters.KindID,
+			Description: kind.Description,
+		},
+		VCAPRequest: strategies.VCAPRequest{
+			ID:          vcapRequestID,
+			ReceiptTime: requestReceivedTime,
+		},
+		Message: strategies.Message{
+			To:      parameters.To,
+			ReplyTo: parameters.ReplyTo,
+			Subject: parameters.Subject,
+			Text:    parameters.Text,
+			HTML: strategies.HTML{
+				BodyContent:    parameters.ParsedHTML.BodyContent,
+				BodyAttributes: parameters.ParsedHTML.BodyAttributes,
+				Head:           parameters.ParsedHTML.Head,
+				Doctype:        parameters.ParsedHTML.Doctype,
+			},
+		},
+	})
 	if err != nil {
 		return []byte{}, err
 	}

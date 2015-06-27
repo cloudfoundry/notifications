@@ -1,27 +1,20 @@
 package fakes
 
-import (
-	"time"
-
-	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
-)
+import "github.com/cloudfoundry-incubator/notifications/postal/strategies"
 
 type Strategy struct {
-	DispatchArguments []interface{}
-	Responses         []strategies.Response
-	Error             error
-	TrimCalled        bool
+	DispatchCall struct {
+		Dispatch  strategies.Dispatch
+		Responses []strategies.Response
+		Error     error
+	}
 }
 
 func NewStrategy() *Strategy {
 	return &Strategy{}
 }
 
-func (s *Strategy) Dispatch(clientID, guid, vcapRequestID string, requestReceived time.Time,
-	options postal.Options, conn models.ConnectionInterface) ([]strategies.Response, error) {
-
-	s.DispatchArguments = []interface{}{clientID, guid, vcapRequestID, requestReceived, options}
-	return s.Responses, s.Error
+func (s *Strategy) Dispatch(dispatch strategies.Dispatch) ([]strategies.Response, error) {
+	s.DispatchCall.Dispatch = dispatch
+	return s.DispatchCall.Responses, s.DispatchCall.Error
 }

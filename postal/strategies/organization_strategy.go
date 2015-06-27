@@ -1,10 +1,7 @@
 package strategies
 
 import (
-	"time"
-
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
 )
@@ -32,11 +29,27 @@ func NewOrganizationStrategy(tokenLoader postal.TokenLoaderInterface, organizati
 	}
 }
 
-func (strategy OrganizationStrategy) Dispatch(clientID, guid, vcapRequestID string, requestReceived time.Time, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
+func (strategy OrganizationStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 	responses := []Response{}
-	options.Endorsement = OrganizationEndorsement
+	options := postal.Options{
+		To:                dispatch.Message.To,
+		ReplyTo:           dispatch.Message.ReplyTo,
+		Subject:           dispatch.Message.Subject,
+		KindID:            dispatch.Kind.ID,
+		KindDescription:   dispatch.Kind.Description,
+		SourceDescription: dispatch.Client.Description,
+		Endorsement:       OrganizationEndorsement,
+		Text:              dispatch.Message.Text,
+		Role:              dispatch.Role,
+		HTML: postal.HTML{
+			BodyContent:    dispatch.Message.HTML.BodyContent,
+			BodyAttributes: dispatch.Message.HTML.BodyAttributes,
+			Head:           dispatch.Message.HTML.Head,
+			Doctype:        dispatch.Message.HTML.Doctype,
+		},
+	}
 
-	if options.Role != "" {
+	if dispatch.Role != "" {
 		options.Endorsement = OrganizationRoleEndorsement
 	}
 
@@ -45,12 +58,12 @@ func (strategy OrganizationStrategy) Dispatch(clientID, guid, vcapRequestID stri
 		return responses, err
 	}
 
-	organization, err := strategy.organizationLoader.Load(guid, token)
+	organization, err := strategy.organizationLoader.Load(dispatch.GUID, token)
 	if err != nil {
 		return responses, err
 	}
 
-	userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToOrganization(guid, options.Role, token)
+	userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToOrganization(dispatch.GUID, options.Role, token)
 	if err != nil {
 		return responses, err
 	}
@@ -60,7 +73,7 @@ func (strategy OrganizationStrategy) Dispatch(clientID, guid, vcapRequestID stri
 		users = append(users, User{GUID: guid})
 	}
 
-	responses = strategy.mailer.Deliver(conn, users, options, cf.CloudControllerSpace{}, organization, clientID, "", vcapRequestID, requestReceived)
+	responses = strategy.mailer.Deliver(dispatch.Connection, users, options, cf.CloudControllerSpace{}, organization, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

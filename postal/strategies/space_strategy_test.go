@@ -16,28 +16,21 @@ import (
 var _ = Describe("Space Strategy", func() {
 	var (
 		strategy           strategies.SpaceStrategy
-		options            postal.Options
 		tokenLoader        *fakes.TokenLoader
 		spaceLoader        *fakes.SpaceLoader
 		organizationLoader *fakes.OrganizationLoader
 		mailer             *fakes.Mailer
-		clientID           string
 		conn               *fakes.Connection
 		findsUserGUIDs     *fakes.FindsUserGUIDs
-		vcapRequestID      string
 		requestReceived    time.Time
 	)
 
 	BeforeEach(func() {
-		clientID = "mister-client"
-		vcapRequestID = "some-request-id"
 		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
 		conn = fakes.NewConnection()
-
 		tokenHeader := map[string]interface{}{
 			"alg": "FAST",
 		}
-
 		tokenClaims := map[string]interface{}{
 			"client_id": "mister-client",
 			"exp":       int64(3404281214),
@@ -45,54 +38,76 @@ var _ = Describe("Space Strategy", func() {
 		}
 		tokenLoader = fakes.NewTokenLoader()
 		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
-
 		mailer = fakes.NewMailer()
-
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
 		findsUserGUIDs.SpaceGuids["space-001"] = []string{"user-123", "user-456"}
-
 		spaceLoader = fakes.NewSpaceLoader()
 		spaceLoader.Space = cf.CloudControllerSpace{
 			Name:             "production",
 			GUID:             "space-001",
 			OrganizationGUID: "org-001",
 		}
-
 		organizationLoader = fakes.NewOrganizationLoader()
 		organizationLoader.Organization = cf.CloudControllerOrganization{
 			Name: "the-org",
 			GUID: "org-001",
 		}
-
 		strategy = strategies.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, mailer)
 	})
 
 	Describe("Dispatch", func() {
 		Context("when the request is valid", func() {
-			BeforeEach(func() {
-				options = postal.Options{
+			It("calls mailer.Deliver with the correct arguments for a space", func() {
+				_, err := strategy.Dispatch(strategies.Dispatch{
+					GUID:       "space-001",
+					Connection: conn,
+					Message: strategies.Message{
+						To:      "dr@strangelove.com",
+						ReplyTo: "reply-to@example.com",
+						Subject: "this is the subject",
+						Text:    "Please reset your password by clicking on this link...",
+						HTML: strategies.HTML{
+							BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
+							BodyAttributes: "some-html-body-attributes",
+							Head:           "<head></head>",
+							Doctype:        "<html>",
+						},
+					},
+					Kind: strategies.Kind{
+						ID:          "forgot_password",
+						Description: "Password reminder",
+					},
+					Client: strategies.Client{
+						ID:          "mister-client",
+						Description: "Login system",
+					},
+					VCAPRequest: strategies.VCAPRequest{
+						ID:          "some-vcap-request-id",
+						ReceiptTime: requestReceived,
+					},
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				users := []strategies.User{{GUID: "user-123"}, {GUID: "user-456"}}
+
+				Expect(mailer.DeliverCall.Args.Connection).To(Equal(conn))
+				Expect(mailer.DeliverCall.Args.Users).To(Equal(users))
+				Expect(mailer.DeliverCall.Args.Options).To(Equal(postal.Options{
+					ReplyTo:           "reply-to@example.com",
+					Subject:           "this is the subject",
+					To:                "dr@strangelove.com",
 					KindID:            "forgot_password",
 					KindDescription:   "Password reminder",
 					SourceDescription: "Login system",
 					Text:              "Please reset your password by clicking on this link...",
-					HTML:              postal.HTML{BodyContent: "<p>Please reset your password by clicking on this link...</p>"},
-				}
-			})
-
-			It("calls mailer.Deliver with the correct arguments for a space", func() {
-				Expect(options.Endorsement).To(BeEmpty())
-
-				_, err := strategy.Dispatch(clientID, "space-001", vcapRequestID, requestReceived, options, conn)
-				if err != nil {
-					panic(err)
-				}
-
-				users := []strategies.User{{GUID: "user-123"}, {GUID: "user-456"}}
-
-				options.Endorsement = strategies.SpaceEndorsement
-				Expect(mailer.DeliverCall.Args.Connection).To(Equal(conn))
-				Expect(mailer.DeliverCall.Args.Users).To(Equal(users))
-				Expect(mailer.DeliverCall.Args.Options).To(Equal(options))
+					HTML: postal.HTML{
+						BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
+						BodyAttributes: "some-html-body-attributes",
+						Head:           "<head></head>",
+						Doctype:        "<html>",
+					},
+					Endorsement: strategies.SpaceEndorsement,
+				}))
 				Expect(mailer.DeliverCall.Args.Space).To(Equal(cf.CloudControllerSpace{
 					GUID:             "space-001",
 					Name:             "production",
@@ -102,9 +117,9 @@ var _ = Describe("Space Strategy", func() {
 					Name: "the-org",
 					GUID: "org-001",
 				}))
-				Expect(mailer.DeliverCall.Args.Client).To(Equal(clientID))
+				Expect(mailer.DeliverCall.Args.Client).To(Equal("mister-client"))
 				Expect(mailer.DeliverCall.Args.Scope).To(Equal(""))
-				Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal(vcapRequestID))
+				Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
 				Expect(mailer.DeliverCall.Args.RequestReceived).To(Equal(requestReceived))
 			})
 		})
@@ -113,8 +128,8 @@ var _ = Describe("Space Strategy", func() {
 			Context("when token loader fails to return a token", func() {
 				It("returns an error", func() {
 					tokenLoader.LoadError = errors.New("BOOM!")
-					_, err := strategy.Dispatch(clientID, "space-001", vcapRequestID, requestReceived, options, conn)
 
+					_, err := strategy.Dispatch(strategies.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
 			})
@@ -122,8 +137,8 @@ var _ = Describe("Space Strategy", func() {
 			Context("when spaceLoader fails to load a space", func() {
 				It("returns an error", func() {
 					spaceLoader.LoadError = errors.New("BOOM!")
-					_, err := strategy.Dispatch(clientID, "space-000", vcapRequestID, requestReceived, options, conn)
 
+					_, err := strategy.Dispatch(strategies.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
 			})
@@ -132,8 +147,8 @@ var _ = Describe("Space Strategy", func() {
 				It("returns an error", func() {
 					findsUserGUIDs.UserGUIDsBelongingToSpaceError = errors.New("BOOM!")
 
-					_, err := strategy.Dispatch(clientID, "space-001", vcapRequestID, requestReceived, options, conn)
-					Expect(err).To(Equal(findsUserGUIDs.UserGUIDsBelongingToSpaceError))
+					_, err := strategy.Dispatch(strategies.Dispatch{})
+					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
 			})
 		})

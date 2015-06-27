@@ -1,10 +1,7 @@
 package strategies
 
 import (
-	"time"
-
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 )
 
@@ -20,9 +17,26 @@ func NewUserStrategy(mailer MailerInterface) UserStrategy {
 	}
 }
 
-func (strategy UserStrategy) Dispatch(clientID, guid, vcapRequestID string, requestTime time.Time, options postal.Options, conn models.ConnectionInterface) ([]Response, error) {
-	options.Endorsement = UserEndorsement
-	responses := strategy.mailer.Deliver(conn, []User{{GUID: guid}}, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, clientID, "", vcapRequestID, requestTime)
+func (strategy UserStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
+	options := postal.Options{
+		ReplyTo:           dispatch.Message.ReplyTo,
+		Subject:           dispatch.Message.Subject,
+		To:                dispatch.Message.To,
+		Endorsement:       UserEndorsement,
+		KindID:            dispatch.Kind.ID,
+		KindDescription:   dispatch.Kind.Description,
+		SourceDescription: dispatch.Client.Description,
+		Text:              dispatch.Message.Text,
+		HTML: postal.HTML{
+			BodyContent:    dispatch.Message.HTML.BodyContent,
+			BodyAttributes: dispatch.Message.HTML.BodyAttributes,
+			Head:           dispatch.Message.HTML.Head,
+			Doctype:        dispatch.Message.HTML.Doctype,
+		},
+	}
+	users := []User{{GUID: dispatch.GUID}}
+
+	responses := strategy.mailer.Deliver(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

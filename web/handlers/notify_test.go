@@ -12,6 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/dgrijalva/jwt-go"
@@ -63,7 +64,7 @@ var _ = Describe("Notify", func() {
 				body, err := json.Marshal(map[string]string{
 					"kind_id":  "test_email",
 					"text":     "This is the plain text body of the email",
-					"html":     "<p>This is the HTML Body of the email</p>",
+					"html":     "<!DOCTYPE html><html><head><script type='javascript'></script></head><body class='hello'><p>This is the HTML Body of the email</p><body></html>",
 					"subject":  "Your instance is down",
 					"reply_to": "me@example.com",
 				})
@@ -103,31 +104,41 @@ var _ = Describe("Notify", func() {
 				vcapRequestID = "some-request-id"
 
 				conn = fakes.NewConnection()
-
-				handler = handlers.NewNotify(finder, registrar)
 				strategy = fakes.NewStrategy()
 				validator = &fakes.Validator{}
+
+				handler = handlers.NewNotify(finder, registrar)
 			})
 
-			It("delegates to the mailStrategy", func() {
+			It("delegates to the strategy", func() {
 				_, err := handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
-				Expect(strategy.DispatchArguments).To(Equal([]interface{}{
-					"mister-client",
-					"space-001",
-					"some-request-id",
-					reqReceivedTime,
-					postal.Options{
-						ReplyTo:           "me@example.com",
-						Subject:           "Your instance is down",
-						KindDescription:   "Instance Down",
-						SourceDescription: "Health Monitor",
-						Text:              "This is the plain text body of the email",
-						HTML:              postal.HTML{BodyAttributes: "", BodyContent: "<p>This is the HTML Body of the email</p>"},
-						KindID:            "test_email",
+				Expect(strategy.DispatchCall.Dispatch).To(Equal(strategies.Dispatch{
+					GUID:       "space-001",
+					Connection: conn,
+					Client: strategies.Client{
+						ID:          "mister-client",
+						Description: "Health Monitor",
+					},
+					Kind: strategies.Kind{
+						ID:          "test_email",
+						Description: "Instance Down",
+					},
+					VCAPRequest: strategies.VCAPRequest{
+						ID:          "some-request-id",
+						ReceiptTime: reqReceivedTime,
+					},
+					Message: strategies.Message{
+						ReplyTo: "me@example.com",
+						Subject: "Your instance is down",
+						Text:    "This is the plain text body of the email",
+						HTML: strategies.HTML{
+							BodyContent:    "<p>This is the HTML Body of the email</p>",
+							BodyAttributes: `class="hello"`,
+							Head:           `<script type="javascript"></script>`,
+							Doctype:        "<!DOCTYPE html>",
+						},
 					},
 				}))
 			})
@@ -155,43 +166,34 @@ var _ = Describe("Notify", func() {
 							"subject":  "Your instance is down",
 							"reply_to": "me@example.com",
 						})
-
-						if err != nil {
-							panic(err)
-						}
+						Expect(err).NotTo(HaveOccurred())
 
 						request, err = http.NewRequest("POST", "/spaces/space-001", bytes.NewBuffer(body))
-						if err != nil {
-							panic(err)
-						}
+						Expect(err).NotTo(HaveOccurred())
 						request.Header.Set("Authorization", "Bearer "+rawToken)
 
 						_, err = handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
-
 						Expect(err).ToNot(BeNil())
+
 						validationErr := err.(params.ValidationError)
 						Expect(validationErr.Errors()).To(ContainElement(`boom`))
 					})
 
 					It("returns a error response when params cannot be parsed", func() {
 						request, err := http.NewRequest("POST", "/spaces/space-001", strings.NewReader("this is not JSON"))
-						if err != nil {
-							panic(err)
-						}
+						Expect(err).NotTo(HaveOccurred())
 						request.Header.Set("Authorization", "Bearer "+rawToken)
 
 						_, err = handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
-
 						Expect(err).To(Equal(params.ParseError{}))
 					})
 				})
 
 				Context("when the strategy dispatch method returns errors", func() {
 					It("returns the error", func() {
-						strategy.Error = errors.New("BOOM!")
+						strategy.DispatchCall.Error = errors.New("BOOM!")
 
 						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
-
 						Expect(err).To(Equal(errors.New("BOOM!")))
 					})
 				})
@@ -201,7 +203,6 @@ var _ = Describe("Notify", func() {
 						finder.ClientAndKindCall.Error = errors.New("BOOM!")
 
 						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
-
 						Expect(err).To(Equal(errors.New("BOOM!")))
 					})
 				})
@@ -211,7 +212,6 @@ var _ = Describe("Notify", func() {
 						registrar.RegisterCall.Error = errors.New("BOOM!")
 
 						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
-
 						Expect(err).To(Equal(errors.New("BOOM!")))
 					})
 				})
@@ -227,7 +227,6 @@ var _ = Describe("Notify", func() {
 						context.Set("token", token)
 
 						_, err = handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
-
 						Expect(err).To(BeAssignableToTypeOf(postal.NewCriticalNotificationError("test_email")))
 					})
 				})

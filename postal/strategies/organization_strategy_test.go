@@ -16,27 +16,20 @@ import (
 var _ = Describe("Organization Strategy", func() {
 	var (
 		strategy           strategies.OrganizationStrategy
-		options            postal.Options
 		tokenLoader        *fakes.TokenLoader
 		organizationLoader *fakes.OrganizationLoader
 		mailer             *fakes.Mailer
-		clientID           string
 		conn               *fakes.Connection
 		findsUserGUIDs     *fakes.FindsUserGUIDs
-		vcapRequestID      string
 		requestReceived    time.Time
 	)
 
 	BeforeEach(func() {
-		clientID = "mister-client"
-		vcapRequestID = "some-request-id"
 		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:38:03.180764129-07:00")
 		conn = fakes.NewConnection()
-
 		tokenHeader := map[string]interface{}{
 			"alg": "FAST",
 		}
-
 		tokenClaims := map[string]interface{}{
 			"client_id": "mister-client",
 			"exp":       int64(3404281214),
@@ -44,72 +37,134 @@ var _ = Describe("Organization Strategy", func() {
 		}
 		tokenLoader = fakes.NewTokenLoader()
 		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
-
 		mailer = fakes.NewMailer()
-
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
 		findsUserGUIDs.OrganizationGuids["org-001"] = []string{"user-123", "user-456"}
-
 		organizationLoader = fakes.NewOrganizationLoader()
 		organizationLoader.Organization = cf.CloudControllerOrganization{
 			Name: "my-org",
 			GUID: "org-001",
 		}
-
 		strategy = strategies.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, mailer)
 	})
 
 	Describe("Dispatch", func() {
 		Context("when the request is valid", func() {
-			BeforeEach(func() {
-				options = postal.Options{
+			It("call mailer.Deliver with the correct arguments for an organization", func() {
+				_, err := strategy.Dispatch(strategies.Dispatch{
+					GUID:       "org-001",
+					Connection: conn,
+					Message: strategies.Message{
+						To:      "dr@strangelove.com",
+						ReplyTo: "reply-to@example.com",
+						Subject: "this is the subject",
+						Text:    "Please reset your password by clicking on this link...",
+						HTML: strategies.HTML{
+							BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
+							BodyAttributes: "some-html-body-attributes",
+							Head:           "<head></head>",
+							Doctype:        "<html>",
+						},
+					},
+					Kind: strategies.Kind{
+						ID:          "forgot_password",
+						Description: "Password reminder",
+					},
+					Client: strategies.Client{
+						ID:          "mister-client",
+						Description: "Login system",
+					},
+					VCAPRequest: strategies.VCAPRequest{
+						ID:          "some-vcap-request-id",
+						ReceiptTime: requestReceived,
+					},
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				users := []strategies.User{
+					{GUID: "user-123"},
+					{GUID: "user-456"},
+				}
+
+				Expect(mailer.DeliverCall.Args.Connection).To(Equal(conn))
+				Expect(mailer.DeliverCall.Args.Users).To(Equal(users))
+				Expect(mailer.DeliverCall.Args.Options).To(Equal(postal.Options{
+					ReplyTo:           "reply-to@example.com",
+					Subject:           "this is the subject",
+					To:                "dr@strangelove.com",
 					KindID:            "forgot_password",
 					KindDescription:   "Password reminder",
 					SourceDescription: "Login system",
 					Text:              "Please reset your password by clicking on this link...",
-					HTML:              postal.HTML{BodyContent: "<p>Please reset your password by clicking on this link...</p>"},
-				}
-			})
-
-			It("call mailer.Deliver with the correct arguments for an organization", func() {
-				Expect(options.Endorsement).To(BeEmpty())
-
-				_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, requestReceived, options, conn)
-				if err != nil {
-					panic(err)
-				}
-
-				options.Endorsement = strategies.OrganizationEndorsement
-				users := []strategies.User{{GUID: "user-123"}, {GUID: "user-456"}}
-
-				Expect(mailer.DeliverCall.Args.Connection).To(Equal(conn))
-				Expect(mailer.DeliverCall.Args.Users).To(Equal(users))
-				Expect(mailer.DeliverCall.Args.Options).To(Equal(options))
+					HTML: postal.HTML{
+						BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
+						BodyAttributes: "some-html-body-attributes",
+						Head:           "<head></head>",
+						Doctype:        "<html>",
+					},
+					Endorsement: strategies.OrganizationEndorsement,
+				}))
 				Expect(mailer.DeliverCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
 				Expect(mailer.DeliverCall.Args.Org).To(Equal(cf.CloudControllerOrganization{
 					Name: "my-org",
 					GUID: "org-001",
 				}))
-				Expect(mailer.DeliverCall.Args.Client).To(Equal(clientID))
+				Expect(mailer.DeliverCall.Args.Client).To(Equal("mister-client"))
 				Expect(mailer.DeliverCall.Args.Scope).To(Equal(""))
-				Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal(vcapRequestID))
+				Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
 				Expect(mailer.DeliverCall.Args.RequestReceived).To(Equal(requestReceived))
 			})
 
 			Context("when the org role field is set", func() {
 				It("calls mailer.Deliver with the correct arguments", func() {
-					options.Role = "OrgManager"
+					_, err := strategy.Dispatch(strategies.Dispatch{
+						GUID:       "org-001",
+						Role:       "OrgManager",
+						Connection: conn,
+						Message: strategies.Message{
+							To:      "dr@strangelove.com",
+							ReplyTo: "reply-to@example.com",
+							Subject: "this is the subject",
+							Text:    "Please reset your password by clicking on this link...",
+							HTML: strategies.HTML{
+								BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
+								BodyAttributes: "some-html-body-attributes",
+								Head:           "<head></head>",
+								Doctype:        "<html>",
+							},
+						},
+						Kind: strategies.Kind{
+							ID:          "forgot_password",
+							Description: "Password reminder",
+						},
+						Client: strategies.Client{
+							ID:          "mister-client",
+							Description: "Login system",
+						},
+						VCAPRequest: strategies.VCAPRequest{
+							ID:          "some-vcap-request-id",
+							ReceiptTime: requestReceived,
+						},
+					})
+					Expect(err).NotTo(HaveOccurred())
 
-					Expect(options.Endorsement).To(BeEmpty())
-
-					_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, requestReceived, options, conn)
-					if err != nil {
-						panic(err)
-					}
-
-					options.Endorsement = strategies.OrganizationRoleEndorsement
-
-					Expect(mailer.DeliverCall.Args.Options).To(Equal(options))
+					Expect(mailer.DeliverCall.Args.Options).To(Equal(postal.Options{
+						ReplyTo:           "reply-to@example.com",
+						Subject:           "this is the subject",
+						To:                "dr@strangelove.com",
+						KindID:            "forgot_password",
+						KindDescription:   "Password reminder",
+						SourceDescription: "Login system",
+						Text:              "Please reset your password by clicking on this link...",
+						Role:              "OrgManager",
+						HTML: postal.HTML{
+							BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
+							BodyAttributes: "some-html-body-attributes",
+							Head:           "<head></head>",
+							Doctype:        "<html>",
+						},
+						Endorsement: strategies.OrganizationRoleEndorsement,
+					}))
 				})
 			})
 		})
@@ -118,8 +173,8 @@ var _ = Describe("Organization Strategy", func() {
 			Context("when token loader fails to return a token", func() {
 				It("returns an error", func() {
 					tokenLoader.LoadError = errors.New("BOOM!")
-					_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, requestReceived, options, conn)
 
+					_, err := strategy.Dispatch(strategies.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
 			})
@@ -127,8 +182,8 @@ var _ = Describe("Organization Strategy", func() {
 			Context("when organizationLoader fails to load an organization", func() {
 				It("returns the error", func() {
 					organizationLoader.LoadError = errors.New("BOOM!")
-					_, err := strategy.Dispatch(clientID, "org-009", vcapRequestID, requestReceived, options, conn)
 
+					_, err := strategy.Dispatch(strategies.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
 			})
@@ -137,8 +192,8 @@ var _ = Describe("Organization Strategy", func() {
 				It("returns an error", func() {
 					findsUserGUIDs.UserGUIDsBelongingToOrganizationError = errors.New("BOOM!")
 
-					_, err := strategy.Dispatch(clientID, "org-001", vcapRequestID, requestReceived, options, conn)
-					Expect(err).ToNot(BeNil())
+					_, err := strategy.Dispatch(strategies.Dispatch{})
+					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
 			})
 		})
