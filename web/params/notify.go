@@ -8,8 +8,6 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 )
 
 const InvalidEmail = "<>InvalidEmail<>"
@@ -21,13 +19,20 @@ type Notify struct {
 	Subject           string `json:"subject"`
 	Text              string `json:"text"`
 	RawHTML           string `json:"html"`
-	ParsedHTML        postal.HTML
+	ParsedHTML        HTML
 	KindID            string `json:"kind_id"`
 	KindDescription   string
 	SourceDescription string
 	Errors            []string
 	To                string `json:"to"`
 	Role              string `json:"role"`
+}
+
+type HTML struct {
+	BodyContent    string
+	BodyAttributes string
+	Head           string
+	Doctype        string
 }
 
 func NewNotify(body io.Reader) (Notify, error) {
@@ -76,20 +81,6 @@ func (notify *Notify) parseRequestBody(body io.Reader) error {
 		}
 	}
 	return nil
-}
-
-func (notify *Notify) ToOptions(client models.Client, kind models.Kind) postal.Options {
-	return postal.Options{
-		ReplyTo:           notify.ReplyTo,
-		Subject:           notify.Subject,
-		KindDescription:   kind.Description,
-		SourceDescription: client.Description,
-		Text:              notify.Text,
-		HTML:              notify.ParsedHTML,
-		KindID:            notify.KindID,
-		To:                notify.To,
-		Role:              notify.Role,
-	}
 }
 
 func (notify *Notify) extractHTML() error {

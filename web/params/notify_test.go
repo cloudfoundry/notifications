@@ -4,8 +4,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 
 	. "github.com/onsi/ginkgo"
@@ -340,45 +338,6 @@ var _ = Describe("Notify", func() {
 					Expect(parameters.ParsedHTML.Head).To(Equal("<title>New Relic</title>"))
 				})
 			})
-		})
-	})
-
-	Describe("ToOptions", func() {
-		It("converts itself to a postal.Options object", func() {
-			body := strings.NewReader(`{
-                "kind_id": "test_email",
-                "reply_to": "me@awesome.com",
-                "subject": "Summary of contents",
-                "text": "Contents of the email message",
-                "html": "<div>Some HTML</div>",
-                "role": "OrgManager"
-            }`)
-
-			parameters, err := params.NewNotify(body)
-			if err != nil {
-				panic(err)
-			}
-
-			client := models.Client{
-				ID:          "client-id",
-				Description: "Descriptive Component Name",
-			}
-			kind := models.Kind{
-				ID:          "test_email",
-				ClientID:    "client-id",
-				Description: "Descriptive Kind Name",
-			}
-			options := parameters.ToOptions(client, kind)
-			Expect(options).To(Equal(postal.Options{
-				KindID:            "test_email",
-				KindDescription:   "Descriptive Kind Name",
-				SourceDescription: "Descriptive Component Name",
-				ReplyTo:           "me@awesome.com",
-				Subject:           "Summary of contents",
-				Text:              "Contents of the email message",
-				HTML:              postal.HTML{BodyAttributes: "", BodyContent: "<div>Some HTML</div>"},
-				Role:              "OrgManager",
-			}))
 		})
 	})
 })

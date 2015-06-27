@@ -1,7 +1,6 @@
 package params_test
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 
 	. "github.com/onsi/ginkgo"
@@ -39,7 +38,7 @@ var _ = Describe("Validator", func() {
 				Expect(notify.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
 
 				notify.To = "otherUser@example.com"
-				notify.ParsedHTML = postal.HTML{BodyContent: "<p>Contents of this email message</p>"}
+				notify.ParsedHTML = params.HTML{BodyContent: "<p>Contents of this email message</p>"}
 
 				Expect(validator.Validate(notify)).To(BeTrue())
 				Expect(len(notify.Errors)).To(Equal(0))
