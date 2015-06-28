@@ -14,8 +14,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
+	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 	"github.com/pivotal-golang/lager"
@@ -184,16 +184,16 @@ func (m Mother) Logger() lager.Logger {
 	return logger
 }
 
-func (m Mother) Logging() middleware.RequestLogging {
-	return middleware.NewRequestLogging(m.Logger())
+func (m Mother) Logging() web.RequestLogging {
+	return web.NewRequestLogging(m.Logger())
 }
 
 func (m Mother) ErrorWriter() handlers.ErrorWriter {
 	return handlers.NewErrorWriter()
 }
 
-func (m Mother) Authenticator(scopes ...string) middleware.Authenticator {
-	return middleware.NewAuthenticator(UAAPublicKey, scopes...)
+func (m Mother) Authenticator(scopes ...string) web.Authenticator {
+	return web.NewAuthenticator(UAAPublicKey, scopes...)
 }
 
 func (m Mother) Registrar() services.Registrar {
@@ -294,7 +294,7 @@ func (m Mother) ReceiptsRepo() models.ReceiptsRepo {
 	return models.NewReceiptsRepo()
 }
 
-func (m Mother) CORS() middleware.CORS {
+func (m Mother) CORS() web.CORS {
 	env := NewEnvironment()
-	return middleware.NewCORS(env.CORSOrigin)
+	return web.NewCORS(env.CORSOrigin)
 }

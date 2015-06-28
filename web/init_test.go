@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/ryanmoran/stack"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/ryanmoran/stack"
 )
 
 func TestWebSuite(t *testing.T) {
+	fakes.RegisterFastTokenSigningMethod()
+
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Web Suite")
 }

@@ -1,4 +1,4 @@
-package middleware_test
+package web_test
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
+	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 
@@ -17,7 +17,7 @@ import (
 )
 
 var _ = Describe("Authenticator", func() {
-	var ware middleware.Authenticator
+	var ware web.Authenticator
 	var request *http.Request
 	var writer *httptest.ResponseRecorder
 	var rawToken string
@@ -26,7 +26,7 @@ var _ = Describe("Authenticator", func() {
 	BeforeEach(func() {
 		var err error
 
-		ware = middleware.NewAuthenticator(application.UAAPublicKey, "fake.scope", "gaben.scope")
+		ware = web.NewAuthenticator(application.UAAPublicKey, "fake.scope", "gaben.scope")
 		writer = httptest.NewRecorder()
 		request, err = http.NewRequest("GET", "/some/path", nil)
 		if err != nil {

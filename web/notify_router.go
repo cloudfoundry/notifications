@@ -4,7 +4,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )
@@ -12,18 +11,18 @@ import (
 func NewNotifyRouter(notify handlers.NotifyInterface,
 	errorWriter handlers.ErrorWriterInterface,
 	userStrategy services.StrategyInterface,
-	logging middleware.RequestLogging,
-	notificationsWriteAuthenticator middleware.Authenticator,
-	databaseAllocator middleware.DatabaseAllocator,
+	logging RequestLogging,
+	notificationsWriteAuthenticator Authenticator,
+	databaseAllocator DatabaseAllocator,
 	spaceStrategy services.StrategyInterface,
 	organizationStrategy services.StrategyInterface,
 	everyoneStrategy services.StrategyInterface,
 	uaaScopeStrategy services.StrategyInterface,
 	emailStrategy services.StrategyInterface,
-	emailsWriteAuthenticator middleware.Authenticator) *mux.Router {
+	emailsWriteAuthenticator Authenticator) *mux.Router {
 
 	router := mux.NewRouter()
-	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
+	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
 
 	router.Handle("/users/{user_id}", stack.NewStack(handlers.NewNotifyUser(notify, errorWriter, userStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator)).Methods("POST").Name("POST /users/{user_id}")
 	router.Handle("/spaces/{space_id}", stack.NewStack(handlers.NewNotifySpace(notify, errorWriter, spaceStrategy)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator)).Methods("POST").Name("POST /spaces/{space_id}")

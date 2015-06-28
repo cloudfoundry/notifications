@@ -1,4 +1,4 @@
-package middleware_test
+package web_test
 
 import (
 	"bytes"
@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
 
@@ -25,7 +25,7 @@ type logLine struct {
 
 var _ = Describe("RequestLogging", func() {
 	var (
-		ware      middleware.RequestLogging
+		ware      web.RequestLogging
 		request   *http.Request
 		writer    *httptest.ResponseRecorder
 		context   stack.Context
@@ -45,7 +45,7 @@ var _ = Describe("RequestLogging", func() {
 		logger.RegisterSink(lager.NewWriterSink(logWriter, lager.DEBUG))
 
 		writer = httptest.NewRecorder()
-		ware = middleware.NewRequestLogging(logger)
+		ware = web.NewRequestLogging(logger)
 		context = stack.NewContext()
 	})
 

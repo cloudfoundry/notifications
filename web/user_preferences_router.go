@@ -4,23 +4,22 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )
 
-func NewUserPreferencesRouter(logging middleware.RequestLogging,
-	cors middleware.CORS,
+func NewUserPreferencesRouter(logging RequestLogging,
+	cors CORS,
 	preferencesFinder services.PreferencesFinderInterface,
 	errorWriter handlers.ErrorWriterInterface,
-	notificationPreferencesReadAuthenticator middleware.Authenticator,
-	databaseAllocator middleware.DatabaseAllocator,
-	notificationPreferencesAdminAuthenticator middleware.Authenticator,
+	notificationPreferencesReadAuthenticator Authenticator,
+	databaseAllocator DatabaseAllocator,
+	notificationPreferencesAdminAuthenticator Authenticator,
 	preferenceUpdater services.PreferenceUpdaterInterface,
-	notificationPreferencesWriteAuthenticator middleware.Authenticator) *mux.Router {
+	notificationPreferencesWriteAuthenticator Authenticator) *mux.Router {
 
 	router := mux.NewRouter()
-	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
+	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
 
 	router.Handle("/user_preferences", stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors)).Methods("OPTIONS").Name("OPTIONS /user_preferences")
 	router.Handle("/user_preferences", stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesReadAuthenticator, databaseAllocator)).Methods("GET").Name("GET /user_preferences")

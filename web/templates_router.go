@@ -4,26 +4,25 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )
 
 func NewTemplatesRouter(templateFinder services.TemplateFinderInterface,
 	errorWriter handlers.ErrorWriterInterface,
-	logging middleware.RequestLogging,
-	notificationsTemplateReadAuthenticator middleware.Authenticator,
-	notificationsTemplateWriteAuthenticator middleware.Authenticator,
-	databaseAllocator middleware.DatabaseAllocator,
+	logging RequestLogging,
+	notificationsTemplateReadAuthenticator Authenticator,
+	notificationsTemplateWriteAuthenticator Authenticator,
+	databaseAllocator DatabaseAllocator,
 	templateUpdater services.TemplateUpdaterInterface,
 	templateCreator services.TemplateCreatorInterface,
 	templateDeleter services.TemplateDeleterInterface,
 	templateAssociationLister services.TemplateAssociationListerInterface,
-	notificationsManageAuthenticator middleware.Authenticator,
+	notificationsManageAuthenticator Authenticator,
 	templateLister services.TemplateListerInterface) *mux.Router {
 
 	router := mux.NewRouter()
-	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
+	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
 
 	router.Handle("/default_template", stack.NewStack(handlers.NewGetDefaultTemplate(templateFinder, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator)).Methods("GET").Name("GET /default_template")
 	router.Handle("/default_template", stack.NewStack(handlers.NewUpdateDefaultTemplate(templateUpdater, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator)).Methods("PUT").Name("PUT /default_template")
