@@ -22,3 +22,11 @@ type kindsRepo interface {
 type preferencesRepo interface {
 	FindNonCriticalPreferences(models.ConnectionInterface, string) ([]models.Preference, error)
 }
+
+type templatesRepo interface {
+	FindByID(models.ConnectionInterface, string) (models.Template, error)
+	Create(models.ConnectionInterface, models.Template) (models.Template, error)
+	Destroy(models.ConnectionInterface, string) error
+	ListIDsAndNames(models.ConnectionInterface) ([]models.Template, error)
+	Update(models.ConnectionInterface, string, models.Template) (models.Template, error)
+}

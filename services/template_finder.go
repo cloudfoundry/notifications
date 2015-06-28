@@ -3,14 +3,14 @@ package services
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type TemplateFinder struct {
-	templatesRepo models.TemplatesRepoInterface
+	templatesRepo templatesRepo
 }
 
 type TemplateFinderInterface interface {
 	FindByID(models.DatabaseInterface, string) (models.Template, error)
 }
 
-func NewTemplateFinder(templatesRepo models.TemplatesRepoInterface) TemplateFinder {
+func NewTemplateFinder(templatesRepo templatesRepo) TemplateFinder {
 	return TemplateFinder{
 		templatesRepo: templatesRepo,
 	}

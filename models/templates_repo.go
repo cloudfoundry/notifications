@@ -5,14 +5,6 @@ import (
 	"time"
 )
 
-type TemplatesRepoInterface interface {
-	FindByID(ConnectionInterface, string) (Template, error)
-	Create(ConnectionInterface, Template) (Template, error)
-	Update(ConnectionInterface, string, Template) (Template, error)
-	ListIDsAndNames(ConnectionInterface) ([]Template, error)
-	Destroy(ConnectionInterface, string) error
-}
-
 type TemplatesRepo struct{}
 
 func NewTemplatesRepo() TemplatesRepo {

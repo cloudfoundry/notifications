@@ -14,14 +14,14 @@ type TemplatesLoader struct {
 	database      models.DatabaseInterface
 	clientsRepo   clientsRepo
 	kindsRepo     kindsRepo
-	templatesRepo models.TemplatesRepoInterface
+	templatesRepo templatesRepo
 }
 
 type clientsRepo interface {
 	Find(models.ConnectionInterface, string) (models.Client, error)
 }
 
-func NewTemplatesLoader(finder services.TemplateFinderInterface, database models.DatabaseInterface, clientsRepo clientsRepo, kindsRepo kindsRepo, templatesRepo models.TemplatesRepoInterface) TemplatesLoader {
+func NewTemplatesLoader(finder services.TemplateFinderInterface, database models.DatabaseInterface, clientsRepo clientsRepo, kindsRepo kindsRepo, templatesRepo templatesRepo) TemplatesLoader {
 
 	return TemplatesLoader{
 		finder:        finder,

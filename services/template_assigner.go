@@ -10,10 +10,10 @@ type TemplateAssignerInterface interface {
 type TemplateAssigner struct {
 	clientsRepo   clientsRepo
 	kindsRepo     kindsRepo
-	templatesRepo models.TemplatesRepoInterface
+	templatesRepo templatesRepo
 }
 
-func NewTemplateAssigner(clientsRepo clientsRepo, kindsRepo kindsRepo, templatesRepo models.TemplatesRepoInterface) TemplateAssigner {
+func NewTemplateAssigner(clientsRepo clientsRepo, kindsRepo kindsRepo, templatesRepo templatesRepo) TemplateAssigner {
 	return TemplateAssigner{
 		clientsRepo:   clientsRepo,
 		kindsRepo:     kindsRepo,

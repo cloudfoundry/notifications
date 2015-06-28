@@ -14,10 +14,10 @@ type TemplateAssociationListerInterface interface {
 type TemplateAssociationLister struct {
 	clientsRepo   clientsRepo
 	kindsRepo     kindsRepo
-	templatesRepo models.TemplatesRepoInterface
+	templatesRepo templatesRepo
 }
 
-func NewTemplateAssociationLister(clientsRepo clientsRepo, kindsRepo kindsRepo, templatesRepo models.TemplatesRepoInterface) TemplateAssociationLister {
+func NewTemplateAssociationLister(clientsRepo clientsRepo, kindsRepo kindsRepo, templatesRepo templatesRepo) TemplateAssociationLister {
 	return TemplateAssociationLister{
 		clientsRepo:   clientsRepo,
 		kindsRepo:     kindsRepo,

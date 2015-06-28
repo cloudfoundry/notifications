@@ -13,3 +13,7 @@ type kindsRepo interface {
 type receiptsRepo interface {
 	CreateReceipts(models.ConnectionInterface, []string, string, string) error
 }
+
+type templatesRepo interface {
+	FindByID(models.ConnectionInterface, string) (models.Template, error)
+}

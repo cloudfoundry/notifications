@@ -7,17 +7,17 @@ type TemplateCreatorInterface interface {
 }
 
 type TemplateCreator struct {
-	repo models.TemplatesRepoInterface
+	templatesRepo templatesRepo
 }
 
-func NewTemplateCreator(repo models.TemplatesRepoInterface) TemplateCreator {
+func NewTemplateCreator(templatesRepo templatesRepo) TemplateCreator {
 	return TemplateCreator{
-		repo: repo,
+		templatesRepo: templatesRepo,
 	}
 }
 
 func (creator TemplateCreator) Create(database models.DatabaseInterface, template models.Template) (string, error) {
-	newTemplate, err := creator.repo.Create(database.Connection(), template)
+	newTemplate, err := creator.templatesRepo.Create(database.Connection(), template)
 	if err != nil {
 		return "", err
 	}

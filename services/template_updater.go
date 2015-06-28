@@ -7,17 +7,17 @@ type TemplateUpdaterInterface interface {
 }
 
 type TemplateUpdater struct {
-	repo models.TemplatesRepoInterface
+	templatesRepo templatesRepo
 }
 
-func NewTemplateUpdater(repo models.TemplatesRepoInterface) TemplateUpdater {
+func NewTemplateUpdater(templatesRepo templatesRepo) TemplateUpdater {
 	return TemplateUpdater{
-		repo: repo,
+		templatesRepo: templatesRepo,
 	}
 }
 
 func (updater TemplateUpdater) Update(database models.DatabaseInterface, templateID string, template models.Template) error {
-	_, err := updater.repo.Update(database.Connection(), templateID, template)
+	_, err := updater.templatesRepo.Update(database.Connection(), templateID, template)
 	if err != nil {
 		return err
 	}
