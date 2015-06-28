@@ -2,7 +2,6 @@ package strategies
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
 )
 
@@ -12,13 +11,13 @@ const (
 )
 
 type OrganizationStrategy struct {
-	tokenLoader        postal.TokenLoaderInterface
+	tokenLoader        TokenLoader
 	organizationLoader services.OrganizationLoaderInterface
 	findsUserGUIDs     services.FindsUserGUIDsInterface
 	enqueuer           EnqueuerInterface
 }
 
-func NewOrganizationStrategy(tokenLoader postal.TokenLoaderInterface, organizationLoader services.OrganizationLoaderInterface,
+func NewOrganizationStrategy(tokenLoader TokenLoader, organizationLoader services.OrganizationLoaderInterface,
 	findsUserGUIDs services.FindsUserGUIDsInterface, enqueuer EnqueuerInterface) OrganizationStrategy {
 
 	return OrganizationStrategy{
@@ -31,7 +30,7 @@ func NewOrganizationStrategy(tokenLoader postal.TokenLoaderInterface, organizati
 
 func (strategy OrganizationStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 	responses := []Response{}
-	options := postal.Options{
+	options := Options{
 		To:                dispatch.Message.To,
 		ReplyTo:           dispatch.Message.ReplyTo,
 		Subject:           dispatch.Message.Subject,
@@ -41,7 +40,7 @@ func (strategy OrganizationStrategy) Dispatch(dispatch Dispatch) ([]Response, er
 		Endorsement:       OrganizationEndorsement,
 		Text:              dispatch.Message.Text,
 		Role:              dispatch.Role,
-		HTML: postal.HTML{
+		HTML: HTML{
 			BodyContent:    dispatch.Message.HTML.BodyContent,
 			BodyAttributes: dispatch.Message.HTML.BodyAttributes,
 			Head:           dispatch.Message.HTML.Head,

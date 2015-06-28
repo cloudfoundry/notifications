@@ -1,9 +1,6 @@
 package strategies
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/postal"
-)
+import "github.com/cloudfoundry-incubator/notifications/cf"
 
 const EmailEndorsement = "This message was sent directly to your email address."
 
@@ -18,7 +15,7 @@ func NewEmailStrategy(enqueuer EnqueuerInterface) EmailStrategy {
 }
 
 func (strategy EmailStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
-	options := postal.Options{
+	options := Options{
 		To:                dispatch.Message.To,
 		ReplyTo:           dispatch.Message.ReplyTo,
 		Subject:           dispatch.Message.Subject,
@@ -27,7 +24,7 @@ func (strategy EmailStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		SourceDescription: dispatch.Client.Description,
 		Endorsement:       EmailEndorsement,
 		Text:              dispatch.Message.Text,
-		HTML: postal.HTML{
+		HTML: HTML{
 			BodyContent:    dispatch.Message.HTML.BodyContent,
 			BodyAttributes: dispatch.Message.HTML.BodyAttributes,
 			Head:           dispatch.Message.HTML.Head,

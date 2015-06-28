@@ -8,7 +8,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 
 	. "github.com/onsi/ginkgo"
@@ -43,7 +42,7 @@ var _ = Describe("Enqueuer", func() {
 	Describe("Enqueue", func() {
 		It("returns the correct types of responses for users", func() {
 			users := []strategies.User{{GUID: "user-1"}, {Email: "user-2@example.com"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			responses := enqueuer.Enqueue(conn, users, postal.Options{KindID: "the-kind"}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
+			responses := enqueuer.Enqueue(conn, users, strategies.Options{KindID: "the-kind"}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
 
 			Expect(responses).To(HaveLen(4))
 			Expect(responses).To(ConsistOf([]strategies.Response{
@@ -76,12 +75,12 @@ var _ = Describe("Enqueuer", func() {
 
 		It("enqueues jobs with the deliveries", func() {
 			users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			enqueuer.Enqueue(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
+			enqueuer.Enqueue(conn, users, strategies.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
 
-			var deliveries []postal.Delivery
+			var deliveries []strategies.Delivery
 			for _ = range users {
 				job := <-queue.Reserve("me")
-				var delivery postal.Delivery
+				var delivery strategies.Delivery
 				err := job.Unmarshal(&delivery)
 				if err != nil {
 					panic(err)
@@ -90,9 +89,9 @@ var _ = Describe("Enqueuer", func() {
 			}
 
 			Expect(deliveries).To(HaveLen(4))
-			Expect(deliveries).To(ConsistOf([]postal.Delivery{
+			Expect(deliveries).To(ConsistOf([]strategies.Delivery{
 				{
-					Options:         postal.Options{},
+					Options:         strategies.Options{},
 					UserGUID:        "user-1",
 					Space:           space,
 					Organization:    org,
@@ -103,7 +102,7 @@ var _ = Describe("Enqueuer", func() {
 					RequestReceived: reqReceived,
 				},
 				{
-					Options:         postal.Options{},
+					Options:         strategies.Options{},
 					UserGUID:        "user-2",
 					Space:           space,
 					Organization:    org,
@@ -114,7 +113,7 @@ var _ = Describe("Enqueuer", func() {
 					RequestReceived: reqReceived,
 				},
 				{
-					Options:         postal.Options{},
+					Options:         strategies.Options{},
 					UserGUID:        "user-3",
 					Space:           space,
 					Organization:    org,
@@ -125,7 +124,7 @@ var _ = Describe("Enqueuer", func() {
 					RequestReceived: reqReceived,
 				},
 				{
-					Options:         postal.Options{},
+					Options:         strategies.Options{},
 					UserGUID:        "user-4",
 					Space:           space,
 					Organization:    org,
@@ -140,12 +139,12 @@ var _ = Describe("Enqueuer", func() {
 
 		It("Upserts a StatusQueued for each of the jobs", func() {
 			users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			enqueuer.Enqueue(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
+			enqueuer.Enqueue(conn, users, strategies.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
 
 			var statuses []string
 			for _ = range users {
 				job := <-queue.Reserve("me")
-				var delivery postal.Delivery
+				var delivery strategies.Delivery
 				err := job.Unmarshal(&delivery)
 				if err != nil {
 					panic(err)
@@ -160,13 +159,13 @@ var _ = Describe("Enqueuer", func() {
 			}
 
 			Expect(statuses).To(HaveLen(4))
-			Expect(statuses).To(ConsistOf([]string{postal.StatusQueued, postal.StatusQueued, postal.StatusQueued, postal.StatusQueued}))
+			Expect(statuses).To(ConsistOf([]string{strategies.StatusQueued, strategies.StatusQueued, strategies.StatusQueued, strategies.StatusQueued}))
 		})
 
 		Context("using a transaction", func() {
 			It("commits the transaction when everything goes well", func() {
 				users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-				responses := enqueuer.Enqueue(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
+				responses := enqueuer.Enqueue(conn, users, strategies.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())
@@ -177,7 +176,7 @@ var _ = Describe("Enqueuer", func() {
 			It("rolls back the transaction when there is an error in message repo upserting", func() {
 				messagesRepo.UpsertError = errors.New("BOOM!")
 				users := []strategies.User{{GUID: "user-1"}}
-				enqueuer.Enqueue(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
+				enqueuer.Enqueue(conn, users, strategies.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeFalse())
@@ -187,7 +186,7 @@ var _ = Describe("Enqueuer", func() {
 			It("returns an empty slice of Response if transaction fails", func() {
 				conn.CommitError = "the commit blew up"
 				users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-				responses := enqueuer.Enqueue(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
+				responses := enqueuer.Enqueue(conn, users, strategies.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())

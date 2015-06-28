@@ -1,9 +1,6 @@
 package strategies
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/postal"
-)
+import "github.com/cloudfoundry-incubator/notifications/cf"
 
 const UserEndorsement = "This message was sent directly to you."
 
@@ -18,7 +15,7 @@ func NewUserStrategy(enqueuer EnqueuerInterface) UserStrategy {
 }
 
 func (strategy UserStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
-	options := postal.Options{
+	options := Options{
 		ReplyTo:           dispatch.Message.ReplyTo,
 		Subject:           dispatch.Message.Subject,
 		To:                dispatch.Message.To,
@@ -27,7 +24,7 @@ func (strategy UserStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		KindDescription:   dispatch.Kind.Description,
 		SourceDescription: dispatch.Client.Description,
 		Text:              dispatch.Message.Text,
-		HTML: postal.HTML{
+		HTML: HTML{
 			BodyContent:    dispatch.Message.HTML.BodyContent,
 			BodyAttributes: dispatch.Message.HTML.BodyAttributes,
 			Head:           dispatch.Message.HTML.Head,

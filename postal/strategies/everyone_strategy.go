@@ -2,19 +2,18 @@ package strategies
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
 )
 
 const EveryoneEndorsement = "This message was sent to everyone."
 
 type EveryoneStrategy struct {
-	tokenLoader postal.TokenLoaderInterface
+	tokenLoader TokenLoader
 	allUsers    services.AllUsersInterface
 	enqueuer    EnqueuerInterface
 }
 
-func NewEveryoneStrategy(tokenLoader postal.TokenLoaderInterface, allUsers services.AllUsersInterface, enqueuer EnqueuerInterface) EveryoneStrategy {
+func NewEveryoneStrategy(tokenLoader TokenLoader, allUsers services.AllUsersInterface, enqueuer EnqueuerInterface) EveryoneStrategy {
 	return EveryoneStrategy{
 		tokenLoader: tokenLoader,
 		allUsers:    allUsers,
@@ -24,7 +23,7 @@ func NewEveryoneStrategy(tokenLoader postal.TokenLoaderInterface, allUsers servi
 
 func (strategy EveryoneStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 	responses := []Response{}
-	options := postal.Options{
+	options := Options{
 		ReplyTo:           dispatch.Message.ReplyTo,
 		Subject:           dispatch.Message.Subject,
 		To:                dispatch.Message.To,
@@ -33,7 +32,7 @@ func (strategy EveryoneStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		KindDescription:   dispatch.Kind.Description,
 		SourceDescription: dispatch.Client.Description,
 		Text:              dispatch.Message.Text,
-		HTML: postal.HTML{
+		HTML: HTML{
 			BodyContent:    dispatch.Message.HTML.BodyContent,
 			BodyAttributes: dispatch.Message.HTML.BodyAttributes,
 			Head:           dispatch.Message.HTML.Head,

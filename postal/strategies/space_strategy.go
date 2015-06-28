@@ -1,21 +1,18 @@
 package strategies
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/services"
-)
+import "github.com/cloudfoundry-incubator/notifications/services"
 
 const SpaceEndorsement = `You received this message because you belong to the "{{.Space}}" space in the "{{.Organization}}" organization.`
 
 type SpaceStrategy struct {
-	tokenLoader        postal.TokenLoaderInterface
+	tokenLoader        TokenLoader
 	spaceLoader        services.SpaceLoaderInterface
 	organizationLoader services.OrganizationLoaderInterface
 	findsUserGUIDs     services.FindsUserGUIDsInterface
 	enqueuer           EnqueuerInterface
 }
 
-func NewSpaceStrategy(tokenLoader postal.TokenLoaderInterface, spaceLoader services.SpaceLoaderInterface, organizationLoader services.OrganizationLoaderInterface,
+func NewSpaceStrategy(tokenLoader TokenLoader, spaceLoader services.SpaceLoaderInterface, organizationLoader services.OrganizationLoaderInterface,
 	findsUserGUIDs services.FindsUserGUIDsInterface, enqueuer EnqueuerInterface) SpaceStrategy {
 
 	return SpaceStrategy{
@@ -29,7 +26,7 @@ func NewSpaceStrategy(tokenLoader postal.TokenLoaderInterface, spaceLoader servi
 
 func (strategy SpaceStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 	responses := []Response{}
-	options := postal.Options{
+	options := Options{
 		To:                dispatch.Message.To,
 		ReplyTo:           dispatch.Message.ReplyTo,
 		Subject:           dispatch.Message.Subject,
@@ -39,7 +36,7 @@ func (strategy SpaceStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		Endorsement:       SpaceEndorsement,
 		Text:              dispatch.Message.Text,
 		Role:              dispatch.Role,
-		HTML: postal.HTML{
+		HTML: HTML{
 			BodyContent:    dispatch.Message.HTML.BodyContent,
 			BodyAttributes: dispatch.Message.HTML.BodyAttributes,
 			Head:           dispatch.Message.HTML.Head,

@@ -6,7 +6,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 
 	. "github.com/onsi/ginkgo"
@@ -80,7 +79,7 @@ var _ = Describe("Everyone Strategy", func() {
 
 			Expect(enqueuer.EnqueueCall.Args.Connection).To(Equal(conn))
 			Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
-			Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(postal.Options{
+			Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(strategies.Options{
 				ReplyTo:           "reply-to@example.com",
 				Subject:           "this is the subject",
 				To:                "dr@strangelove.com",
@@ -88,7 +87,7 @@ var _ = Describe("Everyone Strategy", func() {
 				KindDescription:   "Your Official Welcome",
 				SourceDescription: "Welcome system",
 				Text:              "Welcome to the system, now get off my lawn.",
-				HTML: postal.HTML{
+				HTML: strategies.HTML{
 					BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
 					BodyAttributes: "some-html-body-attributes",
 					Head:           "<head></head>",

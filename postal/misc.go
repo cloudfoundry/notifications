@@ -1,7 +1,5 @@
 package postal
 
-import "github.com/nu7hatch/gouuid"
-
 const (
 	StatusUnavailable   = "unavailable"
 	StatusFailed        = "failed"
@@ -16,8 +14,6 @@ type Templates struct {
 	Text    string
 	HTML    string
 }
-
-type GUIDGenerationFunc func() (*uuid.UUID, error)
 
 type HTML struct {
 	BodyContent    string

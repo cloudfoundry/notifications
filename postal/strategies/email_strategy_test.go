@@ -5,7 +5,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 
 	. "github.com/onsi/ginkgo"
@@ -62,13 +61,13 @@ var _ = Describe("EmailStrategy", func() {
 
 			Expect(enqueuer.EnqueueCall.Args.Connection).To(Equal(conn))
 			Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
-			Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(postal.Options{
+			Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(strategies.Options{
 				ReplyTo:           "reply-to@example.com",
 				Subject:           "this is the subject",
 				KindDescription:   "description of a kind",
 				SourceDescription: "description of a client",
 				Text:              "email text",
-				HTML: postal.HTML{
+				HTML: strategies.HTML{
 					BodyContent:    "some html body content",
 					BodyAttributes: "some html body attributes",
 					Head:           "the html head tag",

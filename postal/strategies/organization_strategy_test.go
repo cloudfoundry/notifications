@@ -6,7 +6,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 
 	. "github.com/onsi/ginkgo"
@@ -88,7 +87,7 @@ var _ = Describe("Organization Strategy", func() {
 
 				Expect(enqueuer.EnqueueCall.Args.Connection).To(Equal(conn))
 				Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
-				Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(postal.Options{
+				Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(strategies.Options{
 					ReplyTo:           "reply-to@example.com",
 					Subject:           "this is the subject",
 					To:                "dr@strangelove.com",
@@ -96,7 +95,7 @@ var _ = Describe("Organization Strategy", func() {
 					KindDescription:   "Password reminder",
 					SourceDescription: "Login system",
 					Text:              "Please reset your password by clicking on this link...",
-					HTML: postal.HTML{
+					HTML: strategies.HTML{
 						BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
 						BodyAttributes: "some-html-body-attributes",
 						Head:           "<head></head>",
@@ -148,7 +147,7 @@ var _ = Describe("Organization Strategy", func() {
 					})
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(postal.Options{
+					Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(strategies.Options{
 						ReplyTo:           "reply-to@example.com",
 						Subject:           "this is the subject",
 						To:                "dr@strangelove.com",
@@ -157,7 +156,7 @@ var _ = Describe("Organization Strategy", func() {
 						SourceDescription: "Login system",
 						Text:              "Please reset your password by clicking on this link...",
 						Role:              "OrgManager",
-						HTML: postal.HTML{
+						HTML: strategies.HTML{
 							BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
 							BodyAttributes: "some-html-body-attributes",
 							Head:           "<head></head>",

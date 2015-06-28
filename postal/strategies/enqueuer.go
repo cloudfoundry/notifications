@@ -6,16 +6,46 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/nu7hatch/gouuid"
 )
 
+const StatusQueued = "queued"
+
+type GUIDGenerationFunc func() (*uuid.UUID, error)
+
+type Options struct {
+	ReplyTo           string
+	Subject           string
+	KindDescription   string
+	SourceDescription string
+	Text              string
+	HTML              HTML
+	KindID            string
+	To                string
+	Role              string
+	Endorsement       string
+}
+
+type Delivery struct {
+	MessageID       string
+	Options         Options
+	UserGUID        string
+	Email           string
+	Space           cf.CloudControllerSpace
+	Organization    cf.CloudControllerOrganization
+	ClientID        string
+	Scope           string
+	VCAPRequestID   string
+	RequestReceived time.Time
+}
+
 type EnqueuerInterface interface {
-	Enqueue(models.ConnectionInterface, []User, postal.Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string, string, time.Time) []Response
+	Enqueue(models.ConnectionInterface, []User, Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string, string, time.Time) []Response
 }
 
 type Enqueuer struct {
 	queue         gobble.QueueInterface
-	guidGenerator postal.GUIDGenerationFunc
+	guidGenerator GUIDGenerationFunc
 	messagesRepo  MessagesRepoInterface
 }
 
@@ -23,7 +53,7 @@ type MessagesRepoInterface interface {
 	Upsert(models.ConnectionInterface, models.Message) (models.Message, error)
 }
 
-func NewEnqueuer(queue gobble.QueueInterface, guidGenerator postal.GUIDGenerationFunc, messagesRepo MessagesRepoInterface) Enqueuer {
+func NewEnqueuer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc, messagesRepo MessagesRepoInterface) Enqueuer {
 	return Enqueuer{
 		queue:         queue,
 		guidGenerator: guidGenerator,
@@ -31,9 +61,7 @@ func NewEnqueuer(queue gobble.QueueInterface, guidGenerator postal.GUIDGeneratio
 	}
 }
 
-func (enqueuer Enqueuer) Enqueue(conn models.ConnectionInterface, users []User,
-	options postal.Options, space cf.CloudControllerSpace,
-	organization cf.CloudControllerOrganization, clientID, scope, vcapRequestID string, reqReceived time.Time) []Response {
+func (enqueuer Enqueuer) Enqueue(conn models.ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, scope, vcapRequestID string, reqReceived time.Time) []Response {
 
 	responses := []Response{}
 	jobsByMessageID := map[string]gobble.Job{}
@@ -44,7 +72,7 @@ func (enqueuer Enqueuer) Enqueue(conn models.ConnectionInterface, users []User,
 		}
 		messageID := guid.String()
 
-		jobsByMessageID[messageID] = gobble.NewJob(postal.Delivery{
+		jobsByMessageID[messageID] = gobble.NewJob(Delivery{
 			Options:         options,
 			UserGUID:        user.GUID,
 			Email:           user.Email,
@@ -63,7 +91,7 @@ func (enqueuer Enqueuer) Enqueue(conn models.ConnectionInterface, users []User,
 		}
 
 		responses = append(responses, Response{
-			Status:         postal.StatusQueued,
+			Status:         StatusQueued,
 			NotificationID: messageID,
 			Recipient:      recipient,
 			VCAPRequestID:  vcapRequestID,
@@ -75,7 +103,7 @@ func (enqueuer Enqueuer) Enqueue(conn models.ConnectionInterface, users []User,
 	for messageID := range jobsByMessageID {
 		_, err := enqueuer.messagesRepo.Upsert(transaction, models.Message{
 			ID:     messageID,
-			Status: postal.StatusQueued,
+			Status: StatusQueued,
 		})
 		if err != nil {
 			transaction.Rollback()

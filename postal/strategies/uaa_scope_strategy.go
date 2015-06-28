@@ -2,7 +2,6 @@ package strategies
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
 )
 
@@ -10,7 +9,7 @@ const ScopeEndorsement = "You received this message because you have the {{.Scop
 
 type UAAScopeStrategy struct {
 	findsUserGUIDs services.FindsUserGUIDsInterface
-	tokenLoader    postal.TokenLoaderInterface
+	tokenLoader    TokenLoader
 	enqueuer       EnqueuerInterface
 }
 
@@ -20,7 +19,7 @@ func (d DefaultScopeError) Error() string {
 	return "You cannot send a notification to a default scope"
 }
 
-func NewUAAScopeStrategy(tokenLoader postal.TokenLoaderInterface, findsUserGUIDs services.FindsUserGUIDsInterface,
+func NewUAAScopeStrategy(tokenLoader TokenLoader, findsUserGUIDs services.FindsUserGUIDsInterface,
 	enqueuer EnqueuerInterface) UAAScopeStrategy {
 
 	return UAAScopeStrategy{
@@ -32,7 +31,7 @@ func NewUAAScopeStrategy(tokenLoader postal.TokenLoaderInterface, findsUserGUIDs
 
 func (strategy UAAScopeStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 	responses := []Response{}
-	options := postal.Options{
+	options := Options{
 		ReplyTo:           dispatch.Message.ReplyTo,
 		Subject:           dispatch.Message.Subject,
 		To:                dispatch.Message.To,
@@ -41,7 +40,7 @@ func (strategy UAAScopeStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		KindDescription:   dispatch.Kind.Description,
 		SourceDescription: dispatch.Client.Description,
 		Text:              dispatch.Message.Text,
-		HTML: postal.HTML{
+		HTML: HTML{
 			BodyContent:    dispatch.Message.HTML.BodyContent,
 			BodyAttributes: dispatch.Message.HTML.BodyAttributes,
 			Head:           dispatch.Message.HTML.Head,

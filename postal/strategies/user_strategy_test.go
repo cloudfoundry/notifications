@@ -6,7 +6,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 
 	. "github.com/onsi/ginkgo"
@@ -64,7 +63,7 @@ var _ = Describe("UserStrategy", func() {
 
 			Expect(reflect.ValueOf(enqueuer.EnqueueCall.Args.Connection).Pointer()).To(Equal(reflect.ValueOf(conn).Pointer()))
 			Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
-			Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(postal.Options{
+			Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(strategies.Options{
 				ReplyTo:           "reply-to@example.com",
 				Subject:           "this is the subject",
 				To:                "dr@strangelove.com",
@@ -72,7 +71,7 @@ var _ = Describe("UserStrategy", func() {
 				KindDescription:   "Water Bottle Reminder",
 				SourceDescription: "The Water Bottle System",
 				Text:              "Please make sure to leave your bottle in a place that is safe and dry",
-				HTML: postal.HTML{
+				HTML: strategies.HTML{
 					BodyContent:    "<p>The water bottle needs to be safe and dry</p>",
 					BodyAttributes: "some-html-body-attributes",
 					Head:           "<head></head>",
