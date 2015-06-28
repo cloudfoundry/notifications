@@ -3,7 +3,7 @@ package services
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type PreferencesFinder struct {
-	preferencesRepo        models.PreferencesRepoInterface
+	preferencesRepo        preferencesRepo
 	globalUnsubscribesRepo globalUnsubscribesRepo
 }
 
@@ -11,7 +11,7 @@ type PreferencesFinderInterface interface {
 	Find(models.DatabaseInterface, string) (PreferencesBuilder, error)
 }
 
-func NewPreferencesFinder(preferencesRepo models.PreferencesRepoInterface, globalUnsubscribesRepo globalUnsubscribesRepo) *PreferencesFinder {
+func NewPreferencesFinder(preferencesRepo preferencesRepo, globalUnsubscribesRepo globalUnsubscribesRepo) *PreferencesFinder {
 	return &PreferencesFinder{
 		preferencesRepo:        preferencesRepo,
 		globalUnsubscribesRepo: globalUnsubscribesRepo,

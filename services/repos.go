@@ -18,3 +18,7 @@ type kindsRepo interface {
 	FindAllByTemplateID(models.ConnectionInterface, string) ([]models.Kind, error)
 	Trim(models.ConnectionInterface, string, []string) (int, error)
 }
+
+type preferencesRepo interface {
+	FindNonCriticalPreferences(models.ConnectionInterface, string) ([]models.Preference, error)
+}

@@ -4,10 +4,6 @@ type PreferencesRepo struct {
 	unsubscribesRepo UnsubscribesRepo
 }
 
-type PreferencesRepoInterface interface {
-	FindNonCriticalPreferences(ConnectionInterface, string) ([]Preference, error)
-}
-
 func NewPreferencesRepo() PreferencesRepo {
 	return PreferencesRepo{}
 }
