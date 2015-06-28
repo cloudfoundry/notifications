@@ -27,7 +27,7 @@ func (handler RegisterNotifications) ServeHTTP(w http.ResponseWriter, req *http.
 	database := context.Get("database").(models.DatabaseInterface)
 	connection := database.Connection()
 
-	parameters, err := params.NewRegistration(req.Body)
+	parameters, err := params.NewRegistrationParams(req.Body)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

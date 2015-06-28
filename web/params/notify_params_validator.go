@@ -2,7 +2,7 @@ package params
 
 type EmailValidator struct{}
 
-func (validator EmailValidator) Validate(notify *Notify) bool {
+func (validator EmailValidator) Validate(notify *NotifyParams) bool {
 	notify.Errors = []string{}
 
 	if notify.To == "" {
@@ -22,7 +22,7 @@ func (validator EmailValidator) Validate(notify *Notify) bool {
 
 type GUIDValidator struct{}
 
-func (validator GUIDValidator) Validate(notify *Notify) bool {
+func (validator GUIDValidator) Validate(notify *NotifyParams) bool {
 	notify.Errors = []string{}
 
 	validator.checkKindIDField(notify)
@@ -38,7 +38,7 @@ func (validator GUIDValidator) Validate(notify *Notify) bool {
 	return len(notify.Errors) == 0
 }
 
-func missingTextOrHTMLFields(notify *Notify) bool {
+func missingTextOrHTMLFields(notify *NotifyParams) bool {
 	return notify.Text == "" && notify.ParsedHTML.BodyContent == ""
 }
 
@@ -55,7 +55,7 @@ func (validator GUIDValidator) invalidRoleField(roleName string) bool {
 	return true
 }
 
-func (validator GUIDValidator) checkKindIDField(notify *Notify) {
+func (validator GUIDValidator) checkKindIDField(notify *NotifyParams) {
 	if notify.KindID == "" {
 		notify.Errors = append(notify.Errors, `"kind_id" is a required field`)
 	} else {

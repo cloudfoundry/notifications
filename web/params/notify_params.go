@@ -14,7 +14,7 @@ const InvalidEmail = "<>InvalidEmail<>"
 
 var validOrganizationRoles = []string{"OrgManager", "OrgAuditor", "BillingManager"}
 
-type Notify struct {
+type NotifyParams struct {
 	ReplyTo           string `json:"reply_to"`
 	Subject           string `json:"subject"`
 	Text              string `json:"text"`
@@ -35,8 +35,8 @@ type HTML struct {
 	Doctype        string
 }
 
-func NewNotify(body io.Reader) (Notify, error) {
-	notify := Notify{}
+func NewNotifyParams(body io.ReadCloser) (NotifyParams, error) {
+	notify := NotifyParams{}
 
 	err := notify.parseRequestBody(body)
 	if err != nil {
@@ -53,7 +53,7 @@ func NewNotify(body io.Reader) (Notify, error) {
 	return notify, nil
 }
 
-func (notify *Notify) formatEmail() {
+func (notify *NotifyParams) formatEmail() {
 	if notify.To == "" {
 		return
 	}
@@ -71,7 +71,9 @@ func (notify *Notify) formatEmail() {
 	}
 }
 
-func (notify *Notify) parseRequestBody(body io.Reader) error {
+func (notify *NotifyParams) parseRequestBody(body io.ReadCloser) error {
+	defer body.Close()
+
 	buffer := bytes.NewBuffer([]byte{})
 	buffer.ReadFrom(body)
 	if buffer.Len() > 0 {
@@ -83,7 +85,7 @@ func (notify *Notify) parseRequestBody(body io.Reader) error {
 	return nil
 }
 
-func (notify *Notify) extractHTML() error {
+func (notify *NotifyParams) extractHTML() error {
 	reader := strings.NewReader(notify.RawHTML)
 	document, err := goquery.NewDocumentFromReader(reader)
 	if err != nil {
@@ -119,7 +121,7 @@ func (notify *Notify) extractHTML() error {
 	return nil
 }
 
-func (notify *Notify) extractDoctype(rawHTML string) (string, error) {
+func (notify *NotifyParams) extractDoctype(rawHTML string) (string, error) {
 	r, err := regexp.Compile("<!DOCTYPE[^>]*>")
 	if err != nil {
 		return "", err
@@ -128,7 +130,7 @@ func (notify *Notify) extractDoctype(rawHTML string) (string, error) {
 
 }
 
-func (notify *Notify) extractHead(document *goquery.Document) (string, error) {
+func (notify *NotifyParams) extractHead(document *goquery.Document) (string, error) {
 	htmlHead, err := document.Find("head").Html()
 	if err != nil {
 		return "", err

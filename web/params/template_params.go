@@ -9,7 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/valiant"
 )
 
-type Template struct {
+type TemplateParams struct {
 	Name     string          `json:"name" validate-required:"true"`
 	Text     string          `json:"text"`
 	HTML     string          `json:"html" validate-required:"true"`
@@ -23,8 +23,10 @@ func (err TemplateCreateError) Error() string {
 	return "Failed to create Template in the database"
 }
 
-func NewTemplate(body io.Reader) (Template, error) {
-	var template Template
+func NewTemplateParams(body io.ReadCloser) (TemplateParams, error) {
+	defer body.Close()
+
+	var template TemplateParams
 	validator := valiant.NewValidator(body)
 
 	err := validator.Validate(&template)
@@ -43,7 +45,7 @@ func NewTemplate(body io.Reader) (Template, error) {
 
 	err = template.validateSyntax()
 	if err != nil {
-		return Template{}, err
+		return TemplateParams{}, err
 	}
 
 	template.setDefaults()
@@ -51,7 +53,7 @@ func NewTemplate(body io.Reader) (Template, error) {
 	return template, nil
 }
 
-func (t Template) validateSyntax() error {
+func (t TemplateParams) validateSyntax() error {
 	toValidate := map[string]string{
 		"Subject": t.Subject,
 		"Text":    t.Text,
@@ -68,7 +70,7 @@ func (t Template) validateSyntax() error {
 	return nil
 }
 
-func (t Template) ToModel() models.Template {
+func (t TemplateParams) ToModel() models.Template {
 	return models.Template{
 		Name:     t.Name,
 		Text:     t.Text,
@@ -78,7 +80,7 @@ func (t Template) ToModel() models.Template {
 	}
 }
 
-func (t *Template) setDefaults() {
+func (t *TemplateParams) setDefaults() {
 	if t.Subject == "" {
 		t.Subject = "{{.Subject}}"
 	}

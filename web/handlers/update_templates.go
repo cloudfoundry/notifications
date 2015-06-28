@@ -25,7 +25,7 @@ func NewUpdateTemplates(updater services.TemplateUpdaterInterface, errorWriter E
 func (handler UpdateTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	templateID := strings.Split(req.URL.String(), "/templates/")[1]
 
-	templateParams, err := params.NewTemplate(req.Body)
+	templateParams, err := params.NewTemplateParams(req.Body)
 	if err != nil {
 		handler.ErrorWriter.Write(w, err)
 		return

@@ -22,7 +22,7 @@ func NewCreateTemplate(creator services.TemplateCreatorInterface, errorWriter Er
 }
 
 func (handler CreateTemplate) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	templateParams, err := params.NewTemplate(req.Body)
+	templateParams, err := params.NewTemplateParams(req.Body)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

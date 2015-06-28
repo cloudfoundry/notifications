@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -19,8 +20,12 @@ func (reader ErrorReader) Read(b []byte) (int, error) {
 	return 0, errors.New("BOOM!")
 }
 
-var _ = Describe("Registration", func() {
-	Describe("NewRegistration", func() {
+func (reader ErrorReader) Close() error {
+	return nil
+}
+
+var _ = Describe("RegistrationParams", func() {
+	Describe("NewRegistrationParams", func() {
 		It("constructs parameters from a reader", func() {
 			body, err := json.Marshal(map[string]interface{}{
 				"source_description": "Raptor Containment Unit",
@@ -36,15 +41,10 @@ var _ = Describe("Registration", func() {
 					},
 				},
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
-			parameters, err := params.NewRegistration(bytes.NewBuffer(body))
-			if err != nil {
-				panic(err)
-			}
-
+			parameters, err := params.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+			Expect(err).NotTo(HaveOccurred())
 			Expect(parameters.SourceDescription).To(Equal("Raptor Containment Unit"))
 			Expect(len(parameters.Kinds)).To(Equal(2))
 			Expect(parameters.Kinds).To(ContainElement(models.Kind{
@@ -64,25 +64,21 @@ var _ = Describe("Registration", func() {
 			body, err := json.Marshal(map[string]interface{}{
 				"source_description": "Raptor Containment Unit",
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
-			parameters, err := params.NewRegistration(bytes.NewBuffer(body))
-			if err != nil {
-				panic(err)
-			}
+			parameters, err := params.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(parameters.IncludesKinds).To(BeFalse())
 		})
 
 		It("returns an error when the parameters are invalid JSON", func() {
-			_, err := params.NewRegistration(strings.NewReader("this is not valid JSON"))
+			_, err := params.NewRegistrationParams(ioutil.NopCloser(strings.NewReader("this is not valid JSON")))
 			Expect(err).To(BeAssignableToTypeOf(params.ParseError{}))
 		})
 
 		It("returns an error when the request body is missing", func() {
-			_, err := params.NewRegistration(ErrorReader{})
+			_, err := params.NewRegistrationParams(ErrorReader{})
 			Expect(err).To(BeAssignableToTypeOf(params.ParseError{}))
 		})
 	})
@@ -99,14 +95,10 @@ var _ = Describe("Registration", func() {
 					},
 				},
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
-			parameters, err := params.NewRegistration(bytes.NewBuffer(body))
-			if err != nil {
-				panic(err)
-			}
+			parameters, err := params.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+			Expect(err).NotTo(HaveOccurred())
 
 			err = parameters.Validate()
 			Expect(err).To(BeNil())
@@ -119,14 +111,10 @@ var _ = Describe("Registration", func() {
 					{Critical: false},
 				},
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
-			parameters, err := params.NewRegistration(bytes.NewBuffer(body))
-			if err != nil {
-				panic(err)
-			}
+			parameters, err := params.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+			Expect(err).NotTo(HaveOccurred())
 
 			err = parameters.Validate()
 			Expect(err).To(BeAssignableToTypeOf(params.ValidationError{}))
@@ -147,14 +135,11 @@ var _ = Describe("Registration", func() {
 					},
 				},
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
-			parameters, err := params.NewRegistration(bytes.NewBuffer(body))
-			if err != nil {
-				panic(err)
-			}
+			parameters, err := params.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+			Expect(err).NotTo(HaveOccurred())
+
 			err = parameters.Validate()
 			Expect(err).To(BeAssignableToTypeOf(params.ValidationError{}))
 			errs := err.(params.ValidationError).Errors()

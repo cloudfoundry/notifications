@@ -7,7 +7,7 @@ import (
 	"io"
 )
 
-type ClientRegistration struct {
+type ClientRegistrationParams struct {
 	SourceName    string                           `json:"source_name"`
 	Notifications map[string](*NotificationStruct) `json:"notifications"`
 }
@@ -18,8 +18,8 @@ type NotificationStruct struct {
 	Critical    bool   `json:"critical"`
 }
 
-func NewClientRegistration(body io.Reader) (ClientRegistration, error) {
-	var clientRegistration ClientRegistration
+func NewClientRegistrationParams(body io.Reader) (ClientRegistrationParams, error) {
+	var clientRegistration ClientRegistrationParams
 
 	decodeReader := bytes.NewBuffer([]byte{})
 	validateReader := bytes.NewBuffer([]byte{})
@@ -77,7 +77,7 @@ func strictValidateJSON(bytes []byte) error {
 	return nil
 }
 
-func (clientRegistration ClientRegistration) Validate() error {
+func (clientRegistration ClientRegistrationParams) Validate() error {
 	errors := ValidationError{}
 	if clientRegistration.SourceName == "" {
 		errors = append(errors, `"source_name" is a required field`)

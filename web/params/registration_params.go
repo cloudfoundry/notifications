@@ -11,14 +11,16 @@ import (
 
 var kindIDFormat = regexp.MustCompile(`^[0-9a-zA-Z_\-.]+$`)
 
-type Registration struct {
+type RegistrationParams struct {
 	SourceDescription string        `json:"source_description"`
 	Kinds             []models.Kind `json:"kinds"`
 	IncludesKinds     bool
 }
 
-func NewRegistration(body io.Reader) (Registration, error) {
-	var registration Registration
+func NewRegistrationParams(body io.ReadCloser) (RegistrationParams, error) {
+	defer body.Close()
+
+	var registration RegistrationParams
 	var hashParams map[string]interface{}
 
 	hashReader := bytes.NewBuffer([]byte{})
@@ -42,7 +44,7 @@ func NewRegistration(body io.Reader) (Registration, error) {
 	return registration, nil
 }
 
-func (registration Registration) Validate() error {
+func (registration RegistrationParams) Validate() error {
 	errors := ValidationError{}
 	if registration.SourceDescription == "" {
 		errors = append(errors, `"source_description" is a required field`)

@@ -30,12 +30,12 @@ func NewNotify(finder services.NotificationsFinderInterface, registrar services.
 }
 
 type ValidatorInterface interface {
-	Validate(*params.Notify) bool
+	Validate(*params.NotifyParams) bool
 }
 
 func (handler Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
 	guid string, strategy services.StrategyInterface, validator ValidatorInterface, vcapRequestID string) ([]byte, error) {
-	parameters, err := params.NewNotify(req.Body)
+	parameters, err := params.NewNotifyParams(req.Body)
 	if err != nil {
 		return []byte{}, err
 	}

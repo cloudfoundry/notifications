@@ -11,8 +11,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("ClientRegistration", func() {
-	Describe("NewClientRegistration", func() {
+var _ = Describe("ClientRegistrationParams", func() {
+	Describe("NewClientRegistrationParams", func() {
 		It("constructs parameters from a reader", func() {
 			body, err := json.Marshal(map[string]interface{}{
 				"source_name": "Raptor Containment Unit",
@@ -26,14 +26,10 @@ var _ = Describe("ClientRegistration", func() {
 					},
 				},
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
-			parameters, err := params.NewClientRegistration(bytes.NewBuffer(body))
-			if err != nil {
-				panic(err)
-			}
+			parameters, err := params.NewClientRegistrationParams(bytes.NewBuffer(body))
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(parameters.SourceName).To(Equal("Raptor Containment Unit"))
 			Expect(len(parameters.Notifications)).To(Equal(2))
@@ -51,25 +47,25 @@ var _ = Describe("ClientRegistration", func() {
 
 		Context("error cases", func() {
 			It("returns an error when the parameters are invalid JSON", func() {
-				_, err := params.NewClientRegistration(strings.NewReader("this is not valid JSON"))
+				_, err := params.NewClientRegistrationParams(strings.NewReader("this is not valid JSON"))
 				Expect(err).To(BeAssignableToTypeOf(params.ParseError{}))
 			})
 
 			It("returns an error when the request body is missing", func() {
-				_, err := params.NewClientRegistration(ErrorReader{})
+				_, err := params.NewClientRegistrationParams(ErrorReader{})
 				Expect(err).To(BeAssignableToTypeOf(params.ParseError{}))
 			})
 
 			Context("when the JSON contains unexpected properties", func() {
 				It("returns an error for invalid top level keys ", func() {
 					someJson := `{ "source_name" : "Raptor Containment Unit", "invalid_property" : 5 }`
-					_, err := params.NewClientRegistration(strings.NewReader(someJson))
+					_, err := params.NewClientRegistrationParams(strings.NewReader(someJson))
 					Expect(err).To(BeAssignableToTypeOf(params.NewSchemaError("")))
 				})
 
 				It("returns an error for invalid nested keys", func() {
 					someJson := `{ "source_name" : "Raptor", "notifications": { "some_id": {"description" : "ok", "invalid_property" : 5 } } }`
-					_, err := params.NewClientRegistration(strings.NewReader(someJson))
+					_, err := params.NewClientRegistrationParams(strings.NewReader(someJson))
 					Expect(err).To(BeAssignableToTypeOf(params.NewSchemaError("")))
 				})
 			})
@@ -77,12 +73,12 @@ var _ = Describe("ClientRegistration", func() {
 			Context("when the JSON contains null values", func() {
 				It("returns an error if 'notifications' collection is null", func() {
 					someJson := `{ "source_name" : "Something something raptor", "notifications": null }`
-					_, err := params.NewClientRegistration(strings.NewReader(someJson))
+					_, err := params.NewClientRegistrationParams(strings.NewReader(someJson))
 					Expect(err).To(BeAssignableToTypeOf(params.NewSchemaError("")))
 				})
 				It("returns an error if an individual notification is null ", func() {
 					someJson := `{ "source_name" : "Raptor", "notifications": { "some_id":  null } }`
-					_, err := params.NewClientRegistration(strings.NewReader(someJson))
+					_, err := params.NewClientRegistrationParams(strings.NewReader(someJson))
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(BeAssignableToTypeOf(params.NewSchemaError("")))
 				})
@@ -92,13 +88,13 @@ var _ = Describe("ClientRegistration", func() {
 
 	Describe("Validate", func() {
 		It("validates when only source_name is present", func() {
-			cr := params.ClientRegistration{SourceName: "jurassic_park"}
+			cr := params.ClientRegistrationParams{SourceName: "jurassic_park"}
 			err := cr.Validate()
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("returns an error when source_name is missing", func() {
-			cr := params.ClientRegistration{}
+			cr := params.ClientRegistrationParams{}
 			err := cr.Validate()
 
 			Expect(err).To(BeAssignableToTypeOf(params.ValidationError{}))
@@ -108,7 +104,7 @@ var _ = Describe("ClientRegistration", func() {
 		})
 
 		It("returns an error if notification is missing a required field", func() {
-			cr := params.ClientRegistration{
+			cr := params.ClientRegistrationParams{
 				SourceName: "jurassic_park",
 				Notifications: map[string](*params.NotificationStruct){
 					"perimeter_breach": {},

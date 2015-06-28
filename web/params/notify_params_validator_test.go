@@ -9,10 +9,13 @@ import (
 
 var _ = Describe("Validator", func() {
 	Describe("EmailValidator", func() {
-		var notify *params.Notify
-		var validator params.EmailValidator
+		var (
+			notify    *params.NotifyParams
+			validator params.EmailValidator
+		)
+
 		BeforeEach(func() {
-			notify = &params.Notify{
+			notify = &params.NotifyParams{
 				Text: "my silly text",
 				To:   "bob@example.com",
 			}
@@ -57,10 +60,13 @@ var _ = Describe("Validator", func() {
 	})
 
 	Describe("GUIDValidator", func() {
-		var notify *params.Notify
-		var validator params.GUIDValidator
+		var (
+			notify    *params.NotifyParams
+			validator params.GUIDValidator
+		)
+
 		BeforeEach(func() {
-			notify = &params.Notify{
+			notify = &params.NotifyParams{
 				KindID:  "test_email",
 				Subject: "Summary of contents",
 				Text:    "Contents of the email message",

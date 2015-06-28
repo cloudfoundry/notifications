@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"io/ioutil"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-func buildTemplateRequestBody(template params.Template) io.Reader {
+func buildTemplateRequestBody(template params.TemplateParams) io.Reader {
 	body, err := json.Marshal(template)
 	if err != nil {
 		panic(err)
@@ -20,9 +20,9 @@ func buildTemplateRequestBody(template params.Template) io.Reader {
 	return bytes.NewBuffer(body)
 }
 
-var _ = Describe("Template", func() {
-	Describe("NewTemplate", func() {
-		Context("When creating a new template", func() {
+var _ = Describe("TemplateParams", func() {
+	Describe("NewTemplateParams", func() {
+		Context("when creating a new template", func() {
 			It("contructs parameters from a reader", func() {
 				body, err := json.Marshal(map[string]interface{}{
 					"name":    `Foo Bar Baz`,
@@ -33,13 +33,10 @@ var _ = Describe("Template", func() {
 						"some_property": "some_value",
 					},
 				})
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
-				parameters, err := params.NewTemplate(bytes.NewBuffer(body))
-
-				Expect(parameters).To(BeAssignableToTypeOf(params.Template{}))
+				parameters, err := params.NewTemplateParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+				Expect(err).NotTo(HaveOccurred())
 				Expect(parameters.Name).To(Equal("Foo Bar Baz"))
 				Expect(parameters.Text).To(Equal("its foobar of course"))
 				Expect(parameters.HTML).To(Equal("<p>its foobar</p>"))
@@ -52,13 +49,10 @@ var _ = Describe("Template", func() {
 					"name": "Foo Bar Baz",
 					"html": "<p>its foobar</p>",
 				})
-				if err != nil {
-					panic(err)
-				}
-
-				parameters, err := params.NewTemplate(bytes.NewBuffer(body))
 				Expect(err).NotTo(HaveOccurred())
-				Expect(parameters).To(BeAssignableToTypeOf(params.Template{}))
+
+				parameters, err := params.NewTemplateParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+				Expect(err).NotTo(HaveOccurred())
 				Expect(parameters.Name).To(Equal("Foo Bar Baz"))
 				Expect(parameters.Text).To(Equal(""))
 				Expect(parameters.HTML).To(Equal("<p>its foobar</p>"))
@@ -69,13 +63,13 @@ var _ = Describe("Template", func() {
 			Context("when the template has invalid syntax", func() {
 				Context("when subject template has invalid syntax", func() {
 					It("returns a validation error", func() {
-						body := buildTemplateRequestBody(params.Template{
+						body := buildTemplateRequestBody(params.TemplateParams{
 							Name:    "Template name",
 							Text:    "Textual template",
 							HTML:    "HTML template",
 							Subject: "{{.bad}",
 						})
-						_, err := params.NewTemplate(body)
+						_, err := params.NewTemplateParams(ioutil.NopCloser(body))
 						Expect(err).To(HaveOccurred())
 						Expect(err).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
 					})
@@ -83,13 +77,13 @@ var _ = Describe("Template", func() {
 
 				Context("when text template has invalid syntax", func() {
 					It("returns a validation error", func() {
-						body := buildTemplateRequestBody(params.Template{
+						body := buildTemplateRequestBody(params.TemplateParams{
 							Name:    "Template name",
 							Text:    "You should feel {{.BAD}",
 							HTML:    "<h1> Amazing </h1>",
 							Subject: "Great Subject",
 						})
-						_, err := params.NewTemplate(body)
+						_, err := params.NewTemplateParams(ioutil.NopCloser(body))
 						Expect(err).To(HaveOccurred())
 						Expect(err).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
 					})
@@ -97,13 +91,13 @@ var _ = Describe("Template", func() {
 
 				Context("when html template has invalid syntax", func() {
 					It("returns a validation error", func() {
-						body := buildTemplateRequestBody(params.Template{
+						body := buildTemplateRequestBody(params.TemplateParams{
 							Name:    "Template name",
 							Text:    "Textual template",
 							HTML:    "{{.bad}",
 							Subject: "Great Subject",
 						})
-						_, err := params.NewTemplate(body)
+						_, err := params.NewTemplateParams(ioutil.NopCloser(body))
 						Expect(err).To(HaveOccurred())
 						Expect(err).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
 					})
@@ -114,23 +108,22 @@ var _ = Describe("Template", func() {
 
 	Describe("ToModel", func() {
 		It("turns a params.Template into a models.Template", func() {
-			theTemplate := params.Template{
+			templateParams := params.TemplateParams{
 				Name:     "The Foo to the Bar",
 				Text:     "its foobar of course",
 				HTML:     "<p>its foobar</p>",
 				Subject:  "Foobar Yah",
 				Metadata: json.RawMessage(`{"some_property": "some_value"}`),
 			}
-			theModel := theTemplate.ToModel()
+			templateModel := templateParams.ToModel()
 
-			Expect(theModel).To(BeAssignableToTypeOf(models.Template{}))
-			Expect(theModel.Name).To(Equal("The Foo to the Bar"))
-			Expect(theModel.Text).To(Equal("its foobar of course"))
-			Expect(theModel.HTML).To(Equal("<p>its foobar</p>"))
-			Expect(theModel.Subject).To(Equal("Foobar Yah"))
-			Expect(theModel.Metadata).To(MatchJSON(`{"some_property": "some_value"}`))
-			Expect(theModel.CreatedAt).To(BeZero())
-			Expect(theModel.UpdatedAt).To(BeZero())
+			Expect(templateModel.Name).To(Equal("The Foo to the Bar"))
+			Expect(templateModel.Text).To(Equal("its foobar of course"))
+			Expect(templateModel.HTML).To(Equal("<p>its foobar</p>"))
+			Expect(templateModel.Subject).To(Equal("Foobar Yah"))
+			Expect(templateModel.Metadata).To(MatchJSON(`{"some_property": "some_value"}`))
+			Expect(templateModel.CreatedAt).To(BeZero())
+			Expect(templateModel.UpdatedAt).To(BeZero())
 		})
 	})
 })
