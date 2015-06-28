@@ -7,10 +7,10 @@ type TemplateDeleterInterface interface {
 }
 
 type TemplateDeleter struct {
-	templatesRepo templatesRepo
+	templatesRepo TemplatesRepo
 }
 
-func NewTemplateDeleter(templatesRepo templatesRepo) TemplateDeleter {
+func NewTemplateDeleter(templatesRepo TemplatesRepo) TemplateDeleter {
 	return TemplateDeleter{
 		templatesRepo: templatesRepo,
 	}

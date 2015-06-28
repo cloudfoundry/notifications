@@ -7,10 +7,10 @@ type TemplateUpdaterInterface interface {
 }
 
 type TemplateUpdater struct {
-	templatesRepo templatesRepo
+	templatesRepo TemplatesRepo
 }
 
-func NewTemplateUpdater(templatesRepo templatesRepo) TemplateUpdater {
+func NewTemplateUpdater(templatesRepo TemplatesRepo) TemplateUpdater {
 	return TemplateUpdater{
 		templatesRepo: templatesRepo,
 	}

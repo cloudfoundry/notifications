@@ -3,8 +3,8 @@ package services
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type NotificationsFinder struct {
-	clientsRepo clientsRepo
-	kindsRepo   kindsRepo
+	clientsRepo ClientsRepo
+	kindsRepo   KindsRepo
 	database    models.DatabaseInterface
 }
 
@@ -13,7 +13,7 @@ type NotificationsFinderInterface interface {
 	ClientAndKind(models.DatabaseInterface, string, string) (models.Client, models.Kind, error)
 }
 
-func NewNotificationsFinder(clientsRepo clientsRepo, kindsRepo kindsRepo) NotificationsFinder {
+func NewNotificationsFinder(clientsRepo ClientsRepo, kindsRepo KindsRepo) NotificationsFinder {
 	return NotificationsFinder{
 		clientsRepo: clientsRepo,
 		kindsRepo:   kindsRepo,

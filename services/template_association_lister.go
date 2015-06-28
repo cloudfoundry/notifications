@@ -12,12 +12,12 @@ type TemplateAssociationListerInterface interface {
 }
 
 type TemplateAssociationLister struct {
-	clientsRepo   clientsRepo
-	kindsRepo     kindsRepo
-	templatesRepo templatesRepo
+	clientsRepo   ClientsRepo
+	kindsRepo     KindsRepo
+	templatesRepo TemplatesRepo
 }
 
-func NewTemplateAssociationLister(clientsRepo clientsRepo, kindsRepo kindsRepo, templatesRepo templatesRepo) TemplateAssociationLister {
+func NewTemplateAssociationLister(clientsRepo ClientsRepo, kindsRepo KindsRepo, templatesRepo TemplatesRepo) TemplateAssociationLister {
 	return TemplateAssociationLister{
 		clientsRepo:   clientsRepo,
 		kindsRepo:     kindsRepo,

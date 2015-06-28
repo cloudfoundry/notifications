@@ -10,18 +10,15 @@ type TemplatesLoaderInterface interface {
 }
 
 type TemplatesLoader struct {
-	finder        services.TemplateFinderInterface
-	database      models.DatabaseInterface
-	clientsRepo   clientsRepo
-	kindsRepo     kindsRepo
-	templatesRepo templatesRepo
+	finder   services.TemplateFinderInterface
+	database models.DatabaseInterface
+
+	clientsRepo   ClientsRepo
+	kindsRepo     KindsRepo
+	templatesRepo TemplatesRepo
 }
 
-type clientsRepo interface {
-	Find(models.ConnectionInterface, string) (models.Client, error)
-}
-
-func NewTemplatesLoader(finder services.TemplateFinderInterface, database models.DatabaseInterface, clientsRepo clientsRepo, kindsRepo kindsRepo, templatesRepo templatesRepo) TemplatesLoader {
+func NewTemplatesLoader(finder services.TemplateFinderInterface, database models.DatabaseInterface, clientsRepo ClientsRepo, kindsRepo KindsRepo, templatesRepo TemplatesRepo) TemplatesLoader {
 
 	return TemplatesLoader{
 		finder:        finder,

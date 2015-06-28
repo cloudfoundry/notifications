@@ -2,22 +2,30 @@ package postal
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-type messagesRepo interface {
-	Upsert(models.ConnectionInterface, models.Message) (models.Message, error)
+type ClientsRepo interface {
+	Find(connection models.ConnectionInterface, clientID string) (models.Client, error)
 }
 
-type kindsRepo interface {
-	Find(models.ConnectionInterface, string, string) (models.Kind, error)
+type KindsRepo interface {
+	Find(connection models.ConnectionInterface, kindID string, clientID string) (models.Kind, error)
 }
 
-type receiptsRepo interface {
-	CreateReceipts(models.ConnectionInterface, []string, string, string) error
+type MessagesRepo interface {
+	Upsert(connection models.ConnectionInterface, message models.Message) (models.Message, error)
 }
 
-type templatesRepo interface {
-	FindByID(models.ConnectionInterface, string) (models.Template, error)
+type ReceiptsRepo interface {
+	CreateReceipts(connection models.ConnectionInterface, userGUIDs []string, clientID string, kindID string) error
 }
 
-type unsubscribesRepo interface {
-	Get(models.ConnectionInterface, string, string, string) (bool, error)
+type TemplatesRepo interface {
+	FindByID(connection models.ConnectionInterface, templateID string) (models.Template, error)
+}
+
+type UnsubscribesRepo interface {
+	Get(connection models.ConnectionInterface, userGUID string, clientID string, kindID string) (bool, error)
+}
+
+type GlobalUnsubscribesRepo interface {
+	Get(connection models.ConnectionInterface, userGUID string) (bool, error)
 }

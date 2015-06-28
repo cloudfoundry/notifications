@@ -8,11 +8,11 @@ type RegistrarInterface interface {
 }
 
 type Registrar struct {
-	clientsRepo clientsRepo
-	kindsRepo   kindsRepo
+	clientsRepo ClientsRepo
+	kindsRepo   KindsRepo
 }
 
-func NewRegistrar(clientsRepo clientsRepo, kindsRepo kindsRepo) Registrar {
+func NewRegistrar(clientsRepo ClientsRepo, kindsRepo KindsRepo) Registrar {
 	return Registrar{
 		clientsRepo: clientsRepo,
 		kindsRepo:   kindsRepo,

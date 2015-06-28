@@ -8,12 +8,12 @@ type TemplateAssignerInterface interface {
 }
 
 type TemplateAssigner struct {
-	clientsRepo   clientsRepo
-	kindsRepo     kindsRepo
-	templatesRepo templatesRepo
+	clientsRepo   ClientsRepo
+	kindsRepo     KindsRepo
+	templatesRepo TemplatesRepo
 }
 
-func NewTemplateAssigner(clientsRepo clientsRepo, kindsRepo kindsRepo, templatesRepo templatesRepo) TemplateAssigner {
+func NewTemplateAssigner(clientsRepo ClientsRepo, kindsRepo KindsRepo, templatesRepo TemplatesRepo) TemplateAssigner {
 	return TemplateAssigner{
 		clientsRepo:   clientsRepo,
 		kindsRepo:     kindsRepo,

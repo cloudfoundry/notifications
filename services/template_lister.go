@@ -12,10 +12,10 @@ type TemplateListerInterface interface {
 	List(models.DatabaseInterface) (map[string]TemplateSummary, error)
 }
 type TemplateLister struct {
-	templatesRepo templatesRepo
+	templatesRepo TemplatesRepo
 }
 
-func NewTemplateLister(templatesRepo templatesRepo) TemplateLister {
+func NewTemplateLister(templatesRepo TemplatesRepo) TemplateLister {
 	return TemplateLister{
 		templatesRepo: templatesRepo,
 	}

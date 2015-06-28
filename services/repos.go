@@ -2,35 +2,40 @@ package services
 
 import "github.com/cloudfoundry-incubator/notifications/models"
 
-type clientsRepo interface {
-	FindAll(models.ConnectionInterface) ([]models.Client, error)
-	Find(models.ConnectionInterface, string) (models.Client, error)
-	Upsert(models.ConnectionInterface, models.Client) (models.Client, error)
-	Update(models.ConnectionInterface, models.Client) (models.Client, error)
-	FindAllByTemplateID(models.ConnectionInterface, string) ([]models.Client, error)
+type ClientsRepo interface {
+	Find(connection models.ConnectionInterface, clientID string) (models.Client, error)
+	FindAll(connection models.ConnectionInterface) ([]models.Client, error)
+	FindAllByTemplateID(connection models.ConnectionInterface, templateID string) ([]models.Client, error)
+	Update(connection models.ConnectionInterface, client models.Client) (models.Client, error)
+	Upsert(connection models.ConnectionInterface, client models.Client) (models.Client, error)
 }
 
-type kindsRepo interface {
-	FindAll(models.ConnectionInterface) ([]models.Kind, error)
-	Find(models.ConnectionInterface, string, string) (models.Kind, error)
-	Update(models.ConnectionInterface, models.Kind) (models.Kind, error)
-	Upsert(models.ConnectionInterface, models.Kind) (models.Kind, error)
-	FindAllByTemplateID(models.ConnectionInterface, string) ([]models.Kind, error)
-	Trim(models.ConnectionInterface, string, []string) (int, error)
+type KindsRepo interface {
+	Find(connection models.ConnectionInterface, kindID string, clientID string) (models.Kind, error)
+	FindAll(connection models.ConnectionInterface) ([]models.Kind, error)
+	FindAllByTemplateID(connection models.ConnectionInterface, templateID string) ([]models.Kind, error)
+	Trim(connection models.ConnectionInterface, clientID string, kindIDs []string) (int, error)
+	Update(connection models.ConnectionInterface, kind models.Kind) (models.Kind, error)
+	Upsert(connection models.ConnectionInterface, kind models.Kind) (models.Kind, error)
 }
 
-type preferencesRepo interface {
-	FindNonCriticalPreferences(models.ConnectionInterface, string) ([]models.Preference, error)
+type PreferencesRepo interface {
+	FindNonCriticalPreferences(connection models.ConnectionInterface, userGUID string) ([]models.Preference, error)
 }
 
-type templatesRepo interface {
-	FindByID(models.ConnectionInterface, string) (models.Template, error)
-	Create(models.ConnectionInterface, models.Template) (models.Template, error)
-	Destroy(models.ConnectionInterface, string) error
-	ListIDsAndNames(models.ConnectionInterface) ([]models.Template, error)
-	Update(models.ConnectionInterface, string, models.Template) (models.Template, error)
+type TemplatesRepo interface {
+	Create(connection models.ConnectionInterface, template models.Template) (models.Template, error)
+	Destroy(connection models.ConnectionInterface, templateID string) error
+	FindByID(connection models.ConnectionInterface, templateID string) (models.Template, error)
+	ListIDsAndNames(connection models.ConnectionInterface) ([]models.Template, error)
+	Update(connection models.ConnectionInterface, templateID string, template models.Template) (models.Template, error)
 }
 
-type unsubscribesRepo interface {
-	Set(models.ConnectionInterface, string, string, string, bool) error
+type UnsubscribesRepo interface {
+	Set(connection models.ConnectionInterface, userID string, clientID string, kindID string, unsubscribe bool) error
+}
+
+type GlobalUnsubscribesRepo interface {
+	Get(connection models.ConnectionInterface, userGUID string) (bool, error)
+	Set(connection models.ConnectionInterface, userGUID string, unsubscribe bool) error
 }

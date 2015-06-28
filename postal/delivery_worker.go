@@ -29,34 +29,34 @@ type Delivery struct {
 }
 
 type DeliveryWorker struct {
-	baseLogger             lager.Logger
-	logger                 lager.Logger
-	mailClient             mail.ClientInterface
-	globalUnsubscribesRepo globalUnsubscribesRepo
-	unsubscribesRepo       unsubscribesRepo
-	kindsRepo              kindsRepo
-	userLoader             UserLoaderInterface
-	templatesLoader        TemplatesLoaderInterface
-	tokenLoader            TokenLoaderInterface
-	messagesRepo           messagesRepo
-	receiptsRepo           receiptsRepo
-	database               models.DatabaseInterface
-	dbTrace                bool
-	sender                 string
-	encryptionKey          []byte
-	identifier             int
 	gobble.Worker
-}
 
-type globalUnsubscribesRepo interface {
-	Get(models.ConnectionInterface, string) (bool, error)
+	dbTrace       bool
+	sender        string
+	encryptionKey []byte
+	identifier    int
+
+	baseLogger lager.Logger
+	logger     lager.Logger
+
+	mailClient      mail.ClientInterface
+	userLoader      UserLoaderInterface
+	templatesLoader TemplatesLoaderInterface
+	tokenLoader     TokenLoaderInterface
+	database        models.DatabaseInterface
+
+	messagesRepo           MessagesRepo
+	receiptsRepo           ReceiptsRepo
+	globalUnsubscribesRepo GlobalUnsubscribesRepo
+	unsubscribesRepo       UnsubscribesRepo
+	kindsRepo              KindsRepo
 }
 
 func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
-	globalUnsubscribesRepo globalUnsubscribesRepo, unsubscribesRepo unsubscribesRepo,
-	kindsRepo kindsRepo, messagesRepo messagesRepo,
+	globalUnsubscribesRepo GlobalUnsubscribesRepo, unsubscribesRepo UnsubscribesRepo,
+	kindsRepo KindsRepo, messagesRepo MessagesRepo,
 	database models.DatabaseInterface, dbTrace bool, sender string, encryptionKey []byte, userLoader UserLoaderInterface,
-	templatesLoader TemplatesLoaderInterface, receiptsRepo receiptsRepo, tokenLoader TokenLoaderInterface) DeliveryWorker {
+	templatesLoader TemplatesLoaderInterface, receiptsRepo ReceiptsRepo, tokenLoader TokenLoaderInterface) DeliveryWorker {
 
 	logger = logger.Session("worker", lager.Data{"worker_id": id})
 

@@ -7,10 +7,10 @@ type TemplateCreatorInterface interface {
 }
 
 type TemplateCreator struct {
-	templatesRepo templatesRepo
+	templatesRepo TemplatesRepo
 }
 
-func NewTemplateCreator(templatesRepo templatesRepo) TemplateCreator {
+func NewTemplateCreator(templatesRepo TemplatesRepo) TemplateCreator {
 	return TemplateCreator{
 		templatesRepo: templatesRepo,
 	}
