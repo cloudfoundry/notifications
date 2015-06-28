@@ -5,11 +5,6 @@ import (
 	"strings"
 )
 
-type UnsubscribesRepoInterface interface {
-	Set(ConnectionInterface, string, string, string, bool) error
-	Get(ConnectionInterface, string, string, string) (bool, error)
-}
-
 type UnsubscribesRepo struct{}
 
 func NewUnsubscribesRepo() UnsubscribesRepo {

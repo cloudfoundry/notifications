@@ -17,3 +17,7 @@ type receiptsRepo interface {
 type templatesRepo interface {
 	FindByID(models.ConnectionInterface, string) (models.Template, error)
 }
+
+type unsubscribesRepo interface {
+	Get(models.ConnectionInterface, string, string, string) (bool, error)
+}

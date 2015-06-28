@@ -33,7 +33,7 @@ type DeliveryWorker struct {
 	logger                 lager.Logger
 	mailClient             mail.ClientInterface
 	globalUnsubscribesRepo globalUnsubscribesRepo
-	unsubscribesRepo       models.UnsubscribesRepoInterface
+	unsubscribesRepo       unsubscribesRepo
 	kindsRepo              kindsRepo
 	userLoader             UserLoaderInterface
 	templatesLoader        TemplatesLoaderInterface
@@ -53,7 +53,7 @@ type globalUnsubscribesRepo interface {
 }
 
 func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
-	globalUnsubscribesRepo globalUnsubscribesRepo, unsubscribesRepo models.UnsubscribesRepoInterface,
+	globalUnsubscribesRepo globalUnsubscribesRepo, unsubscribesRepo unsubscribesRepo,
 	kindsRepo kindsRepo, messagesRepo messagesRepo,
 	database models.DatabaseInterface, dbTrace bool, sender string, encryptionKey []byte, userLoader UserLoaderInterface,
 	templatesLoader TemplatesLoaderInterface, receiptsRepo receiptsRepo, tokenLoader TokenLoaderInterface) DeliveryWorker {

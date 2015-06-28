@@ -30,3 +30,7 @@ type templatesRepo interface {
 	ListIDsAndNames(models.ConnectionInterface) ([]models.Template, error)
 	Update(models.ConnectionInterface, string, models.Template) (models.Template, error)
 }
+
+type unsubscribesRepo interface {
+	Set(models.ConnectionInterface, string, string, string, bool) error
+}
