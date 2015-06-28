@@ -39,7 +39,7 @@ type DeliveryWorker struct {
 	templatesLoader        TemplatesLoaderInterface
 	tokenLoader            TokenLoaderInterface
 	messagesRepo           messagesRepo
-	receiptsRepo           models.ReceiptsRepoInterface
+	receiptsRepo           receiptsRepo
 	database               models.DatabaseInterface
 	dbTrace                bool
 	sender                 string
@@ -56,7 +56,7 @@ func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterf
 	globalUnsubscribesRepo globalUnsubscribesRepo, unsubscribesRepo models.UnsubscribesRepoInterface,
 	kindsRepo kindsRepo, messagesRepo messagesRepo,
 	database models.DatabaseInterface, dbTrace bool, sender string, encryptionKey []byte, userLoader UserLoaderInterface,
-	templatesLoader TemplatesLoaderInterface, receiptsRepo models.ReceiptsRepoInterface, tokenLoader TokenLoaderInterface) DeliveryWorker {
+	templatesLoader TemplatesLoaderInterface, receiptsRepo receiptsRepo, tokenLoader TokenLoaderInterface) DeliveryWorker {
 
 	logger = logger.Session("worker", lager.Data{"worker_id": id})
 

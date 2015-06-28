@@ -1,8 +1,6 @@
 package models_test
 
 import (
-	"time"
-
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -23,164 +21,14 @@ var _ = Describe("Receipts Repo", func() {
 		conn = db.Connection().(*models.Connection)
 	})
 
-	Describe("Create", func() {
-		var receipt models.Receipt
-
-		BeforeEach(func() {
-			receipt = models.Receipt{
-				UserGUID: "user-123",
-				ClientID: "client-abc",
-				KindID:   "abc-def",
-			}
-		})
-
-		It("stores the receipt in the database", func() {
-			receipt, err := repo.Create(conn, receipt)
-			if err != nil {
-				panic(err)
-			}
-
-			receipt, err = repo.Find(conn, receipt.UserGUID, receipt.ClientID, receipt.KindID)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(receipt.UserGUID).To(Equal("user-123"))
-			Expect(receipt.ClientID).To(Equal("client-abc"))
-			Expect(receipt.KindID).To(Equal("abc-def"))
-			Expect(receipt.Count).To(Equal(1))
-			Expect(receipt.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
-		})
-
-		It("returns an DuplicateRecordError when the receipt already exists in the database", func() {
-			_, err := repo.Create(conn, receipt)
-			if err != nil {
-				panic(err)
-			}
-
-			receipt, err = repo.Create(conn, receipt)
-			Expect(err).To(Equal(models.DuplicateRecordError{}))
-		})
-	})
-
-	Describe("Find", func() {
-		It("returns a receipt when it exists in the database", func() {
-			receipt := models.Receipt{
-				UserGUID: "user-123",
-				ClientID: "client-abc",
-				KindID:   "abc-def",
-			}
-
-			receipt, err := repo.Create(conn, receipt)
-			if err != nil {
-				panic(err)
-			}
-
-			receipt, err = repo.Find(conn, receipt.UserGUID, receipt.ClientID, receipt.KindID)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(receipt.UserGUID).To(Equal("user-123"))
-			Expect(receipt.ClientID).To(Equal("client-abc"))
-			Expect(receipt.KindID).To(Equal("abc-def"))
-			Expect(receipt.Count).To(Equal(1))
-			Expect(receipt.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
-		})
-
-		It("returns an RecordNotFoundError when the requested receipt does not exist in the database", func() {
-			_, err := repo.Find(conn, "user-000", "client-000", "unkind-client")
-			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
-		})
-	})
-
-	Describe("Update", func() {
-		It("updates the receipt in the database", func() {
-			receipt := models.Receipt{
-				UserGUID: "user-123",
-				ClientID: "client-abc",
-				KindID:   "abc-def",
-			}
-
-			receipt, err := repo.Create(conn, receipt)
-			if err != nil {
-				panic(err)
-			}
-
-			receipt.KindID = "be-kind"
-			repo.Update(conn, receipt)
-
-			receipt, err = repo.Find(conn, receipt.UserGUID, receipt.ClientID, receipt.KindID)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(receipt.UserGUID).To(Equal("user-123"))
-			Expect(receipt.ClientID).To(Equal("client-abc"))
-			Expect(receipt.KindID).To(Equal("be-kind"))
-			Expect(receipt.Count).To(Equal(1))
-			Expect(receipt.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
-		})
-	})
-
-	Describe("Upsert", func() {
-		var receipt models.Receipt
-		userGUID := "user-123"
-		clientID := "client-abc"
-		kindID := "abc-def"
-
-		BeforeEach(func() {
-			receipt = models.Receipt{
-				UserGUID: userGUID,
-				ClientID: clientID,
-				KindID:   kindID,
-			}
-		})
-
-		It("creates a receipt in the database when no matching record exists", func() {
-			err := repo.Upsert(conn, receipt)
-			if err != nil {
-				panic(err)
-			}
-
-			receipt, err = repo.Find(conn, receipt.UserGUID, receipt.ClientID, receipt.KindID)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(receipt.UserGUID).To(Equal(userGUID))
-			Expect(receipt.ClientID).To(Equal(clientID))
-			Expect(receipt.KindID).To(Equal(kindID))
-			Expect(receipt.Count).To(Equal(1))
-			Expect(receipt.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
-		})
-
-		It("auto-increments the count when a record with same user, client, kind is inserted", func() {
-			receipt, err := repo.Create(conn, receipt)
-			if err != nil {
-				panic(err)
-			}
-
-			err = repo.Upsert(conn, receipt)
-			if err != nil {
-				panic(err)
-			}
-
-			reloadedReceipt, err := repo.Find(conn, userGUID, clientID, kindID)
-
-			Expect(receipt.Count).To(Equal(1))
-			Expect(reloadedReceipt.Count).To(Equal(2))
-			Expect(receipt.Primary).To(Equal(reloadedReceipt.Primary))
-			Expect(receipt.CreatedAt).To(Equal(reloadedReceipt.CreatedAt))
-		})
-	})
-
 	Describe("CreateReceipts", func() {
-		var firstUserGUID string
-		var secondUserGUID string
-		var userGUIDs []string
-		var clientID string
-		var kindID string
+		var (
+			firstUserGUID  string
+			secondUserGUID string
+			userGUIDs      []string
+			clientID       string
+			kindID         string
+		)
 
 		BeforeEach(func() {
 			firstUserGUID = "user-123"
@@ -196,12 +44,12 @@ var _ = Describe("Receipts Repo", func() {
 				panic(err)
 			}
 
-			firstReceipt, err := repo.Find(conn, firstUserGUID, clientID, kindID)
+			firstReceipt, err := findReceipt(conn, firstUserGUID, clientID, kindID)
 			if err != nil {
 				panic(err)
 			}
 
-			secondReceipt, err := repo.Find(conn, secondUserGUID, clientID, kindID)
+			secondReceipt, err := findReceipt(conn, secondUserGUID, clientID, kindID)
 			if err != nil {
 				panic(err)
 			}
@@ -224,7 +72,7 @@ var _ = Describe("Receipts Repo", func() {
 				KindID:   kindID,
 			}
 
-			_, err := repo.Create(conn, receipt)
+			_, err := createReceipt(conn, receipt)
 			if err != nil {
 				panic(err)
 			}
@@ -248,7 +96,7 @@ var _ = Describe("Receipts Repo", func() {
 
 			Expect(int(rowCount)).To(Equal(1))
 
-			firstReceipt, err := repo.Find(conn, firstUserGUID, clientID, kindID)
+			firstReceipt, err := findReceipt(conn, firstUserGUID, clientID, kindID)
 			if err != nil {
 				panic(err)
 			}
@@ -260,7 +108,7 @@ var _ = Describe("Receipts Repo", func() {
 		})
 
 		It("does not update count and adds a row when clientID and kindID are different", func() {
-			_, err := repo.Create(conn, models.Receipt{
+			_, err := createReceipt(conn, models.Receipt{
 				UserGUID: firstUserGUID,
 				ClientID: clientID,
 				KindID:   kindID,
@@ -295,17 +143,17 @@ var _ = Describe("Receipts Repo", func() {
 			}
 			Expect(int(rowCount)).To(Equal(3))
 
-			firstReceipt, err := repo.Find(conn, firstUserGUID, clientID, kindID)
+			firstReceipt, err := findReceipt(conn, firstUserGUID, clientID, kindID)
 			if err != nil {
 				panic(err)
 			}
 
-			differentClientReceipt, err := repo.Find(conn, firstUserGUID, "weird-client", kindID)
+			differentClientReceipt, err := findReceipt(conn, firstUserGUID, "weird-client", kindID)
 			if err != nil {
 				panic(err)
 			}
 
-			differentKindReceipt, err := repo.Find(conn, firstUserGUID, clientID, "a-new-kind")
+			differentKindReceipt, err := findReceipt(conn, firstUserGUID, clientID, "a-new-kind")
 			if err != nil {
 				panic(err)
 			}

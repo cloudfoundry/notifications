@@ -9,3 +9,7 @@ type messagesRepo interface {
 type kindsRepo interface {
 	Find(models.ConnectionInterface, string, string) (models.Kind, error)
 }
+
+type receiptsRepo interface {
+	CreateReceipts(models.ConnectionInterface, []string, string, string) error
+}

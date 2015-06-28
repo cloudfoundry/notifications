@@ -122,10 +122,10 @@ var _ = Describe("PreferencesRepo", func() {
 					Count:    83,
 				}
 
-				receipts.Create(conn, nonCriticalReceipt)
-				receipts.Create(conn, secondNonCriticalReceipt)
-				receipts.Create(conn, criticalReceipt)
-				receipts.Create(conn, otherUserReceipt)
+				createReceipt(conn, nonCriticalReceipt)
+				createReceipt(conn, secondNonCriticalReceipt)
+				createReceipt(conn, criticalReceipt)
+				createReceipt(conn, otherUserReceipt)
 			})
 
 			It("Returns a slice of non-critical notifications for this user", func() {
