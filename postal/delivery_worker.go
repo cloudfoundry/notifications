@@ -28,21 +28,17 @@ type Delivery struct {
 	RequestReceived time.Time
 }
 
-type MessagesRepoInterface interface {
-	Upsert(models.ConnectionInterface, models.Message) (models.Message, error)
-}
-
 type DeliveryWorker struct {
 	baseLogger             lager.Logger
 	logger                 lager.Logger
 	mailClient             mail.ClientInterface
 	globalUnsubscribesRepo globalUnsubscribesRepo
 	unsubscribesRepo       models.UnsubscribesRepoInterface
-	kindsRepo              models.KindsRepoInterface
+	kindsRepo              kindsRepo
 	userLoader             UserLoaderInterface
 	templatesLoader        TemplatesLoaderInterface
 	tokenLoader            TokenLoaderInterface
-	messagesRepo           MessagesRepoInterface
+	messagesRepo           messagesRepo
 	receiptsRepo           models.ReceiptsRepoInterface
 	database               models.DatabaseInterface
 	dbTrace                bool
@@ -58,7 +54,7 @@ type globalUnsubscribesRepo interface {
 
 func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
 	globalUnsubscribesRepo globalUnsubscribesRepo, unsubscribesRepo models.UnsubscribesRepoInterface,
-	kindsRepo models.KindsRepoInterface, messagesRepo MessagesRepoInterface,
+	kindsRepo kindsRepo, messagesRepo messagesRepo,
 	database models.DatabaseInterface, dbTrace bool, sender string, encryptionKey []byte, userLoader UserLoaderInterface,
 	templatesLoader TemplatesLoaderInterface, receiptsRepo models.ReceiptsRepoInterface, tokenLoader TokenLoaderInterface) DeliveryWorker {
 

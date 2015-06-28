@@ -88,11 +88,11 @@ var _ = Describe("PreferencesRepo", func() {
 					Critical:    true,
 				}
 
-				kinds.Create(conn, nonCriticalKind)
-				kinds.Create(conn, secondNonCriticalKind)
-				kinds.Create(conn, nonCriticalKindThatUserHasNotReceived)
-				kinds.Create(conn, criticalKind)
-				kinds.Create(conn, otherUserKind)
+				kinds.Upsert(conn, nonCriticalKind)
+				kinds.Upsert(conn, secondNonCriticalKind)
+				kinds.Upsert(conn, nonCriticalKindThatUserHasNotReceived)
+				kinds.Upsert(conn, criticalKind)
+				kinds.Upsert(conn, otherUserKind)
 
 				nonCriticalReceipt := models.Receipt{
 					ClientID: "raptors",

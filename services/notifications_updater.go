@@ -7,10 +7,10 @@ type NotificationsUpdaterInterface interface {
 }
 
 type NotificationsUpdater struct {
-	kindsRepo models.KindsRepoInterface
+	kindsRepo kindsRepo
 }
 
-func NewNotificationsUpdater(kindsRepo models.KindsRepoInterface) NotificationsUpdater {
+func NewNotificationsUpdater(kindsRepo kindsRepo) NotificationsUpdater {
 	return NotificationsUpdater{
 		kindsRepo: kindsRepo,
 	}

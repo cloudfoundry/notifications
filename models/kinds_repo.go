@@ -19,22 +19,11 @@ func (set IDSet) Contains(id string) bool {
 
 type KindsRepo struct{}
 
-type KindsRepoInterface interface {
-	Create(ConnectionInterface, Kind) (Kind, error)
-	Find(ConnectionInterface, string, string) (Kind, error)
-	FindByClient(ConnectionInterface, string) ([]Kind, error)
-	FindAll(ConnectionInterface) ([]Kind, error)
-	FindAllByTemplateID(ConnectionInterface, string) ([]Kind, error)
-	Update(ConnectionInterface, Kind) (Kind, error)
-	Upsert(ConnectionInterface, Kind) (Kind, error)
-	Trim(ConnectionInterface, string, []string) (int, error)
-}
-
 func NewKindsRepo() KindsRepo {
 	return KindsRepo{}
 }
 
-func (repo KindsRepo) Create(conn ConnectionInterface, kind Kind) (Kind, error) {
+func (repo KindsRepo) create(conn ConnectionInterface, kind Kind) (Kind, error) {
 	err := conn.Insert(&kind)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
@@ -55,17 +44,6 @@ func (repo KindsRepo) Find(conn ConnectionInterface, id, clientID string) (Kind,
 		return kind, err
 	}
 	return kind, nil
-}
-
-func (repo KindsRepo) FindByClient(conn ConnectionInterface, clientID string) ([]Kind, error) {
-	kinds := []Kind{}
-	_, err := conn.Select(&kinds, `SELECT * FROM kinds WHERE client_id = ?`, clientID)
-
-	if err != nil {
-		return []Kind{}, err
-	}
-
-	return kinds, nil
 }
 
 func (repo KindsRepo) FindAll(conn ConnectionInterface) ([]Kind, error) {
@@ -106,7 +84,7 @@ func (repo KindsRepo) Upsert(conn ConnectionInterface, kind Kind) (Kind, error) 
 
 	switch err.(type) {
 	case RecordNotFoundError:
-		kind, err := repo.Create(conn, kind)
+		kind, err := repo.create(conn, kind)
 		if _, ok := err.(DuplicateRecordError); ok {
 			return repo.Update(conn, kind)
 		}

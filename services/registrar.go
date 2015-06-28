@@ -9,10 +9,10 @@ type RegistrarInterface interface {
 
 type Registrar struct {
 	clientsRepo clientsRepo
-	kindsRepo   models.KindsRepoInterface
+	kindsRepo   kindsRepo
 }
 
-func NewRegistrar(clientsRepo clientsRepo, kindsRepo models.KindsRepoInterface) Registrar {
+func NewRegistrar(clientsRepo clientsRepo, kindsRepo kindsRepo) Registrar {
 	return Registrar{
 		clientsRepo: clientsRepo,
 		kindsRepo:   kindsRepo,

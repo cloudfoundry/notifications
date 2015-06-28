@@ -9,11 +9,11 @@ type TemplateAssignerInterface interface {
 
 type TemplateAssigner struct {
 	clientsRepo   clientsRepo
-	kindsRepo     models.KindsRepoInterface
+	kindsRepo     kindsRepo
 	templatesRepo models.TemplatesRepoInterface
 }
 
-func NewTemplateAssigner(clientsRepo clientsRepo, kindsRepo models.KindsRepoInterface, templatesRepo models.TemplatesRepoInterface) TemplateAssigner {
+func NewTemplateAssigner(clientsRepo clientsRepo, kindsRepo kindsRepo, templatesRepo models.TemplatesRepoInterface) TemplateAssigner {
 	return TemplateAssigner{
 		clientsRepo:   clientsRepo,
 		kindsRepo:     kindsRepo,

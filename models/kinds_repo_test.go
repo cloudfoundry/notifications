@@ -13,8 +13,10 @@ import (
 )
 
 var _ = Describe("KindsRepo", func() {
-	var repo models.KindsRepo
-	var conn *models.Connection
+	var (
+		repo models.KindsRepo
+		conn *models.Connection
+	)
 
 	BeforeEach(func() {
 		TruncateTables()
@@ -22,160 +24,6 @@ var _ = Describe("KindsRepo", func() {
 		db := models.NewDatabase(sqlDB, models.Config{})
 		db.Setup()
 		conn = db.Connection().(*models.Connection)
-	})
-
-	Describe("Create", func() {
-		It("stores the kind record into the database", func() {
-			kind := models.Kind{
-				ID:          "my-kind",
-				Description: "My Kind",
-				Critical:    false,
-				ClientID:    "my-client",
-				TemplateID:  "my-template",
-			}
-
-			kind, err := repo.Create(conn, kind)
-			if err != nil {
-				panic(err)
-			}
-
-			kind, err = repo.Find(conn, "my-kind", "my-client")
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(kind.ID).To(Equal("my-kind"))
-			Expect(kind.Description).To(Equal("My Kind"))
-			Expect(kind.Critical).To(BeFalse())
-			Expect(kind.ClientID).To(Equal("my-client"))
-			Expect(kind.TemplateID).To(Equal("my-template"))
-			Expect(kind.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
-			Expect(kind.UpdatedAt).To(Equal(kind.CreatedAt))
-		})
-
-		It("allows duplicate kindIDs that are unique by clientID", func() {
-			kind1 := models.Kind{
-				ID:       "forgotten-password",
-				ClientID: "a-client",
-			}
-
-			kind2 := models.Kind{
-				ID:       "forgotten-password",
-				ClientID: "another-client",
-			}
-
-			kind1, err := repo.Create(conn, kind1)
-			Expect(err).To(BeNil())
-
-			kind2, err = repo.Create(conn, kind2)
-			Expect(err).To(BeNil())
-
-			firstKind, err := repo.Find(conn, "forgotten-password", "a-client")
-			if err != nil {
-				panic(err)
-			}
-
-			secondKind, err := repo.Find(conn, "forgotten-password", "another-client")
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(firstKind).To(Equal(kind1))
-			Expect(secondKind).To(Equal(kind2))
-		})
-
-		It("sets the template ID to 'default' when the field is empty", func() {
-			kind := models.Kind{
-				ID:          "my-kind",
-				Description: "My Kind",
-				Critical:    false,
-				ClientID:    "my-client",
-			}
-
-			kind, err := repo.Create(conn, kind)
-			if err != nil {
-				panic(err)
-			}
-
-			kind, err = repo.Find(conn, "my-kind", "my-client")
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(kind.ID).To(Equal("my-kind"))
-			Expect(kind.Description).To(Equal("My Kind"))
-			Expect(kind.Critical).To(BeFalse())
-			Expect(kind.ClientID).To(Equal("my-client"))
-			Expect(kind.TemplateID).To(Equal(models.DefaultTemplateID))
-			Expect(kind.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
-			Expect(kind.UpdatedAt).To(Equal(kind.CreatedAt))
-		})
-	})
-
-	Describe("FindByClient", func() {
-		It("finds all the records matching the given client ID", func() {
-			kind1 := models.Kind{
-				ID:          "kind1",
-				Description: "kind1-description",
-				Critical:    true,
-				ClientID:    "client1",
-			}
-
-			kind2 := models.Kind{
-				ID:          "kind2",
-				Description: "kind2-description",
-				Critical:    false,
-				ClientID:    "client2",
-			}
-
-			kind3 := models.Kind{
-				ID:          "kind3",
-				Description: "kind3-description",
-				Critical:    false,
-				ClientID:    "client1",
-			}
-
-			_, err := repo.Create(conn, kind1)
-			if err != nil {
-				panic(err)
-			}
-
-			_, err = repo.Create(conn, kind2)
-			if err != nil {
-				panic(err)
-			}
-
-			_, err = repo.Create(conn, kind3)
-			if err != nil {
-				panic(err)
-			}
-
-			kindsForClient1, err := repo.FindByClient(conn, "client1")
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(kindsForClient1[0].ID).To(Equal(kind1.ID))
-			Expect(kindsForClient1[0].Description).To(Equal(kind1.Description))
-			Expect(kindsForClient1[0].Critical).To(Equal(kind1.Critical))
-			Expect(kindsForClient1[0].ClientID).To(Equal(kind1.ClientID))
-			Expect(kindsForClient1[0].CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
-
-			Expect(kindsForClient1[1].ID).To(Equal(kind3.ID))
-			Expect(kindsForClient1[1].Description).To(Equal(kind3.Description))
-			Expect(kindsForClient1[1].Critical).To(Equal(kind3.Critical))
-			Expect(kindsForClient1[1].ClientID).To(Equal(kind3.ClientID))
-			Expect(kindsForClient1[1].CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
-		})
-
-		Context("when there are no kinds for the given client", func() {
-			It("returns an empty slice of kinds", func() {
-				kindsForClient, err := repo.FindByClient(conn, "i-have-no-kinds")
-
-				Expect(err).ToNot(HaveOccurred())
-				Expect(kindsForClient).To(BeEmpty())
-			})
-		})
 	})
 
 	Describe("Update", func() {
@@ -187,7 +35,7 @@ var _ = Describe("KindsRepo", func() {
 					TemplateID: "my-template",
 				}
 
-				kind, err := repo.Create(conn, kind)
+				kind, err := repo.Upsert(conn, kind)
 				if err != nil {
 					panic(err)
 				}
@@ -240,7 +88,7 @@ var _ = Describe("KindsRepo", func() {
 					TemplateID: "my-template",
 				}
 
-				kind, err := repo.Create(conn, kind)
+				kind, err := repo.Upsert(conn, kind)
 				if err != nil {
 					panic(err)
 				}
@@ -311,6 +159,64 @@ var _ = Describe("KindsRepo", func() {
 				Expect(kind.ClientID).To(Equal("my-client"))
 				Expect(kind.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
 			})
+
+			It("allows duplicate kindIDs that are unique by clientID", func() {
+				kind1 := models.Kind{
+					ID:       "forgotten-password",
+					ClientID: "a-client",
+				}
+
+				kind2 := models.Kind{
+					ID:       "forgotten-password",
+					ClientID: "another-client",
+				}
+
+				kind1, err := repo.Upsert(conn, kind1)
+				Expect(err).To(BeNil())
+
+				kind2, err = repo.Upsert(conn, kind2)
+				Expect(err).To(BeNil())
+
+				firstKind, err := repo.Find(conn, "forgotten-password", "a-client")
+				if err != nil {
+					panic(err)
+				}
+
+				secondKind, err := repo.Find(conn, "forgotten-password", "another-client")
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(firstKind).To(Equal(kind1))
+				Expect(secondKind).To(Equal(kind2))
+			})
+
+			It("sets the template ID to 'default' when the field is empty", func() {
+				kind := models.Kind{
+					ID:          "my-kind",
+					Description: "My Kind",
+					Critical:    false,
+					ClientID:    "my-client",
+				}
+
+				kind, err := repo.Upsert(conn, kind)
+				if err != nil {
+					panic(err)
+				}
+
+				kind, err = repo.Find(conn, "my-kind", "my-client")
+				if err != nil {
+					panic(err)
+				}
+
+				Expect(kind.ID).To(Equal("my-kind"))
+				Expect(kind.Description).To(Equal("My Kind"))
+				Expect(kind.Critical).To(BeFalse())
+				Expect(kind.ClientID).To(Equal("my-client"))
+				Expect(kind.TemplateID).To(Equal(models.DefaultTemplateID))
+				Expect(kind.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
+				Expect(kind.UpdatedAt).To(Equal(kind.CreatedAt))
+			})
 		})
 
 		Context("when the record exists", func() {
@@ -320,7 +226,7 @@ var _ = Describe("KindsRepo", func() {
 					ClientID: "my-client",
 				}
 
-				kind, err := repo.Create(conn, kind)
+				kind, err := repo.Upsert(conn, kind)
 				if err != nil {
 					panic(err)
 				}
@@ -388,17 +294,17 @@ var _ = Describe("KindsRepo", func() {
 				ClientID: "other-client-id",
 			}
 
-			kind, err := repo.Create(conn, kind)
+			kind, err := repo.Upsert(conn, kind)
 			if err != nil {
 				panic(err)
 			}
 
-			kindToDelete, err = repo.Create(conn, kindToDelete)
+			kindToDelete, err = repo.Upsert(conn, kindToDelete)
 			if err != nil {
 				panic(err)
 			}
 
-			ignoredKind, err = repo.Create(conn, ignoredKind)
+			ignoredKind, err = repo.Upsert(conn, ignoredKind)
 			if err != nil {
 				panic(err)
 			}
@@ -428,7 +334,7 @@ var _ = Describe("KindsRepo", func() {
 
 	Describe("FindAll", func() {
 		It("returns all the records in the database", func() {
-			kind1, err := repo.Create(conn, models.Kind{
+			kind1, err := repo.Upsert(conn, models.Kind{
 				ID:       "my-kind",
 				ClientID: "the-client-id",
 			})
@@ -436,7 +342,7 @@ var _ = Describe("KindsRepo", func() {
 				panic(err)
 			}
 
-			kind2, err := repo.Create(conn, models.Kind{
+			kind2, err := repo.Upsert(conn, models.Kind{
 				ID:       "another-kind",
 				ClientID: "some-client-id",
 			})
@@ -455,12 +361,12 @@ var _ = Describe("KindsRepo", func() {
 
 	Describe("FindAllByTemplateID", func() {
 		It("returns all kinds with a given template ID", func() {
-			kind, err := repo.Create(conn, models.Kind{
+			kind, err := repo.Upsert(conn, models.Kind{
 				ID:         "some-id",
 				TemplateID: "some-template",
 			})
 
-			_, err = repo.Create(conn, models.Kind{
+			_, err = repo.Upsert(conn, models.Kind{
 				ID: "another-id",
 			})
 

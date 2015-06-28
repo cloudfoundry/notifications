@@ -13,7 +13,7 @@ type PreferenceUpdaterInterface interface {
 type PreferenceUpdater struct {
 	globalUnsubscribesRepo globalUnsubscribesRepo
 	unsubscribesRepo       models.UnsubscribesRepoInterface
-	kindsRepo              models.KindsRepoInterface
+	kindsRepo              kindsRepo
 }
 
 type globalUnsubscribesRepo interface {
@@ -21,7 +21,7 @@ type globalUnsubscribesRepo interface {
 	Get(models.ConnectionInterface, string) (bool, error)
 }
 
-func NewPreferenceUpdater(globalUnsubscribesRepo globalUnsubscribesRepo, unsubscribesRepo models.UnsubscribesRepoInterface, kindsRepo models.KindsRepoInterface) PreferenceUpdater {
+func NewPreferenceUpdater(globalUnsubscribesRepo globalUnsubscribesRepo, unsubscribesRepo models.UnsubscribesRepoInterface, kindsRepo kindsRepo) PreferenceUpdater {
 	return PreferenceUpdater{
 		globalUnsubscribesRepo: globalUnsubscribesRepo,
 		unsubscribesRepo:       unsubscribesRepo,

@@ -13,7 +13,7 @@ type TemplatesLoader struct {
 	finder        services.TemplateFinderInterface
 	database      models.DatabaseInterface
 	clientsRepo   clientsRepo
-	kindsRepo     models.KindsRepoInterface
+	kindsRepo     kindsRepo
 	templatesRepo models.TemplatesRepoInterface
 }
 
@@ -21,7 +21,7 @@ type clientsRepo interface {
 	Find(models.ConnectionInterface, string) (models.Client, error)
 }
 
-func NewTemplatesLoader(finder services.TemplateFinderInterface, database models.DatabaseInterface, clientsRepo clientsRepo, kindsRepo models.KindsRepoInterface, templatesRepo models.TemplatesRepoInterface) TemplatesLoader {
+func NewTemplatesLoader(finder services.TemplateFinderInterface, database models.DatabaseInterface, clientsRepo clientsRepo, kindsRepo kindsRepo, templatesRepo models.TemplatesRepoInterface) TemplatesLoader {
 
 	return TemplatesLoader{
 		finder:        finder,
