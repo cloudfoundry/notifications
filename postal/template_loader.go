@@ -1,16 +1,12 @@
 package postal
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/services"
-)
+import "github.com/cloudfoundry-incubator/notifications/models"
 
 type TemplatesLoaderInterface interface {
 	LoadTemplates(string, string) (Templates, error)
 }
 
 type TemplatesLoader struct {
-	finder   services.TemplateFinderInterface
 	database models.DatabaseInterface
 
 	clientsRepo   ClientsRepo
@@ -18,10 +14,8 @@ type TemplatesLoader struct {
 	templatesRepo TemplatesRepo
 }
 
-func NewTemplatesLoader(finder services.TemplateFinderInterface, database models.DatabaseInterface, clientsRepo ClientsRepo, kindsRepo KindsRepo, templatesRepo TemplatesRepo) TemplatesLoader {
-
+func NewTemplatesLoader(database models.DatabaseInterface, clientsRepo ClientsRepo, kindsRepo KindsRepo, templatesRepo TemplatesRepo) TemplatesLoader {
 	return TemplatesLoader{
-		finder:        finder,
 		database:      database,
 		clientsRepo:   clientsRepo,
 		kindsRepo:     kindsRepo,

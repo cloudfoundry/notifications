@@ -12,22 +12,22 @@ import (
 )
 
 var _ = Describe("TemplateLoader", func() {
-	var loader postal.TemplatesLoader
-	var finder *fakes.TemplateFinder
-	var clientsRepo *fakes.ClientsRepo
-	var kindsRepo *fakes.KindsRepo
-	var templatesRepo *fakes.TemplatesRepo
-	var conn models.ConnectionInterface
-	var database *fakes.Database
+	var (
+		loader        postal.TemplatesLoader
+		clientsRepo   *fakes.ClientsRepo
+		kindsRepo     *fakes.KindsRepo
+		templatesRepo *fakes.TemplatesRepo
+		conn          models.ConnectionInterface
+		database      *fakes.Database
+	)
 
 	BeforeEach(func() {
-		finder = fakes.NewTemplateFinder()
 		clientsRepo = fakes.NewClientsRepo()
 		kindsRepo = fakes.NewKindsRepo()
 		templatesRepo = fakes.NewTemplatesRepo()
 		database = fakes.NewDatabase()
 		conn = database.Connection()
-		loader = postal.NewTemplatesLoader(finder, database, clientsRepo, kindsRepo, templatesRepo)
+		loader = postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
 	})
 
 	Describe("LoadTemplates", func() {

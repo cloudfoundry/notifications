@@ -127,12 +127,11 @@ func (m Mother) Enqueuer() services.Enqueuer {
 }
 
 func (m Mother) TemplatesLoader() postal.TemplatesLoader {
-	finder := m.TemplateFinder()
 	database := m.Database()
 	clientsRepo, kindsRepo := m.Repos()
 	templatesRepo := m.TemplatesRepo()
 
-	return postal.NewTemplatesLoader(finder, database, clientsRepo, kindsRepo, templatesRepo)
+	return postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
 }
 
 func (m Mother) UserLoader() postal.UserLoader {
