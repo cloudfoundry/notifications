@@ -5,11 +5,6 @@ import (
 	"time"
 )
 
-type GlobalUnsubscribesRepoInterface interface {
-	Set(ConnectionInterface, string, bool) error
-	Get(ConnectionInterface, string) (bool, error)
-}
-
 type GlobalUnsubscribesRepo struct{}
 
 func NewGlobalUnsubscribesRepo() GlobalUnsubscribesRepo {
