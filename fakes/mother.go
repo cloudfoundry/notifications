@@ -4,7 +4,6 @@ import (
 	"database/sql"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
@@ -20,28 +19,28 @@ func (mother Mother) Registrar() services.Registrar {
 	return services.Registrar{}
 }
 
-func (mother Mother) EmailStrategy() strategies.EmailStrategy {
-	return strategies.EmailStrategy{}
+func (mother Mother) EmailStrategy() services.EmailStrategy {
+	return services.EmailStrategy{}
 }
 
-func (mother Mother) UserStrategy() strategies.UserStrategy {
-	return strategies.UserStrategy{}
+func (mother Mother) UserStrategy() services.UserStrategy {
+	return services.UserStrategy{}
 }
 
-func (mother Mother) SpaceStrategy() strategies.SpaceStrategy {
-	return strategies.SpaceStrategy{}
+func (mother Mother) SpaceStrategy() services.SpaceStrategy {
+	return services.SpaceStrategy{}
 }
 
-func (mother Mother) OrganizationStrategy() strategies.OrganizationStrategy {
-	return strategies.OrganizationStrategy{}
+func (mother Mother) OrganizationStrategy() services.OrganizationStrategy {
+	return services.OrganizationStrategy{}
 }
 
-func (mother Mother) EveryoneStrategy() strategies.EveryoneStrategy {
-	return strategies.EveryoneStrategy{}
+func (mother Mother) EveryoneStrategy() services.EveryoneStrategy {
+	return services.EveryoneStrategy{}
 }
 
-func (mother Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
-	return strategies.UAAScopeStrategy{}
+func (mother Mother) UAAScopeStrategy() services.UAAScopeStrategy {
+	return services.UAAScopeStrategy{}
 }
 
 func (mother Mother) NotificationsFinder() services.NotificationsFinder {

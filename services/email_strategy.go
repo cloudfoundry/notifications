@@ -1,28 +1,28 @@
-package strategies
+package services
 
 import "github.com/cloudfoundry-incubator/notifications/cf"
 
-const UserEndorsement = "This message was sent directly to you."
+const EmailEndorsement = "This message was sent directly to your email address."
 
-type UserStrategy struct {
+type EmailStrategy struct {
 	enqueuer EnqueuerInterface
 }
 
-func NewUserStrategy(enqueuer EnqueuerInterface) UserStrategy {
-	return UserStrategy{
+func NewEmailStrategy(enqueuer EnqueuerInterface) EmailStrategy {
+	return EmailStrategy{
 		enqueuer: enqueuer,
 	}
 }
 
-func (strategy UserStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
+func (strategy EmailStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 	options := Options{
+		To:                dispatch.Message.To,
 		ReplyTo:           dispatch.Message.ReplyTo,
 		Subject:           dispatch.Message.Subject,
-		To:                dispatch.Message.To,
-		Endorsement:       UserEndorsement,
 		KindID:            dispatch.Kind.ID,
 		KindDescription:   dispatch.Kind.Description,
 		SourceDescription: dispatch.Client.Description,
+		Endorsement:       EmailEndorsement,
 		Text:              dispatch.Message.Text,
 		HTML: HTML{
 			BodyContent:    dispatch.Message.HTML.BodyContent,
@@ -31,8 +31,7 @@ func (strategy UserStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 			Doctype:        dispatch.Message.HTML.Doctype,
 		},
 	}
-	users := []User{{GUID: dispatch.GUID}}
-
+	users := []User{{Email: dispatch.Message.To}}
 	responses := strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil

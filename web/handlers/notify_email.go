@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 )
@@ -12,10 +12,10 @@ import (
 type NotifyEmail struct {
 	errorWriter ErrorWriterInterface
 	notify      NotifyInterface
-	strategy    strategies.StrategyInterface
+	strategy    services.StrategyInterface
 }
 
-func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, strategy strategies.StrategyInterface) NotifyEmail {
+func NewNotifyEmail(notify NotifyInterface, errorWriter ErrorWriterInterface, strategy services.StrategyInterface) NotifyEmail {
 	return NotifyEmail{
 		errorWriter: errorWriter,
 		notify:      notify,

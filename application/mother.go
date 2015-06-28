@@ -13,7 +13,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
@@ -44,8 +43,8 @@ func (m *Mother) Queue() gobble.QueueInterface {
 	})
 }
 
-func (m Mother) UserStrategy() strategies.UserStrategy {
-	return strategies.NewUserStrategy(m.Enqueuer())
+func (m Mother) UserStrategy() services.UserStrategy {
+	return services.NewUserStrategy(m.Enqueuer())
 }
 
 func (m Mother) UAAClient() *uaa.UAA {
@@ -62,7 +61,7 @@ func (m Mother) UAAClient() *uaa.UAA {
 	return m.uaaClient
 }
 
-func (m Mother) SpaceStrategy() strategies.SpaceStrategy {
+func (m Mother) SpaceStrategy() services.SpaceStrategy {
 	env := NewEnvironment()
 	uaaClient := m.UAAClient()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
@@ -73,10 +72,10 @@ func (m Mother) SpaceStrategy() strategies.SpaceStrategy {
 	enqueuer := m.Enqueuer()
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 
-	return strategies.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, enqueuer)
+	return services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, enqueuer)
 }
 
-func (m Mother) OrganizationStrategy() strategies.OrganizationStrategy {
+func (m Mother) OrganizationStrategy() services.OrganizationStrategy {
 	env := NewEnvironment()
 	uaaClient := m.UAAClient()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
@@ -86,19 +85,19 @@ func (m Mother) OrganizationStrategy() strategies.OrganizationStrategy {
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 	enqueuer := m.Enqueuer()
 
-	return strategies.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, enqueuer)
+	return services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, enqueuer)
 }
 
-func (m Mother) EveryoneStrategy() strategies.EveryoneStrategy {
+func (m Mother) EveryoneStrategy() services.EveryoneStrategy {
 	uaaClient := m.UAAClient()
 	tokenLoader := postal.NewTokenLoader(uaaClient)
 	allUsers := services.NewAllUsers(uaaClient)
 	enqueuer := m.Enqueuer()
 
-	return strategies.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer)
+	return services.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer)
 }
 
-func (m Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
+func (m Mother) UAAScopeStrategy() services.UAAScopeStrategy {
 	env := NewEnvironment()
 	uaaClient := m.UAAClient()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
@@ -107,11 +106,11 @@ func (m Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 	enqueuer := m.Enqueuer()
 
-	return strategies.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer)
+	return services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer)
 }
 
-func (m Mother) EmailStrategy() strategies.EmailStrategy {
-	return strategies.NewEmailStrategy(m.Enqueuer())
+func (m Mother) EmailStrategy() services.EmailStrategy {
+	return services.NewEmailStrategy(m.Enqueuer())
 }
 
 func (m Mother) NotificationsFinder() services.NotificationsFinder {
@@ -123,8 +122,8 @@ func (m Mother) NotificationsUpdater() services.NotificationsUpdater {
 	return services.NewNotificationsUpdater(kindsRepo)
 }
 
-func (m Mother) Enqueuer() strategies.Enqueuer {
-	return strategies.NewEnqueuer(m.Queue(), uuid.NewV4, m.MessagesRepo())
+func (m Mother) Enqueuer() services.Enqueuer {
+	return services.NewEnqueuer(m.Queue(), uuid.NewV4, m.MessagesRepo())
 }
 
 func (m Mother) TemplatesLoader() postal.TemplatesLoader {

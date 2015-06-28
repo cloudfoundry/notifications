@@ -1,19 +1,16 @@
-package strategies
-
-import "github.com/cloudfoundry-incubator/notifications/services"
+package services
 
 const SpaceEndorsement = `You received this message because you belong to the "{{.Space}}" space in the "{{.Organization}}" organization.`
 
 type SpaceStrategy struct {
 	tokenLoader        TokenLoader
-	spaceLoader        services.SpaceLoaderInterface
-	organizationLoader services.OrganizationLoaderInterface
-	findsUserGUIDs     services.FindsUserGUIDsInterface
+	spaceLoader        SpaceLoaderInterface
+	organizationLoader OrganizationLoaderInterface
+	findsUserGUIDs     FindsUserGUIDsInterface
 	enqueuer           EnqueuerInterface
 }
 
-func NewSpaceStrategy(tokenLoader TokenLoader, spaceLoader services.SpaceLoaderInterface, organizationLoader services.OrganizationLoaderInterface,
-	findsUserGUIDs services.FindsUserGUIDsInterface, enqueuer EnqueuerInterface) SpaceStrategy {
+func NewSpaceStrategy(tokenLoader TokenLoader, spaceLoader SpaceLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface) SpaceStrategy {
 
 	return SpaceStrategy{
 		tokenLoader:        tokenLoader,

@@ -8,6 +8,7 @@ type Message struct {
 
 type MessagesRepoInterface interface {
 	FindByID(models.ConnectionInterface, string) (models.Message, error)
+	Upsert(models.ConnectionInterface, models.Message) (models.Message, error)
 }
 
 type MessageFinderInterface interface {

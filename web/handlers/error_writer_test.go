@@ -8,7 +8,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
@@ -225,7 +224,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 406 when a record cannot be found", func() {
-		writer.Write(recorder, strategies.DefaultScopeError{})
+		writer.Write(recorder, services.DefaultScopeError{})
 		Expect(recorder.Code).To(Equal(406))
 
 		body := make(map[string]interface{})

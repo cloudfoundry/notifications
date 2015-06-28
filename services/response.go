@@ -1,4 +1,4 @@
-package strategies
+package services
 
 type Response struct {
 	Status         string `json:"status"`

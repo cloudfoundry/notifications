@@ -2,7 +2,7 @@ package web
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
@@ -11,15 +11,15 @@ import (
 
 func NewNotifyRouter(notify handlers.NotifyInterface,
 	errorWriter handlers.ErrorWriterInterface,
-	userStrategy strategies.StrategyInterface,
+	userStrategy services.StrategyInterface,
 	logging middleware.RequestLogging,
 	notificationsWriteAuthenticator middleware.Authenticator,
 	databaseAllocator middleware.DatabaseAllocator,
-	spaceStrategy strategies.StrategyInterface,
-	organizationStrategy strategies.StrategyInterface,
-	everyoneStrategy strategies.StrategyInterface,
-	uaaScopeStrategy strategies.StrategyInterface,
-	emailStrategy strategies.StrategyInterface,
+	spaceStrategy services.StrategyInterface,
+	organizationStrategy services.StrategyInterface,
+	everyoneStrategy services.StrategyInterface,
+	uaaScopeStrategy services.StrategyInterface,
+	emailStrategy services.StrategyInterface,
 	emailsWriteAuthenticator middleware.Authenticator) *mux.Router {
 
 	router := mux.NewRouter()

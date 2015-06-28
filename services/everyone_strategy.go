@@ -1,19 +1,16 @@
-package strategies
+package services
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/services"
-)
+import "github.com/cloudfoundry-incubator/notifications/cf"
 
 const EveryoneEndorsement = "This message was sent to everyone."
 
 type EveryoneStrategy struct {
 	tokenLoader TokenLoader
-	allUsers    services.AllUsersInterface
+	allUsers    AllUsersInterface
 	enqueuer    EnqueuerInterface
 }
 
-func NewEveryoneStrategy(tokenLoader TokenLoader, allUsers services.AllUsersInterface, enqueuer EnqueuerInterface) EveryoneStrategy {
+func NewEveryoneStrategy(tokenLoader TokenLoader, allUsers AllUsersInterface, enqueuer EnqueuerInterface) EveryoneStrategy {
 	return EveryoneStrategy{
 		tokenLoader: tokenLoader,
 		allUsers:    allUsers,

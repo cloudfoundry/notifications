@@ -1,4 +1,4 @@
-package strategies_test
+package services_test
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/cloudfoundry-incubator/notifications/services"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,7 +14,7 @@ import (
 
 var _ = Describe("Organization Strategy", func() {
 	var (
-		strategy           strategies.OrganizationStrategy
+		strategy           services.OrganizationStrategy
 		tokenLoader        *fakes.TokenLoader
 		organizationLoader *fakes.OrganizationLoader
 		enqueuer           *fakes.Enqueuer
@@ -44,50 +44,50 @@ var _ = Describe("Organization Strategy", func() {
 			Name: "my-org",
 			GUID: "org-001",
 		}
-		strategy = strategies.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, enqueuer)
+		strategy = services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, enqueuer)
 	})
 
 	Describe("Dispatch", func() {
 		Context("when the request is valid", func() {
 			It("call enqueuer.Enqueue with the correct arguments for an organization", func() {
-				_, err := strategy.Dispatch(strategies.Dispatch{
+				_, err := strategy.Dispatch(services.Dispatch{
 					GUID:       "org-001",
 					Connection: conn,
-					Message: strategies.Message{
+					Message: services.DispatchMessage{
 						To:      "dr@strangelove.com",
 						ReplyTo: "reply-to@example.com",
 						Subject: "this is the subject",
 						Text:    "Please reset your password by clicking on this link...",
-						HTML: strategies.HTML{
+						HTML: services.HTML{
 							BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
 							BodyAttributes: "some-html-body-attributes",
 							Head:           "<head></head>",
 							Doctype:        "<html>",
 						},
 					},
-					Kind: strategies.Kind{
+					Kind: services.DispatchKind{
 						ID:          "forgot_password",
 						Description: "Password reminder",
 					},
-					Client: strategies.Client{
+					Client: services.DispatchClient{
 						ID:          "mister-client",
 						Description: "Login system",
 					},
-					VCAPRequest: strategies.VCAPRequest{
+					VCAPRequest: services.DispatchVCAPRequest{
 						ID:          "some-vcap-request-id",
 						ReceiptTime: requestReceived,
 					},
 				})
 				Expect(err).NotTo(HaveOccurred())
 
-				users := []strategies.User{
+				users := []services.User{
 					{GUID: "user-123"},
 					{GUID: "user-456"},
 				}
 
 				Expect(enqueuer.EnqueueCall.Args.Connection).To(Equal(conn))
 				Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
-				Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(strategies.Options{
+				Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(services.Options{
 					ReplyTo:           "reply-to@example.com",
 					Subject:           "this is the subject",
 					To:                "dr@strangelove.com",
@@ -95,13 +95,13 @@ var _ = Describe("Organization Strategy", func() {
 					KindDescription:   "Password reminder",
 					SourceDescription: "Login system",
 					Text:              "Please reset your password by clicking on this link...",
-					HTML: strategies.HTML{
+					HTML: services.HTML{
 						BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
 						BodyAttributes: "some-html-body-attributes",
 						Head:           "<head></head>",
 						Doctype:        "<html>",
 					},
-					Endorsement: strategies.OrganizationEndorsement,
+					Endorsement: services.OrganizationEndorsement,
 				}))
 				Expect(enqueuer.EnqueueCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
 				Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{
@@ -116,38 +116,38 @@ var _ = Describe("Organization Strategy", func() {
 
 			Context("when the org role field is set", func() {
 				It("calls enqueuer.Enqueue with the correct arguments", func() {
-					_, err := strategy.Dispatch(strategies.Dispatch{
+					_, err := strategy.Dispatch(services.Dispatch{
 						GUID:       "org-001",
 						Role:       "OrgManager",
 						Connection: conn,
-						Message: strategies.Message{
+						Message: services.DispatchMessage{
 							To:      "dr@strangelove.com",
 							ReplyTo: "reply-to@example.com",
 							Subject: "this is the subject",
 							Text:    "Please reset your password by clicking on this link...",
-							HTML: strategies.HTML{
+							HTML: services.HTML{
 								BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
 								BodyAttributes: "some-html-body-attributes",
 								Head:           "<head></head>",
 								Doctype:        "<html>",
 							},
 						},
-						Kind: strategies.Kind{
+						Kind: services.DispatchKind{
 							ID:          "forgot_password",
 							Description: "Password reminder",
 						},
-						Client: strategies.Client{
+						Client: services.DispatchClient{
 							ID:          "mister-client",
 							Description: "Login system",
 						},
-						VCAPRequest: strategies.VCAPRequest{
+						VCAPRequest: services.DispatchVCAPRequest{
 							ID:          "some-vcap-request-id",
 							ReceiptTime: requestReceived,
 						},
 					})
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(strategies.Options{
+					Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(services.Options{
 						ReplyTo:           "reply-to@example.com",
 						Subject:           "this is the subject",
 						To:                "dr@strangelove.com",
@@ -156,13 +156,13 @@ var _ = Describe("Organization Strategy", func() {
 						SourceDescription: "Login system",
 						Text:              "Please reset your password by clicking on this link...",
 						Role:              "OrgManager",
-						HTML: strategies.HTML{
+						HTML: services.HTML{
 							BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
 							BodyAttributes: "some-html-body-attributes",
 							Head:           "<head></head>",
 							Doctype:        "<html>",
 						},
-						Endorsement: strategies.OrganizationRoleEndorsement,
+						Endorsement: services.OrganizationRoleEndorsement,
 					}))
 				})
 			})
@@ -173,7 +173,7 @@ var _ = Describe("Organization Strategy", func() {
 				It("returns an error", func() {
 					tokenLoader.LoadError = errors.New("BOOM!")
 
-					_, err := strategy.Dispatch(strategies.Dispatch{})
+					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
 			})
@@ -182,7 +182,7 @@ var _ = Describe("Organization Strategy", func() {
 				It("returns the error", func() {
 					organizationLoader.LoadError = errors.New("BOOM!")
 
-					_, err := strategy.Dispatch(strategies.Dispatch{})
+					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
 			})
@@ -191,7 +191,7 @@ var _ = Describe("Organization Strategy", func() {
 				It("returns an error", func() {
 					findsUserGUIDs.UserGUIDsBelongingToOrganizationError = errors.New("BOOM!")
 
-					_, err := strategy.Dispatch(strategies.Dispatch{})
+					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))
 				})
 			})

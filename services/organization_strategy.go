@@ -1,9 +1,6 @@
-package strategies
+package services
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/services"
-)
+import "github.com/cloudfoundry-incubator/notifications/cf"
 
 const (
 	OrganizationEndorsement     = `You received this message because you belong to the "{{.Organization}}" organization.`
@@ -12,13 +9,12 @@ const (
 
 type OrganizationStrategy struct {
 	tokenLoader        TokenLoader
-	organizationLoader services.OrganizationLoaderInterface
-	findsUserGUIDs     services.FindsUserGUIDsInterface
+	organizationLoader OrganizationLoaderInterface
+	findsUserGUIDs     FindsUserGUIDsInterface
 	enqueuer           EnqueuerInterface
 }
 
-func NewOrganizationStrategy(tokenLoader TokenLoader, organizationLoader services.OrganizationLoaderInterface,
-	findsUserGUIDs services.FindsUserGUIDsInterface, enqueuer EnqueuerInterface) OrganizationStrategy {
+func NewOrganizationStrategy(tokenLoader TokenLoader, organizationLoader OrganizationLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface) OrganizationStrategy {
 
 	return OrganizationStrategy{
 		tokenLoader:        tokenLoader,

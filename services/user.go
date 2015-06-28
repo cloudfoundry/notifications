@@ -1,4 +1,4 @@
-package strategies
+package services
 
 type User struct {
 	GUID  string

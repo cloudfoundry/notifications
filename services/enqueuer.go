@@ -1,4 +1,4 @@
-package strategies
+package services
 
 import (
 	"time"
@@ -47,10 +47,6 @@ type Enqueuer struct {
 	queue         gobble.QueueInterface
 	guidGenerator GUIDGenerationFunc
 	messagesRepo  MessagesRepoInterface
-}
-
-type MessagesRepoInterface interface {
-	Upsert(models.ConnectionInterface, models.Message) (models.Message, error)
 }
 
 func NewEnqueuer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc, messagesRepo MessagesRepoInterface) Enqueuer {

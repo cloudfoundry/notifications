@@ -5,15 +5,15 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/cloudfoundry-incubator/notifications/services"
 )
 
 type Enqueuer struct {
 	EnqueueCall struct {
 		Args struct {
 			Connection      models.ConnectionInterface
-			Users           []strategies.User
-			Options         strategies.Options
+			Users           []services.User
+			Options         services.Options
 			Space           cf.CloudControllerSpace
 			Org             cf.CloudControllerOrganization
 			Client          string
@@ -21,7 +21,7 @@ type Enqueuer struct {
 			VCAPRequestID   string
 			RequestReceived time.Time
 		}
-		Responses []strategies.Response
+		Responses []services.Response
 	}
 }
 
@@ -29,8 +29,8 @@ func NewEnqueuer() *Enqueuer {
 	return &Enqueuer{}
 }
 
-func (m *Enqueuer) Enqueue(conn models.ConnectionInterface, users []strategies.User, options strategies.Options,
-	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, scope, vcapRequestID string, reqReceived time.Time) []strategies.Response {
+func (m *Enqueuer) Enqueue(conn models.ConnectionInterface, users []services.User, options services.Options,
+	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, scope, vcapRequestID string, reqReceived time.Time) []services.Response {
 
 	m.EnqueueCall.Args.Connection = conn
 	m.EnqueueCall.Args.Users = users

@@ -1,4 +1,4 @@
-package strategies_test
+package services_test
 
 import (
 	"reflect"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/cloudfoundry-incubator/notifications/services"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,7 +14,7 @@ import (
 
 var _ = Describe("UserStrategy", func() {
 	var (
-		strategy        strategies.UserStrategy
+		strategy        services.UserStrategy
 		enqueuer        *fakes.Enqueuer
 		conn            *fakes.Connection
 		requestReceived time.Time
@@ -24,46 +24,46 @@ var _ = Describe("UserStrategy", func() {
 		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
 		conn = fakes.NewConnection()
 		enqueuer = fakes.NewEnqueuer()
-		strategy = strategies.NewUserStrategy(enqueuer)
+		strategy = services.NewUserStrategy(enqueuer)
 	})
 
 	Describe("Dispatch", func() {
 		It("calls enqueuer.Enqueue with the correct arguments for a user", func() {
-			_, err := strategy.Dispatch(strategies.Dispatch{
+			_, err := strategy.Dispatch(services.Dispatch{
 				GUID:       "user-123",
 				Connection: conn,
-				Message: strategies.Message{
+				Message: services.DispatchMessage{
 					To:      "dr@strangelove.com",
 					ReplyTo: "reply-to@example.com",
 					Subject: "this is the subject",
 					Text:    "Please make sure to leave your bottle in a place that is safe and dry",
-					HTML: strategies.HTML{
+					HTML: services.HTML{
 						BodyContent:    "<p>The water bottle needs to be safe and dry</p>",
 						BodyAttributes: "some-html-body-attributes",
 						Head:           "<head></head>",
 						Doctype:        "<html>",
 					},
 				},
-				Kind: strategies.Kind{
+				Kind: services.DispatchKind{
 					ID:          "forgot_waterbottle",
 					Description: "Water Bottle Reminder",
 				},
-				Client: strategies.Client{
+				Client: services.DispatchClient{
 					ID:          "mister-client",
 					Description: "The Water Bottle System",
 				},
-				VCAPRequest: strategies.VCAPRequest{
+				VCAPRequest: services.DispatchVCAPRequest{
 					ID:          "some-vcap-request-id",
 					ReceiptTime: requestReceived,
 				},
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			users := []strategies.User{{GUID: "user-123"}}
+			users := []services.User{{GUID: "user-123"}}
 
 			Expect(reflect.ValueOf(enqueuer.EnqueueCall.Args.Connection).Pointer()).To(Equal(reflect.ValueOf(conn).Pointer()))
 			Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
-			Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(strategies.Options{
+			Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(services.Options{
 				ReplyTo:           "reply-to@example.com",
 				Subject:           "this is the subject",
 				To:                "dr@strangelove.com",
@@ -71,13 +71,13 @@ var _ = Describe("UserStrategy", func() {
 				KindDescription:   "Water Bottle Reminder",
 				SourceDescription: "The Water Bottle System",
 				Text:              "Please make sure to leave your bottle in a place that is safe and dry",
-				HTML: strategies.HTML{
+				HTML: services.HTML{
 					BodyContent:    "<p>The water bottle needs to be safe and dry</p>",
 					BodyAttributes: "some-html-body-attributes",
 					Head:           "<head></head>",
 					Doctype:        "<html>",
 				},
-				Endorsement: strategies.UserEndorsement,
+				Endorsement: services.UserEndorsement,
 			}))
 			Expect(enqueuer.EnqueueCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
 			Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{}))

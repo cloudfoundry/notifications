@@ -7,7 +7,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/dgrijalva/jwt-go"
@@ -15,7 +14,7 @@ import (
 )
 
 type NotifyInterface interface {
-	Execute(models.ConnectionInterface, *http.Request, stack.Context, string, strategies.StrategyInterface, ValidatorInterface, string) ([]byte, error)
+	Execute(models.ConnectionInterface, *http.Request, stack.Context, string, services.StrategyInterface, ValidatorInterface, string) ([]byte, error)
 }
 
 type Notify struct {
@@ -35,7 +34,7 @@ type ValidatorInterface interface {
 }
 
 func (handler Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
-	guid string, strategy strategies.StrategyInterface, validator ValidatorInterface, vcapRequestID string) ([]byte, error) {
+	guid string, strategy services.StrategyInterface, validator ValidatorInterface, vcapRequestID string) ([]byte, error) {
 	parameters, err := params.NewNotify(req.Body)
 	if err != nil {
 		return []byte{}, err
@@ -66,30 +65,30 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 		return []byte{}, err
 	}
 
-	var responses []strategies.Response
+	var responses []services.Response
 
-	responses, err = strategy.Dispatch(strategies.Dispatch{
+	responses, err = strategy.Dispatch(services.Dispatch{
 		GUID:       guid,
 		Connection: connection,
 		Role:       parameters.Role,
-		Client: strategies.Client{
+		Client: services.DispatchClient{
 			ID:          clientID,
 			Description: client.Description,
 		},
-		Kind: strategies.Kind{
+		Kind: services.DispatchKind{
 			ID:          parameters.KindID,
 			Description: kind.Description,
 		},
-		VCAPRequest: strategies.VCAPRequest{
+		VCAPRequest: services.DispatchVCAPRequest{
 			ID:          vcapRequestID,
 			ReceiptTime: requestReceivedTime,
 		},
-		Message: strategies.Message{
+		Message: services.DispatchMessage{
 			To:      parameters.To,
 			ReplyTo: parameters.ReplyTo,
 			Subject: parameters.Subject,
 			Text:    parameters.Text,
-			HTML: strategies.HTML{
+			HTML: services.HTML{
 				BodyContent:    parameters.ParsedHTML.BodyContent,
 				BodyAttributes: parameters.ParsedHTML.BodyAttributes,
 				Head:           parameters.ParsedHTML.Head,

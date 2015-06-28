@@ -12,7 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/dgrijalva/jwt-go"
@@ -114,26 +114,26 @@ var _ = Describe("Notify", func() {
 				_, err := handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(strategy.DispatchCall.Dispatch).To(Equal(strategies.Dispatch{
+				Expect(strategy.DispatchCall.Dispatch).To(Equal(services.Dispatch{
 					GUID:       "space-001",
 					Connection: conn,
-					Client: strategies.Client{
+					Client: services.DispatchClient{
 						ID:          "mister-client",
 						Description: "Health Monitor",
 					},
-					Kind: strategies.Kind{
+					Kind: services.DispatchKind{
 						ID:          "test_email",
 						Description: "Instance Down",
 					},
-					VCAPRequest: strategies.VCAPRequest{
+					VCAPRequest: services.DispatchVCAPRequest{
 						ID:          "some-request-id",
 						ReceiptTime: reqReceivedTime,
 					},
-					Message: strategies.Message{
+					Message: services.DispatchMessage{
 						ReplyTo: "me@example.com",
 						Subject: "Your instance is down",
 						Text:    "This is the plain text body of the email",
-						HTML: strategies.HTML{
+						HTML: services.HTML{
 							BodyContent:    "<p>This is the HTML Body of the email</p>",
 							BodyAttributes: `class="hello"`,
 							Head:           `<script type="javascript"></script>`,

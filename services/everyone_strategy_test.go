@@ -1,4 +1,4 @@
-package strategies_test
+package services_test
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
+	"github.com/cloudfoundry-incubator/notifications/services"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,7 +14,7 @@ import (
 
 var _ = Describe("Everyone Strategy", func() {
 	var (
-		strategy            strategies.EveryoneStrategy
+		strategy            services.EveryoneStrategy
 		tokenLoader         *fakes.TokenLoader
 		allUsers            *fakes.AllUsers
 		enqueuer            *fakes.Enqueuer
@@ -38,48 +38,48 @@ var _ = Describe("Everyone Strategy", func() {
 		enqueuer = fakes.NewEnqueuer()
 		allUsers = fakes.NewAllUsers()
 		allUsers.AllUserGUIDsCall.Returns = []string{"user-380", "user-319"}
-		strategy = strategies.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer)
+		strategy = services.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer)
 	})
 
 	Describe("Dispatch", func() {
 		It("call enqueuer.Enqueue with the correct arguments for an organization", func() {
-			_, err := strategy.Dispatch(strategies.Dispatch{
+			_, err := strategy.Dispatch(services.Dispatch{
 				Connection: conn,
-				Kind: strategies.Kind{
+				Kind: services.DispatchKind{
 					ID:          "welcome_user",
 					Description: "Your Official Welcome",
 				},
-				Client: strategies.Client{
+				Client: services.DispatchClient{
 					ID:          "my-client",
 					Description: "Welcome system",
 				},
-				Message: strategies.Message{
+				Message: services.DispatchMessage{
 					ReplyTo: "reply-to@example.com",
 					Subject: "this is the subject",
 					To:      "dr@strangelove.com",
 					Text:    "Welcome to the system, now get off my lawn.",
-					HTML: strategies.HTML{
+					HTML: services.HTML{
 						BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
 						BodyAttributes: "some-html-body-attributes",
 						Head:           "<head></head>",
 						Doctype:        "<html>",
 					},
 				},
-				VCAPRequest: strategies.VCAPRequest{
+				VCAPRequest: services.DispatchVCAPRequest{
 					ID:          "some-vcap-request-id",
 					ReceiptTime: requestReceivedTime,
 				},
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			var users []strategies.User
+			var users []services.User
 			for _, guid := range allUsers.AllUserGUIDsCall.Returns {
-				users = append(users, strategies.User{GUID: guid})
+				users = append(users, services.User{GUID: guid})
 			}
 
 			Expect(enqueuer.EnqueueCall.Args.Connection).To(Equal(conn))
 			Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
-			Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(strategies.Options{
+			Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(services.Options{
 				ReplyTo:           "reply-to@example.com",
 				Subject:           "this is the subject",
 				To:                "dr@strangelove.com",
@@ -87,13 +87,13 @@ var _ = Describe("Everyone Strategy", func() {
 				KindDescription:   "Your Official Welcome",
 				SourceDescription: "Welcome system",
 				Text:              "Welcome to the system, now get off my lawn.",
-				HTML: strategies.HTML{
+				HTML: services.HTML{
 					BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
 					BodyAttributes: "some-html-body-attributes",
 					Head:           "<head></head>",
 					Doctype:        "<html>",
 				},
-				Endorsement: strategies.EveryoneEndorsement,
+				Endorsement: services.EveryoneEndorsement,
 			}))
 			Expect(enqueuer.EnqueueCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
 			Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{}))
@@ -108,7 +108,7 @@ var _ = Describe("Everyone Strategy", func() {
 		Context("when token loader fails to return a token", func() {
 			It("returns an error", func() {
 				tokenLoader.LoadError = errors.New("BOOM!")
-				_, err := strategy.Dispatch(strategies.Dispatch{})
+				_, err := strategy.Dispatch(services.Dispatch{})
 
 				Expect(err).To(Equal(errors.New("BOOM!")))
 			})
@@ -117,7 +117,7 @@ var _ = Describe("Everyone Strategy", func() {
 		Context("when allUsers fails to load users", func() {
 			It("returns the error", func() {
 				allUsers.AllUserGUIDsCall.Error = errors.New("BOOM!")
-				_, err := strategy.Dispatch(strategies.Dispatch{})
+				_, err := strategy.Dispatch(services.Dispatch{})
 
 				Expect(err).To(Equal(errors.New("BOOM!")))
 			})
