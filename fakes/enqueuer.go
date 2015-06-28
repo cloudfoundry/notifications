@@ -9,8 +9,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/strategies"
 )
 
-type Mailer struct {
-	DeliverCall struct {
+type Enqueuer struct {
+	EnqueueCall struct {
 		Args struct {
 			Connection      models.ConnectionInterface
 			Users           []strategies.User
@@ -26,22 +26,22 @@ type Mailer struct {
 	}
 }
 
-func NewMailer() *Mailer {
-	return &Mailer{}
+func NewEnqueuer() *Enqueuer {
+	return &Enqueuer{}
 }
 
-func (m *Mailer) Deliver(conn models.ConnectionInterface, users []strategies.User, options postal.Options,
+func (m *Enqueuer) Enqueue(conn models.ConnectionInterface, users []strategies.User, options postal.Options,
 	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, scope, vcapRequestID string, reqReceived time.Time) []strategies.Response {
 
-	m.DeliverCall.Args.Connection = conn
-	m.DeliverCall.Args.Users = users
-	m.DeliverCall.Args.Options = options
-	m.DeliverCall.Args.Space = space
-	m.DeliverCall.Args.Org = org
-	m.DeliverCall.Args.Client = client
-	m.DeliverCall.Args.Scope = scope
-	m.DeliverCall.Args.VCAPRequestID = vcapRequestID
-	m.DeliverCall.Args.RequestReceived = reqReceived
+	m.EnqueueCall.Args.Connection = conn
+	m.EnqueueCall.Args.Users = users
+	m.EnqueueCall.Args.Options = options
+	m.EnqueueCall.Args.Space = space
+	m.EnqueueCall.Args.Org = org
+	m.EnqueueCall.Args.Client = client
+	m.EnqueueCall.Args.Scope = scope
+	m.EnqueueCall.Args.VCAPRequestID = vcapRequestID
+	m.EnqueueCall.Args.RequestReceived = reqReceived
 
-	return m.DeliverCall.Responses
+	return m.EnqueueCall.Responses
 }

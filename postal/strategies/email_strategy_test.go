@@ -17,19 +17,19 @@ var _ = Describe("EmailStrategy", func() {
 
 	Describe("Dispatch", func() {
 		var (
-			mailer          *fakes.Mailer
+			enqueuer        *fakes.Enqueuer
 			conn            *fakes.Connection
 			requestReceived time.Time
 		)
 
 		BeforeEach(func() {
-			mailer = fakes.NewMailer()
-			emailStrategy = strategies.NewEmailStrategy(mailer)
+			enqueuer = fakes.NewEnqueuer()
+			emailStrategy = strategies.NewEmailStrategy(enqueuer)
 			conn = fakes.NewConnection()
 			requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
 		})
 
-		It("calls Deliver on it's mailer with proper arguments", func() {
+		It("calls Enqueue on it's enqueuer with proper arguments", func() {
 			emailStrategy.Dispatch(strategies.Dispatch{
 				Connection: conn,
 				Client: strategies.Client{
@@ -60,9 +60,9 @@ var _ = Describe("EmailStrategy", func() {
 
 			users := []strategies.User{{Email: "dr@strangelove.com"}}
 
-			Expect(mailer.DeliverCall.Args.Connection).To(Equal(conn))
-			Expect(mailer.DeliverCall.Args.Users).To(Equal(users))
-			Expect(mailer.DeliverCall.Args.Options).To(Equal(postal.Options{
+			Expect(enqueuer.EnqueueCall.Args.Connection).To(Equal(conn))
+			Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
+			Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(postal.Options{
 				ReplyTo:           "reply-to@example.com",
 				Subject:           "this is the subject",
 				KindDescription:   "description of a kind",
@@ -79,12 +79,12 @@ var _ = Describe("EmailStrategy", func() {
 				Role:        "",
 				Endorsement: strategies.EmailEndorsement,
 			}))
-			Expect(mailer.DeliverCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
-			Expect(mailer.DeliverCall.Args.Org).To(Equal(cf.CloudControllerOrganization{}))
-			Expect(mailer.DeliverCall.Args.Client).To(Equal("some-client-id"))
-			Expect(mailer.DeliverCall.Args.Scope).To(Equal(""))
-			Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
-			Expect(mailer.DeliverCall.Args.RequestReceived).To(Equal(requestReceived))
+			Expect(enqueuer.EnqueueCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(enqueuer.EnqueueCall.Args.Client).To(Equal("some-client-id"))
+			Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal(""))
+			Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
+			Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
 		})
 	})
 })

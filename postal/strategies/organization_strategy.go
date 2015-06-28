@@ -15,17 +15,17 @@ type OrganizationStrategy struct {
 	tokenLoader        postal.TokenLoaderInterface
 	organizationLoader services.OrganizationLoaderInterface
 	findsUserGUIDs     services.FindsUserGUIDsInterface
-	mailer             MailerInterface
+	enqueuer           EnqueuerInterface
 }
 
 func NewOrganizationStrategy(tokenLoader postal.TokenLoaderInterface, organizationLoader services.OrganizationLoaderInterface,
-	findsUserGUIDs services.FindsUserGUIDsInterface, mailer MailerInterface) OrganizationStrategy {
+	findsUserGUIDs services.FindsUserGUIDsInterface, enqueuer EnqueuerInterface) OrganizationStrategy {
 
 	return OrganizationStrategy{
 		tokenLoader:        tokenLoader,
 		organizationLoader: organizationLoader,
 		findsUserGUIDs:     findsUserGUIDs,
-		mailer:             mailer,
+		enqueuer:           enqueuer,
 	}
 }
 
@@ -73,7 +73,7 @@ func (strategy OrganizationStrategy) Dispatch(dispatch Dispatch) ([]Response, er
 		users = append(users, User{GUID: guid})
 	}
 
-	responses = strategy.mailer.Deliver(dispatch.Connection, users, options, cf.CloudControllerSpace{}, organization, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, organization, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

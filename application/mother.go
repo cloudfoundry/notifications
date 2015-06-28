@@ -45,7 +45,7 @@ func (m *Mother) Queue() gobble.QueueInterface {
 }
 
 func (m Mother) UserStrategy() strategies.UserStrategy {
-	return strategies.NewUserStrategy(m.Mailer())
+	return strategies.NewUserStrategy(m.Enqueuer())
 }
 
 func (m Mother) UAAClient() *uaa.UAA {
@@ -70,10 +70,10 @@ func (m Mother) SpaceStrategy() strategies.SpaceStrategy {
 	tokenLoader := postal.NewTokenLoader(uaaClient)
 	spaceLoader := services.NewSpaceLoader(cloudController)
 	organizationLoader := services.NewOrganizationLoader(cloudController)
-	mailer := m.Mailer()
+	enqueuer := m.Enqueuer()
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 
-	return strategies.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, mailer)
+	return strategies.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, enqueuer)
 }
 
 func (m Mother) OrganizationStrategy() strategies.OrganizationStrategy {
@@ -84,18 +84,18 @@ func (m Mother) OrganizationStrategy() strategies.OrganizationStrategy {
 	tokenLoader := postal.NewTokenLoader(uaaClient)
 	organizationLoader := services.NewOrganizationLoader(cloudController)
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
-	mailer := m.Mailer()
+	enqueuer := m.Enqueuer()
 
-	return strategies.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, mailer)
+	return strategies.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, enqueuer)
 }
 
 func (m Mother) EveryoneStrategy() strategies.EveryoneStrategy {
 	uaaClient := m.UAAClient()
 	tokenLoader := postal.NewTokenLoader(uaaClient)
 	allUsers := services.NewAllUsers(uaaClient)
-	mailer := m.Mailer()
+	enqueuer := m.Enqueuer()
 
-	return strategies.NewEveryoneStrategy(tokenLoader, allUsers, mailer)
+	return strategies.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer)
 }
 
 func (m Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
@@ -105,13 +105,13 @@ func (m Mother) UAAScopeStrategy() strategies.UAAScopeStrategy {
 
 	tokenLoader := postal.NewTokenLoader(uaaClient)
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
-	mailer := m.Mailer()
+	enqueuer := m.Enqueuer()
 
-	return strategies.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, mailer)
+	return strategies.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer)
 }
 
 func (m Mother) EmailStrategy() strategies.EmailStrategy {
-	return strategies.NewEmailStrategy(m.Mailer())
+	return strategies.NewEmailStrategy(m.Enqueuer())
 }
 
 func (m Mother) NotificationsFinder() services.NotificationsFinder {
@@ -123,8 +123,8 @@ func (m Mother) NotificationsUpdater() services.NotificationsUpdater {
 	return services.NewNotificationsUpdater(kindsRepo)
 }
 
-func (m Mother) Mailer() strategies.Mailer {
-	return strategies.NewMailer(m.Queue(), uuid.NewV4, m.MessagesRepo())
+func (m Mother) Enqueuer() strategies.Enqueuer {
+	return strategies.NewEnqueuer(m.Queue(), uuid.NewV4, m.MessagesRepo())
 }
 
 func (m Mother) TemplatesLoader() postal.TemplatesLoader {

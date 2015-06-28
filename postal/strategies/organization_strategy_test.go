@@ -18,7 +18,7 @@ var _ = Describe("Organization Strategy", func() {
 		strategy           strategies.OrganizationStrategy
 		tokenLoader        *fakes.TokenLoader
 		organizationLoader *fakes.OrganizationLoader
-		mailer             *fakes.Mailer
+		enqueuer           *fakes.Enqueuer
 		conn               *fakes.Connection
 		findsUserGUIDs     *fakes.FindsUserGUIDs
 		requestReceived    time.Time
@@ -37,7 +37,7 @@ var _ = Describe("Organization Strategy", func() {
 		}
 		tokenLoader = fakes.NewTokenLoader()
 		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
-		mailer = fakes.NewMailer()
+		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
 		findsUserGUIDs.OrganizationGuids["org-001"] = []string{"user-123", "user-456"}
 		organizationLoader = fakes.NewOrganizationLoader()
@@ -45,12 +45,12 @@ var _ = Describe("Organization Strategy", func() {
 			Name: "my-org",
 			GUID: "org-001",
 		}
-		strategy = strategies.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, mailer)
+		strategy = strategies.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, enqueuer)
 	})
 
 	Describe("Dispatch", func() {
 		Context("when the request is valid", func() {
-			It("call mailer.Deliver with the correct arguments for an organization", func() {
+			It("call enqueuer.Enqueue with the correct arguments for an organization", func() {
 				_, err := strategy.Dispatch(strategies.Dispatch{
 					GUID:       "org-001",
 					Connection: conn,
@@ -86,9 +86,9 @@ var _ = Describe("Organization Strategy", func() {
 					{GUID: "user-456"},
 				}
 
-				Expect(mailer.DeliverCall.Args.Connection).To(Equal(conn))
-				Expect(mailer.DeliverCall.Args.Users).To(Equal(users))
-				Expect(mailer.DeliverCall.Args.Options).To(Equal(postal.Options{
+				Expect(enqueuer.EnqueueCall.Args.Connection).To(Equal(conn))
+				Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
+				Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(postal.Options{
 					ReplyTo:           "reply-to@example.com",
 					Subject:           "this is the subject",
 					To:                "dr@strangelove.com",
@@ -104,19 +104,19 @@ var _ = Describe("Organization Strategy", func() {
 					},
 					Endorsement: strategies.OrganizationEndorsement,
 				}))
-				Expect(mailer.DeliverCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
-				Expect(mailer.DeliverCall.Args.Org).To(Equal(cf.CloudControllerOrganization{
+				Expect(enqueuer.EnqueueCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
+				Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{
 					Name: "my-org",
 					GUID: "org-001",
 				}))
-				Expect(mailer.DeliverCall.Args.Client).To(Equal("mister-client"))
-				Expect(mailer.DeliverCall.Args.Scope).To(Equal(""))
-				Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
-				Expect(mailer.DeliverCall.Args.RequestReceived).To(Equal(requestReceived))
+				Expect(enqueuer.EnqueueCall.Args.Client).To(Equal("mister-client"))
+				Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal(""))
+				Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
+				Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
 			})
 
 			Context("when the org role field is set", func() {
-				It("calls mailer.Deliver with the correct arguments", func() {
+				It("calls enqueuer.Enqueue with the correct arguments", func() {
 					_, err := strategy.Dispatch(strategies.Dispatch{
 						GUID:       "org-001",
 						Role:       "OrgManager",
@@ -148,7 +148,7 @@ var _ = Describe("Organization Strategy", func() {
 					})
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(mailer.DeliverCall.Args.Options).To(Equal(postal.Options{
+					Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(postal.Options{
 						ReplyTo:           "reply-to@example.com",
 						Subject:           "this is the subject",
 						To:                "dr@strangelove.com",

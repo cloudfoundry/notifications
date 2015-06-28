@@ -8,12 +8,12 @@ import (
 const EmailEndorsement = "This message was sent directly to your email address."
 
 type EmailStrategy struct {
-	mailer MailerInterface
+	enqueuer EnqueuerInterface
 }
 
-func NewEmailStrategy(mailer MailerInterface) EmailStrategy {
+func NewEmailStrategy(enqueuer EnqueuerInterface) EmailStrategy {
 	return EmailStrategy{
-		mailer: mailer,
+		enqueuer: enqueuer,
 	}
 }
 
@@ -35,7 +35,7 @@ func (strategy EmailStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		},
 	}
 	users := []User{{Email: dispatch.Message.To}}
-	responses := strategy.mailer.Deliver(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	responses := strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

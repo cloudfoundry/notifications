@@ -15,16 +15,18 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Mailer", func() {
-	var mailer strategies.Mailer
-	var logger *log.Logger
-	var buffer *bytes.Buffer
-	var queue *fakes.Queue
-	var conn *fakes.Connection
-	var space cf.CloudControllerSpace
-	var org cf.CloudControllerOrganization
-	var messagesRepo *fakes.MessagesRepo
-	var reqReceived time.Time
+var _ = Describe("Enqueuer", func() {
+	var (
+		enqueuer     strategies.Enqueuer
+		logger       *log.Logger
+		buffer       *bytes.Buffer
+		queue        *fakes.Queue
+		conn         *fakes.Connection
+		space        cf.CloudControllerSpace
+		org          cf.CloudControllerOrganization
+		messagesRepo *fakes.MessagesRepo
+		reqReceived  time.Time
+	)
 
 	BeforeEach(func() {
 		buffer = bytes.NewBuffer([]byte{})
@@ -32,16 +34,16 @@ var _ = Describe("Mailer", func() {
 		queue = fakes.NewQueue()
 		conn = fakes.NewConnection()
 		messagesRepo = fakes.NewMessagesRepo()
-		mailer = strategies.NewMailer(queue, fakes.NewIncrementingGUIDGenerator().Generate, messagesRepo)
+		enqueuer = strategies.NewEnqueuer(queue, fakes.NewIncrementingGUIDGenerator().Generate, messagesRepo)
 		space = cf.CloudControllerSpace{Name: "the-space"}
 		org = cf.CloudControllerOrganization{Name: "the-org"}
 		reqReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:40:12.207187819-07:00")
 	})
 
-	Describe("Deliver", func() {
+	Describe("Enqueue", func() {
 		It("returns the correct types of responses for users", func() {
 			users := []strategies.User{{GUID: "user-1"}, {Email: "user-2@example.com"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			responses := mailer.Deliver(conn, users, postal.Options{KindID: "the-kind"}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
+			responses := enqueuer.Enqueue(conn, users, postal.Options{KindID: "the-kind"}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
 
 			Expect(responses).To(HaveLen(4))
 			Expect(responses).To(ConsistOf([]strategies.Response{
@@ -74,7 +76,7 @@ var _ = Describe("Mailer", func() {
 
 		It("enqueues jobs with the deliveries", func() {
 			users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
+			enqueuer.Enqueue(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
 
 			var deliveries []postal.Delivery
 			for _ = range users {
@@ -138,7 +140,7 @@ var _ = Describe("Mailer", func() {
 
 		It("Upserts a StatusQueued for each of the jobs", func() {
 			users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
+			enqueuer.Enqueue(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
 
 			var statuses []string
 			for _ = range users {
@@ -164,7 +166,7 @@ var _ = Describe("Mailer", func() {
 		Context("using a transaction", func() {
 			It("commits the transaction when everything goes well", func() {
 				users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-				responses := mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
+				responses := enqueuer.Enqueue(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())
@@ -175,17 +177,17 @@ var _ = Describe("Mailer", func() {
 			It("rolls back the transaction when there is an error in message repo upserting", func() {
 				messagesRepo.UpsertError = errors.New("BOOM!")
 				users := []strategies.User{{GUID: "user-1"}}
-				mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
+				enqueuer.Enqueue(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeFalse())
 				Expect(conn.RollbackWasCalled).To(BeTrue())
 			})
 
-			It("returns an empty []Response{} if transaction fails", func() {
+			It("returns an empty slice of Response if transaction fails", func() {
 				conn.CommitError = "the commit blew up"
 				users := []strategies.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-				responses := mailer.Deliver(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
+				responses := enqueuer.Enqueue(conn, users, postal.Options{}, space, org, "the-client", "my.scope", "some-request-id", reqReceived)
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())

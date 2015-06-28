@@ -9,11 +9,11 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal"
 )
 
-type MailerInterface interface {
-	Deliver(models.ConnectionInterface, []User, postal.Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string, string, time.Time) []Response
+type EnqueuerInterface interface {
+	Enqueue(models.ConnectionInterface, []User, postal.Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string, string, time.Time) []Response
 }
 
-type Mailer struct {
+type Enqueuer struct {
 	queue         gobble.QueueInterface
 	guidGenerator postal.GUIDGenerationFunc
 	messagesRepo  MessagesRepoInterface
@@ -23,22 +23,22 @@ type MessagesRepoInterface interface {
 	Upsert(models.ConnectionInterface, models.Message) (models.Message, error)
 }
 
-func NewMailer(queue gobble.QueueInterface, guidGenerator postal.GUIDGenerationFunc, messagesRepo MessagesRepoInterface) Mailer {
-	return Mailer{
+func NewEnqueuer(queue gobble.QueueInterface, guidGenerator postal.GUIDGenerationFunc, messagesRepo MessagesRepoInterface) Enqueuer {
+	return Enqueuer{
 		queue:         queue,
 		guidGenerator: guidGenerator,
 		messagesRepo:  messagesRepo,
 	}
 }
 
-func (mailer Mailer) Deliver(conn models.ConnectionInterface, users []User,
+func (enqueuer Enqueuer) Enqueue(conn models.ConnectionInterface, users []User,
 	options postal.Options, space cf.CloudControllerSpace,
 	organization cf.CloudControllerOrganization, clientID, scope, vcapRequestID string, reqReceived time.Time) []Response {
 
 	responses := []Response{}
 	jobsByMessageID := map[string]gobble.Job{}
 	for _, user := range users {
-		guid, err := mailer.guidGenerator()
+		guid, err := enqueuer.guidGenerator()
 		if err != nil {
 			panic(err)
 		}
@@ -73,7 +73,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, users []User,
 	transaction := conn.Transaction()
 	transaction.Begin()
 	for messageID := range jobsByMessageID {
-		_, err := mailer.messagesRepo.Upsert(transaction, models.Message{
+		_, err := enqueuer.messagesRepo.Upsert(transaction, models.Message{
 			ID:     messageID,
 			Status: postal.StatusQueued,
 		})
@@ -88,7 +88,7 @@ func (mailer Mailer) Deliver(conn models.ConnectionInterface, users []User,
 	}
 
 	for _, job := range jobsByMessageID {
-		_, err := mailer.queue.Enqueue(job)
+		_, err := enqueuer.queue.Enqueue(job)
 		if err != nil {
 			return []Response{}
 		}

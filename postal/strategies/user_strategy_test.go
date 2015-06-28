@@ -16,7 +16,7 @@ import (
 var _ = Describe("UserStrategy", func() {
 	var (
 		strategy        strategies.UserStrategy
-		mailer          *fakes.Mailer
+		enqueuer        *fakes.Enqueuer
 		conn            *fakes.Connection
 		requestReceived time.Time
 	)
@@ -24,12 +24,12 @@ var _ = Describe("UserStrategy", func() {
 	BeforeEach(func() {
 		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
 		conn = fakes.NewConnection()
-		mailer = fakes.NewMailer()
-		strategy = strategies.NewUserStrategy(mailer)
+		enqueuer = fakes.NewEnqueuer()
+		strategy = strategies.NewUserStrategy(enqueuer)
 	})
 
 	Describe("Dispatch", func() {
-		It("calls mailer.Deliver with the correct arguments for a user", func() {
+		It("calls enqueuer.Enqueue with the correct arguments for a user", func() {
 			_, err := strategy.Dispatch(strategies.Dispatch{
 				GUID:       "user-123",
 				Connection: conn,
@@ -62,9 +62,9 @@ var _ = Describe("UserStrategy", func() {
 
 			users := []strategies.User{{GUID: "user-123"}}
 
-			Expect(reflect.ValueOf(mailer.DeliverCall.Args.Connection).Pointer()).To(Equal(reflect.ValueOf(conn).Pointer()))
-			Expect(mailer.DeliverCall.Args.Users).To(Equal(users))
-			Expect(mailer.DeliverCall.Args.Options).To(Equal(postal.Options{
+			Expect(reflect.ValueOf(enqueuer.EnqueueCall.Args.Connection).Pointer()).To(Equal(reflect.ValueOf(conn).Pointer()))
+			Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
+			Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(postal.Options{
 				ReplyTo:           "reply-to@example.com",
 				Subject:           "this is the subject",
 				To:                "dr@strangelove.com",
@@ -80,12 +80,12 @@ var _ = Describe("UserStrategy", func() {
 				},
 				Endorsement: strategies.UserEndorsement,
 			}))
-			Expect(mailer.DeliverCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
-			Expect(mailer.DeliverCall.Args.Org).To(Equal(cf.CloudControllerOrganization{}))
-			Expect(mailer.DeliverCall.Args.Client).To(Equal("mister-client"))
-			Expect(mailer.DeliverCall.Args.Scope).To(Equal(""))
-			Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
-			Expect(mailer.DeliverCall.Args.RequestReceived).To(Equal(requestReceived))
+			Expect(enqueuer.EnqueueCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(enqueuer.EnqueueCall.Args.Client).To(Equal("mister-client"))
+			Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal(""))
+			Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
+			Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
 		})
 	})
 })

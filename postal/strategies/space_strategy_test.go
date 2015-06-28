@@ -19,7 +19,7 @@ var _ = Describe("Space Strategy", func() {
 		tokenLoader        *fakes.TokenLoader
 		spaceLoader        *fakes.SpaceLoader
 		organizationLoader *fakes.OrganizationLoader
-		mailer             *fakes.Mailer
+		enqueuer           *fakes.Enqueuer
 		conn               *fakes.Connection
 		findsUserGUIDs     *fakes.FindsUserGUIDs
 		requestReceived    time.Time
@@ -38,7 +38,7 @@ var _ = Describe("Space Strategy", func() {
 		}
 		tokenLoader = fakes.NewTokenLoader()
 		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
-		mailer = fakes.NewMailer()
+		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
 		findsUserGUIDs.SpaceGuids["space-001"] = []string{"user-123", "user-456"}
 		spaceLoader = fakes.NewSpaceLoader()
@@ -52,12 +52,12 @@ var _ = Describe("Space Strategy", func() {
 			Name: "the-org",
 			GUID: "org-001",
 		}
-		strategy = strategies.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, mailer)
+		strategy = strategies.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, enqueuer)
 	})
 
 	Describe("Dispatch", func() {
 		Context("when the request is valid", func() {
-			It("calls mailer.Deliver with the correct arguments for a space", func() {
+			It("calls enqueuer.Enqueue with the correct arguments for a space", func() {
 				_, err := strategy.Dispatch(strategies.Dispatch{
 					GUID:       "space-001",
 					Connection: conn,
@@ -90,9 +90,9 @@ var _ = Describe("Space Strategy", func() {
 
 				users := []strategies.User{{GUID: "user-123"}, {GUID: "user-456"}}
 
-				Expect(mailer.DeliverCall.Args.Connection).To(Equal(conn))
-				Expect(mailer.DeliverCall.Args.Users).To(Equal(users))
-				Expect(mailer.DeliverCall.Args.Options).To(Equal(postal.Options{
+				Expect(enqueuer.EnqueueCall.Args.Connection).To(Equal(conn))
+				Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
+				Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(postal.Options{
 					ReplyTo:           "reply-to@example.com",
 					Subject:           "this is the subject",
 					To:                "dr@strangelove.com",
@@ -108,19 +108,19 @@ var _ = Describe("Space Strategy", func() {
 					},
 					Endorsement: strategies.SpaceEndorsement,
 				}))
-				Expect(mailer.DeliverCall.Args.Space).To(Equal(cf.CloudControllerSpace{
+				Expect(enqueuer.EnqueueCall.Args.Space).To(Equal(cf.CloudControllerSpace{
 					GUID:             "space-001",
 					Name:             "production",
 					OrganizationGUID: "org-001",
 				}))
-				Expect(mailer.DeliverCall.Args.Org).To(Equal(cf.CloudControllerOrganization{
+				Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{
 					Name: "the-org",
 					GUID: "org-001",
 				}))
-				Expect(mailer.DeliverCall.Args.Client).To(Equal("mister-client"))
-				Expect(mailer.DeliverCall.Args.Scope).To(Equal(""))
-				Expect(mailer.DeliverCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
-				Expect(mailer.DeliverCall.Args.RequestReceived).To(Equal(requestReceived))
+				Expect(enqueuer.EnqueueCall.Args.Client).To(Equal("mister-client"))
+				Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal(""))
+				Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
+				Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
 			})
 		})
 

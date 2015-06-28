@@ -12,18 +12,18 @@ type SpaceStrategy struct {
 	spaceLoader        services.SpaceLoaderInterface
 	organizationLoader services.OrganizationLoaderInterface
 	findsUserGUIDs     services.FindsUserGUIDsInterface
-	mailer             MailerInterface
+	enqueuer           EnqueuerInterface
 }
 
 func NewSpaceStrategy(tokenLoader postal.TokenLoaderInterface, spaceLoader services.SpaceLoaderInterface, organizationLoader services.OrganizationLoaderInterface,
-	findsUserGUIDs services.FindsUserGUIDsInterface, mailer MailerInterface) SpaceStrategy {
+	findsUserGUIDs services.FindsUserGUIDsInterface, enqueuer EnqueuerInterface) SpaceStrategy {
 
 	return SpaceStrategy{
 		tokenLoader:        tokenLoader,
 		spaceLoader:        spaceLoader,
 		organizationLoader: organizationLoader,
 		findsUserGUIDs:     findsUserGUIDs,
-		mailer:             mailer,
+		enqueuer:           enqueuer,
 	}
 }
 
@@ -72,7 +72,7 @@ func (strategy SpaceStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		return responses, err
 	}
 
-	responses = strategy.mailer.Deliver(dispatch.Connection, users, options, space, org, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, space, org, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

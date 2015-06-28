@@ -11,14 +11,14 @@ const EveryoneEndorsement = "This message was sent to everyone."
 type EveryoneStrategy struct {
 	tokenLoader postal.TokenLoaderInterface
 	allUsers    services.AllUsersInterface
-	mailer      MailerInterface
+	enqueuer    EnqueuerInterface
 }
 
-func NewEveryoneStrategy(tokenLoader postal.TokenLoaderInterface, allUsers services.AllUsersInterface, mailer MailerInterface) EveryoneStrategy {
+func NewEveryoneStrategy(tokenLoader postal.TokenLoaderInterface, allUsers services.AllUsersInterface, enqueuer EnqueuerInterface) EveryoneStrategy {
 	return EveryoneStrategy{
 		tokenLoader: tokenLoader,
 		allUsers:    allUsers,
-		mailer:      mailer,
+		enqueuer:    enqueuer,
 	}
 }
 
@@ -57,7 +57,7 @@ func (strategy EveryoneStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		users = append(users, User{GUID: guid})
 	}
 
-	responses = strategy.mailer.Deliver(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

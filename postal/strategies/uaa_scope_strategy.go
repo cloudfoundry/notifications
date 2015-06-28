@@ -11,7 +11,7 @@ const ScopeEndorsement = "You received this message because you have the {{.Scop
 type UAAScopeStrategy struct {
 	findsUserGUIDs services.FindsUserGUIDsInterface
 	tokenLoader    postal.TokenLoaderInterface
-	mailer         MailerInterface
+	enqueuer       EnqueuerInterface
 }
 
 type DefaultScopeError struct{}
@@ -21,12 +21,12 @@ func (d DefaultScopeError) Error() string {
 }
 
 func NewUAAScopeStrategy(tokenLoader postal.TokenLoaderInterface, findsUserGUIDs services.FindsUserGUIDsInterface,
-	mailer MailerInterface) UAAScopeStrategy {
+	enqueuer EnqueuerInterface) UAAScopeStrategy {
 
 	return UAAScopeStrategy{
 		findsUserGUIDs: findsUserGUIDs,
 		tokenLoader:    tokenLoader,
-		mailer:         mailer,
+		enqueuer:       enqueuer,
 	}
 }
 
@@ -68,7 +68,7 @@ func (strategy UAAScopeStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		users = append(users, User{GUID: guid})
 	}
 
-	responses = strategy.mailer.Deliver(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.GUID, dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.GUID, dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }
