@@ -27,7 +27,7 @@ var _ = Describe("Transaction", func() {
 			}
 
 			repo := models.NewClientsRepo()
-			_, err = repo.Create(transaction, models.Client{
+			_, err = repo.Upsert(transaction, models.Client{
 				ID:          "my-client",
 				Description: "My Client",
 			})
@@ -58,7 +58,7 @@ var _ = Describe("Transaction", func() {
 			}
 
 			repo := models.NewClientsRepo()
-			_, err = repo.Create(transaction, models.Client{
+			_, err = repo.Upsert(transaction, models.Client{
 				ID:          "my-client",
 				Description: "My Client",
 			})

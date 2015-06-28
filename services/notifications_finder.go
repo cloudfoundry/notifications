@@ -3,9 +3,17 @@ package services
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type NotificationsFinder struct {
-	clientsRepo models.ClientsRepoInterface
+	clientsRepo clientsRepo
 	kindsRepo   models.KindsRepoInterface
 	database    models.DatabaseInterface
+}
+
+type clientsRepo interface {
+	FindAll(models.ConnectionInterface) ([]models.Client, error)
+	Find(models.ConnectionInterface, string) (models.Client, error)
+	Upsert(models.ConnectionInterface, models.Client) (models.Client, error)
+	Update(models.ConnectionInterface, models.Client) (models.Client, error)
+	FindAllByTemplateID(models.ConnectionInterface, string) ([]models.Client, error)
 }
 
 type NotificationsFinderInterface interface {
@@ -13,7 +21,7 @@ type NotificationsFinderInterface interface {
 	ClientAndKind(models.DatabaseInterface, string, string) (models.Client, models.Kind, error)
 }
 
-func NewNotificationsFinder(clientsRepo models.ClientsRepoInterface, kindsRepo models.KindsRepoInterface) NotificationsFinder {
+func NewNotificationsFinder(clientsRepo clientsRepo, kindsRepo models.KindsRepoInterface) NotificationsFinder {
 	return NotificationsFinder{
 		clientsRepo: clientsRepo,
 		kindsRepo:   kindsRepo,

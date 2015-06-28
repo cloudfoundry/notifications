@@ -8,12 +8,14 @@ import (
 )
 
 var _ = Describe("PreferencesRepo", func() {
-	var repo models.PreferencesRepo
-	var kinds models.KindsRepo
-	var clients models.ClientsRepo
-	var receipts models.ReceiptsRepo
-	var conn *models.Connection
-	var unsubscribeRepo models.UnsubscribesRepo
+	var (
+		repo            models.PreferencesRepo
+		kinds           models.KindsRepo
+		clients         models.ClientsRepo
+		receipts        models.ReceiptsRepo
+		conn            *models.Connection
+		unsubscribeRepo models.UnsubscribesRepo
+	)
 
 	BeforeEach(func() {
 		TruncateTables()
@@ -48,7 +50,8 @@ var _ = Describe("PreferencesRepo", func() {
 					Description: "raptors description",
 				}
 
-				clients.Create(conn, raptorClient)
+				_, err := clients.Upsert(conn, raptorClient)
+				Expect(err).NotTo(HaveOccurred())
 
 				nonCriticalKind := models.Kind{
 					ID:          "sleepy",

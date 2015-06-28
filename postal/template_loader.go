@@ -12,13 +12,16 @@ type TemplatesLoaderInterface interface {
 type TemplatesLoader struct {
 	finder        services.TemplateFinderInterface
 	database      models.DatabaseInterface
-	clientsRepo   models.ClientsRepoInterface
+	clientsRepo   clientsRepo
 	kindsRepo     models.KindsRepoInterface
 	templatesRepo models.TemplatesRepoInterface
 }
 
-func NewTemplatesLoader(finder services.TemplateFinderInterface, database models.DatabaseInterface, clientsRepo models.ClientsRepoInterface,
-	kindsRepo models.KindsRepoInterface, templatesRepo models.TemplatesRepoInterface) TemplatesLoader {
+type clientsRepo interface {
+	Find(models.ConnectionInterface, string) (models.Client, error)
+}
+
+func NewTemplatesLoader(finder services.TemplateFinderInterface, database models.DatabaseInterface, clientsRepo clientsRepo, kindsRepo models.KindsRepoInterface, templatesRepo models.TemplatesRepoInterface) TemplatesLoader {
 
 	return TemplatesLoader{
 		finder:        finder,

@@ -7,20 +7,11 @@ import (
 
 type ClientsRepo struct{}
 
-type ClientsRepoInterface interface {
-	Create(ConnectionInterface, Client) (Client, error)
-	Find(ConnectionInterface, string) (Client, error)
-	FindAll(ConnectionInterface) ([]Client, error)
-	FindAllByTemplateID(ConnectionInterface, string) ([]Client, error)
-	Update(ConnectionInterface, Client) (Client, error)
-	Upsert(ConnectionInterface, Client) (Client, error)
-}
-
 func NewClientsRepo() ClientsRepo {
 	return ClientsRepo{}
 }
 
-func (repo ClientsRepo) Create(conn ConnectionInterface, client Client) (Client, error) {
+func (repo ClientsRepo) create(conn ConnectionInterface, client Client) (Client, error) {
 	err := conn.Insert(&client)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
@@ -78,7 +69,7 @@ func (repo ClientsRepo) Upsert(conn ConnectionInterface, client Client) (Client,
 
 	switch err.(type) {
 	case RecordNotFoundError:
-		client, err := repo.Create(conn, client)
+		client, err := repo.create(conn, client)
 		if _, ok := err.(DuplicateRecordError); ok {
 			return repo.Update(conn, client)
 		}

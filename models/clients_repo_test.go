@@ -13,8 +13,10 @@ import (
 )
 
 var _ = Describe("ClientsRepo", func() {
-	var repo models.ClientsRepo
-	var conn models.ConnectionInterface
+	var (
+		repo models.ClientsRepo
+		conn models.ConnectionInterface
+	)
 
 	BeforeEach(func() {
 		TruncateTables()
@@ -22,53 +24,6 @@ var _ = Describe("ClientsRepo", func() {
 		db := models.NewDatabase(sqlDB, models.Config{})
 		db.Setup()
 		conn = db.Connection()
-	})
-
-	Describe("Create", func() {
-		It("stores the client record into the database", func() {
-			client := models.Client{
-				ID:          "my-client",
-				Description: "My Client",
-				TemplateID:  "my-template",
-			}
-
-			client, err := repo.Create(conn, client)
-			if err != nil {
-				panic(err)
-			}
-
-			client, err = repo.Find(conn, "my-client")
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(client.ID).To(Equal("my-client"))
-			Expect(client.Description).To(Equal("My Client"))
-			Expect(client.TemplateID).To(Equal("my-template"))
-			Expect(client.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
-		})
-
-		It("sets the template_id to 'default' when the field is empty", func() {
-			client := models.Client{
-				ID:          "my-client",
-				Description: "My Client",
-			}
-
-			client, err := repo.Create(conn, client)
-			if err != nil {
-				panic(err)
-			}
-
-			client, err = repo.Find(conn, "my-client")
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(client.ID).To(Equal("my-client"))
-			Expect(client.Description).To(Equal("My Client"))
-			Expect(client.TemplateID).To(Equal(models.DefaultTemplateID))
-			Expect(client.CreatedAt).To(BeTemporally("~", time.Now(), 2*time.Second))
-		})
 	})
 
 	Describe("FindAll", func() {
@@ -83,12 +38,12 @@ var _ = Describe("ClientsRepo", func() {
 				Description: "client2-description",
 			}
 
-			firstClient, err := repo.Create(conn, client1)
+			firstClient, err := repo.Upsert(conn, client1)
 			if err != nil {
 				panic(err)
 			}
 
-			secondClient, err := repo.Create(conn, client2)
+			secondClient, err := repo.Upsert(conn, client2)
 			if err != nil {
 				panic(err)
 			}
@@ -110,7 +65,7 @@ var _ = Describe("ClientsRepo", func() {
 					TemplateID: "my-template",
 				}
 
-				client, err := repo.Create(conn, client)
+				client, err := repo.Upsert(conn, client)
 				if err != nil {
 					panic(err)
 				}
@@ -151,7 +106,7 @@ var _ = Describe("ClientsRepo", func() {
 					TemplateID: "my-template",
 				}
 
-				client, err := repo.Create(conn, client)
+				client, err := repo.Upsert(conn, client)
 				if err != nil {
 					panic(err)
 				}
@@ -209,7 +164,7 @@ var _ = Describe("ClientsRepo", func() {
 					ID: "my-client",
 				}
 
-				client, err := repo.Create(conn, client)
+				client, err := repo.Upsert(conn, client)
 				if err != nil {
 					panic(err)
 				}
@@ -252,14 +207,14 @@ var _ = Describe("ClientsRepo", func() {
 
 	Describe("FindAllByTemplateID", func() {
 		It("returns a list of clients with the given template ID", func() {
-			client1, err := repo.Create(conn, models.Client{
+			client1, err := repo.Upsert(conn, models.Client{
 				ID:         "i-have-a-template",
 				TemplateID: "some-template-id",
 			})
 			if err != nil {
 				panic(err)
 			}
-			_, err = repo.Create(conn, models.Client{
+			_, err = repo.Upsert(conn, models.Client{
 				ID: "i-dont-have-a-template",
 			})
 			if err != nil {
