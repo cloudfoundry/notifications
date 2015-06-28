@@ -7,7 +7,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/valiant"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 )
 
@@ -33,7 +32,7 @@ func (handler UpdateSpecificUserPreferences) ServeHTTP(w http.ResponseWriter, re
 	validator := valiant.NewValidator(req.Body)
 	err := validator.Validate(&builder)
 	if err != nil {
-		handler.errorWriter.Write(w, params.ValidationError([]string{err.Error()}))
+		handler.errorWriter.Write(w, ValidationError([]string{err.Error()}))
 		return
 	}
 
@@ -51,7 +50,7 @@ func (handler UpdateSpecificUserPreferences) ServeHTTP(w http.ResponseWriter, re
 
 		switch err.(type) {
 		case services.MissingKindOrClientError, services.CriticalKindError:
-			handler.errorWriter.Write(w, params.ValidationError([]string{err.Error()}))
+			handler.errorWriter.Write(w, ValidationError([]string{err.Error()}))
 		default:
 			handler.errorWriter.Write(w, err)
 		}

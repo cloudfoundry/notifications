@@ -10,7 +10,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
@@ -79,7 +78,7 @@ var _ = Describe("CreateTemplate", func() {
 				}
 
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
+				Expect(errorWriter.Error).To(BeAssignableToTypeOf(handlers.ValidationError([]string{})))
 			})
 
 			It("Writes a validation error to the errorwriter when the request is missing the html field", func() {
@@ -89,7 +88,7 @@ var _ = Describe("CreateTemplate", func() {
 					panic(err)
 				}
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
+				Expect(errorWriter.Error).To(BeAssignableToTypeOf(handlers.ValidationError([]string{})))
 			})
 
 			It("writes a parse error for an invalid request", func() {
@@ -99,13 +98,13 @@ var _ = Describe("CreateTemplate", func() {
 					panic(err)
 				}
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
+				Expect(errorWriter.Error).To(BeAssignableToTypeOf(handlers.ParseError{}))
 			})
 
 			It("returns a 500 for all other error cases", func() {
 				creator.CreateCall.Error = errors.New("my new error")
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.TemplateCreateError{}))
+				Expect(errorWriter.Error).To(BeAssignableToTypeOf(handlers.TemplateCreateError{}))
 			})
 		})
 	})

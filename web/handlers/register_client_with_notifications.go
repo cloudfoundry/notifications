@@ -6,7 +6,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 )
@@ -27,7 +26,7 @@ func (handler RegisterClientWithNotifications) ServeHTTP(w http.ResponseWriter, 
 	database := context.Get("database").(models.DatabaseInterface)
 	connection := database.Connection()
 
-	parameters, err := params.NewClientRegistrationParams(req.Body)
+	parameters, err := NewClientRegistrationParams(req.Body)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

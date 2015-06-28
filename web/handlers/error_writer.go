@@ -7,7 +7,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 )
 
 type ErrorWriterInterface interface {
@@ -24,15 +23,15 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 	switch err.(type) {
 	case postal.UAAScopesError, postal.CriticalNotificationError, services.TemplateAssignmentError, MissingUserTokenError:
 		writer.write(w, 422, []string{err.Error()})
-	case params.ValidationError:
-		writer.write(w, 422, err.(params.ValidationError).Errors())
+	case ValidationError:
+		writer.write(w, 422, err.(ValidationError).Errors())
 	case services.CCDownError, postal.UAADownError, postal.UAAGenericError:
 		writer.write(w, http.StatusBadGateway, []string{err.Error()})
 	case services.CCNotFoundError, models.TemplateFindError, models.RecordNotFoundError:
 		writer.write(w, http.StatusNotFound, []string{err.Error()})
-	case postal.TemplateLoadError, params.TemplateCreateError, models.TemplateUpdateError, models.TransactionCommitError:
+	case postal.TemplateLoadError, TemplateCreateError, models.TemplateUpdateError, models.TransactionCommitError:
 		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
-	case params.ParseError, params.SchemaError:
+	case ParseError, SchemaError:
 		writer.write(w, http.StatusBadRequest, []string{err.Error()})
 	case models.DuplicateRecordError:
 		writer.write(w, http.StatusConflict, []string{err.Error()})

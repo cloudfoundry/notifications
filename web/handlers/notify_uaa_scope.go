@@ -6,7 +6,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 )
 
@@ -29,7 +28,7 @@ func (handler NotifyUAAScope) ServeHTTP(w http.ResponseWriter, req *http.Request
 	scope := strings.TrimPrefix(req.URL.Path, "/uaa_scopes/")
 	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
 
-	output, err := handler.notify.Execute(connection, req, context, scope, handler.strategy, params.GUIDValidator{}, vcapRequestID)
+	output, err := handler.notify.Execute(connection, req, context, scope, handler.strategy, GUIDValidator{}, vcapRequestID)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

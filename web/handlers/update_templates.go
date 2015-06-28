@@ -6,7 +6,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 )
 
@@ -25,7 +24,7 @@ func NewUpdateTemplates(updater services.TemplateUpdaterInterface, errorWriter E
 func (handler UpdateTemplates) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	templateID := strings.Split(req.URL.String(), "/templates/")[1]
 
-	templateParams, err := params.NewTemplateParams(req.Body)
+	templateParams, err := NewTemplateParams(req.Body)
 	if err != nil {
 		handler.ErrorWriter.Write(w, err)
 		return

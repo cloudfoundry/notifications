@@ -5,7 +5,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 )
 
@@ -22,7 +21,7 @@ func NewCreateTemplate(creator services.TemplateCreatorInterface, errorWriter Er
 }
 
 func (handler CreateTemplate) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	templateParams, err := params.NewTemplateParams(req.Body)
+	templateParams, err := NewTemplateParams(req.Body)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return
@@ -32,7 +31,7 @@ func (handler CreateTemplate) ServeHTTP(w http.ResponseWriter, req *http.Request
 
 	templateID, err := handler.creator.Create(context.Get("database").(models.DatabaseInterface), template)
 	if err != nil {
-		handler.errorWriter.Write(w, params.TemplateCreateError{})
+		handler.errorWriter.Write(w, TemplateCreateError{})
 		return
 	}
 

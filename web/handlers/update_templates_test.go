@@ -8,7 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
@@ -81,7 +80,7 @@ var _ = Describe("UpdateTemplates", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					handler.ServeHTTP(writer, request, context)
-					Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
+					Expect(errorWriter.Error).To(BeAssignableToTypeOf(handlers.ValidationError([]string{})))
 				})
 			})
 
@@ -92,7 +91,7 @@ var _ = Describe("UpdateTemplates", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					handler.ServeHTTP(writer, request, context)
-					Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
+					Expect(errorWriter.Error).To(BeAssignableToTypeOf(handlers.ValidationError([]string{})))
 				})
 			})
 

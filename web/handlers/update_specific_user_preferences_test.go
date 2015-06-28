@@ -13,7 +13,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 
@@ -144,31 +143,31 @@ var _ = Describe("UpdateSpecificUserPreferences", func() {
 					handler.ServeHTTP(writer, request, context)
 
 					Expect(errorWriter.Error).ToNot(BeNil())
-					Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
+					Expect(errorWriter.Error).To(BeAssignableToTypeOf(handlers.ValidationError{}))
 					Expect(connection.BeginWasCalled).To(BeFalse())
 					Expect(connection.CommitWasCalled).To(BeFalse())
 					Expect(connection.RollbackWasCalled).To(BeFalse())
 				})
 			})
 
-			It("delegates MissingKindOrClientErrors as params.ValidationError to the ErrorWriter", func() {
+			It("delegates MissingKindOrClientErrors as handlers.ValidationError to the ErrorWriter", func() {
 				updater.ExecuteError = services.MissingKindOrClientError("BOOM!")
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{"BOOM!"})))
+				Expect(errorWriter.Error).To(Equal(handlers.ValidationError([]string{"BOOM!"})))
 
 				Expect(connection.BeginWasCalled).To(BeTrue())
 				Expect(connection.CommitWasCalled).To(BeFalse())
 				Expect(connection.RollbackWasCalled).To(BeTrue())
 			})
 
-			It("delegates CriticalKindErrors as params.ValidationError to the ErrorWriter", func() {
+			It("delegates CriticalKindErrors as handlers.ValidationError to the ErrorWriter", func() {
 				updater.ExecuteError = services.CriticalKindError("BOOM!")
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(Equal(params.ValidationError([]string{"BOOM!"})))
+				Expect(errorWriter.Error).To(Equal(handlers.ValidationError([]string{"BOOM!"})))
 
 				Expect(connection.BeginWasCalled).To(BeTrue())
 				Expect(connection.CommitWasCalled).To(BeFalse())

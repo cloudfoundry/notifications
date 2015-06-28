@@ -10,7 +10,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -97,7 +96,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 500 when there is a template create error", func() {
-		writer.Write(recorder, params.TemplateCreateError{})
+		writer.Write(recorder, handlers.TemplateCreateError{})
 
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
 
@@ -152,8 +151,8 @@ var _ = Describe("ErrorWriter", func() {
 		Expect(body["errors"]).To(ContainElement("CloudController Error: Space could not be found"))
 	})
 
-	It("returns a 400 when the params cannot be parsed due to syntatically invalid JSON", func() {
-		writer.Write(recorder, params.ParseError{})
+	It("returns a 400 when the handlers cannot be parsed due to syntatically invalid JSON", func() {
+		writer.Write(recorder, handlers.ParseError{})
 
 		Expect(recorder.Code).To(Equal(400))
 
@@ -166,8 +165,8 @@ var _ = Describe("ErrorWriter", func() {
 		Expect(body["errors"]).To(ContainElement("Request body could not be parsed"))
 	})
 
-	It("returns a 422 when the params are not valid due to semantically invalid JSON", func() {
-		writer.Write(recorder, params.ValidationError([]string{"something", "another"}))
+	It("returns a 422 when the handlers are not valid due to semantically invalid JSON", func() {
+		writer.Write(recorder, handlers.ValidationError([]string{"something", "another"}))
 
 		Expect(recorder.Code).To(Equal(422))
 

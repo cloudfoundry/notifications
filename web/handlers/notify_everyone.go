@@ -5,7 +5,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 )
 
@@ -27,7 +26,7 @@ func (handler NotifyEveryone) ServeHTTP(w http.ResponseWriter, req *http.Request
 	connection := context.Get("database").(models.DatabaseInterface).Connection()
 	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
 
-	output, err := handler.notify.Execute(connection, req, context, "", handler.strategy, params.GUIDValidator{}, vcapRequestID)
+	output, err := handler.notify.Execute(connection, req, context, "", handler.strategy, GUIDValidator{}, vcapRequestID)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

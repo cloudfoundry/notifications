@@ -5,7 +5,6 @@ import (
 	"regexp"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 )
 
@@ -26,9 +25,9 @@ type NotificationsUpdaterInterface interface {
 }
 
 func (handler UpdateNotifications) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	var updateParams params.NotificationUpdateParams
+	var updateParams NotificationUpdateParams
 
-	updateParams, err := params.NewNotificationParams(req.Body)
+	updateParams, err := NewNotificationParams(req.Body)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

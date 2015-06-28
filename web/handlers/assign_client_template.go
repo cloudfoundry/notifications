@@ -7,7 +7,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 )
 
@@ -34,7 +33,7 @@ func (handler AssignClientTemplate) ServeHTTP(w http.ResponseWriter, req *http.R
 	var templateAssignment TemplateAssignment
 	err := json.NewDecoder(req.Body).Decode(&templateAssignment)
 	if err != nil {
-		handler.errorWriter.Write(w, params.ParseError{})
+		handler.errorWriter.Write(w, ParseError{})
 		return
 	}
 

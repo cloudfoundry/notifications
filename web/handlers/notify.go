@@ -8,7 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 )
@@ -30,23 +29,23 @@ func NewNotify(finder services.NotificationsFinderInterface, registrar services.
 }
 
 type ValidatorInterface interface {
-	Validate(*params.NotifyParams) bool
+	Validate(*NotifyParams) bool
 }
 
 func (handler Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
 	guid string, strategy services.StrategyInterface, validator ValidatorInterface, vcapRequestID string) ([]byte, error) {
-	parameters, err := params.NewNotifyParams(req.Body)
+	parameters, err := NewNotifyParams(req.Body)
 	if err != nil {
 		return []byte{}, err
 	}
 
 	if !validator.Validate(&parameters) {
-		return []byte{}, params.ValidationError(parameters.Errors)
+		return []byte{}, ValidationError(parameters.Errors)
 	}
 
 	requestReceivedTime, ok := context.Get(RequestReceivedTime).(time.Time)
 	if !ok {
-		panic("programmer error: missing handlers.RequestReceivedTime in http context")
+		panic("programmer error: missing RequestReceivedTime in http context")
 	}
 	token := context.Get("token").(*jwt.Token) // TODO: (rm) get rid of the context object, just pass in the token
 	clientID := token.Claims["client_id"].(string)

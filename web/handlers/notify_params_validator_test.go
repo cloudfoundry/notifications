@@ -1,7 +1,7 @@
-package params_test
+package handlers_test
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/web/params"
+	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -10,16 +10,16 @@ import (
 var _ = Describe("Validator", func() {
 	Describe("EmailValidator", func() {
 		var (
-			notify    *params.NotifyParams
-			validator params.EmailValidator
+			notify    *handlers.NotifyParams
+			validator handlers.EmailValidator
 		)
 
 		BeforeEach(func() {
-			notify = &params.NotifyParams{
+			notify = &handlers.NotifyParams{
 				Text: "my silly text",
 				To:   "bob@example.com",
 			}
-			validator = params.EmailValidator{}
+			validator = handlers.EmailValidator{}
 		})
 
 		Describe("Validate", func() {
@@ -41,7 +41,7 @@ var _ = Describe("Validator", func() {
 				Expect(notify.Errors).To(ContainElement(`"text" or "html" fields must be supplied`))
 
 				notify.To = "otherUser@example.com"
-				notify.ParsedHTML = params.HTML{BodyContent: "<p>Contents of this email message</p>"}
+				notify.ParsedHTML = handlers.HTML{BodyContent: "<p>Contents of this email message</p>"}
 
 				Expect(validator.Validate(notify)).To(BeTrue())
 				Expect(len(notify.Errors)).To(Equal(0))
@@ -49,7 +49,7 @@ var _ = Describe("Validator", func() {
 
 			Context("When the notify params object finds an invalid email", func() {
 				It("Reports a validation error", func() {
-					notify.To = params.InvalidEmail
+					notify.To = handlers.InvalidEmail
 
 					Expect(validator.Validate(notify)).To(BeFalse())
 					Expect(len(notify.Errors)).To(Equal(1))
@@ -61,17 +61,17 @@ var _ = Describe("Validator", func() {
 
 	Describe("GUIDValidator", func() {
 		var (
-			notify    *params.NotifyParams
-			validator params.GUIDValidator
+			notify    *handlers.NotifyParams
+			validator handlers.GUIDValidator
 		)
 
 		BeforeEach(func() {
-			notify = &params.NotifyParams{
+			notify = &handlers.NotifyParams{
 				KindID:  "test_email",
 				Subject: "Summary of contents",
 				Text:    "Contents of the email message",
 			}
-			validator = params.GUIDValidator{}
+			validator = handlers.GUIDValidator{}
 		})
 
 		Describe("Validate", func() {

@@ -9,7 +9,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
@@ -64,7 +63,7 @@ var _ = Describe("NotifyUAAScope", func() {
 				Expect(notify.ExecuteCall.Args.Context).To(Equal(context))
 				Expect(notify.ExecuteCall.Args.GUID).To(Equal("great.scope"))
 				Expect(notify.ExecuteCall.Args.Strategy).To(Equal(strategy))
-				Expect(notify.ExecuteCall.Args.Validator).To(BeAssignableToTypeOf(params.GUIDValidator{}))
+				Expect(notify.ExecuteCall.Args.Validator).To(BeAssignableToTypeOf(handlers.GUIDValidator{}))
 				Expect(notify.ExecuteCall.Args.VCAPRequestID).To(Equal("some-request-id"))
 			})
 		})

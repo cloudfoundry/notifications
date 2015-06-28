@@ -9,7 +9,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
@@ -84,6 +83,6 @@ var _ = Describe("AssignClientTemplate", func() {
 		}
 
 		handler.ServeHTTP(w, request, context)
-		Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
+		Expect(errorWriter.Error).To(BeAssignableToTypeOf(handlers.ParseError{}))
 	})
 })

@@ -14,7 +14,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 
@@ -194,7 +193,7 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ParseError{}))
+				Expect(errorWriter.Error).To(BeAssignableToTypeOf(handlers.ParseError{}))
 
 				Expect(conn.BeginWasCalled).To(BeFalse())
 				Expect(conn.CommitWasCalled).To(BeFalse())
@@ -209,7 +208,7 @@ var _ = Describe("RegisterClientWithNotifications", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(params.ValidationError{}))
+				Expect(errorWriter.Error).To(BeAssignableToTypeOf(handlers.ValidationError{}))
 
 				Expect(conn.BeginWasCalled).To(BeFalse())
 				Expect(conn.CommitWasCalled).To(BeFalse())

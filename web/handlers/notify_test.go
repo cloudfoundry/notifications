@@ -14,7 +14,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 
@@ -175,7 +174,7 @@ var _ = Describe("Notify", func() {
 						_, err = handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
 						Expect(err).ToNot(BeNil())
 
-						validationErr := err.(params.ValidationError)
+						validationErr := err.(handlers.ValidationError)
 						Expect(validationErr.Errors()).To(ContainElement(`boom`))
 					})
 
@@ -185,7 +184,7 @@ var _ = Describe("Notify", func() {
 						request.Header.Set("Authorization", "Bearer "+rawToken)
 
 						_, err = handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
-						Expect(err).To(Equal(params.ParseError{}))
+						Expect(err).To(Equal(handlers.ParseError{}))
 					})
 				})
 

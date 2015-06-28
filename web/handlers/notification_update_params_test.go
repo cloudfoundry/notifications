@@ -1,9 +1,9 @@
-package params_test
+package handlers_test
 
 import (
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/web/params"
+	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,9 +14,9 @@ var _ = Describe("Notification", func() {
 		Context("when the json is valid", func() {
 			It("returns a NotificationUpdateParams", func() {
 				body := strings.NewReader(`{"description":"my awesome notification", "critical":true, "template":"my-awesome-template"}`)
-				updateParams, err := params.NewNotificationParams(body)
+				updateParams, err := handlers.NewNotificationParams(body)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(updateParams).To(BeAssignableToTypeOf(params.NotificationUpdateParams{}))
+				Expect(updateParams).To(BeAssignableToTypeOf(handlers.NotificationUpdateParams{}))
 			})
 		})
 
@@ -24,16 +24,16 @@ var _ = Describe("Notification", func() {
 			Context("when the json is missing a required field", func() {
 				It("returns a validation error", func() {
 					body := strings.NewReader(`{"critical":true, "template":"my-awesome-template"}`)
-					_, err := params.NewNotificationParams(body)
-					Expect(err).To(BeAssignableToTypeOf(params.ValidationError{}))
+					_, err := handlers.NewNotificationParams(body)
+					Expect(err).To(BeAssignableToTypeOf(handlers.ValidationError{}))
 				})
 			})
 
 			Context("when the json is malformed", func() {
 				It("returns a parse error", func() {
 					body := strings.NewReader(`{"description":"my awesome notification", "critical":true, "template":"my-awesome-template}`)
-					_, err := params.NewNotificationParams(body)
-					Expect(err).To(BeAssignableToTypeOf(params.ParseError{}))
+					_, err := handlers.NewNotificationParams(body)
+					Expect(err).To(BeAssignableToTypeOf(handlers.ParseError{}))
 				})
 			})
 		})
@@ -42,7 +42,7 @@ var _ = Describe("Notification", func() {
 	Describe("ToModel", func() {
 		It("returns a model.Kind composed of the NotificationUpdateParams", func() {
 			body := strings.NewReader(`{"description":"my awesome notification", "critical":true, "template":"my-awesome-template"}`)
-			updateParams, err := params.NewNotificationParams(body)
+			updateParams, err := handlers.NewNotificationParams(body)
 			if err != nil {
 				panic(err)
 			}

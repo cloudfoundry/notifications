@@ -1,11 +1,11 @@
-package params_test
+package handlers_test
 
 import (
 	"io"
 	"io/ioutil"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/web/params"
+	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,7 +14,7 @@ import (
 var _ = Describe("NotifyParams", func() {
 	Describe("NewNotifyParams", func() {
 		It("parses the body of the given request", func() {
-			parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+			parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                 "kind_id": "test_email",
                 "reply_to": "me@awesome.com",
                 "subject": "Summary of contents",
@@ -32,13 +32,13 @@ var _ = Describe("NotifyParams", func() {
 
 		It("does not blow up if the request body is empty", func() {
 			Expect(func() {
-				params.NewNotifyParams(ioutil.NopCloser(strings.NewReader("")))
+				handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader("")))
 			}).NotTo(Panic())
 		})
 
 		Describe("to field parsing", func() {
 			It("handles when a name is attached to the address", func() {
-				parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+				parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
 					"to": "The User <user@example.com>"
 				}`)))
 				Expect(err).NotTo(HaveOccurred())
@@ -46,7 +46,7 @@ var _ = Describe("NotifyParams", func() {
 			})
 
 			It("populates the To field with the parsed email address", func() {
-				parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+				parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                     "to": "user@example.com"
 				}`)))
 				Expect(err).NotTo(HaveOccurred())
@@ -54,15 +54,15 @@ var _ = Describe("NotifyParams", func() {
 			})
 
 			It("sets the to field to InvalidEmail cannot be parsed", func() {
-				parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+				parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                     "to": "<The User"
 				}`)))
 				Expect(err).NotTo(HaveOccurred())
-				Expect(parameters.To).To(Equal(params.InvalidEmail))
+				Expect(parameters.To).To(Equal(handlers.InvalidEmail))
 			})
 
 			It("Sets the To field to empty of if it is not specified", func() {
-				parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+				parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                     "to": ""
 				}`)))
 				Expect(err).NotTo(HaveOccurred())
@@ -72,14 +72,14 @@ var _ = Describe("NotifyParams", func() {
 
 		Describe("role field parsing", func() {
 			It("sets the role field to empty if it is not specificed", func() {
-				parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader("{}")))
+				parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader("{}")))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(parameters.Role).To(Equal(""))
 
 			})
 
 			It("sets the role field that is specified", func() {
-				parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+				parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                     "role": "the-role"
 				}`)))
 				Expect(err).NotTo(HaveOccurred())
@@ -90,7 +90,7 @@ var _ = Describe("NotifyParams", func() {
 		Describe("html parsing", func() {
 			Context("when a doctype is passed in", func() {
 				It("pulls out the doctype", func() {
-					parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+					parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                         "kind_id": "test_email",
                         "html": "<!DOCTYPE html>"
 					}`)))
@@ -101,7 +101,7 @@ var _ = Describe("NotifyParams", func() {
 
 			Context("when no doctype is passed", func() {
 				It("returns an empty doctype", func() {
-					parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+					parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                         "kind_id": "test_email",
                         "html": ""
 					}`)))
@@ -112,7 +112,7 @@ var _ = Describe("NotifyParams", func() {
 
 			Context("when a head tag is passed in", func() {
 				It("pulls out the contents of the head tag", func() {
-					parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+					parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                         "kind_id": "test_email",
                         "html": "<head><title>BananaDamage</title></head>"
 					}`)))
@@ -123,7 +123,7 @@ var _ = Describe("NotifyParams", func() {
 
 			Context("when no head tag is passed in", func() {
 				It("Head is left as an empty string", func() {
-					parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+					parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                         "kind_id": "test_email",
                         "html": ""
 					}`)))
@@ -143,13 +143,13 @@ var _ = Describe("NotifyParams", func() {
 				})
 
 				It("pulls out the html in the body", func() {
-					parameters, err := params.NewNotifyParams(body)
+					parameters, err := handlers.NewNotifyParams(body)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(parameters.ParsedHTML.BodyContent).To(ContainSubstring("<p>The TEXT</p><h1>the TITLE</h1>"))
 				})
 
 				It("preserves any attributes on the body tag itself", func() {
-					parameters, err := params.NewNotifyParams(body)
+					parameters, err := handlers.NewNotifyParams(body)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(parameters.ParsedHTML.BodyAttributes).To(ContainSubstring(`class="bananaDamage"`))
 				})
@@ -158,7 +158,7 @@ var _ = Describe("NotifyParams", func() {
 
 			Context("when only an html tag is present", func() {
 				It("the contents in the html tag are put into the body", func() {
-					parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+					parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                         "kind_id": "test_email",
                         "html": "<html><head><title>BananaDamage</title></head><p>The TEXT</p><h1>the TITLE</h1></html>"
                     }`)))
@@ -170,7 +170,7 @@ var _ = Describe("NotifyParams", func() {
 
 			Context("when just bare html is passed without surrounding html/body tags", func() {
 				It("the html is placed in the body", func() {
-					parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+					parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                         "kind_id": "test_email",
                         "html": "<p>The TEXT</p><h1>the TITLE</h1>"
                     }`)))
@@ -181,14 +181,14 @@ var _ = Describe("NotifyParams", func() {
 
 			Context("when invalid html is passed", func() {
 				It("pulls out the html anyway", func() {
-					parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+					parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                         "kind_id": "test_email",
                         "html": "<html><p>The TEXT<h1>the TITLE</h1></html>"
                     }`)))
 					Expect(err).NotTo(HaveOccurred())
 					Expect(parameters.ParsedHTML.BodyContent).To(Equal("<p>The TEXT</p><h1>the TITLE</h1>"))
 
-					parameters, err = params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+					parameters, err = handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                         "kind_id": "test_email",
                         "html": "<html><p>The TEXT<h1>the TITLE</h1></body>"
                     }`)))
@@ -199,7 +199,7 @@ var _ = Describe("NotifyParams", func() {
 
 			Context("when no html is passed", func() {
 				It("does not error", func() {
-					parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+					parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
                         "kind_id": "test_email",
                         "text": "not html yo"
                     }`)))
@@ -211,23 +211,23 @@ var _ = Describe("NotifyParams", func() {
 			Context("when the to field is invalid", func() {
 				Context("when it has unmatched <", func() {
 					It("assigns <>invalidEmail<>", func() {
-						parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+						parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
 							"to": "<invalid email",
 							"text": "Contents of the email message"
 						}`)))
 						Expect(err).NotTo(HaveOccurred())
-						Expect(parameters.To).To(Equal(params.InvalidEmail))
+						Expect(parameters.To).To(Equal(handlers.InvalidEmail))
 					})
 				})
 
 				Context("when it is missing an @", func() {
 					It("assigns <>invalidEmail<>", func() {
-						parameters, err := params.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
+						parameters, err := handlers.NewNotifyParams(ioutil.NopCloser(strings.NewReader(`{
 							"to": "invalidemail.com",
 							"text": "Contents of the email message"
 						}`)))
 						Expect(err).NotTo(HaveOccurred())
-						Expect(parameters.To).To(Equal(params.InvalidEmail))
+						Expect(parameters.To).To(Equal(handlers.InvalidEmail))
 					})
 				})
 			})
@@ -237,7 +237,7 @@ var _ = Describe("NotifyParams", func() {
 					html := `<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\"><head><title>New Relic</title></head><body bgcolor=\"#cccccc\" leftmargin=\"10\" topmargin=\"0\" rightmargin=\"10\" bottommargin=\"10\" marginheight=\"10\" marginwidth=\"10\"><div>div here ya</div></body>`
 					body := ioutil.NopCloser(strings.NewReader(`{"kind_id": "test_email", "html": "` + html + `"}`))
 
-					parameters, err := params.NewNotifyParams(body)
+					parameters, err := handlers.NewNotifyParams(body)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(parameters.ParsedHTML.Doctype).To(Equal("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">"))
 					Expect(parameters.ParsedHTML.BodyAttributes).To(Equal("bgcolor=\"#cccccc\" leftmargin=\"10\" topmargin=\"0\" rightmargin=\"10\" bottommargin=\"10\" marginheight=\"10\" marginwidth=\"10\""))

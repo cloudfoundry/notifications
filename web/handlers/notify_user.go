@@ -6,7 +6,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
 	"github.com/ryanmoran/stack"
 )
 
@@ -30,7 +29,7 @@ func (handler NotifyUser) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 	userGUID := strings.TrimPrefix(req.URL.Path, "/users/")
 	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
 
-	output, err := handler.notify.Execute(connection, req, context, userGUID, handler.strategy, params.GUIDValidator{}, vcapRequestID)
+	output, err := handler.notify.Execute(connection, req, context, userGUID, handler.strategy, GUIDValidator{}, vcapRequestID)
 	if err != nil {
 		handler.errorWriter.Write(w, err)
 		return

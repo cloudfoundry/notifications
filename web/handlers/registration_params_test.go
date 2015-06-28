@@ -1,4 +1,4 @@
-package params_test
+package handlers_test
 
 import (
 	"bytes"
@@ -8,8 +8,7 @@ import (
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/web/params"
-
+	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -43,7 +42,7 @@ var _ = Describe("RegistrationParams", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			parameters, err := params.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+			parameters, err := handlers.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(parameters.SourceDescription).To(Equal("Raptor Containment Unit"))
 			Expect(len(parameters.Kinds)).To(Equal(2))
@@ -66,20 +65,20 @@ var _ = Describe("RegistrationParams", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			parameters, err := params.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+			parameters, err := handlers.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(parameters.IncludesKinds).To(BeFalse())
 		})
 
 		It("returns an error when the parameters are invalid JSON", func() {
-			_, err := params.NewRegistrationParams(ioutil.NopCloser(strings.NewReader("this is not valid JSON")))
-			Expect(err).To(BeAssignableToTypeOf(params.ParseError{}))
+			_, err := handlers.NewRegistrationParams(ioutil.NopCloser(strings.NewReader("this is not valid JSON")))
+			Expect(err).To(BeAssignableToTypeOf(handlers.ParseError{}))
 		})
 
 		It("returns an error when the request body is missing", func() {
-			_, err := params.NewRegistrationParams(ErrorReader{})
-			Expect(err).To(BeAssignableToTypeOf(params.ParseError{}))
+			_, err := handlers.NewRegistrationParams(ErrorReader{})
+			Expect(err).To(BeAssignableToTypeOf(handlers.ParseError{}))
 		})
 	})
 
@@ -97,7 +96,7 @@ var _ = Describe("RegistrationParams", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			parameters, err := params.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+			parameters, err := handlers.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
 			Expect(err).NotTo(HaveOccurred())
 
 			err = parameters.Validate()
@@ -113,12 +112,12 @@ var _ = Describe("RegistrationParams", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			parameters, err := params.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+			parameters, err := handlers.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
 			Expect(err).NotTo(HaveOccurred())
 
 			err = parameters.Validate()
-			Expect(err).To(BeAssignableToTypeOf(params.ValidationError{}))
-			errs := err.(params.ValidationError).Errors()
+			Expect(err).To(BeAssignableToTypeOf(handlers.ValidationError{}))
+			errs := err.(handlers.ValidationError).Errors()
 			Expect(len(errs)).To(Equal(3))
 			Expect(err).To(ContainElement(`"source_description" is a required field`))
 			Expect(err).To(ContainElement(`"kind.id" is a required field`))
@@ -137,12 +136,12 @@ var _ = Describe("RegistrationParams", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			parameters, err := params.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+			parameters, err := handlers.NewRegistrationParams(ioutil.NopCloser(bytes.NewBuffer(body)))
 			Expect(err).NotTo(HaveOccurred())
 
 			err = parameters.Validate()
-			Expect(err).To(BeAssignableToTypeOf(params.ValidationError{}))
-			errs := err.(params.ValidationError).Errors()
+			Expect(err).To(BeAssignableToTypeOf(handlers.ValidationError{}))
+			errs := err.(handlers.ValidationError).Errors()
 			Expect(len(errs)).To(Equal(1))
 			Expect(err).To(ContainElement(`"kind.id" is improperly formatted`))
 		})

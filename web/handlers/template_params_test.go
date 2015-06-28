@@ -1,4 +1,4 @@
-package params_test
+package handlers_test
 
 import (
 	"bytes"
@@ -6,13 +6,13 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/cloudfoundry-incubator/notifications/web/params"
+	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-func buildTemplateRequestBody(template params.TemplateParams) io.Reader {
+func buildTemplateRequestBody(template handlers.TemplateParams) io.Reader {
 	body, err := json.Marshal(template)
 	if err != nil {
 		panic(err)
@@ -35,7 +35,7 @@ var _ = Describe("TemplateParams", func() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 
-				parameters, err := params.NewTemplateParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+				parameters, err := handlers.NewTemplateParams(ioutil.NopCloser(bytes.NewBuffer(body)))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(parameters.Name).To(Equal("Foo Bar Baz"))
 				Expect(parameters.Text).To(Equal("its foobar of course"))
@@ -51,7 +51,7 @@ var _ = Describe("TemplateParams", func() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 
-				parameters, err := params.NewTemplateParams(ioutil.NopCloser(bytes.NewBuffer(body)))
+				parameters, err := handlers.NewTemplateParams(ioutil.NopCloser(bytes.NewBuffer(body)))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(parameters.Name).To(Equal("Foo Bar Baz"))
 				Expect(parameters.Text).To(Equal(""))
@@ -63,43 +63,43 @@ var _ = Describe("TemplateParams", func() {
 			Context("when the template has invalid syntax", func() {
 				Context("when subject template has invalid syntax", func() {
 					It("returns a validation error", func() {
-						body := buildTemplateRequestBody(params.TemplateParams{
+						body := buildTemplateRequestBody(handlers.TemplateParams{
 							Name:    "Template name",
 							Text:    "Textual template",
 							HTML:    "HTML template",
 							Subject: "{{.bad}",
 						})
-						_, err := params.NewTemplateParams(ioutil.NopCloser(body))
+						_, err := handlers.NewTemplateParams(ioutil.NopCloser(body))
 						Expect(err).To(HaveOccurred())
-						Expect(err).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
+						Expect(err).To(BeAssignableToTypeOf(handlers.ValidationError([]string{})))
 					})
 				})
 
 				Context("when text template has invalid syntax", func() {
 					It("returns a validation error", func() {
-						body := buildTemplateRequestBody(params.TemplateParams{
+						body := buildTemplateRequestBody(handlers.TemplateParams{
 							Name:    "Template name",
 							Text:    "You should feel {{.BAD}",
 							HTML:    "<h1> Amazing </h1>",
 							Subject: "Great Subject",
 						})
-						_, err := params.NewTemplateParams(ioutil.NopCloser(body))
+						_, err := handlers.NewTemplateParams(ioutil.NopCloser(body))
 						Expect(err).To(HaveOccurred())
-						Expect(err).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
+						Expect(err).To(BeAssignableToTypeOf(handlers.ValidationError([]string{})))
 					})
 				})
 
 				Context("when html template has invalid syntax", func() {
 					It("returns a validation error", func() {
-						body := buildTemplateRequestBody(params.TemplateParams{
+						body := buildTemplateRequestBody(handlers.TemplateParams{
 							Name:    "Template name",
 							Text:    "Textual template",
 							HTML:    "{{.bad}",
 							Subject: "Great Subject",
 						})
-						_, err := params.NewTemplateParams(ioutil.NopCloser(body))
+						_, err := handlers.NewTemplateParams(ioutil.NopCloser(body))
 						Expect(err).To(HaveOccurred())
-						Expect(err).To(BeAssignableToTypeOf(params.ValidationError([]string{})))
+						Expect(err).To(BeAssignableToTypeOf(handlers.ValidationError([]string{})))
 					})
 				})
 			})
@@ -107,8 +107,8 @@ var _ = Describe("TemplateParams", func() {
 	})
 
 	Describe("ToModel", func() {
-		It("turns a params.Template into a models.Template", func() {
-			templateParams := params.TemplateParams{
+		It("turns a handlers.Template into a models.Template", func() {
+			templateParams := handlers.TemplateParams{
 				Name:     "The Foo to the Bar",
 				Text:     "its foobar of course",
 				HTML:     "<p>its foobar</p>",
