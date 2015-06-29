@@ -106,7 +106,7 @@ func (m Mother) UAAScopeStrategy() services.UAAScopeStrategy {
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 	enqueuer := m.Enqueuer()
 
-	return services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer)
+	return services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer, env.DefaultUAAScopes)
 }
 
 func (m Mother) EmailStrategy() services.EmailStrategy {

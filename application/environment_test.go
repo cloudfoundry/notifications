@@ -17,6 +17,7 @@ var _ = Describe("Environment", func() {
 		"DATABASE_URL",
 		"DB_LOGGING_ENABLED",
 		"DB_MAX_OPEN_CONNS",
+		"DEFAULT_UAA_SCOPES",
 		"ENCRYPTION_KEY",
 		"GOBBLE_WAIT_MAX_DURATION",
 		"PORT",
@@ -445,6 +446,20 @@ var _ = Describe("Environment", func() {
 			env := application.NewEnvironment()
 
 			Expect(env.GobbleWaitMaxDuration).To(Equal(5000))
+		})
+	})
+
+	Describe("Default UAA scopes", func() {
+		It("sets the value if present", func() {
+			os.Setenv("DEFAULT_UAA_SCOPES", "my-scope,banana,foo,bar")
+			env := application.NewEnvironment()
+
+			Expect(env.DefaultUAAScopes).To(Equal([]string{
+				"my-scope",
+				"banana",
+				"foo",
+				"bar",
+			}))
 		})
 	})
 })

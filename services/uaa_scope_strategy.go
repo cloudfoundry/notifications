@@ -8,6 +8,7 @@ type UAAScopeStrategy struct {
 	findsUserGUIDs FindsUserGUIDsInterface
 	tokenLoader    TokenLoader
 	enqueuer       EnqueuerInterface
+	defaultScopes  []string
 }
 
 type DefaultScopeError struct{}
@@ -16,13 +17,12 @@ func (d DefaultScopeError) Error() string {
 	return "You cannot send a notification to a default scope"
 }
 
-func NewUAAScopeStrategy(tokenLoader TokenLoader, findsUserGUIDs FindsUserGUIDsInterface,
-	enqueuer EnqueuerInterface) UAAScopeStrategy {
-
+func NewUAAScopeStrategy(tokenLoader TokenLoader, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface, defaultScopes []string) UAAScopeStrategy {
 	return UAAScopeStrategy{
 		findsUserGUIDs: findsUserGUIDs,
 		tokenLoader:    tokenLoader,
 		enqueuer:       enqueuer,
+		defaultScopes:  defaultScopes,
 	}
 }
 
@@ -70,20 +70,7 @@ func (strategy UAAScopeStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 }
 
 func (strategy UAAScopeStrategy) scopeIsDefault(scope string) bool {
-	defaultScopes := []string{
-		"cloud_controller.read",
-		"cloud_controller.write",
-		"openid",
-		"approvals.me",
-		"cloud_controller_service_permissions.read",
-		"scim.me",
-		"uaa.user",
-		"password.write",
-		"scim.userids",
-		"oauth.approvals",
-	}
-
-	for _, singleScope := range defaultScopes {
+	for _, singleScope := range strategy.defaultScopes {
 		if scope == singleScope {
 			return true
 		}

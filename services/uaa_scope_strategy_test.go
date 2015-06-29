@@ -20,9 +20,23 @@ var _ = Describe("UAA Scope Strategy", func() {
 		conn            *fakes.Connection
 		findsUserGUIDs  *fakes.FindsUserGUIDs
 		requestReceived time.Time
+		defaultScopes   []string
 	)
 
 	BeforeEach(func() {
+		defaultScopes = []string{
+			"cloud_controller.read",
+			"cloud_controller.write",
+			"openid",
+			"approvals.me",
+			"cloud_controller_service_permissions.read",
+			"scim.me",
+			"uaa.user",
+			"password.write",
+			"scim.userids",
+			"oauth.approvals",
+		}
+
 		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
 		conn = fakes.NewConnection()
 		tokenHeader := map[string]interface{}{
@@ -38,7 +52,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
 		findsUserGUIDs.GUIDsWithScopes["great.scope"] = []string{"user-311"}
-		strategy = services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer)
+		strategy = services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer, defaultScopes)
 	})
 
 	Describe("Dispatch", func() {
@@ -122,21 +136,8 @@ var _ = Describe("UAA Scope Strategy", func() {
 				})
 			})
 
-			Context("when an invalid scope is passed", func() {
+			Context("when an default scope is passed", func() {
 				It("returns an error", func() {
-					defaultScopes := []string{
-						"cloud_controller.read",
-						"cloud_controller.write",
-						"openid",
-						"approvals.me",
-						"cloud_controller_service_permissions.read",
-						"scim.me",
-						"uaa.user",
-						"password.write",
-						"scim.userids",
-						"oauth.approvals",
-					}
-
 					for _, scope := range defaultScopes {
 						_, err := strategy.Dispatch(services.Dispatch{
 							GUID: scope,

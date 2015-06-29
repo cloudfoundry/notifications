@@ -100,4 +100,58 @@ var _ = Describe("Sending notifications to users with certain scopes", func() {
 			Expect(data).To(ContainElement("You received this message because you have the this.scope scope."))
 		})
 	})
+
+	It("does not send messages to a user with a default scope", func() {
+		var templateID string
+		client := support.NewClient(Servers.Notifications.URL())
+		clientID := "notifications-sender"
+		clientToken := GetClientTokenFor(clientID)
+		scope := "openid"
+
+		By("registering a client with a notification", func() {
+			status, err := client.Notifications.Register(clientToken.Access, support.RegisterClient{
+				SourceName: "Notifications Sender",
+				Notifications: map[string]support.RegisterNotification{
+					"scope-test": {
+						Description: "Scope Test",
+					},
+				},
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNoContent))
+		})
+
+		By("creating a template", func() {
+			var status int
+			var err error
+			status, templateID, err = client.Templates.Create(clientToken.Access, support.Template{
+				Name:    "Frozen",
+				Subject: "Food {{.Subject}}",
+				HTML:    "<h1>Fish</h1>{{.HTML}}<b>{{.Endorsement}}</b>",
+				Text:    "Fish\n{{.Text}}\n{{.Endorsement}}",
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+			Expect(templateID).NotTo(Equal(""))
+		})
+
+		By("assigning the template to the client", func() {
+			status, err := client.Templates.AssignToClient(clientToken.Access, clientID, templateID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNoContent))
+		})
+
+		By("sending a notification to all users with a UAA scope", func() {
+			status, _, err := client.Notify.Scope(clientToken.Access, scope, support.Notify{
+				KindID:  "scope-test",
+				HTML:    "this is a scope test",
+				Text:    "this is a scope test",
+				Subject: "scope-subject",
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNotAcceptable))
+		})
+	})
 })
