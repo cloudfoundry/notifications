@@ -156,7 +156,7 @@ func (mother Mother) MailClient() *mail.Client {
 		Port:           env.SMTPPort,
 		Secret:         env.SMTPCRAMMD5Secret,
 		TestMode:       env.TestMode,
-		SkipVerifySSL:  env.VerifySSL,
+		SkipVerifySSL:  !env.VerifySSL,
 		DisableTLS:     !env.SMTPTLS,
 		LoggingEnabled: env.SMTPLoggingEnabled,
 	}
