@@ -9,7 +9,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/web"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/viron"
 )
@@ -79,9 +78,9 @@ func (app Application) ConfigureSMTP(logger lager.Logger) {
 }
 
 func (app Application) RetrieveUAAPublicKey(logger lager.Logger) {
-	uaaClient := app.mother.UAAClient()
+	uaaClient := app.mother.WrappedUAAClient()
 
-	key, err := uaa.GetTokenKey(*uaaClient)
+	key, err := uaaClient.GetTokenKey()
 	if err != nil {
 		logger.Fatal("uaa-get-token-key-errored", err)
 	}

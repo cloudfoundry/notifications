@@ -14,17 +14,17 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
+	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/nu7hatch/gouuid"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 	"github.com/pivotal-golang/lager"
 )
 
 type Mother struct {
-	uaaClient *uaa.UAA
-	sqlDB     *sql.DB
-	mutex     sync.Mutex
+	wrappedUAAClient *uaa.UAAClient
+	sqlDB            *sql.DB
+	mutex            sync.Mutex
 }
 
 func NewMother() *Mother {
@@ -47,23 +47,22 @@ func (m Mother) UserStrategy() services.UserStrategy {
 	return services.NewUserStrategy(m.Enqueuer())
 }
 
-func (m Mother) UAAClient() *uaa.UAA {
+func (m Mother) WrappedUAAClient() *uaa.UAAClient {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	if m.uaaClient == nil {
+	if m.wrappedUAAClient == nil {
 		env := NewEnvironment()
-		client := uaa.NewUAA("", env.UAAHost, env.UAAClientID, env.UAAClientSecret, "")
-		client.VerifySSL = env.VerifySSL
-		m.uaaClient = &client
+		client := uaa.NewUAAClient(env.UAAHost, env.UAAClientID, env.UAAClientSecret, env.VerifySSL)
+		m.wrappedUAAClient = &client
 	}
 
-	return m.uaaClient
+	return m.wrappedUAAClient
 }
 
 func (m Mother) SpaceStrategy() services.SpaceStrategy {
 	env := NewEnvironment()
-	uaaClient := m.UAAClient()
+	uaaClient := m.WrappedUAAClient()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
 	tokenLoader := postal.NewTokenLoader(uaaClient)
@@ -77,7 +76,7 @@ func (m Mother) SpaceStrategy() services.SpaceStrategy {
 
 func (m Mother) OrganizationStrategy() services.OrganizationStrategy {
 	env := NewEnvironment()
-	uaaClient := m.UAAClient()
+	uaaClient := m.WrappedUAAClient()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
 	tokenLoader := postal.NewTokenLoader(uaaClient)
@@ -89,7 +88,7 @@ func (m Mother) OrganizationStrategy() services.OrganizationStrategy {
 }
 
 func (m Mother) EveryoneStrategy() services.EveryoneStrategy {
-	uaaClient := m.UAAClient()
+	uaaClient := m.WrappedUAAClient()
 	tokenLoader := postal.NewTokenLoader(uaaClient)
 	allUsers := services.NewAllUsers(uaaClient)
 	enqueuer := m.Enqueuer()
@@ -99,7 +98,7 @@ func (m Mother) EveryoneStrategy() services.EveryoneStrategy {
 
 func (m Mother) UAAScopeStrategy() services.UAAScopeStrategy {
 	env := NewEnvironment()
-	uaaClient := m.UAAClient()
+	uaaClient := m.WrappedUAAClient()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
 	tokenLoader := postal.NewTokenLoader(uaaClient)
@@ -135,13 +134,13 @@ func (m Mother) TemplatesLoader() postal.TemplatesLoader {
 }
 
 func (m Mother) UserLoader() postal.UserLoader {
-	uaaClient := m.UAAClient()
+	uaaClient := m.WrappedUAAClient()
 
 	return postal.NewUserLoader(uaaClient)
 }
 
 func (m Mother) TokenLoader() postal.TokenLoader {
-	uaaClient := m.UAAClient()
+	uaaClient := m.WrappedUAAClient()
 
 	return postal.NewTokenLoader(uaaClient)
 }
