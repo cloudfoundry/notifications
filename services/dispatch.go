@@ -10,6 +10,7 @@ type Dispatch struct {
 	GUID       string
 	Role       string
 	Connection models.ConnectionInterface
+	UAAHost    string
 
 	VCAPRequest DispatchVCAPRequest
 	Message     DispatchMessage

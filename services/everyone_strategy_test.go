@@ -65,6 +65,7 @@ var _ = Describe("Everyone Strategy", func() {
 						Doctype:        "<html>",
 					},
 				},
+				UAAHost: "my-uaa-host",
 				VCAPRequest: services.DispatchVCAPRequest{
 					ID:          "some-vcap-request-id",
 					ReceiptTime: requestReceivedTime,
@@ -100,6 +101,7 @@ var _ = Describe("Everyone Strategy", func() {
 			Expect(enqueuer.EnqueueCall.Args.Client).To(Equal("my-client"))
 			Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal(""))
 			Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
+			Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("my-uaa-host"))
 			Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceivedTime))
 		})
 	})

@@ -8,7 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
+	"github.com/cloudfoundry-incubator/notifications/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -36,7 +36,7 @@ var _ = Describe("TokenLoader", func() {
 			clientToken = fakes.BuildToken(tokenHeader, tokenClaims)
 
 			uaaClient = fakes.NewUAAClient()
-			uaaClient.ClientToken = uaa.Token{Access: clientToken}
+			uaaClient.ClientAccessToken = clientToken
 
 			tokenLoader = postal.NewTokenLoader(uaaClient)
 		})
@@ -71,7 +71,7 @@ var _ = Describe("TokenLoader", func() {
 				}
 				Expect(token).To(Equal(clientToken))
 
-				uaaClient.ClientToken.Access = "the-wrong-token"
+				uaaClient.ClientAccessToken = "the-wrong-token"
 
 				token, err = tokenLoader.Load()
 				if err != nil {
@@ -86,7 +86,7 @@ var _ = Describe("TokenLoader", func() {
 			It("Does ask UAA for a new token", func() {
 				tokenClaims["exp"] = time.Now().Add(-5 * time.Minute).Unix()
 				expiredToken := fakes.BuildToken(tokenHeader, tokenClaims)
-				uaaClient.ClientToken.Access = expiredToken
+				uaaClient.ClientAccessToken = expiredToken
 
 				token, err := tokenLoader.Load()
 				if err != nil {
@@ -94,7 +94,7 @@ var _ = Describe("TokenLoader", func() {
 				}
 				Expect(token).To(Equal(expiredToken))
 
-				uaaClient.ClientToken.Access = "the-correct-token"
+				uaaClient.ClientAccessToken = "the-correct-token"
 
 				token, err = tokenLoader.Load()
 				if err != nil {

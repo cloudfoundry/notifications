@@ -1,6 +1,6 @@
 package services
 
-import "github.com/pivotal-cf/uaa-sso-golang/uaa"
+import "github.com/cloudfoundry-incubator/notifications/uaa"
 
 type AllUsersInterface interface {
 	AllUserGUIDs() ([]string, error)

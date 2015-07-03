@@ -85,6 +85,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 						ID:          "some-vcap-request-id",
 						ReceiptTime: requestReceived,
 					},
+					UAAHost: "uaa",
 				})
 				Expect(err).NotTo(HaveOccurred())
 
@@ -114,6 +115,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 				Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal("great.scope"))
 				Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
 				Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
+				Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("uaa"))
 			})
 		})
 

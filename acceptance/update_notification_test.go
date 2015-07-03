@@ -21,7 +21,7 @@ var _ = Describe("Updating A Notification", func() {
 	BeforeEach(func() {
 		notificationID = "acceptance-test"
 		clientID = "notifications-admin"
-		clientToken = GetClientTokenFor(clientID)
+		clientToken = GetClientTokenFor(clientID, "uaa")
 		client = support.NewClient(Servers.Notifications.URL())
 	})
 

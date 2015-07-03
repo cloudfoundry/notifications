@@ -18,27 +18,31 @@ import (
 )
 
 type UAA struct {
-	server *httptest.Server
+	server    *httptest.Server
+	Zone      string
+	ServerURL string
 }
 
-func NewUAA() UAA {
+func NewUAA(zone string) *UAA {
 	router := mux.NewRouter()
 	router.HandleFunc("/oauth/token", UAAPostOAuthToken).Methods("POST")
 	router.HandleFunc("/token_key", UAAGetTokenKey).Methods("GET")
-	router.Path("/Users").Queries("attributes", "").Handler(UAAGetUser).Methods("GET")
+	router.Path("/Users").Queries("attributes", "").Handler(UAAGetUser(zone)).Methods("GET")
 	router.HandleFunc("/Users", UAAGetUsers).Methods("GET")
 	router.HandleFunc("/Groups", UAAGetUsersByScope).Methods("GET")
 	router.HandleFunc("/{anything:.*}", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		fmt.Printf("UAA ROUTE REQUEST ---> %+v\n", req)
 		w.WriteHeader(http.StatusTeapot)
 	}))
-	return UAA{
+	return &UAA{
 		server: httptest.NewUnstartedServer(router),
+		Zone:   zone,
 	}
 }
 
-func (s UAA) Boot() {
+func (s *UAA) Boot() {
 	s.server.Start()
+	s.ServerURL = s.server.URL
 	os.Setenv("UAA_HOST", s.server.URL)
 }
 
@@ -70,6 +74,7 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
 	token := jwt.New(jwt.GetSigningMethod("RS256"))
 	token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 	token.Claims["client_id"] = clientID
+	token.Claims["iss"] = "http://" + req.Host
 
 	switch req.Form.Get("grant_type") {
 	case "client_credentials":
@@ -108,38 +113,40 @@ var UAAGetTokenKey = http.HandlerFunc(func(w http.ResponseWriter, req *http.Requ
 	w.Write(response)
 })
 
-var UAAGetUser = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	err := req.ParseForm()
-	if err != nil {
-		panic(err)
-	}
-
-	filter := req.Form.Get("filter")
-	filterParts := strings.Split(filter, " or ")
-	queryRegexp := regexp.MustCompile(`Id eq "(.*)"`)
-	resources := []interface{}{}
-	for _, part := range filterParts {
-		matches := queryRegexp.FindAllStringSubmatch(part, 1)
-		match := matches[0]
-		if user, ok := UAAUsers[match[1]]; ok {
-			resources = append(resources, user)
+var UAAGetUser = func(zone string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		err := req.ParseForm()
+		if err != nil {
+			panic(err)
 		}
-	}
 
-	response, err := json.Marshal(map[string]interface{}{
-		"resources":    resources,
-		"startIndex":   1,
-		"itemsPerPage": 100,
-		"totalResults": 1,
-		"schemas":      []string{"urn:scim:schemas:core:1.0"},
+		filter := req.Form.Get("filter")
+		filterParts := strings.Split(filter, " or ")
+		queryRegexp := regexp.MustCompile(`Id eq "(.*)"`)
+		resources := []interface{}{}
+		for _, part := range filterParts {
+			matches := queryRegexp.FindAllStringSubmatch(part, 1)
+			match := matches[0]
+			if user, ok := ZonedUAAUsers(zone)[match[1]]; ok {
+				resources = append(resources, user)
+			}
+		}
+
+		response, err := json.Marshal(map[string]interface{}{
+			"resources":    resources,
+			"startIndex":   1,
+			"itemsPerPage": 100,
+			"totalResults": 1,
+			"schemas":      []string{"urn:scim:schemas:core:1.0"},
+		})
+		if err != nil {
+			panic(err)
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(response)
 	})
-	if err != nil {
-		panic(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
-})
+}
 
 var UAAGetUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 	response, err := json.Marshal(map[string]interface{}{
@@ -202,6 +209,16 @@ var UAAUsersByScope = map[string]interface{}{
 			},
 		},
 	},
+}
+
+func ZonedUAAUsers(zone string) map[string]map[string]interface{} {
+	if zone == "uaa" {
+		return UAAUsers
+	} else if zone == "testzone1" {
+		return TestZoneUsers
+	} else {
+		return make(map[string]map[string]interface{})
+	}
 }
 
 var UAAUsers = map[string]map[string]interface{}{
@@ -387,6 +404,34 @@ var UAAUsers = map[string]map[string]interface{}{
 		"approvals": []string{},
 		"active":    true,
 		"verified":  false,
+		"schemas":   []string{"urn:scim:schemas:core:1.0"},
+	},
+}
+
+var TestZoneUsers = map[string]map[string]interface{}{
+	"user-in-zone": {
+		"id": "user-in-zone",
+		"meta": map[string]interface{}{
+			"version":      4,
+			"created":      "2014-07-16T21:00:09.021Z",
+			"lastModified": "2014-08-04T19:16:29.172Z",
+		},
+		"userName": "user-in-zone",
+		"name":     map[string]string{},
+		"emails": []map[string]string{
+			{"value": "user-in-zone@example.com"},
+		},
+		"groups": []map[string]string{
+			{
+				"value":   "some-group-guid",
+				"display": "notifications.write",
+				"type":    "DIRECT",
+			},
+		},
+		"approvals": []interface{}{},
+		"active":    true,
+		"verified":  false,
+		"origin":    "uaa",
 		"schemas":   []string{"urn:scim:schemas:core:1.0"},
 	},
 }

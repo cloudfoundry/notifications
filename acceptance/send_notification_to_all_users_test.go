@@ -17,7 +17,7 @@ var _ = Describe("Send a notification to all users of UAA", func() {
 		var templateID string
 		indexedResponses := map[string]support.NotifyResponse{}
 		clientID := "notifications-sender"
-		clientToken := GetClientTokenFor(clientID)
+		clientToken := GetClientTokenFor(clientID, "uaa")
 		client := support.NewClient(Servers.Notifications.URL())
 
 		By("registering a notification", func() {

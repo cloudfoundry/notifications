@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
+	"github.com/cloudfoundry-incubator/notifications/uaa"
 )
 
 type UAA string

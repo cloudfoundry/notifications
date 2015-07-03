@@ -23,6 +23,7 @@ type Delivery struct {
 	Space           cf.CloudControllerSpace
 	Organization    cf.CloudControllerOrganization
 	ClientID        string
+	UAAHost         string
 	Scope           string
 	VCAPRequestID   string
 	RequestReceived time.Time
@@ -31,19 +32,21 @@ type Delivery struct {
 type DeliveryWorker struct {
 	gobble.Worker
 
-	dbTrace       bool
-	sender        string
-	encryptionKey []byte
-	identifier    int
+	dbTrace          bool
+	sender           string
+	encryptionKey    []byte
+	identifier       int
+	canonicalUAAHost string
 
 	baseLogger lager.Logger
 	logger     lager.Logger
 
-	mailClient      mail.ClientInterface
-	userLoader      UserLoaderInterface
-	templatesLoader TemplatesLoaderInterface
-	tokenLoader     TokenLoaderInterface
-	database        models.DatabaseInterface
+	mailClient       mail.ClientInterface
+	userLoader       UserLoaderInterface
+	templatesLoader  TemplatesLoaderInterface
+	tokenLoader      TokenLoaderInterface
+	zonedTokenLoader ZonedTokenLoaderInterface
+	database         models.DatabaseInterface
 
 	messagesRepo           MessagesRepo
 	receiptsRepo           ReceiptsRepo
@@ -52,11 +55,15 @@ type DeliveryWorker struct {
 	kindsRepo              KindsRepo
 }
 
+type ZonedTokenLoaderInterface interface {
+	Load(string) (string, error)
+}
+
 func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
 	globalUnsubscribesRepo GlobalUnsubscribesRepo, unsubscribesRepo UnsubscribesRepo,
 	kindsRepo KindsRepo, messagesRepo MessagesRepo,
-	database models.DatabaseInterface, dbTrace bool, sender string, encryptionKey []byte, userLoader UserLoaderInterface,
-	templatesLoader TemplatesLoaderInterface, receiptsRepo ReceiptsRepo, tokenLoader TokenLoaderInterface) DeliveryWorker {
+	database models.DatabaseInterface, dbTrace bool, sender string, encryptionKey []byte, canonicalUAAHost string, userLoader UserLoaderInterface,
+	templatesLoader TemplatesLoaderInterface, receiptsRepo ReceiptsRepo, tokenLoader TokenLoaderInterface, zonedTokenLoader ZonedTokenLoaderInterface) DeliveryWorker {
 
 	logger = logger.Session("worker", lager.Data{"worker_id": id})
 
@@ -73,8 +80,10 @@ func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterf
 		dbTrace:                dbTrace,
 		sender:                 sender,
 		encryptionKey:          encryptionKey,
+		canonicalUAAHost:       canonicalUAAHost,
 		userLoader:             userLoader,
 		tokenLoader:            tokenLoader,
+		zonedTokenLoader:       zonedTokenLoader,
 		templatesLoader:        templatesLoader,
 		receiptsRepo:           receiptsRepo,
 	}
@@ -112,7 +121,9 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 	}
 
 	if delivery.Email == "" {
-		token, err := worker.tokenLoader.Load()
+		var token string
+
+		token, err = worker.zonedTokenLoader.Load(delivery.UAAHost)
 		if err != nil {
 			worker.retry(delivery.MessageID, delivery.Email, job)
 			return

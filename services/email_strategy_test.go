@@ -55,6 +55,7 @@ var _ = Describe("EmailStrategy", func() {
 					ID:          "some-vcap-request-id",
 					ReceiptTime: requestReceived,
 				},
+				UAAHost: "uaahost",
 			})
 
 			users := []services.User{{Email: "dr@strangelove.com"}}
@@ -84,6 +85,7 @@ var _ = Describe("EmailStrategy", func() {
 			Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal(""))
 			Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
 			Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
+			Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("uaahost"))
 		})
 	})
 })

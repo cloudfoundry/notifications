@@ -13,7 +13,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
+	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
@@ -67,6 +67,7 @@ var _ = Describe("DeliveryWorker", func() {
 		templateLoader         *fakes.TemplatesLoader
 		receiptsRepo           *fakes.ReceiptsRepo
 		tokenLoader            *fakes.TokenLoader
+		zonedTokenLoader       *fakes.ZonedTokenLoader
 		messageID              string
 	)
 
@@ -92,6 +93,7 @@ var _ = Describe("DeliveryWorker", func() {
 		userLoader.Users["user-123"] = uaa.User{Emails: []string{fakeUserEmail}}
 		userLoader.Users["user-456"] = uaa.User{Emails: []string{"user-456@example.com"}}
 		tokenLoader = fakes.NewTokenLoader()
+		zonedTokenLoader = fakes.NewZonedTokenLoader()
 		templateLoader = fakes.NewTemplatesLoader()
 		templateLoader.Templates = postal.Templates{
 			Text:    "{{.Text}}",
@@ -101,12 +103,13 @@ var _ = Describe("DeliveryWorker", func() {
 		receiptsRepo = fakes.NewReceiptsRepo()
 
 		worker = postal.NewDeliveryWorker(id, logger, mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
-			messagesRepo, database, false, sender, encryptionKey, userLoader, templateLoader, receiptsRepo, tokenLoader)
+			messagesRepo, database, false, sender, encryptionKey, "canonical-uaa-host", userLoader, templateLoader, receiptsRepo, tokenLoader, zonedTokenLoader)
 
 		messageID = "randomly-generated-guid"
 		delivery = postal.Delivery{
 			ClientID: "some-client",
 			UserGUID: userGUID,
+			UAAHost:  "canonical-uaa-host",
 			Options: postal.Options{
 				Subject: "the subject",
 				Text:    "body content",
@@ -147,6 +150,18 @@ var _ = Describe("DeliveryWorker", func() {
 				worker.Work()
 				return true
 			}).Should(BeTrue())
+		})
+	})
+
+	Describe("Deliver to zone", func() {
+		It("makes a call to getNewClientToken for a zone during a delivery", func() {
+			delivery.UAAHost = "zoned-uaa-host"
+
+			job := gobble.NewJob(delivery)
+			worker.Deliver(&job)
+
+			Expect(zonedTokenLoader.LoadArgument).To(Equal("zoned-uaa-host"))
+			Expect(tokenLoader.LoadWasCalled).To(BeFalse())
 		})
 	})
 
@@ -201,7 +216,7 @@ var _ = Describe("DeliveryWorker", func() {
 			sum := md5.Sum([]byte("banana's are so very tasty"))
 			encryptionKey := sum[:]
 			worker = postal.NewDeliveryWorker(id, logger, mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
-				messagesRepo, database, true, "from@email.com", encryptionKey, userLoader, templateLoader, receiptsRepo, tokenLoader)
+				messagesRepo, database, true, "from@email.com", encryptionKey, "canonical-uaa-host", userLoader, templateLoader, receiptsRepo, tokenLoader, zonedTokenLoader)
 			worker.Deliver(&job)
 			database.TraceLogger.Printf("some statement")
 
@@ -257,15 +272,12 @@ var _ = Describe("DeliveryWorker", func() {
 			})
 		})
 
-		It("makes a call to getNewClientToken during a delivery", func() {
-			worker.Deliver(&job)
-
-			Expect(tokenLoader.LoadWasCalled).To(BeTrue())
-		})
-
-		Context("when loading a token fails", func() {
+		Context("when loading a zoned token fails", func() {
 			It("retries the job", func() {
-				tokenLoader.LoadError = errors.New("failed to load a UAA token")
+				delivery.UAAHost = "zoned-uaa-host"
+				job = gobble.NewJob(delivery)
+
+				zonedTokenLoader.LoadError = errors.New("failed to load a zoned UAA token")
 				worker.Deliver(&job)
 
 				Expect(job.RetryCount).To(Equal(1))

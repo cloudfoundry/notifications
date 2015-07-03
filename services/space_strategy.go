@@ -66,7 +66,7 @@ func (strategy SpaceStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		return responses, err
 	}
 
-	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, space, org, dispatch.Client.ID, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, space, org, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

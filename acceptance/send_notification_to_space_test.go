@@ -17,7 +17,7 @@ var _ = Describe("Sending notifications to all users in a space", func() {
 		var templateID string
 		client := support.NewClient(Servers.Notifications.URL())
 		clientID := "notifications-sender"
-		clientToken := GetClientTokenFor(clientID)
+		clientToken := GetClientTokenFor(clientID, "uaa")
 		spaceID := "space-123"
 		indexedResponses := map[string]support.NotifyResponse{}
 
@@ -117,7 +117,7 @@ var _ = Describe("Sending notifications to all users in a space", func() {
 	It("returns a 404 if the space cannot be found", func() {
 		client := support.NewClient(Servers.Notifications.URL())
 		clientID := "notifications-sender"
-		clientToken := GetClientTokenFor(clientID)
+		clientToken := GetClientTokenFor(clientID, "uaa")
 		spaceID := "banana"
 
 		status, _, err := client.Notify.Space(clientToken.Access, spaceID, support.Notify{

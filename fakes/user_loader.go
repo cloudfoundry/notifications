@@ -1,6 +1,6 @@
 package fakes
 
-import "github.com/pivotal-cf/uaa-sso-golang/uaa"
+import "github.com/cloudfoundry-incubator/notifications/uaa"
 
 type UserLoader struct {
 	Users       map[string]uaa.User

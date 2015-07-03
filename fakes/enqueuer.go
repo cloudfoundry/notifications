@@ -20,6 +20,7 @@ type Enqueuer struct {
 			Scope           string
 			VCAPRequestID   string
 			RequestReceived time.Time
+			UAAHost         string
 		}
 		Responses []services.Response
 	}
@@ -30,7 +31,7 @@ func NewEnqueuer() *Enqueuer {
 }
 
 func (m *Enqueuer) Enqueue(conn models.ConnectionInterface, users []services.User, options services.Options,
-	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, scope, vcapRequestID string, reqReceived time.Time) []services.Response {
+	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []services.Response {
 
 	m.EnqueueCall.Args.Connection = conn
 	m.EnqueueCall.Args.Users = users
@@ -38,6 +39,7 @@ func (m *Enqueuer) Enqueue(conn models.ConnectionInterface, users []services.Use
 	m.EnqueueCall.Args.Space = space
 	m.EnqueueCall.Args.Org = org
 	m.EnqueueCall.Args.Client = client
+	m.EnqueueCall.Args.UAAHost = uaaHost
 	m.EnqueueCall.Args.Scope = scope
 	m.EnqueueCall.Args.VCAPRequestID = vcapRequestID
 	m.EnqueueCall.Args.RequestReceived = reqReceived

@@ -44,6 +44,7 @@ var _ = Describe("UserStrategy", func() {
 						Doctype:        "<html>",
 					},
 				},
+				UAAHost: "uaa",
 				Kind: services.DispatchKind{
 					ID:          "forgot_waterbottle",
 					Description: "Water Bottle Reminder",
@@ -83,6 +84,7 @@ var _ = Describe("UserStrategy", func() {
 			Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{}))
 			Expect(enqueuer.EnqueueCall.Args.Client).To(Equal("mister-client"))
 			Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal(""))
+			Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("uaa"))
 			Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
 			Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
 		})

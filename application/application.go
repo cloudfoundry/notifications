@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/viron"
@@ -78,7 +79,7 @@ func (app Application) ConfigureSMTP(logger lager.Logger) {
 }
 
 func (app Application) RetrieveUAAPublicKey(logger lager.Logger) {
-	uaaClient := app.mother.WrappedUAAClient()
+	uaaClient := app.mother.UAAClient()
 
 	key, err := uaaClient.GetTokenKey()
 	if err != nil {
@@ -101,13 +102,15 @@ func (app Application) StartQueueGauge() {
 }
 
 func (app Application) StartWorkers() {
+	zonedUAAClient := uaa.NewZonedUAAClient(app.env.UAAClientID, app.env.UAAClientSecret, app.env.VerifySSL, UAAPublicKey)
+
 	WorkerGenerator{
 		InstanceIndex: app.env.VCAPApplication.InstanceIndex,
 		Count:         WorkerCount,
 	}.Work(func(i int) Worker {
 		worker := postal.NewDeliveryWorker(i, app.mother.Logger(), app.mother.MailClient(), app.mother.Queue(),
 			app.mother.GlobalUnsubscribesRepo(), app.mother.UnsubscribesRepo(), app.mother.KindsRepo(), app.mother.MessagesRepo(),
-			app.mother.Database(), app.env.DBLoggingEnabled, app.env.Sender, app.env.EncryptionKey, app.mother.UserLoader(), app.mother.TemplatesLoader(), app.mother.ReceiptsRepo(), app.mother.TokenLoader())
+			app.mother.Database(), app.env.DBLoggingEnabled, app.env.Sender, app.env.EncryptionKey, app.env.UAAHost, postal.NewUserLoader(zonedUAAClient), app.mother.TemplatesLoader(), app.mother.ReceiptsRepo(), app.mother.TokenLoader(), uaa.NewZonedTokenLoader(zonedUAAClient))
 		return &worker
 	})
 }

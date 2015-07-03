@@ -28,7 +28,8 @@ var Servers struct {
 	Notifications servers.Notifications
 	SMTP          *servers.SMTP
 	CC            servers.CC
-	UAA           servers.UAA
+	UAA           *servers.UAA
+	ZonedUAA      *servers.UAA
 }
 
 func TestAcceptanceSuite(t *testing.T) {
@@ -44,7 +45,10 @@ var _ = BeforeSuite(func() {
 	Servers.SMTP = servers.NewSMTP()
 	Servers.SMTP.Boot()
 
-	Servers.UAA = servers.NewUAA()
+	Servers.ZonedUAA = servers.NewUAA("testzone1")
+	Servers.ZonedUAA.Boot()
+
+	Servers.UAA = servers.NewUAA("uaa")
 	Servers.UAA.Boot()
 
 	Servers.CC = servers.NewCC()
@@ -97,8 +101,8 @@ func ResetDatabase() {
 	gobbleDB.Connection.TruncateTables()
 }
 
-func GetClientTokenFor(clientID string) uaa.Token {
-	token, err := GetUAAClientFor(clientID).GetClientToken()
+func GetClientTokenFor(clientID, zone string) uaa.Token {
+	token, err := GetUAAClientFor(clientID, zone).GetClientToken()
 	if err != nil {
 		panic(err)
 	}
@@ -107,7 +111,7 @@ func GetClientTokenFor(clientID string) uaa.Token {
 }
 
 func GetUserTokenFor(code string) uaa.Token {
-	token, err := GetUAAClientFor("notifications-sender").Exchange(code)
+	token, err := GetUAAClientFor("notifications-sender", "uaa").Exchange(code)
 	if err != nil {
 		panic(err)
 	}
@@ -115,7 +119,12 @@ func GetUserTokenFor(code string) uaa.Token {
 	return token
 }
 
-func GetUAAClientFor(clientID string) uaa.UAA {
-	env := application.NewEnvironment()
-	return uaa.NewUAA("", env.UAAHost, clientID, "secret", "")
+func GetUAAClientFor(clientID string, zone string) uaa.UAA {
+	var host string
+	if zone == "testzone1" {
+		host = Servers.ZonedUAA.ServerURL
+	} else {
+		host = Servers.UAA.ServerURL
+	}
+	return uaa.NewUAA("", host, clientID, "secret", "")
 }

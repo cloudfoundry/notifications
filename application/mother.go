@@ -22,9 +22,9 @@ import (
 )
 
 type Mother struct {
-	wrappedUAAClient *uaa.UAAClient
-	sqlDB            *sql.DB
-	mutex            sync.Mutex
+	uaaClient *uaa.UAAClient
+	sqlDB     *sql.DB
+	mutex     sync.Mutex
 }
 
 func NewMother() *Mother {
@@ -47,22 +47,22 @@ func (m Mother) UserStrategy() services.UserStrategy {
 	return services.NewUserStrategy(m.Enqueuer())
 }
 
-func (m Mother) WrappedUAAClient() *uaa.UAAClient {
+func (m Mother) UAAClient() *uaa.UAAClient {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	if m.wrappedUAAClient == nil {
+	if m.uaaClient == nil {
 		env := NewEnvironment()
 		client := uaa.NewUAAClient(env.UAAHost, env.UAAClientID, env.UAAClientSecret, env.VerifySSL)
-		m.wrappedUAAClient = &client
+		m.uaaClient = &client
 	}
 
-	return m.wrappedUAAClient
+	return m.uaaClient
 }
 
 func (m Mother) SpaceStrategy() services.SpaceStrategy {
 	env := NewEnvironment()
-	uaaClient := m.WrappedUAAClient()
+	uaaClient := m.UAAClient()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
 	tokenLoader := postal.NewTokenLoader(uaaClient)
@@ -76,7 +76,7 @@ func (m Mother) SpaceStrategy() services.SpaceStrategy {
 
 func (m Mother) OrganizationStrategy() services.OrganizationStrategy {
 	env := NewEnvironment()
-	uaaClient := m.WrappedUAAClient()
+	uaaClient := m.UAAClient()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
 	tokenLoader := postal.NewTokenLoader(uaaClient)
@@ -88,7 +88,7 @@ func (m Mother) OrganizationStrategy() services.OrganizationStrategy {
 }
 
 func (m Mother) EveryoneStrategy() services.EveryoneStrategy {
-	uaaClient := m.WrappedUAAClient()
+	uaaClient := m.UAAClient()
 	tokenLoader := postal.NewTokenLoader(uaaClient)
 	allUsers := services.NewAllUsers(uaaClient)
 	enqueuer := m.Enqueuer()
@@ -98,7 +98,7 @@ func (m Mother) EveryoneStrategy() services.EveryoneStrategy {
 
 func (m Mother) UAAScopeStrategy() services.UAAScopeStrategy {
 	env := NewEnvironment()
-	uaaClient := m.WrappedUAAClient()
+	uaaClient := m.UAAClient()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
 	tokenLoader := postal.NewTokenLoader(uaaClient)
@@ -133,14 +133,8 @@ func (m Mother) TemplatesLoader() postal.TemplatesLoader {
 	return postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
 }
 
-func (m Mother) UserLoader() postal.UserLoader {
-	uaaClient := m.WrappedUAAClient()
-
-	return postal.NewUserLoader(uaaClient)
-}
-
 func (m Mother) TokenLoader() postal.TokenLoader {
-	uaaClient := m.WrappedUAAClient()
+	uaaClient := m.UAAClient()
 
 	return postal.NewTokenLoader(uaaClient)
 }

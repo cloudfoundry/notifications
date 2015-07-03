@@ -23,7 +23,7 @@ var _ = Describe("Preferences Endpoint", func() {
 
 	BeforeEach(func() {
 		client = support.NewClient(Servers.Notifications.URL())
-		clientToken = GetClientTokenFor("notifications-sender")
+		clientToken = GetClientTokenFor("notifications-sender", "uaa")
 		userGUID = "user-123"
 
 		By("registering a client with a notification", func() {

@@ -3,7 +3,7 @@ package postal_test
 import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
+	"github.com/cloudfoundry-incubator/notifications/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -12,7 +12,7 @@ import (
 var _ = Describe("UserLoader", func() {
 	var loader postal.UserLoader
 	var token string
-	var uaaClient *fakes.UAAClient
+	var uaaClient *fakes.ZonedUAAClient
 
 	Describe("Load", func() {
 		BeforeEach(func() {
@@ -26,10 +26,7 @@ var _ = Describe("UserLoader", func() {
 			}
 			token = fakes.BuildToken(tokenHeader, tokenClaims)
 
-			uaaClient = fakes.NewUAAClient()
-			uaaClient.ClientToken = uaa.Token{
-				Access: token,
-			}
+			uaaClient = fakes.NewZonedUAAClient()
 			uaaClient.UsersByID = map[string]uaa.User{
 				"user-123": {
 					Emails: []string{"user-123@example.com"},

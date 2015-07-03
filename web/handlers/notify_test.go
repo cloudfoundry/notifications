@@ -76,6 +76,7 @@ var _ = Describe("Notify", func() {
 				}
 				tokenClaims = map[string]interface{}{
 					"client_id": "mister-client",
+					"iss":       "zone-uaa-host",
 					"exp":       int64(3404281214),
 					"scope":     []string{"notifications.write", "critical_notifications.write"},
 				}
@@ -124,6 +125,7 @@ var _ = Describe("Notify", func() {
 						ID:          "test_email",
 						Description: "Instance Down",
 					},
+					UAAHost: "zone-uaa-host",
 					VCAPRequest: services.DispatchVCAPRequest{
 						ID:          "some-request-id",
 						ReceiptTime: reqReceivedTime,

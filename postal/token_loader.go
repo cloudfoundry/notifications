@@ -5,15 +5,15 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
+	"github.com/cloudfoundry-incubator/notifications/uaa"
 )
 
 type uaaTokenInterface interface {
-	uaa.SetTokenInterface
-	uaa.GetClientTokenInterface
+	SetToken(string)
+	GetClientToken() (string, error)
 }
 
-var token uaa.Token
+var accessToken string
 var mutex sync.Mutex
 
 type TokenLoader struct {
@@ -37,24 +37,24 @@ func (loader TokenLoader) Load() (string, error) {
 	defer mutex.Unlock()
 
 	if loader.newTokenRequired() {
-		token, err = loader.getNewClientToken()
+		accessToken, err = loader.getNewClientToken()
 		if err != nil {
 			err = UAAErrorFor(err)
 			return "", err
 		}
 	}
-	loader.uaaClient.SetToken(token.Access)
+	loader.uaaClient.SetToken(accessToken)
 
-	return token.Access, nil
+	return accessToken, nil
 }
 
 func ResetLoader() {
-	token = uaa.Token{}
+	accessToken = ""
 }
 
 func (loader TokenLoader) expired() bool {
 	toleratedRequestTime := time.Duration(30 * time.Second)
-	expired, err := token.ExpiresBefore(time.Duration(toleratedRequestTime))
+	expired, err := uaa.AccessTokenExpiresBefore(accessToken, time.Duration(toleratedRequestTime))
 	if err != nil {
 		return true
 	}
@@ -63,13 +63,13 @@ func (loader TokenLoader) expired() bool {
 }
 
 func (loader TokenLoader) newTokenRequired() bool {
-	return token.Access == "" || loader.expired()
+	return accessToken == "" || loader.expired()
 }
 
-func (loader TokenLoader) getNewClientToken() (uaa.Token, error) {
+func (loader TokenLoader) getNewClientToken() (string, error) {
 	then := time.Now()
 
-	token, err := loader.uaaClient.GetClientToken()
+	at, err := loader.uaaClient.GetClientToken()
 
 	duration := time.Now().Sub(then)
 
@@ -78,5 +78,5 @@ func (loader TokenLoader) getNewClientToken() (uaa.Token, error) {
 		"value": duration.Seconds(),
 	}).Log()
 
-	return token, err
+	return at, err
 }

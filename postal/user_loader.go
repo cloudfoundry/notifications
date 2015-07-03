@@ -4,12 +4,11 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
+	"github.com/cloudfoundry-incubator/notifications/uaa"
 )
 
 type uaaUsersInterface interface {
-	uaa.UsersEmailsByIDsInterface
-	uaa.SetTokenInterface
+	UsersEmailsByIDs(string, ...string) ([]uaa.User, error)
 }
 
 type UserLoader struct {
@@ -29,9 +28,7 @@ func NewUserLoader(uaaClient uaaUsersInterface) UserLoader {
 func (loader UserLoader) Load(guids []string, token string) (map[string]uaa.User, error) {
 	users := make(map[string]uaa.User)
 
-	loader.uaaClient.SetToken(token)
-
-	usersByIDs, err := loader.fetchUsersByIDs(guids)
+	usersByIDs, err := loader.fetchUsersByIDs(token, guids)
 	if err != nil {
 		err = UAAErrorFor(err)
 		return users, err
@@ -50,10 +47,10 @@ func (loader UserLoader) Load(guids []string, token string) (map[string]uaa.User
 	return users, nil
 }
 
-func (loader UserLoader) fetchUsersByIDs(guids []string) ([]uaa.User, error) {
+func (loader UserLoader) fetchUsersByIDs(token string, guids []string) ([]uaa.User, error) {
 	then := time.Now()
 
-	usersByIDs, err := loader.uaaClient.UsersEmailsByIDs(guids...)
+	usersByIDs, err := loader.uaaClient.UsersEmailsByIDs(token, guids...)
 
 	duration := time.Now().Sub(then)
 

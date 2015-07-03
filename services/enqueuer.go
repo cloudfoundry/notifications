@@ -34,13 +34,14 @@ type Delivery struct {
 	Space           cf.CloudControllerSpace
 	Organization    cf.CloudControllerOrganization
 	ClientID        string
+	UAAHost         string
 	Scope           string
 	VCAPRequestID   string
 	RequestReceived time.Time
 }
 
 type EnqueuerInterface interface {
-	Enqueue(models.ConnectionInterface, []User, Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string, string, time.Time) []Response
+	Enqueue(models.ConnectionInterface, []User, Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string, string, string, time.Time) []Response
 }
 
 type Enqueuer struct {
@@ -57,7 +58,7 @@ func NewEnqueuer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc, 
 	}
 }
 
-func (enqueuer Enqueuer) Enqueue(conn models.ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, scope, vcapRequestID string, reqReceived time.Time) []Response {
+func (enqueuer Enqueuer) Enqueue(conn models.ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []Response {
 
 	responses := []Response{}
 	jobsByMessageID := map[string]gobble.Job{}
@@ -76,6 +77,7 @@ func (enqueuer Enqueuer) Enqueue(conn models.ConnectionInterface, users []User, 
 			Organization:    organization,
 			ClientID:        clientID,
 			MessageID:       messageID,
+			UAAHost:         uaaHost,
 			Scope:           scope,
 			VCAPRequestID:   vcapRequestID,
 			RequestReceived: reqReceived,

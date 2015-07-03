@@ -24,7 +24,7 @@ var _ = Describe("Getting a Message's status", func() {
 	}
 
 	BeforeEach(func() {
-		clientToken = GetClientTokenFor("notification-sender")
+		clientToken = GetClientTokenFor("notification-sender", "uaa")
 		client = support.NewClient(Servers.Notifications.URL())
 	})
 
