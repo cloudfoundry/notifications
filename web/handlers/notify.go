@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -50,7 +52,11 @@ func (handler Notify) Execute(connection models.ConnectionInterface, req *http.R
 	token := context.Get("token").(*jwt.Token) // TODO: (rm) get rid of the context object, just pass in the token
 	clientID := token.Claims["client_id"].(string)
 
-	uaaHost := token.Claims["iss"].(string)
+	tokenIssuerURL, err := url.Parse(token.Claims["iss"].(string))
+	if err != nil {
+		return []byte{}, errors.New("Token issuer URL invalid")
+	}
+	uaaHost := tokenIssuerURL.Scheme + "://" + tokenIssuerURL.Host
 
 	client, kind, err := handler.finder.ClientAndKind(context.Get("database").(models.DatabaseInterface), clientID, parameters.KindID)
 	if err != nil {

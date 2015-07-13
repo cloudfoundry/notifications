@@ -2,6 +2,7 @@ package uaa
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -39,7 +40,12 @@ func (z ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]User, e
 		return nil, err
 	}
 
-	uaaClient := uaaSSOGolang.NewUAA("", parsedToken.Claims["iss"].(string), z.clientID, z.clientSecret, "")
+	tokenIssuerURL, err := url.Parse(parsedToken.Claims["iss"].(string))
+	if err != nil {
+		return nil, err
+	}
+	uaaHost := tokenIssuerURL.Scheme + "://" + tokenIssuerURL.Host
+	uaaClient := uaaSSOGolang.NewUAA("", uaaHost, z.clientID, z.clientSecret, "")
 	uaaClient.VerifySSL = z.verifySSL
 	uaaClient.SetToken(token)
 

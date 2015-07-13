@@ -76,7 +76,7 @@ var _ = Describe("Notify", func() {
 				}
 				tokenClaims = map[string]interface{}{
 					"client_id": "mister-client",
-					"iss":       "zone-uaa-host",
+					"iss":       "http://zone-uaa-host/oauth/token",
 					"exp":       int64(3404281214),
 					"scope":     []string{"notifications.write", "critical_notifications.write"},
 				}
@@ -125,7 +125,7 @@ var _ = Describe("Notify", func() {
 						ID:          "test_email",
 						Description: "Instance Down",
 					},
-					UAAHost: "zone-uaa-host",
+					UAAHost: "http://zone-uaa-host",
 					VCAPRequest: services.DispatchVCAPRequest{
 						ID:          "some-request-id",
 						ReceiptTime: reqReceivedTime,
@@ -229,6 +229,21 @@ var _ = Describe("Notify", func() {
 
 						_, err = handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
 						Expect(err).To(BeAssignableToTypeOf(postal.NewCriticalNotificationError("test_email")))
+					})
+				})
+
+				Context("when the token is mal-formed", func() {
+					It("returns the error", func() {
+						tokenClaims["iss"] = "%gh&%ij?"
+						rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
+						token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
+							return []byte(application.UAAPublicKey), nil
+						})
+
+						context.Set("token", token)
+
+						_, err = handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
+						Expect(err).To(Equal(errors.New("Token issuer URL invalid")))
 					})
 				})
 			})

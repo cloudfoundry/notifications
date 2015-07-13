@@ -74,7 +74,7 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
 	token := jwt.New(jwt.GetSigningMethod("RS256"))
 	token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 	token.Claims["client_id"] = clientID
-	token.Claims["iss"] = "http://" + req.Host
+	token.Claims["iss"] = "http://" + req.Host + "/oauth/token"
 
 	switch req.Form.Get("grant_type") {
 	case "client_credentials":
