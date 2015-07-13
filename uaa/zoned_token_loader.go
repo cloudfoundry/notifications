@@ -1,5 +1,11 @@
 package uaa
 
+import (
+	"time"
+
+	"github.com/cloudfoundry-incubator/notifications/metrics"
+)
+
 type ZonedTokenLoader struct {
 	uaaClient UAAClientInterface
 }
@@ -15,6 +21,15 @@ func NewZonedTokenLoader(uaaClient UAAClientInterface) *ZonedTokenLoader {
 }
 
 func (z *ZonedTokenLoader) Load(uaaHost string) (string, error) {
+	then := time.Now()
+
 	token, err := z.uaaClient.ZonedGetClientToken(uaaHost)
+
+	duration := time.Now().Sub(then)
+
+	metrics.NewMetric("histogram", map[string]interface{}{
+		"name":  "notifications.external-requests.uaa.client-token",
+		"value": duration.Seconds(),
+	}).Log()
 	return token, err
 }
