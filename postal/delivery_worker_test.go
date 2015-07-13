@@ -66,7 +66,6 @@ var _ = Describe("DeliveryWorker", func() {
 		fakeUserEmail          string
 		templateLoader         *fakes.TemplatesLoader
 		receiptsRepo           *fakes.ReceiptsRepo
-		tokenLoader            *fakes.TokenLoader
 		zonedTokenLoader       *fakes.ZonedTokenLoader
 		messageID              string
 	)
@@ -92,7 +91,6 @@ var _ = Describe("DeliveryWorker", func() {
 		userLoader = fakes.NewUserLoader()
 		userLoader.Users["user-123"] = uaa.User{Emails: []string{fakeUserEmail}}
 		userLoader.Users["user-456"] = uaa.User{Emails: []string{"user-456@example.com"}}
-		tokenLoader = fakes.NewTokenLoader()
 		zonedTokenLoader = fakes.NewZonedTokenLoader()
 		templateLoader = fakes.NewTemplatesLoader()
 		templateLoader.Templates = postal.Templates{
@@ -103,7 +101,7 @@ var _ = Describe("DeliveryWorker", func() {
 		receiptsRepo = fakes.NewReceiptsRepo()
 
 		worker = postal.NewDeliveryWorker(id, logger, mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
-			messagesRepo, database, false, sender, encryptionKey, "canonical-uaa-host", userLoader, templateLoader, receiptsRepo, tokenLoader, zonedTokenLoader)
+			messagesRepo, database, false, sender, encryptionKey, userLoader, templateLoader, receiptsRepo, zonedTokenLoader)
 
 		messageID = "randomly-generated-guid"
 		delivery = postal.Delivery{
@@ -161,7 +159,6 @@ var _ = Describe("DeliveryWorker", func() {
 			worker.Deliver(&job)
 
 			Expect(zonedTokenLoader.LoadArgument).To(Equal("zoned-uaa-host"))
-			Expect(tokenLoader.LoadWasCalled).To(BeFalse())
 		})
 	})
 
@@ -216,7 +213,7 @@ var _ = Describe("DeliveryWorker", func() {
 			sum := md5.Sum([]byte("banana's are so very tasty"))
 			encryptionKey := sum[:]
 			worker = postal.NewDeliveryWorker(id, logger, mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
-				messagesRepo, database, true, "from@email.com", encryptionKey, "canonical-uaa-host", userLoader, templateLoader, receiptsRepo, tokenLoader, zonedTokenLoader)
+				messagesRepo, database, true, "from@email.com", encryptionKey, userLoader, templateLoader, receiptsRepo, zonedTokenLoader)
 			worker.Deliver(&job)
 			database.TraceLogger.Printf("some statement")
 

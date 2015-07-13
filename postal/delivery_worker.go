@@ -32,11 +32,10 @@ type Delivery struct {
 type DeliveryWorker struct {
 	gobble.Worker
 
-	dbTrace          bool
-	sender           string
-	encryptionKey    []byte
-	identifier       int
-	canonicalUAAHost string
+	dbTrace       bool
+	sender        string
+	encryptionKey []byte
+	identifier    int
 
 	baseLogger lager.Logger
 	logger     lager.Logger
@@ -44,7 +43,6 @@ type DeliveryWorker struct {
 	mailClient       mail.ClientInterface
 	userLoader       UserLoaderInterface
 	templatesLoader  TemplatesLoaderInterface
-	tokenLoader      TokenLoaderInterface
 	zonedTokenLoader ZonedTokenLoaderInterface
 	database         models.DatabaseInterface
 
@@ -62,8 +60,8 @@ type ZonedTokenLoaderInterface interface {
 func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
 	globalUnsubscribesRepo GlobalUnsubscribesRepo, unsubscribesRepo UnsubscribesRepo,
 	kindsRepo KindsRepo, messagesRepo MessagesRepo,
-	database models.DatabaseInterface, dbTrace bool, sender string, encryptionKey []byte, canonicalUAAHost string, userLoader UserLoaderInterface,
-	templatesLoader TemplatesLoaderInterface, receiptsRepo ReceiptsRepo, tokenLoader TokenLoaderInterface, zonedTokenLoader ZonedTokenLoaderInterface) DeliveryWorker {
+	database models.DatabaseInterface, dbTrace bool, sender string, encryptionKey []byte, userLoader UserLoaderInterface,
+	templatesLoader TemplatesLoaderInterface, receiptsRepo ReceiptsRepo, zonedTokenLoader ZonedTokenLoaderInterface) DeliveryWorker {
 
 	logger = logger.Session("worker", lager.Data{"worker_id": id})
 
@@ -80,9 +78,7 @@ func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterf
 		dbTrace:                dbTrace,
 		sender:                 sender,
 		encryptionKey:          encryptionKey,
-		canonicalUAAHost:       canonicalUAAHost,
 		userLoader:             userLoader,
-		tokenLoader:            tokenLoader,
 		zonedTokenLoader:       zonedTokenLoader,
 		templatesLoader:        templatesLoader,
 		receiptsRepo:           receiptsRepo,
