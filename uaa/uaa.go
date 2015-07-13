@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/pivotal-cf-experimental/warrant"
 	uaaSSOGolang "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
@@ -26,10 +27,11 @@ func NewZonedUAAClient(clientID, clientSecret string, verifySSL bool, uaaPublicK
 }
 
 func (z ZonedUAAClient) ZonedGetClientToken(host string) (string, error) {
-	uaaClient := uaaSSOGolang.NewUAA("", host, z.clientID, z.clientSecret, "")
-	uaaClient.VerifySSL = z.verifySSL
-	token, err := uaaClient.GetClientToken()
-	return token.Access, err
+	uaaClient := warrant.New(warrant.Config{
+		Host:          host,
+		SkipVerifySSL: !z.verifySSL,
+	})
+	return uaaClient.Clients.GetToken(z.clientID, z.clientSecret)
 }
 
 func (z ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]User, error) {
