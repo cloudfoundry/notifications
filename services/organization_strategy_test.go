@@ -15,7 +15,7 @@ import (
 var _ = Describe("Organization Strategy", func() {
 	var (
 		strategy           services.OrganizationStrategy
-		tokenLoader        *fakes.TokenLoader
+		tokenLoader        *fakes.ZonedTokenLoader
 		organizationLoader *fakes.OrganizationLoader
 		enqueuer           *fakes.Enqueuer
 		conn               *fakes.Connection
@@ -32,9 +32,10 @@ var _ = Describe("Organization Strategy", func() {
 		tokenClaims := map[string]interface{}{
 			"client_id": "mister-client",
 			"exp":       int64(3404281214),
+			"iss":       "testzone1",
 			"scope":     []string{"notifications.write"},
 		}
-		tokenLoader = fakes.NewTokenLoader()
+		tokenLoader = fakes.NewZonedTokenLoader()
 		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
 		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
@@ -77,7 +78,7 @@ var _ = Describe("Organization Strategy", func() {
 						ID:          "some-vcap-request-id",
 						ReceiptTime: requestReceived,
 					},
-					UAAHost: "uaa",
+					UAAHost: "testzone1",
 				})
 				Expect(err).NotTo(HaveOccurred())
 
@@ -113,7 +114,8 @@ var _ = Describe("Organization Strategy", func() {
 				Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal(""))
 				Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
 				Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
-				Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("uaa"))
+				Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("testzone1"))
+				Expect(tokenLoader.LoadArgument).To(Equal("testzone1"))
 			})
 
 			Context("when the org role field is set", func() {

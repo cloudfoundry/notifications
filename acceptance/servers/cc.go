@@ -5,7 +5,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"regexp"
+	"strings"
 
+	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 )
 
@@ -107,74 +111,111 @@ var CCGetOrg = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 })
 
 var CCGetOrgUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	json := `{
-       "total_results": 2,
-       "total_pages": 1,
-       "prev_url": null,
-       "next_url": null,
-       "resources": [
-          {
-             "metadata": {
-                "guid": "user-456",
-                "url": "/v2/users/user-456",
-                "created_at": "2014-07-16T21:58:29+00:00",
-                "updated_at": null
-             },
-             "entity": {
-                "admin": false,
-                "active": true,
-                "default_space_guid": null,
-                "spaces_url": "/v2/users/user-456/spaces",
-                "organizations_url": "/v2/users/user-456/organizations",
-                "managed_organizations_url": "/v2/users/user-456/managed_organizations",
-                "billing_managed_organizations_url": "/v2/users/user-456/billing_managed_organizations",
-                "audited_organizations_url": "/v2/users/user-456/audited_organizations",
-                "managed_spaces_url": "/v2/users/user-456/managed_spaces",
-                "audited_spaces_url": "/v2/users/user-456/audited_spaces"
-             }
-          },
-          {
-             "metadata": {
-                "guid": "user-789",
-                "url": "/v2/users/user-789",
-                "created_at": "2014-07-18T22:08:18+00:00",
-                "updated_at": null
-             },
-             "entity": {
-                "admin": false,
-                "active": false,
-                "default_space_guid": null,
-                "spaces_url": "/v2/users/user-789/spaces",
-                "organizations_url": "/v2/users/user-789/organizations",
-                "managed_organizations_url": "/v2/users/user-789/managed_organizations",
-                "billing_managed_organizations_url": "/v2/users/user-789/billing_managed_organizations",
-                "audited_organizations_url": "/v2/users/user-789/audited_organizations",
-                "managed_spaces_url": "/v2/users/user-789/managed_spaces",
-                "audited_spaces_url": "/v2/users/user-789/audited_spaces"
-             }
-          },
-          {
-             "metadata": {
-                "guid": "user-000",
-                "url": "/v2/users/user-000",
-                "created_at": "2014-07-16T21:58:29+00:00",
-                "updated_at": null
-             },
-             "entity": {
-                "admin": false,
-                "active": true,
-                "default_space_guid": null,
-                "spaces_url": "/v2/users/user-000/spaces",
-                "organizations_url": "/v2/users/user-000/organizations",
-                "managed_organizations_url": "/v2/users/user-000/managed_organizations",
-                "billing_managed_organizations_url": "/v2/users/user-000/billing_managed_organizations",
-                "audited_organizations_url": "/v2/users/user-000/audited_organizations",
-                "managed_spaces_url": "/v2/users/user-000/managed_spaces",
-                "audited_spaces_url": "/v2/users/user-000/audited_spaces"
-             }
-          }
-       ]
-    }`
+	token := strings.Split(req.Header.Get("Authorization"), " ")[1]
+	jwtToken, _ := jwt.Parse(token, func(*jwt.Token) (interface{}, error) {
+		return []byte(fakes.UAAPublicKey), nil
+	})
+
+	var json string
+	if regexp.MustCompile(string(os.Getenv("UAA_HOST"))).MatchString(jwtToken.Claims["iss"].(string)) {
+		json = `{
+		   "total_results": 2,
+		   "total_pages": 1,
+		   "prev_url": null,
+		   "next_url": null,
+		   "resources": [
+			  {
+				 "metadata": {
+					"guid": "user-456",
+					"url": "/v2/users/user-456",
+					"created_at": "2014-07-16T21:58:29+00:00",
+					"updated_at": null
+				 },
+				 "entity": {
+					"admin": false,
+					"active": true,
+					"default_space_guid": null,
+					"spaces_url": "/v2/users/user-456/spaces",
+					"organizations_url": "/v2/users/user-456/organizations",
+					"managed_organizations_url": "/v2/users/user-456/managed_organizations",
+					"billing_managed_organizations_url": "/v2/users/user-456/billing_managed_organizations",
+					"audited_organizations_url": "/v2/users/user-456/audited_organizations",
+					"managed_spaces_url": "/v2/users/user-456/managed_spaces",
+					"audited_spaces_url": "/v2/users/user-456/audited_spaces"
+				 }
+			  },
+			  {
+				 "metadata": {
+					"guid": "user-789",
+					"url": "/v2/users/user-789",
+					"created_at": "2014-07-18T22:08:18+00:00",
+					"updated_at": null
+				 },
+				 "entity": {
+					"admin": false,
+					"active": false,
+					"default_space_guid": null,
+					"spaces_url": "/v2/users/user-789/spaces",
+					"organizations_url": "/v2/users/user-789/organizations",
+					"managed_organizations_url": "/v2/users/user-789/managed_organizations",
+					"billing_managed_organizations_url": "/v2/users/user-789/billing_managed_organizations",
+					"audited_organizations_url": "/v2/users/user-789/audited_organizations",
+					"managed_spaces_url": "/v2/users/user-789/managed_spaces",
+					"audited_spaces_url": "/v2/users/user-789/audited_spaces"
+				 }
+			  },
+			  {
+				 "metadata": {
+					"guid": "user-000",
+					"url": "/v2/users/user-000",
+					"created_at": "2014-07-16T21:58:29+00:00",
+					"updated_at": null
+				 },
+				 "entity": {
+					"admin": false,
+					"active": true,
+					"default_space_guid": null,
+					"spaces_url": "/v2/users/user-000/spaces",
+					"organizations_url": "/v2/users/user-000/organizations",
+					"managed_organizations_url": "/v2/users/user-000/managed_organizations",
+					"billing_managed_organizations_url": "/v2/users/user-000/billing_managed_organizations",
+					"audited_organizations_url": "/v2/users/user-000/audited_organizations",
+					"managed_spaces_url": "/v2/users/user-000/managed_spaces",
+					"audited_spaces_url": "/v2/users/user-000/audited_spaces"
+				 }
+			  }
+		   ]
+		}`
+	} else {
+		json = `{
+		   "total_results": 1,
+		   "total_pages": 1,
+		   "prev_url": null,
+		   "next_url": null,
+		   "resources": [
+			  {
+				 "metadata": {
+					"guid": "another-user-in-zone",
+					"url": "/v2/users/another-user-in-zone",
+					"created_at": "2014-07-16T21:58:29+00:00",
+					"updated_at": null
+				 },
+				 "entity": {
+					"admin": false,
+					"active": true,
+					"default_space_guid": null,
+					"spaces_url": "/v2/users/another-user-in-zone/spaces",
+					"organizations_url": "/v2/users/another-user-in-zone/organizations",
+					"managed_organizations_url": "/v2/users/another-user-in-zone/managed_organizations",
+					"billing_managed_organizations_url": "/v2/users/another-user-in-zone/billing_managed_organizations",
+					"audited_organizations_url": "/v2/users/another-user-in-zone/audited_organizations",
+					"managed_spaces_url": "/v2/users/another-user-in-zone/managed_spaces",
+					"audited_spaces_url": "/v2/users/another-user-in-zone/audited_spaces"
+				 }
+			  }
+			]
+		}`
+	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(json))

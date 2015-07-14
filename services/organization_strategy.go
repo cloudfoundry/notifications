@@ -8,14 +8,13 @@ const (
 )
 
 type OrganizationStrategy struct {
-	tokenLoader        TokenLoader
+	tokenLoader        ZonedTokenLoaderInterface
 	organizationLoader OrganizationLoaderInterface
 	findsUserGUIDs     FindsUserGUIDsInterface
 	enqueuer           EnqueuerInterface
 }
 
-func NewOrganizationStrategy(tokenLoader TokenLoader, organizationLoader OrganizationLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface) OrganizationStrategy {
-
+func NewOrganizationStrategy(tokenLoader ZonedTokenLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface) OrganizationStrategy {
 	return OrganizationStrategy{
 		tokenLoader:        tokenLoader,
 		organizationLoader: organizationLoader,
@@ -48,7 +47,7 @@ func (strategy OrganizationStrategy) Dispatch(dispatch Dispatch) ([]Response, er
 		options.Endorsement = OrganizationRoleEndorsement
 	}
 
-	token, err := strategy.tokenLoader.Load()
+	token, err := strategy.tokenLoader.Load(dispatch.UAAHost)
 	if err != nil {
 		return responses, err
 	}
