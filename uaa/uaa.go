@@ -47,16 +47,23 @@ func (z ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]User, e
 		return nil, err
 	}
 	uaaHost := tokenIssuerURL.Scheme + "://" + tokenIssuerURL.Host
-	uaaClient := uaaSSOGolang.NewUAA("", uaaHost, z.clientID, z.clientSecret, "")
-	uaaClient.VerifySSL = z.verifySSL
-	uaaClient.SetToken(token)
-
-	users, err := uaaClient.UsersEmailsByIDs(ids...)
-	myUsers := make([]User, len(users))
-	for index, user := range users {
-		myUsers[index].fromSSOGolangUser(user)
+	uaaClient := warrant.New(warrant.Config{
+		Host:          uaaHost,
+		SkipVerifySSL: !z.verifySSL,
+	})
+	myUsers := make([]User, 0, len(ids))
+	for _, id := range ids {
+		users, err := uaaClient.Users.List(warrant.Query{Filter: fmt.Sprintf("Id eq \"%s\"", id)}, token)
+		if err != nil {
+			return nil, err
+		}
+		user := User{}
+		for _, warrantUser := range users {
+			user.fromWarrantUser(warrantUser)
+			myUsers = append(myUsers, user)
+		}
 	}
-	return myUsers, err
+	return myUsers, nil
 }
 
 type UAAClient struct {
@@ -87,6 +94,11 @@ func (u *UAAClient) GetClientToken() (string, error) {
 func (u *UAAClient) UsersGUIDsByScope(scope string) ([]string, error) {
 	guids, err := u.Client.UsersGUIDsByScope(scope)
 	return guids, err
+}
+
+func (u *User) fromWarrantUser(user warrant.User) {
+	u.ID = user.ID
+	u.Emails = user.Emails
 }
 
 func (u *User) fromSSOGolangUser(user uaaSSOGolang.User) {

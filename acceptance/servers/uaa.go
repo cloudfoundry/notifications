@@ -27,7 +27,7 @@ func NewUAA(zone string) *UAA {
 	router := mux.NewRouter()
 	router.HandleFunc("/oauth/token", UAAPostOAuthToken).Methods("POST")
 	router.HandleFunc("/token_key", UAAGetTokenKey).Methods("GET")
-	router.Path("/Users").Queries("attributes", "").Handler(UAAGetUser(zone)).Methods("GET")
+	router.Path("/Users").Queries("filter", "").Handler(UAAGetUser(zone)).Methods("GET")
 	router.HandleFunc("/Users", UAAGetUsers).Methods("GET")
 	router.HandleFunc("/Groups", UAAGetUsersByScope).Methods("GET")
 	router.HandleFunc("/{anything:.*}", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
