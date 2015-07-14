@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/cloudfoundry-incubator/notifications",
-	"GoVersion": "go1.3.3",
+	"GoVersion": "go1.4.2",
 	"Packages": [
 		"./..."
 	],
@@ -81,6 +81,10 @@
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/rainmaker",
 			"Rev": "4d942cc08bd37d504bb60356a83c560968bb6338"
+		},
+		{
+			"ImportPath": "github.com/pivotal-cf-experimental/warrant",
+			"Rev": "04cf521d549f1f73a77ef64b5255d831681fb649"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",
