@@ -13,11 +13,11 @@ import (
 
 var _ = Describe("AllUserGUIDs", func() {
 	var allUsers services.AllUsers
-	var uaaClient *fakes.UAAClient
+	var uaaClient *fakes.ZonedUAAClient
 	var users []uaa.User
 
 	BeforeEach(func() {
-		uaaClient = fakes.NewUAAClient()
+		uaaClient = fakes.NewZonedUAAClient()
 		allUsers = services.NewAllUsers(uaaClient)
 	})
 
@@ -42,16 +42,17 @@ var _ = Describe("AllUserGUIDs", func() {
 		})
 
 		It("returns the UAAUsers, UserGUIDs, and an error", func() {
-			guids, err := allUsers.AllUserGUIDs()
+			guids, err := allUsers.AllUserGUIDs("token")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(guids).To(ConsistOf("user-456", "user-999", "user-123"))
+			Expect(uaaClient.AllUsersToken).To(Equal("token"))
 		})
 	})
 
 	Context("when the request to UAA fails", func() {
 		It("bubbles up the error", func() {
 			uaaClient.AllUsersError = errors.New("BOOM!")
-			_, err := allUsers.AllUserGUIDs()
+			_, err := allUsers.AllUserGUIDs("token")
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(errors.New("BOOM!")))
 		})

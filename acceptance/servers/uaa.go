@@ -28,7 +28,7 @@ func NewUAA(zone string) *UAA {
 	router.HandleFunc("/oauth/token", UAAPostOAuthToken).Methods("POST")
 	router.HandleFunc("/token_key", UAAGetTokenKey).Methods("GET")
 	router.Path("/Users").Queries("filter", "").Handler(UAAGetUser(zone)).Methods("GET")
-	router.HandleFunc("/Users", UAAGetUsers).Methods("GET")
+	router.HandleFunc("/Users", UAAGetUsers(zone)).Methods("GET")
 	router.HandleFunc("/Groups", UAAGetUsersByScope).Methods("GET")
 	router.HandleFunc("/{anything:.*}", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		fmt.Printf("UAA ROUTE REQUEST ---> %+v\n", req)
@@ -148,21 +148,23 @@ var UAAGetUser = func(zone string) http.HandlerFunc {
 	})
 }
 
-var UAAGetUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	response, err := json.Marshal(map[string]interface{}{
-		"resources":    allUsersResponse,
-		"startIndex":   1,
-		"itemsPerPage": 100,
-		"totalResults": 1,
-		"schemas":      []string{"urn:scim:schemas:core:1.0"},
-	})
-	if err != nil {
-		panic(err)
-	}
+var UAAGetUsers = func(zone string) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		response, err := json.Marshal(map[string]interface{}{
+			"resources":    zonedAllUsersResponse(zone),
+			"startIndex":   1,
+			"itemsPerPage": 100,
+			"totalResults": 1,
+			"schemas":      []string{"urn:scim:schemas:core:1.0"},
+		})
+		if err != nil {
+			panic(err)
+		}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write(response)
-})
+		w.WriteHeader(http.StatusOK)
+		w.Write(response)
+	})
+}
 
 var UAAGetUsersByScope = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 	err := req.ParseForm()
@@ -218,6 +220,16 @@ func ZonedUAAUsers(zone string) map[string]map[string]interface{} {
 		return TestZoneUsers
 	} else {
 		return make(map[string]map[string]interface{})
+	}
+}
+
+func zonedAllUsersResponse(zone string) []map[string]interface{} {
+	if zone == "uaa" {
+		return allUsersResponse
+	} else if zone == "testzone1" {
+		return allZonedUsersResponse
+	} else {
+		return make([]map[string]interface{}, 0)
 	}
 }
 
@@ -434,9 +446,38 @@ var TestZoneUsers = map[string]map[string]interface{}{
 		"origin":    "uaa",
 		"schemas":   []string{"urn:scim:schemas:core:1.0"},
 	},
+	"another-user-in-zone": {
+		"id": "another-user-in-zone",
+		"meta": map[string]interface{}{
+			"version":      4,
+			"created":      "2014-07-16T21:00:09.021Z",
+			"lastModified": "2014-08-04T19:16:29.172Z",
+		},
+		"userName": "another-user-in-zone",
+		"name":     map[string]string{},
+		"emails": []map[string]string{
+			{"value": "another-user-in-zone@example.com"},
+		},
+		"groups": []map[string]string{
+			{
+				"value":   "some-group-guid",
+				"display": "notifications.write",
+				"type":    "DIRECT",
+			},
+		},
+		"approvals": []interface{}{},
+		"active":    true,
+		"verified":  false,
+		"origin":    "uaa",
+		"schemas":   []string{"urn:scim:schemas:core:1.0"},
+	},
 }
 
 var allUsersResponse = []map[string]interface{}{
 	UAAUsers["091b6583-0933-4d17-a5b6-66e54666c88e"],
 	UAAUsers["943e6076-b1a5-4404-811b-a1ee9253bf56"],
+}
+var allZonedUsersResponse = []map[string]interface{}{
+	TestZoneUsers["user-in-zone"],
+	TestZoneUsers["another-user-in-zone"],
 }

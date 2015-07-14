@@ -4,17 +4,20 @@ import "github.com/cloudfoundry-incubator/notifications/cf"
 
 const EveryoneEndorsement = "This message was sent to everyone."
 
+type ZonedTokenLoaderInterface interface {
+	Load(string) (string, error)
+}
 type EveryoneStrategy struct {
-	tokenLoader TokenLoader
-	allUsers    AllUsersInterface
-	enqueuer    EnqueuerInterface
+	zonedTokenLoader ZonedTokenLoaderInterface
+	allUsers         AllUsersInterface
+	enqueuer         EnqueuerInterface
 }
 
-func NewEveryoneStrategy(tokenLoader TokenLoader, allUsers AllUsersInterface, enqueuer EnqueuerInterface) EveryoneStrategy {
+func NewEveryoneStrategy(zonedTokenLoader ZonedTokenLoaderInterface, allUsers AllUsersInterface, enqueuer EnqueuerInterface) EveryoneStrategy {
 	return EveryoneStrategy{
-		tokenLoader: tokenLoader,
-		allUsers:    allUsers,
-		enqueuer:    enqueuer,
+		zonedTokenLoader: zonedTokenLoader,
+		allUsers:         allUsers,
+		enqueuer:         enqueuer,
 	}
 }
 
@@ -37,13 +40,13 @@ func (strategy EveryoneStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		},
 	}
 
-	_, err := strategy.tokenLoader.Load()
+	token, err := strategy.zonedTokenLoader.Load(dispatch.UAAHost)
 	if err != nil {
 		return responses, err
 	}
 
 	// split this up so that it only loads user guids
-	userGUIDs, err := strategy.allUsers.AllUserGUIDs()
+	userGUIDs, err := strategy.allUsers.AllUserGUIDs(token)
 	if err != nil {
 		return responses, err
 	}

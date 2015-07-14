@@ -66,6 +66,31 @@ func (z ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]User, e
 	return myUsers, nil
 }
 
+func (z ZonedUAAClient) AllUsers(token string) ([]User, error) {
+	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
+		return []byte(z.UAAPublicKey), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	tokenIssuerURL, err := url.Parse(parsedToken.Claims["iss"].(string))
+	if err != nil {
+		return nil, err
+	}
+	uaaHost := tokenIssuerURL.Scheme + "://" + tokenIssuerURL.Host
+
+	uaaSSOGolangClient := uaaSSOGolang.NewUAA("", uaaHost, z.clientID, z.clientSecret, "")
+	uaaSSOGolangClient.VerifySSL = z.verifySSL
+	users, err := uaaSSOGolangClient.AllUsers()
+
+	myUsers := make([]User, len(users))
+	for index, user := range users {
+		myUsers[index].fromSSOGolangUser(user)
+	}
+	return myUsers, err
+}
+
 type UAAClient struct {
 	Client *uaaSSOGolang.UAA
 }
@@ -104,16 +129,6 @@ func (u *User) fromWarrantUser(user warrant.User) {
 func (u *User) fromSSOGolangUser(user uaaSSOGolang.User) {
 	u.ID = user.ID
 	u.Emails = user.Emails
-}
-
-func (u *UAAClient) AllUsers() ([]User, error) {
-	users, err := u.Client.AllUsers()
-
-	myUsers := make([]User, len(users))
-	for index, user := range users {
-		myUsers[index].fromSSOGolangUser(user)
-	}
-	return myUsers, err
 }
 
 func (u *UAAClient) GetTokenKey() (string, error) {

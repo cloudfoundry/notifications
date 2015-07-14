@@ -88,8 +88,9 @@ func (m Mother) OrganizationStrategy() services.OrganizationStrategy {
 }
 
 func (m Mother) EveryoneStrategy() services.EveryoneStrategy {
-	uaaClient := m.UAAClient()
-	tokenLoader := postal.NewTokenLoader(uaaClient)
+	env := NewEnvironment()
+	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
+	tokenLoader := uaa.NewZonedTokenLoader(uaaClient)
 	allUsers := services.NewAllUsers(uaaClient)
 	enqueuer := m.Enqueuer()
 

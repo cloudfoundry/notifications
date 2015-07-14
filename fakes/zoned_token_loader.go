@@ -1,6 +1,7 @@
 package fakes
 
 type ZonedTokenLoader struct {
+	Token        string
 	LoadArgument string
 	LoadError    error
 }
@@ -11,5 +12,5 @@ func NewZonedTokenLoader() *ZonedTokenLoader {
 
 func (z *ZonedTokenLoader) Load(uaaHost string) (string, error) {
 	z.LoadArgument = uaaHost
-	return "", z.LoadError
+	return z.Token, z.LoadError
 }

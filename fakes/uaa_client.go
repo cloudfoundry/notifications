@@ -17,6 +17,9 @@ type ZonedUAAClient struct {
 	UsersByID               map[string]uaa.User
 	ZonedGetClientTokenHost string
 	ZonedToken              string
+	AllUsersData            []uaa.User
+	AllUsersError           error
+	AllUsersToken           string
 }
 
 func NewUAAClient() *UAAClient {
@@ -37,10 +40,6 @@ func (fake *UAAClient) UsersGUIDsByScope(scope string) ([]string, error) {
 	return fake.UsersGUIDsByScopeResponse[scope], fake.UsersGUIDsByScopeError
 }
 
-func (fake *UAAClient) AllUsers() ([]uaa.User, error) {
-	return fake.AllUsersData, fake.AllUsersError
-}
-
 func NewZonedUAAClient() *ZonedUAAClient {
 	return &ZonedUAAClient{}
 }
@@ -59,4 +58,9 @@ func (z ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]uaa.Use
 	}
 
 	return users, z.ErrorForUserByID
+}
+
+func (z *ZonedUAAClient) AllUsers(token string) ([]uaa.User, error) {
+	z.AllUsersToken = token
+	return z.AllUsersData, z.AllUsersError
 }

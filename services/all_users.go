@@ -3,7 +3,7 @@ package services
 import "github.com/cloudfoundry-incubator/notifications/uaa"
 
 type AllUsersInterface interface {
-	AllUserGUIDs() ([]string, error)
+	AllUserGUIDs(string) ([]string, error)
 }
 
 type AllUsers struct {
@@ -11,7 +11,7 @@ type AllUsers struct {
 }
 
 type uaaAllUsersInterface interface {
-	AllUsers() ([]uaa.User, error)
+	AllUsers(string) ([]uaa.User, error)
 }
 
 func NewAllUsers(uaa uaaAllUsersInterface) AllUsers {
@@ -20,10 +20,10 @@ func NewAllUsers(uaa uaaAllUsersInterface) AllUsers {
 	}
 }
 
-func (allUsers AllUsers) AllUserGUIDs() ([]string, error) {
+func (allUsers AllUsers) AllUserGUIDs(token string) ([]string, error) {
 	var guids []string
 
-	usersMap, err := allUsers.uaa.AllUsers()
+	usersMap, err := allUsers.uaa.AllUsers(token)
 	if err != nil {
 		return guids, err
 	}

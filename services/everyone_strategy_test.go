@@ -15,7 +15,8 @@ import (
 var _ = Describe("Everyone Strategy", func() {
 	var (
 		strategy            services.EveryoneStrategy
-		tokenLoader         *fakes.TokenLoader
+		zonedTokenLoader    *fakes.ZonedTokenLoader
+		zonedToken          string
 		allUsers            *fakes.AllUsers
 		enqueuer            *fakes.Enqueuer
 		conn                *fakes.Connection
@@ -31,14 +32,17 @@ var _ = Describe("Everyone Strategy", func() {
 		tokenClaims := map[string]interface{}{
 			"client_id": "mister-client",
 			"exp":       int64(3404281214),
+			"iss":       "my-uaa-host",
 			"scope":     []string{"notifications.write"},
 		}
-		tokenLoader = fakes.NewTokenLoader()
-		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
+		zonedTokenLoader = fakes.NewZonedTokenLoader()
+
+		zonedToken = fakes.BuildToken(tokenHeader, tokenClaims)
+		zonedTokenLoader.Token = zonedToken
 		enqueuer = fakes.NewEnqueuer()
 		allUsers = fakes.NewAllUsers()
 		allUsers.AllUserGUIDsCall.Returns = []string{"user-380", "user-319"}
-		strategy = services.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer)
+		strategy = services.NewEveryoneStrategy(zonedTokenLoader, allUsers, enqueuer)
 	})
 
 	Describe("Dispatch", func() {
@@ -103,13 +107,15 @@ var _ = Describe("Everyone Strategy", func() {
 			Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
 			Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("my-uaa-host"))
 			Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceivedTime))
+			Expect(zonedTokenLoader.LoadArgument).To(Equal("my-uaa-host"))
+			Expect(allUsers.Token).To(Equal(zonedToken))
 		})
 	})
 
 	Context("failure cases", func() {
 		Context("when token loader fails to return a token", func() {
 			It("returns an error", func() {
-				tokenLoader.LoadError = errors.New("BOOM!")
+				zonedTokenLoader.LoadError = errors.New("BOOM!")
 				_, err := strategy.Dispatch(services.Dispatch{})
 
 				Expect(err).To(Equal(errors.New("BOOM!")))
