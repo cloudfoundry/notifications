@@ -46,23 +46,18 @@ func (z ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]User, e
 		return nil, err
 	}
 
-	uaaClient := warrant.New(warrant.Config{
-		Host:          uaaHost,
-		SkipVerifySSL: !z.verifySSL,
-	})
+	uaaClient := uaaSSOGolang.NewUAA("", uaaHost, z.clientID, z.clientSecret, "")
+	uaaClient.VerifySSL = z.verifySSL
+	uaaClient.SetToken(token)
 
 	var myUsers []User
-	for _, id := range ids {
-		users, err := uaaClient.Users.List(warrant.Query{
-			Filter: fmt.Sprintf("Id eq \"%s\"", id),
-		}, token)
-		if err != nil {
-			return nil, err
-		}
+	users, err := uaaClient.UsersEmailsByIDs(ids...)
+	if err != nil {
+		return myUsers, err
+	}
 
-		for _, warrantUser := range users {
-			myUsers = append(myUsers, newUserFromWarrantUser(warrantUser))
-		}
+	for _, user := range users {
+		myUsers = append(myUsers, newUserFromSSOGolangUser(user))
 	}
 
 	return myUsers, nil
