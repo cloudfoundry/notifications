@@ -1,16 +1,16 @@
 package fakes
 
-type ZonedTokenLoader struct {
+type TokenLoader struct {
 	Token        string
 	LoadArgument string
 	LoadError    error
 }
 
-func NewZonedTokenLoader() *ZonedTokenLoader {
-	return &ZonedTokenLoader{}
+func NewTokenLoader() *TokenLoader {
+	return &TokenLoader{}
 }
 
-func (z *ZonedTokenLoader) Load(uaaHost string) (string, error) {
-	z.LoadArgument = uaaHost
-	return z.Token, z.LoadError
+func (t *TokenLoader) Load(uaaHost string) (string, error) {
+	t.LoadArgument = uaaHost
+	return t.Token, t.LoadError
 }

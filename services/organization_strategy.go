@@ -8,13 +8,13 @@ const (
 )
 
 type OrganizationStrategy struct {
-	tokenLoader        ZonedTokenLoaderInterface
+	tokenLoader        TokenLoaderInterface
 	organizationLoader OrganizationLoaderInterface
 	findsUserGUIDs     FindsUserGUIDsInterface
 	enqueuer           EnqueuerInterface
 }
 
-func NewOrganizationStrategy(tokenLoader ZonedTokenLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface) OrganizationStrategy {
+func NewOrganizationStrategy(tokenLoader TokenLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface) OrganizationStrategy {
 	return OrganizationStrategy{
 		tokenLoader:        tokenLoader,
 		organizationLoader: organizationLoader,

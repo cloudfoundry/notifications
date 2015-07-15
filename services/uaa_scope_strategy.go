@@ -6,7 +6,7 @@ const ScopeEndorsement = "You received this message because you have the {{.Scop
 
 type UAAScopeStrategy struct {
 	findsUserGUIDs FindsUserGUIDsInterface
-	tokenLoader    ZonedTokenLoaderInterface
+	tokenLoader    TokenLoaderInterface
 	enqueuer       EnqueuerInterface
 	defaultScopes  []string
 }
@@ -17,7 +17,7 @@ func (d DefaultScopeError) Error() string {
 	return "You cannot send a notification to a default scope"
 }
 
-func NewUAAScopeStrategy(tokenLoader ZonedTokenLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface, defaultScopes []string) UAAScopeStrategy {
+func NewUAAScopeStrategy(tokenLoader TokenLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface, defaultScopes []string) UAAScopeStrategy {
 	return UAAScopeStrategy{
 		findsUserGUIDs: findsUserGUIDs,
 		tokenLoader:    tokenLoader,

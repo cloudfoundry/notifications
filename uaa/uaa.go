@@ -26,7 +26,7 @@ func NewZonedUAAClient(clientID, clientSecret string, verifySSL bool, uaaPublicK
 	}
 }
 
-func (z ZonedUAAClient) ZonedGetClientToken(host string) (string, error) {
+func (z ZonedUAAClient) GetClientToken(host string) (string, error) {
 	uaaClient := warrant.New(warrant.Config{
 		Host:          host,
 		SkipVerifySSL: !z.verifySSL,

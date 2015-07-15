@@ -15,7 +15,7 @@ import (
 var _ = Describe("Space Strategy", func() {
 	var (
 		strategy           services.SpaceStrategy
-		tokenLoader        *fakes.ZonedTokenLoader
+		tokenLoader        *fakes.TokenLoader
 		spaceLoader        *fakes.SpaceLoader
 		organizationLoader *fakes.OrganizationLoader
 		enqueuer           *fakes.Enqueuer
@@ -36,7 +36,7 @@ var _ = Describe("Space Strategy", func() {
 			"iss":       "uaa",
 			"scope":     []string{"notifications.write"},
 		}
-		tokenLoader = fakes.NewZonedTokenLoader()
+		tokenLoader = fakes.NewTokenLoader()
 		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
 		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()

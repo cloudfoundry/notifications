@@ -15,7 +15,7 @@ import (
 var _ = Describe("Organization Strategy", func() {
 	var (
 		strategy           services.OrganizationStrategy
-		tokenLoader        *fakes.ZonedTokenLoader
+		tokenLoader        *fakes.TokenLoader
 		organizationLoader *fakes.OrganizationLoader
 		enqueuer           *fakes.Enqueuer
 		conn               *fakes.Connection
@@ -35,7 +35,7 @@ var _ = Describe("Organization Strategy", func() {
 			"iss":       "testzone1",
 			"scope":     []string{"notifications.write"},
 		}
-		tokenLoader = fakes.NewZonedTokenLoader()
+		tokenLoader = fakes.NewTokenLoader()
 		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
 		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()

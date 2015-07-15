@@ -13,8 +13,8 @@ type UAAClient struct {
 type ZonedUAAClient struct {
 	ErrorForUserByID          error
 	UsersByID                 map[string]uaa.User
-	ZonedGetClientTokenHost   string
-	ZonedToken                string
+	GetClientTokenHost        string
+	Token                     string
 	AllUsersData              []uaa.User
 	AllUsersError             error
 	AllUsersToken             string
@@ -40,9 +40,9 @@ func NewZonedUAAClient() *ZonedUAAClient {
 	}
 }
 
-func (z *ZonedUAAClient) ZonedGetClientToken(host string) (string, error) {
-	z.ZonedGetClientTokenHost = host
-	return z.ZonedToken, nil
+func (z *ZonedUAAClient) GetClientToken(host string) (string, error) {
+	z.GetClientTokenHost = host
+	return z.Token, nil
 }
 
 func (z ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]uaa.User, error) {

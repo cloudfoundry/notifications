@@ -66,7 +66,7 @@ var _ = Describe("DeliveryWorker", func() {
 		fakeUserEmail          string
 		templateLoader         *fakes.TemplatesLoader
 		receiptsRepo           *fakes.ReceiptsRepo
-		zonedTokenLoader       *fakes.ZonedTokenLoader
+		tokenLoader            *fakes.TokenLoader
 		messageID              string
 	)
 
@@ -91,7 +91,7 @@ var _ = Describe("DeliveryWorker", func() {
 		userLoader = fakes.NewUserLoader()
 		userLoader.Users["user-123"] = uaa.User{Emails: []string{fakeUserEmail}}
 		userLoader.Users["user-456"] = uaa.User{Emails: []string{"user-456@example.com"}}
-		zonedTokenLoader = fakes.NewZonedTokenLoader()
+		tokenLoader = fakes.NewTokenLoader()
 		templateLoader = fakes.NewTemplatesLoader()
 		templateLoader.Templates = postal.Templates{
 			Text:    "{{.Text}}",
@@ -101,7 +101,7 @@ var _ = Describe("DeliveryWorker", func() {
 		receiptsRepo = fakes.NewReceiptsRepo()
 
 		worker = postal.NewDeliveryWorker(id, logger, mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
-			messagesRepo, database, false, sender, encryptionKey, userLoader, templateLoader, receiptsRepo, zonedTokenLoader)
+			messagesRepo, database, false, sender, encryptionKey, userLoader, templateLoader, receiptsRepo, tokenLoader)
 
 		messageID = "randomly-generated-guid"
 		delivery = postal.Delivery{
@@ -158,7 +158,7 @@ var _ = Describe("DeliveryWorker", func() {
 			job := gobble.NewJob(delivery)
 			worker.Deliver(&job)
 
-			Expect(zonedTokenLoader.LoadArgument).To(Equal("zoned-uaa-host"))
+			Expect(tokenLoader.LoadArgument).To(Equal("zoned-uaa-host"))
 		})
 	})
 
@@ -213,7 +213,7 @@ var _ = Describe("DeliveryWorker", func() {
 			sum := md5.Sum([]byte("banana's are so very tasty"))
 			encryptionKey := sum[:]
 			worker = postal.NewDeliveryWorker(id, logger, mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
-				messagesRepo, database, true, "from@email.com", encryptionKey, userLoader, templateLoader, receiptsRepo, zonedTokenLoader)
+				messagesRepo, database, true, "from@email.com", encryptionKey, userLoader, templateLoader, receiptsRepo, tokenLoader)
 			worker.Deliver(&job)
 			database.TraceLogger.Printf("some statement")
 
@@ -274,7 +274,7 @@ var _ = Describe("DeliveryWorker", func() {
 				delivery.UAAHost = "zoned-uaa-host"
 				job = gobble.NewJob(delivery)
 
-				zonedTokenLoader.LoadError = errors.New("failed to load a zoned UAA token")
+				tokenLoader.LoadError = errors.New("failed to load a zoned UAA token")
 				worker.Deliver(&job)
 
 				Expect(job.RetryCount).To(Equal(1))

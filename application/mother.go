@@ -65,7 +65,7 @@ func (m Mother) SpaceStrategy() services.SpaceStrategy {
 	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-	tokenLoader := uaa.NewZonedTokenLoader(uaaClient)
+	tokenLoader := uaa.NewTokenLoader(uaaClient)
 	spaceLoader := services.NewSpaceLoader(cloudController)
 	organizationLoader := services.NewOrganizationLoader(cloudController)
 	enqueuer := m.Enqueuer()
@@ -79,7 +79,7 @@ func (m Mother) OrganizationStrategy() services.OrganizationStrategy {
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
 	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
-	tokenLoader := uaa.NewZonedTokenLoader(uaaClient)
+	tokenLoader := uaa.NewTokenLoader(uaaClient)
 	organizationLoader := services.NewOrganizationLoader(cloudController)
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 	enqueuer := m.Enqueuer()
@@ -90,7 +90,7 @@ func (m Mother) OrganizationStrategy() services.OrganizationStrategy {
 func (m Mother) EveryoneStrategy() services.EveryoneStrategy {
 	env := NewEnvironment()
 	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
-	tokenLoader := uaa.NewZonedTokenLoader(uaaClient)
+	tokenLoader := uaa.NewTokenLoader(uaaClient)
 	allUsers := services.NewAllUsers(uaaClient)
 	enqueuer := m.Enqueuer()
 
@@ -102,7 +102,7 @@ func (m Mother) UAAScopeStrategy() services.UAAScopeStrategy {
 	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-	tokenLoader := uaa.NewZonedTokenLoader(uaaClient)
+	tokenLoader := uaa.NewTokenLoader(uaaClient)
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 	enqueuer := m.Enqueuer()
 
@@ -132,12 +132,6 @@ func (m Mother) TemplatesLoader() postal.TemplatesLoader {
 	templatesRepo := m.TemplatesRepo()
 
 	return postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
-}
-
-func (m Mother) TokenLoader() postal.TokenLoader {
-	uaaClient := m.UAAClient()
-
-	return postal.NewTokenLoader(uaaClient)
 }
 
 func (m Mother) MailClient() *mail.Client {

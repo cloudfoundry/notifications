@@ -40,11 +40,11 @@ type DeliveryWorker struct {
 	baseLogger lager.Logger
 	logger     lager.Logger
 
-	mailClient       mail.ClientInterface
-	userLoader       UserLoaderInterface
-	templatesLoader  TemplatesLoaderInterface
-	zonedTokenLoader ZonedTokenLoaderInterface
-	database         models.DatabaseInterface
+	mailClient      mail.ClientInterface
+	userLoader      UserLoaderInterface
+	templatesLoader TemplatesLoaderInterface
+	tokenLoader     TokenLoaderInterface
+	database        models.DatabaseInterface
 
 	messagesRepo           MessagesRepo
 	receiptsRepo           ReceiptsRepo
@@ -53,7 +53,7 @@ type DeliveryWorker struct {
 	kindsRepo              KindsRepo
 }
 
-type ZonedTokenLoaderInterface interface {
+type TokenLoaderInterface interface {
 	Load(string) (string, error)
 }
 
@@ -61,7 +61,7 @@ func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterf
 	globalUnsubscribesRepo GlobalUnsubscribesRepo, unsubscribesRepo UnsubscribesRepo,
 	kindsRepo KindsRepo, messagesRepo MessagesRepo,
 	database models.DatabaseInterface, dbTrace bool, sender string, encryptionKey []byte, userLoader UserLoaderInterface,
-	templatesLoader TemplatesLoaderInterface, receiptsRepo ReceiptsRepo, zonedTokenLoader ZonedTokenLoaderInterface) DeliveryWorker {
+	templatesLoader TemplatesLoaderInterface, receiptsRepo ReceiptsRepo, tokenLoader TokenLoaderInterface) DeliveryWorker {
 
 	logger = logger.Session("worker", lager.Data{"worker_id": id})
 
@@ -79,7 +79,7 @@ func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterf
 		sender:                 sender,
 		encryptionKey:          encryptionKey,
 		userLoader:             userLoader,
-		zonedTokenLoader:       zonedTokenLoader,
+		tokenLoader:            tokenLoader,
 		templatesLoader:        templatesLoader,
 		receiptsRepo:           receiptsRepo,
 	}
@@ -119,7 +119,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 	if delivery.Email == "" {
 		var token string
 
-		token, err = worker.zonedTokenLoader.Load(delivery.UAAHost)
+		token, err = worker.tokenLoader.Load(delivery.UAAHost)
 		if err != nil {
 			worker.retry(delivery.MessageID, delivery.Email, job)
 			return

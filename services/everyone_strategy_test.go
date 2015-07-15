@@ -15,8 +15,8 @@ import (
 var _ = Describe("Everyone Strategy", func() {
 	var (
 		strategy            services.EveryoneStrategy
-		zonedTokenLoader    *fakes.ZonedTokenLoader
-		zonedToken          string
+		tokenLoader         *fakes.TokenLoader
+		token               string
 		allUsers            *fakes.AllUsers
 		enqueuer            *fakes.Enqueuer
 		conn                *fakes.Connection
@@ -35,14 +35,14 @@ var _ = Describe("Everyone Strategy", func() {
 			"iss":       "my-uaa-host",
 			"scope":     []string{"notifications.write"},
 		}
-		zonedTokenLoader = fakes.NewZonedTokenLoader()
+		tokenLoader = fakes.NewTokenLoader()
 
-		zonedToken = fakes.BuildToken(tokenHeader, tokenClaims)
-		zonedTokenLoader.Token = zonedToken
+		token = fakes.BuildToken(tokenHeader, tokenClaims)
+		tokenLoader.Token = token
 		enqueuer = fakes.NewEnqueuer()
 		allUsers = fakes.NewAllUsers()
 		allUsers.AllUserGUIDsCall.Returns = []string{"user-380", "user-319"}
-		strategy = services.NewEveryoneStrategy(zonedTokenLoader, allUsers, enqueuer)
+		strategy = services.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer)
 	})
 
 	Describe("Dispatch", func() {
@@ -107,15 +107,15 @@ var _ = Describe("Everyone Strategy", func() {
 			Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
 			Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("my-uaa-host"))
 			Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceivedTime))
-			Expect(zonedTokenLoader.LoadArgument).To(Equal("my-uaa-host"))
-			Expect(allUsers.Token).To(Equal(zonedToken))
+			Expect(tokenLoader.LoadArgument).To(Equal("my-uaa-host"))
+			Expect(allUsers.Token).To(Equal(token))
 		})
 	})
 
 	Context("failure cases", func() {
 		Context("when token loader fails to return a token", func() {
 			It("returns an error", func() {
-				zonedTokenLoader.LoadError = errors.New("BOOM!")
+				tokenLoader.LoadError = errors.New("BOOM!")
 				_, err := strategy.Dispatch(services.Dispatch{})
 
 				Expect(err).To(Equal(errors.New("BOOM!")))

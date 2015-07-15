@@ -1,5 +1,5 @@
 package services
 
-type TokenLoader interface {
-	Load() (string, error)
+type TokenLoaderInterface interface {
+	Load(string) (string, error)
 }
