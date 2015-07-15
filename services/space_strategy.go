@@ -3,14 +3,14 @@ package services
 const SpaceEndorsement = `You received this message because you belong to the "{{.Space}}" space in the "{{.Organization}}" organization.`
 
 type SpaceStrategy struct {
-	tokenLoader        TokenLoader
+	tokenLoader        ZonedTokenLoaderInterface
 	spaceLoader        SpaceLoaderInterface
 	organizationLoader OrganizationLoaderInterface
 	findsUserGUIDs     FindsUserGUIDsInterface
 	enqueuer           EnqueuerInterface
 }
 
-func NewSpaceStrategy(tokenLoader TokenLoader, spaceLoader SpaceLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface) SpaceStrategy {
+func NewSpaceStrategy(tokenLoader ZonedTokenLoaderInterface, spaceLoader SpaceLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface) SpaceStrategy {
 
 	return SpaceStrategy{
 		tokenLoader:        tokenLoader,
@@ -41,7 +41,7 @@ func (strategy SpaceStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		},
 	}
 
-	token, err := strategy.tokenLoader.Load()
+	token, err := strategy.tokenLoader.Load(dispatch.UAAHost)
 	if err != nil {
 		return responses, err
 	}

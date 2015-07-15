@@ -14,11 +14,11 @@ import (
 var _ = Describe("FindsUserGUIDs", func() {
 	var finder services.FindsUserGUIDs
 	var cc *fakes.CloudController
-	var uaa *fakes.UAAClient
+	var uaa *fakes.ZonedUAAClient
 
 	BeforeEach(func() {
 		cc = fakes.NewCloudController()
-		uaa = fakes.NewUAAClient()
+		uaa = fakes.NewZonedUAAClient()
 		finder = services.NewFindsUserGUIDs(cc, uaa)
 	})
 
@@ -28,7 +28,7 @@ var _ = Describe("FindsUserGUIDs", func() {
 		})
 
 		It("returns the userGUIDs that have that scope", func() {
-			guids, err := finder.UserGUIDsBelongingToScope("this.scope")
+			guids, err := finder.UserGUIDsBelongingToScope("token", "this.scope")
 
 			Expect(guids).To(Equal([]string{"user-402", "user-525"}))
 			Expect(err).NotTo(HaveOccurred())
@@ -37,7 +37,7 @@ var _ = Describe("FindsUserGUIDs", func() {
 		Context("when uaa has an error", func() {
 			It("returns the error", func() {
 				uaa.UsersGUIDsByScopeError = errors.New("foobar")
-				_, err := finder.UserGUIDsBelongingToScope("this.scope")
+				_, err := finder.UserGUIDsBelongingToScope("token", "this.scope")
 
 				Expect(err).To(MatchError(errors.New("foobar")))
 			})

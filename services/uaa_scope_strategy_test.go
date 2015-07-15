@@ -15,7 +15,7 @@ import (
 var _ = Describe("UAA Scope Strategy", func() {
 	var (
 		strategy        services.UAAScopeStrategy
-		tokenLoader     *fakes.TokenLoader
+		tokenLoader     *fakes.ZonedTokenLoader
 		enqueuer        *fakes.Enqueuer
 		conn            *fakes.Connection
 		findsUserGUIDs  *fakes.FindsUserGUIDs
@@ -47,7 +47,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 			"exp":       int64(3404281214),
 			"scope":     []string{"notifications.write"},
 		}
-		tokenLoader = fakes.NewTokenLoader()
+		tokenLoader = fakes.NewZonedTokenLoader()
 		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
 		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()

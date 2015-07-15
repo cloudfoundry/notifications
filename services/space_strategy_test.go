@@ -15,7 +15,7 @@ import (
 var _ = Describe("Space Strategy", func() {
 	var (
 		strategy           services.SpaceStrategy
-		tokenLoader        *fakes.TokenLoader
+		tokenLoader        *fakes.ZonedTokenLoader
 		spaceLoader        *fakes.SpaceLoader
 		organizationLoader *fakes.OrganizationLoader
 		enqueuer           *fakes.Enqueuer
@@ -33,9 +33,10 @@ var _ = Describe("Space Strategy", func() {
 		tokenClaims := map[string]interface{}{
 			"client_id": "mister-client",
 			"exp":       int64(3404281214),
+			"iss":       "uaa",
 			"scope":     []string{"notifications.write"},
 		}
-		tokenLoader = fakes.NewTokenLoader()
+		tokenLoader = fakes.NewZonedTokenLoader()
 		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
 		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
@@ -122,6 +123,7 @@ var _ = Describe("Space Strategy", func() {
 				Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
 				Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
 				Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("uaa"))
+				Expect(tokenLoader.LoadArgument).To(Equal("uaa"))
 			})
 		})
 

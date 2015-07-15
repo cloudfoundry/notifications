@@ -6,7 +6,7 @@ const ScopeEndorsement = "You received this message because you have the {{.Scop
 
 type UAAScopeStrategy struct {
 	findsUserGUIDs FindsUserGUIDsInterface
-	tokenLoader    TokenLoader
+	tokenLoader    ZonedTokenLoaderInterface
 	enqueuer       EnqueuerInterface
 	defaultScopes  []string
 }
@@ -17,7 +17,7 @@ func (d DefaultScopeError) Error() string {
 	return "You cannot send a notification to a default scope"
 }
 
-func NewUAAScopeStrategy(tokenLoader TokenLoader, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface, defaultScopes []string) UAAScopeStrategy {
+func NewUAAScopeStrategy(tokenLoader ZonedTokenLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface, defaultScopes []string) UAAScopeStrategy {
 	return UAAScopeStrategy{
 		findsUserGUIDs: findsUserGUIDs,
 		tokenLoader:    tokenLoader,
@@ -49,12 +49,12 @@ func (strategy UAAScopeStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		return responses, DefaultScopeError{}
 	}
 
-	_, err := strategy.tokenLoader.Load() // TODO: (rm) this triggers a weird side-effect that is required
+	token, err := strategy.tokenLoader.Load(dispatch.UAAHost) // TODO: (rm) this triggers a weird side-effect that is required
 	if err != nil {
 		return responses, err
 	}
 
-	userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToScope(dispatch.GUID)
+	userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToScope(token, dispatch.GUID)
 	if err != nil {
 		return responses, err
 	}

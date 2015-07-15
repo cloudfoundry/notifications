@@ -25,6 +25,6 @@ func (finder FindsUserGUIDs) UserGUIDsBelongingToOrganization(orgGUID, role, tok
 	return finder.OrganizationGuids[orgGUID], finder.UserGUIDsBelongingToOrganizationError
 }
 
-func (finder FindsUserGUIDs) UserGUIDsBelongingToScope(scope string) ([]string, error) {
+func (finder FindsUserGUIDs) UserGUIDsBelongingToScope(token, scope string) ([]string, error) {
 	return finder.GUIDsWithScopes[scope], finder.UserGUIDsBelongingToScopeError
 }

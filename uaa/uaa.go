@@ -35,18 +35,10 @@ func (z ZonedUAAClient) ZonedGetClientToken(host string) (string, error) {
 }
 
 func (z ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]User, error) {
-	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
-		return []byte(z.UAAPublicKey), nil
-	})
+	uaaHost, err := z.tokenHost(token)
 	if err != nil {
 		return nil, err
 	}
-
-	tokenIssuerURL, err := url.Parse(parsedToken.Claims["iss"].(string))
-	if err != nil {
-		return nil, err
-	}
-	uaaHost := tokenIssuerURL.Scheme + "://" + tokenIssuerURL.Host
 	uaaClient := warrant.New(warrant.Config{
 		Host:          uaaHost,
 		SkipVerifySSL: !z.verifySSL,
@@ -66,20 +58,27 @@ func (z ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]User, e
 	return myUsers, nil
 }
 
-func (z ZonedUAAClient) AllUsers(token string) ([]User, error) {
+func (z ZonedUAAClient) tokenHost(token string) (string, error) {
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		return []byte(z.UAAPublicKey), nil
 	})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	tokenIssuerURL, err := url.Parse(parsedToken.Claims["iss"].(string))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	uaaHost := tokenIssuerURL.Scheme + "://" + tokenIssuerURL.Host
+	return uaaHost, nil
+}
 
+func (z ZonedUAAClient) AllUsers(token string) ([]User, error) {
+	uaaHost, err := z.tokenHost(token)
+	if err != nil {
+		return nil, err
+	}
 	uaaSSOGolangClient := uaaSSOGolang.NewUAA("", uaaHost, z.clientID, z.clientSecret, "")
 	uaaSSOGolangClient.VerifySSL = z.verifySSL
 	users, err := uaaSSOGolangClient.AllUsers()
@@ -89,6 +88,17 @@ func (z ZonedUAAClient) AllUsers(token string) ([]User, error) {
 		myUsers[index].fromSSOGolangUser(user)
 	}
 	return myUsers, err
+}
+
+func (z ZonedUAAClient) UsersGUIDsByScope(token string, scope string) ([]string, error) {
+	uaaHost, err := z.tokenHost(token)
+	if err != nil {
+		return nil, err
+	}
+	uaaSSOGolangClient := uaaSSOGolang.NewUAA("", uaaHost, z.clientID, z.clientSecret, "")
+	uaaSSOGolangClient.VerifySSL = z.verifySSL
+	guids, err := uaaSSOGolangClient.UsersGUIDsByScope(scope)
+	return guids, err
 }
 
 type UAAClient struct {

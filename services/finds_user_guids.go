@@ -8,13 +8,13 @@ type FindsUserGUIDs struct {
 }
 
 type uaaUsersGUIDsByScopeInterface interface {
-	UsersGUIDsByScope(scope string) ([]string, error)
+	UsersGUIDsByScope(token, scope string) ([]string, error)
 }
 
 type FindsUserGUIDsInterface interface {
 	UserGUIDsBelongingToSpace(string, string) ([]string, error)
 	UserGUIDsBelongingToOrganization(string, string, string) ([]string, error)
-	UserGUIDsBelongingToScope(string) ([]string, error)
+	UserGUIDsBelongingToScope(string, string) ([]string, error)
 }
 
 func NewFindsUserGUIDs(cloudController cf.CloudControllerInterface, uaa uaaUsersGUIDsByScopeInterface) FindsUserGUIDs {
@@ -66,10 +66,10 @@ func (finder FindsUserGUIDs) UserGUIDsBelongingToOrganization(orgGUID, role, tok
 	return userGUIDs, nil
 }
 
-func (finder FindsUserGUIDs) UserGUIDsBelongingToScope(scope string) ([]string, error) {
+func (finder FindsUserGUIDs) UserGUIDsBelongingToScope(token, scope string) ([]string, error) {
 	var userGUIDs []string
 
-	userGUIDs, err := finder.uaa.UsersGUIDsByScope(scope)
+	userGUIDs, err := finder.uaa.UsersGUIDsByScope(token, scope)
 	if err != nil {
 		return userGUIDs, err
 	}

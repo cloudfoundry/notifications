@@ -62,10 +62,10 @@ func (m Mother) UAAClient() *uaa.UAAClient {
 
 func (m Mother) SpaceStrategy() services.SpaceStrategy {
 	env := NewEnvironment()
-	uaaClient := m.UAAClient()
+	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-	tokenLoader := postal.NewTokenLoader(uaaClient)
+	tokenLoader := uaa.NewZonedTokenLoader(uaaClient)
 	spaceLoader := services.NewSpaceLoader(cloudController)
 	organizationLoader := services.NewOrganizationLoader(cloudController)
 	enqueuer := m.Enqueuer()
@@ -81,7 +81,7 @@ func (m Mother) OrganizationStrategy() services.OrganizationStrategy {
 	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
 	tokenLoader := uaa.NewZonedTokenLoader(uaaClient)
 	organizationLoader := services.NewOrganizationLoader(cloudController)
-	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, m.UAAClient())
+	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 	enqueuer := m.Enqueuer()
 
 	return services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, enqueuer)
@@ -99,10 +99,10 @@ func (m Mother) EveryoneStrategy() services.EveryoneStrategy {
 
 func (m Mother) UAAScopeStrategy() services.UAAScopeStrategy {
 	env := NewEnvironment()
-	uaaClient := m.UAAClient()
+	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
-	tokenLoader := postal.NewTokenLoader(uaaClient)
+	tokenLoader := uaa.NewZonedTokenLoader(uaaClient)
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 	enqueuer := m.Enqueuer()
 
