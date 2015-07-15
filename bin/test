@@ -1,5 +1,4 @@
-#! /usr/bin/env bash
-set -e
+#!/bin/bash -e
 
 DIR=$(dirname $0)
 

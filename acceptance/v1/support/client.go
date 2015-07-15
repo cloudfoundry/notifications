@@ -2,6 +2,7 @@ package support
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -18,6 +19,7 @@ type Client struct {
 	Notify        *NotifyService
 	Preferences   *PreferencesService
 	Messages      *MessagesService
+	API           *APIService
 	HTTPClient    *http.Client
 }
 
@@ -45,6 +47,10 @@ func NewClient(host string) *Client {
 	client.Messages = &MessagesService{
 		client: client,
 	}
+	client.API = &APIService{
+		client: client,
+	}
+
 	client.HTTPClient = http.DefaultClient
 
 	return client
@@ -178,4 +184,29 @@ func (c Client) ClientsNotificationsTemplatePath(clientID, notificationID string
 
 func (c Client) MessagePath(messageID string) string {
 	return c.host + "/messages/" + messageID
+}
+
+func (c Client) InfoPath() string {
+	return c.host + "/info"
+}
+
+type APIService struct {
+	client *Client
+}
+
+func (s *APIService) Version() (int, int, error) {
+	status, body, err := s.client.makeRequest("GET", s.client.InfoPath(), nil, "")
+	if err != nil {
+		return 0, 0, err
+	}
+
+	var info struct {
+		Version int `json:"version"`
+	}
+	err = json.Unmarshal(body, &info)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return status, info.Version, nil
 }

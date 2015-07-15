@@ -1,5 +1,4 @@
-#! /usr/bin/env bash
-set -e
+#!/bin/bash -e
 
 DIR=$(dirname $0)
 
@@ -12,6 +11,7 @@ RED="\033[0;31m"
 NONE="\033[0m"
 
 source $DIR/env/$ENVIRONMENT
+EXIT_CODE=0
 
 function run() {
   set +e
@@ -20,7 +20,13 @@ function run() {
   set -e
 }
 
-run -slowSpecThreshold=20 ./acceptance
+if [[ $EXIT_CODE = 0 ]]; then
+	run -slowSpecThreshold=20 ./acceptance/v2
+fi
+
+if [[ $EXIT_CODE = 0 ]]; then
+	run -slowSpecThreshold=20 ./acceptance/v1
+fi
 
 if [[ $EXIT_CODE = 0 ]]; then
     STATE="${GREEN}ACCEPTANCE SUITE PASS${NONE}"

@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"database/sql"
 	"fmt"
 	"net"
 	"net/http"
@@ -11,6 +12,8 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
+	"github.com/cloudfoundry-incubator/notifications/gobble"
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/onsi/ginkgo"
 )
 
@@ -108,6 +111,24 @@ func (s Notifications) URL() string {
 	return "http://localhost:" + s.port
 }
 
+func (s Notifications) MigrateDatabase() {
+	env := application.NewEnvironment()
+	database, gobbleDB := fetchDatabases()
+
+	database.Migrate(env.ModelMigrationsPath)
+	gobbleDB.Migrate(env.GobbleMigrationsPath)
+}
+
+func (s Notifications) ResetDatabase() {
+	database, gobbleDB := fetchDatabases()
+
+	database.Setup()
+	database.Connection().(*models.Connection).TruncateTables()
+	database.Seed()
+
+	gobbleDB.Connection.TruncateTables()
+}
+
 func freePort() string {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -118,4 +139,17 @@ func freePort() string {
 	address := listener.Addr().String()
 	addressParts := strings.SplitN(address, ":", 2)
 	return addressParts[1]
+}
+
+func fetchDatabases() (*models.DB, *gobble.DB) {
+	env := application.NewEnvironment()
+	sqlDB, err := sql.Open("mysql", env.DatabaseURL)
+	if err != nil {
+		ginkgo.Fail(err.Error(), 1)
+	}
+
+	database := models.NewDatabase(sqlDB, models.Config{DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json")})
+	gobbleDB := gobble.NewDatabase(sqlDB)
+
+	return database, gobbleDB
 }

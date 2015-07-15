@@ -1,9 +1,9 @@
-package acceptance
+package v1
 
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/acceptance/support"
+	"github.com/cloudfoundry-incubator/notifications/acceptance/v1/support"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

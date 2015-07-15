@@ -15,7 +15,7 @@ var _ = Describe("GetInfo", func() {
 		var handler handlers.GetInfo
 
 		BeforeEach(func() {
-			handler = handlers.NewGetInfo()
+			handler = handlers.NewGetInfo(100)
 		})
 
 		It("returns a 200 response code and an empty JSON body", func() {
@@ -28,7 +28,9 @@ var _ = Describe("GetInfo", func() {
 			handler.ServeHTTP(writer, request, nil)
 
 			Expect(writer.Code).To(Equal(http.StatusOK))
-			Expect(writer.Body.String()).To(Equal("{}"))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"version": 100
+			}`))
 		})
 	})
 })

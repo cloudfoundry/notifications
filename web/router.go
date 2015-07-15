@@ -65,14 +65,20 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	notificationsRouter := NewNotificationsRouter(registrar, errorWriter, logging, notificationsWriteAuthenticator, databaseAllocator, notificationsFinder, notificationsManageAuthenticator)
 	notifyRouter := NewNotifyRouter(notify, errorWriter, userStrategy, logging, notificationsWriteAuthenticator, databaseAllocator, spaceStrategy, organizationStrategy, everyoneStrategy, uaaScopeStrategy, emailStrategy, emailsWriteAuthenticator)
 
-	pool := NewRouterPool()
-	pool.AddMux(NewInfoRouter(logging))
-	pool.AddMux(userPreferencesRouter)
-	pool.AddMux(clientsRouter)
-	pool.AddMux(messagesRouter)
-	pool.AddMux(templatesRouter)
-	pool.AddMux(notificationsRouter)
-	pool.AddMux(notifyRouter)
+	v1 := NewRouterPool()
+	v1.AddMux(NewInfoRouter(1, logging))
+	v1.AddMux(userPreferencesRouter)
+	v1.AddMux(clientsRouter)
+	v1.AddMux(messagesRouter)
+	v1.AddMux(templatesRouter)
+	v1.AddMux(notificationsRouter)
+	v1.AddMux(notifyRouter)
 
-	return pool
+	v2 := NewRouterPool()
+	v2.AddMux(NewInfoRouter(2, logging))
+
+	return VersionRouter{
+		1: v1,
+		2: v2,
+	}
 }

@@ -1,16 +1,11 @@
-package acceptance
+package v1
 
 import (
-	"database/sql"
 	"os"
-	"path"
 	"regexp"
 	"testing"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
-	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/gobble"
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -18,29 +13,25 @@ import (
 )
 
 var (
-	TRUE  = true
-	FALSE = false
+	TRUE      = true
+	FALSE     = false
+	GUIDRegex = regexp.MustCompile(`[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}`)
+	Servers   struct {
+		Notifications servers.Notifications
+		SMTP          *servers.SMTP
+		CC            servers.CC
+		UAA           *servers.UAA
+		ZonedUAA      *servers.UAA
+	}
 )
-
-var GUIDRegex = regexp.MustCompile(`[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}`)
-
-var Servers struct {
-	Notifications servers.Notifications
-	SMTP          *servers.SMTP
-	CC            servers.CC
-	UAA           *servers.UAA
-	ZonedUAA      *servers.UAA
-}
 
 func TestAcceptanceSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Acceptance Suite")
+	RunSpecs(t, "V1 Acceptance Suite")
 }
 
 var _ = BeforeSuite(func() {
 	os.Setenv("VCAP_APPLICATION", `{"instance_index": -1}`)
-
-	MigrateDatabase()
 
 	Servers.SMTP = servers.NewSMTP()
 	Servers.SMTP.Boot()
@@ -56,6 +47,7 @@ var _ = BeforeSuite(func() {
 
 	Servers.Notifications = servers.NewNotifications()
 	Servers.Notifications.Compile()
+	Servers.Notifications.MigrateDatabase()
 	Servers.Notifications.Boot()
 })
 
@@ -64,42 +56,14 @@ var _ = AfterSuite(func() {
 	Servers.Notifications.Destroy()
 	Servers.CC.Close()
 	Servers.UAA.Close()
+	Servers.ZonedUAA.Close()
 	Servers.SMTP.Close()
 })
 
 var _ = BeforeEach(func() {
-	ResetDatabase()
+	Servers.Notifications.ResetDatabase()
 	Servers.SMTP.Reset()
 })
-
-func FetchDatabases() (*models.DB, *gobble.DB) {
-	env := application.NewEnvironment()
-	sqlDB, err := sql.Open("mysql", env.DatabaseURL)
-	Expect(err).NotTo(HaveOccurred())
-
-	database := models.NewDatabase(sqlDB, models.Config{DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json")})
-	gobbleDB := gobble.NewDatabase(sqlDB)
-
-	return database, gobbleDB
-}
-
-func MigrateDatabase() {
-	env := application.NewEnvironment()
-	database, gobbleDB := FetchDatabases()
-
-	database.Migrate(env.ModelMigrationsPath)
-	gobbleDB.Migrate(env.GobbleMigrationsPath)
-}
-
-func ResetDatabase() {
-	database, gobbleDB := FetchDatabases()
-
-	database.Setup()
-	database.Connection().(*models.Connection).TruncateTables()
-	database.Seed()
-
-	gobbleDB.Connection.TruncateTables()
-}
 
 func GetClientTokenFor(clientID, zone string) uaa.Token {
 	token, err := GetUAAClientFor(clientID, zone).GetClientToken()
