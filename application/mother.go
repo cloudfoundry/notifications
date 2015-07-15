@@ -22,9 +22,8 @@ import (
 )
 
 type Mother struct {
-	uaaClient *uaa.UAAClient
-	sqlDB     *sql.DB
-	mutex     sync.Mutex
+	sqlDB *sql.DB
+	mutex sync.Mutex
 }
 
 func NewMother() *Mother {
@@ -45,19 +44,6 @@ func (m *Mother) Queue() gobble.QueueInterface {
 
 func (m Mother) UserStrategy() services.UserStrategy {
 	return services.NewUserStrategy(m.Enqueuer())
-}
-
-func (m Mother) UAAClient() *uaa.UAAClient {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	if m.uaaClient == nil {
-		env := NewEnvironment()
-		client := uaa.NewUAAClient(env.UAAHost, env.UAAClientID, env.UAAClientSecret, env.VerifySSL)
-		m.uaaClient = &client
-	}
-
-	return m.uaaClient
 }
 
 func (m Mother) SpaceStrategy() services.SpaceStrategy {

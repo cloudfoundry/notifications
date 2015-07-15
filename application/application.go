@@ -79,9 +79,9 @@ func (app Application) ConfigureSMTP(logger lager.Logger) {
 }
 
 func (app Application) RetrieveUAAPublicKey(logger lager.Logger) {
-	uaaClient := app.mother.UAAClient()
+	zonedUAAClient := uaa.NewZonedUAAClient(app.env.UAAClientID, app.env.UAAClientSecret, app.env.VerifySSL, "")
 
-	key, err := uaaClient.GetTokenKey()
+	key, err := zonedUAAClient.GetTokenKey(app.env.UAAHost)
 	if err != nil {
 		logger.Fatal("uaa-get-token-key-errored", err)
 	}
