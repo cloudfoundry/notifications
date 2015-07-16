@@ -4,8 +4,11 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/collections"
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/nu7hatch/gouuid"
 )
 
 type MotherInterface interface {
@@ -74,8 +77,11 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	v1.AddMux(notificationsRouter)
 	v1.AddMux(notifyRouter)
 
+	sendersCollection := collections.NewSendersCollection(models.NewSendersRepository(uuid.NewV4))
+
 	v2 := NewRouterPool()
 	v2.AddMux(NewInfoRouter(2, logging))
+	v2.AddMux(NewSendersRouter(logging, notificationsWriteAuthenticator, databaseAllocator, sendersCollection))
 
 	return VersionRouter{
 		1: v1,

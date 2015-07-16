@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
+	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -36,3 +37,16 @@ var _ = AfterSuite(func() {
 	Servers.Notifications.Close()
 	Servers.Notifications.Destroy()
 })
+
+func GetClientTokenFor(clientID, zone string) uaa.Token {
+	token, err := GetUAAClientFor(clientID, zone).GetClientToken()
+	if err != nil {
+		panic(err)
+	}
+
+	return token
+}
+
+func GetUAAClientFor(clientID string, zone string) uaa.UAA {
+	return uaa.NewUAA("", Servers.UAA.ServerURL, clientID, "secret", "")
+}

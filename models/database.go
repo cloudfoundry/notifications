@@ -65,6 +65,7 @@ func (database DB) Setup() {
 	database.connection.AddTableWithName(GlobalUnsubscribe{}, "global_unsubscribes").SetKeys(true, "Primary").ColMap("UserID").SetUnique(true)
 	database.connection.AddTableWithName(Template{}, "templates").SetKeys(true, "Primary").ColMap("Name").SetUnique(true)
 	database.connection.AddTableWithName(Message{}, "messages").SetKeys(false, "ID")
+	database.connection.AddTableWithName(Sender{}, "senders").SetKeys(false, "ID").SetUniqueTogether("name", "client_id")
 }
 
 func (database DB) Seed() {

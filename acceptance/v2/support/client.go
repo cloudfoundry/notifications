@@ -18,7 +18,8 @@ type Config struct {
 type Client struct {
 	config     Config
 	httpClient *http.Client
-	API        *APIService
+	API        APIService
+	Senders    SendersService
 }
 
 func NewClient(config Config) *Client {
@@ -26,6 +27,7 @@ func NewClient(config Config) *Client {
 		config:     config,
 		httpClient: http.DefaultClient,
 		API:        NewAPIService(config),
+		Senders:    NewSendersService(config),
 	}
 }
 
@@ -100,13 +102,13 @@ type APIService struct {
 	config Config
 }
 
-func NewAPIService(config Config) *APIService {
-	return &APIService{
+func NewAPIService(config Config) APIService {
+	return APIService{
 		config: config,
 	}
 }
 
-func (s *APIService) Version() (int, error) {
+func (s APIService) Version() (int, error) {
 	status, body, err := NewClient(s.config).makeRequest("GET", s.config.Host+"/info", nil, "")
 	if err != nil {
 		return 0, err

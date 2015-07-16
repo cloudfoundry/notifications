@@ -165,9 +165,7 @@ var _ = Describe("ClientsRepo", func() {
 				}
 
 				client, err := repo.Upsert(conn, client)
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				client = models.Client{
 					ID:          "my-client",
@@ -175,9 +173,7 @@ var _ = Describe("ClientsRepo", func() {
 				}
 
 				client, err = repo.Upsert(conn, client)
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(client.ID).To(Equal("my-client"))
 				Expect(client.Description).To(Equal("My Client"))

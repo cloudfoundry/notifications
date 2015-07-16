@@ -42,6 +42,7 @@ func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 	}
 
 	context.Set("token", token)
+	context.Set("client_id", token.Claims["client_id"])
 
 	return true
 }

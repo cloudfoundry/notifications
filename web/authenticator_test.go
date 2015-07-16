@@ -88,6 +88,12 @@ var _ = Describe("Authenticator", func() {
 			Expect(*(contextToken.(*jwt.Token))).To(Equal(*token))
 		})
 
+		It("sets the client_id on the context", func() {
+			ware.ServeHTTP(writer, request, context)
+
+			Expect(context.Get("client_id")).To(Equal("mister-client"))
+		})
+
 		Context("when the prefix to the token has different capitalization", func() {
 			It("still sets the token", func() {
 				request.Header.Set("Authorization", "bearer "+rawToken)
