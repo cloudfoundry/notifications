@@ -57,6 +57,7 @@ If you are unfamiliar with UAA consult the [UAA token overview](https://github.c
 | DB_LOGGING_ENABLED           | Logs DB interactions when set to true       | false    |
 | DB_MAX_OPEN_CONNS            | Maximum number of open DB connections       | 0 (unlimited) |
 | DATABASE_URL\*               | URL to your Database                        | \<none\> |
+| DEFAULT_UAA_SCOPES\*         | Comma separated list of scopes              | \<none\> |
 | ENCRYPTION_KEY\*             | Key used to encrypt the unsubscribe ID      | \<none\> |
 | GOBBLE_MIGRATIONS_DIR\*      | Location of the gobble migrations directory | \<none\> |
 | PORT                         | Port that application will bind to          | 3000     |
