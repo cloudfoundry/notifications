@@ -12,6 +12,7 @@ import (
 
 type collection interface {
 	Add(conn models.ConnectionInterface, sender collections.Sender) (createdSender collections.Sender, err error)
+	Get(conn models.ConnectionInterface, senderID, clientID string) (retrievedSender collections.Sender, err error)
 }
 
 type CreateHandler struct {

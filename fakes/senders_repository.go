@@ -10,6 +10,13 @@ type SendersRepository struct {
 		Err          error
 	}
 
+	GetCall struct {
+		Conn         models.ConnectionInterface
+		SenderID     string
+		ReturnSender models.Sender
+		Err          error
+	}
+
 	GetByClientIDAndNameCall struct {
 		ReturnSender models.Sender
 		Err          error
@@ -27,6 +34,12 @@ func (s *SendersRepository) Insert(conn models.ConnectionInterface, sender model
 	s.InsertCall.Conn = conn
 	s.InsertCall.Sender = sender
 	return s.InsertCall.ReturnSender, s.InsertCall.Err
+}
+
+func (s *SendersRepository) Get(conn models.ConnectionInterface, senderID string) (models.Sender, error) {
+	s.GetCall.Conn = conn
+	s.GetCall.SenderID = senderID
+	return s.GetCall.ReturnSender, s.GetCall.Err
 }
 
 func (s *SendersRepository) GetByClientIDAndName(conn models.ConnectionInterface, clientID, name string) (models.Sender, error) {

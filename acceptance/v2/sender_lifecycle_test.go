@@ -31,11 +31,11 @@ var _ = Describe("Sender lifecycle", func() {
 			Expect(sender.Name).To(Equal("My Cool App"))
 		})
 
-		//By("getting the sender", func() {
-		//retrieved_sender, err := client.Senders.Get(sender.ID, token.Access)
-		//Expect(err).NotTo(HaveOccurred())
-		//Expect(retrieved_sender.Name).To(Equal("My Cool App"))
-		//Expect(retrieved_sender.ID).To(Equal(sender.ID))
-		//})
+		By("getting the sender", func() {
+			retrieved_sender, err := client.Senders.Get(sender.ID, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(retrieved_sender.Name).To(Equal("My Cool App"))
+			Expect(retrieved_sender.ID).To(Equal(sender.ID))
+		})
 	})
 })

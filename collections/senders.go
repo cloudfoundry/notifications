@@ -29,8 +29,17 @@ func (e PersistenceError) Error() string {
 	return fmt.Sprintf("persistence error: %s", e.Err)
 }
 
+type NotFoundError struct {
+	Err error
+}
+
+func (e NotFoundError) Error() string {
+	return fmt.Sprintf("not found error: %s", e.Err)
+}
+
 type sendersRepository interface {
 	Insert(conn models.ConnectionInterface, sender models.Sender) (insertedSender models.Sender, err error)
+	Get(conn models.ConnectionInterface, senderID string) (retrievedSender models.Sender, err error)
 	GetByClientIDAndName(conn models.ConnectionInterface, clientID, name string) (retrievedSender models.Sender, err error)
 }
 
@@ -62,11 +71,41 @@ func (sc SendersCollection) Add(conn models.ConnectionInterface, sender Sender) 
 		case models.DuplicateRecordError:
 			model, err = sc.repo.GetByClientIDAndName(conn, sender.ClientID, sender.Name)
 			if err != nil {
-				panic(err)
+				return Sender{}, PersistenceError{err}
 			}
 		default:
 			return Sender{}, PersistenceError{err}
 		}
+	}
+
+	return Sender{
+		ID:       model.ID,
+		Name:     model.Name,
+		ClientID: model.ClientID,
+	}, nil
+}
+
+func (sc SendersCollection) Get(conn models.ConnectionInterface, senderID, clientID string) (Sender, error) {
+	if senderID == "" {
+		return Sender{}, ValidationError{errors.New("missing sender id")}
+	}
+
+	if clientID == "" {
+		return Sender{}, ValidationError{errors.New("missing client id")}
+	}
+
+	model, err := sc.repo.Get(conn, senderID)
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return Sender{}, NotFoundError{err}
+		default:
+			return Sender{}, PersistenceError{err}
+		}
+	}
+
+	if clientID != model.ClientID {
+		return Sender{}, NotFoundError{errors.New("sender not found")}
 	}
 
 	return Sender{

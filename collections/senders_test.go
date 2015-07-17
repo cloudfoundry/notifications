@@ -20,17 +20,20 @@ var _ = Describe("SendersCollection", func() {
 
 	BeforeEach(func() {
 		sendersRepository = fakes.NewSendersRepository()
-		sendersRepository.InsertCall.ReturnSender = models.Sender{
-			ID:       "some-sender-id",
-			Name:     "some-sender",
-			ClientID: "some-client-id",
-		}
 
 		sendersCollection = collections.NewSendersCollection(sendersRepository)
 		conn = fakes.NewConnection()
 	})
 
 	Describe("Add", func() {
+		BeforeEach(func() {
+			sendersRepository.InsertCall.ReturnSender = models.Sender{
+				ID:       "some-sender-id",
+				Name:     "some-sender",
+				ClientID: "some-client-id",
+			}
+		})
+
 		It("adds a sender to the collection", func() {
 			sender, err := sendersCollection.Add(conn, collections.Sender{
 				Name:     "some-sender",
@@ -104,6 +107,87 @@ var _ = Describe("SendersCollection", func() {
 				})
 				Expect(err).To(MatchError(collections.ValidationError{
 					Err: errors.New("missing sender client_id"),
+				}))
+			})
+
+			It("returns a persistence error when the sender cannot be found by client id and name", func() {
+				sendersRepository.InsertCall.ReturnSender = models.Sender{}
+				sendersRepository.InsertCall.Err = models.DuplicateRecordError{}
+
+				sendersRepository.GetByClientIDAndNameCall.ReturnSender = models.Sender{}
+				sendersRepository.GetByClientIDAndNameCall.Err = errors.New("BOOM!")
+
+				_, err := sendersCollection.Add(conn, collections.Sender{
+					Name:     "some-sender",
+					ClientID: "some-client-id",
+				})
+				Expect(err).To(MatchError(collections.PersistenceError{
+					Err: errors.New("BOOM!"),
+				}))
+			})
+		})
+	})
+
+	Describe("Get", func() {
+		BeforeEach(func() {
+			sendersRepository.GetCall.ReturnSender = models.Sender{
+				ID:       "some-sender-id",
+				Name:     "some-sender",
+				ClientID: "some-client-id",
+			}
+		})
+
+		It("will retrieve a sender from the collection", func() {
+			sender, err := sendersCollection.Get(conn, "some-sender-id", "some-client-id")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(sender).To(Equal(collections.Sender{
+				ID:       "some-sender-id",
+				Name:     "some-sender",
+				ClientID: "some-client-id",
+			}))
+
+			Expect(sendersRepository.GetCall.Conn).To(Equal(conn))
+			Expect(sendersRepository.GetCall.SenderID).To(Equal("some-sender-id"))
+		})
+
+		Context("failure cases", func() {
+			It("validates that a sender id was specified", func() {
+				_, err := sendersCollection.Get(conn, "", "some-client-id")
+				Expect(err).To(MatchError(collections.ValidationError{
+					Err: errors.New("missing sender id"),
+				}))
+			})
+
+			It("validates that a client id was specified", func() {
+				_, err := sendersCollection.Get(conn, "some-sender-id", "")
+				Expect(err).To(MatchError(collections.ValidationError{
+					Err: errors.New("missing client id"),
+				}))
+			})
+
+			It("generates a not found error when the sender does not exist", func() {
+				sendersRepository.GetCall.Err = models.RecordNotFoundError("sender not found")
+
+				_, err := sendersCollection.Get(conn, "some-sender-id", "some-client-id")
+				Expect(err).To(MatchError(collections.NotFoundError{
+					Err: models.RecordNotFoundError("sender not found"),
+				}))
+			})
+
+			It("generates a not found error when the sender belongs to a different client", func() {
+				_, err := sendersCollection.Get(conn, "some-sender-id", "mismatch-client-id")
+				Expect(err).To(MatchError(collections.NotFoundError{
+					Err: errors.New("sender not found"),
+				}))
+			})
+
+			It("handles unexpected database errors", func() {
+				sendersRepository.GetCall.ReturnSender = models.Sender{}
+				sendersRepository.GetCall.Err = errors.New("BOOM!")
+
+				_, err := sendersCollection.Get(conn, "some-sender-id", "some-client-id")
+				Expect(err).To(MatchError(collections.PersistenceError{
+					Err: errors.New("BOOM!"),
 				}))
 			})
 		})

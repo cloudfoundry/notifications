@@ -37,6 +37,19 @@ func (r SendersRepository) Insert(conn ConnectionInterface, sender Sender) (Send
 	return sender, nil
 }
 
+func (r SendersRepository) Get(conn ConnectionInterface, senderID string) (Sender, error) {
+	sender := Sender{}
+	err := conn.SelectOne(&sender, "SELECT * FROM `senders` WHERE `id` = ?", senderID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = NewRecordNotFoundError("Sender with sender_id %q could not be found", senderID)
+		}
+		return sender, err
+	}
+
+	return sender, nil
+}
+
 func (r SendersRepository) GetByClientIDAndName(conn ConnectionInterface, clientID, name string) (Sender, error) {
 	sender := Sender{}
 	err := conn.SelectOne(&sender, "SELECT * FROM `senders` WHERE `client_id` = ? AND `name` = ?", clientID, name)

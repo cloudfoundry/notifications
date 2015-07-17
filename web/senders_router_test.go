@@ -32,6 +32,22 @@ var _ = Describe("SendersRouter", func() {
 	It("routes POST /senders", func() {
 		s := router.Get("POST /senders").GetHandler().(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(senders.CreateHandler{}))
+		Expect(s.Middleware).To(HaveLen(3))
+
+		requestLogging := s.Middleware[0].(web.RequestLogging)
+		Expect(requestLogging).To(Equal(logging))
+
+		authenticator := s.Middleware[1].(web.Authenticator)
+		Expect(authenticator).To(Equal(auth))
+
+		databaseAllocator := s.Middleware[2].(web.DatabaseAllocator)
+		Expect(databaseAllocator).To(Equal(dbAllocator))
+	})
+
+	It("routes GET /senders/{sender_id}", func() {
+		s := router.Get("GET /senders/{sender_id}").GetHandler().(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(senders.GetHandler{}))
+		Expect(s.Middleware).To(HaveLen(3))
 
 		requestLogging := s.Middleware[0].(web.RequestLogging)
 		Expect(requestLogging).To(Equal(logging))
