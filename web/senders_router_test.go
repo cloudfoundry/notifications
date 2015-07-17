@@ -42,9 +42,4 @@ var _ = Describe("SendersRouter", func() {
 		databaseAllocator := s.Middleware[2].(web.DatabaseAllocator)
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
-
-	PIt("routes GET /senders/{id}", func() {
-		handler := router.Get("GET /senders/{id}").GetHandler()
-		Expect(handler).To(BeAssignableToTypeOf(senders.GetHandler{}))
-	})
 })
