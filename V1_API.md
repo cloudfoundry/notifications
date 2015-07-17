@@ -1,4 +1,4 @@
-# Notifications
+# Notifications V1 Documentation
 
 - System Status
 	- [Check service status](#get-info)
@@ -42,6 +42,11 @@
 
 ##### Request
 
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 1
+```
+
 ###### Route
 ```
 GET /info
@@ -49,16 +54,18 @@ GET /info
 
 ###### CURL example
 ```
-$ curl -i -X GET http://notifications.example.com/info
+$ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
+  http://notifications.example.com/info
 
 HTTP/1.1 200 OK
 Connection: close
-Content-Length: 2
+Content-Length: 13
 Content-Type: text/plain; charset=utf-8
 Date: Tue, 30 Sep 2014 21:29:36 GMT
 X-Cf-Requestid: 2cf01258-ccff-41e9-6d82-41a4441af4af
 
-{}
+{"version": 1}
 ```
 
 ##### Response
@@ -69,9 +76,9 @@ X-Cf-Requestid: 2cf01258-ccff-41e9-6d82-41a4441af4af
 ```
 
 ###### Body
-| Fields   | Description |
-| -------- | ----------- |
-| \<None\> |             |
+| Fields  | Description        |
+| ------- | ------------------ |
+| version | API version number |
 
 
 ## Sending Notifications
@@ -83,6 +90,7 @@ X-Cf-Requestid: 2cf01258-ccff-41e9-6d82-41a4441af4af
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notifications.write` scope. Sending __critical__ notifications requires the `critical_notifications.write` scope.
@@ -108,6 +116,7 @@ POST /users/{user-guid}
 ###### CURL example
 ```
 curl -i -X POST \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"kind_id":"example-kind-id", "subject":"what it is all about", "html":"this is a test"}' \
   http://notifications.example.com/users/user-guid
@@ -147,6 +156,7 @@ X-Cf-Requestid: 5c9bca88-280e-41d1-6e80-26a2a97adf4a
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notifications.write` scope. Sending __critical__ notifications requires the `critical_notifications.write` scope.
@@ -172,6 +182,7 @@ POST /spaces/{space-guid}
 ###### CURL example
 ```
 $ curl -i -X POST \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"kind_id":"example-kind-id", "subject":"what it is all about", "html":"this is a test"}' \
   http://notifications.example.com/spaces/space-guid
@@ -216,6 +227,7 @@ X-Cf-Requestid: 4dcfc91c-9cf6-4a51-497a-8ae506ce37f5
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notifications.write` scope. Sending __critical__ notifications requires the `critical_notifications.write` scope.
@@ -241,6 +253,7 @@ POST /organizations/{organization-guid}
 ###### CURL example
 ```
 $ curl -i -X POST \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"kind_id":"example-kind-id", "subject":"what it is all about", "html":"this is a test"}' \
   http://notifications.example.com/organizations/organization-guid
@@ -285,6 +298,7 @@ X-Cf-Requestid: 3a564cd9-74c8-46f6-5d31-8a8b600fc43f
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notifications.write` scope. Sending __critical__ notifications requires the `critical_notifications.write` scope.
@@ -310,6 +324,7 @@ POST /everyone
 ###### CURL example
 ```
 $ curl -i -X POST \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"kind_id":"example-kind-id", "subject":"what it is all about", "html":"this is a test"}' \
   http://notifications.example.com/everyone
@@ -354,6 +369,7 @@ X-Cf-Requestid: 3a564cd9-74c8-46f6-5d31-8a8b600fc43f
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notifications.write` scope. Sending __critical__ notifications requires the `critical_notifications.write` scope.
@@ -379,6 +395,7 @@ POST /uaa_scopes/{scope}
 ###### CURL example
 ```
 $ curl -i -X POST \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"kind_id":"example-kind-id", "subject":"what it is all about", "html":"this is a test"}' \
   http://notifications.example.com/uaa_scopes/uaa.scope
@@ -422,6 +439,7 @@ X-Cf-Requestid: 3a564cd9-74c8-46f6-5d31-8a8b600fc43f
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `emails.write` scope
@@ -448,6 +466,7 @@ POST /emails
 ###### CURL example
 ```
 $ curl -i -X POST \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"to":"user@example.com", "subject":"what it is all about", "html":"this is a test","kind_id":"my-notification"}' \
   http://notifications.example.com/emails
@@ -488,6 +507,7 @@ X-Cf-Requestid: eb7ee46c-2142-4a74-5b73-e4971eea511a
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires either the `emails.write` or the `notifications.write` scope
@@ -508,8 +528,9 @@ GET /messages/{messageID}
 ###### CURL example
 ```
 $ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-    http://notifications.example.com/messages/540cf340-03d3-4552-714f-0ec548a6cca9
+  http://notifications.example.com/messages/540cf340-03d3-4552-714f-0ec548a6cca9
 
 200 OK
 Connection: close
@@ -555,6 +576,7 @@ If the `messageID` is not known to the system, a `404 Not Found` response will b
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notifications.write` scope. Registering __critical__ notifications requires the `critical_notifications.write` scope.
@@ -585,6 +607,7 @@ PUT /notifications
 ###### CURL example
 ```
 $ curl -i -X PUT \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"source_name":"Galactic Empire", "notifications":{"my-first-notification-id":{"description":"Example Kind Description", "critical": true}, "my-second-notification-id":{"description":"Example description", "critical":true}}}' \
   http://notifications.example.com/notifications
@@ -613,6 +636,7 @@ X-Cf-Requestid: f39e22a4-6693-4a6d-6b27-006aecc924d4
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notifications.manage` scope.
@@ -634,6 +658,7 @@ PUT /clients/{client-id}/notifications/{notification-id}
 ###### CURL example
 ```
 $ curl -i -X PUT \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"description":"my excellent description", "critical":true, "template":"68C52741-C3C3-4B52-A522-787BF6159F72"}' \
   http://notifications.example.com/clients/a-good-client-id/notifications/my-notification-id
@@ -663,6 +688,7 @@ Returns all notifications in the system, grouped by client.  Clients without any
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notifications.manage` scope.
@@ -675,6 +701,7 @@ GET /notifications
 ###### CURL example
 ```
 $ curl -i \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   http://notifications.example.com/notifications
 
@@ -747,6 +774,11 @@ Transfer-Encoding: chunked
 
 ##### Request
 
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 1
+```
+
 ###### Route
 ```
 OPTIONS /user_preferences
@@ -755,6 +787,7 @@ OPTIONS /user_preferences
 ###### CURL example
 ```
 $ curl -i -X OPTIONS \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   http://notifications.example.com/user_preferences
 
 HTTP/1.1 204 No Content
@@ -795,6 +828,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <USER-TOKEN>
 ```
 \* The user token requires `notification_preferences.write` scope.
@@ -807,6 +841,7 @@ GET /user_preferences
 ###### CURL example
 ```
 $ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <USER-TOKEN>" \
   http://notifications.example.com/user_preferences
 
@@ -884,6 +919,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <USER-TOKEN>
 ```
 \* The user token requires `notification_preferences.write` scope.
@@ -909,6 +945,7 @@ PATCH /user_preferences
 ###### CURL example
 ```
 $ curl -i -X PATCH \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <USER-TOKEN>" \
   -d '{"global_unsubscribe": false, "clients": {"login-service":{"effa96de-2349-423a-b5e4-b1e84712a714":{"email":true}}}}'
   http://notifications.example.com/user_preferences
@@ -944,6 +981,11 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 
 ##### Request
 
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 1
+```
+
 ###### Route
 ```
 OPTIONS /user_preferences/{user-guid}
@@ -952,6 +994,7 @@ OPTIONS /user_preferences/{user-guid}
 ###### CURL example
 ```
 $ curl -i -X OPTIONS \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   http://notifications.example.com/user_preferences/user-guid
 
 HTTP/1.1 204 No Content
@@ -992,6 +1035,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notification_preferences.admin` scope.
@@ -1004,6 +1048,7 @@ GET /user_preferences/{user-guid}
 ###### CURL example
 ```
 $ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   http://notifications.example.com/user_preferences/user-guid
 
@@ -1081,6 +1126,7 @@ The above headers constitute a CORS contract. They indicate that the GET and PAT
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notification_preferences.admin` scope.
@@ -1106,6 +1152,7 @@ PATCH /user_preferences/user-guid
 ###### CURL example
 ```
 $ curl -i -X PATCH \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <USER-TOKEN>" \
   -d '{"global_unsubcribe":false, "clients": {"login-service":{"effa96de-2349-423a-b5e4-b1e84712a714":{"email":true}}}}'
   http://notifications.example.com/user_preferences/user-guid
@@ -1147,6 +1194,7 @@ This endpoint is used to create a template and save it to the database.
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notification_templates.write` scope
@@ -1170,6 +1218,7 @@ POST /templates
 ###### CURL example
 ```
 $ curl -i -X POST \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"name": "My template", "subject":"System notification: {{.Subject}}", "text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>", "metadata": {"tags": "<h1>", "raptors": "scary"}}' \
   http://notifications.example.com/templates
@@ -1207,6 +1256,7 @@ This endpoint is used to retrieve a template that was saved to the database.
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notification_templates.read` scope
@@ -1218,6 +1268,7 @@ GET /templates/{my-template-id}
 ###### CURL example
 ```
 $ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   http://notifications.example.com/templates/my-template-id
 
@@ -1269,6 +1320,7 @@ This endpoint is used to update a template in the database.
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notification_templates.write` scope
@@ -1292,6 +1344,7 @@ PUT /templates/templateID
 ###### CURL example
 ```
 $ curl -i -X PUT \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"name": "My template", "subject":"System notification: {{.Subject}}", "text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>"}' \
   http://notifications.example.com/templates/templateID
@@ -1323,6 +1376,7 @@ This endpoint is used to delete an existing template in the database.
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notification_templates.write` scope
@@ -1334,7 +1388,10 @@ DELETE /templates/templateID
 
 ###### CURL example
 ```
-$ curl -i -X DELETE -H "Authorization: Bearer <CLIENT-TOKEN>" http://notifications.example.com/templates/template-id
+$ curl -i -X DELETE \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/templates/template-id
 
 204 No Content
 Connection: close
@@ -1358,6 +1415,7 @@ This endpoint is used to retrieve a list of template id's and names that were sa
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notification_templates.read` scope
@@ -1369,6 +1427,7 @@ GET /templates
 ###### CURL example
 ```
 $ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   http://notifications.example.com/templates
 
@@ -1408,6 +1467,7 @@ This endpoint is used to retrieve the default template.
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notification_templates.read` scope
@@ -1419,6 +1479,7 @@ GET /default_template
 ###### CURL example
 ```
 $ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   http://notifications.example.com/default_template
 
@@ -1468,6 +1529,7 @@ This endpoint is used to update the default template.
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notification_templates.write` scope
@@ -1491,6 +1553,7 @@ PUT /default_template
 ###### CURL example
 ```
 $ curl -i -X PUT \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"name": "My template", "subject":"System notification: {{.Subject}}", "text":"Message to: {{.To}}, sent from the {{.ClientID}} UAA Client", "html": "<p>Message to: {{.To}}, sent from the {{.ClientID}} UAA Client</p>"}' \
   http://notifications.example.com/default_template
@@ -1520,6 +1583,7 @@ This endpoint is used to assign an existing template to a known client.
 
 ###### Headers
 ```
+X-NOTIFICATIONS-VERSION: 1
 Authorization: bearer <CLIENT-TOKEN>
 ```
 \* The client token requires `notifications.manage` scope
@@ -1539,6 +1603,7 @@ PUT /clients/:client_id/template
 ###### CURL example
 ```
 $ curl -i -X PUT \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"template": "4102591e-10d7-4c83-9fc9-1c88c5754f37"}' \
   http://notifications.example.com/clients/my-client/template
@@ -1587,6 +1652,7 @@ PUT /clients/:client_id/notifications/:notification_id/template
 ###### CURL example
 ```
 $ curl -i -X PUT \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{"template": "4102591e-10d7-4c83-9fc9-1c88c5754f37"}' \
   http://notifications.example.com/clients/my-client/notifications/my-notification/template
@@ -1627,6 +1693,7 @@ GET /templates/:template_id/associations
 ###### CURL example
 ```
 $ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 1" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   http://notifications.example.com/templates/template-id/associations
 

@@ -119,16 +119,21 @@ The Emails endpoint expects a json body to be posted with the following keys:
 \*\* either text or html have to be set, not both
 
 
-[Further API Documentation](/API.md)
+<a name="api-docs"></a>
+### API Documentation
+- [Version 1 Documentation](/V1_API.md)
+- [Version 2 Documentation](/V2_API.md)
 
 ## Configuring Email Templates
-You can do a whole lot to configure templates for your notifications, see [API.md](/API.md) for specific endpoints available!
+You can do a whole lot to configure templates for your notifications, see [API Docs](#api-docs) for specific endpoints available!
 
 <a name="unsubscribe-id"></a>
 #### UnsubscribeID
 
-AES Encryption is used to encrypt a token value for unsubscribing a user from a 
-notification. The format of the token is the `user_guid|client_id|kind_id`. The key used to instantiate a cipher is a 16 byte MD5 sum of the text given to the `ENCRYPTION_KEY` environment variable.
+AES Encryption is used to encrypt a token value for unsubscribing a user from a
+notification. The format of the token is the `user_guid|client_id|kind_id`. The
+key used to instantiate a cipher is a 16 byte MD5 sum of the text given to the
+`ENCRYPTION_KEY` environment variable.
 
 Encrypting:
 
