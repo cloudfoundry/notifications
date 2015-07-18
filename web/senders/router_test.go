@@ -1,4 +1,4 @@
-package web_test
+package senders_test
 
 import (
 	"database/sql"
@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("SendersRouter", func() {
+var _ = Describe("Router", func() {
 	var (
 		logging     web.RequestLogging
 		auth        web.Authenticator
@@ -26,7 +26,7 @@ var _ = Describe("SendersRouter", func() {
 		logging = web.NewRequestLogging(lager.NewLogger("log-prefix"))
 		auth = web.NewAuthenticator("some-public-key", "notifications.write")
 		dbAllocator = web.NewDatabaseAllocator(&sql.DB{}, false)
-		router = web.NewSendersRouter(web.SendersRouterConfig{
+		router = senders.NewRouter(senders.RouterConfig{
 			RequestLogging:    logging,
 			Authenticator:     auth,
 			DatabaseAllocator: dbAllocator,

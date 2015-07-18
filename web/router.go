@@ -8,6 +8,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/cloudfoundry-incubator/notifications/web/notificationtypes"
+	"github.com/cloudfoundry-incubator/notifications/web/senders"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -144,13 +146,13 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		Version:        2,
 		RequestLogging: logging,
 	}))
-	v2.AddMux(NewSendersRouter(SendersRouterConfig{
+	v2.AddMux(senders.NewRouter(senders.RouterConfig{
 		RequestLogging:    logging,
 		Authenticator:     notificationsWriteAuthenticator,
 		DatabaseAllocator: databaseAllocator,
 		SendersCollection: sendersCollection,
 	}))
-	v2.AddMux(NewNotificationTypesRouter(NotificationTypesRouterConfig{
+	v2.AddMux(notificationtypes.NewRouter(notificationtypes.RouterConfig{
 		NotificationTypesCollection: collections.NotificationTypesCollection{},
 	}))
 

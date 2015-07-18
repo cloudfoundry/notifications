@@ -1,8 +1,7 @@
-package web_test
+package notificationtypes_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/collections"
-	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/notificationtypes"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
@@ -20,7 +19,7 @@ var _ = Describe("NotificationTypesRouter", func() {
 		//logging = web.NewRequestLogging(lager.NewLogger("log-prefix"))
 		//auth = web.NewAuthenticator("some-public-key", "notifications.write")
 		//dbAllocator = web.NewDatabaseAllocator(&sql.DB{}, false)
-		router = web.NewNotificationTypesRouter(web.NotificationTypesRouterConfig{
+		router = notificationtypes.NewRouter(notificationtypes.RouterConfig{
 			NotificationTypesCollection: collections.NotificationTypesCollection{},
 		})
 	})
