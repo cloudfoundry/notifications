@@ -2,7 +2,7 @@ package notificationtypes_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/collections"
-	"github.com/cloudfoundry-incubator/notifications/web/notificationtypes"
+	"github.com/cloudfoundry-incubator/notifications/web/v2/notificationtypes"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 

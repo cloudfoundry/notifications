@@ -8,8 +8,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
-	"github.com/cloudfoundry-incubator/notifications/web/notificationtypes"
-	"github.com/cloudfoundry-incubator/notifications/web/senders"
+	"github.com/cloudfoundry-incubator/notifications/web/v2/notificationtypes"
+	"github.com/cloudfoundry-incubator/notifications/web/v2/senders"
 	"github.com/nu7hatch/gouuid"
 )
 

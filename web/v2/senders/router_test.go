@@ -5,7 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/web"
-	"github.com/cloudfoundry-incubator/notifications/web/senders"
+	"github.com/cloudfoundry-incubator/notifications/web/v2/senders"
 	"github.com/gorilla/mux"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"

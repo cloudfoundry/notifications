@@ -10,7 +10,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/web/senders"
+	"github.com/cloudfoundry-incubator/notifications/web/v2/senders"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"

@@ -8,7 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/web/notificationtypes"
+	"github.com/cloudfoundry-incubator/notifications/web/v2/notificationtypes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/ryanmoran/stack"
