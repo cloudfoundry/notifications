@@ -61,28 +61,98 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	databaseAllocator := NewDatabaseAllocator(mother.SQLDatabase(), config.DBLoggingEnabled)
 	cors := mother.CORS()
 
-	userPreferencesRouter := NewUserPreferencesRouter(logging, cors, preferencesFinder, errorWriter, notificationPreferencesReadAuthenticator, databaseAllocator, notificationPreferencesAdminAuthenticator, preferenceUpdater, notificationPreferencesWriteAuthenticator)
-	clientsRouter := NewClientsRouter(templateAssigner, errorWriter, logging, notificationsManageAuthenticator, databaseAllocator, notificationsUpdater)
-	messagesRouter := NewMessagesRouter(messageFinder, errorWriter, logging, notificationsWriteOrEmailsWriteAuthenticator, databaseAllocator)
-	templatesRouter := NewTemplatesRouter(templateFinder, errorWriter, logging, notificationsTemplateReadAuthenticator, notificationsTemplateWriteAuthenticator, databaseAllocator, templateUpdater, templateCreator, templateDeleter, templateAssociationLister, notificationsManageAuthenticator, templateLister)
-	notificationsRouter := NewNotificationsRouter(registrar, errorWriter, logging, notificationsWriteAuthenticator, databaseAllocator, notificationsFinder, notificationsManageAuthenticator)
-	notifyRouter := NewNotifyRouter(notify, errorWriter, userStrategy, logging, notificationsWriteAuthenticator, databaseAllocator, spaceStrategy, organizationStrategy, everyoneStrategy, uaaScopeStrategy, emailStrategy, emailsWriteAuthenticator)
-
 	v1 := NewRouterPool()
-	v1.AddMux(NewInfoRouter(1, logging))
-	v1.AddMux(userPreferencesRouter)
-	v1.AddMux(clientsRouter)
-	v1.AddMux(messagesRouter)
-	v1.AddMux(templatesRouter)
-	v1.AddMux(notificationsRouter)
-	v1.AddMux(notifyRouter)
+	v1.AddMux(NewInfoRouter(InfoRouterConfig{
+		Version:        1,
+		RequestLogging: logging,
+	}))
+	v1.AddMux(NewUserPreferencesRouter(UserPreferencesRouterConfig{
+		ErrorWriter:       errorWriter,
+		PreferencesFinder: preferencesFinder,
+		PreferenceUpdater: preferenceUpdater,
 
+		CORS:                                      cors,
+		RequestLogging:                            logging,
+		DatabaseAllocator:                         databaseAllocator,
+		NotificationPreferencesReadAuthenticator:  notificationPreferencesReadAuthenticator,
+		NotificationPreferencesWriteAuthenticator: notificationPreferencesWriteAuthenticator,
+		NotificationPreferencesAdminAuthenticator: notificationPreferencesAdminAuthenticator,
+	}))
+	v1.AddMux(NewClientsRouter(ClientsRouterConfig{
+		ErrorWriter:          errorWriter,
+		TemplateAssigner:     templateAssigner,
+		NotificationsUpdater: notificationsUpdater,
+
+		RequestLogging:                   logging,
+		DatabaseAllocator:                databaseAllocator,
+		NotificationsManageAuthenticator: notificationsManageAuthenticator,
+	}))
+	v1.AddMux(NewMessagesRouter(MessagesRouterConfig{
+		ErrorWriter:   errorWriter,
+		MessageFinder: messageFinder,
+
+		RequestLogging:                               logging,
+		DatabaseAllocator:                            databaseAllocator,
+		NotificationsWriteOrEmailsWriteAuthenticator: notificationsWriteOrEmailsWriteAuthenticator,
+	}))
+	v1.AddMux(NewTemplatesRouter(TemplatesRouterConfig{
+		ErrorWriter:               errorWriter,
+		TemplateFinder:            templateFinder,
+		TemplateUpdater:           templateUpdater,
+		TemplateCreator:           templateCreator,
+		TemplateDeleter:           templateDeleter,
+		TemplateLister:            templateLister,
+		TemplateAssociationLister: templateAssociationLister,
+
+		RequestLogging:                          logging,
+		DatabaseAllocator:                       databaseAllocator,
+		NotificationTemplatesReadAuthenticator:  notificationsTemplateReadAuthenticator,
+		NotificationTemplatesWriteAuthenticator: notificationsTemplateWriteAuthenticator,
+		NotificationsManageAuthenticator:        notificationsManageAuthenticator,
+	}))
+	v1.AddMux(NewNotificationsRouter(NotificationsRouterConfig{
+		ErrorWriter:         errorWriter,
+		Registrar:           registrar,
+		NotificationsFinder: notificationsFinder,
+
+		RequestLogging:                   logging,
+		DatabaseAllocator:                databaseAllocator,
+		NotificationsWriteAuthenticator:  notificationsWriteAuthenticator,
+		NotificationsManageAuthenticator: notificationsManageAuthenticator,
+	}))
+	v1.AddMux(NewNotifyRouter(NotifyRouterConfig{
+		ErrorWriter:          errorWriter,
+		Notify:               notify,
+		UserStrategy:         userStrategy,
+		SpaceStrategy:        spaceStrategy,
+		OrganizationStrategy: organizationStrategy,
+		EveryoneStrategy:     everyoneStrategy,
+		UAAScopeStrategy:     uaaScopeStrategy,
+		EmailStrategy:        emailStrategy,
+
+		RequestLogging:                  logging,
+		NotificationsWriteAuthenticator: notificationsWriteAuthenticator,
+		DatabaseAllocator:               databaseAllocator,
+		EmailsWriteAuthenticator:        emailsWriteAuthenticator,
+	}))
+
+	// V2
 	sendersCollection := collections.NewSendersCollection(models.NewSendersRepository(uuid.NewV4))
 
 	v2 := NewRouterPool()
-	v2.AddMux(NewInfoRouter(2, logging))
-	v2.AddMux(NewSendersRouter(logging, notificationsWriteAuthenticator, databaseAllocator, sendersCollection))
-	v2.AddMux(NewNotificationTypesRouter(collections.NotificationTypesCollection{}))
+	v2.AddMux(NewInfoRouter(InfoRouterConfig{
+		Version:        2,
+		RequestLogging: logging,
+	}))
+	v2.AddMux(NewSendersRouter(SendersRouterConfig{
+		RequestLogging:    logging,
+		Authenticator:     notificationsWriteAuthenticator,
+		DatabaseAllocator: databaseAllocator,
+		SendersCollection: sendersCollection,
+	}))
+	v2.AddMux(NewNotificationTypesRouter(NotificationTypesRouterConfig{
+		NotificationTypesCollection: collections.NotificationTypesCollection{},
+	}))
 
 	return VersionRouter{
 		1: v1,

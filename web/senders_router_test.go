@@ -26,7 +26,12 @@ var _ = Describe("SendersRouter", func() {
 		logging = web.NewRequestLogging(lager.NewLogger("log-prefix"))
 		auth = web.NewAuthenticator("some-public-key", "notifications.write")
 		dbAllocator = web.NewDatabaseAllocator(&sql.DB{}, false)
-		router = web.NewSendersRouter(logging, auth, dbAllocator, collections.SendersCollection{})
+		router = web.NewSendersRouter(web.SendersRouterConfig{
+			RequestLogging:    logging,
+			Authenticator:     auth,
+			DatabaseAllocator: dbAllocator,
+			SendersCollection: collections.SendersCollection{},
+		})
 	})
 
 	It("routes POST /senders", func() {

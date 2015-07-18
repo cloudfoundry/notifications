@@ -15,7 +15,15 @@ var _ = Describe("NotificatonsRouter", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = web.NewNotificationsRouter(fakes.NewRegistrar(), fakes.NewErrorWriter(), web.RequestLogging{}, web.Authenticator{Scopes: []string{"notifications.write"}}, web.DatabaseAllocator{}, fakes.NewNotificationsFinder(), web.Authenticator{Scopes: []string{"notifications.manage"}})
+		router = web.NewNotificationsRouter(web.NotificationsRouterConfig{
+			Registrar:                        fakes.NewRegistrar(),
+			ErrorWriter:                      fakes.NewErrorWriter(),
+			RequestLogging:                   web.RequestLogging{},
+			NotificationsWriteAuthenticator:  web.Authenticator{Scopes: []string{"notifications.write"}},
+			DatabaseAllocator:                web.DatabaseAllocator{},
+			NotificationsFinder:              fakes.NewNotificationsFinder(),
+			NotificationsManageAuthenticator: web.Authenticator{Scopes: []string{"notifications.manage"}},
+		})
 	})
 
 	Describe("/notifications", func() {

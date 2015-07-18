@@ -20,7 +20,9 @@ var _ = Describe("NotificationTypesRouter", func() {
 		//logging = web.NewRequestLogging(lager.NewLogger("log-prefix"))
 		//auth = web.NewAuthenticator("some-public-key", "notifications.write")
 		//dbAllocator = web.NewDatabaseAllocator(&sql.DB{}, false)
-		router = web.NewNotificationTypesRouter(collections.NotificationTypesCollection{})
+		router = web.NewNotificationTypesRouter(web.NotificationTypesRouterConfig{
+			NotificationTypesCollection: collections.NotificationTypesCollection{},
+		})
 	})
 
 	It("routes POST /senders/{sender_id}/notification_types", func() {

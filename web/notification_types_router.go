@@ -7,7 +7,11 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-func NewNotificationTypesRouter(notificationTypesCollection collections.NotificationTypesCollection) *mux.Router {
+type NotificationTypesRouterConfig struct {
+	NotificationTypesCollection collections.NotificationTypesCollection
+}
+
+func NewNotificationTypesRouter(config NotificationTypesRouterConfig) *mux.Router {
 	router := mux.NewRouter()
 
 	createStack := stack.NewStack(notificationtypes.NewCreateHandler(nil))

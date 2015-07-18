@@ -14,7 +14,10 @@ var _ = Describe("InfoRouter", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = web.NewInfoRouter(1, web.RequestLogging{})
+		router = web.NewInfoRouter(web.InfoRouterConfig{
+			Version:        1,
+			RequestLogging: web.RequestLogging{},
+		})
 	})
 
 	It("routes GET /info", func() {

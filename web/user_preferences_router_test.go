@@ -16,7 +16,18 @@ var _ = Describe("UserPreferencesRouter", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = web.NewUserPreferencesRouter(web.RequestLogging{}, web.CORS{}, fakes.NewPreferencesFinder(services.PreferencesBuilder{}), fakes.NewErrorWriter(), web.Authenticator{Scopes: []string{"notification_preferences.read"}}, web.DatabaseAllocator{}, web.Authenticator{Scopes: []string{"notification_preferences.admin"}}, fakes.NewPreferenceUpdater(), web.Authenticator{Scopes: []string{"notification_preferences.write"}})
+		router = web.NewUserPreferencesRouter(web.UserPreferencesRouterConfig{
+			ErrorWriter:       fakes.NewErrorWriter(),
+			PreferencesFinder: fakes.NewPreferencesFinder(services.PreferencesBuilder{}),
+			PreferenceUpdater: fakes.NewPreferenceUpdater(),
+
+			CORS:                                      web.CORS{},
+			RequestLogging:                            web.RequestLogging{},
+			DatabaseAllocator:                         web.DatabaseAllocator{},
+			NotificationPreferencesReadAuthenticator:  web.Authenticator{Scopes: []string{"notification_preferences.read"}},
+			NotificationPreferencesAdminAuthenticator: web.Authenticator{Scopes: []string{"notification_preferences.admin"}},
+			NotificationPreferencesWriteAuthenticator: web.Authenticator{Scopes: []string{"notification_preferences.write"}},
+		})
 	})
 
 	Describe("/user_preferences", func() {

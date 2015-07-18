@@ -15,7 +15,21 @@ var _ = Describe("TemplatesRouter", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = web.NewTemplatesRouter(fakes.NewTemplateFinder(), fakes.NewErrorWriter(), web.RequestLogging{}, web.Authenticator{Scopes: []string{"notification_templates.read"}}, web.Authenticator{Scopes: []string{"notification_templates.write"}}, web.DatabaseAllocator{}, fakes.NewTemplateUpdater(), fakes.NewTemplateCreator(), fakes.NewTemplateDeleter(), fakes.NewTemplateAssociationLister(), web.Authenticator{Scopes: []string{"notifications.manage"}}, fakes.NewTemplateLister())
+		router = web.NewTemplatesRouter(web.TemplatesRouterConfig{
+			ErrorWriter:               fakes.NewErrorWriter(),
+			TemplateFinder:            fakes.NewTemplateFinder(),
+			TemplateUpdater:           fakes.NewTemplateUpdater(),
+			TemplateCreator:           fakes.NewTemplateCreator(),
+			TemplateDeleter:           fakes.NewTemplateDeleter(),
+			TemplateLister:            fakes.NewTemplateLister(),
+			TemplateAssociationLister: fakes.NewTemplateAssociationLister(),
+
+			RequestLogging:                          web.RequestLogging{},
+			DatabaseAllocator:                       web.DatabaseAllocator{},
+			NotificationsManageAuthenticator:        web.Authenticator{Scopes: []string{"notifications.manage"}},
+			NotificationTemplatesReadAuthenticator:  web.Authenticator{Scopes: []string{"notification_templates.read"}},
+			NotificationTemplatesWriteAuthenticator: web.Authenticator{Scopes: []string{"notification_templates.write"}},
+		})
 	})
 
 	Describe("/templates", func() {

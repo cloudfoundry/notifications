@@ -8,20 +8,32 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-func NewNotificationsRouter(registrar services.RegistrarInterface,
-	errorWriter handlers.ErrorWriterInterface,
-	logging RequestLogging,
-	notificationsWriteAuthenticator Authenticator,
-	databaseAllocator DatabaseAllocator,
-	notificationsFinder services.NotificationsFinderInterface,
-	notificationsManageAuthenticator Authenticator) *mux.Router {
+type NotificationsRouterConfig struct {
+	Registrar           services.RegistrarInterface
+	NotificationsFinder services.NotificationsFinderInterface
+	ErrorWriter         handlers.ErrorWriterInterface
 
+	RequestLogging                   RequestLogging
+	DatabaseAllocator                DatabaseAllocator
+	NotificationsWriteAuthenticator  Authenticator
+	NotificationsManageAuthenticator Authenticator
+}
+
+func NewNotificationsRouter(config NotificationsRouterConfig) *mux.Router {
 	router := mux.NewRouter()
 	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
 
-	router.Handle("/registration", stack.NewStack(handlers.NewRegisterNotifications(registrar, errorWriter)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator)).Methods("PUT").Name("PUT /registration")
-	router.Handle("/notifications", stack.NewStack(handlers.NewRegisterClientWithNotifications(registrar, errorWriter)).Use(logging, requestCounter, notificationsWriteAuthenticator, databaseAllocator)).Methods("PUT").Name("PUT /notifications")
-	router.Handle("/notifications", stack.NewStack(handlers.NewGetAllNotifications(notificationsFinder, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator)).Methods("GET").Name("GET /notifications")
+	registerNotificationsHandler := handlers.NewRegisterNotifications(config.Registrar, config.ErrorWriter)
+	registerNotificationsStack := stack.NewStack(registerNotificationsHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/registration", registerNotificationsStack).Methods("PUT").Name("PUT /registration")
+
+	registerClientWithNotificationHandler := handlers.NewRegisterClientWithNotifications(config.Registrar, config.ErrorWriter)
+	registerClientWithNotificationStack := stack.NewStack(registerClientWithNotificationHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/notifications", registerClientWithNotificationStack).Methods("PUT").Name("PUT /notifications")
+
+	getAllNotificationsHandler := handlers.NewGetAllNotifications(config.NotificationsFinder, config.ErrorWriter)
+	getAllNotificationsStack := stack.NewStack(getAllNotificationsHandler).Use(config.RequestLogging, requestCounter, config.NotificationsManageAuthenticator, config.DatabaseAllocator)
+	router.Handle("/notifications", getAllNotificationsStack).Methods("GET").Name("GET /notifications")
 
 	return router
 }

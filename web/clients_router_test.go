@@ -15,7 +15,14 @@ var _ = Describe("ClientsRouter", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = web.NewClientsRouter(fakes.NewTemplateAssigner(), fakes.NewErrorWriter(), web.RequestLogging{}, web.Authenticator{Scopes: []string{"notifications.manage"}}, web.DatabaseAllocator{}, &fakes.NotificationUpdater{})
+		router = web.NewClientsRouter(web.ClientsRouterConfig{
+			TemplateAssigner:                 fakes.NewTemplateAssigner(),
+			ErrorWriter:                      fakes.NewErrorWriter(),
+			RequestLogging:                   web.RequestLogging{},
+			NotificationsManageAuthenticator: web.Authenticator{Scopes: []string{"notifications.manage"}},
+			DatabaseAllocator:                web.DatabaseAllocator{},
+			NotificationsUpdater:             &fakes.NotificationUpdater{},
+		})
 	})
 
 	It("routes PUT /clients/{client_id}/notifications/{notification_id}", func() {

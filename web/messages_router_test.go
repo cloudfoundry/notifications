@@ -15,7 +15,13 @@ var _ = Describe("MessagesRouter", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = web.NewMessagesRouter(fakes.NewMessageFinder(), fakes.NewErrorWriter(), web.RequestLogging{}, web.Authenticator{Scopes: []string{"notifications.write", "emails.write"}}, web.DatabaseAllocator{})
+		router = web.NewMessagesRouter(web.MessagesRouterConfig{
+			MessageFinder:                                fakes.NewMessageFinder(),
+			ErrorWriter:                                  fakes.NewErrorWriter(),
+			RequestLogging:                               web.RequestLogging{},
+			NotificationsWriteOrEmailsWriteAuthenticator: web.Authenticator{Scopes: []string{"notifications.write", "emails.write"}},
+			DatabaseAllocator:                            web.DatabaseAllocator{},
+		})
 	})
 
 	It("routes GET /messages/{message_id}", func() {

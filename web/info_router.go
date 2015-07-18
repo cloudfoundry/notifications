@@ -7,11 +7,16 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-func NewInfoRouter(version int, logging RequestLogging) *mux.Router {
+type InfoRouterConfig struct {
+	Version        int
+	RequestLogging RequestLogging
+}
+
+func NewInfoRouter(config InfoRouterConfig) *mux.Router {
 	router := mux.NewRouter()
 	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
 
-	router.Handle("/info", stack.NewStack(handlers.NewGetInfo(version)).Use(logging, requestCounter)).Methods("GET").Name("GET /info")
+	router.Handle("/info", stack.NewStack(handlers.NewGetInfo(config.Version)).Use(config.RequestLogging, requestCounter)).Methods("GET").Name("GET /info")
 
 	return router
 }

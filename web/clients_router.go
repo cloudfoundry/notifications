@@ -8,19 +8,31 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-func NewClientsRouter(templateAssigner services.TemplateAssignerInterface,
-	errorWriter handlers.ErrorWriterInterface,
-	logging RequestLogging,
-	notificationsManageAuthenticator Authenticator,
-	databaseAllocator DatabaseAllocator,
-	notificationsUpdater services.NotificationsUpdaterInterface) *mux.Router {
+type ClientsRouterConfig struct {
+	RequestLogging                   RequestLogging
+	NotificationsManageAuthenticator Authenticator
+	DatabaseAllocator                DatabaseAllocator
+	ErrorWriter                      handlers.ErrorWriterInterface
 
+	TemplateAssigner     services.TemplateAssignerInterface
+	NotificationsUpdater services.NotificationsUpdaterInterface
+}
+
+func NewClientsRouter(config ClientsRouterConfig) *mux.Router {
 	router := mux.NewRouter()
 	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
 
-	router.Handle("/clients/{client_id}/template", stack.NewStack(handlers.NewAssignClientTemplate(templateAssigner, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator)).Methods("PUT").Name("PUT /clients/{client_id}/template")
-	router.Handle("/clients/{client_id}/notifications/{notification_id}", stack.NewStack(handlers.NewUpdateNotifications(notificationsUpdater, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator)).Methods("PUT").Name("PUT /clients/{client_id}/notifications/{notification_id}")
-	router.Handle("/clients/{client_id}/notifications/{notification_id}/template", stack.NewStack(handlers.NewAssignNotificationTemplate(templateAssigner, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator)).Methods("PUT").Name("PUT /clients/{client_id}/notifications/{notification_id}/template")
+	assignClientTemplateHandler := handlers.NewAssignClientTemplate(config.TemplateAssigner, config.ErrorWriter)
+	assignClientTemplateStack := stack.NewStack(assignClientTemplateHandler).Use(config.RequestLogging, requestCounter, config.NotificationsManageAuthenticator, config.DatabaseAllocator)
+	router.Handle("/clients/{client_id}/template", assignClientTemplateStack).Methods("PUT").Name("PUT /clients/{client_id}/template")
+
+	updateNotificationHandler := handlers.NewUpdateNotifications(config.NotificationsUpdater, config.ErrorWriter)
+	updateNotificationStack := stack.NewStack(updateNotificationHandler).Use(config.RequestLogging, requestCounter, config.NotificationsManageAuthenticator, config.DatabaseAllocator)
+	router.Handle("/clients/{client_id}/notifications/{notification_id}", updateNotificationStack).Methods("PUT").Name("PUT /clients/{client_id}/notifications/{notification_id}")
+
+	assignNotificationTemplateHandler := handlers.NewAssignNotificationTemplate(config.TemplateAssigner, config.ErrorWriter)
+	assignNotificationTemplateStack := stack.NewStack(assignNotificationTemplateHandler).Use(config.RequestLogging, requestCounter, config.NotificationsManageAuthenticator, config.DatabaseAllocator)
+	router.Handle("/clients/{client_id}/notifications/{notification_id}/template", assignNotificationTemplateStack).Methods("PUT").Name("PUT /clients/{client_id}/notifications/{notification_id}/template")
 
 	return router
 }

@@ -8,16 +8,21 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-func NewMessagesRouter(messageFinder services.MessageFinderInterface,
-	errorWriter handlers.ErrorWriterInterface,
-	logging RequestLogging,
-	notificationsWriteOrEmailsWriteAuthenticator Authenticator,
-	databaseAllocator DatabaseAllocator) *mux.Router {
+type MessagesRouterConfig struct {
+	MessageFinder                                services.MessageFinderInterface
+	ErrorWriter                                  handlers.ErrorWriterInterface
+	RequestLogging                               RequestLogging
+	NotificationsWriteOrEmailsWriteAuthenticator Authenticator
+	DatabaseAllocator                            DatabaseAllocator
+}
 
+func NewMessagesRouter(config MessagesRouterConfig) *mux.Router {
 	router := mux.NewRouter()
 	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
 
-	router.Handle("/messages/{message_id}", stack.NewStack(handlers.NewGetMessages(messageFinder, errorWriter)).Use(logging, requestCounter, notificationsWriteOrEmailsWriteAuthenticator, databaseAllocator)).Methods("GET").Name("GET /messages/{message_id}")
+	getMessageHandler := handlers.NewGetMessages(config.MessageFinder, config.ErrorWriter)
+	getMessageStack := stack.NewStack(getMessageHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteOrEmailsWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/messages/{message_id}", getMessageStack).Methods("GET").Name("GET /messages/{message_id}")
 
 	return router
 }

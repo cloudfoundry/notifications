@@ -8,26 +8,42 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-func NewUserPreferencesRouter(logging RequestLogging,
-	cors CORS,
-	preferencesFinder services.PreferencesFinderInterface,
-	errorWriter handlers.ErrorWriterInterface,
-	notificationPreferencesReadAuthenticator Authenticator,
-	databaseAllocator DatabaseAllocator,
-	notificationPreferencesAdminAuthenticator Authenticator,
-	preferenceUpdater services.PreferenceUpdaterInterface,
-	notificationPreferencesWriteAuthenticator Authenticator) *mux.Router {
+type UserPreferencesRouterConfig struct {
+	ErrorWriter       handlers.ErrorWriterInterface
+	PreferencesFinder services.PreferencesFinderInterface
+	PreferenceUpdater services.PreferenceUpdaterInterface
 
+	CORS                                      CORS
+	RequestLogging                            RequestLogging
+	DatabaseAllocator                         DatabaseAllocator
+	NotificationPreferencesReadAuthenticator  Authenticator
+	NotificationPreferencesAdminAuthenticator Authenticator
+	NotificationPreferencesWriteAuthenticator Authenticator
+}
+
+func NewUserPreferencesRouter(config UserPreferencesRouterConfig) *mux.Router {
 	router := mux.NewRouter()
 	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
 
-	router.Handle("/user_preferences", stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors)).Methods("OPTIONS").Name("OPTIONS /user_preferences")
-	router.Handle("/user_preferences", stack.NewStack(handlers.NewGetPreferences(preferencesFinder, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesReadAuthenticator, databaseAllocator)).Methods("GET").Name("GET /user_preferences")
-	router.Handle("/user_preferences", stack.NewStack(handlers.NewUpdatePreferences(preferenceUpdater, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesWriteAuthenticator, databaseAllocator)).Methods("PATCH").Name("PATCH /user_preferences")
+	optionsPreferencesStack := stack.NewStack(handlers.NewOptionsPreferences()).Use(config.RequestLogging, requestCounter, config.CORS)
+	router.Handle("/user_preferences", optionsPreferencesStack).Methods("OPTIONS").Name("OPTIONS /user_preferences")
+	router.Handle("/user_preferences/{user_id}", optionsPreferencesStack).Methods("OPTIONS").Name("OPTIONS /user_preferences/{user_id}")
 
-	router.Handle("/user_preferences/{user_id}", stack.NewStack(handlers.NewOptionsPreferences()).Use(logging, requestCounter, cors)).Methods("OPTIONS").Name("OPTIONS /user_preferences/{user_id}")
-	router.Handle("/user_preferences/{user_id}", stack.NewStack(handlers.NewGetPreferencesForUser(preferencesFinder, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesAdminAuthenticator, databaseAllocator)).Methods("GET").Name("GET /user_preferences/{user_id}")
-	router.Handle("/user_preferences/{user_id}", stack.NewStack(handlers.NewUpdateSpecificUserPreferences(preferenceUpdater, errorWriter)).Use(logging, requestCounter, cors, notificationPreferencesAdminAuthenticator, databaseAllocator)).Methods("PATCH").Name("PATCH /user_preferences/{user_id}")
+	getPreferencesHandler := handlers.NewGetPreferences(config.PreferencesFinder, config.ErrorWriter)
+	getPreferencesStack := stack.NewStack(getPreferencesHandler).Use(config.RequestLogging, requestCounter, config.CORS, config.NotificationPreferencesReadAuthenticator, config.DatabaseAllocator)
+	router.Handle("/user_preferences", getPreferencesStack).Methods("GET").Name("GET /user_preferences")
+
+	updatePreferencesHandler := handlers.NewUpdatePreferences(config.PreferenceUpdater, config.ErrorWriter)
+	updatePreferencesStack := stack.NewStack(updatePreferencesHandler).Use(config.RequestLogging, requestCounter, config.CORS, config.NotificationPreferencesWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/user_preferences", updatePreferencesStack).Methods("PATCH").Name("PATCH /user_preferences")
+
+	getPreferencesForUserHandler := handlers.NewGetPreferencesForUser(config.PreferencesFinder, config.ErrorWriter)
+	getPreferencesForUserStack := stack.NewStack(getPreferencesForUserHandler).Use(config.RequestLogging, requestCounter, config.CORS, config.NotificationPreferencesAdminAuthenticator, config.DatabaseAllocator)
+	router.Handle("/user_preferences/{user_id}", getPreferencesForUserStack).Methods("GET").Name("GET /user_preferences/{user_id}")
+
+	updateSpecificUserPreferencesHandler := handlers.NewUpdateSpecificUserPreferences(config.PreferenceUpdater, config.ErrorWriter)
+	updateSpecificUserPreferencesStack := stack.NewStack(updateSpecificUserPreferencesHandler).Use(config.RequestLogging, requestCounter, config.CORS, config.NotificationPreferencesAdminAuthenticator, config.DatabaseAllocator)
+	router.Handle("/user_preferences/{user_id}", updateSpecificUserPreferencesStack).Methods("PATCH").Name("PATCH /user_preferences/{user_id}")
 
 	return router
 }

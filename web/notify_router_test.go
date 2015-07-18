@@ -15,7 +15,21 @@ var _ = Describe("NotifyRouter", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = web.NewNotifyRouter(fakes.NewNotify(), fakes.NewErrorWriter(), fakes.NewStrategy(), web.RequestLogging{}, web.Authenticator{Scopes: []string{"notifications.write"}}, web.DatabaseAllocator{}, fakes.NewStrategy(), fakes.NewStrategy(), fakes.NewStrategy(), fakes.NewStrategy(), fakes.NewStrategy(), web.Authenticator{Scopes: []string{"emails.write"}})
+		router = web.NewNotifyRouter(web.NotifyRouterConfig{
+			Notify:               fakes.NewNotify(),
+			ErrorWriter:          fakes.NewErrorWriter(),
+			UserStrategy:         fakes.NewStrategy(),
+			SpaceStrategy:        fakes.NewStrategy(),
+			OrganizationStrategy: fakes.NewStrategy(),
+			EveryoneStrategy:     fakes.NewStrategy(),
+			UAAScopeStrategy:     fakes.NewStrategy(),
+			EmailStrategy:        fakes.NewStrategy(),
+
+			RequestLogging:                  web.RequestLogging{},
+			DatabaseAllocator:               web.DatabaseAllocator{},
+			NotificationsWriteAuthenticator: web.Authenticator{Scopes: []string{"notifications.write"}},
+			EmailsWriteAuthenticator:        web.Authenticator{Scopes: []string{"emails.write"}},
+		})
 	})
 
 	It("routes POST /users/{user_id}", func() {

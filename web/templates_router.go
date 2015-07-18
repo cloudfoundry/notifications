@@ -8,32 +8,57 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-func NewTemplatesRouter(templateFinder services.TemplateFinderInterface,
-	errorWriter handlers.ErrorWriterInterface,
-	logging RequestLogging,
-	notificationsTemplateReadAuthenticator Authenticator,
-	notificationsTemplateWriteAuthenticator Authenticator,
-	databaseAllocator DatabaseAllocator,
-	templateUpdater services.TemplateUpdaterInterface,
-	templateCreator services.TemplateCreatorInterface,
-	templateDeleter services.TemplateDeleterInterface,
-	templateAssociationLister services.TemplateAssociationListerInterface,
-	notificationsManageAuthenticator Authenticator,
-	templateLister services.TemplateListerInterface) *mux.Router {
+type TemplatesRouterConfig struct {
+	TemplateFinder            services.TemplateFinderInterface
+	TemplateLister            services.TemplateListerInterface
+	TemplateUpdater           services.TemplateUpdaterInterface
+	TemplateCreator           services.TemplateCreatorInterface
+	TemplateDeleter           services.TemplateDeleterInterface
+	TemplateAssociationLister services.TemplateAssociationListerInterface
+	ErrorWriter               handlers.ErrorWriterInterface
 
+	RequestLogging                          RequestLogging
+	DatabaseAllocator                       DatabaseAllocator
+	NotificationTemplatesReadAuthenticator  Authenticator
+	NotificationTemplatesWriteAuthenticator Authenticator
+	NotificationsManageAuthenticator        Authenticator
+}
+
+func NewTemplatesRouter(config TemplatesRouterConfig) *mux.Router {
 	router := mux.NewRouter()
 	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
 
-	router.Handle("/default_template", stack.NewStack(handlers.NewGetDefaultTemplate(templateFinder, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator)).Methods("GET").Name("GET /default_template")
-	router.Handle("/default_template", stack.NewStack(handlers.NewUpdateDefaultTemplate(templateUpdater, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator)).Methods("PUT").Name("PUT /default_template")
+	getDefaultTemplateHandler := handlers.NewGetDefaultTemplate(config.TemplateFinder, config.ErrorWriter)
+	getDefaultTemplateStack := stack.NewStack(getDefaultTemplateHandler).Use(config.RequestLogging, requestCounter, config.NotificationTemplatesReadAuthenticator, config.DatabaseAllocator)
+	router.Handle("/default_template", getDefaultTemplateStack).Methods("GET").Name("GET /default_template")
 
-	router.Handle("/templates", stack.NewStack(handlers.NewListTemplates(templateLister, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator)).Methods("GET").Name("GET /templates")
-	router.Handle("/templates", stack.NewStack(handlers.NewCreateTemplate(templateCreator, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator)).Methods("POST").Name("POST /templates")
+	updateDefaultTemplateHandler := handlers.NewUpdateDefaultTemplate(config.TemplateUpdater, config.ErrorWriter)
+	updateDefaultTemplateStack := stack.NewStack(updateDefaultTemplateHandler).Use(config.RequestLogging, requestCounter, config.NotificationTemplatesWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/default_template", updateDefaultTemplateStack).Methods("PUT").Name("PUT /default_template")
 
-	router.Handle("/templates/{template_id}", stack.NewStack(handlers.NewGetTemplates(templateFinder, errorWriter)).Use(logging, requestCounter, notificationsTemplateReadAuthenticator, databaseAllocator)).Methods("GET").Name("GET /templates/{template_id}")
-	router.Handle("/templates/{template_id}", stack.NewStack(handlers.NewUpdateTemplates(templateUpdater, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator)).Methods("PUT").Name("PUT /templates/{template_id}")
-	router.Handle("/templates/{template_id}", stack.NewStack(handlers.NewDeleteTemplates(templateDeleter, errorWriter)).Use(logging, requestCounter, notificationsTemplateWriteAuthenticator, databaseAllocator)).Methods("DELETE").Name("DELETE /templates/{template_id}")
-	router.Handle("/templates/{template_id}/associations", stack.NewStack(handlers.NewListTemplateAssociations(templateAssociationLister, errorWriter)).Use(logging, requestCounter, notificationsManageAuthenticator, databaseAllocator)).Methods("GET").Name("GET /templates/{template_id}/associations")
+	listTemplatesHandler := handlers.NewListTemplates(config.TemplateLister, config.ErrorWriter)
+	listTemplatesStack := stack.NewStack(listTemplatesHandler).Use(config.RequestLogging, requestCounter, config.NotificationTemplatesReadAuthenticator, config.DatabaseAllocator)
+	router.Handle("/templates", listTemplatesStack).Methods("GET").Name("GET /templates")
+
+	createTemplateHandler := handlers.NewCreateTemplate(config.TemplateCreator, config.ErrorWriter)
+	createTemplateStack := stack.NewStack(createTemplateHandler).Use(config.RequestLogging, requestCounter, config.NotificationTemplatesWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/templates", createTemplateStack).Methods("POST").Name("POST /templates")
+
+	getTemplateHandler := handlers.NewGetTemplates(config.TemplateFinder, config.ErrorWriter)
+	getTemplateStack := stack.NewStack(getTemplateHandler).Use(config.RequestLogging, requestCounter, config.NotificationTemplatesReadAuthenticator, config.DatabaseAllocator)
+	router.Handle("/templates/{template_id}", getTemplateStack).Methods("GET").Name("GET /templates/{template_id}")
+
+	updateTemplateHandler := handlers.NewUpdateTemplates(config.TemplateUpdater, config.ErrorWriter)
+	updateTemplateStack := stack.NewStack(updateTemplateHandler).Use(config.RequestLogging, requestCounter, config.NotificationTemplatesWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/templates/{template_id}", updateTemplateStack).Methods("PUT").Name("PUT /templates/{template_id}")
+
+	deleteTemplateHandler := handlers.NewDeleteTemplates(config.TemplateDeleter, config.ErrorWriter)
+	deleteTemplateStack := stack.NewStack(deleteTemplateHandler).Use(config.RequestLogging, requestCounter, config.NotificationTemplatesWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/templates/{template_id}", deleteTemplateStack).Methods("DELETE").Name("DELETE /templates/{template_id}")
+
+	listTemplateAssociationsHandler := handlers.NewListTemplateAssociations(config.TemplateAssociationLister, config.ErrorWriter)
+	listTemplateAssociationsStack := stack.NewStack(listTemplateAssociationsHandler).Use(config.RequestLogging, requestCounter, config.NotificationsManageAuthenticator, config.DatabaseAllocator)
+	router.Handle("/templates/{template_id}/associations", listTemplateAssociationsStack).Methods("GET").Name("GET /templates/{template_id}/associations")
 
 	return router
 }
