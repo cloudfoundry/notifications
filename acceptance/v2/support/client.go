@@ -16,18 +16,20 @@ type Config struct {
 }
 
 type Client struct {
-	config     Config
-	httpClient *http.Client
-	API        APIService
-	Senders    SendersService
+	config            Config
+	httpClient        *http.Client
+	API               APIService
+	Senders           SendersService
+	NotificationTypes NotificationTypesService
 }
 
 func NewClient(config Config) *Client {
 	return &Client{
-		config:     config,
-		httpClient: http.DefaultClient,
-		API:        NewAPIService(config),
-		Senders:    NewSendersService(config),
+		config:            config,
+		httpClient:        http.DefaultClient,
+		API:               NewAPIService(config),
+		Senders:           NewSendersService(config),
+		NotificationTypes: NewNotificationTypesService(config),
 	}
 }
 

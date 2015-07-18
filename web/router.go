@@ -82,6 +82,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	v2 := NewRouterPool()
 	v2.AddMux(NewInfoRouter(2, logging))
 	v2.AddMux(NewSendersRouter(logging, notificationsWriteAuthenticator, databaseAllocator, sendersCollection))
+	v2.AddMux(NewNotificationTypesRouter(collections.NotificationTypesCollection{}))
 
 	return VersionRouter{
 		1: v1,

@@ -1,0 +1,61 @@
+package notificationtypes
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/cloudfoundry-incubator/notifications/collections"
+	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/ryanmoran/stack"
+)
+
+type collection interface {
+	Add(conn models.ConnectionInterface, notificationType collections.NotificationType) (createdNotificationType collections.NotificationType, err error)
+}
+
+type CreateHandler struct {
+	notificationTypes collection
+}
+
+func NewCreateHandler(notificationTypes collection) CreateHandler {
+	return CreateHandler{
+		notificationTypes: notificationTypes,
+	}
+}
+
+func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+	var createRequest struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Critical    bool   `json:"critical"`
+		TemplateID  string `json:"template_id"`
+	}
+
+	err := json.NewDecoder(req.Body).Decode(&createRequest)
+	if err != nil {
+		panic(err)
+	}
+
+	database := context.Get("database").(models.DatabaseInterface)
+
+	notificationType, err := h.notificationTypes.Add(database.Connection(), collections.NotificationType{
+		Name:        createRequest.Name,
+		Description: createRequest.Description,
+		Critical:    createRequest.Critical,
+		TemplateID:  createRequest.TemplateID,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	createResponse, _ := json.Marshal(map[string]interface{}{
+		"id":          notificationType.ID,
+		"name":        notificationType.Name,
+		"description": notificationType.Description,
+		"critical":    notificationType.Critical,
+		"template_id": notificationType.TemplateID,
+	})
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write(createResponse)
+}

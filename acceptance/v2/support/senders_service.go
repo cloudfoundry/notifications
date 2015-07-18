@@ -7,6 +7,11 @@ import (
 	"net/http"
 )
 
+type Sender struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type SendersService struct {
 	config Config
 }
