@@ -4,26 +4,27 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )
 
 type UserPreferencesRouterConfig struct {
+	CORS                                      middleware.CORS
+	RequestLogging                            middleware.RequestLogging
+	DatabaseAllocator                         middleware.DatabaseAllocator
+	NotificationPreferencesReadAuthenticator  middleware.Authenticator
+	NotificationPreferencesAdminAuthenticator middleware.Authenticator
+	NotificationPreferencesWriteAuthenticator middleware.Authenticator
+
 	ErrorWriter       handlers.ErrorWriterInterface
 	PreferencesFinder services.PreferencesFinderInterface
 	PreferenceUpdater services.PreferenceUpdaterInterface
-
-	CORS                                      CORS
-	RequestLogging                            RequestLogging
-	DatabaseAllocator                         DatabaseAllocator
-	NotificationPreferencesReadAuthenticator  Authenticator
-	NotificationPreferencesAdminAuthenticator Authenticator
-	NotificationPreferencesWriteAuthenticator Authenticator
 }
 
 func NewUserPreferencesRouter(config UserPreferencesRouterConfig) *mux.Router {
 	router := mux.NewRouter()
-	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
+	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
 	optionsPreferencesStack := stack.NewStack(handlers.NewOptionsPreferences()).Use(config.RequestLogging, requestCounter, config.CORS)
 	router.Handle("/user_preferences", optionsPreferencesStack).Methods("OPTIONS").Name("OPTIONS /user_preferences")

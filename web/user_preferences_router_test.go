@@ -5,6 +5,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 
@@ -21,12 +22,12 @@ var _ = Describe("UserPreferencesRouter", func() {
 			PreferencesFinder: fakes.NewPreferencesFinder(services.PreferencesBuilder{}),
 			PreferenceUpdater: fakes.NewPreferenceUpdater(),
 
-			CORS:                                      web.CORS{},
-			RequestLogging:                            web.RequestLogging{},
-			DatabaseAllocator:                         web.DatabaseAllocator{},
-			NotificationPreferencesReadAuthenticator:  web.Authenticator{Scopes: []string{"notification_preferences.read"}},
-			NotificationPreferencesAdminAuthenticator: web.Authenticator{Scopes: []string{"notification_preferences.admin"}},
-			NotificationPreferencesWriteAuthenticator: web.Authenticator{Scopes: []string{"notification_preferences.write"}},
+			CORS:                                      middleware.CORS{},
+			RequestLogging:                            middleware.RequestLogging{},
+			DatabaseAllocator:                         middleware.DatabaseAllocator{},
+			NotificationPreferencesReadAuthenticator:  middleware.Authenticator{Scopes: []string{"notification_preferences.read"}},
+			NotificationPreferencesAdminAuthenticator: middleware.Authenticator{Scopes: []string{"notification_preferences.admin"}},
+			NotificationPreferencesWriteAuthenticator: middleware.Authenticator{Scopes: []string{"notification_preferences.write"}},
 		})
 	})
 
@@ -34,25 +35,25 @@ var _ = Describe("UserPreferencesRouter", func() {
 		It("routes GET /user_preferences", func() {
 			s := router.Get("GET /user_preferences").GetHandler().(stack.Stack)
 			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetPreferences{}))
-			ExpectToContainMiddlewareStack(s.Middleware, web.RequestLogging{}, web.RequestCounter{}, web.CORS{}, web.Authenticator{}, web.DatabaseAllocator{})
+			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
-			authenticator := s.Middleware[3].(web.Authenticator)
+			authenticator := s.Middleware[3].(middleware.Authenticator)
 			Expect(authenticator.Scopes).To(Equal([]string{"notification_preferences.read"}))
 		})
 
 		It("routes PATCH /user_preferences", func() {
 			s := router.Get("PATCH /user_preferences").GetHandler().(stack.Stack)
 			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UpdatePreferences{}))
-			ExpectToContainMiddlewareStack(s.Middleware, web.RequestLogging{}, web.RequestCounter{}, web.CORS{}, web.Authenticator{}, web.DatabaseAllocator{})
+			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
-			authenticator := s.Middleware[3].(web.Authenticator)
+			authenticator := s.Middleware[3].(middleware.Authenticator)
 			Expect(authenticator.Scopes).To(Equal([]string{"notification_preferences.write"}))
 		})
 
 		It("routes OPTIONS /user_preferences", func() {
 			s := router.Get("OPTIONS /user_preferences").GetHandler().(stack.Stack)
 			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.OptionsPreferences{}))
-			ExpectToContainMiddlewareStack(s.Middleware, web.RequestLogging{}, web.RequestCounter{}, web.CORS{})
+			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{})
 		})
 	})
 
@@ -60,25 +61,25 @@ var _ = Describe("UserPreferencesRouter", func() {
 		It("routes GET /user_preferences/{user_id}", func() {
 			s := router.Get("GET /user_preferences/{user_id}").GetHandler().(stack.Stack)
 			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetPreferencesForUser{}))
-			ExpectToContainMiddlewareStack(s.Middleware, web.RequestLogging{}, web.RequestCounter{}, web.CORS{}, web.Authenticator{}, web.DatabaseAllocator{})
+			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
-			authenticator := s.Middleware[3].(web.Authenticator)
+			authenticator := s.Middleware[3].(middleware.Authenticator)
 			Expect(authenticator.Scopes).To(Equal([]string{"notification_preferences.admin"}))
 		})
 
 		It("routes PATCH /user_preferences/{user_id}", func() {
 			s := router.Get("PATCH /user_preferences/{user_id}").GetHandler().(stack.Stack)
 			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UpdateSpecificUserPreferences{}))
-			ExpectToContainMiddlewareStack(s.Middleware, web.RequestLogging{}, web.RequestCounter{}, web.CORS{}, web.Authenticator{}, web.DatabaseAllocator{})
+			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
-			authenticator := s.Middleware[3].(web.Authenticator)
+			authenticator := s.Middleware[3].(middleware.Authenticator)
 			Expect(authenticator.Scopes).To(Equal([]string{"notification_preferences.admin"}))
 		})
 
 		It("routes OPTIONS /user_preferences/{user_id}", func() {
 			s := router.Get("OPTIONS /user_preferences/{user_id}").GetHandler().(stack.Stack)
 			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.OptionsPreferences{}))
-			ExpectToContainMiddlewareStack(s.Middleware, web.RequestLogging{}, web.RequestCounter{}, web.CORS{})
+			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{})
 		})
 	})
 })

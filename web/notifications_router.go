@@ -4,24 +4,25 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )
 
 type NotificationsRouterConfig struct {
+	RequestLogging                   middleware.RequestLogging
+	DatabaseAllocator                middleware.DatabaseAllocator
+	NotificationsWriteAuthenticator  middleware.Authenticator
+	NotificationsManageAuthenticator middleware.Authenticator
+
 	Registrar           services.RegistrarInterface
 	NotificationsFinder services.NotificationsFinderInterface
 	ErrorWriter         handlers.ErrorWriterInterface
-
-	RequestLogging                   RequestLogging
-	DatabaseAllocator                DatabaseAllocator
-	NotificationsWriteAuthenticator  Authenticator
-	NotificationsManageAuthenticator Authenticator
 }
 
 func NewNotificationsRouter(config NotificationsRouterConfig) *mux.Router {
 	router := mux.NewRouter()
-	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
+	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
 	registerNotificationsHandler := handlers.NewRegisterNotifications(config.Registrar, config.ErrorWriter)
 	registerNotificationsStack := stack.NewStack(registerNotificationsHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)

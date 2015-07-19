@@ -1,4 +1,4 @@
-package web_test
+package middleware_test
 
 import (
 	"bytes"
@@ -10,8 +10,8 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
 
@@ -21,7 +21,7 @@ import (
 
 var _ = Describe("Database Allocator", func() {
 	var (
-		ware    web.DatabaseAllocator
+		ware    middleware.DatabaseAllocator
 		sqlDB   *sql.DB
 		writer  *httptest.ResponseRecorder
 		request *http.Request
@@ -34,7 +34,7 @@ var _ = Describe("Database Allocator", func() {
 		sqlDB, err = sqlmock.New()
 		Expect(err).NotTo(HaveOccurred())
 
-		ware = web.NewDatabaseAllocator(sqlDB, true)
+		ware = middleware.NewDatabaseAllocator(sqlDB, true)
 
 		writer = httptest.NewRecorder()
 		request = &http.Request{}
@@ -93,7 +93,7 @@ var _ = Describe("Database Allocator", func() {
 
 	Context("when db logging is disabled", func() {
 		It("allocates a database that does not log", func() {
-			ware = web.NewDatabaseAllocator(sqlDB, false)
+			ware = middleware.NewDatabaseAllocator(sqlDB, false)
 
 			result := ware.ServeHTTP(writer, request, context)
 			Expect(result).To(BeTrue())

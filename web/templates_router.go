@@ -4,11 +4,18 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )
 
 type TemplatesRouterConfig struct {
+	RequestLogging                          middleware.RequestLogging
+	DatabaseAllocator                       middleware.DatabaseAllocator
+	NotificationTemplatesReadAuthenticator  middleware.Authenticator
+	NotificationTemplatesWriteAuthenticator middleware.Authenticator
+	NotificationsManageAuthenticator        middleware.Authenticator
+
 	TemplateFinder            services.TemplateFinderInterface
 	TemplateLister            services.TemplateListerInterface
 	TemplateUpdater           services.TemplateUpdaterInterface
@@ -16,17 +23,11 @@ type TemplatesRouterConfig struct {
 	TemplateDeleter           services.TemplateDeleterInterface
 	TemplateAssociationLister services.TemplateAssociationListerInterface
 	ErrorWriter               handlers.ErrorWriterInterface
-
-	RequestLogging                          RequestLogging
-	DatabaseAllocator                       DatabaseAllocator
-	NotificationTemplatesReadAuthenticator  Authenticator
-	NotificationTemplatesWriteAuthenticator Authenticator
-	NotificationsManageAuthenticator        Authenticator
 }
 
 func NewTemplatesRouter(config TemplatesRouterConfig) *mux.Router {
 	router := mux.NewRouter()
-	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
+	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
 	getDefaultTemplateHandler := handlers.NewGetDefaultTemplate(config.TemplateFinder, config.ErrorWriter)
 	getDefaultTemplateStack := stack.NewStack(getDefaultTemplateHandler).Use(config.RequestLogging, requestCounter, config.NotificationTemplatesReadAuthenticator, config.DatabaseAllocator)

@@ -1,19 +1,21 @@
-package web_test
+package middleware_test
 
 import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/web"
+	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("CORS", func() {
-	var writer *httptest.ResponseRecorder
-	var request *http.Request
-	var ware web.CORS
-	var corsOrigin = "test-cors-origin"
+	var (
+		writer     *httptest.ResponseRecorder
+		request    *http.Request
+		ware       middleware.CORS
+		corsOrigin = "test-cors-origin"
+	)
 
 	Describe("ServeHTTP", func() {
 		BeforeEach(func() {
@@ -25,7 +27,7 @@ var _ = Describe("CORS", func() {
 				panic(err)
 			}
 
-			ware = web.NewCORS(corsOrigin)
+			ware = middleware.NewCORS(corsOrigin)
 		})
 
 		It("sets the correct CORS headers", func() {

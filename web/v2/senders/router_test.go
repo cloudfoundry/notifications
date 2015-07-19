@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
-	"github.com/cloudfoundry-incubator/notifications/web"
+	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/senders"
 	"github.com/gorilla/mux"
 	"github.com/pivotal-golang/lager"
@@ -16,16 +16,17 @@ import (
 
 var _ = Describe("Router", func() {
 	var (
-		logging     web.RequestLogging
-		auth        web.Authenticator
-		dbAllocator web.DatabaseAllocator
+		logging     middleware.RequestLogging
+		auth        middleware.Authenticator
+		dbAllocator middleware.DatabaseAllocator
 		router      *mux.Router
 	)
 
 	BeforeEach(func() {
-		logging = web.NewRequestLogging(lager.NewLogger("log-prefix"))
-		auth = web.NewAuthenticator("some-public-key", "notifications.write")
-		dbAllocator = web.NewDatabaseAllocator(&sql.DB{}, false)
+		logging = middleware.NewRequestLogging(lager.NewLogger("log-prefix"))
+		auth = middleware.NewAuthenticator("some-public-key", "notifications.write")
+		dbAllocator = middleware.NewDatabaseAllocator(&sql.DB{}, false)
+
 		router = senders.NewRouter(senders.RouterConfig{
 			RequestLogging:    logging,
 			Authenticator:     auth,
@@ -39,13 +40,13 @@ var _ = Describe("Router", func() {
 		Expect(s.Handler).To(BeAssignableToTypeOf(senders.CreateHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
-		requestLogging := s.Middleware[0].(web.RequestLogging)
+		requestLogging := s.Middleware[0].(middleware.RequestLogging)
 		Expect(requestLogging).To(Equal(logging))
 
-		authenticator := s.Middleware[1].(web.Authenticator)
+		authenticator := s.Middleware[1].(middleware.Authenticator)
 		Expect(authenticator).To(Equal(auth))
 
-		databaseAllocator := s.Middleware[2].(web.DatabaseAllocator)
+		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 
@@ -54,13 +55,13 @@ var _ = Describe("Router", func() {
 		Expect(s.Handler).To(BeAssignableToTypeOf(senders.GetHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
-		requestLogging := s.Middleware[0].(web.RequestLogging)
+		requestLogging := s.Middleware[0].(middleware.RequestLogging)
 		Expect(requestLogging).To(Equal(logging))
 
-		authenticator := s.Middleware[1].(web.Authenticator)
+		authenticator := s.Middleware[1].(middleware.Authenticator)
 		Expect(authenticator).To(Equal(auth))
 
-		databaseAllocator := s.Middleware[2].(web.DatabaseAllocator)
+		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 })

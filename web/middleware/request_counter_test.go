@@ -1,4 +1,4 @@
-package web_test
+package middleware_test
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/web"
+	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 
 	. "github.com/onsi/ginkgo"
@@ -14,10 +14,12 @@ import (
 )
 
 var _ = Describe("RequestCounter", func() {
-	var ware web.RequestCounter
-	var request *http.Request
-	var writer *httptest.ResponseRecorder
-	var buffer *bytes.Buffer
+	var (
+		ware    middleware.RequestCounter
+		request *http.Request
+		writer  *httptest.ResponseRecorder
+		buffer  *bytes.Buffer
+	)
 
 	BeforeEach(func() {
 		var err error
@@ -30,7 +32,7 @@ var _ = Describe("RequestCounter", func() {
 		matcher.HandleFunc(path, func(http.ResponseWriter, *http.Request) {}).Name("GET " + path)
 		buffer = bytes.NewBuffer([]byte{})
 
-		ware = web.NewRequestCounter(matcher, log.New(buffer, "", 0))
+		ware = middleware.NewRequestCounter(matcher, log.New(buffer, "", 0))
 	})
 
 	It("logs a request hit for a matching route", func() {

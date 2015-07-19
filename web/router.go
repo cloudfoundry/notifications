@@ -8,6 +8,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/notificationtypes"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/senders"
 	"github.com/nu7hatch/gouuid"
@@ -27,10 +28,10 @@ type MotherInterface interface {
 	PreferenceUpdater() services.PreferenceUpdater
 	MessageFinder() services.MessageFinder
 	TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister)
-	Logging() RequestLogging
+	Logging() middleware.RequestLogging
 	ErrorWriter() handlers.ErrorWriter
-	Authenticator(...string) Authenticator
-	CORS() CORS
+	Authenticator(...string) middleware.Authenticator
+	CORS() middleware.CORS
 	SQLDatabase() *sql.DB
 }
 
@@ -60,7 +61,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	notificationsTemplateWriteAuthenticator := mother.Authenticator("notification_templates.write")
 	notificationsTemplateReadAuthenticator := mother.Authenticator("notification_templates.read")
 	notificationsWriteOrEmailsWriteAuthenticator := mother.Authenticator("notifications.write", "emails.write")
-	databaseAllocator := NewDatabaseAllocator(mother.SQLDatabase(), config.DBLoggingEnabled)
+	databaseAllocator := middleware.NewDatabaseAllocator(mother.SQLDatabase(), config.DBLoggingEnabled)
 	cors := mother.CORS()
 
 	v1 := NewRouterPool()

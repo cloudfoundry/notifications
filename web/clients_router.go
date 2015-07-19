@@ -4,14 +4,15 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )
 
 type ClientsRouterConfig struct {
-	RequestLogging                   RequestLogging
-	NotificationsManageAuthenticator Authenticator
-	DatabaseAllocator                DatabaseAllocator
+	RequestLogging                   middleware.RequestLogging
+	NotificationsManageAuthenticator middleware.Authenticator
+	DatabaseAllocator                middleware.DatabaseAllocator
 	ErrorWriter                      handlers.ErrorWriterInterface
 
 	TemplateAssigner     services.TemplateAssignerInterface
@@ -20,7 +21,7 @@ type ClientsRouterConfig struct {
 
 func NewClientsRouter(config ClientsRouterConfig) *mux.Router {
 	router := mux.NewRouter()
-	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
+	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
 	assignClientTemplateHandler := handlers.NewAssignClientTemplate(config.TemplateAssigner, config.ErrorWriter)
 	assignClientTemplateStack := stack.NewStack(assignClientTemplateHandler).Use(config.RequestLogging, requestCounter, config.NotificationsManageAuthenticator, config.DatabaseAllocator)

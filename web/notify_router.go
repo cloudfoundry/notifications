@@ -4,11 +4,17 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )
 
 type NotifyRouterConfig struct {
+	RequestLogging                  middleware.RequestLogging
+	DatabaseAllocator               middleware.DatabaseAllocator
+	NotificationsWriteAuthenticator middleware.Authenticator
+	EmailsWriteAuthenticator        middleware.Authenticator
+
 	Notify               handlers.NotifyInterface
 	ErrorWriter          handlers.ErrorWriterInterface
 	UserStrategy         services.StrategyInterface
@@ -17,16 +23,11 @@ type NotifyRouterConfig struct {
 	EveryoneStrategy     services.StrategyInterface
 	UAAScopeStrategy     services.StrategyInterface
 	EmailStrategy        services.StrategyInterface
-
-	RequestLogging                  RequestLogging
-	DatabaseAllocator               DatabaseAllocator
-	NotificationsWriteAuthenticator Authenticator
-	EmailsWriteAuthenticator        Authenticator
 }
 
 func NewNotifyRouter(config NotifyRouterConfig) *mux.Router {
 	router := mux.NewRouter()
-	requestCounter := NewRequestCounter(router, metrics.DefaultLogger)
+	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
 	notifyUserHandler := handlers.NewNotifyUser(config.Notify, config.ErrorWriter, config.UserStrategy)
 	notifyUserStack := stack.NewStack(notifyUserHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
