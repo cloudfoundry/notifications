@@ -10,12 +10,12 @@ import (
 )
 
 type RouterConfig struct {
-	CORS                                      middleware.CORS
-	RequestLogging                            middleware.RequestLogging
-	DatabaseAllocator                         middleware.DatabaseAllocator
-	NotificationPreferencesReadAuthenticator  middleware.Authenticator
-	NotificationPreferencesAdminAuthenticator middleware.Authenticator
-	NotificationPreferencesWriteAuthenticator middleware.Authenticator
+	CORS                                      stack.Middleware
+	RequestLogging                            stack.Middleware
+	DatabaseAllocator                         stack.Middleware
+	NotificationPreferencesReadAuthenticator  stack.Middleware
+	NotificationPreferencesAdminAuthenticator stack.Middleware
+	NotificationPreferencesWriteAuthenticator stack.Middleware
 
 	ErrorWriter       handlers.ErrorWriterInterface
 	PreferencesFinder services.PreferencesFinderInterface

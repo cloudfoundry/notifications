@@ -10,10 +10,10 @@ import (
 )
 
 type RouterConfig struct {
-	RequestLogging                   middleware.RequestLogging
-	DatabaseAllocator                middleware.DatabaseAllocator
-	NotificationsWriteAuthenticator  middleware.Authenticator
-	NotificationsManageAuthenticator middleware.Authenticator
+	RequestLogging                   stack.Middleware
+	DatabaseAllocator                stack.Middleware
+	NotificationsWriteAuthenticator  stack.Middleware
+	NotificationsManageAuthenticator stack.Middleware
 
 	Registrar           services.RegistrarInterface
 	NotificationsFinder services.NotificationsFinderInterface

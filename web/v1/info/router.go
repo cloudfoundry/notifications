@@ -10,7 +10,7 @@ import (
 
 type RouterConfig struct {
 	Version        int
-	RequestLogging middleware.RequestLogging
+	RequestLogging stack.Middleware
 }
 
 func NewRouter(config RouterConfig) *mux.Router {
