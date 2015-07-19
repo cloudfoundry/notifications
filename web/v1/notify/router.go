@@ -1,4 +1,4 @@
-package web
+package notify
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
@@ -9,7 +9,7 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type NotifyRouterConfig struct {
+type RouterConfig struct {
 	RequestLogging                  middleware.RequestLogging
 	DatabaseAllocator               middleware.DatabaseAllocator
 	NotificationsWriteAuthenticator middleware.Authenticator
@@ -25,7 +25,7 @@ type NotifyRouterConfig struct {
 	EmailStrategy        services.StrategyInterface
 }
 
-func NewNotifyRouter(config NotifyRouterConfig) *mux.Router {
+func NewRouter(config RouterConfig) *mux.Router {
 	router := mux.NewRouter()
 	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 

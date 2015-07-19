@@ -1,4 +1,4 @@
-package web
+package info
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
@@ -8,12 +8,12 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type InfoRouterConfig struct {
+type RouterConfig struct {
 	Version        int
 	RequestLogging middleware.RequestLogging
 }
 
-func NewInfoRouter(config InfoRouterConfig) *mux.Router {
+func NewRouter(config RouterConfig) *mux.Router {
 	router := mux.NewRouter()
 	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 

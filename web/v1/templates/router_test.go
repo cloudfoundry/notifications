@@ -1,10 +1,10 @@
-package web_test
+package templates_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/templates"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 
@@ -12,11 +12,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("TemplatesRouter", func() {
+var _ = Describe("Router", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = web.NewTemplatesRouter(web.TemplatesRouterConfig{
+		router = templates.NewRouter(templates.RouterConfig{
 			ErrorWriter:               fakes.NewErrorWriter(),
 			TemplateFinder:            fakes.NewTemplateFinder(),
 			TemplateUpdater:           fakes.NewTemplateUpdater(),

@@ -1,10 +1,10 @@
-package web_test
+package notify_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/notify"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 
@@ -12,11 +12,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("NotifyRouter", func() {
+var _ = Describe("Router", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = web.NewNotifyRouter(web.NotifyRouterConfig{
+		router = notify.NewRouter(notify.RouterConfig{
 			Notify:               fakes.NewNotify(),
 			ErrorWriter:          fakes.NewErrorWriter(),
 			UserStrategy:         fakes.NewStrategy(),

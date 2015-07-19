@@ -1,10 +1,10 @@
-package web_test
+package notifications_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/notifications"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 
@@ -12,11 +12,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("NotificatonsRouter", func() {
+var _ = Describe("Router", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = web.NewNotificationsRouter(web.NotificationsRouterConfig{
+		router = notifications.NewRouter(notifications.RouterConfig{
 			RequestLogging:                   middleware.RequestLogging{},
 			DatabaseAllocator:                middleware.DatabaseAllocator{},
 			NotificationsWriteAuthenticator:  middleware.Authenticator{Scopes: []string{"notifications.write"}},

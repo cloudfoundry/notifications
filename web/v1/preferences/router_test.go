@@ -1,11 +1,11 @@
-package web_test
+package preferences_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/preferences"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 
@@ -13,11 +13,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("UserPreferencesRouter", func() {
+var _ = Describe("Router", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = web.NewUserPreferencesRouter(web.UserPreferencesRouterConfig{
+		router = preferences.NewRouter(preferences.RouterConfig{
 			ErrorWriter:       fakes.NewErrorWriter(),
 			PreferencesFinder: fakes.NewPreferencesFinder(services.PreferencesBuilder{}),
 			PreferenceUpdater: fakes.NewPreferenceUpdater(),

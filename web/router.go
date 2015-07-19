@@ -9,6 +9,13 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/clients"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/info"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/messages"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/notifications"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/notify"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/preferences"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/templates"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/notificationtypes"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/senders"
 	"github.com/nu7hatch/gouuid"
@@ -44,7 +51,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	organizationStrategy := mother.OrganizationStrategy()
 	everyoneStrategy := mother.EveryoneStrategy()
 	uaaScopeStrategy := mother.UAAScopeStrategy()
-	notify := handlers.NewNotify(mother.NotificationsFinder(), registrar)
+	notifyObj := handlers.NewNotify(mother.NotificationsFinder(), registrar)
 	preferencesFinder := mother.PreferencesFinder()
 	preferenceUpdater := mother.PreferenceUpdater()
 	templateCreator, templateFinder, templateUpdater, templateDeleter, templateLister, templateAssigner, templateAssociationLister := mother.TemplateServiceObjects()
@@ -65,11 +72,11 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	cors := mother.CORS()
 
 	v1 := NewRouterPool()
-	v1.AddMux(NewInfoRouter(InfoRouterConfig{
+	v1.AddMux(info.NewRouter(info.RouterConfig{
 		Version:        1,
 		RequestLogging: logging,
 	}))
-	v1.AddMux(NewUserPreferencesRouter(UserPreferencesRouterConfig{
+	v1.AddMux(preferences.NewRouter(preferences.RouterConfig{
 		ErrorWriter:       errorWriter,
 		PreferencesFinder: preferencesFinder,
 		PreferenceUpdater: preferenceUpdater,
@@ -81,7 +88,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		NotificationPreferencesWriteAuthenticator: notificationPreferencesWriteAuthenticator,
 		NotificationPreferencesAdminAuthenticator: notificationPreferencesAdminAuthenticator,
 	}))
-	v1.AddMux(NewClientsRouter(ClientsRouterConfig{
+	v1.AddMux(clients.NewRouter(clients.RouterConfig{
 		ErrorWriter:          errorWriter,
 		TemplateAssigner:     templateAssigner,
 		NotificationsUpdater: notificationsUpdater,
@@ -90,7 +97,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		DatabaseAllocator:                databaseAllocator,
 		NotificationsManageAuthenticator: notificationsManageAuthenticator,
 	}))
-	v1.AddMux(NewMessagesRouter(MessagesRouterConfig{
+	v1.AddMux(messages.NewRouter(messages.RouterConfig{
 		ErrorWriter:   errorWriter,
 		MessageFinder: messageFinder,
 
@@ -98,7 +105,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		DatabaseAllocator:                            databaseAllocator,
 		NotificationsWriteOrEmailsWriteAuthenticator: notificationsWriteOrEmailsWriteAuthenticator,
 	}))
-	v1.AddMux(NewTemplatesRouter(TemplatesRouterConfig{
+	v1.AddMux(templates.NewRouter(templates.RouterConfig{
 		ErrorWriter:               errorWriter,
 		TemplateFinder:            templateFinder,
 		TemplateUpdater:           templateUpdater,
@@ -113,7 +120,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		NotificationTemplatesWriteAuthenticator: notificationsTemplateWriteAuthenticator,
 		NotificationsManageAuthenticator:        notificationsManageAuthenticator,
 	}))
-	v1.AddMux(NewNotificationsRouter(NotificationsRouterConfig{
+	v1.AddMux(notifications.NewRouter(notifications.RouterConfig{
 		ErrorWriter:         errorWriter,
 		Registrar:           registrar,
 		NotificationsFinder: notificationsFinder,
@@ -123,9 +130,9 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		NotificationsWriteAuthenticator:  notificationsWriteAuthenticator,
 		NotificationsManageAuthenticator: notificationsManageAuthenticator,
 	}))
-	v1.AddMux(NewNotifyRouter(NotifyRouterConfig{
+	v1.AddMux(notify.NewRouter(notify.RouterConfig{
 		ErrorWriter:          errorWriter,
-		Notify:               notify,
+		Notify:               notifyObj,
 		UserStrategy:         userStrategy,
 		SpaceStrategy:        spaceStrategy,
 		OrganizationStrategy: organizationStrategy,
@@ -143,7 +150,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	sendersCollection := collections.NewSendersCollection(models.NewSendersRepository(uuid.NewV4))
 
 	v2 := NewRouterPool()
-	v2.AddMux(NewInfoRouter(InfoRouterConfig{
+	v2.AddMux(info.NewRouter(info.RouterConfig{
 		Version:        2,
 		RequestLogging: logging,
 	}))

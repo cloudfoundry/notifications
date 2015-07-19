@@ -1,4 +1,4 @@
-package web
+package templates
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
@@ -9,7 +9,7 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type TemplatesRouterConfig struct {
+type RouterConfig struct {
 	RequestLogging                          middleware.RequestLogging
 	DatabaseAllocator                       middleware.DatabaseAllocator
 	NotificationTemplatesReadAuthenticator  middleware.Authenticator
@@ -25,7 +25,7 @@ type TemplatesRouterConfig struct {
 	ErrorWriter               handlers.ErrorWriterInterface
 }
 
-func NewTemplatesRouter(config TemplatesRouterConfig) *mux.Router {
+func NewRouter(config RouterConfig) *mux.Router {
 	router := mux.NewRouter()
 	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 

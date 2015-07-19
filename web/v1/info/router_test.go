@@ -1,9 +1,9 @@
-package web_test
+package info_test
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/info"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 
@@ -11,11 +11,11 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("InfoRouter", func() {
+var _ = Describe("Router", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = web.NewInfoRouter(web.InfoRouterConfig{
+		router = info.NewRouter(info.RouterConfig{
 			Version:        1,
 			RequestLogging: middleware.RequestLogging{},
 		})

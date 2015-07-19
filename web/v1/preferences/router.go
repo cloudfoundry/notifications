@@ -1,4 +1,4 @@
-package web
+package preferences
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
@@ -9,7 +9,7 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type UserPreferencesRouterConfig struct {
+type RouterConfig struct {
 	CORS                                      middleware.CORS
 	RequestLogging                            middleware.RequestLogging
 	DatabaseAllocator                         middleware.DatabaseAllocator
@@ -22,7 +22,7 @@ type UserPreferencesRouterConfig struct {
 	PreferenceUpdater services.PreferenceUpdaterInterface
 }
 
-func NewUserPreferencesRouter(config UserPreferencesRouterConfig) *mux.Router {
+func NewRouter(config RouterConfig) *mux.Router {
 	router := mux.NewRouter()
 	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
