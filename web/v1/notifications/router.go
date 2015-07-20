@@ -3,7 +3,6 @@ package notifications
 import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
@@ -15,26 +14,36 @@ type RouterConfig struct {
 	NotificationsWriteAuthenticator  stack.Middleware
 	NotificationsManageAuthenticator stack.Middleware
 
-	Registrar           services.RegistrarInterface
-	NotificationsFinder services.NotificationsFinderInterface
-	ErrorWriter         handlers.ErrorWriterInterface
+	ErrorWriter          errorWriter
+	Registrar            services.RegistrarInterface
+	TemplateAssigner     services.TemplateAssignerInterface
+	NotificationsFinder  services.NotificationsFinderInterface
+	NotificationsUpdater services.NotificationsUpdaterInterface
 }
 
 func NewRouter(config RouterConfig) *mux.Router {
 	router := mux.NewRouter()
 	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
-	registerNotificationsHandler := handlers.NewRegisterNotifications(config.Registrar, config.ErrorWriter)
-	registerNotificationsStack := stack.NewStack(registerNotificationsHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
-	router.Handle("/registration", registerNotificationsStack).Methods("PUT").Name("PUT /registration")
+	registrationHandler := NewRegistrationHandler(config.Registrar, config.ErrorWriter)
+	registrationStack := stack.NewStack(registrationHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/registration", registrationStack).Methods("PUT").Name("PUT /registration")
 
-	registerClientWithNotificationHandler := handlers.NewRegisterClientWithNotifications(config.Registrar, config.ErrorWriter)
-	registerClientWithNotificationStack := stack.NewStack(registerClientWithNotificationHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
-	router.Handle("/notifications", registerClientWithNotificationStack).Methods("PUT").Name("PUT /notifications")
+	putHandler := NewPutHandler(config.Registrar, config.ErrorWriter)
+	putStack := stack.NewStack(putHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/notifications", putStack).Methods("PUT").Name("PUT /notifications")
 
-	getAllNotificationsHandler := handlers.NewGetAllNotifications(config.NotificationsFinder, config.ErrorWriter)
-	getAllNotificationsStack := stack.NewStack(getAllNotificationsHandler).Use(config.RequestLogging, requestCounter, config.NotificationsManageAuthenticator, config.DatabaseAllocator)
-	router.Handle("/notifications", getAllNotificationsStack).Methods("GET").Name("GET /notifications")
+	listHandler := NewListHandler(config.NotificationsFinder, config.ErrorWriter)
+	listStack := stack.NewStack(listHandler).Use(config.RequestLogging, requestCounter, config.NotificationsManageAuthenticator, config.DatabaseAllocator)
+	router.Handle("/notifications", listStack).Methods("GET").Name("GET /notifications")
+
+	updateHandler := NewUpdateHandler(config.NotificationsUpdater, config.ErrorWriter)
+	updateStack := stack.NewStack(updateHandler).Use(config.RequestLogging, requestCounter, config.NotificationsManageAuthenticator, config.DatabaseAllocator)
+	router.Handle("/clients/{client_id}/notifications/{notification_id}", updateStack).Methods("PUT").Name("PUT /clients/{client_id}/notifications/{notification_id}")
+
+	assignTemplateHandler := NewAssignTemplateHandler(config.TemplateAssigner, config.ErrorWriter)
+	assignTemplateStack := stack.NewStack(assignTemplateHandler).Use(config.RequestLogging, requestCounter, config.NotificationsManageAuthenticator, config.DatabaseAllocator)
+	router.Handle("/clients/{client_id}/notifications/{notification_id}/template", assignTemplateStack).Methods("PUT").Name("PUT /clients/{client_id}/notifications/{notification_id}/template")
 
 	return router
 }

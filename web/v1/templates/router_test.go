@@ -2,7 +2,6 @@ package templates_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/v1/templates"
 	"github.com/gorilla/mux"
@@ -36,7 +35,7 @@ var _ = Describe("Router", func() {
 	Describe("/templates", func() {
 		It("routes GET /templates", func() {
 			s := router.Get("GET /templates").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.ListTemplates{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(templates.ListHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[2].(middleware.Authenticator)
@@ -45,7 +44,7 @@ var _ = Describe("Router", func() {
 
 		It("routes POST /templates", func() {
 			s := router.Get("POST /templates").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.CreateTemplate{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(templates.CreateHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[2].(middleware.Authenticator)
@@ -56,7 +55,7 @@ var _ = Describe("Router", func() {
 	Describe("/templates/{template_id}", func() {
 		It("routes GET /templates/{template_id}", func() {
 			s := router.Get("GET /templates/{template_id}").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetTemplates{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(templates.GetHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[2].(middleware.Authenticator)
@@ -65,7 +64,7 @@ var _ = Describe("Router", func() {
 
 		It("routes PUT /templates/{template_id}", func() {
 			s := router.Get("PUT /templates/{template_id}").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UpdateTemplates{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(templates.UpdateHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[2].(middleware.Authenticator)
@@ -74,7 +73,7 @@ var _ = Describe("Router", func() {
 
 		It("routes DELETE /templates/{template_id}", func() {
 			s := router.Get("DELETE /templates/{template_id}").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.DeleteTemplates{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(templates.DeleteHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[2].(middleware.Authenticator)
@@ -83,7 +82,7 @@ var _ = Describe("Router", func() {
 
 		It("routes GET /templates/{template_id}/associations", func() {
 			s := router.Get("GET /templates/{template_id}/associations").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.ListTemplateAssociations{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(templates.ListAssociationsHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[2].(middleware.Authenticator)
@@ -94,7 +93,7 @@ var _ = Describe("Router", func() {
 	Describe("/default_template", func() {
 		It("routes GET /default_template", func() {
 			s := router.Get("GET /default_template").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetDefaultTemplate{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(templates.GetDefaultHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[2].(middleware.Authenticator)
@@ -103,7 +102,7 @@ var _ = Describe("Router", func() {
 
 		It("routes PUT /default_template", func() {
 			s := router.Get("PUT /default_template").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UpdateDefaultTemplate{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(templates.UpdateDefaultHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[2].(middleware.Authenticator)

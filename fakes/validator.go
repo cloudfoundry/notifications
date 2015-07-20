@@ -1,12 +1,12 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/web/handlers"
+import "github.com/cloudfoundry-incubator/notifications/web/v1/notify"
 
 type Validator struct {
 	ValidateErrors []string
 }
 
-func (fake *Validator) Validate(notify *handlers.NotifyParams) bool {
-	notify.Errors = append(notify.Errors, fake.ValidateErrors...)
+func (fake *Validator) Validate(n *notify.NotifyParams) bool {
+	n.Errors = append(n.Errors, fake.ValidateErrors...)
 	return len(fake.ValidateErrors) == 0
 }

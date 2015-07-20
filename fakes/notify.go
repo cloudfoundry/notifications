@@ -5,7 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
+	"github.com/cloudfoundry-incubator/notifications/web/v1/notify"
 	"github.com/ryanmoran/stack"
 )
 
@@ -17,7 +17,7 @@ type Notify struct {
 			Context       stack.Context
 			GUID          string
 			Strategy      services.StrategyInterface
-			Validator     handlers.ValidatorInterface
+			Validator     notify.ValidatorInterface
 			VCAPRequestID string
 		}
 		Response []byte
@@ -30,7 +30,7 @@ func NewNotify() *Notify {
 }
 
 func (fake *Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
-	guid string, strategy services.StrategyInterface, validator handlers.ValidatorInterface, vcapRequestID string) ([]byte, error) {
+	guid string, strategy services.StrategyInterface, validator notify.ValidatorInterface, vcapRequestID string) ([]byte, error) {
 
 	fake.ExecuteCall.Args.Connection = connection
 	fake.ExecuteCall.Args.Request = req

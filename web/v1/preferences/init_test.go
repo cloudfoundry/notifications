@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
@@ -11,6 +12,8 @@ import (
 )
 
 func TestWebV1PreferencesSuite(t *testing.T) {
+	fakes.RegisterFastTokenSigningMethod()
+
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Web V1 Preferences Suite")
 }

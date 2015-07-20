@@ -15,8 +15,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
+	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
@@ -161,8 +161,8 @@ func (m Mother) Logging() middleware.RequestLogging {
 	return middleware.NewRequestLogging(m.Logger())
 }
 
-func (m Mother) ErrorWriter() handlers.ErrorWriter {
-	return handlers.NewErrorWriter()
+func (m Mother) ErrorWriter() webutil.ErrorWriter {
+	return webutil.NewErrorWriter()
 }
 
 func (m Mother) Authenticator(scopes ...string) middleware.Authenticator {

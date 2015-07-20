@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestWebHandlersSuite(t *testing.T) {
+func TestWebV2SendersSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Senders Suite")
+	RunSpecs(t, "Web V2 Senders Suite")
 }

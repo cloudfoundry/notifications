@@ -5,8 +5,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
+	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 )
 
 type Mother struct{}
@@ -81,8 +81,8 @@ func (mother Mother) Logging() middleware.RequestLogging {
 	return middleware.RequestLogging{}
 }
 
-func (mother Mother) ErrorWriter() handlers.ErrorWriter {
-	return handlers.ErrorWriter{}
+func (mother Mother) ErrorWriter() webutil.ErrorWriter {
+	return webutil.ErrorWriter{}
 }
 
 func (mother Mother) Authenticator(scopes ...string) middleware.Authenticator {

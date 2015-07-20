@@ -2,7 +2,6 @@ package notifications_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/v1/notifications"
 	"github.com/gorilla/mux"
@@ -22,16 +21,17 @@ var _ = Describe("Router", func() {
 			NotificationsWriteAuthenticator:  middleware.Authenticator{Scopes: []string{"notifications.write"}},
 			NotificationsManageAuthenticator: middleware.Authenticator{Scopes: []string{"notifications.manage"}},
 
-			Registrar:           fakes.NewRegistrar(),
-			ErrorWriter:         fakes.NewErrorWriter(),
-			NotificationsFinder: fakes.NewNotificationsFinder(),
+			Registrar:            fakes.NewRegistrar(),
+			ErrorWriter:          fakes.NewErrorWriter(),
+			NotificationsFinder:  fakes.NewNotificationsFinder(),
+			NotificationsUpdater: &fakes.NotificationUpdater{},
 		})
 	})
 
 	Describe("/notifications", func() {
 		It("routes PUT /notifications", func() {
 			s := router.Get("PUT /notifications").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.RegisterClientWithNotifications{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(notifications.PutHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[2].(middleware.Authenticator)
@@ -40,7 +40,25 @@ var _ = Describe("Router", func() {
 
 		It("routes GET /notifications", func() {
 			s := router.Get("GET /notifications").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetAllNotifications{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(notifications.ListHandler{}))
+			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
+
+			authenticator := s.Middleware[2].(middleware.Authenticator)
+			Expect(authenticator.Scopes).To(Equal([]string{"notifications.manage"}))
+		})
+
+		It("routes PUT /clients/{client_id}/notifications/{notification_id}", func() {
+			s := router.Get("PUT /clients/{client_id}/notifications/{notification_id}").GetHandler().(stack.Stack)
+			Expect(s.Handler).To(BeAssignableToTypeOf(notifications.UpdateHandler{}))
+			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
+
+			authenticator := s.Middleware[2].(middleware.Authenticator)
+			Expect(authenticator.Scopes).To(Equal([]string{"notifications.manage"}))
+		})
+
+		It("routes PUT /clients/{client_id}/notifications/{notification_id}/template", func() {
+			s := router.Get("PUT /clients/{client_id}/notifications/{notification_id}/template").GetHandler().(stack.Stack)
+			Expect(s.Handler).To(BeAssignableToTypeOf(notifications.AssignTemplateHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[2].(middleware.Authenticator)
@@ -51,7 +69,7 @@ var _ = Describe("Router", func() {
 	Describe("/registration", func() {
 		It("routes PUT /registration", func() {
 			s := router.Get("PUT /registration").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.RegisterNotifications{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(notifications.RegistrationHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[2].(middleware.Authenticator)

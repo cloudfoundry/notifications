@@ -7,7 +7,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/v1/clients"
 	"github.com/cloudfoundry-incubator/notifications/web/v1/info"
@@ -18,6 +17,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/web/v1/templates"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/notificationtypes"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/senders"
+	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -36,7 +36,7 @@ type MotherInterface interface {
 	MessageFinder() services.MessageFinder
 	TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister)
 	Logging() middleware.RequestLogging
-	ErrorWriter() handlers.ErrorWriter
+	ErrorWriter() webutil.ErrorWriter
 	Authenticator(...string) middleware.Authenticator
 	CORS() middleware.CORS
 	SQLDatabase() *sql.DB
@@ -51,7 +51,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	organizationStrategy := mother.OrganizationStrategy()
 	everyoneStrategy := mother.EveryoneStrategy()
 	uaaScopeStrategy := mother.UAAScopeStrategy()
-	notifyObj := handlers.NewNotify(mother.NotificationsFinder(), registrar)
+	notifyObj := notify.NewNotify(mother.NotificationsFinder(), registrar)
 	preferencesFinder := mother.PreferencesFinder()
 	preferenceUpdater := mother.PreferenceUpdater()
 	templateCreator, templateFinder, templateUpdater, templateDeleter, templateLister, templateAssigner, templateAssociationLister := mother.TemplateServiceObjects()
@@ -89,9 +89,8 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		NotificationPreferencesAdminAuthenticator: notificationPreferencesAdminAuthenticator,
 	}))
 	v1.AddMux(clients.NewRouter(clients.RouterConfig{
-		ErrorWriter:          errorWriter,
-		TemplateAssigner:     templateAssigner,
-		NotificationsUpdater: notificationsUpdater,
+		ErrorWriter:      errorWriter,
+		TemplateAssigner: templateAssigner,
 
 		RequestLogging:                   logging,
 		DatabaseAllocator:                databaseAllocator,
@@ -121,9 +120,11 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		NotificationsManageAuthenticator:        notificationsManageAuthenticator,
 	}))
 	v1.AddMux(notifications.NewRouter(notifications.RouterConfig{
-		ErrorWriter:         errorWriter,
-		Registrar:           registrar,
-		NotificationsFinder: notificationsFinder,
+		ErrorWriter:          errorWriter,
+		Registrar:            registrar,
+		NotificationsFinder:  notificationsFinder,
+		NotificationsUpdater: notificationsUpdater,
+		TemplateAssigner:     templateAssigner,
 
 		RequestLogging:                   logging,
 		DatabaseAllocator:                databaseAllocator,

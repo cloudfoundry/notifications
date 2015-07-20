@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
 )
@@ -29,7 +28,7 @@ func (ware DatabaseAllocator) ServeHTTP(w http.ResponseWriter, req *http.Request
 
 	logger := gorpCompatibleLogger{
 		logger: context.Get("logger").(lager.Logger).WithData(lager.Data{
-			handlers.VCAPRequestIDKey: context.Get(handlers.VCAPRequestIDKey),
+			VCAPRequestIDKey: context.Get(VCAPRequestIDKey),
 		}),
 	}
 

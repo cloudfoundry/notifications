@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
@@ -90,7 +89,7 @@ var _ = Describe("RequestLogging", func() {
 		result := ware.ServeHTTP(writer, request, context)
 		Expect(result).To(BeTrue())
 
-		requestID, ok := context.Get(handlers.VCAPRequestIDKey).(string)
+		requestID, ok := context.Get(middleware.VCAPRequestIDKey).(string)
 		Expect(ok).To(BeTrue())
 		Expect(requestID).To(Equal("some-request-id"))
 	})
@@ -99,7 +98,7 @@ var _ = Describe("RequestLogging", func() {
 		result := ware.ServeHTTP(writer, request, context)
 		Expect(result).To(BeTrue())
 
-		requestReceivedTime, ok := context.Get(handlers.RequestReceivedTime).(time.Time)
+		requestReceivedTime, ok := context.Get(middleware.RequestReceivedTime).(time.Time)
 		Expect(ok).To(BeTrue())
 		Expect(requestReceivedTime).To(BeTemporally("~", time.Now()))
 	})

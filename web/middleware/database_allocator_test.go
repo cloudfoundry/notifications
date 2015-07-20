@@ -10,7 +10,6 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
@@ -45,7 +44,7 @@ var _ = Describe("Database Allocator", func() {
 
 		context = stack.NewContext()
 		context.Set("logger", logger)
-		context.Set(handlers.VCAPRequestIDKey, "some-vcap-request-id")
+		context.Set(middleware.VCAPRequestIDKey, "some-vcap-request-id")
 	})
 
 	AfterEach(func() {

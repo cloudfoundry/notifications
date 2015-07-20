@@ -4,9 +4,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
+)
+
+const (
+	VCAPRequestIDKey    = "vcap_request_id"
+	RequestReceivedTime = "request_received_time"
 )
 
 type RequestLogging struct {
@@ -24,7 +28,7 @@ func (r RequestLogging) ServeHTTP(response http.ResponseWriter, request *http.Re
 	}
 
 	logSession := r.logger.Session("request", lager.Data{
-		handlers.VCAPRequestIDKey: requestID,
+		VCAPRequestIDKey: requestID,
 	})
 
 	logSession.Info("incoming", lager.Data{
@@ -33,8 +37,8 @@ func (r RequestLogging) ServeHTTP(response http.ResponseWriter, request *http.Re
 	})
 
 	context.Set("logger", logSession)
-	context.Set(handlers.VCAPRequestIDKey, requestID)
-	context.Set(handlers.RequestReceivedTime, time.Now().UTC())
+	context.Set(VCAPRequestIDKey, requestID)
+	context.Set(RequestReceivedTime, time.Now().UTC())
 
 	return true
 }

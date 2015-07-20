@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestWebHandlersSuite(t *testing.T) {
+func TestWebV2NotificationTypesSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "NotificationTypes Suite")
+	RunSpecs(t, "Web V2 Notification Types Suite")
 }

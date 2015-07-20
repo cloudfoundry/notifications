@@ -3,7 +3,6 @@ package preferences_test
 import (
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/v1/preferences"
 	"github.com/gorilla/mux"
@@ -34,7 +33,7 @@ var _ = Describe("Router", func() {
 	Describe("/user_preferences", func() {
 		It("routes GET /user_preferences", func() {
 			s := router.Get("GET /user_preferences").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetPreferences{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(preferences.GetPreferencesHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[3].(middleware.Authenticator)
@@ -43,7 +42,7 @@ var _ = Describe("Router", func() {
 
 		It("routes PATCH /user_preferences", func() {
 			s := router.Get("PATCH /user_preferences").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UpdatePreferences{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(preferences.UpdatePreferencesHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[3].(middleware.Authenticator)
@@ -52,7 +51,7 @@ var _ = Describe("Router", func() {
 
 		It("routes OPTIONS /user_preferences", func() {
 			s := router.Get("OPTIONS /user_preferences").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.OptionsPreferences{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(preferences.OptionsHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{})
 		})
 	})
@@ -60,7 +59,7 @@ var _ = Describe("Router", func() {
 	Describe("/user_preferences/{user_id}", func() {
 		It("routes GET /user_preferences/{user_id}", func() {
 			s := router.Get("GET /user_preferences/{user_id}").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.GetPreferencesForUser{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(preferences.GetUserPreferencesHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[3].(middleware.Authenticator)
@@ -69,7 +68,7 @@ var _ = Describe("Router", func() {
 
 		It("routes PATCH /user_preferences/{user_id}", func() {
 			s := router.Get("PATCH /user_preferences/{user_id}").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.UpdateSpecificUserPreferences{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(preferences.UpdateUserPreferencesHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
 			authenticator := s.Middleware[3].(middleware.Authenticator)
@@ -78,7 +77,7 @@ var _ = Describe("Router", func() {
 
 		It("routes OPTIONS /user_preferences/{user_id}", func() {
 			s := router.Get("OPTIONS /user_preferences/{user_id}").GetHandler().(stack.Stack)
-			Expect(s.Handler).To(BeAssignableToTypeOf(handlers.OptionsPreferences{}))
+			Expect(s.Handler).To(BeAssignableToTypeOf(preferences.OptionsHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.CORS{})
 		})
 	})

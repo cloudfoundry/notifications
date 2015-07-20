@@ -3,7 +3,6 @@ package notify
 import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/services"
-	"github.com/cloudfoundry-incubator/notifications/web/handlers"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
@@ -15,8 +14,8 @@ type RouterConfig struct {
 	NotificationsWriteAuthenticator stack.Middleware
 	EmailsWriteAuthenticator        stack.Middleware
 
-	Notify               handlers.NotifyInterface
-	ErrorWriter          handlers.ErrorWriterInterface
+	Notify               NotifyInterface
+	ErrorWriter          errorWriter
 	UserStrategy         services.StrategyInterface
 	SpaceStrategy        services.StrategyInterface
 	OrganizationStrategy services.StrategyInterface
@@ -29,29 +28,29 @@ func NewRouter(config RouterConfig) *mux.Router {
 	router := mux.NewRouter()
 	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
-	notifyUserHandler := handlers.NewNotifyUser(config.Notify, config.ErrorWriter, config.UserStrategy)
-	notifyUserStack := stack.NewStack(notifyUserHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
-	router.Handle("/users/{user_id}", notifyUserStack).Methods("POST").Name("POST /users/{user_id}")
+	userHandler := NewUserHandler(config.Notify, config.ErrorWriter, config.UserStrategy)
+	userStack := stack.NewStack(userHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/users/{user_id}", userStack).Methods("POST").Name("POST /users/{user_id}")
 
-	notifySpaceHandler := handlers.NewNotifySpace(config.Notify, config.ErrorWriter, config.SpaceStrategy)
-	notifySpaceStack := stack.NewStack(notifySpaceHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
-	router.Handle("/spaces/{space_id}", notifySpaceStack).Methods("POST").Name("POST /spaces/{space_id}")
+	spaceHandler := NewSpaceHandler(config.Notify, config.ErrorWriter, config.SpaceStrategy)
+	spaceStack := stack.NewStack(spaceHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/spaces/{space_id}", spaceStack).Methods("POST").Name("POST /spaces/{space_id}")
 
-	notifyOrganizationHandler := handlers.NewNotifyOrganization(config.Notify, config.ErrorWriter, config.OrganizationStrategy)
-	notifyOrganizationStack := stack.NewStack(notifyOrganizationHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
-	router.Handle("/organizations/{org_id}", notifyOrganizationStack).Methods("POST").Name("POST /organizations/{org_id}")
+	orgHandler := NewOrganizationHandler(config.Notify, config.ErrorWriter, config.OrganizationStrategy)
+	orgStack := stack.NewStack(orgHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/organizations/{org_id}", orgStack).Methods("POST").Name("POST /organizations/{org_id}")
 
-	notifyEveryoneHandler := handlers.NewNotifyEveryone(config.Notify, config.ErrorWriter, config.EveryoneStrategy)
-	notifyEveryoneStack := stack.NewStack(notifyEveryoneHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
-	router.Handle("/everyone", notifyEveryoneStack).Methods("POST").Name("POST /everyone")
+	everyoneHandler := NewEveryoneHandler(config.Notify, config.ErrorWriter, config.EveryoneStrategy)
+	everyoneStack := stack.NewStack(everyoneHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/everyone", everyoneStack).Methods("POST").Name("POST /everyone")
 
-	notifyUAAScopeHandler := handlers.NewNotifyUAAScope(config.Notify, config.ErrorWriter, config.UAAScopeStrategy)
-	notifyUAAScopeStack := stack.NewStack(notifyUAAScopeHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
-	router.Handle("/uaa_scopes/{scope}", notifyUAAScopeStack).Methods("POST").Name("POST /uaa_scopes/{scope}")
+	scopeHandler := NewUAAScopeHandler(config.Notify, config.ErrorWriter, config.UAAScopeStrategy)
+	scopeStack := stack.NewStack(scopeHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/uaa_scopes/{scope}", scopeStack).Methods("POST").Name("POST /uaa_scopes/{scope}")
 
-	notifyEmailHandler := handlers.NewNotifyEmail(config.Notify, config.ErrorWriter, config.EmailStrategy)
-	notifyEmailStack := stack.NewStack(notifyEmailHandler).Use(config.RequestLogging, requestCounter, config.EmailsWriteAuthenticator, config.DatabaseAllocator)
-	router.Handle("/emails", notifyEmailStack).Methods("POST").Name("POST /emails")
+	emailHandler := NewEmailHandler(config.Notify, config.ErrorWriter, config.EmailStrategy)
+	emailStack := stack.NewStack(emailHandler).Use(config.RequestLogging, requestCounter, config.EmailsWriteAuthenticator, config.DatabaseAllocator)
+	router.Handle("/emails", emailStack).Methods("POST").Name("POST /emails")
 
 	return router
 }

@@ -1,0 +1,79 @@
+package preferences
+
+import (
+	"encoding/json"
+	"net/http"
+	"regexp"
+
+	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/services"
+	"github.com/cloudfoundry-incubator/notifications/valiant"
+	"github.com/cloudfoundry-incubator/notifications/web/webutil"
+	"github.com/ryanmoran/stack"
+)
+
+type UpdateUserPreferencesHandler struct {
+	preferenceUpdater services.PreferenceUpdaterInterface
+	errorWriter       errorWriter
+}
+
+func NewUpdateUserPreferencesHandler(preferenceUpdater services.PreferenceUpdaterInterface, errWriter errorWriter) UpdateUserPreferencesHandler {
+	return UpdateUserPreferencesHandler{
+		preferenceUpdater: preferenceUpdater,
+		errorWriter:       errWriter,
+	}
+}
+
+func (h UpdateUserPreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+	database := context.Get("database").(models.DatabaseInterface)
+	connection := database.Connection()
+
+	userGUID := regexp.MustCompile(".*/user_preferences/(.*)").FindStringSubmatch(req.URL.Path)[1]
+
+	builder := services.NewPreferencesBuilder()
+	validator := valiant.NewValidator(req.Body)
+	err := validator.Validate(&builder)
+	if err != nil {
+		h.errorWriter.Write(w, webutil.ValidationError([]string{err.Error()}))
+		return
+	}
+
+	preferences, err := builder.ToPreferences()
+	if err != nil {
+		h.errorWriter.Write(w, err)
+		return
+	}
+
+	transaction := connection.Transaction()
+	transaction.Begin()
+	err = h.preferenceUpdater.Execute(transaction, preferences, builder.GlobalUnsubscribe, userGUID)
+	if err != nil {
+		transaction.Rollback()
+
+		switch err.(type) {
+		case services.MissingKindOrClientError, services.CriticalKindError:
+			h.errorWriter.Write(w, webutil.ValidationError([]string{err.Error()}))
+		default:
+			h.errorWriter.Write(w, err)
+		}
+		return
+	}
+
+	err = transaction.Commit()
+	if err != nil {
+		h.errorWriter.Write(w, models.NewTransactionCommitError(err.Error()))
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func writeJSON(w http.ResponseWriter, status int, object interface{}) {
+	output, err := json.Marshal(object)
+	if err != nil {
+		panic(err) // No JSON we write into a response should ever panic
+	}
+
+	w.WriteHeader(status)
+	w.Write(output)
+}
