@@ -1,6 +1,8 @@
 package collections_test
 
 import (
+	"errors"
+
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 
@@ -42,6 +44,34 @@ var _ = Describe("NotificationTypesCollection", func() {
 			Expect(fakeNotificationTypesRepository.InsertCall.NotificationType.Critical).To(Equal(notificationType.Critical))
 			Expect(fakeNotificationTypesRepository.InsertCall.NotificationType.TemplateID).To(Equal(notificationType.TemplateID))
 			Expect(fakeNotificationTypesRepository.InsertCall.NotificationType.SenderID).To(Equal(notificationType.SenderID))
+		})
+
+		It("requires a name to be specified", func() {
+			notificationType := collections.NotificationType{
+				Description: "description",
+				Critical:    false,
+				TemplateID:  "",
+				SenderID:    "mysender",
+			}
+
+			_, err := notificationTypesCollection.Add(fakeDatabaseConnection, notificationType)
+			Expect(err).To(MatchError(collections.ValidationError{
+				Err: errors.New("missing notification type name"),
+			}))
+		})
+
+		It("requires a description to be specified", func() {
+			notificationType := collections.NotificationType{
+				Name:       "some-notification-type",
+				Critical:   false,
+				TemplateID: "",
+				SenderID:   "mysender",
+			}
+
+			_, err := notificationTypesCollection.Add(fakeDatabaseConnection, notificationType)
+			Expect(err).To(MatchError(collections.ValidationError{
+				Err: errors.New("missing notification type description"),
+			}))
 		})
 	})
 })
