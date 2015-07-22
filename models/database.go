@@ -66,7 +66,6 @@ func (database DB) Setup() {
 	database.connection.AddTableWithName(Template{}, "templates").SetKeys(true, "Primary").ColMap("Name").SetUnique(true)
 	database.connection.AddTableWithName(Message{}, "messages").SetKeys(false, "ID")
 	database.connection.AddTableWithName(Sender{}, "senders").SetKeys(false, "ID").SetUniqueTogether("name", "client_id")
-	database.connection.AddTableWithName(NotificationType{}, "notification_types").SetKeys(false, "ID").SetUniqueTogether("name", "sender_id")
 }
 
 func (database DB) Seed() {

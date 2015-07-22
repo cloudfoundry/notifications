@@ -25,7 +25,7 @@ var _ = Describe("Notification types lifecycle", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("can create a new notification type", func() {
+	PIt("can create a new notification type", func() {
 		By("creating a notification type", func() {
 			notificationType, err := client.NotificationTypes.Create(sender.ID, "some-notification-type", "a great notification type", "", false, token.Access)
 			Expect(err).NotTo(HaveOccurred())
@@ -33,13 +33,6 @@ var _ = Describe("Notification types lifecycle", func() {
 			Expect(notificationType.Description).To(Equal("a great notification type"))
 			Expect(notificationType.Critical).To(BeFalse())
 			Expect(notificationType.TemplateID).To(BeEmpty())
-		})
-
-		By("creating it again with the same name", func() {
-			notificationType, err := client.NotificationTypes.Create(sender.ID, "some-notification-type", "another great notification type", "", false, token.Access)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(notificationType.Name).To(Equal("some-notification-type"))
-			Expect(notificationType.Description).To(Equal("a great notification type"))
 		})
 	})
 })

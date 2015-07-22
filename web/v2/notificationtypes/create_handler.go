@@ -2,12 +2,10 @@ package notificationtypes
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 )
 
@@ -35,37 +33,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	err := json.NewDecoder(req.Body).Decode(&createRequest)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error": "invalid json body"}`))
-		return
-	}
-
-	if createRequest.Name == "" {
-		w.WriteHeader(422)
-		w.Write([]byte(`{"error": "missing notification type name"}`))
-		return
-	}
-
-	if createRequest.Description == "" {
-		w.WriteHeader(422)
-		w.Write([]byte(`{"error": "missing notification type description"}`))
-		return
-	}
-
-	if createRequest.Critical == true {
-		hasCriticalWrite := false
-		token := context.Get("token").(*jwt.Token)
-		for _, scope := range token.Claims["scope"].([]interface{}) {
-			if scope.(string) == "critical_notifications.write" {
-				hasCriticalWrite = true
-			}
-		}
-
-		if hasCriticalWrite == false {
-			w.WriteHeader(http.StatusForbidden)
-			w.Write([]byte(`{"error": "some-error"}`))
-			return
-		}
+		panic(err)
 	}
 
 	database := context.Get("database").(models.DatabaseInterface)
@@ -74,13 +42,10 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		Name:        createRequest.Name,
 		Description: createRequest.Description,
 		Critical:    createRequest.Critical,
-
-		TemplateID: createRequest.TemplateID,
+		TemplateID:  createRequest.TemplateID,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, `{ "error": "%s" }`, err)
-		return
+		panic(err)
 	}
 
 	createResponse, _ := json.Marshal(map[string]interface{}{
