@@ -22,7 +22,3 @@ func (n *NotificationTypesRepository) Insert(conn models.ConnectionInterface, no
 	n.InsertCall.Connection = conn
 	return n.InsertCall.ReturnNotificationType, n.InsertCall.Err
 }
-
-func (n *NotificationTypesRepository) GetBySenderIDAndName(conn models.ConnectionInterface, senderID, name string) (models.NotificationType, error) {
-	return models.NotificationType{}, nil
-}

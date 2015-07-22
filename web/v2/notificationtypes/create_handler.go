@@ -40,6 +40,18 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
+	if createRequest.Name == "" {
+		w.WriteHeader(422)
+		w.Write([]byte(`{"error": "missing notification type name"}`))
+		return
+	}
+
+	if createRequest.Description == "" {
+		w.WriteHeader(422)
+		w.Write([]byte(`{"error": "missing notification type description"}`))
+		return
+	}
+
 	if createRequest.Critical == true {
 		hasCriticalWrite := false
 		token := context.Get("token").(*jwt.Token)
@@ -51,7 +63,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 		if hasCriticalWrite == false {
 			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintf(w, `{ "error": "%s" }`, http.StatusText(http.StatusForbidden))
+			w.Write([]byte(`{"error": "some-error"}`))
 			return
 		}
 	}
@@ -62,15 +74,11 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		Name:        createRequest.Name,
 		Description: createRequest.Description,
 		Critical:    createRequest.Critical,
-		TemplateID:  createRequest.TemplateID,
+
+		TemplateID: createRequest.TemplateID,
 	})
 	if err != nil {
-		switch err.(type) {
-		case collections.ValidationError:
-			w.WriteHeader(422)
-		default:
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, `{ "error": "%s" }`, err)
 		return
 	}
