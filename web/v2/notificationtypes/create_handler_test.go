@@ -235,7 +235,7 @@ var _ = Describe("CreateHandler", func() {
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusForbidden))
-			Expect(writer.Body.String()).To(MatchJSON(`{ "error": "some-error" }`))
+			Expect(writer.Body.String()).To(MatchJSON(`{ "error": "Forbidden" }`))
 		})
 
 		It("returns a 400 when the JSON request body cannot be unmarshalled", func() {
@@ -250,7 +250,7 @@ var _ = Describe("CreateHandler", func() {
 			}`))
 		})
 
-		It("returns a 422 when the request does not contain a name field", func() {
+		It("returns a 422 when the model does not save", func() {
 			requestBody, err := json.Marshal(map[string]interface{}{
 				"description": "missing-name",
 				"critical":    false,
@@ -261,30 +261,15 @@ var _ = Describe("CreateHandler", func() {
 			request, err = http.NewRequest("POST", "/senders/some-sender-id/notification_types", bytes.NewBuffer(requestBody))
 			Expect(err).NotTo(HaveOccurred())
 
-			handler.ServeHTTP(writer, request, context)
-
-			Expect(writer.Code).To(Equal(422))
-			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "missing notification type name"
-			}`))
-		})
-
-		It("returns a 422 when the request does not contain a description field", func() {
-			requestBody, err := json.Marshal(map[string]interface{}{
-				"name":        "missing-description",
-				"critical":    false,
-				"template_id": "some-template-id",
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			request, err = http.NewRequest("POST", "/senders/some-sender-id/notification_types", bytes.NewBuffer(requestBody))
-			Expect(err).NotTo(HaveOccurred())
+			notificationTypesCollection.AddCall.Err = collections.ValidationError{
+				Err: errors.New("bananas are delicious"),
+			}
 
 			handler.ServeHTTP(writer, request, context)
 
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "missing notification type description"
+				"error": "validation error: bananas are delicious"
 			}`))
 		})
 

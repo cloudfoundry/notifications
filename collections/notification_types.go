@@ -1,6 +1,10 @@
 package collections
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+	"errors"
+
+	"github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type NotificationType struct {
 	ID          string
@@ -27,6 +31,18 @@ func NewNotificationTypesCollection(repo notificationTypesRepository) Notificati
 }
 
 func (nc NotificationTypesCollection) Add(conn models.ConnectionInterface, notificationType NotificationType) (NotificationType, error) {
+	if notificationType.Name == "" {
+		return NotificationType{}, ValidationError{
+			Err: errors.New("missing notification type name"),
+		}
+	}
+
+	if notificationType.Description == "" {
+		return NotificationType{}, ValidationError{
+			Err: errors.New("missing notification type description"),
+		}
+	}
+
 	returnNotificationType, err := nc.notificationTypesRepository.Insert(conn, models.NotificationType{
 		Name:        notificationType.Name,
 		Description: notificationType.Description,
