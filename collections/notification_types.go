@@ -17,16 +17,19 @@ type NotificationType struct {
 
 type NotificationTypesCollection struct {
 	notificationTypesRepository notificationTypesRepository
+	sendersRepository           sendersRepository
 }
 
 type notificationTypesRepository interface {
 	Insert(models.ConnectionInterface, models.NotificationType) (models.NotificationType, error)
 	GetBySenderIDAndName(models.ConnectionInterface, string, string) (models.NotificationType, error)
+	List(models.ConnectionInterface, string) ([]models.NotificationType, error)
 }
 
-func NewNotificationTypesCollection(repo notificationTypesRepository) NotificationTypesCollection {
+func NewNotificationTypesCollection(nr notificationTypesRepository, sr sendersRepository) NotificationTypesCollection {
 	return NotificationTypesCollection{
-		notificationTypesRepository: repo,
+		notificationTypesRepository: nr,
+		sendersRepository:           sr,
 	}
 }
 
@@ -70,4 +73,42 @@ func (nc NotificationTypesCollection) Add(conn models.ConnectionInterface, notif
 		TemplateID:  returnNotificationType.TemplateID,
 		SenderID:    returnNotificationType.SenderID,
 	}, err
+}
+
+func (nc NotificationTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]NotificationType, error) {
+	senderModel, err := nc.sendersRepository.Get(conn, senderID)
+
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return []NotificationType{}, NotFoundError{err}
+		default:
+			return []NotificationType{}, PersistenceError{err}
+		}
+	}
+
+	if senderModel.ClientID != clientID {
+		return []NotificationType{}, NotFoundError{errors.New("sender not found")}
+	}
+
+	modelList, err := nc.notificationTypesRepository.List(conn, senderID)
+	if err != nil {
+		panic(err)
+	}
+
+	notificationTypeList := []NotificationType{}
+
+	for _, model := range modelList {
+		notificationType := NotificationType{
+			ID:          model.ID,
+			Name:        model.Name,
+			Description: model.Description,
+			Critical:    model.Critical,
+			TemplateID:  model.TemplateID,
+			SenderID:    model.SenderID,
+		}
+		notificationTypeList = append(notificationTypeList, notificationType)
+	}
+
+	return notificationTypeList, nil
 }

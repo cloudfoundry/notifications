@@ -48,4 +48,13 @@ var _ = Describe("NotificationTypesRouter", func() {
 		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
+
+	It("routes GET /senders/{sender_id}/notification_types", func() {
+		s := router.Get("GET /senders/{sender_id}/notification_types").GetHandler().(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(notificationtypes.ListHandler{}))
+		Expect(s.Middleware).To(HaveLen(1))
+
+		databaseAllocator := s.Middleware[0].(middleware.DatabaseAllocator)
+		Expect(databaseAllocator).To(Equal(dbAllocator))
+	})
 })

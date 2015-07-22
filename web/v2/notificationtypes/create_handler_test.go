@@ -59,6 +59,7 @@ var _ = Describe("CreateHandler", func() {
 			Description: "some-notification-type-description",
 			Critical:    false,
 			TemplateID:  "some-template-id",
+			SenderID:    "some-sender-id",
 		}
 
 		requestBody, err := json.Marshal(map[string]interface{}{
@@ -83,6 +84,7 @@ var _ = Describe("CreateHandler", func() {
 			Description: "some-notification-type-description",
 			Critical:    false,
 			TemplateID:  "some-template-id",
+			SenderID:    "some-sender-id",
 		}))
 		Expect(notificationTypesCollection.AddCall.Conn).To(Equal(database.Conn))
 		Expect(database.ConnectionWasCalled).To(BeTrue())
@@ -115,6 +117,7 @@ var _ = Describe("CreateHandler", func() {
 			Description: "some-notification-type-description",
 			Critical:    false,
 			TemplateID:  "some-template-id",
+			SenderID:    "some-sender-id",
 		}))
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
@@ -134,6 +137,7 @@ var _ = Describe("CreateHandler", func() {
 			Description: "some-notification-type-description",
 			Critical:    false,
 			TemplateID:  "",
+			SenderID:    "some-sender-id",
 		}
 
 		requestBody, err := json.Marshal(map[string]interface{}{
@@ -153,6 +157,7 @@ var _ = Describe("CreateHandler", func() {
 			Description: "some-notification-type-description",
 			Critical:    false,
 			TemplateID:  "",
+			SenderID:    "some-sender-id",
 		}))
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
@@ -180,6 +185,7 @@ var _ = Describe("CreateHandler", func() {
 			Description: "some-notification-type-description",
 			Critical:    true,
 			TemplateID:  "some-template-id",
+			SenderID:    "some-sender-id",
 		}
 
 		requestBody, err := json.Marshal(map[string]interface{}{
@@ -200,6 +206,7 @@ var _ = Describe("CreateHandler", func() {
 			Description: "some-notification-type-description",
 			Critical:    true,
 			TemplateID:  "some-template-id",
+			SenderID:    "some-sender-id",
 		}))
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
@@ -220,6 +227,7 @@ var _ = Describe("CreateHandler", func() {
 				Description: "some-notification-type-description",
 				Critical:    true,
 				TemplateID:  "some-template-id",
+				SenderID:    "some-sender-id",
 			}
 
 			requestBody, err := json.Marshal(map[string]interface{}{

@@ -12,6 +12,9 @@ type NotificationTypesCollection struct {
 		ReturnNotificationType collections.NotificationType
 		Err                    error
 	}
+	ListCall struct {
+		ReturnNotificationTypeList []collections.NotificationType
+	}
 }
 
 func NewNotificationTypesCollection() *NotificationTypesCollection {
@@ -22,4 +25,8 @@ func (c *NotificationTypesCollection) Add(conn models.ConnectionInterface, notif
 	c.AddCall.Conn = conn
 	c.AddCall.NotificationType = notificationType
 	return c.AddCall.ReturnNotificationType, c.AddCall.Err
+}
+
+func (c *NotificationTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]collections.NotificationType, error) {
+	return c.ListCall.ReturnNotificationTypeList, nil
 }

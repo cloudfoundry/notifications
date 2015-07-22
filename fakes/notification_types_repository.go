@@ -11,6 +11,11 @@ type NotificationTypesRepository struct {
 		ReturnNotificationType models.NotificationType
 		Err                    error
 	}
+	ListCall struct {
+		Connection                 models.ConnectionInterface
+		ReturnNotificationTypeList []models.NotificationType
+		Err                        error
+	}
 }
 
 func NewNotificationTypesRepository() *NotificationTypesRepository {
@@ -25,4 +30,9 @@ func (n *NotificationTypesRepository) Insert(conn models.ConnectionInterface, no
 
 func (n *NotificationTypesRepository) GetBySenderIDAndName(conn models.ConnectionInterface, senderID, name string) (models.NotificationType, error) {
 	return models.NotificationType{}, nil
+}
+
+func (n *NotificationTypesRepository) List(conn models.ConnectionInterface, senderID string) ([]models.NotificationType, error) {
+	n.ListCall.Connection = conn
+	return n.ListCall.ReturnNotificationTypeList, n.ListCall.Err
 }

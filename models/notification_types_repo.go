@@ -45,3 +45,13 @@ func (n NotificationTypesRepository) GetBySenderIDAndName(connection ConnectionI
 
 	return notificationType, nil
 }
+
+func (n NotificationTypesRepository) List(connection ConnectionInterface, senderID string) ([]NotificationType, error) {
+	notificationTypeList := []NotificationType{}
+	_, err := connection.Select(&notificationTypeList, "SELECT * FROM `notification_types` WHERE `sender_id` = ?", senderID)
+	if err != nil {
+		panic(err)
+	}
+
+	return notificationTypeList, nil
+}

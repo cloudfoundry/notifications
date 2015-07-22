@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -13,6 +14,7 @@ import (
 
 type collection interface {
 	Add(conn models.ConnectionInterface, notificationType collections.NotificationType) (createdNotificationType collections.NotificationType, err error)
+	List(conn models.ConnectionInterface, senderID, clientID string) (notificationTypes []collections.NotificationType, err error)
 }
 
 type CreateHandler struct {
@@ -26,6 +28,9 @@ func NewCreateHandler(notificationTypes collection) CreateHandler {
 }
 
 func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+	splitURL := strings.Split(req.URL.Path, "/")
+	senderID := splitURL[len(splitURL)-2]
+
 	var createRequest struct {
 		Name        string `json:"name"`
 		Description string `json:"description"`
@@ -63,6 +68,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		Description: createRequest.Description,
 		Critical:    createRequest.Critical,
 		TemplateID:  createRequest.TemplateID,
+		SenderID:    senderID,
 	})
 	if err != nil {
 		switch err.(type) {

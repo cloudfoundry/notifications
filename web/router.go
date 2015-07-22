@@ -148,8 +148,9 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	}))
 
 	// V2
-	sendersCollection := collections.NewSendersCollection(models.NewSendersRepository(uuid.NewV4))
-	notificationTypesCollection := collections.NewNotificationTypesCollection(models.NewNotificationTypesRepository(uuid.NewV4))
+	sendersRepository := models.NewSendersRepository(uuid.NewV4)
+	sendersCollection := collections.NewSendersCollection(sendersRepository)
+	notificationTypesCollection := collections.NewNotificationTypesCollection(models.NewNotificationTypesRepository(uuid.NewV4), sendersRepository)
 
 	v2 := NewRouterPool()
 	v2.AddMux(info.NewRouter(info.RouterConfig{
