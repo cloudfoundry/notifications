@@ -2,9 +2,11 @@ package notificationtypes
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/ryanmoran/stack"
 )
@@ -27,7 +29,15 @@ func (h ListHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 
 	notificationTypes, err := h.notificationTypes.List(database.Connection(), senderID, context.Get("client_id").(string))
 	if err != nil {
-		panic(err)
+		switch err.(type) {
+		case collections.NotFoundError:
+			writer.WriteHeader(http.StatusNotFound)
+			writer.Write([]byte(`{ "error": "sender not found" }`))
+		default:
+			writer.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(writer, `{ "error": "%s" }`, err)
+		}
+		return
 	}
 
 	responseList := []interface{}{}

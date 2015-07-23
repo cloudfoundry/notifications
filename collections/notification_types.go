@@ -91,6 +91,14 @@ func (nc NotificationTypesCollection) Add(conn models.ConnectionInterface, notif
 }
 
 func (nc NotificationTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]NotificationType, error) {
+	if senderID == "" {
+		return []NotificationType{}, ValidationError{errors.New("missing sender id")}
+	}
+
+	if clientID == "" {
+		return []NotificationType{}, ValidationError{errors.New("missing client id")}
+	}
+
 	senderModel, err := nc.sendersRepository.Get(conn, senderID)
 
 	if err != nil {
@@ -108,7 +116,7 @@ func (nc NotificationTypesCollection) List(conn models.ConnectionInterface, send
 
 	modelList, err := nc.notificationTypesRepository.List(conn, senderID)
 	if err != nil {
-		panic(err)
+		return []NotificationType{}, PersistenceError{err}
 	}
 
 	notificationTypeList := []NotificationType{}

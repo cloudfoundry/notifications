@@ -177,6 +177,20 @@ var _ = Describe("NotificationTypesCollection", func() {
 		})
 
 		Context("failure cases", func() {
+			It("validates that a sender id was specified", func() {
+				_, err := notificationTypesCollection.List(fakeDatabaseConnection, "", "some-client-id")
+				Expect(err).To(MatchError(collections.ValidationError{
+					Err: errors.New("missing sender id"),
+				}))
+			})
+
+			It("validates that a client id was specified", func() {
+				_, err := notificationTypesCollection.List(fakeDatabaseConnection, "some-sender-id", "")
+				Expect(err).To(MatchError(collections.ValidationError{
+					Err: errors.New("missing client id"),
+				}))
+			})
+
 			It("generates a not found error when the sender does not exist", func() {
 				fakeNotificationTypesRepository.ListCall.Err = models.RecordNotFoundError("sender not found")
 				fakeSendersRepository.GetCall.Err = models.RecordNotFoundError("sender not found")
@@ -198,6 +212,21 @@ var _ = Describe("NotificationTypesCollection", func() {
 				_, err := notificationTypesCollection.List(fakeDatabaseConnection, "mismatch-sender-id", "some-client-id")
 				Expect(err).To(MatchError(collections.NotFoundError{
 					Err: errors.New("sender not found"),
+				}))
+			})
+
+			It("handles unexpected database errors", func() {
+				fakeNotificationTypesRepository.ListCall.ReturnNotificationTypeList = []models.NotificationType{}
+				fakeNotificationTypesRepository.ListCall.Err = errors.New("BOOM!")
+				fakeSendersRepository.GetCall.ReturnSender = models.Sender{
+					ID:       "some-sender-id",
+					Name:     "some-sender",
+					ClientID: "some-client-id",
+				}
+
+				_, err := notificationTypesCollection.List(fakeDatabaseConnection, "some-sender-id", "some-client-id")
+				Expect(err).To(MatchError(collections.PersistenceError{
+					Err: errors.New("BOOM!"),
 				}))
 			})
 		})

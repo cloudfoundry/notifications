@@ -33,6 +33,8 @@ var _ = Describe("CreateHandler", func() {
 	BeforeEach(func() {
 		context = stack.NewContext()
 
+		context.Set("client_id", "some-client-id")
+
 		database = fakes.NewDatabase()
 		context.Set("database", database)
 
