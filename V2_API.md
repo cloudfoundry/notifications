@@ -5,6 +5,9 @@
 - Senders
 	- [Creating a sender](#create-sender)
 	- [Retrieving a sender](#retrieve-sender)
+- Notification Types
+  - [Creating a notification type](#create-notification-type)
+  - [Listing the notification types](#list-notification-types)
 
 ## System Status
 
@@ -224,3 +227,52 @@ X-Cf-Requestid: 6106873b-14ea-4fd9-6418-946c1651e4ac
 | description   | Notification type description         |
 | critical      | Critical notification type flag       |
 | template_id   | Template ID                           |
+
+<a name="list-notification-types"></a>
+#### Listing Notification Types
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The user token requires `notifications.write` scope.
+\*\* Creation of a critical notification type requires `critical_notifications.write` scope.
+
+###### Route
+```
+GET /senders/<sender-id>/notification-types
+```
+###### CURL example
+```
+$ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/notification_types
+
+HTTP/1.1 200 OK
+Date: Thu, 23 Jul 2015 19:22:46 GMT
+Content-Length: 180
+Content-Type: text/plain; charset=utf-8
+
+{"notification_types":[{"critical":false,"description":"notification type description","id":"702ce4c7-93a0-42b5-4fd5-4d0ed68e2cd7","name":"my-notification-type","template_id":""}]}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields             | Description                           |
+| ------------------ | ------------------------------------- |
+| notification_types | The array of notification types       |
+| id                 | System-generated notification type ID |
+| name               | Notification type name                |
+| description        | Notification type description         |
+| critical           | Critical notification type flag       |
+| template_id        | Template ID                           |
