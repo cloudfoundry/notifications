@@ -33,7 +33,22 @@ func NewNotificationTypesCollection(nr notificationTypesRepository, sr sendersRe
 	}
 }
 
-func (nc NotificationTypesCollection) Add(conn models.ConnectionInterface, notificationType NotificationType) (NotificationType, error) {
+func (nc NotificationTypesCollection) Add(conn models.ConnectionInterface, notificationType NotificationType, clientID string) (NotificationType, error) {
+	senderModel, err := nc.sendersRepository.Get(conn, notificationType.SenderID)
+
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return NotificationType{}, NotFoundError{err}
+		default:
+			return NotificationType{}, PersistenceError{err}
+		}
+	}
+
+	if senderModel.ClientID != clientID {
+		return NotificationType{}, NotFoundError{errors.New("sender not found")}
+	}
+
 	if notificationType.Name == "" {
 		return NotificationType{}, ValidationError{
 			Err: errors.New("missing notification type name"),

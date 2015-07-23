@@ -13,7 +13,7 @@ import (
 )
 
 type collection interface {
-	Add(conn models.ConnectionInterface, notificationType collections.NotificationType) (createdNotificationType collections.NotificationType, err error)
+	Add(conn models.ConnectionInterface, notificationType collections.NotificationType, clientID string) (createdNotificationType collections.NotificationType, err error)
 	List(conn models.ConnectionInterface, senderID, clientID string) (notificationTypes []collections.NotificationType, err error)
 }
 
@@ -69,7 +69,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		Critical:    createRequest.Critical,
 		TemplateID:  createRequest.TemplateID,
 		SenderID:    senderID,
-	})
+	}, context.Get("client_id").(string))
 	if err != nil {
 		switch err.(type) {
 		case collections.ValidationError:

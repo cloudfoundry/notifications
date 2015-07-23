@@ -28,12 +28,12 @@ var _ = Describe("NotificationTypesCollection", func() {
 	})
 
 	Describe("Add", func() {
-		BeforeEach(func() {
-			fakeNotificationTypesRepository.InsertCall.ReturnNotificationType.ID = "generated-id"
-		})
+		var (
+			notificationType collections.NotificationType
+		)
 
-		It("adds a notification type to the collection", func() {
-			notificationType := collections.NotificationType{
+		BeforeEach(func() {
+			notificationType = collections.NotificationType{
 				Name:        "My cool notification type",
 				Description: "description",
 				Critical:    false,
@@ -41,7 +41,17 @@ var _ = Describe("NotificationTypesCollection", func() {
 				SenderID:    "mysender",
 			}
 
-			returnedNotificationType, err := notificationTypesCollection.Add(fakeDatabaseConnection, notificationType)
+			fakeNotificationTypesRepository.InsertCall.ReturnNotificationType.ID = "generated-id"
+		})
+
+		It("adds a notification type to the collection", func() {
+			fakeSendersRepository.GetCall.ReturnSender = models.Sender{
+				ID:       "mysender",
+				Name:     "some-sender",
+				ClientID: "client_id",
+			}
+
+			returnedNotificationType, err := notificationTypesCollection.Add(fakeDatabaseConnection, notificationType, "client_id")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(returnedNotificationType.ID).To(Equal("generated-id"))
 			Expect(fakeNotificationTypesRepository.InsertCall.Connection).To(Equal(fakeDatabaseConnection))
@@ -53,31 +63,67 @@ var _ = Describe("NotificationTypesCollection", func() {
 		})
 
 		It("requires a name to be specified", func() {
-			notificationType := collections.NotificationType{
+			notificationType = collections.NotificationType{
 				Description: "description",
 				Critical:    false,
 				TemplateID:  "",
 				SenderID:    "mysender",
 			}
+			fakeSendersRepository.GetCall.ReturnSender = models.Sender{
+				ID:       "mysender",
+				Name:     "some-sender",
+				ClientID: "client_id",
+			}
 
-			_, err := notificationTypesCollection.Add(fakeDatabaseConnection, notificationType)
+			_, err := notificationTypesCollection.Add(fakeDatabaseConnection, notificationType, "client_id")
 			Expect(err).To(MatchError(collections.ValidationError{
 				Err: errors.New("missing notification type name"),
 			}))
 		})
 
 		It("requires a description to be specified", func() {
-			notificationType := collections.NotificationType{
+			notificationType = collections.NotificationType{
 				Name:       "some-notification-type",
 				Critical:   false,
 				TemplateID: "",
 				SenderID:   "mysender",
 			}
+			fakeSendersRepository.GetCall.ReturnSender = models.Sender{
+				ID:       "mysender",
+				Name:     "some-sender",
+				ClientID: "client_id",
+			}
 
-			_, err := notificationTypesCollection.Add(fakeDatabaseConnection, notificationType)
+			_, err := notificationTypesCollection.Add(fakeDatabaseConnection, notificationType, "client_id")
 			Expect(err).To(MatchError(collections.ValidationError{
 				Err: errors.New("missing notification type description"),
 			}))
+		})
+
+		Context("failure cases", func() {
+			It("generates a not found error when the sender does not exist", func() {
+				fakeNotificationTypesRepository.InsertCall.Err = models.RecordNotFoundError("sender not found")
+				fakeSendersRepository.GetCall.Err = models.RecordNotFoundError("sender not found")
+
+				_, err := notificationTypesCollection.Add(fakeDatabaseConnection, notificationType, "some-client-id")
+				Expect(err).To(MatchError(collections.NotFoundError{
+					Err: models.RecordNotFoundError("sender not found"),
+				}))
+			})
+
+			It("generates a not found error when the sender belongs to a different client", func() {
+				fakeNotificationTypesRepository.InsertCall.Err = models.RecordNotFoundError("sender not found")
+				fakeSendersRepository.GetCall.ReturnSender = models.Sender{
+					ID:       "some-sender-id",
+					Name:     "some-sender",
+					ClientID: "mismatch-client-id",
+				}
+
+				_, err := notificationTypesCollection.Add(fakeDatabaseConnection, notificationType, "some-client-id")
+				Expect(err).To(MatchError(collections.NotFoundError{
+					Err: errors.New("sender not found"),
+				}))
+			})
 		})
 	})
 
