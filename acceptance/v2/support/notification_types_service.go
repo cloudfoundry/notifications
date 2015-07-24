@@ -53,3 +53,23 @@ func (n NotificationTypesService) Create(senderID, name, description, templateID
 
 	return notificationType, nil
 }
+
+func (n NotificationTypesService) Show(senderID, notificationTypeID, token string) (NotificationType, error) {
+	var notificationType NotificationType
+
+	status, body, err := NewClient(n.config).makeRequest("GET", n.config.Host+"/senders/"+senderID+"/notification_types/"+notificationTypeID, nil, token)
+	if err != nil {
+		return notificationType, err
+	}
+
+	if status != http.StatusOK {
+		return notificationType, UnexpectedStatusError{status, string(body)}
+	}
+
+	err = json.Unmarshal(body, &notificationType)
+	if err != nil {
+		return notificationType, err
+	}
+
+	return notificationType, nil
+}

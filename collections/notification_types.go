@@ -24,6 +24,7 @@ type notificationTypesRepository interface {
 	Insert(models.ConnectionInterface, models.NotificationType) (models.NotificationType, error)
 	GetBySenderIDAndName(models.ConnectionInterface, string, string) (models.NotificationType, error)
 	List(models.ConnectionInterface, string) ([]models.NotificationType, error)
+	Get(models.ConnectionInterface, string) (models.NotificationType, error)
 }
 
 func NewNotificationTypesCollection(nr notificationTypesRepository, sr sendersRepository) NotificationTypesCollection {
@@ -134,4 +135,20 @@ func (nc NotificationTypesCollection) List(conn models.ConnectionInterface, send
 	}
 
 	return notificationTypeList, nil
+}
+
+func (nc NotificationTypesCollection) Get(conn models.ConnectionInterface, notificationTypeID, senderID, clientID string) (NotificationType, error) {
+	model, err := nc.notificationTypesRepository.Get(conn, notificationTypeID)
+	if err != nil {
+		panic(err)
+	}
+
+	return NotificationType{
+		ID:          model.ID,
+		Name:        model.Name,
+		Description: model.Description,
+		Critical:    model.Critical,
+		TemplateID:  model.TemplateID,
+		SenderID:    model.SenderID,
+	}, nil
 }

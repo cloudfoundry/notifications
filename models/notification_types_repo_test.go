@@ -101,4 +101,38 @@ var _ = Describe("NotificationTypesRepo", func() {
 			Expect(len(returnNotificationTypeList)).To(Equal(0))
 		})
 	})
+
+	Describe("Get", func() {
+		It("fetches a record from the database", func() {
+			notificationType, err := repo.Insert(conn, models.NotificationType{
+				Name:        "notification-type",
+				Description: "notification-type-description",
+				Critical:    false,
+				TemplateID:  "some-template-id",
+				SenderID:    "some-sender-id",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			returnNotificationType, err := repo.Get(conn, notificationType.ID)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(returnNotificationType).To(Equal(notificationType))
+		})
+
+		Context("failure cases", func() {
+			It("fails to fetch the notification type given a non-existent notification_type_id", func() {
+				_, err := repo.Insert(conn, models.NotificationType{
+					Name:        "notification-type",
+					Description: "notification-type-description",
+					Critical:    false,
+					TemplateID:  "some-template-id",
+					SenderID:    "some-sender-id",
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = repo.Get(conn, "missing-notification-type-id")
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+			})
+		})
+	})
 })

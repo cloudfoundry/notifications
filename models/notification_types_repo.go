@@ -55,3 +55,16 @@ func (n NotificationTypesRepository) List(connection ConnectionInterface, sender
 
 	return notificationTypeList, nil
 }
+
+func (n NotificationTypesRepository) Get(connection ConnectionInterface, notificationTypeID string) (NotificationType, error) {
+	notificationType := NotificationType{}
+	err := connection.SelectOne(&notificationType, "SELECT * FROM `notification_types` WHERE `id` = ?", notificationTypeID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = NewRecordNotFoundError("Notification type with id %q could not be found", notificationTypeID)
+		}
+		return notificationType, err
+	}
+
+	return notificationType, nil
+}

@@ -15,6 +15,7 @@ import (
 type collection interface {
 	Add(conn models.ConnectionInterface, notificationType collections.NotificationType, clientID string) (createdNotificationType collections.NotificationType, err error)
 	List(conn models.ConnectionInterface, senderID, clientID string) (notificationTypes []collections.NotificationType, err error)
+	Get(conn models.ConnectionInterface, senderID, notificationTypeID, clientID string) (notificationType collections.NotificationType, err error)
 }
 
 type CreateHandler struct {

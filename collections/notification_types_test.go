@@ -231,4 +231,18 @@ var _ = Describe("NotificationTypesCollection", func() {
 			})
 		})
 	})
+
+	Describe("Get", func() {
+		It("returns the ID if it is found", func() {
+			fakeNotificationTypesRepository.GetReturn.NotificationType = models.NotificationType{
+				ID:       "a-notification-type-id",
+				Name:     "typename",
+				SenderID: "senderID",
+			}
+
+			notificationType, err := notificationTypesCollection.Get(fakeDatabaseConnection, "a-notification-type-id", "senderID", "some-client-id")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(notificationType.Name).To(Equal("typename"))
+		})
+	})
 })

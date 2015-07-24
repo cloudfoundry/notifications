@@ -19,8 +19,10 @@ func NewRouter(config RouterConfig) *mux.Router {
 
 	createStack := stack.NewStack(NewCreateHandler(config.NotificationTypesCollection)).Use(config.RequestLogging, config.Authenticator, config.DatabaseAllocator)
 	listStack := stack.NewStack(NewListHandler(config.NotificationTypesCollection)).Use(config.RequestLogging, config.Authenticator, config.DatabaseAllocator)
+	showStack := stack.NewStack(NewShowHandler(config.NotificationTypesCollection)).Use(config.RequestLogging, config.Authenticator, config.DatabaseAllocator)
 
 	router.Handle("/senders/{sender_id}/notification_types", createStack).Methods("POST").Name("POST /senders/{sender_id}/notification_types")
+	router.Handle("/senders/{sender_id}/notification_types/{notification_type_id}", showStack).Methods("GET").Name("GET /senders/{sender_id}/notification_types/{notification_type_id}")
 	router.Handle("/senders/{sender_id}/notification_types", listStack).Methods("GET").Name("GET /senders/{sender_id}/notification_types")
 
 	return router
