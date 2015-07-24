@@ -138,17 +138,52 @@ func (nc NotificationTypesCollection) List(conn models.ConnectionInterface, send
 }
 
 func (nc NotificationTypesCollection) Get(conn models.ConnectionInterface, notificationTypeID, senderID, clientID string) (NotificationType, error) {
-	model, err := nc.notificationTypesRepository.Get(conn, notificationTypeID)
+	if notificationTypeID == "" {
+		return NotificationType{}, ValidationError{errors.New("missing notification type id")}
+	}
+
+	if senderID == "" {
+		return NotificationType{}, ValidationError{errors.New("missing sender id")}
+	}
+
+	if clientID == "" {
+		return NotificationType{}, ValidationError{errors.New("missing client id")}
+	}
+
+	sender, err := nc.sendersRepository.Get(conn, senderID)
 	if err != nil {
-		panic(err)
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return NotificationType{}, NotFoundError{err}
+		default:
+			return NotificationType{}, PersistenceError{err}
+		}
+	}
+
+	if clientID != sender.ClientID {
+		return NotificationType{}, NotFoundError{errors.New("sender not found")}
+	}
+
+	notificationType, err := nc.notificationTypesRepository.Get(conn, notificationTypeID)
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return NotificationType{}, NotFoundError{err}
+		default:
+			return NotificationType{}, PersistenceError{err}
+		}
+	}
+
+	if senderID != notificationType.SenderID {
+		return NotificationType{}, NotFoundError{errors.New("notification type not found")}
 	}
 
 	return NotificationType{
-		ID:          model.ID,
-		Name:        model.Name,
-		Description: model.Description,
-		Critical:    model.Critical,
-		TemplateID:  model.TemplateID,
-		SenderID:    model.SenderID,
+		ID:          notificationType.ID,
+		Name:        notificationType.Name,
+		Description: notificationType.Description,
+		Critical:    notificationType.Critical,
+		TemplateID:  notificationType.TemplateID,
+		SenderID:    notificationType.SenderID,
 	}, nil
 }
