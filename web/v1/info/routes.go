@@ -7,16 +7,13 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type RouterConfig struct {
+type Routes struct {
 	Version        int
 	RequestLogging stack.Middleware
 }
 
-func NewRouter(config RouterConfig) *mux.Router {
-	router := mux.NewRouter()
+func (r Routes) Register(router *mux.Router) {
 	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
-	router.Handle("/info", stack.NewStack(NewGetHandler(config.Version)).Use(config.RequestLogging, requestCounter)).Methods("GET").Name("GET /info")
-
-	return router
+	router.Handle("/info", stack.NewStack(NewGetHandler(r.Version)).Use(r.RequestLogging, requestCounter)).Methods("GET").Name("GET /info")
 }

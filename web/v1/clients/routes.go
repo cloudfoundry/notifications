@@ -8,7 +8,7 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type RouterConfig struct {
+type Routes struct {
 	RequestLogging                   stack.Middleware
 	NotificationsManageAuthenticator stack.Middleware
 	DatabaseAllocator                stack.Middleware
@@ -17,13 +17,10 @@ type RouterConfig struct {
 	TemplateAssigner services.TemplateAssignerInterface
 }
 
-func NewRouter(config RouterConfig) *mux.Router {
-	router := mux.NewRouter()
+func (r Routes) Register(router *mux.Router) {
 	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
-	assignTemplateHandler := NewAssignTemplateHandler(config.TemplateAssigner, config.ErrorWriter)
-	assignTemplateStack := stack.NewStack(assignTemplateHandler).Use(config.RequestLogging, requestCounter, config.NotificationsManageAuthenticator, config.DatabaseAllocator)
+	assignTemplateHandler := NewAssignTemplateHandler(r.TemplateAssigner, r.ErrorWriter)
+	assignTemplateStack := stack.NewStack(assignTemplateHandler).Use(r.RequestLogging, requestCounter, r.NotificationsManageAuthenticator, r.DatabaseAllocator)
 	router.Handle("/clients/{client_id}/template", assignTemplateStack).Methods("PUT").Name("PUT /clients/{client_id}/template")
-
-	return router
 }

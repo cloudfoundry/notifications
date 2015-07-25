@@ -8,7 +8,7 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type RouterConfig struct {
+type Routes struct {
 	RequestLogging                               stack.Middleware
 	NotificationsWriteOrEmailsWriteAuthenticator stack.Middleware
 	DatabaseAllocator                            stack.Middleware
@@ -17,13 +17,10 @@ type RouterConfig struct {
 	ErrorWriter   errorWriter
 }
 
-func NewRouter(config RouterConfig) *mux.Router {
-	router := mux.NewRouter()
+func (r Routes) Register(router *mux.Router) {
 	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
 
-	getHandler := NewGetHandler(config.MessageFinder, config.ErrorWriter)
-	getStack := stack.NewStack(getHandler).Use(config.RequestLogging, requestCounter, config.NotificationsWriteOrEmailsWriteAuthenticator, config.DatabaseAllocator)
+	getHandler := NewGetHandler(r.MessageFinder, r.ErrorWriter)
+	getStack := stack.NewStack(getHandler).Use(r.RequestLogging, requestCounter, r.NotificationsWriteOrEmailsWriteAuthenticator, r.DatabaseAllocator)
 	router.Handle("/messages/{message_id}", getStack).Methods("GET").Name("GET /messages/{message_id}")
-
-	return router
 }

@@ -11,18 +11,19 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Router", func() {
+var _ = Describe("Routes", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = clients.NewRouter(clients.RouterConfig{
+		router = mux.NewRouter()
+		clients.Routes{
 			RequestLogging:                   middleware.RequestLogging{},
 			DatabaseAllocator:                middleware.DatabaseAllocator{},
 			NotificationsManageAuthenticator: middleware.Authenticator{Scopes: []string{"notifications.manage"}},
 
 			ErrorWriter:      fakes.NewErrorWriter(),
 			TemplateAssigner: fakes.NewTemplateAssigner(),
-		})
+		}.Register(router)
 	})
 
 	It("routes PUT /clients/{client_id}/template", func() {

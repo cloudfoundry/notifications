@@ -10,14 +10,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Router", func() {
+var _ = Describe("Routes", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = info.NewRouter(info.RouterConfig{
+		router = mux.NewRouter()
+		info.Routes{
 			Version:        1,
 			RequestLogging: middleware.RequestLogging{},
-		})
+		}.Register(router)
 	})
 
 	It("routes GET /info", func() {

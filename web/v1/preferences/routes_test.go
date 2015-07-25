@@ -12,11 +12,12 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Router", func() {
+var _ = Describe("Routes", func() {
 	var router *mux.Router
 
 	BeforeEach(func() {
-		router = preferences.NewRouter(preferences.RouterConfig{
+		router = mux.NewRouter()
+		preferences.Routes{
 			ErrorWriter:       fakes.NewErrorWriter(),
 			PreferencesFinder: fakes.NewPreferencesFinder(services.PreferencesBuilder{}),
 			PreferenceUpdater: fakes.NewPreferenceUpdater(),
@@ -27,7 +28,7 @@ var _ = Describe("Router", func() {
 			NotificationPreferencesReadAuthenticator:  middleware.Authenticator{Scopes: []string{"notification_preferences.read"}},
 			NotificationPreferencesAdminAuthenticator: middleware.Authenticator{Scopes: []string{"notification_preferences.admin"}},
 			NotificationPreferencesWriteAuthenticator: middleware.Authenticator{Scopes: []string{"notification_preferences.write"}},
-		})
+		}.Register(router)
 	})
 
 	Describe("/user_preferences", func() {
