@@ -8,6 +8,11 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
+type muxer interface {
+	Handle(method, path string, handler stack.Handler, middleware ...stack.Middleware)
+	GetRouter() *mux.Router
+}
+
 type Routes struct {
 	RequestLogging                   stack.Middleware
 	DatabaseAllocator                stack.Middleware
@@ -21,26 +26,11 @@ type Routes struct {
 	NotificationsUpdater services.NotificationsUpdaterInterface
 }
 
-func (r Routes) Register(router *mux.Router) {
-	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
-
-	registrationHandler := NewRegistrationHandler(r.Registrar, r.ErrorWriter)
-	registrationStack := stack.NewStack(registrationHandler).Use(r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
-	router.Handle("/registration", registrationStack).Methods("PUT").Name("PUT /registration")
-
-	putHandler := NewPutHandler(r.Registrar, r.ErrorWriter)
-	putStack := stack.NewStack(putHandler).Use(r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
-	router.Handle("/notifications", putStack).Methods("PUT").Name("PUT /notifications")
-
-	listHandler := NewListHandler(r.NotificationsFinder, r.ErrorWriter)
-	listStack := stack.NewStack(listHandler).Use(r.RequestLogging, requestCounter, r.NotificationsManageAuthenticator, r.DatabaseAllocator)
-	router.Handle("/notifications", listStack).Methods("GET").Name("GET /notifications")
-
-	updateHandler := NewUpdateHandler(r.NotificationsUpdater, r.ErrorWriter)
-	updateStack := stack.NewStack(updateHandler).Use(r.RequestLogging, requestCounter, r.NotificationsManageAuthenticator, r.DatabaseAllocator)
-	router.Handle("/clients/{client_id}/notifications/{notification_id}", updateStack).Methods("PUT").Name("PUT /clients/{client_id}/notifications/{notification_id}")
-
-	assignTemplateHandler := NewAssignTemplateHandler(r.TemplateAssigner, r.ErrorWriter)
-	assignTemplateStack := stack.NewStack(assignTemplateHandler).Use(r.RequestLogging, requestCounter, r.NotificationsManageAuthenticator, r.DatabaseAllocator)
-	router.Handle("/clients/{client_id}/notifications/{notification_id}/template", assignTemplateStack).Methods("PUT").Name("PUT /clients/{client_id}/notifications/{notification_id}/template")
+func (r Routes) Register(m muxer) {
+	requestCounter := middleware.NewRequestCounter(m.GetRouter(), metrics.DefaultLogger)
+	m.Handle("PUT", "/registration", NewRegistrationHandler(r.Registrar, r.ErrorWriter), r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
+	m.Handle("PUT", "/notifications", NewPutHandler(r.Registrar, r.ErrorWriter), r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
+	m.Handle("GET", "/notifications", NewListHandler(r.NotificationsFinder, r.ErrorWriter), r.RequestLogging, requestCounter, r.NotificationsManageAuthenticator, r.DatabaseAllocator)
+	m.Handle("PUT", "/clients/{client_id}/notifications/{notification_id}", NewUpdateHandler(r.NotificationsUpdater, r.ErrorWriter), r.RequestLogging, requestCounter, r.NotificationsManageAuthenticator, r.DatabaseAllocator)
+	m.Handle("PUT", "/clients/{client_id}/notifications/{notification_id}/template", NewAssignTemplateHandler(r.TemplateAssigner, r.ErrorWriter), r.RequestLogging, requestCounter, r.NotificationsManageAuthenticator, r.DatabaseAllocator)
 }

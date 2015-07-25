@@ -8,6 +8,11 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
+type muxer interface {
+	Handle(method, path string, handler stack.Handler, middleware ...stack.Middleware)
+	GetRouter() *mux.Router
+}
+
 type Routes struct {
 	RequestLogging                   stack.Middleware
 	NotificationsManageAuthenticator stack.Middleware
@@ -17,10 +22,7 @@ type Routes struct {
 	TemplateAssigner services.TemplateAssignerInterface
 }
 
-func (r Routes) Register(router *mux.Router) {
-	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
-
-	assignTemplateHandler := NewAssignTemplateHandler(r.TemplateAssigner, r.ErrorWriter)
-	assignTemplateStack := stack.NewStack(assignTemplateHandler).Use(r.RequestLogging, requestCounter, r.NotificationsManageAuthenticator, r.DatabaseAllocator)
-	router.Handle("/clients/{client_id}/template", assignTemplateStack).Methods("PUT").Name("PUT /clients/{client_id}/template")
+func (r Routes) Register(m muxer) {
+	requestCounter := middleware.NewRequestCounter(m.GetRouter(), metrics.DefaultLogger)
+	m.Handle("PUT", "/clients/{client_id}/template", NewAssignTemplateHandler(r.TemplateAssigner, r.ErrorWriter), r.RequestLogging, requestCounter, r.NotificationsManageAuthenticator, r.DatabaseAllocator)
 }

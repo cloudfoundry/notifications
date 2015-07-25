@@ -1,10 +1,12 @@
 package notify_test
 
 import (
+	"net/http"
+
 	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/v1/notify"
-	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
@@ -12,10 +14,10 @@ import (
 )
 
 var _ = Describe("Routes", func() {
-	var router *mux.Router
+	var muxer web.Muxer
 
 	BeforeEach(func() {
-		router = mux.NewRouter()
+		muxer = web.NewMuxer()
 		notify.Routes{
 			Notify:               fakes.NewNotify(),
 			ErrorWriter:          fakes.NewErrorWriter(),
@@ -30,11 +32,14 @@ var _ = Describe("Routes", func() {
 			DatabaseAllocator:               middleware.DatabaseAllocator{},
 			NotificationsWriteAuthenticator: middleware.Authenticator{Scopes: []string{"notifications.write"}},
 			EmailsWriteAuthenticator:        middleware.Authenticator{Scopes: []string{"emails.write"}},
-		}.Register(router)
+		}.Register(muxer)
 	})
 
 	It("routes POST /users/{user_id}", func() {
-		s := router.Get("POST /users/{user_id}").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("POST", "/users/{user_id}", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(notify.UserHandler{}))
 		ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
@@ -43,7 +48,10 @@ var _ = Describe("Routes", func() {
 	})
 
 	It("routes POST /spaces/{space_id}", func() {
-		s := router.Get("POST /spaces/{space_id}").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("POST", "/spaces/{space_id}", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(notify.SpaceHandler{}))
 		ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
@@ -52,7 +60,10 @@ var _ = Describe("Routes", func() {
 	})
 
 	It("routes POST /organizations/{org_id}", func() {
-		s := router.Get("POST /organizations/{org_id}").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("POST", "/organizations/{org_id}", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(notify.OrganizationHandler{}))
 		ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
@@ -61,7 +72,10 @@ var _ = Describe("Routes", func() {
 	})
 
 	It("routes POST /everyone", func() {
-		s := router.Get("POST /everyone").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("POST", "/everyone", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(notify.EveryoneHandler{}))
 		ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
@@ -70,7 +84,10 @@ var _ = Describe("Routes", func() {
 	})
 
 	It("routes POST /uaa_scopes/{scope}", func() {
-		s := router.Get("POST /uaa_scopes/{scope}").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("POST", "/uaa_scopes/{scope}", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(notify.UAAScopeHandler{}))
 		ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
@@ -79,7 +96,10 @@ var _ = Describe("Routes", func() {
 	})
 
 	It("routes POST /emails", func() {
-		s := router.Get("POST /emails").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("POST", "/emails", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(notify.EmailHandler{}))
 		ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 

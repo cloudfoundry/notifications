@@ -2,9 +2,12 @@ package senders
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/collections"
-	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )
+
+type muxer interface {
+	Handle(method, path string, handler stack.Handler, middleware ...stack.Middleware)
+}
 
 type Routes struct {
 	RequestLogging    stack.Middleware
@@ -13,10 +16,7 @@ type Routes struct {
 	SendersCollection collections.SendersCollection
 }
 
-func (r Routes) Register(router *mux.Router) {
-	createStack := stack.NewStack(NewCreateHandler(r.SendersCollection)).Use(r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
-	getStack := stack.NewStack(NewGetHandler(r.SendersCollection)).Use(r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
-
-	router.Handle("/senders", createStack).Methods("POST").Name("POST /senders")
-	router.Handle("/senders/{sender_id}", getStack).Methods("GET").Name("GET /senders/{sender_id}")
+func (r Routes) Register(m muxer) {
+	m.Handle("POST", "/senders", NewCreateHandler(r.SendersCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
+	m.Handle("GET", "/senders/{sender_id}", NewGetHandler(r.SendersCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
 }

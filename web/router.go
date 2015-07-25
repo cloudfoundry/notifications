@@ -18,7 +18,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/web/v2/campaigntypes"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/senders"
 	"github.com/cloudfoundry-incubator/notifications/web/webutil"
-	"github.com/gorilla/mux"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -72,7 +71,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	databaseAllocator := middleware.NewDatabaseAllocator(mother.SQLDatabase(), config.DBLoggingEnabled)
 	cors := mother.CORS()
 
-	v1 := mux.NewRouter()
+	v1 := NewMuxer()
 
 	info.Routes{
 		Version:        1,
@@ -162,7 +161,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	sendersCollection := collections.NewSendersCollection(sendersRepository)
 	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository)
 
-	v2 := mux.NewRouter()
+	v2 := NewMuxer()
 
 	info.Routes{
 		Version:        2,

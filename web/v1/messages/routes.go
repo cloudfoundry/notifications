@@ -8,6 +8,11 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
+type muxer interface {
+	Handle(method, path string, handler stack.Handler, middleware ...stack.Middleware)
+	GetRouter() *mux.Router
+}
+
 type Routes struct {
 	RequestLogging                               stack.Middleware
 	NotificationsWriteOrEmailsWriteAuthenticator stack.Middleware
@@ -17,10 +22,7 @@ type Routes struct {
 	ErrorWriter   errorWriter
 }
 
-func (r Routes) Register(router *mux.Router) {
-	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
-
-	getHandler := NewGetHandler(r.MessageFinder, r.ErrorWriter)
-	getStack := stack.NewStack(getHandler).Use(r.RequestLogging, requestCounter, r.NotificationsWriteOrEmailsWriteAuthenticator, r.DatabaseAllocator)
-	router.Handle("/messages/{message_id}", getStack).Methods("GET").Name("GET /messages/{message_id}")
+func (r Routes) Register(m muxer) {
+	requestCounter := middleware.NewRequestCounter(m.GetRouter(), metrics.DefaultLogger)
+	m.Handle("GET", "/messages/{message_id}", NewGetHandler(r.MessageFinder, r.ErrorWriter), r.RequestLogging, requestCounter, r.NotificationsWriteOrEmailsWriteAuthenticator, r.DatabaseAllocator)
 }

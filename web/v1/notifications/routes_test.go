@@ -1,10 +1,12 @@
 package notifications_test
 
 import (
+	"net/http"
+
 	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/v1/notifications"
-	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
@@ -12,10 +14,10 @@ import (
 )
 
 var _ = Describe("Routes", func() {
-	var router *mux.Router
+	var muxer web.Muxer
 
 	BeforeEach(func() {
-		router = mux.NewRouter()
+		muxer = web.NewMuxer()
 		notifications.Routes{
 			RequestLogging:                   middleware.RequestLogging{},
 			DatabaseAllocator:                middleware.DatabaseAllocator{},
@@ -26,12 +28,15 @@ var _ = Describe("Routes", func() {
 			ErrorWriter:          fakes.NewErrorWriter(),
 			NotificationsFinder:  fakes.NewNotificationsFinder(),
 			NotificationsUpdater: &fakes.NotificationUpdater{},
-		}.Register(router)
+		}.Register(muxer)
 	})
 
 	Describe("/notifications", func() {
 		It("routes PUT /notifications", func() {
-			s := router.Get("PUT /notifications").GetHandler().(stack.Stack)
+			request, err := http.NewRequest("PUT", "/notifications", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			s := muxer.Match(request).(stack.Stack)
 			Expect(s.Handler).To(BeAssignableToTypeOf(notifications.PutHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
@@ -40,7 +45,10 @@ var _ = Describe("Routes", func() {
 		})
 
 		It("routes GET /notifications", func() {
-			s := router.Get("GET /notifications").GetHandler().(stack.Stack)
+			request, err := http.NewRequest("GET", "/notifications", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			s := muxer.Match(request).(stack.Stack)
 			Expect(s.Handler).To(BeAssignableToTypeOf(notifications.ListHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
@@ -49,7 +57,10 @@ var _ = Describe("Routes", func() {
 		})
 
 		It("routes PUT /clients/{client_id}/notifications/{notification_id}", func() {
-			s := router.Get("PUT /clients/{client_id}/notifications/{notification_id}").GetHandler().(stack.Stack)
+			request, err := http.NewRequest("PUT", "/clients/{client_id}/notifications/{notification_id}", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			s := muxer.Match(request).(stack.Stack)
 			Expect(s.Handler).To(BeAssignableToTypeOf(notifications.UpdateHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
@@ -58,7 +69,10 @@ var _ = Describe("Routes", func() {
 		})
 
 		It("routes PUT /clients/{client_id}/notifications/{notification_id}/template", func() {
-			s := router.Get("PUT /clients/{client_id}/notifications/{notification_id}/template").GetHandler().(stack.Stack)
+			request, err := http.NewRequest("PUT", "/clients/{client_id}/notifications/{notification_id}/template", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			s := muxer.Match(request).(stack.Stack)
 			Expect(s.Handler).To(BeAssignableToTypeOf(notifications.AssignTemplateHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 
@@ -69,7 +83,10 @@ var _ = Describe("Routes", func() {
 
 	Describe("/registration", func() {
 		It("routes PUT /registration", func() {
-			s := router.Get("PUT /registration").GetHandler().(stack.Stack)
+			request, err := http.NewRequest("PUT", "/registration", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			s := muxer.Match(request).(stack.Stack)
 			Expect(s.Handler).To(BeAssignableToTypeOf(notifications.RegistrationHandler{}))
 			ExpectToContainMiddlewareStack(s.Middleware, middleware.RequestLogging{}, middleware.RequestCounter{}, middleware.Authenticator{}, middleware.DatabaseAllocator{})
 

@@ -7,13 +7,17 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
+type muxer interface {
+	Handle(method, path string, handler stack.Handler, middleware ...stack.Middleware)
+	GetRouter() *mux.Router
+}
+
 type Routes struct {
 	Version        int
 	RequestLogging stack.Middleware
 }
 
-func (r Routes) Register(router *mux.Router) {
-	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
-
-	router.Handle("/info", stack.NewStack(NewGetHandler(r.Version)).Use(r.RequestLogging, requestCounter)).Methods("GET").Name("GET /info")
+func (r Routes) Register(m muxer) {
+	requestCounter := middleware.NewRequestCounter(m.GetRouter(), metrics.DefaultLogger)
+	m.Handle("GET", "/info", NewGetHandler(r.Version), r.RequestLogging, requestCounter)
 }

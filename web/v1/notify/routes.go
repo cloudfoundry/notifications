@@ -8,6 +8,11 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
+type muxer interface {
+	Handle(method, path string, handler stack.Handler, middleware ...stack.Middleware)
+	GetRouter() *mux.Router
+}
+
 type Routes struct {
 	RequestLogging                  stack.Middleware
 	DatabaseAllocator               stack.Middleware
@@ -24,30 +29,12 @@ type Routes struct {
 	EmailStrategy        services.StrategyInterface
 }
 
-func (r Routes) Register(router *mux.Router) {
-	requestCounter := middleware.NewRequestCounter(router, metrics.DefaultLogger)
-
-	userHandler := NewUserHandler(r.Notify, r.ErrorWriter, r.UserStrategy)
-	userStack := stack.NewStack(userHandler).Use(r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
-	router.Handle("/users/{user_id}", userStack).Methods("POST").Name("POST /users/{user_id}")
-
-	spaceHandler := NewSpaceHandler(r.Notify, r.ErrorWriter, r.SpaceStrategy)
-	spaceStack := stack.NewStack(spaceHandler).Use(r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
-	router.Handle("/spaces/{space_id}", spaceStack).Methods("POST").Name("POST /spaces/{space_id}")
-
-	orgHandler := NewOrganizationHandler(r.Notify, r.ErrorWriter, r.OrganizationStrategy)
-	orgStack := stack.NewStack(orgHandler).Use(r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
-	router.Handle("/organizations/{org_id}", orgStack).Methods("POST").Name("POST /organizations/{org_id}")
-
-	everyoneHandler := NewEveryoneHandler(r.Notify, r.ErrorWriter, r.EveryoneStrategy)
-	everyoneStack := stack.NewStack(everyoneHandler).Use(r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
-	router.Handle("/everyone", everyoneStack).Methods("POST").Name("POST /everyone")
-
-	scopeHandler := NewUAAScopeHandler(r.Notify, r.ErrorWriter, r.UAAScopeStrategy)
-	scopeStack := stack.NewStack(scopeHandler).Use(r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
-	router.Handle("/uaa_scopes/{scope}", scopeStack).Methods("POST").Name("POST /uaa_scopes/{scope}")
-
-	emailHandler := NewEmailHandler(r.Notify, r.ErrorWriter, r.EmailStrategy)
-	emailStack := stack.NewStack(emailHandler).Use(r.RequestLogging, requestCounter, r.EmailsWriteAuthenticator, r.DatabaseAllocator)
-	router.Handle("/emails", emailStack).Methods("POST").Name("POST /emails")
+func (r Routes) Register(m muxer) {
+	requestCounter := middleware.NewRequestCounter(m.GetRouter(), metrics.DefaultLogger)
+	m.Handle("POST", "/users/{user_id}", NewUserHandler(r.Notify, r.ErrorWriter, r.UserStrategy), r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
+	m.Handle("POST", "/spaces/{space_id}", NewSpaceHandler(r.Notify, r.ErrorWriter, r.SpaceStrategy), r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
+	m.Handle("POST", "/organizations/{org_id}", NewOrganizationHandler(r.Notify, r.ErrorWriter, r.OrganizationStrategy), r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
+	m.Handle("POST", "/everyone", NewEveryoneHandler(r.Notify, r.ErrorWriter, r.EveryoneStrategy), r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
+	m.Handle("POST", "/uaa_scopes/{scope}", NewUAAScopeHandler(r.Notify, r.ErrorWriter, r.UAAScopeStrategy), r.RequestLogging, requestCounter, r.NotificationsWriteAuthenticator, r.DatabaseAllocator)
+	m.Handle("POST", "/emails", NewEmailHandler(r.Notify, r.ErrorWriter, r.EmailStrategy), r.RequestLogging, requestCounter, r.EmailsWriteAuthenticator, r.DatabaseAllocator)
 }
