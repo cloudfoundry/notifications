@@ -1,6 +1,7 @@
 package notificationtypes_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 
@@ -64,34 +65,82 @@ var _ = Describe("ShowHandler", func() {
 	})
 
 	Context("failure cases", func() {
-		//It("returns a 404 when the sender does not exist", func() {
-		//notificationTypesCollection.ListCall.Err = collections.NotFoundError{
-		//Err: errors.New("sender not found"),
-		//}
+		It("returns a 400 when the notification type ID is an empty string", func() {
+			notificationTypesCollection.GetCall.Err = collections.ValidationError{
+				Err: errors.New("missing notification type id"),
+			}
 
-		//var err error
-		//request, err = http.NewRequest("GET", "/senders/non-existent-sender-id/notification_types", nil)
-		//Expect(err).NotTo(HaveOccurred())
+			var err error
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/", nil)
+			Expect(err).NotTo(HaveOccurred())
 
-		//handler.ServeHTTP(writer, request, context)
-		//Expect(writer.Code).To(Equal(http.StatusNotFound))
-		//Expect(writer.Body.String()).To(MatchJSON(`{
-		//"error": "sender not found"
-		//}`))
-		//})
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusBadRequest))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "missing notification type id"
+			}`))
+		})
 
-		//It("returns a 500 when the collection indicates a system error", func() {
-		//notificationTypesCollection.ListCall.Err = errors.New("BOOM!")
+		It("returns a 400 when the sender ID is an empty string", func() {
+			notificationTypesCollection.GetCall.Err = collections.ValidationError{
+				Err: errors.New("missing sender id"),
+			}
 
-		//var err error
-		//request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types", nil)
-		//Expect(err).NotTo(HaveOccurred())
+			var err error
+			request, err = http.NewRequest("GET", "/senders//notification_types/some-notification-type-id", nil)
+			Expect(err).NotTo(HaveOccurred())
 
-		//handler.ServeHTTP(writer, request, context)
-		//Expect(writer.Code).To(Equal(http.StatusInternalServerError))
-		//Expect(writer.Body.String()).To(MatchJSON(`{
-		//"error": "BOOM!"
-		//}`))
-		//})
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusBadRequest))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "missing sender id"
+			}`))
+		})
+
+		It("returns a 404 when the notification type does not exist", func() {
+			notificationTypesCollection.GetCall.Err = collections.NotFoundError{
+				Err: errors.New("notification type not found"),
+			}
+
+			var err error
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/missing-notification-type-id", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusNotFound))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "notification type not found"
+			}`))
+		})
+
+		It("returns a 404 when the sender does not exist", func() {
+			notificationTypesCollection.GetCall.Err = collections.NotFoundError{
+				Err: errors.New("sender not found"),
+			}
+
+			var err error
+			request, err = http.NewRequest("GET", "/senders/missing-sender-id/notification_types/some-notification-type-id", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusNotFound))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "sender not found"
+			}`))
+		})
+
+		It("returns a 500 when the collection indicates a system error", func() {
+			notificationTypesCollection.GetCall.Err = errors.New("BOOM!")
+
+			var err error
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/some-notification-type-id", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "BOOM!"
+			}`))
+		})
 	})
 })
