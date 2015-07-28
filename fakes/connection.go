@@ -36,6 +36,11 @@ type Connection struct {
 	UpdateCall struct {
 		List []interface{}
 	}
+
+	GetCall struct {
+		Returns interface{}
+		Err 	error
+	}
 }
 
 func NewConnection() *Connection {
@@ -95,4 +100,8 @@ func (conn *Connection) Update(list ...interface{}) (int64, error) {
 
 func (conn *Connection) Transaction() models.TransactionInterface {
 	return conn
+}
+
+func (conn *Connection) Get(i interface{}, keys ...interface{}) (interface{}, error) {
+	return i, nil
 }

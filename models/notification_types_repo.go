@@ -35,7 +35,7 @@ func (n NotificationTypesRepository) Insert(connection ConnectionInterface, noti
 
 func (n NotificationTypesRepository) GetBySenderIDAndName(connection ConnectionInterface, senderID, name string) (NotificationType, error) {
 	notificationType := NotificationType{}
-	err := connection.SelectOne(&notificationType, "SELECT * FROM `notification_types` WHERE `sender_id` = ? AND `name` = ?", senderID, name)
+	err := connection.SelectOne(&notificationType, "SELECT * FROM `campaign_types` WHERE `sender_id` = ? AND `name` = ?", senderID, name)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			err = NewRecordNotFoundError("Campaign type with sender_id %q and name %q could not be found", senderID, name)
@@ -48,7 +48,7 @@ func (n NotificationTypesRepository) GetBySenderIDAndName(connection ConnectionI
 
 func (n NotificationTypesRepository) List(connection ConnectionInterface, senderID string) ([]NotificationType, error) {
 	notificationTypeList := []NotificationType{}
-	_, err := connection.Select(&notificationTypeList, "SELECT * FROM `notification_types` WHERE `sender_id` = ?", senderID)
+	_, err := connection.Select(&notificationTypeList, "SELECT * FROM `campaign_types` WHERE `sender_id` = ?", senderID)
 	if err != nil {
 		panic(err)
 	}
@@ -57,14 +57,13 @@ func (n NotificationTypesRepository) List(connection ConnectionInterface, sender
 }
 
 func (n NotificationTypesRepository) Get(connection ConnectionInterface, notificationTypeID string) (NotificationType, error) {
-	notificationType := NotificationType{}
-	err := connection.SelectOne(&notificationType, "SELECT * FROM `notification_types` WHERE `id` = ?", notificationTypeID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			err = NewRecordNotFoundError("Campaign type with id %q could not be found", notificationTypeID)
-		}
-		return notificationType, err
+	notificationType, err := connection.Get(NotificationType{}, notificationTypeID)
+	if notificationType == nil {
+		err = NewRecordNotFoundError("Campaign type with id %q could not be found", notificationTypeID)
 	}
 
-	return notificationType, nil
+	if err != nil {
+		return NotificationType{}, err
+	}
+	return *notificationType.(*NotificationType), nil
 }

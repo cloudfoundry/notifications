@@ -14,6 +14,7 @@ type ConnectionInterface interface {
 	Update(...interface{}) (int64, error)
 	Exec(string, ...interface{}) (sql.Result, error)
 	Transaction() TransactionInterface
+	Get(i interface{}, keys ...interface{}) (interface{}, error)
 }
 
 type Connection struct {
