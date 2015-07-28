@@ -7,6 +7,7 @@
 	- [Retrieving a sender](#retrieve-sender)
 - Notification Types
   - [Creating a notification type](#create-notification-type)
+  - [Showing a notification type](#show-notification-type)
   - [Listing the notification types](#list-notification-types)
 
 ## System Status
@@ -227,6 +228,55 @@ X-Cf-Requestid: 6106873b-14ea-4fd9-6418-946c1651e4ac
 | description   | Notification type description         |
 | critical      | Critical notification type flag       |
 | template_id   | Template ID                           |
+
+<a name="show-notification-type"></a>
+#### Showing A Notification Type
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The user token requires `notifications.write` scope.
+
+###### Route
+```
+GET /senders/<sender-id>/notification-types/<notification-type-id>
+```
+###### CURL example
+```
+$ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/notification_types/3369a6ae-22c5-4da9-7081-b35350c79c4c
+
+200 OK
+RESPONSE HEADERS:
+  Date: Tue, 28 Jul 2015 00:54:54 GMT
+  Content-Length: 155
+  Content-Type: text/plain; charset=utf-8
+  Connection: close
+RESPONSE BODY:
+{"critical":false,"description":"notification type description","id":"3369a6ae-22c5-4da9-7081-b35350c79c4c","name":"my-notification-type","template_id":""}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields             | Description                           |
+| ------------------ | ------------------------------------- |
+| id                 | System-generated notification type ID |
+| name               | Notification type name                |
+| description        | Notification type description         |
+| critical           | Critical notification type flag       |
+| template_id        | Template ID                           |
 
 <a name="list-notification-types"></a>
 #### Listing Notification Types
