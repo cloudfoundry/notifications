@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-type NotificationType struct {
+type CampaignType struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -14,18 +14,18 @@ type NotificationType struct {
 	TemplateID  string `json:"template_id"`
 }
 
-type NotificationTypesService struct {
+type CampaignTypesService struct {
 	config Config
 }
 
-func NewNotificationTypesService(config Config) NotificationTypesService {
-	return NotificationTypesService{
+func NewCampaignTypesService(config Config) CampaignTypesService {
+	return CampaignTypesService{
 		config: config,
 	}
 }
 
-func (n NotificationTypesService) Create(senderID, name, description, templateID string, critical bool, token string) (NotificationType, error) {
-	var notificationType NotificationType
+func (n CampaignTypesService) Create(senderID, name, description, templateID string, critical bool, token string) (CampaignType, error) {
+	var campaignType CampaignType
 
 	content, err := json.Marshal(map[string]interface{}{
 		"name":        name,
@@ -34,44 +34,44 @@ func (n NotificationTypesService) Create(senderID, name, description, templateID
 		"template_id": templateID,
 	})
 	if err != nil {
-		return notificationType, err
+		return campaignType, err
 	}
 
 	status, body, err := NewClient(n.config).makeRequest("POST", n.config.Host+"/senders/"+senderID+"/campaign_types", bytes.NewBuffer(content), token)
 	if err != nil {
-		return notificationType, err
+		return campaignType, err
 	}
 
 	if status != http.StatusCreated {
-		return notificationType, UnexpectedStatusError{status, string(body)}
+		return campaignType, UnexpectedStatusError{status, string(body)}
 	}
 
-	err = json.Unmarshal(body, &notificationType)
+	err = json.Unmarshal(body, &campaignType)
 	if err != nil {
-		return notificationType, err
+		return campaignType, err
 	}
 
-	return notificationType, nil
+	return campaignType, nil
 }
 
-func (n NotificationTypesService) Show(senderID, notificationTypeID, token string) (NotificationType, error) {
-	var notificationType NotificationType
+func (n CampaignTypesService) Show(senderID, campaignTypeID, token string) (CampaignType, error) {
+	var campaignType CampaignType
 
-	status, body, err := NewClient(n.config).makeRequest("GET", n.config.Host+"/senders/"+senderID+"/campaign_types/"+notificationTypeID, nil, token)
+	status, body, err := NewClient(n.config).makeRequest("GET", n.config.Host+"/senders/"+senderID+"/campaign_types/"+campaignTypeID, nil, token)
 	if err != nil {
-		return notificationType, err
+		return campaignType, err
 	}
 
 	if status == http.StatusNotFound {
-		return notificationType, NotFoundError{status, string(body)}
+		return campaignType, NotFoundError{status, string(body)}
 	} else if status != http.StatusOK {
-		return notificationType, UnexpectedStatusError{status, string(body)}
+		return campaignType, UnexpectedStatusError{status, string(body)}
 	}
 
-	err = json.Unmarshal(body, &notificationType)
+	err = json.Unmarshal(body, &campaignType)
 	if err != nil {
-		return notificationType, err
+		return campaignType, err
 	}
 
-	return notificationType, nil
+	return campaignType, nil
 }

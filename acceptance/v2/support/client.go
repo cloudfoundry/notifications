@@ -20,7 +20,7 @@ type Client struct {
 	httpClient        *http.Client
 	API               APIService
 	Senders           SendersService
-	NotificationTypes NotificationTypesService
+	CampaignTypes CampaignTypesService
 }
 
 func NewClient(config Config) *Client {
@@ -29,7 +29,7 @@ func NewClient(config Config) *Client {
 		httpClient:        http.DefaultClient,
 		API:               NewAPIService(config),
 		Senders:           NewSendersService(config),
-		NotificationTypes: NewNotificationTypesService(config),
+		CampaignTypes: NewCampaignTypesService(config),
 	}
 }
 
