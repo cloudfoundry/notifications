@@ -40,7 +40,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 	})
 
 	Describe("GetBySenderIDAndName", func() {
-		It("fetches the notification type given a sender_id and name", func() {
+		It("fetches the campaign type given a sender_id and name", func() {
 			createdCampaignType, err := repo.Insert(conn, models.CampaignType{
 				Name:        "some-campaign-type",
 				Description: "some-campaign-type-description",
@@ -56,7 +56,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 			Expect(campaignType.ID).To(Equal(createdCampaignType.ID))
 		})
 
-		It("fails to fetch the notification type given a non-existent sender_id and name", func() {
+		It("fails to fetch the campaign type given a non-existent sender_id and name", func() {
 			_, err := repo.GetBySenderIDAndName(conn, "another-sender-id", "some-campaign-type")
 			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 		})
@@ -120,7 +120,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 		})
 
 		Context("failure cases", func() {
-			It("fails to fetch the notification type given a non-existent notification_type_id", func() {
+			It("fails to fetch the campaign type given a non-existent campaign_type_id", func() {
 				_, err := repo.Insert(conn, models.CampaignType{
 					Name:        "campaign-type",
 					Description: "campaign-type-description",

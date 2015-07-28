@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("NotificationTypesRouter", func() {
+var _ = Describe("CampaignTypesRouter", func() {
 	var (
 		logging     middleware.RequestLogging
 		dbAllocator middleware.DatabaseAllocator
@@ -49,8 +49,8 @@ var _ = Describe("NotificationTypesRouter", func() {
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 
-	It("routes GET /senders/{sender_id}/campaign_types/{notification_type_id}", func() {
-		s := router.Get("GET /senders/{sender_id}/campaign_types/{notification_type_id}").GetHandler().(stack.Stack)
+	It("routes GET /senders/{sender_id}/campaign_types/{campaign_type_id}", func() {
+		s := router.Get("GET /senders/{sender_id}/campaign_types/{campaign_type_id}").GetHandler().(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(campaigntypes.ShowHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 

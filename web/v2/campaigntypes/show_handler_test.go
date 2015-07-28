@@ -39,7 +39,7 @@ var _ = Describe("ShowHandler", func() {
 		handler = campaigntypes.NewShowHandler(campaignTypesCollection)
 	})
 
-	It("returns information on a given notification type", func() {
+	It("returns information on a given campaign type", func() {
 		campaignTypesCollection.GetCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "campaign-type-id-one",
 			Name:        "first-campaign-type",
@@ -49,7 +49,7 @@ var _ = Describe("ShowHandler", func() {
 			SenderID:    "some-sender-id",
 		}
 		var err error
-		request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/campaign-type-id-one", nil)
+		request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types/campaign-type-id-one", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
@@ -65,17 +65,17 @@ var _ = Describe("ShowHandler", func() {
 	})
 
 	Context("failure cases", func() {
-		It("returns a 400 when the notification type ID is an empty string", func() {
-			campaignTypesCollection.GetCall.Err = collections.NewValidationError("missing notification type id")
+		It("returns a 400 when the campaign type ID is an empty string", func() {
+			campaignTypesCollection.GetCall.Err = collections.NewValidationError("missing campaign type id")
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/", nil)
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types/", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusBadRequest))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "missing notification type id"
+				"error": "missing campaign type id"
 			}`))
 		})
 
@@ -83,7 +83,7 @@ var _ = Describe("ShowHandler", func() {
 			campaignTypesCollection.GetCall.Err = collections.NewValidationError("missing sender id")
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders//notification_types/some-campaign-type-id", nil)
+			request, err = http.NewRequest("GET", "/senders//campaign_types/some-campaign-type-id", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -93,17 +93,17 @@ var _ = Describe("ShowHandler", func() {
 			}`))
 		})
 
-		It("returns a 404 when the notification type does not exist", func() {
-			campaignTypesCollection.GetCall.Err = collections.NewNotFoundError("notification type not found")
+		It("returns a 404 when the campaign type does not exist", func() {
+			campaignTypesCollection.GetCall.Err = collections.NewNotFoundError("campaign type not found")
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/missing-campaign-type-id", nil)
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types/missing-campaign-type-id", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "notification type not found"
+				"error": "campaign type not found"
 			}`))
 		})
 
@@ -111,7 +111,7 @@ var _ = Describe("ShowHandler", func() {
 			campaignTypesCollection.GetCall.Err = collections.NewNotFoundError("sender not found")
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders/missing-sender-id/notification_types/some-campaign-type-id", nil)
+			request, err = http.NewRequest("GET", "/senders/missing-sender-id/campaign_types/some-campaign-type-id", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -125,7 +125,7 @@ var _ = Describe("ShowHandler", func() {
 			campaignTypesCollection.GetCall.Err = errors.New("BOOM!")
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/some-campaign-type-id", nil)
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types/some-campaign-type-id", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)

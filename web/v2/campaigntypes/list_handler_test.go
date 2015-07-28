@@ -38,7 +38,7 @@ var _ = Describe("ListHandler", func() {
 		handler = campaigntypes.NewListHandler(campaignTypesCollection)
 	})
 
-	It("returns a list of notification types", func() {
+	It("returns a list of campaign types", func() {
 		campaignTypesCollection.ListCall.ReturnCampaignTypeList = []collections.CampaignType{
 			{
 				ID:          "campaign-type-id-one",
@@ -85,7 +85,7 @@ var _ = Describe("ListHandler", func() {
 		}`))
 	})
 
-	It("returns an empty list of notification types if the table has no records", func() {
+	It("returns an empty list of campaign types if the table has no records", func() {
 		var err error
 		request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types", nil)
 		Expect(err).NotTo(HaveOccurred())

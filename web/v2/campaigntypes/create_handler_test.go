@@ -21,7 +21,7 @@ import (
 var _ = Describe("CreateHandler", func() {
 	var (
 		handler                     campaigntypes.CreateHandler
-		notificationTypesCollection *fakes.CampaignTypesCollection
+		campaignTypesCollection *fakes.CampaignTypesCollection
 		context                     stack.Context
 		writer                      *httptest.ResponseRecorder
 		request                     *http.Request
@@ -54,8 +54,8 @@ var _ = Describe("CreateHandler", func() {
 		context.Set("token", token)
 
 		writer = httptest.NewRecorder()
-		notificationTypesCollection = fakes.NewCampaignTypesCollection()
-		notificationTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
+		campaignTypesCollection = fakes.NewCampaignTypesCollection()
+		campaignTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "some-campaign-type-id",
 			Name:        "some-campaign-type",
 			Description: "some-campaign-type-description",
@@ -72,23 +72,23 @@ var _ = Describe("CreateHandler", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		request, err = http.NewRequest("POST", "/senders/some-sender-id/notification_types", bytes.NewBuffer(requestBody))
+		request, err = http.NewRequest("POST", "/senders/some-sender-id/campaign_types", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
-		handler = campaigntypes.NewCreateHandler(notificationTypesCollection)
+		handler = campaigntypes.NewCreateHandler(campaignTypesCollection)
 	})
 
-	It("creates a notification type", func() {
+	It("creates a campaign type", func() {
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(notificationTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
+		Expect(campaignTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
 			Name:        "some-campaign-type",
 			Description: "some-campaign-type-description",
 			Critical:    false,
 			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
 		}))
-		Expect(notificationTypesCollection.AddCall.Conn).To(Equal(database.Conn))
+		Expect(campaignTypesCollection.AddCall.Conn).To(Equal(database.Conn))
 		Expect(database.ConnectionWasCalled).To(BeTrue())
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
@@ -109,12 +109,12 @@ var _ = Describe("CreateHandler", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		request, err = http.NewRequest("POST", "/senders/some-sender-id/notification_types", bytes.NewBuffer(requestBody))
+		request, err = http.NewRequest("POST", "/senders/some-sender-id/campaign_types", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(notificationTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
+		Expect(campaignTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
 			Name:        "some-campaign-type",
 			Description: "some-campaign-type-description",
 			Critical:    false,
@@ -133,7 +133,7 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	It("allows the template_id field to be omitted", func() {
-		notificationTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
+		campaignTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "some-campaign-type-id",
 			Name:        "some-campaign-type",
 			Description: "some-campaign-type-description",
@@ -149,12 +149,12 @@ var _ = Describe("CreateHandler", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		request, err = http.NewRequest("POST", "/senders/some-sender-id/notification_types", bytes.NewBuffer(requestBody))
+		request, err = http.NewRequest("POST", "/senders/some-sender-id/campaign_types", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(notificationTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
+		Expect(campaignTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
 			Name:        "some-campaign-type",
 			Description: "some-campaign-type-description",
 			Critical:    false,
@@ -172,7 +172,7 @@ var _ = Describe("CreateHandler", func() {
 		}`))
 	})
 
-	It("requires critical_notifications.write to create a critical notification type", func() {
+	It("requires critical_notifications.write to create a critical campaign type", func() {
 		tokenClaims["scope"] = []string{"notifications.write", "critical_notifications.write"}
 		rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
 		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
@@ -181,7 +181,7 @@ var _ = Describe("CreateHandler", func() {
 		Expect(err).NotTo(HaveOccurred())
 		context.Set("token", token)
 
-		notificationTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
+		campaignTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "some-campaign-type-id",
 			Name:        "some-campaign-type",
 			Description: "some-campaign-type-description",
@@ -198,12 +198,12 @@ var _ = Describe("CreateHandler", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		request, err = http.NewRequest("POST", "/senders/some-sender-id/notification_types", bytes.NewBuffer(requestBody))
+		request, err = http.NewRequest("POST", "/senders/some-sender-id/campaign_types", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(notificationTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
+		Expect(campaignTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
 			Name:        "some-campaign-type",
 			Description: "some-campaign-type-description",
 			Critical:    true,
@@ -222,8 +222,8 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	Context("failure cases", func() {
-		It("returns a 403 when the client without the critical_notifications.write scope attempts to create a critical notification type", func() {
-			notificationTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
+		It("returns a 403 when the client without the critical_notifications.write scope attempts to create a critical campaign type", func() {
+			campaignTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 				ID:          "some-campaign-type-id",
 				Name:        "some-campaign-type",
 				Description: "some-campaign-type-description",
@@ -240,7 +240,7 @@ var _ = Describe("CreateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			request, err = http.NewRequest("POST", "/senders/some-sender-id/notification_types", bytes.NewBuffer(requestBody))
+			request, err = http.NewRequest("POST", "/senders/some-sender-id/campaign_types", bytes.NewBuffer(requestBody))
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -250,7 +250,7 @@ var _ = Describe("CreateHandler", func() {
 
 		It("returns a 400 when the JSON request body cannot be unmarshalled", func() {
 			var err error
-			request, err = http.NewRequest("POST", "/senders/some-sender-id/notification_types", strings.NewReader("%%%"))
+			request, err = http.NewRequest("POST", "/senders/some-sender-id/campaign_types", strings.NewReader("%%%"))
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -268,10 +268,10 @@ var _ = Describe("CreateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			request, err = http.NewRequest("POST", "/senders/some-sender-id/notification_types", bytes.NewBuffer(requestBody))
+			request, err = http.NewRequest("POST", "/senders/some-sender-id/campaign_types", bytes.NewBuffer(requestBody))
 			Expect(err).NotTo(HaveOccurred())
 
-			notificationTypesCollection.AddCall.Err = collections.NewValidationError("bananas are delicious")
+			campaignTypesCollection.AddCall.Err = collections.NewValidationError("bananas are delicious")
 
 			handler.ServeHTTP(writer, request, context)
 
@@ -282,7 +282,7 @@ var _ = Describe("CreateHandler", func() {
 		})
 
 		It("returns a 500 when there is a persistence error", func() {
-			notificationTypesCollection.AddCall.Err = errors.New("BOOM!")
+			campaignTypesCollection.AddCall.Err = errors.New("BOOM!")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))

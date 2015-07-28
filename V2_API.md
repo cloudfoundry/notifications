@@ -5,10 +5,10 @@
 - Senders
 	- [Creating a sender](#create-sender)
 	- [Retrieving a sender](#retrieve-sender)
-- Notification Types
-  - [Creating a notification type](#create-campaign-type)
-  - [Showing a notification type](#show-campaign-type)
-  - [Listing the notification types](#list-campaign-types)
+- Campaign types
+  - [Creating a campaign type](#create-campaign-type)
+  - [Showing a campaign type](#show-campaign-type)
+  - [Listing the campaign types](#list-campaign-types)
 
 ## System Status
 
@@ -166,10 +166,10 @@ X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
 | name   | Sender name |
 
 
-## Notification Types
+## Campaign types
 
 <a name="create-campaign-type"></a>
-#### Creating a notification type
+#### Creating a campaign type
 
 ##### Request
 
@@ -179,7 +179,7 @@ X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
 \* The user token requires `notifications.write` scope.
-\*\* Creation of a critical notification type requires `critical_notifications.write` scope.
+\*\* Creation of a critical campaign type requires `critical_notifications.write` scope.
 
 ###### Route
 ```
@@ -189,10 +189,10 @@ POST /senders/<sender-id>/campaign-types
 
 | Key                       | Description                                                         |
 | ------------------------- | ------------------------------------------------------------------- |
-| name\*                    | the human-readable name given to a notification type                |
-| description\*             | the human-readable description given to a notification type         |
-| critical (default: false) | a flag to indicate whether the notification type is critical or not |
-| template_id               | the ID of a template to use for this notification type              |
+| name\*                    | the human-readable name given to a campaign type                |
+| description\*             | the human-readable description given to a campaign type         |
+| critical (default: false) | a flag to indicate whether the campaign type is critical or not |
+| template_id               | the ID of a template to use for this campaign type              |
 
 \* required
 
@@ -201,8 +201,8 @@ POST /senders/<sender-id>/campaign-types
 $ curl -i -X POST \
   -H "X-NOTIFICATIONS-VERSION: 2" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"name":"my-campaign-type","description":"notification type description","critical":false,"template_id":""}'
-  http://notifications.mrorange.cfla.cf-app.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/notification_types
+  -d '{"name":"my-campaign-type","description":"campaign type description","critical":false,"template_id":""}'
+  http://notifications.mrorange.cfla.cf-app.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types
 
 HTTP/1.1 201 Created
 Content-Length: 155
@@ -210,7 +210,7 @@ Content-Type: text/plain; charset=utf-8
 Date: Wed, 22 Jul 2015 16:00:37 GMT
 X-Cf-Requestid: 6106873b-14ea-4fd9-6418-946c1651e4ac
 
-{"critical":false,"description":"notification type description","id":"3d9aa963-97bb-4b48-4c3c-ecccad6314f8","name":"my-campaign-type","template_id":""}
+{"critical":false,"description":"campaign type description","id":"3d9aa963-97bb-4b48-4c3c-ecccad6314f8","name":"my-campaign-type","template_id":""}
 ```
 
 ##### Response
@@ -223,14 +223,14 @@ X-Cf-Requestid: 6106873b-14ea-4fd9-6418-946c1651e4ac
 ###### Body
 | Fields        | Description                           |
 | ------------- | ------------------------------------- |
-| id            | System-generated notification type ID |
-| name          | Notification type name                |
-| description   | Notification type description         |
-| critical      | Critical notification type flag       |
+| id            | System-generated campaign type ID |
+| name          | Campaign type name                |
+| description   | Campaign type description         |
+| critical      | Critical campaign type flag       |
 | template_id   | Template ID                           |
 
 <a name="show-campaign-type"></a>
-#### Showing A Notification Type
+#### Showing A Campaign type
 
 ##### Request
 
@@ -250,7 +250,7 @@ GET /senders/<sender-id>/campaign-types/<campaign-type-id>
 $ curl -i -X GET \
   -H "X-NOTIFICATIONS-VERSION: 2" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/notification_types/3369a6ae-22c5-4da9-7081-b35350c79c4c
+  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types/3369a6ae-22c5-4da9-7081-b35350c79c4c
 
 200 OK
 RESPONSE HEADERS:
@@ -259,7 +259,7 @@ RESPONSE HEADERS:
   Content-Type: text/plain; charset=utf-8
   Connection: close
 RESPONSE BODY:
-{"critical":false,"description":"notification type description","id":"3369a6ae-22c5-4da9-7081-b35350c79c4c","name":"my-campaign-type","template_id":""}
+{"critical":false,"description":"campaign type description","id":"3369a6ae-22c5-4da9-7081-b35350c79c4c","name":"my-campaign-type","template_id":""}
 ```
 
 ##### Response
@@ -272,14 +272,14 @@ RESPONSE BODY:
 ###### Body
 | Fields             | Description                           |
 | ------------------ | ------------------------------------- |
-| id                 | System-generated notification type ID |
-| name               | Notification type name                |
-| description        | Notification type description         |
-| critical           | Critical notification type flag       |
+| id                 | System-generated campaign type ID |
+| name               | Campaign type name                |
+| description        | Campaign type description         |
+| critical           | Critical campaign type flag       |
 | template_id        | Template ID                           |
 
 <a name="list-campaign-types"></a>
-#### Listing Notification Types
+#### Listing Campaign types
 
 ##### Request
 
@@ -289,7 +289,7 @@ X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
 \* The user token requires `notifications.write` scope.
-\*\* Creation of a critical notification type requires `critical_notifications.write` scope.
+\*\* Creation of a critical campaign type requires `critical_notifications.write` scope.
 
 ###### Route
 ```
@@ -300,14 +300,14 @@ GET /senders/<sender-id>/campaign-types
 $ curl -i -X GET \
   -H "X-NOTIFICATIONS-VERSION: 2" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/notification_types
+  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types
 
 HTTP/1.1 200 OK
 Date: Thu, 23 Jul 2015 19:22:46 GMT
 Content-Length: 180
 Content-Type: text/plain; charset=utf-8
 
-{"notification_types":[{"critical":false,"description":"notification type description","id":"702ce4c7-93a0-42b5-4fd5-4d0ed68e2cd7","name":"my-campaign-type","template_id":""}]}
+{"campaign_types":[{"critical":false,"description":"campaign type description","id":"702ce4c7-93a0-42b5-4fd5-4d0ed68e2cd7","name":"my-campaign-type","template_id":""}]}
 ```
 
 ##### Response
@@ -320,9 +320,9 @@ Content-Type: text/plain; charset=utf-8
 ###### Body
 | Fields             | Description                           |
 | ------------------ | ------------------------------------- |
-| notification_types | The array of notification types       |
-| id                 | System-generated notification type ID |
-| name               | Notification type name                |
-| description        | Notification type description         |
-| critical           | Critical notification type flag       |
+| campaign_types | The array of campaign types       |
+| id                 | System-generated campaign type ID |
+| name               | Campaign type name                |
+| description        | Campaign type description         |
+| critical           | Critical campaign type flag       |
 | template_id        | Template ID                           |

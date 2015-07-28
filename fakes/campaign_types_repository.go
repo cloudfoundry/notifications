@@ -18,7 +18,7 @@ type CampaignTypesRepository struct {
 	}
 	GetCall struct {
 		Connection         models.ConnectionInterface
-		notificationTypeID string
+		campaignTypeID string
 	}
 	GetReturn struct {
 		CampaignType models.CampaignType
@@ -30,8 +30,8 @@ func NewCampaignTypesRepository() *CampaignTypesRepository {
 	return &CampaignTypesRepository{}
 }
 
-func (n *CampaignTypesRepository) Insert(conn models.ConnectionInterface, notificationType models.CampaignType) (models.CampaignType, error) {
-	n.InsertCall.CampaignType = notificationType
+func (n *CampaignTypesRepository) Insert(conn models.ConnectionInterface, campaignType models.CampaignType) (models.CampaignType, error) {
+	n.InsertCall.CampaignType = campaignType
 	n.InsertCall.Connection = conn
 	return n.InsertCall.ReturnCampaignType, n.InsertCall.Err
 }
@@ -45,8 +45,8 @@ func (n *CampaignTypesRepository) List(conn models.ConnectionInterface, senderID
 	return n.ListCall.ReturnCampaignTypeList, n.ListCall.Err
 }
 
-func (n *CampaignTypesRepository) Get(conn models.ConnectionInterface, notificationTypeID string) (models.CampaignType, error) {
+func (n *CampaignTypesRepository) Get(conn models.ConnectionInterface, campaignTypeID string) (models.CampaignType, error) {
 	n.GetCall.Connection = conn
-	n.GetCall.notificationTypeID = notificationTypeID
+	n.GetCall.campaignTypeID = campaignTypeID
 	return n.GetReturn.CampaignType, n.GetReturn.Err
 }
