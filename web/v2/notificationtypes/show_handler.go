@@ -29,17 +29,20 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 	database := context.Get("database").(models.DatabaseInterface)
 	notificationType, err := h.notificationTypes.Get(database.Connection(), notificationTypeID, senderID, context.Get("client_id").(string))
 	if err != nil {
+		var errorMessage string
 		switch err.(type) {
 		case collections.ValidationError:
+			errorMessage = err.(collections.ValidationError).Message
 			writer.WriteHeader(http.StatusBadRequest)
 		case collections.NotFoundError:
+			errorMessage = err.(collections.NotFoundError).Message
 			writer.WriteHeader(http.StatusNotFound)
 		default:
 			writer.WriteHeader(http.StatusInternalServerError)
+			errorMessage = err.Error()
 		}
 
-		splitErr := strings.Split(err.Error(), ": ")
-		fmt.Fprintf(writer, `{"error": "%s"}`, splitErr[len(splitErr)-1])
+		fmt.Fprintf(writer, `{"error": "%s"}`, errorMessage)
 		return
 	}
 

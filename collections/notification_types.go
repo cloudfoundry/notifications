@@ -2,6 +2,7 @@ package collections
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
@@ -38,27 +39,35 @@ func (nc NotificationTypesCollection) Add(conn models.ConnectionInterface, notif
 	senderModel, err := nc.sendersRepository.Get(conn, notificationType.SenderID)
 
 	if err != nil {
-		switch err.(type) {
+		switch e := err.(type) {
 		case models.RecordNotFoundError:
-			return NotificationType{}, NotFoundError{err}
+			return NotificationType{}, NotFoundError{
+				Err:     e,
+				Message: string(e),
+			}
 		default:
 			return NotificationType{}, PersistenceError{err}
 		}
 	}
 
 	if senderModel.ClientID != clientID {
-		return NotificationType{}, NotFoundError{errors.New("sender not found")}
+		return NotificationType{}, NotFoundError{
+			Err:     errors.New("sender not found"),
+			Message: "sender not found",
+		}
 	}
 
 	if notificationType.Name == "" {
 		return NotificationType{}, ValidationError{
-			Err: errors.New("missing notification type name"),
+			Err:     errors.New("missing notification type name"),
+			Message: "missing notification type name",
 		}
 	}
 
 	if notificationType.Description == "" {
 		return NotificationType{}, ValidationError{
-			Err: errors.New("missing notification type description"),
+			Err:     errors.New("missing notification type description"),
+			Message: "missing notification type description",
 		}
 	}
 
@@ -93,11 +102,14 @@ func (nc NotificationTypesCollection) Add(conn models.ConnectionInterface, notif
 
 func (nc NotificationTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]NotificationType, error) {
 	if senderID == "" {
-		return []NotificationType{}, ValidationError{errors.New("missing sender id")}
+		return []NotificationType{}, ValidationError{
+			Err:     errors.New("missing sender id"),
+			Message: "missing sender id",
+		}
 	}
 
 	if clientID == "" {
-		return []NotificationType{}, ValidationError{errors.New("missing client id")}
+		return []NotificationType{}, NewValidationError("missing client id")
 	}
 
 	senderModel, err := nc.sendersRepository.Get(conn, senderID)
@@ -105,14 +117,17 @@ func (nc NotificationTypesCollection) List(conn models.ConnectionInterface, send
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
-			return []NotificationType{}, NotFoundError{err}
+			return []NotificationType{}, NotFoundError{
+				Err:     err,
+				Message: "sender not found",
+			}
 		default:
 			return []NotificationType{}, PersistenceError{err}
 		}
 	}
 
 	if senderModel.ClientID != clientID {
-		return []NotificationType{}, NotFoundError{errors.New("sender not found")}
+		return []NotificationType{}, NewNotFoundError("sender not found")
 	}
 
 	modelList, err := nc.notificationTypesRepository.List(conn, senderID)
@@ -139,43 +154,63 @@ func (nc NotificationTypesCollection) List(conn models.ConnectionInterface, send
 
 func (nc NotificationTypesCollection) Get(conn models.ConnectionInterface, notificationTypeID, senderID, clientID string) (NotificationType, error) {
 	if notificationTypeID == "" {
-		return NotificationType{}, ValidationError{errors.New("missing notification type id")}
+		return NotificationType{}, ValidationError{
+			Err:     errors.New("missing notification type id"),
+			Message: "missing notification type id",
+		}
 	}
 
 	if senderID == "" {
-		return NotificationType{}, ValidationError{errors.New("missing sender id")}
+		return NotificationType{}, ValidationError{
+			Err:     errors.New("missing sender id"),
+			Message: "missing sender id",
+		}
 	}
 
 	if clientID == "" {
-		return NotificationType{}, ValidationError{errors.New("missing client id")}
+		return NotificationType{}, ValidationError{
+			Err:     errors.New("missing client id"),
+			Message: "missing client id",
+		}
 	}
 
 	sender, err := nc.sendersRepository.Get(conn, senderID)
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
-			return NotificationType{}, NotFoundError{err}
+			return NotificationType{}, NewNotFoundError("sender not found")
 		default:
 			return NotificationType{}, PersistenceError{err}
 		}
 	}
 
 	if clientID != sender.ClientID {
-		return NotificationType{}, NotFoundError{errors.New("sender not found")}
+		message := fmt.Sprintf("sender %s not found", senderID)
+		return NotificationType{}, NotFoundError{
+			Err:     errors.New(message),
+			Message: message,
+		}
 	}
 
 	notificationType, err := nc.notificationTypesRepository.Get(conn, notificationTypeID)
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
-			return NotificationType{}, NotFoundError{err}
+			return NotificationType{}, NotFoundError{
+				Err:     err,
+				Message: "notification type not found",
+			}
 		default:
 			return NotificationType{}, PersistenceError{err}
 		}
 	}
 
 	if senderID != notificationType.SenderID {
-		return NotificationType{}, NotFoundError{errors.New("notification type not found")}
+		message := fmt.Sprintf("notification type %s not found", notificationTypeID)
+		return NotificationType{}, NotFoundError{
+			Err:     errors.New(message),
+			Message: message,
+		}
 	}
 
 	return NotificationType{

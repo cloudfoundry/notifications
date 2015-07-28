@@ -271,9 +271,7 @@ var _ = Describe("CreateHandler", func() {
 			request, err = http.NewRequest("POST", "/senders/some-sender-id/notification_types", bytes.NewBuffer(requestBody))
 			Expect(err).NotTo(HaveOccurred())
 
-			notificationTypesCollection.AddCall.Err = collections.ValidationError{
-				Err: errors.New("bananas are delicious"),
-			}
+			notificationTypesCollection.AddCall.Err = collections.NewValidationError("bananas are delicious")
 
 			handler.ServeHTTP(writer, request, context)
 

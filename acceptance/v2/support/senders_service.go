@@ -77,3 +77,12 @@ type UnexpectedStatusError struct {
 func (e UnexpectedStatusError) Error() string {
 	return fmt.Sprintf("Unexpected status %d: %s", e.Status, e.Body)
 }
+
+type NotFoundError struct {
+	Status int
+	Body   string
+}
+
+func (e NotFoundError) Error() string {
+	return fmt.Sprintf("Not Found: %s", e.Status, e.Body)
+}

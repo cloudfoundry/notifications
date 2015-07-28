@@ -66,9 +66,7 @@ var _ = Describe("ShowHandler", func() {
 
 	Context("failure cases", func() {
 		It("returns a 400 when the notification type ID is an empty string", func() {
-			notificationTypesCollection.GetCall.Err = collections.ValidationError{
-				Err: errors.New("missing notification type id"),
-			}
+			notificationTypesCollection.GetCall.Err = collections.NewValidationError("missing notification type id")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/", nil)
@@ -82,9 +80,7 @@ var _ = Describe("ShowHandler", func() {
 		})
 
 		It("returns a 400 when the sender ID is an empty string", func() {
-			notificationTypesCollection.GetCall.Err = collections.ValidationError{
-				Err: errors.New("missing sender id"),
-			}
+			notificationTypesCollection.GetCall.Err = collections.NewValidationError("missing sender id")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders//notification_types/some-notification-type-id", nil)
@@ -98,9 +94,7 @@ var _ = Describe("ShowHandler", func() {
 		})
 
 		It("returns a 404 when the notification type does not exist", func() {
-			notificationTypesCollection.GetCall.Err = collections.NotFoundError{
-				Err: errors.New("notification type not found"),
-			}
+			notificationTypesCollection.GetCall.Err = collections.NewNotFoundError("notification type not found")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/missing-notification-type-id", nil)
@@ -114,9 +108,7 @@ var _ = Describe("ShowHandler", func() {
 		})
 
 		It("returns a 404 when the sender does not exist", func() {
-			notificationTypesCollection.GetCall.Err = collections.NotFoundError{
-				Err: errors.New("sender not found"),
-			}
+			notificationTypesCollection.GetCall.Err = collections.NewNotFoundError("sender not found")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/missing-sender-id/notification_types/some-notification-type-id", nil)

@@ -62,7 +62,9 @@ func (n NotificationTypesService) Show(senderID, notificationTypeID, token strin
 		return notificationType, err
 	}
 
-	if status != http.StatusOK {
+	if status == http.StatusNotFound {
+		return notificationType, NotFoundError{status, string(body)}
+	} else if status != http.StatusOK {
 		return notificationType, UnexpectedStatusError{status, string(body)}
 	}
 

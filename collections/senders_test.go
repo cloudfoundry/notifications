@@ -96,18 +96,14 @@ var _ = Describe("SendersCollection", func() {
 				_, err := sendersCollection.Add(conn, collections.Sender{
 					ClientID: "some-client-id",
 				})
-				Expect(err).To(MatchError(collections.ValidationError{
-					Err: errors.New("missing sender name"),
-				}))
+				Expect(err).To(MatchError(collections.NewValidationError("missing sender name")))
 			})
 
 			It("validates that a sender has a client id", func() {
 				_, err := sendersCollection.Add(conn, collections.Sender{
 					Name: "some-sender",
 				})
-				Expect(err).To(MatchError(collections.ValidationError{
-					Err: errors.New("missing sender client_id"),
-				}))
+				Expect(err).To(MatchError(collections.NewValidationError("missing sender client_id")))
 			})
 
 			It("returns a persistence error when the sender cannot be found by client id and name", func() {
@@ -153,16 +149,12 @@ var _ = Describe("SendersCollection", func() {
 		Context("failure cases", func() {
 			It("validates that a sender id was specified", func() {
 				_, err := sendersCollection.Get(conn, "", "some-client-id")
-				Expect(err).To(MatchError(collections.ValidationError{
-					Err: errors.New("missing sender id"),
-				}))
+				Expect(err).To(MatchError(collections.NewValidationError("missing sender id")))
 			})
 
 			It("validates that a client id was specified", func() {
 				_, err := sendersCollection.Get(conn, "some-sender-id", "")
-				Expect(err).To(MatchError(collections.ValidationError{
-					Err: errors.New("missing client id"),
-				}))
+				Expect(err).To(MatchError(collections.NewValidationError("missing client id")))
 			})
 
 			It("generates a not found error when the sender does not exist", func() {
@@ -170,15 +162,14 @@ var _ = Describe("SendersCollection", func() {
 
 				_, err := sendersCollection.Get(conn, "some-sender-id", "some-client-id")
 				Expect(err).To(MatchError(collections.NotFoundError{
-					Err: models.RecordNotFoundError("sender not found"),
+					Message: "sender not found",
+					Err:     models.RecordNotFoundError("sender not found"),
 				}))
 			})
 
 			It("generates a not found error when the sender belongs to a different client", func() {
 				_, err := sendersCollection.Get(conn, "some-sender-id", "mismatch-client-id")
-				Expect(err).To(MatchError(collections.NotFoundError{
-					Err: errors.New("sender not found"),
-				}))
+				Expect(err).To(MatchError(collections.NewNotFoundError("sender not found")))
 			})
 
 			It("handles unexpected database errors", func() {
