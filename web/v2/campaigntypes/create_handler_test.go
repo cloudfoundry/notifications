@@ -55,7 +55,7 @@ var _ = Describe("CreateHandler", func() {
 
 		writer = httptest.NewRecorder()
 		notificationTypesCollection = fakes.NewCampaignTypesCollection()
-		notificationTypesCollection.AddCall.ReturnNotificationType = collections.CampaignType{
+		notificationTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "some-notification-type-id",
 			Name:        "some-notification-type",
 			Description: "some-notification-type-description",
@@ -81,7 +81,7 @@ var _ = Describe("CreateHandler", func() {
 	It("creates a notification type", func() {
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(notificationTypesCollection.AddCall.NotificationType).To(Equal(collections.CampaignType{
+		Expect(notificationTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
 			Name:        "some-notification-type",
 			Description: "some-notification-type-description",
 			Critical:    false,
@@ -114,7 +114,7 @@ var _ = Describe("CreateHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(notificationTypesCollection.AddCall.NotificationType).To(Equal(collections.CampaignType{
+		Expect(notificationTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
 			Name:        "some-notification-type",
 			Description: "some-notification-type-description",
 			Critical:    false,
@@ -133,7 +133,7 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	It("allows the template_id field to be omitted", func() {
-		notificationTypesCollection.AddCall.ReturnNotificationType = collections.CampaignType{
+		notificationTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "some-notification-type-id",
 			Name:        "some-notification-type",
 			Description: "some-notification-type-description",
@@ -154,7 +154,7 @@ var _ = Describe("CreateHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(notificationTypesCollection.AddCall.NotificationType).To(Equal(collections.CampaignType{
+		Expect(notificationTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
 			Name:        "some-notification-type",
 			Description: "some-notification-type-description",
 			Critical:    false,
@@ -181,7 +181,7 @@ var _ = Describe("CreateHandler", func() {
 		Expect(err).NotTo(HaveOccurred())
 		context.Set("token", token)
 
-		notificationTypesCollection.AddCall.ReturnNotificationType = collections.CampaignType{
+		notificationTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "some-notification-type-id",
 			Name:        "some-notification-type",
 			Description: "some-notification-type-description",
@@ -203,7 +203,7 @@ var _ = Describe("CreateHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(notificationTypesCollection.AddCall.NotificationType).To(Equal(collections.CampaignType{
+		Expect(notificationTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
 			Name:        "some-notification-type",
 			Description: "some-notification-type-description",
 			Critical:    true,
@@ -223,7 +223,7 @@ var _ = Describe("CreateHandler", func() {
 
 	Context("failure cases", func() {
 		It("returns a 403 when the client without the critical_notifications.write scope attempts to create a critical notification type", func() {
-			notificationTypesCollection.AddCall.ReturnNotificationType = collections.CampaignType{
+			notificationTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 				ID:          "some-notification-type-id",
 				Name:        "some-notification-type",
 				Description: "some-notification-type-description",

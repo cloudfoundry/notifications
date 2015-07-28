@@ -1,6 +1,6 @@
 package models
 
-type NotificationType struct {
+type CampaignType struct {
 	ID          string `db:"id"`
 	Name        string `db:"name"`
 	Description string `db:"description"`

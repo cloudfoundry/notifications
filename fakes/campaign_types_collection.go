@@ -7,9 +7,9 @@ import (
 
 type CampaignTypesCollection struct {
 	AddCall struct {
-		NotificationType       collections.CampaignType
+		CampaignType collections.CampaignType
 		Conn                   models.ConnectionInterface
-		ReturnNotificationType collections.CampaignType
+		ReturnCampaignType collections.CampaignType
 		Err                    error
 	}
 	ListCall struct {
@@ -26,16 +26,16 @@ func NewCampaignTypesCollection() *CampaignTypesCollection {
 	return &CampaignTypesCollection{}
 }
 
-func (c *CampaignTypesCollection) Add(conn models.ConnectionInterface, notificationType collections.CampaignType, clientID string) (collections.CampaignType, error) {
+func (c *CampaignTypesCollection) Add(conn models.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error) {
 	c.AddCall.Conn = conn
-	c.AddCall.NotificationType = notificationType
-	return c.AddCall.ReturnNotificationType, c.AddCall.Err
+	c.AddCall.CampaignType = campaignType
+	return c.AddCall.ReturnCampaignType, c.AddCall.Err
 }
 
 func (c *CampaignTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]collections.CampaignType, error) {
 	return c.ListCall.ReturnCampaignTypeList, c.ListCall.Err
 }
 
-func (c *CampaignTypesCollection) Get(conn models.ConnectionInterface, notificationTypeID, senderID, clientID string) (collections.CampaignType, error) {
+func (c *CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) (collections.CampaignType, error) {
 	return c.GetCall.ReturnCampaignType, c.GetCall.Err
 }

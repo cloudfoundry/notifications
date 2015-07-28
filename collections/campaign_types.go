@@ -17,26 +17,26 @@ type CampaignType struct {
 }
 
 type CampaignTypesCollection struct {
-	notificationTypesRepository notificationTypesRepository
+	campaignTypesRepository campaignTypesRepository
 	sendersRepository           sendersRepository
 }
 
-type notificationTypesRepository interface {
-	Insert(models.ConnectionInterface, models.NotificationType) (models.NotificationType, error)
-	GetBySenderIDAndName(models.ConnectionInterface, string, string) (models.NotificationType, error)
-	List(models.ConnectionInterface, string) ([]models.NotificationType, error)
-	Get(models.ConnectionInterface, string) (models.NotificationType, error)
+type campaignTypesRepository interface {
+	Insert(models.ConnectionInterface, models.CampaignType) (models.CampaignType, error)
+	GetBySenderIDAndName(models.ConnectionInterface, string, string) (models.CampaignType, error)
+	List(models.ConnectionInterface, string) ([]models.CampaignType, error)
+	Get(models.ConnectionInterface, string) (models.CampaignType, error)
 }
 
-func NewCampaignTypesCollection(nr notificationTypesRepository, sr sendersRepository) CampaignTypesCollection {
+func NewCampaignTypesCollection(nr campaignTypesRepository, sr sendersRepository) CampaignTypesCollection {
 	return CampaignTypesCollection{
-		notificationTypesRepository: nr,
+		campaignTypesRepository: nr,
 		sendersRepository:           sr,
 	}
 }
 
-func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, notificationType CampaignType, clientID string) (CampaignType, error) {
-	senderModel, err := nc.sendersRepository.Get(conn, notificationType.SenderID)
+func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, campaignType CampaignType, clientID string) (CampaignType, error) {
+	senderModel, err := nc.sendersRepository.Get(conn, campaignType.SenderID)
 
 	if err != nil {
 		switch e := err.(type) {
@@ -57,31 +57,31 @@ func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, notificat
 		}
 	}
 
-	if notificationType.Name == "" {
+	if campaignType.Name == "" {
 		return CampaignType{}, ValidationError{
 			Err:     errors.New("missing campaign type name"),
 			Message: "missing campaign type name",
 		}
 	}
 
-	if notificationType.Description == "" {
+	if campaignType.Description == "" {
 		return CampaignType{}, ValidationError{
 			Err:     errors.New("missing campaign type description"),
 			Message: "missing campaign type description",
 		}
 	}
 
-	returnNotificationType, err := nc.notificationTypesRepository.Insert(conn, models.NotificationType{
-		Name:        notificationType.Name,
-		Description: notificationType.Description,
-		Critical:    notificationType.Critical,
-		TemplateID:  notificationType.TemplateID,
-		SenderID:    notificationType.SenderID,
+	returnCampaignType, err := nc.campaignTypesRepository.Insert(conn, models.CampaignType{
+		Name:        campaignType.Name,
+		Description: campaignType.Description,
+		Critical:    campaignType.Critical,
+		TemplateID:  campaignType.TemplateID,
+		SenderID:    campaignType.SenderID,
 	})
 	if err != nil {
 		switch err.(type) {
 		case models.DuplicateRecordError:
-			returnNotificationType, err = nc.notificationTypesRepository.GetBySenderIDAndName(conn, notificationType.SenderID, notificationType.Name)
+			returnCampaignType, err = nc.campaignTypesRepository.GetBySenderIDAndName(conn, campaignType.SenderID, campaignType.Name)
 			if err != nil {
 				return CampaignType{}, PersistenceError{err}
 			}
@@ -91,12 +91,12 @@ func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, notificat
 	}
 
 	return CampaignType{
-		ID:          returnNotificationType.ID,
-		Name:        returnNotificationType.Name,
-		Description: returnNotificationType.Description,
-		Critical:    returnNotificationType.Critical,
-		TemplateID:  returnNotificationType.TemplateID,
-		SenderID:    returnNotificationType.SenderID,
+		ID:          returnCampaignType.ID,
+		Name:        returnCampaignType.Name,
+		Description: returnCampaignType.Description,
+		Critical:    returnCampaignType.Critical,
+		TemplateID:  returnCampaignType.TemplateID,
+		SenderID:    returnCampaignType.SenderID,
 	}, err
 }
 
@@ -130,15 +130,15 @@ func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID
 		return []CampaignType{}, NewNotFoundError("sender not found")
 	}
 
-	modelList, err := nc.notificationTypesRepository.List(conn, senderID)
+	modelList, err := nc.campaignTypesRepository.List(conn, senderID)
 	if err != nil {
 		return []CampaignType{}, PersistenceError{err}
 	}
 
-	notificationTypeList := []CampaignType{}
+	campaignTypeList := []CampaignType{}
 
 	for _, model := range modelList {
-		notificationType := CampaignType{
+		campaignType := CampaignType{
 			ID:          model.ID,
 			Name:        model.Name,
 			Description: model.Description,
@@ -146,14 +146,14 @@ func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID
 			TemplateID:  model.TemplateID,
 			SenderID:    model.SenderID,
 		}
-		notificationTypeList = append(notificationTypeList, notificationType)
+		campaignTypeList = append(campaignTypeList, campaignType)
 	}
 
-	return notificationTypeList, nil
+	return campaignTypeList, nil
 }
 
-func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, notificationTypeID, senderID, clientID string) (CampaignType, error) {
-	if notificationTypeID == "" {
+func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) (CampaignType, error) {
+	if campaignTypeID == "" {
 		return CampaignType{}, ValidationError{
 			Err:     errors.New("missing campaign type id"),
 			Message: "missing campaign type id",
@@ -178,7 +178,7 @@ func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, notificat
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
-			return CampaignType{}, NewNotFoundError(fmt.Sprintf("sender %s not found", notificationTypeID))
+			return CampaignType{}, NewNotFoundError(fmt.Sprintf("sender %s not found", campaignTypeID))
 		default:
 			return CampaignType{}, PersistenceError{err}
 		}
@@ -192,21 +192,21 @@ func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, notificat
 		}
 	}
 
-	notificationType, err := nc.notificationTypesRepository.Get(conn, notificationTypeID)
+	campaignType, err := nc.campaignTypesRepository.Get(conn, campaignTypeID)
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
 			return CampaignType{}, NotFoundError{
 				Err:     err,
-				Message: fmt.Sprintf("campaign type %s not found", notificationTypeID),
+				Message: fmt.Sprintf("campaign type %s not found", campaignTypeID),
 			}
 		default:
 			return CampaignType{}, PersistenceError{err}
 		}
 	}
 
-	if senderID != notificationType.SenderID {
-		message := fmt.Sprintf("campaign type %s not found", notificationTypeID)
+	if senderID != campaignType.SenderID {
+		message := fmt.Sprintf("campaign type %s not found", campaignTypeID)
 		return CampaignType{}, NotFoundError{
 			Err:     errors.New(message),
 			Message: message,
@@ -214,11 +214,11 @@ func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, notificat
 	}
 
 	return CampaignType{
-		ID:          notificationType.ID,
-		Name:        notificationType.Name,
-		Description: notificationType.Description,
-		Critical:    notificationType.Critical,
-		TemplateID:  notificationType.TemplateID,
-		SenderID:    notificationType.SenderID,
+		ID:          campaignType.ID,
+		Name:        campaignType.Name,
+		Description: campaignType.Description,
+		Critical:    campaignType.Critical,
+		TemplateID:  campaignType.TemplateID,
+		SenderID:    campaignType.SenderID,
 	}, nil
 }

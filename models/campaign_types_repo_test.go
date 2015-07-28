@@ -8,9 +8,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("NotificationTypesRepo", func() {
+var _ = Describe("CampaignTypesRepo", func() {
 	var (
-		repo models.NotificationTypesRepository
+		repo models.CampaignTypesRepository
 		conn models.ConnectionInterface
 	)
 
@@ -24,7 +24,7 @@ var _ = Describe("NotificationTypesRepo", func() {
 
 	Describe("Insert", func() {
 		It("inserts the record into the database", func() {
-			notificationType := models.NotificationType{
+			campaignType := models.CampaignType{
 				Name:        "some-notification-type",
 				Description: "some-notification-type-description",
 				Critical:    false,
@@ -32,16 +32,16 @@ var _ = Describe("NotificationTypesRepo", func() {
 				SenderID:    "some-sender-id",
 			}
 
-			returnNotificationType, err := repo.Insert(conn, notificationType)
+			returnCampaignType, err := repo.Insert(conn, campaignType)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(returnNotificationType.ID).To(Equal("deadbeef-aabb-ccdd-eeff-001122334455"))
+			Expect(returnCampaignType.ID).To(Equal("deadbeef-aabb-ccdd-eeff-001122334455"))
 		})
 	})
 
 	Describe("GetBySenderIDAndName", func() {
 		It("fetches the notification type given a sender_id and name", func() {
-			createdNotificationType, err := repo.Insert(conn, models.NotificationType{
+			createdCampaignType, err := repo.Insert(conn, models.CampaignType{
 				Name:        "some-notification-type",
 				Description: "some-notification-type-description",
 				Critical:    false,
@@ -50,10 +50,10 @@ var _ = Describe("NotificationTypesRepo", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			notificationType, err := repo.GetBySenderIDAndName(conn, "some-sender-id", "some-notification-type")
+			campaignType, err := repo.GetBySenderIDAndName(conn, "some-sender-id", "some-notification-type")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(notificationType.ID).To(Equal(createdNotificationType.ID))
+			Expect(campaignType.ID).To(Equal(createdCampaignType.ID))
 		})
 
 		It("fails to fetch the notification type given a non-existent sender_id and name", func() {
@@ -64,7 +64,7 @@ var _ = Describe("NotificationTypesRepo", func() {
 
 	Describe("List", func() {
 		It("fetches a list of records from the database", func() {
-			createdNotificationTypeOne, err := repo.Insert(conn, models.NotificationType{
+			createdCampaignTypeOne, err := repo.Insert(conn, models.CampaignType{
 				Name:        "notification-type-one",
 				Description: "notification-type-one-description",
 				Critical:    false,
@@ -73,7 +73,7 @@ var _ = Describe("NotificationTypesRepo", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			createdNotificationTypeTwo, err := repo.Insert(conn, models.NotificationType{
+			createdCampaignTypeTwo, err := repo.Insert(conn, models.CampaignType{
 				Name:        "notification-type-two",
 				Description: "notification-type-two-description",
 				Critical:    false,
@@ -82,29 +82,29 @@ var _ = Describe("NotificationTypesRepo", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			returnNotificationTypeList, err := repo.List(conn, "some-sender-id")
+			returnCampaignTypeList, err := repo.List(conn, "some-sender-id")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(len(returnNotificationTypeList)).To(Equal(2))
+			Expect(len(returnCampaignTypeList)).To(Equal(2))
 
-			Expect(returnNotificationTypeList[0].ID).To(Equal(createdNotificationTypeOne.ID))
-			Expect(returnNotificationTypeList[0].SenderID).To(Equal(createdNotificationTypeOne.SenderID))
+			Expect(returnCampaignTypeList[0].ID).To(Equal(createdCampaignTypeOne.ID))
+			Expect(returnCampaignTypeList[0].SenderID).To(Equal(createdCampaignTypeOne.SenderID))
 
-			Expect(returnNotificationTypeList[1].ID).To(Equal(createdNotificationTypeTwo.ID))
-			Expect(returnNotificationTypeList[1].SenderID).To(Equal(createdNotificationTypeTwo.SenderID))
+			Expect(returnCampaignTypeList[1].ID).To(Equal(createdCampaignTypeTwo.ID))
+			Expect(returnCampaignTypeList[1].SenderID).To(Equal(createdCampaignTypeTwo.SenderID))
 		})
 
 		It("fetches an empty list of records from the database if nothing has been inserted", func() {
-			returnNotificationTypeList, err := repo.List(conn, "some-sender-id")
+			returnCampaignTypeList, err := repo.List(conn, "some-sender-id")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(len(returnNotificationTypeList)).To(Equal(0))
+			Expect(len(returnCampaignTypeList)).To(Equal(0))
 		})
 	})
 
 	Describe("Get", func() {
 		It("fetches a record from the database", func() {
-			notificationType, err := repo.Insert(conn, models.NotificationType{
+			campaignType, err := repo.Insert(conn, models.CampaignType{
 				Name:        "notification-type",
 				Description: "notification-type-description",
 				Critical:    false,
@@ -113,15 +113,15 @@ var _ = Describe("NotificationTypesRepo", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			returnNotificationType, err := repo.Get(conn, notificationType.ID)
+			returnCampaignType, err := repo.Get(conn, campaignType.ID)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(returnNotificationType).To(Equal(notificationType))
+			Expect(returnCampaignType).To(Equal(campaignType))
 		})
 
 		Context("failure cases", func() {
 			It("fails to fetch the notification type given a non-existent notification_type_id", func() {
-				_, err := repo.Insert(conn, models.NotificationType{
+				_, err := repo.Insert(conn, models.CampaignType{
 					Name:        "notification-type",
 					Description: "notification-type-description",
 					Critical:    false,
