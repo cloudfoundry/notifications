@@ -1,4 +1,4 @@
-package notificationtypes_test
+package campaigntypes_test
 
 import (
 	"testing"

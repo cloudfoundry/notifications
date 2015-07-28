@@ -9,7 +9,7 @@ type NotificationTypesRepository struct {
 	guidGenerator guidGeneratorFunc
 }
 
-func NewNotificationTypesRepository(guidGenerator guidGeneratorFunc) NotificationTypesRepository {
+func NewCampaignTypesRepository(guidGenerator guidGeneratorFunc) NotificationTypesRepository {
 	return NotificationTypesRepository{
 		guidGenerator: guidGenerator,
 	}

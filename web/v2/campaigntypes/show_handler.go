@@ -1,4 +1,4 @@
-package notificationtypes
+package campaigntypes
 
 import (
 	"encoding/json"
@@ -12,22 +12,22 @@ import (
 )
 
 type ShowHandler struct {
-	notificationTypes collection
+	campaignTypes collection
 }
 
-func NewShowHandler(notificationTypes collection) ShowHandler {
+func NewShowHandler(campaignTypes collection) ShowHandler {
 	return ShowHandler{
-		notificationTypes: notificationTypes,
+		campaignTypes: campaignTypes,
 	}
 }
 
 func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request, context stack.Context) {
 	splitURL := strings.Split(request.URL.Path, "/")
-	notificationTypeID := splitURL[len(splitURL)-1]
+	campaignTypeID := splitURL[len(splitURL)-1]
 	senderID := splitURL[len(splitURL)-3]
 
 	database := context.Get("database").(models.DatabaseInterface)
-	notificationType, err := h.notificationTypes.Get(database.Connection(), notificationTypeID, senderID, context.Get("client_id").(string))
+	campaignType, err := h.campaignTypes.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
 	if err != nil {
 		var errorMessage string
 		switch err.(type) {
@@ -47,10 +47,10 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 	}
 
 	jsonMap := map[string]interface{}{
-		"id":          notificationType.ID,
-		"name":        notificationType.Name,
-		"description": notificationType.Description,
-		"critical":    notificationType.Critical,
+		"id":          campaignType.ID,
+		"name":        campaignType.Name,
+		"description": campaignType.Description,
+		"critical":    campaignType.Critical,
 		"template_id": "",
 	}
 

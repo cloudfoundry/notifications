@@ -1,4 +1,4 @@
-package notificationtypes_test
+package campaigntypes_test
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/web/v2/notificationtypes"
+	"github.com/cloudfoundry-incubator/notifications/web/v2/campaigntypes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/ryanmoran/stack"
@@ -15,8 +15,8 @@ import (
 
 var _ = Describe("ListHandler", func() {
 	var (
-		handler                     notificationtypes.ListHandler
-		notificationTypesCollection *fakes.NotificationTypesCollection
+		handler                     campaigntypes.ListHandler
+		campaignTypesCollection *fakes.CampaignTypesCollection
 		context                     stack.Context
 		writer                      *httptest.ResponseRecorder
 		request                     *http.Request
@@ -33,13 +33,13 @@ var _ = Describe("ListHandler", func() {
 
 		writer = httptest.NewRecorder()
 
-		notificationTypesCollection = fakes.NewNotificationTypesCollection()
+		campaignTypesCollection = fakes.NewCampaignTypesCollection()
 
-		handler = notificationtypes.NewListHandler(notificationTypesCollection)
+		handler = campaigntypes.NewListHandler(campaignTypesCollection)
 	})
 
 	It("returns a list of notification types", func() {
-		notificationTypesCollection.ListCall.ReturnNotificationTypeList = []collections.NotificationType{
+		campaignTypesCollection.ListCall.ReturnCampaignTypeList = []collections.CampaignType{
 			{
 				ID:          "notification-type-id-one",
 				Name:        "first-notification-type",
@@ -100,7 +100,7 @@ var _ = Describe("ListHandler", func() {
 
 	Context("failure cases", func() {
 		It("returns a 404 when the sender does not exist", func() {
-			notificationTypesCollection.ListCall.Err = collections.NotFoundError{
+			campaignTypesCollection.ListCall.Err = collections.NotFoundError{
 				Err: errors.New("sender not found"),
 			}
 
@@ -116,7 +116,7 @@ var _ = Describe("ListHandler", func() {
 		})
 
 		It("returns a 500 when the collection indicates a system error", func() {
-			notificationTypesCollection.ListCall.Err = errors.New("BOOM!")
+			campaignTypesCollection.ListCall.Err = errors.New("BOOM!")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types", nil)

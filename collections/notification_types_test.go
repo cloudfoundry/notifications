@@ -13,7 +13,7 @@ import (
 
 var _ = Describe("NotificationTypesCollection", func() {
 	var (
-		notificationTypesCollection     collections.NotificationTypesCollection
+		notificationTypesCollection     collections.CampaignTypesCollection
 		fakeNotificationTypesRepository *fakes.NotificationTypesRepository
 		fakeSendersRepository           *fakes.SendersRepository
 		fakeDatabaseConnection          *fakes.Connection
@@ -23,17 +23,17 @@ var _ = Describe("NotificationTypesCollection", func() {
 		fakeNotificationTypesRepository = fakes.NewNotificationTypesRepository()
 		fakeSendersRepository = fakes.NewSendersRepository()
 
-		notificationTypesCollection = collections.NewNotificationTypesCollection(fakeNotificationTypesRepository, fakeSendersRepository)
+		notificationTypesCollection = collections.NewCampaignTypesCollection(fakeNotificationTypesRepository, fakeSendersRepository)
 		fakeDatabaseConnection = fakes.NewConnection()
 	})
 
 	Describe("Add", func() {
 		var (
-			notificationType collections.NotificationType
+			notificationType collections.CampaignType
 		)
 
 		BeforeEach(func() {
-			notificationType = collections.NotificationType{
+			notificationType = collections.CampaignType{
 				Name:        "My cool notification type",
 				Description: "description",
 				Critical:    false,
@@ -63,7 +63,7 @@ var _ = Describe("NotificationTypesCollection", func() {
 		})
 
 		It("requires a name to be specified", func() {
-			notificationType = collections.NotificationType{
+			notificationType = collections.CampaignType{
 				Description: "description",
 				Critical:    false,
 				TemplateID:  "",
@@ -80,7 +80,7 @@ var _ = Describe("NotificationTypesCollection", func() {
 		})
 
 		It("requires a description to be specified", func() {
-			notificationType = collections.NotificationType{
+			notificationType = collections.CampaignType{
 				Name:       "some-notification-type",
 				Critical:   false,
 				TemplateID: "",

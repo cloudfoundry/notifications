@@ -15,7 +15,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/web/v1/notify"
 	"github.com/cloudfoundry-incubator/notifications/web/v1/preferences"
 	"github.com/cloudfoundry-incubator/notifications/web/v1/templates"
-	"github.com/cloudfoundry-incubator/notifications/web/v2/notificationtypes"
+	"github.com/cloudfoundry-incubator/notifications/web/v2/campaigntypes"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/senders"
 	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 	"github.com/nu7hatch/gouuid"
@@ -150,7 +150,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	// V2
 	sendersRepository := models.NewSendersRepository(uuid.NewV4)
 	sendersCollection := collections.NewSendersCollection(sendersRepository)
-	notificationTypesCollection := collections.NewNotificationTypesCollection(models.NewNotificationTypesRepository(uuid.NewV4), sendersRepository)
+	campaignTypesCollection := collections.NewCampaignTypesCollection(models.NewCampaignTypesRepository(uuid.NewV4), sendersRepository)
 
 	v2 := NewRouterPool()
 	v2.AddMux(info.NewRouter(info.RouterConfig{
@@ -163,11 +163,11 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		DatabaseAllocator: databaseAllocator,
 		SendersCollection: sendersCollection,
 	}))
-	v2.AddMux(notificationtypes.NewRouter(notificationtypes.RouterConfig{
+	v2.AddMux(campaigntypes.NewRouter(campaigntypes.RouterConfig{
 		RequestLogging:              logging,
 		Authenticator:               notificationsWriteAuthenticator,
 		DatabaseAllocator:           databaseAllocator,
-		NotificationTypesCollection: notificationTypesCollection,
+		CampaignTypesCollection: 	 campaignTypesCollection,
 	}))
 
 	return VersionRouter{

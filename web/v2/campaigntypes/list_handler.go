@@ -1,4 +1,4 @@
-package notificationtypes
+package campaigntypes
 
 import (
 	"encoding/json"
@@ -12,12 +12,12 @@ import (
 )
 
 type ListHandler struct {
-	notificationTypes collection
+	campaignTypes collection
 }
 
-func NewListHandler(notificationTypes collection) ListHandler {
+func NewListHandler(campaignTypes collection) ListHandler {
 	return ListHandler{
-		notificationTypes: notificationTypes,
+		campaignTypes: campaignTypes,
 	}
 }
 
@@ -27,7 +27,7 @@ func (h ListHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 
 	database := context.Get("database").(models.DatabaseInterface)
 
-	notificationTypes, err := h.notificationTypes.List(database.Connection(), senderID, context.Get("client_id").(string))
+	campaignTypes, err := h.campaignTypes.List(database.Connection(), senderID, context.Get("client_id").(string))
 	if err != nil {
 		switch err.(type) {
 		case collections.NotFoundError:
@@ -42,13 +42,13 @@ func (h ListHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 
 	responseList := []interface{}{}
 
-	for _, notificationType := range notificationTypes {
+	for _, campaignType := range campaignTypes {
 		responseList = append(responseList, map[string]interface{}{
-			"id":          notificationType.ID,
-			"name":        notificationType.Name,
-			"description": notificationType.Description,
-			"critical":    notificationType.Critical,
-			"template_id": notificationType.TemplateID,
+			"id":          campaignType.ID,
+			"name":        campaignType.Name,
+			"description": campaignType.Description,
+			"critical":    campaignType.Critical,
+			"template_id": campaignType.TemplateID,
 		})
 	}
 

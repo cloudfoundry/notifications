@@ -1,4 +1,4 @@
-package notificationtypes
+package campaigntypes
 
 import (
 	"encoding/json"
@@ -13,18 +13,18 @@ import (
 )
 
 type collection interface {
-	Add(conn models.ConnectionInterface, notificationType collections.NotificationType, clientID string) (createdNotificationType collections.NotificationType, err error)
-	List(conn models.ConnectionInterface, senderID, clientID string) (notificationTypes []collections.NotificationType, err error)
-	Get(conn models.ConnectionInterface, senderID, notificationTypeID, clientID string) (notificationType collections.NotificationType, err error)
+	Add(conn models.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error)
+	List(conn models.ConnectionInterface, senderID, clientID string) ([]collections.CampaignType, error)
+	Get(conn models.ConnectionInterface, senderID, campaignTypeID, clientID string) (collections.CampaignType, error)
 }
 
 type CreateHandler struct {
-	notificationTypes collection
+	campaignTypes collection
 }
 
-func NewCreateHandler(notificationTypes collection) CreateHandler {
+func NewCreateHandler(campaignTypes collection) CreateHandler {
 	return CreateHandler{
-		notificationTypes: notificationTypes,
+		campaignTypes: campaignTypes,
 	}
 }
 
@@ -64,7 +64,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	database := context.Get("database").(models.DatabaseInterface)
 
-	notificationType, err := h.notificationTypes.Add(database.Connection(), collections.NotificationType{
+	campaignType, err := h.campaignTypes.Add(database.Connection(), collections.CampaignType{
 		Name:        createRequest.Name,
 		Description: createRequest.Description,
 		Critical:    createRequest.Critical,
@@ -83,11 +83,11 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	}
 
 	createResponse, _ := json.Marshal(map[string]interface{}{
-		"id":          notificationType.ID,
-		"name":        notificationType.Name,
-		"description": notificationType.Description,
-		"critical":    notificationType.Critical,
-		"template_id": notificationType.TemplateID,
+		"id":          campaignType.ID,
+		"name":        campaignType.Name,
+		"description": campaignType.Description,
+		"critical":    campaignType.Critical,
+		"template_id": campaignType.TemplateID,
 	})
 
 	w.WriteHeader(http.StatusCreated)

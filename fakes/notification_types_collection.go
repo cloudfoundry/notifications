@@ -5,37 +5,37 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
 
-type NotificationTypesCollection struct {
+type CampaignTypesCollection struct {
 	AddCall struct {
-		NotificationType       collections.NotificationType
+		NotificationType       collections.CampaignType
 		Conn                   models.ConnectionInterface
-		ReturnNotificationType collections.NotificationType
+		ReturnNotificationType collections.CampaignType
 		Err                    error
 	}
 	ListCall struct {
-		ReturnNotificationTypeList []collections.NotificationType
+		ReturnCampaignTypeList []collections.CampaignType
 		Err                        error
 	}
 	GetCall struct {
-		ReturnNotificationType collections.NotificationType
+		ReturnCampaignType collections.CampaignType
 		Err                    error
 	}
 }
 
-func NewNotificationTypesCollection() *NotificationTypesCollection {
-	return &NotificationTypesCollection{}
+func NewCampaignTypesCollection() *CampaignTypesCollection {
+	return &CampaignTypesCollection{}
 }
 
-func (c *NotificationTypesCollection) Add(conn models.ConnectionInterface, notificationType collections.NotificationType, clientID string) (collections.NotificationType, error) {
+func (c *CampaignTypesCollection) Add(conn models.ConnectionInterface, notificationType collections.CampaignType, clientID string) (collections.CampaignType, error) {
 	c.AddCall.Conn = conn
 	c.AddCall.NotificationType = notificationType
 	return c.AddCall.ReturnNotificationType, c.AddCall.Err
 }
 
-func (c *NotificationTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]collections.NotificationType, error) {
-	return c.ListCall.ReturnNotificationTypeList, c.ListCall.Err
+func (c *CampaignTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]collections.CampaignType, error) {
+	return c.ListCall.ReturnCampaignTypeList, c.ListCall.Err
 }
 
-func (c *NotificationTypesCollection) Get(conn models.ConnectionInterface, notificationTypeID, senderID, clientID string) (collections.NotificationType, error) {
-	return c.GetCall.ReturnNotificationType, c.GetCall.Err
+func (c *CampaignTypesCollection) Get(conn models.ConnectionInterface, notificationTypeID, senderID, clientID string) (collections.CampaignType, error) {
+	return c.GetCall.ReturnCampaignType, c.GetCall.Err
 }

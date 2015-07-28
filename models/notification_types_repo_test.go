@@ -16,7 +16,7 @@ var _ = Describe("NotificationTypesRepo", func() {
 
 	BeforeEach(func() {
 		TruncateTables()
-		repo = models.NewNotificationTypesRepository(fakes.NewIncrementingGUIDGenerator().Generate)
+		repo = models.NewCampaignTypesRepository(fakes.NewIncrementingGUIDGenerator().Generate)
 		db := models.NewDatabase(sqlDB, models.Config{})
 		db.Setup()
 		conn = db.Connection()

@@ -1,4 +1,4 @@
-package notificationtypes_test
+package campaigntypes_test
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/web/v2/notificationtypes"
+	"github.com/cloudfoundry-incubator/notifications/web/v2/campaigntypes"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
@@ -16,8 +16,8 @@ import (
 
 var _ = Describe("ShowHandler", func() {
 	var (
-		handler                     notificationtypes.ShowHandler
-		notificationTypesCollection *fakes.NotificationTypesCollection
+		handler                     campaigntypes.ShowHandler
+		campaignTypesCollection *fakes.CampaignTypesCollection
 		context                     stack.Context
 		writer                      *httptest.ResponseRecorder
 		request                     *http.Request
@@ -34,13 +34,13 @@ var _ = Describe("ShowHandler", func() {
 
 		writer = httptest.NewRecorder()
 
-		notificationTypesCollection = fakes.NewNotificationTypesCollection()
+		campaignTypesCollection = fakes.NewCampaignTypesCollection()
 
-		handler = notificationtypes.NewShowHandler(notificationTypesCollection)
+		handler = campaigntypes.NewShowHandler(campaignTypesCollection)
 	})
 
 	It("returns information on a given notification type", func() {
-		notificationTypesCollection.GetCall.ReturnNotificationType = collections.NotificationType{
+		campaignTypesCollection.GetCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "notification-type-id-one",
 			Name:        "first-notification-type",
 			Description: "first-notification-type-description",
@@ -66,7 +66,7 @@ var _ = Describe("ShowHandler", func() {
 
 	Context("failure cases", func() {
 		It("returns a 400 when the notification type ID is an empty string", func() {
-			notificationTypesCollection.GetCall.Err = collections.NewValidationError("missing notification type id")
+			campaignTypesCollection.GetCall.Err = collections.NewValidationError("missing notification type id")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/", nil)
@@ -80,7 +80,7 @@ var _ = Describe("ShowHandler", func() {
 		})
 
 		It("returns a 400 when the sender ID is an empty string", func() {
-			notificationTypesCollection.GetCall.Err = collections.NewValidationError("missing sender id")
+			campaignTypesCollection.GetCall.Err = collections.NewValidationError("missing sender id")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders//notification_types/some-notification-type-id", nil)
@@ -94,7 +94,7 @@ var _ = Describe("ShowHandler", func() {
 		})
 
 		It("returns a 404 when the notification type does not exist", func() {
-			notificationTypesCollection.GetCall.Err = collections.NewNotFoundError("notification type not found")
+			campaignTypesCollection.GetCall.Err = collections.NewNotFoundError("notification type not found")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/missing-notification-type-id", nil)
@@ -108,7 +108,7 @@ var _ = Describe("ShowHandler", func() {
 		})
 
 		It("returns a 404 when the sender does not exist", func() {
-			notificationTypesCollection.GetCall.Err = collections.NewNotFoundError("sender not found")
+			campaignTypesCollection.GetCall.Err = collections.NewNotFoundError("sender not found")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/missing-sender-id/notification_types/some-notification-type-id", nil)
@@ -122,7 +122,7 @@ var _ = Describe("ShowHandler", func() {
 		})
 
 		It("returns a 500 when the collection indicates a system error", func() {
-			notificationTypesCollection.GetCall.Err = errors.New("BOOM!")
+			campaignTypesCollection.GetCall.Err = errors.New("BOOM!")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/some-notification-type-id", nil)
