@@ -56,17 +56,17 @@ var _ = Describe("CreateHandler", func() {
 		writer = httptest.NewRecorder()
 		notificationTypesCollection = fakes.NewCampaignTypesCollection()
 		notificationTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
-			ID:          "some-notification-type-id",
-			Name:        "some-notification-type",
-			Description: "some-notification-type-description",
+			ID:          "some-campaign-type-id",
+			Name:        "some-campaign-type",
+			Description: "some-campaign-type-description",
 			Critical:    false,
 			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
 		}
 
 		requestBody, err := json.Marshal(map[string]interface{}{
-			"name":        "some-notification-type",
-			"description": "some-notification-type-description",
+			"name":        "some-campaign-type",
+			"description": "some-campaign-type-description",
 			"critical":    false,
 			"template_id": "some-template-id",
 		})
@@ -82,8 +82,8 @@ var _ = Describe("CreateHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(notificationTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
-			Name:        "some-notification-type",
-			Description: "some-notification-type-description",
+			Name:        "some-campaign-type",
+			Description: "some-campaign-type-description",
 			Critical:    false,
 			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
@@ -93,9 +93,9 @@ var _ = Describe("CreateHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"id": "some-notification-type-id",
-			"name": "some-notification-type",
-			"description": "some-notification-type-description",
+			"id": "some-campaign-type-id",
+			"name": "some-campaign-type",
+			"description": "some-campaign-type-description",
 			"critical": false,
 			"template_id": "some-template-id"
 		}`))
@@ -103,8 +103,8 @@ var _ = Describe("CreateHandler", func() {
 
 	It("allows the critical field to be omitted", func() {
 		requestBody, err := json.Marshal(map[string]string{
-			"name":        "some-notification-type",
-			"description": "some-notification-type-description",
+			"name":        "some-campaign-type",
+			"description": "some-campaign-type-description",
 			"template_id": "some-template-id",
 		})
 		Expect(err).NotTo(HaveOccurred())
@@ -115,8 +115,8 @@ var _ = Describe("CreateHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(notificationTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
-			Name:        "some-notification-type",
-			Description: "some-notification-type-description",
+			Name:        "some-campaign-type",
+			Description: "some-campaign-type-description",
 			Critical:    false,
 			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
@@ -124,9 +124,9 @@ var _ = Describe("CreateHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"id": "some-notification-type-id",
-			"name": "some-notification-type",
-			"description": "some-notification-type-description",
+			"id": "some-campaign-type-id",
+			"name": "some-campaign-type",
+			"description": "some-campaign-type-description",
 			"critical": false,
 			"template_id": "some-template-id"
 		}`))
@@ -134,17 +134,17 @@ var _ = Describe("CreateHandler", func() {
 
 	It("allows the template_id field to be omitted", func() {
 		notificationTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
-			ID:          "some-notification-type-id",
-			Name:        "some-notification-type",
-			Description: "some-notification-type-description",
+			ID:          "some-campaign-type-id",
+			Name:        "some-campaign-type",
+			Description: "some-campaign-type-description",
 			Critical:    false,
 			TemplateID:  "",
 			SenderID:    "some-sender-id",
 		}
 
 		requestBody, err := json.Marshal(map[string]interface{}{
-			"name":        "some-notification-type",
-			"description": "some-notification-type-description",
+			"name":        "some-campaign-type",
+			"description": "some-campaign-type-description",
 			"critical":    false,
 		})
 		Expect(err).NotTo(HaveOccurred())
@@ -155,8 +155,8 @@ var _ = Describe("CreateHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(notificationTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
-			Name:        "some-notification-type",
-			Description: "some-notification-type-description",
+			Name:        "some-campaign-type",
+			Description: "some-campaign-type-description",
 			Critical:    false,
 			TemplateID:  "",
 			SenderID:    "some-sender-id",
@@ -164,9 +164,9 @@ var _ = Describe("CreateHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"id": "some-notification-type-id",
-			"name": "some-notification-type",
-			"description": "some-notification-type-description",
+			"id": "some-campaign-type-id",
+			"name": "some-campaign-type",
+			"description": "some-campaign-type-description",
 			"critical": false,
 			"template_id": ""
 		}`))
@@ -182,17 +182,17 @@ var _ = Describe("CreateHandler", func() {
 		context.Set("token", token)
 
 		notificationTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
-			ID:          "some-notification-type-id",
-			Name:        "some-notification-type",
-			Description: "some-notification-type-description",
+			ID:          "some-campaign-type-id",
+			Name:        "some-campaign-type",
+			Description: "some-campaign-type-description",
 			Critical:    true,
 			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
 		}
 
 		requestBody, err := json.Marshal(map[string]interface{}{
-			"name":        "some-notification-type",
-			"description": "some-notification-type-description",
+			"name":        "some-campaign-type",
+			"description": "some-campaign-type-description",
 			"critical":    true,
 			"template_id": "some-template-id",
 		})
@@ -204,8 +204,8 @@ var _ = Describe("CreateHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(notificationTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
-			Name:        "some-notification-type",
-			Description: "some-notification-type-description",
+			Name:        "some-campaign-type",
+			Description: "some-campaign-type-description",
 			Critical:    true,
 			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
@@ -213,9 +213,9 @@ var _ = Describe("CreateHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"id": "some-notification-type-id",
-			"name": "some-notification-type",
-			"description": "some-notification-type-description",
+			"id": "some-campaign-type-id",
+			"name": "some-campaign-type",
+			"description": "some-campaign-type-description",
 			"critical": true,
 			"template_id": "some-template-id"
 		}`))
@@ -224,17 +224,17 @@ var _ = Describe("CreateHandler", func() {
 	Context("failure cases", func() {
 		It("returns a 403 when the client without the critical_notifications.write scope attempts to create a critical notification type", func() {
 			notificationTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
-				ID:          "some-notification-type-id",
-				Name:        "some-notification-type",
-				Description: "some-notification-type-description",
+				ID:          "some-campaign-type-id",
+				Name:        "some-campaign-type",
+				Description: "some-campaign-type-description",
 				Critical:    true,
 				TemplateID:  "some-template-id",
 				SenderID:    "some-sender-id",
 			}
 
 			requestBody, err := json.Marshal(map[string]interface{}{
-				"name":        "some-notification-type",
-				"description": "some-notification-type-description",
+				"name":        "some-campaign-type",
+				"description": "some-campaign-type-description",
 				"critical":    true,
 				"template_id": "some-template-id",
 			})

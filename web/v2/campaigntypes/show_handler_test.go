@@ -41,24 +41,24 @@ var _ = Describe("ShowHandler", func() {
 
 	It("returns information on a given notification type", func() {
 		campaignTypesCollection.GetCall.ReturnCampaignType = collections.CampaignType{
-			ID:          "notification-type-id-one",
-			Name:        "first-notification-type",
-			Description: "first-notification-type-description",
+			ID:          "campaign-type-id-one",
+			Name:        "first-campaign-type",
+			Description: "first-campaign-type-description",
 			Critical:    false,
 			TemplateID:  "",
 			SenderID:    "some-sender-id",
 		}
 		var err error
-		request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/notification-type-id-one", nil)
+		request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/campaign-type-id-one", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"id": "notification-type-id-one",
-			"name": "first-notification-type",
-			"description": "first-notification-type-description",
+			"id": "campaign-type-id-one",
+			"name": "first-campaign-type",
+			"description": "first-campaign-type-description",
 			"critical": false,
 			"template_id": ""
 		}`))
@@ -83,7 +83,7 @@ var _ = Describe("ShowHandler", func() {
 			campaignTypesCollection.GetCall.Err = collections.NewValidationError("missing sender id")
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders//notification_types/some-notification-type-id", nil)
+			request, err = http.NewRequest("GET", "/senders//notification_types/some-campaign-type-id", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -97,7 +97,7 @@ var _ = Describe("ShowHandler", func() {
 			campaignTypesCollection.GetCall.Err = collections.NewNotFoundError("notification type not found")
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/missing-notification-type-id", nil)
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/missing-campaign-type-id", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -111,7 +111,7 @@ var _ = Describe("ShowHandler", func() {
 			campaignTypesCollection.GetCall.Err = collections.NewNotFoundError("sender not found")
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders/missing-sender-id/notification_types/some-notification-type-id", nil)
+			request, err = http.NewRequest("GET", "/senders/missing-sender-id/notification_types/some-campaign-type-id", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -125,7 +125,7 @@ var _ = Describe("ShowHandler", func() {
 			campaignTypesCollection.GetCall.Err = errors.New("BOOM!")
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/some-notification-type-id", nil)
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types/some-campaign-type-id", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)

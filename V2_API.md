@@ -6,9 +6,9 @@
 	- [Creating a sender](#create-sender)
 	- [Retrieving a sender](#retrieve-sender)
 - Notification Types
-  - [Creating a notification type](#create-notification-type)
-  - [Showing a notification type](#show-notification-type)
-  - [Listing the notification types](#list-notification-types)
+  - [Creating a notification type](#create-campaign-type)
+  - [Showing a notification type](#show-campaign-type)
+  - [Listing the notification types](#list-campaign-types)
 
 ## System Status
 
@@ -168,7 +168,7 @@ X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
 
 ## Notification Types
 
-<a name="create-notification-type"></a>
+<a name="create-campaign-type"></a>
 #### Creating a notification type
 
 ##### Request
@@ -183,7 +183,7 @@ Authorization: Bearer <CLIENT-TOKEN>
 
 ###### Route
 ```
-POST /senders/<sender-id>/notification-types
+POST /senders/<sender-id>/campaign-types
 ```
 ###### Params
 
@@ -201,7 +201,7 @@ POST /senders/<sender-id>/notification-types
 $ curl -i -X POST \
   -H "X-NOTIFICATIONS-VERSION: 2" \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"name":"my-notification-type","description":"notification type description","critical":false,"template_id":""}'
+  -d '{"name":"my-campaign-type","description":"notification type description","critical":false,"template_id":""}'
   http://notifications.mrorange.cfla.cf-app.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/notification_types
 
 HTTP/1.1 201 Created
@@ -210,7 +210,7 @@ Content-Type: text/plain; charset=utf-8
 Date: Wed, 22 Jul 2015 16:00:37 GMT
 X-Cf-Requestid: 6106873b-14ea-4fd9-6418-946c1651e4ac
 
-{"critical":false,"description":"notification type description","id":"3d9aa963-97bb-4b48-4c3c-ecccad6314f8","name":"my-notification-type","template_id":""}
+{"critical":false,"description":"notification type description","id":"3d9aa963-97bb-4b48-4c3c-ecccad6314f8","name":"my-campaign-type","template_id":""}
 ```
 
 ##### Response
@@ -229,7 +229,7 @@ X-Cf-Requestid: 6106873b-14ea-4fd9-6418-946c1651e4ac
 | critical      | Critical notification type flag       |
 | template_id   | Template ID                           |
 
-<a name="show-notification-type"></a>
+<a name="show-campaign-type"></a>
 #### Showing A Notification Type
 
 ##### Request
@@ -243,7 +243,7 @@ Authorization: Bearer <CLIENT-TOKEN>
 
 ###### Route
 ```
-GET /senders/<sender-id>/notification-types/<notification-type-id>
+GET /senders/<sender-id>/campaign-types/<campaign-type-id>
 ```
 ###### CURL example
 ```
@@ -259,7 +259,7 @@ RESPONSE HEADERS:
   Content-Type: text/plain; charset=utf-8
   Connection: close
 RESPONSE BODY:
-{"critical":false,"description":"notification type description","id":"3369a6ae-22c5-4da9-7081-b35350c79c4c","name":"my-notification-type","template_id":""}
+{"critical":false,"description":"notification type description","id":"3369a6ae-22c5-4da9-7081-b35350c79c4c","name":"my-campaign-type","template_id":""}
 ```
 
 ##### Response
@@ -278,7 +278,7 @@ RESPONSE BODY:
 | critical           | Critical notification type flag       |
 | template_id        | Template ID                           |
 
-<a name="list-notification-types"></a>
+<a name="list-campaign-types"></a>
 #### Listing Notification Types
 
 ##### Request
@@ -293,7 +293,7 @@ Authorization: Bearer <CLIENT-TOKEN>
 
 ###### Route
 ```
-GET /senders/<sender-id>/notification-types
+GET /senders/<sender-id>/campaign-types
 ```
 ###### CURL example
 ```
@@ -307,7 +307,7 @@ Date: Thu, 23 Jul 2015 19:22:46 GMT
 Content-Length: 180
 Content-Type: text/plain; charset=utf-8
 
-{"notification_types":[{"critical":false,"description":"notification type description","id":"702ce4c7-93a0-42b5-4fd5-4d0ed68e2cd7","name":"my-notification-type","template_id":""}]}
+{"notification_types":[{"critical":false,"description":"notification type description","id":"702ce4c7-93a0-42b5-4fd5-4d0ed68e2cd7","name":"my-campaign-type","template_id":""}]}
 ```
 
 ##### Response

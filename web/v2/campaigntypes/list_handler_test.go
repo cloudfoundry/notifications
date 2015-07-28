@@ -41,17 +41,17 @@ var _ = Describe("ListHandler", func() {
 	It("returns a list of notification types", func() {
 		campaignTypesCollection.ListCall.ReturnCampaignTypeList = []collections.CampaignType{
 			{
-				ID:          "notification-type-id-one",
-				Name:        "first-notification-type",
-				Description: "first-notification-type-description",
+				ID:          "campaign-type-id-one",
+				Name:        "first-campaign-type",
+				Description: "first-campaign-type-description",
 				Critical:    false,
 				TemplateID:  "",
 				SenderID:    "some-sender-id",
 			},
 			{
-				ID:          "notification-type-id-two",
-				Name:        "second-notification-type",
-				Description: "second-notification-type-description",
+				ID:          "campaign-type-id-two",
+				Name:        "second-campaign-type",
+				Description: "second-campaign-type-description",
 				Critical:    true,
 				TemplateID:  "",
 				SenderID:    "some-sender-id",
@@ -68,16 +68,16 @@ var _ = Describe("ListHandler", func() {
 		Expect(writer.Body.String()).To(MatchJSON(`{
 			"campaign_types": [
 				{
-					"id": "notification-type-id-one",
-					"name": "first-notification-type",
-					"description": "first-notification-type-description",
+					"id": "campaign-type-id-one",
+					"name": "first-campaign-type",
+					"description": "first-campaign-type-description",
 					"critical": false,
 					"template_id": ""
 				},
 				{
-					"id": "notification-type-id-two",
-					"name": "second-notification-type",
-					"description": "second-notification-type-description",
+					"id": "campaign-type-id-two",
+					"name": "second-campaign-type",
+					"description": "second-campaign-type-description",
 					"critical": true,
 					"template_id": ""
 				}
