@@ -178,7 +178,7 @@ func (nc NotificationTypesCollection) Get(conn models.ConnectionInterface, notif
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
-			return NotificationType{}, NewNotFoundError("sender not found")
+			return NotificationType{}, NewNotFoundError(fmt.Sprintf("sender %s not found", notificationTypeID))
 		default:
 			return NotificationType{}, PersistenceError{err}
 		}
@@ -198,7 +198,7 @@ func (nc NotificationTypesCollection) Get(conn models.ConnectionInterface, notif
 		case models.RecordNotFoundError:
 			return NotificationType{}, NotFoundError{
 				Err:     err,
-				Message: "notification type not found",
+				Message: fmt.Sprintf("notification type %s not found", notificationTypeID),
 			}
 		default:
 			return NotificationType{}, PersistenceError{err}
