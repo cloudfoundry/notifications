@@ -37,7 +37,7 @@ func (n NotificationTypesService) Create(senderID, name, description, templateID
 		return notificationType, err
 	}
 
-	status, body, err := NewClient(n.config).makeRequest("POST", n.config.Host+"/senders/"+senderID+"/notification_types", bytes.NewBuffer(content), token)
+	status, body, err := NewClient(n.config).makeRequest("POST", n.config.Host+"/senders/"+senderID+"/campaign_types", bytes.NewBuffer(content), token)
 	if err != nil {
 		return notificationType, err
 	}
@@ -57,7 +57,7 @@ func (n NotificationTypesService) Create(senderID, name, description, templateID
 func (n NotificationTypesService) Show(senderID, notificationTypeID, token string) (NotificationType, error) {
 	var notificationType NotificationType
 
-	status, body, err := NewClient(n.config).makeRequest("GET", n.config.Host+"/senders/"+senderID+"/notification_types/"+notificationTypeID, nil, token)
+	status, body, err := NewClient(n.config).makeRequest("GET", n.config.Host+"/senders/"+senderID+"/campaign_types/"+notificationTypeID, nil, token)
 	if err != nil {
 		return notificationType, err
 	}

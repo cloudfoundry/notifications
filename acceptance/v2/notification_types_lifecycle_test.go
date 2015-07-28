@@ -74,7 +74,7 @@ var _ = Describe("Notification types lifecycle", func() {
 			_, err := client.NotificationTypes.Show(otherSender.ID, notificationType.ID, token.Access)
 
 			Expect(err.(support.NotFoundError).Status).To(Equal(http.StatusNotFound))
-			expectedErrorMessage := fmt.Sprintf("{\"error\": \"notification type %s not found\"}", notificationType.ID)
+			expectedErrorMessage := fmt.Sprintf("{\"error\": \"campaign type %s not found\"}", notificationType.ID)
 			Expect(err.(support.NotFoundError).Body).To(MatchJSON(expectedErrorMessage))
 		})
 	})

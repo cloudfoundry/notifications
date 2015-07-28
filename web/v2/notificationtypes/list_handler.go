@@ -53,7 +53,7 @@ func (h ListHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 	}
 
 	listResponse, _ := json.Marshal(map[string]interface{}{
-		"notification_types": responseList,
+		"campaign_types": responseList,
 	})
 
 	writer.Write(listResponse)

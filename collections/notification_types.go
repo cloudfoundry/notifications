@@ -59,15 +59,15 @@ func (nc NotificationTypesCollection) Add(conn models.ConnectionInterface, notif
 
 	if notificationType.Name == "" {
 		return NotificationType{}, ValidationError{
-			Err:     errors.New("missing notification type name"),
-			Message: "missing notification type name",
+			Err:     errors.New("missing campaign type name"),
+			Message: "missing campaign type name",
 		}
 	}
 
 	if notificationType.Description == "" {
 		return NotificationType{}, ValidationError{
-			Err:     errors.New("missing notification type description"),
-			Message: "missing notification type description",
+			Err:     errors.New("missing campaign type description"),
+			Message: "missing campaign type description",
 		}
 	}
 
@@ -155,8 +155,8 @@ func (nc NotificationTypesCollection) List(conn models.ConnectionInterface, send
 func (nc NotificationTypesCollection) Get(conn models.ConnectionInterface, notificationTypeID, senderID, clientID string) (NotificationType, error) {
 	if notificationTypeID == "" {
 		return NotificationType{}, ValidationError{
-			Err:     errors.New("missing notification type id"),
-			Message: "missing notification type id",
+			Err:     errors.New("missing campaign type id"),
+			Message: "missing campaign type id",
 		}
 	}
 
@@ -198,7 +198,7 @@ func (nc NotificationTypesCollection) Get(conn models.ConnectionInterface, notif
 		case models.RecordNotFoundError:
 			return NotificationType{}, NotFoundError{
 				Err:     err,
-				Message: fmt.Sprintf("notification type %s not found", notificationTypeID),
+				Message: fmt.Sprintf("campaign type %s not found", notificationTypeID),
 			}
 		default:
 			return NotificationType{}, PersistenceError{err}
@@ -206,7 +206,7 @@ func (nc NotificationTypesCollection) Get(conn models.ConnectionInterface, notif
 	}
 
 	if senderID != notificationType.SenderID {
-		message := fmt.Sprintf("notification type %s not found", notificationTypeID)
+		message := fmt.Sprintf("campaign type %s not found", notificationTypeID)
 		return NotificationType{}, NotFoundError{
 			Err:     errors.New(message),
 			Message: message,

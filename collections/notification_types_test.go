@@ -76,7 +76,7 @@ var _ = Describe("NotificationTypesCollection", func() {
 			}
 
 			_, err := notificationTypesCollection.Add(fakeDatabaseConnection, notificationType, "client_id")
-			Expect(err).To(MatchError(collections.NewValidationError("missing notification type name")))
+			Expect(err).To(MatchError(collections.NewValidationError("missing campaign type name")))
 		})
 
 		It("requires a description to be specified", func() {
@@ -93,7 +93,7 @@ var _ = Describe("NotificationTypesCollection", func() {
 			}
 
 			_, err := notificationTypesCollection.Add(fakeDatabaseConnection, notificationType, "client_id")
-			Expect(err).To(MatchError(collections.NewValidationError("missing notification type description")))
+			Expect(err).To(MatchError(collections.NewValidationError("missing campaign type description")))
 		})
 
 		Context("failure cases", func() {
@@ -240,7 +240,7 @@ var _ = Describe("NotificationTypesCollection", func() {
 		Context("failure cases", func() {
 			It("validates that a notification type id was specified", func() {
 				_, err := notificationTypesCollection.Get(fakeDatabaseConnection, "", "some-sender-id", "some-client-id")
-				Expect(err).To(MatchError(collections.NewValidationError("missing notification type id")))
+				Expect(err).To(MatchError(collections.NewValidationError("missing campaign type id")))
 			})
 
 			It("validates that a sender id was specified", func() {
@@ -254,7 +254,7 @@ var _ = Describe("NotificationTypesCollection", func() {
 			})
 
 			It("returns a not found error if the notification type does not exist", func() {
-				fakeNotificationTypesRepository.GetReturn.Err = models.RecordNotFoundError("notification type not found")
+				fakeNotificationTypesRepository.GetReturn.Err = models.RecordNotFoundError("campaign type not found")
 				fakeSendersRepository.GetCall.ReturnSender = models.Sender{
 					ID:       "some-sender-id",
 					Name:     "I dont matter",
@@ -262,8 +262,8 @@ var _ = Describe("NotificationTypesCollection", func() {
 				}
 				_, err := notificationTypesCollection.Get(fakeDatabaseConnection, "missing-notification-type-id", "some-sender-id", "some-client-id")
 				Expect(err).To(MatchError(collections.NotFoundError{
-					Message: "notification type missing-notification-type-id not found",
-					Err:     models.RecordNotFoundError("notification type not found"),
+					Message: "campaign type missing-notification-type-id not found",
+					Err:     models.RecordNotFoundError("campaign type not found"),
 				}))
 			})
 
@@ -290,7 +290,7 @@ var _ = Describe("NotificationTypesCollection", func() {
 					ClientID: "some-client-id",
 				}
 				_, err := notificationTypesCollection.Get(fakeDatabaseConnection, "some-notification-type-id", "someone-elses-sender-id", "some-client-id")
-				Expect(err).To(MatchError(collections.NewNotFoundError("notification type some-notification-type-id not found")))
+				Expect(err).To(MatchError(collections.NewNotFoundError("campaign type some-notification-type-id not found")))
 			})
 
 			It("returns a not found error if the sender does not belong to the client", func() {

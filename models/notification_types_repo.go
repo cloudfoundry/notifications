@@ -38,7 +38,7 @@ func (n NotificationTypesRepository) GetBySenderIDAndName(connection ConnectionI
 	err := connection.SelectOne(&notificationType, "SELECT * FROM `notification_types` WHERE `sender_id` = ? AND `name` = ?", senderID, name)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = NewRecordNotFoundError("Notification type with sender_id %q and name %q could not be found", senderID, name)
+			err = NewRecordNotFoundError("Campaign type with sender_id %q and name %q could not be found", senderID, name)
 		}
 		return notificationType, err
 	}
@@ -61,7 +61,7 @@ func (n NotificationTypesRepository) Get(connection ConnectionInterface, notific
 	err := connection.SelectOne(&notificationType, "SELECT * FROM `notification_types` WHERE `id` = ?", notificationTypeID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = NewRecordNotFoundError("Notification type with id %q could not be found", notificationTypeID)
+			err = NewRecordNotFoundError("Campaign type with id %q could not be found", notificationTypeID)
 		}
 		return notificationType, err
 	}

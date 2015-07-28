@@ -34,8 +34,8 @@ var _ = Describe("NotificationTypesRouter", func() {
 		})
 	})
 
-	It("routes POST /senders/{sender_id}/notification_types", func() {
-		s := router.Get("POST /senders/{sender_id}/notification_types").GetHandler().(stack.Stack)
+	It("routes POST /senders/{sender_id}/campaign_types", func() {
+		s := router.Get("POST /senders/{sender_id}/campaign_types").GetHandler().(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(notificationtypes.CreateHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
@@ -49,8 +49,8 @@ var _ = Describe("NotificationTypesRouter", func() {
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 
-	It("routes GET /senders/{sender_id}/notification_types/{notification_type_id}", func() {
-		s := router.Get("GET /senders/{sender_id}/notification_types/{notification_type_id}").GetHandler().(stack.Stack)
+	It("routes GET /senders/{sender_id}/campaign_types/{notification_type_id}", func() {
+		s := router.Get("GET /senders/{sender_id}/campaign_types/{notification_type_id}").GetHandler().(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(notificationtypes.ShowHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
@@ -64,8 +64,8 @@ var _ = Describe("NotificationTypesRouter", func() {
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 
-	It("routes GET /senders/{sender_id}/notification_types", func() {
-		s := router.Get("GET /senders/{sender_id}/notification_types").GetHandler().(stack.Stack)
+	It("routes GET /senders/{sender_id}/campaign_types", func() {
+		s := router.Get("GET /senders/{sender_id}/campaign_types").GetHandler().(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(notificationtypes.ListHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 

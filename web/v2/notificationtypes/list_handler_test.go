@@ -59,14 +59,14 @@ var _ = Describe("ListHandler", func() {
 		}
 
 		var err error
-		request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types", nil)
+		request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"notification_types": [
+			"campaign_types": [
 				{
 					"id": "notification-type-id-one",
 					"name": "first-notification-type",
@@ -87,14 +87,14 @@ var _ = Describe("ListHandler", func() {
 
 	It("returns an empty list of notification types if the table has no records", func() {
 		var err error
-		request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types", nil)
+		request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"notification_types": []
+			"campaign_types": []
 		}`))
 	})
 
@@ -105,7 +105,7 @@ var _ = Describe("ListHandler", func() {
 			}
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders/non-existent-sender-id/notification_types", nil)
+			request, err = http.NewRequest("GET", "/senders/non-existent-sender-id/campaign_types", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -119,7 +119,7 @@ var _ = Describe("ListHandler", func() {
 			notificationTypesCollection.ListCall.Err = errors.New("BOOM!")
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders/some-sender-id/notification_types", nil)
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
