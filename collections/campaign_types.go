@@ -1,7 +1,6 @@
 package collections
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -18,7 +17,7 @@ type CampaignType struct {
 
 type CampaignTypesCollection struct {
 	campaignTypesRepository campaignTypesRepository
-	sendersRepository           sendersRepository
+	sendersRepository       sendersRepository
 }
 
 type campaignTypesRepository interface {
@@ -31,7 +30,7 @@ type campaignTypesRepository interface {
 func NewCampaignTypesCollection(nr campaignTypesRepository, sr sendersRepository) CampaignTypesCollection {
 	return CampaignTypesCollection{
 		campaignTypesRepository: nr,
-		sendersRepository:           sr,
+		sendersRepository:       sr,
 	}
 }
 
@@ -55,17 +54,11 @@ func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, campaignT
 	}
 
 	if campaignType.Name == "" {
-		return CampaignType{}, ValidationError{
-			Err:     errors.New("missing campaign type name"),
-			Message: "missing campaign type name",
-		}
+		return CampaignType{}, NewValidationError("missing campaign type name")
 	}
 
 	if campaignType.Description == "" {
-		return CampaignType{}, ValidationError{
-			Err:     errors.New("missing campaign type description"),
-			Message: "missing campaign type description",
-		}
+		return CampaignType{}, NewValidationError("missing campaign type description")
 	}
 
 	returnCampaignType, err := nc.campaignTypesRepository.Insert(conn, models.CampaignType{
@@ -99,10 +92,7 @@ func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, campaignT
 
 func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]CampaignType, error) {
 	if senderID == "" {
-		return []CampaignType{}, ValidationError{
-			Err:     errors.New("missing sender id"),
-			Message: "missing sender id",
-		}
+		return []CampaignType{}, NewValidationError("missing sender id")
 	}
 
 	if clientID == "" {
@@ -151,24 +141,15 @@ func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID
 
 func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) (CampaignType, error) {
 	if campaignTypeID == "" {
-		return CampaignType{}, ValidationError{
-			Err:     errors.New("missing campaign type id"),
-			Message: "missing campaign type id",
-		}
+		return CampaignType{}, NewValidationError("missing campaign type id")
 	}
 
 	if senderID == "" {
-		return CampaignType{}, ValidationError{
-			Err:     errors.New("missing sender id"),
-			Message: "missing sender id",
-		}
+		return CampaignType{}, NewValidationError("missing sender id")
 	}
 
 	if clientID == "" {
-		return CampaignType{}, ValidationError{
-			Err:     errors.New("missing client id"),
-			Message: "missing client id",
-		}
+		return CampaignType{}, NewValidationError("missing client id")
 	}
 
 	sender, err := nc.sendersRepository.Get(conn, senderID)
@@ -182,11 +163,7 @@ func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignT
 	}
 
 	if clientID != sender.ClientID {
-		message := fmt.Sprintf("sender %s not found", senderID)
-		return CampaignType{}, NotFoundError{
-			Err:     errors.New(message),
-			Message: message,
-		}
+		return CampaignType{}, NewNotFoundError(fmt.Sprintf("sender %s not found", senderID))
 	}
 
 	campaignType, err := nc.campaignTypesRepository.Get(conn, campaignTypeID)
@@ -203,11 +180,7 @@ func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignT
 	}
 
 	if senderID != campaignType.SenderID {
-		message := fmt.Sprintf("campaign type %s not found", campaignTypeID)
-		return CampaignType{}, NotFoundError{
-			Err:     errors.New(message),
-			Message: message,
-		}
+		return CampaignType{}, NewNotFoundError(fmt.Sprintf("campaign type %s not found", campaignTypeID))
 	}
 
 	return CampaignType{
