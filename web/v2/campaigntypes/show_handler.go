@@ -30,12 +30,12 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 	campaignType, err := h.campaignTypes.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
 	if err != nil {
 		var errorMessage string
-		switch err.(type) {
+		switch e := err.(type) {
 		case collections.ValidationError:
-			errorMessage = err.(collections.ValidationError).Message
+			errorMessage = e.Message
 			writer.WriteHeader(http.StatusBadRequest)
 		case collections.NotFoundError:
-			errorMessage = err.(collections.NotFoundError).Message
+			errorMessage = e.Message
 			writer.WriteHeader(http.StatusNotFound)
 		default:
 			writer.WriteHeader(http.StatusInternalServerError)

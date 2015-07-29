@@ -43,7 +43,7 @@ func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, campaignT
 		case models.RecordNotFoundError:
 			return CampaignType{}, NotFoundError{
 				Err:     e,
-				Message: string(e),
+				Message: fmt.Sprintf("Sender %s not found", campaignType.SenderID),
 			}
 		default:
 			return CampaignType{}, PersistenceError{err}
@@ -51,10 +51,7 @@ func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, campaignT
 	}
 
 	if senderModel.ClientID != clientID {
-		return CampaignType{}, NotFoundError{
-			Err:     errors.New("sender not found"),
-			Message: "sender not found",
-		}
+		return CampaignType{}, NewNotFoundError(fmt.Sprintf("Sender %s not found", campaignType.SenderID))
 	}
 
 	if campaignType.Name == "" {

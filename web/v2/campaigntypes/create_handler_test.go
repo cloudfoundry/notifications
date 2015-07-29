@@ -277,7 +277,7 @@ var _ = Describe("CreateHandler", func() {
 
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "validation error: bananas are delicious"
+				"error": "bananas are delicious"
 			}`))
 		})
 
@@ -288,6 +288,18 @@ var _ = Describe("CreateHandler", func() {
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
 			Expect(writer.Body.String()).To(MatchJSON(`{
 				"error": "BOOM!"
+			}`))
+		})
+		It("returns a 404 when the sender could not be found", func() {
+			campaignTypesCollection.AddCall.Err = collections.NotFoundError{
+				Err: errors.New("THIS WAS PRODUCED BY ROBOTS"),
+				Message: "This is for humans.",
+			}
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusNotFound))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "This is for humans."
 			}`))
 		})
 
