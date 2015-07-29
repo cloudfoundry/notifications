@@ -39,6 +39,24 @@ var _ = Describe("CampaignTypesRepo", func() {
 
 			Expect(returnCampaignType.ID).To(Equal("deadbeef-aabb-ccdd-eeff-001122334455"))
 		})
+
+		Context("failure cases", func() {
+			It("passes along error messages from the database", func() {
+				conn := fakes.NewConnection()
+				conn.InsertCall.Err = errors.New("a useful database error message")
+
+				campaignType := models.CampaignType{
+					Name:        "some-campaign-type",
+					Description: "some-campaign-type-description",
+					Critical:    false,
+					TemplateID:  "some-template-id",
+					SenderID:    "some-sender-id",
+				}
+
+				_, err := repo.Insert(conn, campaignType)
+				Expect(err).To(MatchError("a useful database error message"))
+			})
+		})
 	})
 
 	Describe("GetBySenderIDAndName", func() {
@@ -58,9 +76,18 @@ var _ = Describe("CampaignTypesRepo", func() {
 			Expect(campaignType.ID).To(Equal(createdCampaignType.ID))
 		})
 
-		It("fails to fetch the campaign type given a non-existent sender_id and name", func() {
-			_, err := repo.GetBySenderIDAndName(conn, "another-sender-id", "some-campaign-type")
-			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+		Context("failure cases", func() {
+			It("fails to fetch the campaign type given a non-existent sender_id and name", func() {
+				_, err := repo.GetBySenderIDAndName(conn, "another-sender-id", "some-campaign-type")
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+			})
+
+			It("passes along error messages from the database", func() {
+				conn := fakes.NewConnection()
+				conn.SelectOneCall.Errs = []error{errors.New("a useful database error message")}
+				_, err := repo.GetBySenderIDAndName(conn, "some-sender-id", "some-campaign-type")
+				Expect(err).To(MatchError("a useful database error message"))
+			})
 		})
 	})
 
@@ -144,6 +171,14 @@ var _ = Describe("CampaignTypesRepo", func() {
 				_, err = repo.Get(conn, "missing-campaign-type-id")
 				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 			})
+
+			It("passes along error messages from the database", func() {
+				conn := fakes.NewConnection()
+				conn.SelectOneCall.Errs = []error{errors.New("a useful database error message")}
+				_, err := repo.Get(conn, "campaign-type-id")
+				Expect(err).To(MatchError("a useful database error message"))
+			})
+
 		})
 	})
 })

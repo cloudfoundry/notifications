@@ -53,13 +53,14 @@ func (n CampaignTypesRepository) List(connection ConnectionInterface, senderID s
 }
 
 func (n CampaignTypesRepository) Get(connection ConnectionInterface, campaignTypeID string) (CampaignType, error) {
-	campaignType, err := connection.Get(CampaignType{}, campaignTypeID)
-	if campaignType == nil {
-		err = NewRecordNotFoundError("Campaign type with id %q could not be found", campaignTypeID)
+	campaignType := CampaignType{}
+	err := connection.SelectOne(&campaignType, "SELECT * FROM `campaign_types` WHERE `id` = ?", campaignTypeID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = NewRecordNotFoundError("Campaign type with id %q could not be found", campaignTypeID)
+		}
+		return campaignType, err
 	}
 
-	if err != nil {
-		return CampaignType{}, err
-	}
-	return *campaignType.(*CampaignType), nil
+	return campaignType, nil
 }
