@@ -49,11 +49,7 @@ func (n CampaignTypesRepository) GetBySenderIDAndName(connection ConnectionInter
 func (n CampaignTypesRepository) List(connection ConnectionInterface, senderID string) ([]CampaignType, error) {
 	campaignTypeList := []CampaignType{}
 	_, err := connection.Select(&campaignTypeList, "SELECT * FROM `campaign_types` WHERE `sender_id` = ?", senderID)
-	if err != nil {
-		panic(err)
-	}
-
-	return campaignTypeList, nil
+	return campaignTypeList, err
 }
 
 func (n CampaignTypesRepository) Get(connection ConnectionInterface, campaignTypeID string) (CampaignType, error) {

@@ -1,6 +1,8 @@
 package models_test
 
 import (
+	"errors"
+
 	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
@@ -99,6 +101,15 @@ var _ = Describe("CampaignTypesRepo", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(len(returnCampaignTypeList)).To(Equal(0))
+		})
+
+		Context("failure cases", func() {
+			It("returns errors", func() {
+				conn := fakes.NewConnection()
+				conn.SelectCall.Err = errors.New("BOOM!")
+				_, err := repo.List(conn, "some-sender-id")
+				Expect(err).To(MatchError("BOOM!"))
+			})
 		})
 	})
 

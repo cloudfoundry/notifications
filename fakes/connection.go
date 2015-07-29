@@ -29,6 +29,10 @@ type Connection struct {
 		CallCount int
 	}
 
+	SelectCall struct {
+		Err error
+	}
+
 	InsertCall struct {
 		Err error
 	}
@@ -39,7 +43,7 @@ type Connection struct {
 
 	GetCall struct {
 		Returns interface{}
-		Err 	error
+		Err     error
 	}
 }
 
@@ -78,7 +82,7 @@ func (conn Connection) Insert(list ...interface{}) error {
 }
 
 func (conn Connection) Select(i interface{}, query string, args ...interface{}) ([]interface{}, error) {
-	return []interface{}{}, nil
+	return []interface{}{}, conn.SelectCall.Err
 }
 
 func (conn *Connection) SelectOne(i interface{}, query string, args ...interface{}) error {
