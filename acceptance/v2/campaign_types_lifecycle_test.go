@@ -41,8 +41,6 @@ var _ = Describe("Campaign types lifecycle", func() {
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 				"name":        "some-campaign-type",
 				"description": "a great campaign type",
-				"template_id": "",
-				"critical":    false,
 			}, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
@@ -59,8 +57,6 @@ var _ = Describe("Campaign types lifecycle", func() {
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 				"name":        "some-campaign-type",
 				"description": "another great campaign type",
-				"template_id": "",
-				"critical":    false,
 			}, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
@@ -76,7 +72,6 @@ var _ = Describe("Campaign types lifecycle", func() {
 			status, response, err := client.Do("PUT", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), map[string]interface{}{
 				"name":        "updated-campaign-type",
 				"description": "still the same great campaign type",
-				"template_id": "",
 				"critical":    true,
 			}, token.Access)
 			Expect(err).NotTo(HaveOccurred())
@@ -108,8 +103,6 @@ var _ = Describe("Campaign types lifecycle", func() {
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 				"name":        "some-campaign-type",
 				"description": "a great campaign type",
-				"template_id": "",
-				"critical":    false,
 			}, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 
