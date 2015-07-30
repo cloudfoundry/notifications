@@ -12,13 +12,6 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type collection interface {
-	Add(conn models.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error)
-	List(conn models.ConnectionInterface, senderID, clientID string) ([]collections.CampaignType, error)
-	Get(conn models.ConnectionInterface, senderID, campaignTypeID, clientID string) (collections.CampaignType, error)
-	Update(conn models.ConnectionInterface, campaignType collections.CampaignType) (collections.CampaignType, error)
-}
-
 type CreateHandler struct {
 	campaignTypes collection
 }
@@ -77,7 +70,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	database := context.Get("database").(models.DatabaseInterface)
 
-	campaignType, err := h.campaignTypes.Add(database.Connection(), collections.CampaignType{
+	campaignType, err := h.campaignTypes.Set(database.Connection(), collections.CampaignType{
 		Name:        createRequest.Name,
 		Description: createRequest.Description,
 		Critical:    createRequest.Critical,

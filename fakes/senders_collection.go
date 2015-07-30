@@ -6,7 +6,7 @@ import (
 )
 
 type SendersCollection struct {
-	AddCall struct {
+	SetCall struct {
 		Conn         models.ConnectionInterface
 		Sender       collections.Sender
 		ReturnSender collections.Sender
@@ -26,10 +26,10 @@ func NewSendersCollection() *SendersCollection {
 	return &SendersCollection{}
 }
 
-func (c *SendersCollection) Add(conn models.ConnectionInterface, sender collections.Sender) (collections.Sender, error) {
-	c.AddCall.Conn = conn
-	c.AddCall.Sender = sender
-	return c.AddCall.ReturnSender, c.AddCall.Err
+func (c *SendersCollection) Set(conn models.ConnectionInterface, sender collections.Sender) (collections.Sender, error) {
+	c.SetCall.Conn = conn
+	c.SetCall.Sender = sender
+	return c.SetCall.ReturnSender, c.SetCall.Err
 }
 
 func (c *SendersCollection) Get(conn models.ConnectionInterface, senderID, clientID string) (collections.Sender, error) {

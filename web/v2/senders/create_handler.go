@@ -10,11 +10,6 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type collection interface {
-	Add(conn models.ConnectionInterface, sender collections.Sender) (createdSender collections.Sender, err error)
-	Get(conn models.ConnectionInterface, senderID, clientID string) (retrievedSender collections.Sender, err error)
-}
-
 type CreateHandler struct {
 	senders collection
 }
@@ -52,7 +47,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
-	sender, err := h.senders.Add(database.Connection(), collections.Sender{
+	sender, err := h.senders.Set(database.Connection(), collections.Sender{
 		Name:     createRequest.Name,
 		ClientID: context.Get("client_id").(string),
 	})

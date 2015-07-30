@@ -28,7 +28,7 @@ func NewSendersCollection(repo sendersRepository) SendersCollection {
 	}
 }
 
-func (sc SendersCollection) Add(conn models.ConnectionInterface, sender Sender) (Sender, error) {
+func (sc SendersCollection) Set(conn models.ConnectionInterface, sender Sender) (Sender, error) {
 	model, err := sc.repo.Insert(conn, models.Sender{
 		Name:     sender.Name,
 		ClientID: sender.ClientID,

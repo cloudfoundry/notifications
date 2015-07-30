@@ -67,7 +67,7 @@ var _ = Describe("UpdateHandler", func() {
 		guid, err := uuid.NewV4()
 		Expect(err).NotTo(HaveOccurred())
 
-		campaignTypesCollection.UpdateCall.ReturnCampaignType = collections.CampaignType{
+		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
 			ID:          guid.String(),
 			Name:        "update-campaign-type",
 			Description: "update-campaign-type-description",
@@ -89,7 +89,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(campaignTypesCollection.UpdateCall.CampaignType).To(Equal(collections.CampaignType{
+		Expect(campaignTypesCollection.SetCall.CampaignType).To(Equal(collections.CampaignType{
 			ID:          guid.String(),
 			Name:        "update-campaign-type",
 			Description: "update-campaign-type-description",

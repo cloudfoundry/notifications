@@ -73,6 +73,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 				"name":        "updated-campaign-type",
 				"description": "still the same great campaign type",
 				"critical":    true,
+				"template_id": "", // TODO: remove this optional field
 			}, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))

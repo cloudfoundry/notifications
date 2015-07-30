@@ -2,9 +2,15 @@ package senders
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/collections"
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )
+
+type collection interface {
+	Set(conn models.ConnectionInterface, sender collections.Sender) (createdSender collections.Sender, err error)
+	Get(conn models.ConnectionInterface, senderID, clientID string) (retrievedSender collections.Sender, err error)
+}
 
 type RouterConfig struct {
 	RequestLogging    stack.Middleware

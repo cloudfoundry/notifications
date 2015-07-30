@@ -42,21 +42,21 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	database := context.Get("database").(models.DatabaseInterface)
 
-	h.campaignTypes.Update(database.Connection(), collections.CampaignType{
+	campaignType, err := h.campaignTypes.Set(database.Connection(), collections.CampaignType{
 		ID:          campaignTypeID,
 		Name:        *updateRequest.Name,
 		Description: *updateRequest.Description,
 		Critical:    *updateRequest.Critical,
 		TemplateID:  *updateRequest.TemplateID,
 		SenderID:    senderID,
-	}) //, context.Get("client_id").(string))
+	}, context.Get("client_id").(string))
 
 	jsonMap := map[string]interface{}{
-		"id":          campaignTypeID,
-		"name":        updateRequest.Name,
-		"description": updateRequest.Description,
-		"critical":    updateRequest.Critical,
-		"template_id": "",
+		"id":          campaignType.ID,
+		"name":        campaignType.Name,
+		"description": campaignType.Description,
+		"critical":    campaignType.Critical,
+		"template_id": campaignType.TemplateID,
 	}
 
 	jsonBody, err := json.Marshal(jsonMap)

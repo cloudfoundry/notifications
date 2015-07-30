@@ -25,7 +25,7 @@ var _ = Describe("SendersCollection", func() {
 		conn = fakes.NewConnection()
 	})
 
-	Describe("Add", func() {
+	Describe("Set", func() {
 		BeforeEach(func() {
 			sendersRepository.InsertCall.ReturnSender = models.Sender{
 				ID:       "some-sender-id",
@@ -35,7 +35,7 @@ var _ = Describe("SendersCollection", func() {
 		})
 
 		It("adds a sender to the collection", func() {
-			sender, err := sendersCollection.Add(conn, collections.Sender{
+			sender, err := sendersCollection.Set(conn, collections.Sender{
 				Name:     "some-sender",
 				ClientID: "some-client-id",
 			})
@@ -62,7 +62,7 @@ var _ = Describe("SendersCollection", func() {
 				ClientID: "some-client-id",
 			}
 
-			sender, err := sendersCollection.Add(conn, collections.Sender{
+			sender, err := sendersCollection.Set(conn, collections.Sender{
 				Name:     "some-sender",
 				ClientID: "some-client-id",
 			})
@@ -83,7 +83,7 @@ var _ = Describe("SendersCollection", func() {
 				sendersRepository.InsertCall.ReturnSender = models.Sender{}
 				sendersRepository.InsertCall.Err = errors.New("BOOM!")
 
-				_, err := sendersCollection.Add(conn, collections.Sender{
+				_, err := sendersCollection.Set(conn, collections.Sender{
 					Name:     "some-sender",
 					ClientID: "some-client-id",
 				})
@@ -99,7 +99,7 @@ var _ = Describe("SendersCollection", func() {
 				sendersRepository.GetByClientIDAndNameCall.ReturnSender = models.Sender{}
 				sendersRepository.GetByClientIDAndNameCall.Err = errors.New("BOOM!")
 
-				_, err := sendersCollection.Add(conn, collections.Sender{
+				_, err := sendersCollection.Set(conn, collections.Sender{
 					Name:     "some-sender",
 					ClientID: "some-client-id",
 				})

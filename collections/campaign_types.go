@@ -34,7 +34,7 @@ func NewCampaignTypesCollection(nr campaignTypesRepository, sr sendersRepository
 	}
 }
 
-func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, campaignType CampaignType, clientID string) (CampaignType, error) {
+func (nc CampaignTypesCollection) Set(conn models.ConnectionInterface, campaignType CampaignType, clientID string) (CampaignType, error) {
 	senderModel, err := nc.sendersRepository.Get(conn, campaignType.SenderID)
 	if err != nil {
 		switch e := err.(type) {
@@ -81,46 +81,6 @@ func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, campaignT
 	}, err
 }
 
-func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]CampaignType, error) {
-	senderModel, err := nc.sendersRepository.Get(conn, senderID)
-	if err != nil {
-		switch err.(type) {
-		case models.RecordNotFoundError:
-			return []CampaignType{}, NotFoundError{
-				Err:     err,
-				Message: "sender not found",
-			}
-		default:
-			return []CampaignType{}, PersistenceError{err}
-		}
-	}
-
-	if senderModel.ClientID != clientID {
-		return []CampaignType{}, NewNotFoundError("sender not found")
-	}
-
-	modelList, err := nc.campaignTypesRepository.List(conn, senderID)
-	if err != nil {
-		return []CampaignType{}, PersistenceError{err}
-	}
-
-	campaignTypeList := []CampaignType{}
-
-	for _, model := range modelList {
-		campaignType := CampaignType{
-			ID:          model.ID,
-			Name:        model.Name,
-			Description: model.Description,
-			Critical:    model.Critical,
-			TemplateID:  model.TemplateID,
-			SenderID:    model.SenderID,
-		}
-		campaignTypeList = append(campaignTypeList, campaignType)
-	}
-
-	return campaignTypeList, nil
-}
-
 func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) (CampaignType, error) {
 	sender, err := nc.sendersRepository.Get(conn, senderID)
 	if err != nil {
@@ -161,6 +121,46 @@ func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignT
 		TemplateID:  campaignType.TemplateID,
 		SenderID:    campaignType.SenderID,
 	}, nil
+}
+
+func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]CampaignType, error) {
+	senderModel, err := nc.sendersRepository.Get(conn, senderID)
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return []CampaignType{}, NotFoundError{
+				Err:     err,
+				Message: "sender not found",
+			}
+		default:
+			return []CampaignType{}, PersistenceError{err}
+		}
+	}
+
+	if senderModel.ClientID != clientID {
+		return []CampaignType{}, NewNotFoundError("sender not found")
+	}
+
+	modelList, err := nc.campaignTypesRepository.List(conn, senderID)
+	if err != nil {
+		return []CampaignType{}, PersistenceError{err}
+	}
+
+	campaignTypeList := []CampaignType{}
+
+	for _, model := range modelList {
+		campaignType := CampaignType{
+			ID:          model.ID,
+			Name:        model.Name,
+			Description: model.Description,
+			Critical:    model.Critical,
+			TemplateID:  model.TemplateID,
+			SenderID:    model.SenderID,
+		}
+		campaignTypeList = append(campaignTypeList, campaignType)
+	}
+
+	return campaignTypeList, nil
 }
 
 func (cc CampaignTypesCollection) Update(conn models.ConnectionInterface, campaignType CampaignType) (CampaignType, error) {
