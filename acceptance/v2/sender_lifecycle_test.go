@@ -1,6 +1,9 @@
 package v2
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/cloudfoundry-incubator/notifications/acceptance/v2/support"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -16,27 +19,37 @@ var _ = Describe("Sender lifecycle", func() {
 
 	BeforeEach(func() {
 		client = support.NewClient(support.Config{
-			Host: Servers.Notifications.URL(),
+			Host:  Servers.Notifications.URL(),
 			Trace: Trace,
 		})
 		token = GetClientTokenFor("my-client", "uaa")
 	})
 
 	It("can create and read a new sender", func() {
-		var sender support.Sender
+		var sender struct {
+			ID   string
+			Name string
+		}
 
 		By("creating a sender", func() {
-			var err error
-			sender, err = client.Senders.Create("My Cool App", token.Access)
+			status, response, err := client.Do("POST", "/senders", map[string]interface{}{
+				"name": "My Cool App",
+			}, token.Access)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+
+			sender.ID = response["id"].(string)
+			sender.Name = response["name"].(string)
+
 			Expect(sender.Name).To(Equal("My Cool App"))
 		})
 
 		By("getting the sender", func() {
-			retrieved_sender, err := client.Senders.Get(sender.ID, token.Access)
+			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s", sender.ID), nil, token.Access)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(retrieved_sender.Name).To(Equal("My Cool App"))
-			Expect(retrieved_sender.ID).To(Equal(sender.ID))
+			Expect(status).To(Equal(http.StatusOK))
+			Expect(response["id"]).To(Equal(sender.ID))
+			Expect(response["name"]).To(Equal("My Cool App"))
 		})
 	})
 })

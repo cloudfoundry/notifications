@@ -1,6 +1,8 @@
 package v2
 
 import (
+	"net/http"
+
 	"github.com/cloudfoundry-incubator/notifications/acceptance/v2/support"
 
 	. "github.com/onsi/ginkgo"
@@ -14,14 +16,15 @@ var _ = Describe("v2 API", func() {
 
 	BeforeEach(func() {
 		client = support.NewClient(support.Config{
-			Host: Servers.Notifications.URL(),
+			Host:  Servers.Notifications.URL(),
 			Trace: Trace,
 		})
 	})
 
 	It("serves the correct API version number", func() {
-		version, err := client.API.Version()
+		status, response, err := client.Do("GET", "/info", nil, "")
 		Expect(err).NotTo(HaveOccurred())
-		Expect(version).To(Equal(2))
+		Expect(status).To(Equal(http.StatusOK))
+		Expect(response["version"]).To(Equal(float64(2)))
 	})
 })

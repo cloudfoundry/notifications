@@ -16,21 +16,41 @@ type Config struct {
 }
 
 type Client struct {
-	config            Config
-	httpClient        *http.Client
-	API               APIService
-	Senders           SendersService
-	CampaignTypes CampaignTypesService
+	config     Config
+	httpClient *http.Client
 }
 
 func NewClient(config Config) *Client {
 	return &Client{
-		config:            config,
-		httpClient:        http.DefaultClient,
-		API:               NewAPIService(config),
-		Senders:           NewSendersService(config),
-		CampaignTypes: NewCampaignTypesService(config),
+		config:     config,
+		httpClient: http.DefaultClient,
 	}
+}
+
+func (c Client) Do(method string, path string, payload map[string]interface{}, token string) (int, map[string]interface{}, error) {
+	var requestBody io.Reader
+
+	if payload != nil {
+		content, err := json.Marshal(payload)
+		if err != nil {
+			return 0, nil, err
+		}
+
+		requestBody = bytes.NewBuffer(content)
+	}
+
+	responseCode, responseBody, err := c.makeRequest(method, c.config.Host+path, requestBody, token)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	var body map[string]interface{}
+	err = json.Unmarshal(responseBody, &body)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return responseCode, body, err
 }
 
 func (c Client) makeRequest(method, path string, content io.Reader, token string) (int, []byte, error) {
@@ -98,35 +118,4 @@ func (c Client) printResponse(response *http.Response) {
 	response.Body = ioutil.NopCloser(body)
 
 	fmt.Printf("[RES] %s %s\n", response.Status, buffer.String())
-}
-
-type APIService struct {
-	config Config
-}
-
-func NewAPIService(config Config) APIService {
-	return APIService{
-		config: config,
-	}
-}
-
-func (s APIService) Version() (int, error) {
-	status, body, err := NewClient(s.config).makeRequest("GET", s.config.Host+"/info", nil, "")
-	if err != nil {
-		return 0, err
-	}
-
-	if status != http.StatusOK {
-		return 0, fmt.Errorf("request failed: %d %s", status, body)
-	}
-
-	var info struct {
-		Version int `json:"version"`
-	}
-	err = json.Unmarshal(body, &info)
-	if err != nil {
-		return 0, err
-	}
-
-	return info.Version, nil
 }
