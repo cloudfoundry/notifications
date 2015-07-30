@@ -204,3 +204,7 @@ func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignT
 		SenderID:    campaignType.SenderID,
 	}, nil
 }
+
+func (cc CampaignTypesCollection) Update(conn models.ConnectionInterface, campaignType CampaignType) (CampaignType, error) {
+	return CampaignType{}, nil
+}

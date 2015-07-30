@@ -7,18 +7,24 @@ import (
 
 type CampaignTypesCollection struct {
 	AddCall struct {
-		CampaignType collections.CampaignType
-		Conn                   models.ConnectionInterface
+		CampaignType       collections.CampaignType
+		Conn               models.ConnectionInterface
 		ReturnCampaignType collections.CampaignType
-		Err                    error
+		Err                error
 	}
 	ListCall struct {
 		ReturnCampaignTypeList []collections.CampaignType
-		Err                        error
+		Err                    error
 	}
 	GetCall struct {
 		ReturnCampaignType collections.CampaignType
-		Err                    error
+		Err                error
+	}
+	UpdateCall struct {
+		CampaignType       collections.CampaignType
+		Conn               models.ConnectionInterface
+		ReturnCampaignType collections.CampaignType
+		Err                error
 	}
 }
 
@@ -38,4 +44,10 @@ func (c *CampaignTypesCollection) List(conn models.ConnectionInterface, senderID
 
 func (c *CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) (collections.CampaignType, error) {
 	return c.GetCall.ReturnCampaignType, c.GetCall.Err
+}
+
+func (c *CampaignTypesCollection) Update(conn models.ConnectionInterface, campaignType collections.CampaignType) (collections.CampaignType, error) {
+	c.UpdateCall.CampaignType = campaignType
+	c.UpdateCall.Conn = conn
+	return c.UpdateCall.ReturnCampaignType, c.UpdateCall.Err
 }

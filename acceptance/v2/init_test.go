@@ -2,6 +2,8 @@ package v2
 
 import (
 	"testing"
+	"strconv"
+	"os"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -10,11 +12,14 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var Servers struct {
-	Notifications servers.Notifications
-	SMTP          *servers.SMTP
-	UAA           *servers.UAA
-}
+var (
+	Servers struct {
+		Notifications servers.Notifications
+		SMTP          *servers.SMTP
+		UAA           *servers.UAA
+	}
+	Trace, _ = strconv.ParseBool(os.Getenv("TRACE"))
+)
 
 func TestAcceptanceSuite(t *testing.T) {
 	RegisterFailHandler(Fail)

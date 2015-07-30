@@ -17,6 +17,7 @@ var _ = Describe("Sender lifecycle", func() {
 	BeforeEach(func() {
 		client = support.NewClient(support.Config{
 			Host: Servers.Notifications.URL(),
+			Trace: Trace,
 		})
 		token = GetClientTokenFor("my-client", "uaa")
 	})

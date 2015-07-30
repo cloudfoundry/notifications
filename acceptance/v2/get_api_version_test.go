@@ -15,6 +15,7 @@ var _ = Describe("v2 API", func() {
 	BeforeEach(func() {
 		client = support.NewClient(support.Config{
 			Host: Servers.Notifications.URL(),
+			Trace: Trace,
 		})
 	})
 

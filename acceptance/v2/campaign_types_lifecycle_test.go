@@ -20,7 +20,8 @@ var _ = Describe("Campaign types lifecycle", func() {
 
 	BeforeEach(func() {
 		client = support.NewClient(support.Config{
-			Host: Servers.Notifications.URL(),
+			Host:  Servers.Notifications.URL(),
+			Trace: Trace,
 		})
 		token = GetClientTokenFor("my-client", "uaa")
 		var err error
@@ -28,7 +29,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("can create and show a new campaign type", func() {
+	PIt("can create, update and show a new campaign type", func() {
 		var campaignType support.CampaignType
 		var err error
 		By("creating a campaign type", func() {
@@ -47,11 +48,19 @@ var _ = Describe("Campaign types lifecycle", func() {
 			Expect(campaignType.Description).To(Equal("a great campaign type"))
 		})
 
+		By("updating it with different information", func() {
+			updatedCampaignType, err := client.CampaignTypes.Update(sender.ID, campaignType.ID, "updated-campaign-type", "still the same great campaign type", "", true, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(updatedCampaignType.Name).To(Equal("updated-campaign-type"))
+			Expect(updatedCampaignType.Description).To(Equal("still the same great campaign type"))
+			Expect(updatedCampaignType.Critical).To(BeTrue())
+		})
+
 		By("showing the newly created campaign type", func() {
 			gottenCampaignType, err := client.CampaignTypes.Show(sender.ID, campaignType.ID, token.Access)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(gottenCampaignType.Name).To(Equal("some-campaign-type"))
-			Expect(gottenCampaignType.Description).To(Equal("a great campaign type"))
+			Expect(gottenCampaignType.Name).To(Equal("updated-campaign-type"))
+			Expect(gottenCampaignType.Description).To(Equal("still the same great campaign type"))
 		})
 	})
 

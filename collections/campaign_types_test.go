@@ -333,4 +333,30 @@ var _ = Describe("CampaignTypesCollection", func() {
 			})
 		})
 	})
+
+	Describe("Update", func() {
+		var (
+			campaignType collections.CampaignType
+		)
+
+		BeforeEach(func() {
+			campaignType = collections.CampaignType{
+				ID:          "existing-campaign-type-id",
+				Name:        helpers.AddressOfString("My cool campaign type"),
+				Description: helpers.AddressOfString("description"),
+				Critical:    helpers.AddressOfBool(false),
+				TemplateID:  helpers.AddressOfString(""),
+				SenderID:    "mysender",
+			}
+		})
+
+		PIt("updates the name if the campaign type is found", func() {
+		})
+
+		PIt("updates the description if the campaign type is found", func() {
+		})
+
+		PIt("updates the critical flag if the campaign type is found", func() {
+		})
+	})
 })

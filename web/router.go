@@ -164,10 +164,10 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		SendersCollection: sendersCollection,
 	}))
 	v2.AddMux(campaigntypes.NewRouter(campaigntypes.RouterConfig{
-		RequestLogging:              logging,
-		Authenticator:               notificationsWriteAuthenticator,
-		DatabaseAllocator:           databaseAllocator,
-		CampaignTypesCollection: 	 campaignTypesCollection,
+		RequestLogging:          logging,
+		Authenticator:           notificationsWriteAuthenticator,
+		DatabaseAllocator:       databaseAllocator,
+		CampaignTypesCollection: campaignTypesCollection,
 	}))
 
 	return VersionRouter{

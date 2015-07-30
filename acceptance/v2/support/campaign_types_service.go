@@ -24,6 +24,36 @@ func NewCampaignTypesService(config Config) CampaignTypesService {
 	}
 }
 
+func (c CampaignTypesService) Update(senderID, campaignTypeID, name, description, templateID string, critical bool, token string) (CampaignType, error) {
+	var campaignType CampaignType
+
+	content, err := json.Marshal(map[string]interface{}{
+		"name":        name,
+		"description": description,
+		"critical":    critical,
+		"template_id": templateID,
+	})
+	if err != nil {
+		return campaignType, err
+	}
+
+	status, body, err := NewClient(c.config).makeRequest("PUT", c.config.Host+"/senders/"+senderID+"/campaign_types/"+campaignTypeID, bytes.NewBuffer(content), token)
+	if err != nil {
+		return campaignType, err
+	}
+
+	if status != http.StatusOK {
+		return campaignType, UnexpectedStatusError{status, string(body)}
+	}
+
+	err = json.Unmarshal(body, &campaignType)
+	if err != nil {
+		return campaignType, err
+	}
+
+	return campaignType, nil
+}
+
 func (n CampaignTypesService) Create(senderID, name, description, templateID string, critical bool, token string) (CampaignType, error) {
 	var campaignType CampaignType
 

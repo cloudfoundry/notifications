@@ -27,9 +27,9 @@ var _ = Describe("CampaignTypesRouter", func() {
 		auth = middleware.NewAuthenticator("some-public-key", "notifications.write")
 		dbAllocator = middleware.NewDatabaseAllocator(&sql.DB{}, false)
 		router = campaigntypes.NewRouter(campaigntypes.RouterConfig{
-			RequestLogging:              logging,
-			Authenticator:               auth,
-			DatabaseAllocator:           dbAllocator,
+			RequestLogging:          logging,
+			Authenticator:           auth,
+			DatabaseAllocator:       dbAllocator,
 			CampaignTypesCollection: collections.CampaignTypesCollection{},
 		})
 	})
@@ -37,6 +37,21 @@ var _ = Describe("CampaignTypesRouter", func() {
 	It("routes POST /senders/{sender_id}/campaign_types", func() {
 		s := router.Get("POST /senders/{sender_id}/campaign_types").GetHandler().(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(campaigntypes.CreateHandler{}))
+		Expect(s.Middleware).To(HaveLen(3))
+
+		requestLogging := s.Middleware[0].(middleware.RequestLogging)
+		Expect(requestLogging).To(Equal(logging))
+
+		authenticator := s.Middleware[1].(middleware.Authenticator)
+		Expect(authenticator).To(Equal(auth))
+
+		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
+		Expect(databaseAllocator).To(Equal(dbAllocator))
+	})
+
+	It("routes GET /senders/{sender_id}/campaign_types", func() {
+		s := router.Get("GET /senders/{sender_id}/campaign_types").GetHandler().(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(campaigntypes.ListHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
 		requestLogging := s.Middleware[0].(middleware.RequestLogging)
@@ -64,9 +79,9 @@ var _ = Describe("CampaignTypesRouter", func() {
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 
-	It("routes GET /senders/{sender_id}/campaign_types", func() {
-		s := router.Get("GET /senders/{sender_id}/campaign_types").GetHandler().(stack.Stack)
-		Expect(s.Handler).To(BeAssignableToTypeOf(campaigntypes.ListHandler{}))
+	It("routes PUT /senders/{sender_id}/campaign_types/{campaign_type}", func() {
+		s := router.Get("PUT /senders/{sender_id}/campaign_types/{campaign_type_id}").GetHandler().(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(campaigntypes.UpdateHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
 		requestLogging := s.Middleware[0].(middleware.RequestLogging)
