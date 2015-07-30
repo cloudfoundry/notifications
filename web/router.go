@@ -149,8 +149,10 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 
 	// V2
 	sendersRepository := models.NewSendersRepository(uuid.NewV4)
+	campaignTypesRepository := models.NewCampaignTypesRepository(uuid.NewV4)
+
 	sendersCollection := collections.NewSendersCollection(sendersRepository)
-	campaignTypesCollection := collections.NewCampaignTypesCollection(models.NewCampaignTypesRepository(uuid.NewV4), sendersRepository)
+	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository)
 
 	v2 := NewRouterPool()
 	v2.AddMux(info.NewRouter(info.RouterConfig{

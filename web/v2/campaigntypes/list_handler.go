@@ -25,6 +25,19 @@ func (h ListHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 	splitURL := strings.Split(request.URL.Path, "/")
 	senderID := splitURL[len(splitURL)-2]
 
+	if senderID == "" {
+		writer.WriteHeader(http.StatusNotFound)
+		writer.Write([]byte(`{ "error": "missing sender id" }`))
+		return
+	}
+
+	clientID := context.Get("client_id")
+	if clientID == "" {
+		writer.WriteHeader(http.StatusUnauthorized)
+		writer.Write([]byte(`{ "error": "missing client id" }`))
+		return
+	}
+
 	database := context.Get("database").(models.DatabaseInterface)
 
 	campaignTypes, err := h.campaignTypes.List(database.Connection(), senderID, context.Get("client_id").(string))

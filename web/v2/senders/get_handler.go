@@ -25,13 +25,23 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 	splitURL := strings.Split(req.URL.Path, "/")
 	senderID := splitURL[len(splitURL)-1]
 
+	if senderID == "" {
+		w.WriteHeader(422)
+		fmt.Fprintf(w, `{ "error": "%s" }`, "missing sender id")
+		return
+	}
+
+	clientID := context.Get("client_id")
+	if clientID == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, `{ "error": "%s" }`, "missing client id")
+		return
+	}
+
 	database := context.Get("database").(models.DatabaseInterface)
 	sender, err := h.senders.Get(database.Connection(), senderID, context.Get("client_id").(string))
 	if err != nil {
 		switch err.(type) {
-		case collections.ValidationError:
-			w.WriteHeader(422)
-			w.Write([]byte(`{ "error": "missing sender id" }`))
 		case collections.NotFoundError:
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte(`{ "error": "sender not found" }`))

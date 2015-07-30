@@ -10,7 +10,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/helpers"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/campaigntypes"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/nu7hatch/gouuid"
@@ -70,10 +69,10 @@ var _ = Describe("UpdateHandler", func() {
 
 		campaignTypesCollection.UpdateCall.ReturnCampaignType = collections.CampaignType{
 			ID:          guid.String(),
-			Name:        helpers.AddressOfString("update-campaign-type"),
-			Description: helpers.AddressOfString("update-campaign-type-description"),
-			Critical:    helpers.AddressOfBool(true),
-			TemplateID:  helpers.AddressOfString(""),
+			Name:        "update-campaign-type",
+			Description: "update-campaign-type-description",
+			Critical:    true,
+			TemplateID:  "",
 			SenderID:    "some-sender-id",
 		}
 
@@ -92,10 +91,10 @@ var _ = Describe("UpdateHandler", func() {
 
 		Expect(campaignTypesCollection.UpdateCall.CampaignType).To(Equal(collections.CampaignType{
 			ID:          guid.String(),
-			Name:        helpers.AddressOfString("update-campaign-type"),
-			Description: helpers.AddressOfString("update-campaign-type-description"),
-			Critical:    helpers.AddressOfBool(true),
-			TemplateID:  helpers.AddressOfString(""),
+			Name:        "update-campaign-type",
+			Description: "update-campaign-type-description",
+			Critical:    true,
+			TemplateID:  "",
 			SenderID:    "some-sender-id",
 		}))
 

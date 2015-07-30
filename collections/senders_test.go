@@ -92,20 +92,6 @@ var _ = Describe("SendersCollection", func() {
 				}))
 			})
 
-			It("validates that a sender has a name", func() {
-				_, err := sendersCollection.Add(conn, collections.Sender{
-					ClientID: "some-client-id",
-				})
-				Expect(err).To(MatchError(collections.NewValidationError("missing sender name")))
-			})
-
-			It("validates that a sender has a client id", func() {
-				_, err := sendersCollection.Add(conn, collections.Sender{
-					Name: "some-sender",
-				})
-				Expect(err).To(MatchError(collections.NewValidationError("missing sender client_id")))
-			})
-
 			It("returns a persistence error when the sender cannot be found by client id and name", func() {
 				sendersRepository.InsertCall.ReturnSender = models.Sender{}
 				sendersRepository.InsertCall.Err = models.DuplicateRecordError{}
@@ -147,16 +133,6 @@ var _ = Describe("SendersCollection", func() {
 		})
 
 		Context("failure cases", func() {
-			It("validates that a sender id was specified", func() {
-				_, err := sendersCollection.Get(conn, "", "some-client-id")
-				Expect(err).To(MatchError(collections.NewValidationError("missing sender id")))
-			})
-
-			It("validates that a client id was specified", func() {
-				_, err := sendersCollection.Get(conn, "some-sender-id", "")
-				Expect(err).To(MatchError(collections.NewValidationError("missing client id")))
-			})
-
 			It("generates a not found error when the sender does not exist", func() {
 				sendersRepository.GetCall.Err = models.RecordNotFoundError("sender not found")
 

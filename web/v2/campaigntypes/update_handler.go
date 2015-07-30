@@ -44,10 +44,10 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	h.campaignTypes.Update(database.Connection(), collections.CampaignType{
 		ID:          campaignTypeID,
-		Name:        updateRequest.Name,
-		Description: updateRequest.Description,
-		Critical:    updateRequest.Critical,
-		TemplateID:  updateRequest.TemplateID,
+		Name:        *updateRequest.Name,
+		Description: *updateRequest.Description,
+		Critical:    *updateRequest.Critical,
+		TemplateID:  *updateRequest.TemplateID,
 		SenderID:    senderID,
 	}) //, context.Get("client_id").(string))
 

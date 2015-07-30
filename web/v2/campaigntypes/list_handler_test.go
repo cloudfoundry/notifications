@@ -7,7 +7,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/helpers"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/campaigntypes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -43,18 +42,18 @@ var _ = Describe("ListHandler", func() {
 		campaignTypesCollection.ListCall.ReturnCampaignTypeList = []collections.CampaignType{
 			{
 				ID:          "campaign-type-id-one",
-				Name:        helpers.AddressOfString("first-campaign-type"),
-				Description: helpers.AddressOfString("first-campaign-type-description"),
-				Critical:    helpers.AddressOfBool(false),
-				TemplateID:  helpers.AddressOfString(""),
+				Name:        "first-campaign-type",
+				Description: "first-campaign-type-description",
+				Critical:    false,
+				TemplateID:  "",
 				SenderID:    "some-sender-id",
 			},
 			{
 				ID:          "campaign-type-id-two",
-				Name:        helpers.AddressOfString("second-campaign-type"),
-				Description: helpers.AddressOfString("second-campaign-type-description"),
-				Critical:    helpers.AddressOfBool(true),
-				TemplateID:  helpers.AddressOfString(""),
+				Name:        "second-campaign-type",
+				Description: "second-campaign-type-description",
+				Critical:    true,
+				TemplateID:  "",
 				SenderID:    "some-sender-id",
 			},
 		}
@@ -113,6 +112,32 @@ var _ = Describe("ListHandler", func() {
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
 			Expect(writer.Body.String()).To(MatchJSON(`{
 				"error": "sender not found"
+			}`))
+		})
+
+		It("returns a 400 when the sender id is missing", func() {
+			var err error
+			request, err = http.NewRequest("GET", "/senders//campaign_types", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusNotFound))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+					"error": "missing sender id"
+			}`))
+		})
+
+		It("returns a 401 when the client id is missing", func() {
+			var err error
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			context.Set("client_id", "")
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusUnauthorized))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+					"error": "missing client id"
 			}`))
 		})
 

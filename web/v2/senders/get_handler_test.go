@@ -63,10 +63,6 @@ var _ = Describe("GetHandler", func() {
 
 	Context("failure cases", func() {
 		It("returns a 422 when the URL does not include a sender_id", func() {
-			sendersCollection.GetCall.Err = collections.ValidationError{
-				Err: errors.New("missing sender id"),
-			}
-
 			var err error
 			request, err = http.NewRequest("GET", "/senders/", nil)
 			Expect(err).NotTo(HaveOccurred())
@@ -75,6 +71,16 @@ var _ = Describe("GetHandler", func() {
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
 				"error": "missing sender id"
+			}`))
+		})
+
+		It("returns a 401 when the client id is missing", func() {
+			context.Set("client_id", "")
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusUnauthorized))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "missing client id"
 			}`))
 		})
 

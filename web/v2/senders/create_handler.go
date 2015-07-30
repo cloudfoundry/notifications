@@ -38,19 +38,27 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	}
 
 	database := context.Get("database").(models.DatabaseInterface)
+
+	if createRequest.Name == "" {
+		w.WriteHeader(422)
+		w.Write([]byte(`{ "error": "missing sender name" }`))
+		return
+	}
+
+	clientID := context.Get("client_id")
+	if clientID == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`{ "error": "missing client id" }`))
+		return
+	}
+
 	sender, err := h.senders.Add(database.Connection(), collections.Sender{
 		Name:     createRequest.Name,
 		ClientID: context.Get("client_id").(string),
 	})
 	if err != nil {
-		switch err.(type) {
-		case collections.ValidationError:
-			w.WriteHeader(422)
-			w.Write([]byte(`{ "error": "missing sender name" }`))
-		default:
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, `{ "error": "%s" }`, err)
-		}
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, `{ "error": "%s" }`, err)
 		return
 	}
 

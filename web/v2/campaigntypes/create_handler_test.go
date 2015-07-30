@@ -11,7 +11,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/helpers"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/campaigntypes"
 	"github.com/dgrijalva/jwt-go"
 	. "github.com/onsi/ginkgo"
@@ -58,10 +57,10 @@ var _ = Describe("CreateHandler", func() {
 		campaignTypesCollection = fakes.NewCampaignTypesCollection()
 		campaignTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "some-campaign-type-id",
-			Name:        helpers.AddressOfString("some-campaign-type"),
-			Description: helpers.AddressOfString("some-campaign-type-description"),
-			Critical:    helpers.AddressOfBool(false),
-			TemplateID:  helpers.AddressOfString("some-template-id"),
+			Name:        "some-campaign-type",
+			Description: "some-campaign-type-description",
+			Critical:    false,
+			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
 		}
 
@@ -83,10 +82,10 @@ var _ = Describe("CreateHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(campaignTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
-			Name:        helpers.AddressOfString("some-campaign-type"),
-			Description: helpers.AddressOfString("some-campaign-type-description"),
-			Critical:    helpers.AddressOfBool(false),
-			TemplateID:  helpers.AddressOfString("some-template-id"),
+			Name:        "some-campaign-type",
+			Description: "some-campaign-type-description",
+			Critical:    false,
+			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
 		}))
 		Expect(campaignTypesCollection.AddCall.Conn).To(Equal(database.Conn))
@@ -102,77 +101,6 @@ var _ = Describe("CreateHandler", func() {
 		}`))
 	})
 
-	It("allows the critical field to be omitted", func() {
-		requestBody, err := json.Marshal(map[string]string{
-			"name":        "some-campaign-type",
-			"description": "some-campaign-type-description",
-			"template_id": "some-template-id",
-		})
-		Expect(err).NotTo(HaveOccurred())
-
-		request, err = http.NewRequest("POST", "/senders/some-sender-id/campaign_types", bytes.NewBuffer(requestBody))
-		Expect(err).NotTo(HaveOccurred())
-
-		handler.ServeHTTP(writer, request, context)
-
-		Expect(campaignTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
-			Name:        helpers.AddressOfString("some-campaign-type"),
-			Description: helpers.AddressOfString("some-campaign-type-description"),
-			Critical:    nil,
-			TemplateID:  helpers.AddressOfString("some-template-id"),
-			SenderID:    "some-sender-id",
-		}))
-
-		Expect(writer.Code).To(Equal(http.StatusCreated))
-		Expect(writer.Body.String()).To(MatchJSON(`{
-			"id": "some-campaign-type-id",
-			"name": "some-campaign-type",
-			"description": "some-campaign-type-description",
-			"critical": false,
-			"template_id": "some-template-id"
-		}`))
-	})
-
-	It("allows the template_id field to be omitted", func() {
-		campaignTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
-			ID:          "some-campaign-type-id",
-			Name:        helpers.AddressOfString("some-campaign-type"),
-			Description: helpers.AddressOfString("some-campaign-type-description"),
-			Critical:    helpers.AddressOfBool(false),
-			TemplateID:  helpers.AddressOfString(""),
-			SenderID:    "some-sender-id",
-		}
-
-		requestBody, err := json.Marshal(map[string]interface{}{
-			"name":        "some-campaign-type",
-			"description": "some-campaign-type-description",
-			"critical":    false,
-		})
-		Expect(err).NotTo(HaveOccurred())
-
-		request, err = http.NewRequest("POST", "/senders/some-sender-id/campaign_types", bytes.NewBuffer(requestBody))
-		Expect(err).NotTo(HaveOccurred())
-
-		handler.ServeHTTP(writer, request, context)
-
-		Expect(campaignTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
-			Name:        helpers.AddressOfString("some-campaign-type"),
-			Description: helpers.AddressOfString("some-campaign-type-description"),
-			Critical:    helpers.AddressOfBool(false),
-			TemplateID:  nil,
-			SenderID:    "some-sender-id",
-		}))
-
-		Expect(writer.Code).To(Equal(http.StatusCreated))
-		Expect(writer.Body.String()).To(MatchJSON(`{
-			"id": "some-campaign-type-id",
-			"name": "some-campaign-type",
-			"description": "some-campaign-type-description",
-			"critical": false,
-			"template_id": ""
-		}`))
-	})
-
 	It("requires critical_notifications.write to create a critical campaign type", func() {
 		tokenClaims["scope"] = []string{"notifications.write", "critical_notifications.write"}
 		rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
@@ -184,10 +112,10 @@ var _ = Describe("CreateHandler", func() {
 
 		campaignTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "some-campaign-type-id",
-			Name:        helpers.AddressOfString("some-campaign-type"),
-			Description: helpers.AddressOfString("some-campaign-type-description"),
-			Critical:    helpers.AddressOfBool(true),
-			TemplateID:  helpers.AddressOfString("some-template-id"),
+			Name:        "some-campaign-type",
+			Description: "some-campaign-type-description",
+			Critical:    true,
+			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
 		}
 
@@ -205,10 +133,10 @@ var _ = Describe("CreateHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(campaignTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
-			Name:        helpers.AddressOfString("some-campaign-type"),
-			Description: helpers.AddressOfString("some-campaign-type-description"),
-			Critical:    helpers.AddressOfBool(true),
-			TemplateID:  helpers.AddressOfString("some-template-id"),
+			Name:        "some-campaign-type",
+			Description: "some-campaign-type-description",
+			Critical:    true,
+			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
 		}))
 
@@ -226,10 +154,10 @@ var _ = Describe("CreateHandler", func() {
 		It("returns a 403 when the client without the critical_notifications.write scope attempts to create a critical campaign type", func() {
 			campaignTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 				ID:          "some-campaign-type-id",
-				Name:        helpers.AddressOfString("some-campaign-type"),
-				Description: helpers.AddressOfString("some-campaign-type-description"),
-				Critical:    helpers.AddressOfBool(true),
-				TemplateID:  helpers.AddressOfString("some-template-id"),
+				Name:        "some-campaign-type",
+				Description: "some-campaign-type-description",
+				Critical:    true,
+				TemplateID:  "some-template-id",
 				SenderID:    "some-sender-id",
 			}
 
@@ -261,24 +189,39 @@ var _ = Describe("CreateHandler", func() {
 			}`))
 		})
 
-		It("returns a 422 when the model does not save", func() {
+		It("returns a 422 when name is omitted", func() {
 			requestBody, err := json.Marshal(map[string]interface{}{
-				"description": "missing-name",
+				"description": "description",
 				"critical":    false,
-				"template_id": "some-template-id",
+				"template_id": "",
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			request, err = http.NewRequest("POST", "/senders/some-sender-id/campaign_types", bytes.NewBuffer(requestBody))
 			Expect(err).NotTo(HaveOccurred())
 
-			campaignTypesCollection.AddCall.Err = collections.NewValidationError("bananas are delicious")
-
 			handler.ServeHTTP(writer, request, context)
-
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "bananas are delicious"
+				"error": "missing campaign type name"
+			}`))
+		})
+
+		It("returns a 422 when description is omitted", func() {
+			requestBody, err := json.Marshal(map[string]interface{}{
+				"name":        "some name",
+				"critical":    false,
+				"template_id": "",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			request, err = http.NewRequest("POST", "/senders/some-sender-id/campaign_types", bytes.NewBuffer(requestBody))
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(422))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "missing campaign type description"
 			}`))
 		})
 
@@ -291,6 +234,7 @@ var _ = Describe("CreateHandler", func() {
 				"error": "BOOM!"
 			}`))
 		})
+
 		It("returns a 404 when the sender could not be found", func() {
 			campaignTypesCollection.AddCall.Err = collections.NotFoundError{
 				Err:     errors.New("THIS WAS PRODUCED BY ROBOTS"),

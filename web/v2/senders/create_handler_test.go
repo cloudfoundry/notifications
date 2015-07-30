@@ -83,10 +83,6 @@ var _ = Describe("CreateHandler", func() {
 		})
 
 		It("returns a 422 when the request does not include a sender name", func() {
-			sendersCollection.AddCall.Err = collections.ValidationError{
-				Err: errors.New("missing sender name"),
-			}
-
 			var err error
 			request, err = http.NewRequest("POST", "/senders", strings.NewReader("{}"))
 			Expect(err).NotTo(HaveOccurred())
@@ -95,6 +91,16 @@ var _ = Describe("CreateHandler", func() {
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
 				"error": "missing sender name"
+			}`))
+		})
+
+		It("returns a 401 when the request does not include a client id", func() {
+			context.Set("client_id", "")
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusUnauthorized))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "missing client id"
 			}`))
 		})
 

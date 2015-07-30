@@ -26,14 +26,30 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 	campaignTypeID := splitURL[len(splitURL)-1]
 	senderID := splitURL[len(splitURL)-3]
 
+	if senderID == "" {
+		writer.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(writer, `{"error": %q}`, "missing sender id")
+		return
+	}
+
+	if campaignTypeID == "" {
+		writer.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(writer, `{"error": %q}`, "missing campaign type id")
+		return
+	}
+
+	clientID := context.Get("client_id")
+	if clientID == "" {
+		writer.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(writer, `{"error": %q}`, "missing client id")
+		return
+	}
+
 	database := context.Get("database").(models.DatabaseInterface)
 	campaignType, err := h.campaignTypes.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
 	if err != nil {
 		var errorMessage string
 		switch e := err.(type) {
-		case collections.ValidationError:
-			errorMessage = e.Message
-			writer.WriteHeader(http.StatusBadRequest)
 		case collections.NotFoundError:
 			errorMessage = e.Message
 			writer.WriteHeader(http.StatusNotFound)

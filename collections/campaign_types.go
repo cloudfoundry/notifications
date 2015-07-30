@@ -8,10 +8,10 @@ import (
 
 type CampaignType struct {
 	ID          string
-	Name        *string
-	Description *string
-	Critical    *bool
-	TemplateID  *string
+	Name        string
+	Description string
+	Critical    bool
+	TemplateID  string
 	SenderID    string
 }
 
@@ -36,7 +36,6 @@ func NewCampaignTypesCollection(nr campaignTypesRepository, sr sendersRepository
 
 func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, campaignType CampaignType, clientID string) (CampaignType, error) {
 	senderModel, err := nc.sendersRepository.Get(conn, campaignType.SenderID)
-
 	if err != nil {
 		switch e := err.(type) {
 		case models.RecordNotFoundError:
@@ -53,37 +52,17 @@ func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, campaignT
 		return CampaignType{}, NewNotFoundError(fmt.Sprintf("Sender %s not found", campaignType.SenderID))
 	}
 
-	// Enforce required fields
-	if campaignType.Name == nil || *campaignType.Name == "" {
-		return CampaignType{}, NewValidationError("missing campaign type name")
-	}
-
-	if campaignType.Description == nil || *campaignType.Description == "" {
-		return CampaignType{}, NewValidationError("missing campaign type description")
-	}
-
-	// Populate optional fields with default values
-	if campaignType.Critical == nil {
-		defaultCriticalValue := false
-		campaignType.Critical = &defaultCriticalValue
-	}
-
-	if campaignType.TemplateID == nil {
-		defaultTemplateIDValue := ""
-		campaignType.TemplateID = &defaultTemplateIDValue
-	}
-
 	returnCampaignType, err := nc.campaignTypesRepository.Insert(conn, models.CampaignType{
-		Name:        *campaignType.Name,
-		Description: *campaignType.Description,
-		Critical:    *campaignType.Critical,
-		TemplateID:  *campaignType.TemplateID,
+		Name:        campaignType.Name,
+		Description: campaignType.Description,
+		Critical:    campaignType.Critical,
+		TemplateID:  campaignType.TemplateID,
 		SenderID:    campaignType.SenderID,
 	})
 	if err != nil {
 		switch err.(type) {
 		case models.DuplicateRecordError:
-			returnCampaignType, err = nc.campaignTypesRepository.GetBySenderIDAndName(conn, campaignType.SenderID, *campaignType.Name)
+			returnCampaignType, err = nc.campaignTypesRepository.GetBySenderIDAndName(conn, campaignType.SenderID, campaignType.Name)
 			if err != nil {
 				return CampaignType{}, PersistenceError{err}
 			}
@@ -94,25 +73,16 @@ func (nc CampaignTypesCollection) Add(conn models.ConnectionInterface, campaignT
 
 	return CampaignType{
 		ID:          returnCampaignType.ID,
-		Name:        &returnCampaignType.Name,
-		Description: &returnCampaignType.Description,
-		Critical:    &returnCampaignType.Critical,
-		TemplateID:  &returnCampaignType.TemplateID,
+		Name:        returnCampaignType.Name,
+		Description: returnCampaignType.Description,
+		Critical:    returnCampaignType.Critical,
+		TemplateID:  returnCampaignType.TemplateID,
 		SenderID:    returnCampaignType.SenderID,
 	}, err
 }
 
 func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]CampaignType, error) {
-	if senderID == "" {
-		return []CampaignType{}, NewValidationError("missing sender id")
-	}
-
-	if clientID == "" {
-		return []CampaignType{}, NewValidationError("missing client id")
-	}
-
 	senderModel, err := nc.sendersRepository.Get(conn, senderID)
-
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
@@ -139,10 +109,10 @@ func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID
 	for _, model := range modelList {
 		campaignType := CampaignType{
 			ID:          model.ID,
-			Name:        &model.Name,
-			Description: &model.Description,
-			Critical:    &model.Critical,
-			TemplateID:  &model.TemplateID,
+			Name:        model.Name,
+			Description: model.Description,
+			Critical:    model.Critical,
+			TemplateID:  model.TemplateID,
 			SenderID:    model.SenderID,
 		}
 		campaignTypeList = append(campaignTypeList, campaignType)
@@ -152,18 +122,6 @@ func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID
 }
 
 func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) (CampaignType, error) {
-	if campaignTypeID == "" {
-		return CampaignType{}, NewValidationError("missing campaign type id")
-	}
-
-	if senderID == "" {
-		return CampaignType{}, NewValidationError("missing sender id")
-	}
-
-	if clientID == "" {
-		return CampaignType{}, NewValidationError("missing client id")
-	}
-
 	sender, err := nc.sendersRepository.Get(conn, senderID)
 	if err != nil {
 		switch err.(type) {
@@ -197,10 +155,10 @@ func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignT
 
 	return CampaignType{
 		ID:          campaignType.ID,
-		Name:        &campaignType.Name,
-		Description: &campaignType.Description,
-		Critical:    &campaignType.Critical,
-		TemplateID:  &campaignType.TemplateID,
+		Name:        campaignType.Name,
+		Description: campaignType.Description,
+		Critical:    campaignType.Critical,
+		TemplateID:  campaignType.TemplateID,
 		SenderID:    campaignType.SenderID,
 	}, nil
 }

@@ -5,7 +5,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/helpers"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -35,10 +34,10 @@ var _ = Describe("CampaignTypesCollection", func() {
 
 		BeforeEach(func() {
 			campaignType = collections.CampaignType{
-				Name:        helpers.AddressOfString("My cool campaign type"),
-				Description: helpers.AddressOfString("description"),
-				Critical:    helpers.AddressOfBool(false),
-				TemplateID:  helpers.AddressOfString(""),
+				Name:        "My cool campaign type",
+				Description: "description",
+				Critical:    false,
+				TemplateID:  "",
 				SenderID:    "mysender",
 			}
 
@@ -56,45 +55,11 @@ var _ = Describe("CampaignTypesCollection", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(returnedCampaignType.ID).To(Equal("generated-id"))
 			Expect(fakeCampaignTypesRepository.InsertCall.Connection).To(Equal(fakeDatabaseConnection))
-			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Name).To(Equal(*campaignType.Name))
-			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Description).To(Equal(*campaignType.Description))
-			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Critical).To(Equal(*campaignType.Critical))
-			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.TemplateID).To(Equal(*campaignType.TemplateID))
+			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Name).To(Equal(campaignType.Name))
+			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Description).To(Equal(campaignType.Description))
+			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Critical).To(Equal(campaignType.Critical))
+			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.TemplateID).To(Equal(campaignType.TemplateID))
 			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.SenderID).To(Equal(campaignType.SenderID))
-		})
-
-		It("requires a name to be specified", func() {
-			campaignType = collections.CampaignType{
-				Description: helpers.AddressOfString("description"),
-				Critical:    helpers.AddressOfBool(false),
-				TemplateID:  helpers.AddressOfString(""),
-				SenderID:    "mysender",
-			}
-			fakeSendersRepository.GetCall.ReturnSender = models.Sender{
-				ID:       "mysender",
-				Name:     "some-sender",
-				ClientID: "client_id",
-			}
-
-			_, err := campaignTypesCollection.Add(fakeDatabaseConnection, campaignType, "client_id")
-			Expect(err).To(MatchError(collections.NewValidationError("missing campaign type name")))
-		})
-
-		It("requires a description to be specified", func() {
-			campaignType = collections.CampaignType{
-				Name:       helpers.AddressOfString("some-campaign-type"),
-				Critical:   helpers.AddressOfBool(false),
-				TemplateID: helpers.AddressOfString(""),
-				SenderID:   "mysender",
-			}
-			fakeSendersRepository.GetCall.ReturnSender = models.Sender{
-				ID:       "mysender",
-				Name:     "some-sender",
-				ClientID: "client_id",
-			}
-
-			_, err := campaignTypesCollection.Add(fakeDatabaseConnection, campaignType, "client_id")
-			Expect(err).To(MatchError(collections.NewValidationError("missing campaign type description")))
 		})
 
 		Context("failure cases", func() {
@@ -171,16 +136,6 @@ var _ = Describe("CampaignTypesCollection", func() {
 		})
 
 		Context("failure cases", func() {
-			It("validates that a sender id was specified", func() {
-				_, err := campaignTypesCollection.List(fakeDatabaseConnection, "", "some-client-id")
-				Expect(err).To(MatchError(collections.NewValidationError("missing sender id")))
-			})
-
-			It("validates that a client id was specified", func() {
-				_, err := campaignTypesCollection.List(fakeDatabaseConnection, "some-sender-id", "")
-				Expect(err).To(MatchError(collections.NewValidationError("missing client id")))
-			})
-
 			It("generates a not found error when the sender does not exist", func() {
 				fakeSendersRepository.GetCall.Err = models.RecordNotFoundError("sender not found")
 
@@ -235,25 +190,10 @@ var _ = Describe("CampaignTypesCollection", func() {
 
 			campaignType, err := campaignTypesCollection.Get(fakeDatabaseConnection, "a-campaign-type-id", "senderID", "some-client-id")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(campaignType.Name).To(Equal(helpers.AddressOfString("typename")))
+			Expect(campaignType.Name).To(Equal("typename"))
 		})
 
 		Context("failure cases", func() {
-			It("validates that a campaign type id was specified", func() {
-				_, err := campaignTypesCollection.Get(fakeDatabaseConnection, "", "some-sender-id", "some-client-id")
-				Expect(err).To(MatchError(collections.NewValidationError("missing campaign type id")))
-			})
-
-			It("validates that a sender id was specified", func() {
-				_, err := campaignTypesCollection.Get(fakeDatabaseConnection, "some-campaign-type-id", "", "some-client-id")
-				Expect(err).To(MatchError(collections.NewValidationError("missing sender id")))
-			})
-
-			It("validates that a client id was specified", func() {
-				_, err := campaignTypesCollection.Get(fakeDatabaseConnection, "some-campaign-type-id", "some-sender-id", "")
-				Expect(err).To(MatchError(collections.NewValidationError("missing client id")))
-			})
-
 			It("returns a not found error if the campaign type does not exist", func() {
 				fakeCampaignTypesRepository.GetReturn.Err = models.RecordNotFoundError("campaign type not found")
 				fakeSendersRepository.GetCall.ReturnSender = models.Sender{
@@ -342,10 +282,10 @@ var _ = Describe("CampaignTypesCollection", func() {
 		BeforeEach(func() {
 			campaignType = collections.CampaignType{
 				ID:          "existing-campaign-type-id",
-				Name:        helpers.AddressOfString("My cool campaign type"),
-				Description: helpers.AddressOfString("description"),
-				Critical:    helpers.AddressOfBool(false),
-				TemplateID:  helpers.AddressOfString(""),
+				Name:        "My cool campaign type",
+				Description: "description",
+				Critical:    false,
+				TemplateID:  "",
 				SenderID:    "mysender",
 			}
 		})

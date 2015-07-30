@@ -34,10 +34,10 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	senderID := splitURL[len(splitURL)-2]
 
 	var createRequest struct {
-		Name        *string `json:"name"`
-		Description *string `json:"description"`
-		Critical    *bool   `json:"critical"`
-		TemplateID  *string `json:"template_id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Critical    bool   `json:"critical"`
+		TemplateID  string `json:"template_id"`
 	}
 
 	err := json.NewDecoder(req.Body).Decode(&createRequest)
@@ -47,7 +47,19 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
-	if createRequest.Critical != nil && *createRequest.Critical == true {
+	if createRequest.Name == "" {
+		w.WriteHeader(422)
+		fmt.Fprintf(w, `{ "error": %q }`, "missing campaign type name")
+		return
+	}
+
+	if createRequest.Description == "" {
+		w.WriteHeader(422)
+		fmt.Fprintf(w, `{"error": %q}`, "missing campaign type description")
+		return
+	}
+
+	if createRequest.Critical == true {
 		hasCriticalWrite := false
 		token := context.Get("token").(*jwt.Token)
 		for _, scope := range token.Claims["scope"].([]interface{}) {
@@ -58,7 +70,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 		if hasCriticalWrite == false {
 			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintf(w, `{ "error": "%s" }`, http.StatusText(http.StatusForbidden))
+			fmt.Fprintf(w, `{ "error": %q }`, http.StatusText(http.StatusForbidden))
 			return
 		}
 	}
@@ -75,9 +87,6 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	if err != nil {
 		var errorMessage string
 		switch e := err.(type) {
-		case collections.ValidationError:
-			w.WriteHeader(422)
-			errorMessage = e.Message
 		case collections.NotFoundError:
 			w.WriteHeader(404)
 			errorMessage = e.Message
