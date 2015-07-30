@@ -5,6 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/helpers"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -13,10 +14,10 @@ import (
 
 var _ = Describe("CampaignTypesCollection", func() {
 	var (
-		campaignTypesCollection collections.CampaignTypesCollection
+		campaignTypesCollection     collections.CampaignTypesCollection
 		fakeCampaignTypesRepository *fakes.CampaignTypesRepository
-		fakeSendersRepository           *fakes.SendersRepository
-		fakeDatabaseConnection          *fakes.Connection
+		fakeSendersRepository       *fakes.SendersRepository
+		fakeDatabaseConnection      *fakes.Connection
 	)
 
 	BeforeEach(func() {
@@ -34,10 +35,10 @@ var _ = Describe("CampaignTypesCollection", func() {
 
 		BeforeEach(func() {
 			campaignType = collections.CampaignType{
-				Name:        "My cool campaign type",
-				Description: "description",
-				Critical:    false,
-				TemplateID:  "",
+				Name:        helpers.AddressOfString("My cool campaign type"),
+				Description: helpers.AddressOfString("description"),
+				Critical:    helpers.AddressOfBool(false),
+				TemplateID:  helpers.AddressOfString(""),
 				SenderID:    "mysender",
 			}
 
@@ -55,18 +56,18 @@ var _ = Describe("CampaignTypesCollection", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(returnedCampaignType.ID).To(Equal("generated-id"))
 			Expect(fakeCampaignTypesRepository.InsertCall.Connection).To(Equal(fakeDatabaseConnection))
-			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Name).To(Equal(campaignType.Name))
-			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Description).To(Equal(campaignType.Description))
-			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Critical).To(Equal(campaignType.Critical))
-			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.TemplateID).To(Equal(campaignType.TemplateID))
+			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Name).To(Equal(*campaignType.Name))
+			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Description).To(Equal(*campaignType.Description))
+			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Critical).To(Equal(*campaignType.Critical))
+			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.TemplateID).To(Equal(*campaignType.TemplateID))
 			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.SenderID).To(Equal(campaignType.SenderID))
 		})
 
 		It("requires a name to be specified", func() {
 			campaignType = collections.CampaignType{
-				Description: "description",
-				Critical:    false,
-				TemplateID:  "",
+				Description: helpers.AddressOfString("description"),
+				Critical:    helpers.AddressOfBool(false),
+				TemplateID:  helpers.AddressOfString(""),
 				SenderID:    "mysender",
 			}
 			fakeSendersRepository.GetCall.ReturnSender = models.Sender{
@@ -81,9 +82,9 @@ var _ = Describe("CampaignTypesCollection", func() {
 
 		It("requires a description to be specified", func() {
 			campaignType = collections.CampaignType{
-				Name:       "some-campaign-type",
-				Critical:   false,
-				TemplateID: "",
+				Name:       helpers.AddressOfString("some-campaign-type"),
+				Critical:   helpers.AddressOfBool(false),
+				TemplateID: helpers.AddressOfString(""),
 				SenderID:   "mysender",
 			}
 			fakeSendersRepository.GetCall.ReturnSender = models.Sender{
@@ -234,7 +235,7 @@ var _ = Describe("CampaignTypesCollection", func() {
 
 			campaignType, err := campaignTypesCollection.Get(fakeDatabaseConnection, "a-campaign-type-id", "senderID", "some-client-id")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(campaignType.Name).To(Equal("typename"))
+			Expect(campaignType.Name).To(Equal(helpers.AddressOfString("typename")))
 		})
 
 		Context("failure cases", func() {

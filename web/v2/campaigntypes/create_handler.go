@@ -33,10 +33,10 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	senderID := splitURL[len(splitURL)-2]
 
 	var createRequest struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		Critical    bool   `json:"critical"`
-		TemplateID  string `json:"template_id"`
+		Name        *string `json:"name"`
+		Description *string `json:"description"`
+		Critical    *bool   `json:"critical"`
+		TemplateID  *string `json:"template_id"`
 	}
 
 	err := json.NewDecoder(req.Body).Decode(&createRequest)
@@ -46,7 +46,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
-	if createRequest.Critical == true {
+	if createRequest.Critical != nil && *createRequest.Critical == true {
 		hasCriticalWrite := false
 		token := context.Get("token").(*jwt.Token)
 		for _, scope := range token.Claims["scope"].([]interface{}) {

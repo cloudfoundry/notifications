@@ -11,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/helpers"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/campaigntypes"
 	"github.com/dgrijalva/jwt-go"
 	. "github.com/onsi/ginkgo"
@@ -20,14 +21,14 @@ import (
 
 var _ = Describe("CreateHandler", func() {
 	var (
-		handler                     campaigntypes.CreateHandler
+		handler                 campaigntypes.CreateHandler
 		campaignTypesCollection *fakes.CampaignTypesCollection
-		context                     stack.Context
-		writer                      *httptest.ResponseRecorder
-		request                     *http.Request
-		database                    *fakes.Database
-		tokenHeader                 map[string]interface{}
-		tokenClaims                 map[string]interface{}
+		context                 stack.Context
+		writer                  *httptest.ResponseRecorder
+		request                 *http.Request
+		database                *fakes.Database
+		tokenHeader             map[string]interface{}
+		tokenClaims             map[string]interface{}
 	)
 
 	BeforeEach(func() {
@@ -57,10 +58,10 @@ var _ = Describe("CreateHandler", func() {
 		campaignTypesCollection = fakes.NewCampaignTypesCollection()
 		campaignTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "some-campaign-type-id",
-			Name:        "some-campaign-type",
-			Description: "some-campaign-type-description",
-			Critical:    false,
-			TemplateID:  "some-template-id",
+			Name:        helpers.AddressOfString("some-campaign-type"),
+			Description: helpers.AddressOfString("some-campaign-type-description"),
+			Critical:    helpers.AddressOfBool(false),
+			TemplateID:  helpers.AddressOfString("some-template-id"),
 			SenderID:    "some-sender-id",
 		}
 
@@ -82,10 +83,10 @@ var _ = Describe("CreateHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(campaignTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
-			Name:        "some-campaign-type",
-			Description: "some-campaign-type-description",
-			Critical:    false,
-			TemplateID:  "some-template-id",
+			Name:        helpers.AddressOfString("some-campaign-type"),
+			Description: helpers.AddressOfString("some-campaign-type-description"),
+			Critical:    helpers.AddressOfBool(false),
+			TemplateID:  helpers.AddressOfString("some-template-id"),
 			SenderID:    "some-sender-id",
 		}))
 		Expect(campaignTypesCollection.AddCall.Conn).To(Equal(database.Conn))
@@ -115,10 +116,10 @@ var _ = Describe("CreateHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(campaignTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
-			Name:        "some-campaign-type",
-			Description: "some-campaign-type-description",
-			Critical:    false,
-			TemplateID:  "some-template-id",
+			Name:        helpers.AddressOfString("some-campaign-type"),
+			Description: helpers.AddressOfString("some-campaign-type-description"),
+			Critical:    nil,
+			TemplateID:  helpers.AddressOfString("some-template-id"),
 			SenderID:    "some-sender-id",
 		}))
 
@@ -135,10 +136,10 @@ var _ = Describe("CreateHandler", func() {
 	It("allows the template_id field to be omitted", func() {
 		campaignTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "some-campaign-type-id",
-			Name:        "some-campaign-type",
-			Description: "some-campaign-type-description",
-			Critical:    false,
-			TemplateID:  "",
+			Name:        helpers.AddressOfString("some-campaign-type"),
+			Description: helpers.AddressOfString("some-campaign-type-description"),
+			Critical:    helpers.AddressOfBool(false),
+			TemplateID:  helpers.AddressOfString(""),
 			SenderID:    "some-sender-id",
 		}
 
@@ -155,10 +156,10 @@ var _ = Describe("CreateHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(campaignTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
-			Name:        "some-campaign-type",
-			Description: "some-campaign-type-description",
-			Critical:    false,
-			TemplateID:  "",
+			Name:        helpers.AddressOfString("some-campaign-type"),
+			Description: helpers.AddressOfString("some-campaign-type-description"),
+			Critical:    helpers.AddressOfBool(false),
+			TemplateID:  nil,
 			SenderID:    "some-sender-id",
 		}))
 
@@ -183,10 +184,10 @@ var _ = Describe("CreateHandler", func() {
 
 		campaignTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "some-campaign-type-id",
-			Name:        "some-campaign-type",
-			Description: "some-campaign-type-description",
-			Critical:    true,
-			TemplateID:  "some-template-id",
+			Name:        helpers.AddressOfString("some-campaign-type"),
+			Description: helpers.AddressOfString("some-campaign-type-description"),
+			Critical:    helpers.AddressOfBool(true),
+			TemplateID:  helpers.AddressOfString("some-template-id"),
 			SenderID:    "some-sender-id",
 		}
 
@@ -204,10 +205,10 @@ var _ = Describe("CreateHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(campaignTypesCollection.AddCall.CampaignType).To(Equal(collections.CampaignType{
-			Name:        "some-campaign-type",
-			Description: "some-campaign-type-description",
-			Critical:    true,
-			TemplateID:  "some-template-id",
+			Name:        helpers.AddressOfString("some-campaign-type"),
+			Description: helpers.AddressOfString("some-campaign-type-description"),
+			Critical:    helpers.AddressOfBool(true),
+			TemplateID:  helpers.AddressOfString("some-template-id"),
 			SenderID:    "some-sender-id",
 		}))
 
@@ -225,10 +226,10 @@ var _ = Describe("CreateHandler", func() {
 		It("returns a 403 when the client without the critical_notifications.write scope attempts to create a critical campaign type", func() {
 			campaignTypesCollection.AddCall.ReturnCampaignType = collections.CampaignType{
 				ID:          "some-campaign-type-id",
-				Name:        "some-campaign-type",
-				Description: "some-campaign-type-description",
-				Critical:    true,
-				TemplateID:  "some-template-id",
+				Name:        helpers.AddressOfString("some-campaign-type"),
+				Description: helpers.AddressOfString("some-campaign-type-description"),
+				Critical:    helpers.AddressOfBool(true),
+				TemplateID:  helpers.AddressOfString("some-template-id"),
 				SenderID:    "some-sender-id",
 			}
 
@@ -292,7 +293,7 @@ var _ = Describe("CreateHandler", func() {
 		})
 		It("returns a 404 when the sender could not be found", func() {
 			campaignTypesCollection.AddCall.Err = collections.NotFoundError{
-				Err: errors.New("THIS WAS PRODUCED BY ROBOTS"),
+				Err:     errors.New("THIS WAS PRODUCED BY ROBOTS"),
 				Message: "This is for humans.",
 			}
 

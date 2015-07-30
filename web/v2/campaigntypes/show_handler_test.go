@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/helpers"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/campaigntypes"
 	"github.com/ryanmoran/stack"
 
@@ -16,12 +17,12 @@ import (
 
 var _ = Describe("ShowHandler", func() {
 	var (
-		handler                     campaigntypes.ShowHandler
+		handler                 campaigntypes.ShowHandler
 		campaignTypesCollection *fakes.CampaignTypesCollection
-		context                     stack.Context
-		writer                      *httptest.ResponseRecorder
-		request                     *http.Request
-		database                    *fakes.Database
+		context                 stack.Context
+		writer                  *httptest.ResponseRecorder
+		request                 *http.Request
+		database                *fakes.Database
 	)
 
 	BeforeEach(func() {
@@ -42,10 +43,10 @@ var _ = Describe("ShowHandler", func() {
 	It("returns information on a given campaign type", func() {
 		campaignTypesCollection.GetCall.ReturnCampaignType = collections.CampaignType{
 			ID:          "campaign-type-id-one",
-			Name:        "first-campaign-type",
-			Description: "first-campaign-type-description",
-			Critical:    false,
-			TemplateID:  "",
+			Name:        helpers.AddressOfString("first-campaign-type"),
+			Description: helpers.AddressOfString("first-campaign-type-description"),
+			Critical:    helpers.AddressOfBool(false),
+			TemplateID:  helpers.AddressOfString(""),
 			SenderID:    "some-sender-id",
 		}
 		var err error

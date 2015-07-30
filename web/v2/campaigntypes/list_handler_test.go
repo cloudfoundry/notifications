@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/helpers"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/campaigntypes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,12 +16,12 @@ import (
 
 var _ = Describe("ListHandler", func() {
 	var (
-		handler                     campaigntypes.ListHandler
+		handler                 campaigntypes.ListHandler
 		campaignTypesCollection *fakes.CampaignTypesCollection
-		context                     stack.Context
-		writer                      *httptest.ResponseRecorder
-		request                     *http.Request
-		database                    *fakes.Database
+		context                 stack.Context
+		writer                  *httptest.ResponseRecorder
+		request                 *http.Request
+		database                *fakes.Database
 	)
 
 	BeforeEach(func() {
@@ -42,18 +43,18 @@ var _ = Describe("ListHandler", func() {
 		campaignTypesCollection.ListCall.ReturnCampaignTypeList = []collections.CampaignType{
 			{
 				ID:          "campaign-type-id-one",
-				Name:        "first-campaign-type",
-				Description: "first-campaign-type-description",
-				Critical:    false,
-				TemplateID:  "",
+				Name:        helpers.AddressOfString("first-campaign-type"),
+				Description: helpers.AddressOfString("first-campaign-type-description"),
+				Critical:    helpers.AddressOfBool(false),
+				TemplateID:  helpers.AddressOfString(""),
 				SenderID:    "some-sender-id",
 			},
 			{
 				ID:          "campaign-type-id-two",
-				Name:        "second-campaign-type",
-				Description: "second-campaign-type-description",
-				Critical:    true,
-				TemplateID:  "",
+				Name:        helpers.AddressOfString("second-campaign-type"),
+				Description: helpers.AddressOfString("second-campaign-type-description"),
+				Critical:    helpers.AddressOfBool(true),
+				TemplateID:  helpers.AddressOfString(""),
 				SenderID:    "some-sender-id",
 			},
 		}
