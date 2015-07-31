@@ -181,4 +181,67 @@ var _ = Describe("CampaignTypesRepo", func() {
 
 		})
 	})
+
+	Describe("Update", func() {
+		It("Updates a campaign type in the database", func() {
+			exisitngCampaignType, err := repo.Insert(conn, models.CampaignType{
+				Name:        "campaign-type",
+				Description: "campaign-type-description",
+				Critical:    false,
+				TemplateID:  "some-template-id",
+				SenderID:    "some-sender-id",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			returnCampaignType, err := repo.Update(conn, models.CampaignType{
+				ID:          exisitngCampaignType.ID,
+				Name:        "updated name",
+				Description: "updated description",
+				Critical:    false,
+				TemplateID:  "updated template id",
+				SenderID:    "some-sender-id",
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(returnCampaignType.ID).To(Equal(exisitngCampaignType.ID))
+			Expect(returnCampaignType.Name).To(Equal("updated name"))
+
+			campaignType, err := repo.Get(conn, exisitngCampaignType.ID)
+			Expect(campaignType.Name).To(Equal("updated name"))
+			Expect(campaignType.Description).To(Equal("updated description"))
+			Expect(campaignType.Critical).To(Equal(false))
+			Expect(campaignType.TemplateID).To(Equal("updated template id"))
+		})
+
+		Context("failure cases", func() {
+			It("Provides a helpful error when no records are updated", func() {
+				_, err := repo.Update(conn, models.CampaignType{
+					ID:          "I-do-not-exist",
+					Name:        "updated name",
+					Description: "updated description",
+					Critical:    false,
+					TemplateID:  "updated template id",
+					SenderID:    "some-sender-id",
+				})
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+				Expect(string(err.(models.RecordNotFoundError))).To(Equal("No records updated: Campaign type with id \"I-do-not-exist\" could not be found"))
+			})
+
+			It("It passes along error messagers from the database", func() {
+				conn := fakes.NewConnection()
+				conn.UpdateCall.Err = errors.New("a database error")
+
+				campaignType := models.CampaignType{
+					ID:          "some id",
+					Name:        "updated name",
+					Description: "updated description",
+					Critical:    false,
+					TemplateID:  "updated template id",
+					SenderID:    "some-sender-id",
+				}
+
+				_, err := repo.Update(conn, campaignType)
+				Expect(err).To(MatchError("a database error"))
+			})
+		})
+	})
 })
