@@ -21,10 +21,11 @@ type CampaignTypesCollection struct {
 }
 
 type campaignTypesRepository interface {
-	Insert(models.ConnectionInterface, models.CampaignType) (models.CampaignType, error)
-	GetBySenderIDAndName(models.ConnectionInterface, string, string) (models.CampaignType, error)
-	List(models.ConnectionInterface, string) ([]models.CampaignType, error)
-	Get(models.ConnectionInterface, string) (models.CampaignType, error)
+	Insert(conn models.ConnectionInterface, campaignType models.CampaignType) (createdCampaignType models.CampaignType, err error)
+	GetBySenderIDAndName(conn models.ConnectionInterface, senderID string, name string) (campaignType models.CampaignType, err error)
+	List(conn models.ConnectionInterface, senderID string) (campaignTypes []models.CampaignType, err error)
+	Get(conn models.ConnectionInterface, id string) (campaignType models.CampaignType, err error)
+	Update(conn models.ConnectionInterface, campaignType models.CampaignType) (updatedCampaignType models.CampaignType, err error)
 }
 
 func NewCampaignTypesCollection(nr campaignTypesRepository, sr sendersRepository) CampaignTypesCollection {
@@ -52,13 +53,23 @@ func (nc CampaignTypesCollection) Set(conn models.ConnectionInterface, campaignT
 		return CampaignType{}, NewNotFoundError(fmt.Sprintf("Sender %s not found", campaignType.SenderID))
 	}
 
-	returnCampaignType, err := nc.campaignTypesRepository.Insert(conn, models.CampaignType{
-		Name:        campaignType.Name,
-		Description: campaignType.Description,
-		Critical:    campaignType.Critical,
-		TemplateID:  campaignType.TemplateID,
-		SenderID:    campaignType.SenderID,
-	})
+	var (
+		returnCampaignType models.CampaignType
+		campaignTypeModel  = models.CampaignType{
+			ID:          campaignType.ID,
+			Name:        campaignType.Name,
+			Description: campaignType.Description,
+			Critical:    campaignType.Critical,
+			TemplateID:  campaignType.TemplateID,
+			SenderID:    campaignType.SenderID,
+		}
+	)
+
+	if campaignType.ID != "" {
+		returnCampaignType, err = nc.campaignTypesRepository.Update(conn, campaignTypeModel)
+	} else {
+		returnCampaignType, err = nc.campaignTypesRepository.Insert(conn, campaignTypeModel)
+	}
 	if err != nil {
 		switch err.(type) {
 		case models.DuplicateRecordError:
@@ -161,8 +172,4 @@ func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID
 	}
 
 	return campaignTypeList, nil
-}
-
-func (cc CampaignTypesCollection) Update(conn models.ConnectionInterface, campaignType CampaignType) (CampaignType, error) {
-	return CampaignType{}, nil
 }

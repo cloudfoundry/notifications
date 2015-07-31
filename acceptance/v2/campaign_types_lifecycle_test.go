@@ -34,7 +34,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 		senderID = response["id"].(string)
 	})
 
-	PIt("can create, update and show a new campaign type", func() {
+	It("can create, update and show a new campaign type", func() {
 		var campaignTypeID string
 
 		By("creating a campaign type", func() {
@@ -47,6 +47,18 @@ var _ = Describe("Campaign types lifecycle", func() {
 
 			campaignTypeID = response["id"].(string)
 
+			Expect(response["name"]).To(Equal("some-campaign-type"))
+			Expect(response["description"]).To(Equal("a great campaign type"))
+			Expect(response["critical"]).To(BeFalse())
+			Expect(response["template_id"]).To(BeEmpty())
+		})
+
+		By("showing the newly created campaign type", func() {
+			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+
+			Expect(response["id"]).To(Equal(campaignTypeID))
 			Expect(response["name"]).To(Equal("some-campaign-type"))
 			Expect(response["description"]).To(Equal("a great campaign type"))
 			Expect(response["critical"]).To(BeFalse())
@@ -84,13 +96,16 @@ var _ = Describe("Campaign types lifecycle", func() {
 			Expect(response["template_id"]).To(BeEmpty())
 		})
 
-		By("showing the newly created campaign type", func() {
+		By("showing the updated campaign type", func() {
 			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
+			Expect(response["id"]).To(Equal(campaignTypeID))
 			Expect(response["name"]).To(Equal("updated-campaign-type"))
 			Expect(response["description"]).To(Equal("still the same great campaign type"))
+			Expect(response["critical"]).To(BeTrue())
+			Expect(response["template_id"]).To(BeEmpty())
 		})
 	})
 

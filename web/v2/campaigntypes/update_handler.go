@@ -34,10 +34,9 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	err := json.NewDecoder(req.Body).Decode(&updateRequest)
 	if err != nil {
-		panic(err)
-		//w.WriteHeader(http.StatusBadRequest)
-		//w.Write([]byte(`{"error": "invalid json body"}`))
-		//return
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{"error": "invalid json body"}`))
+		return
 	}
 
 	database := context.Get("database").(models.DatabaseInterface)

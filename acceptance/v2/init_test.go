@@ -1,9 +1,9 @@
 package v2
 
 import (
-	"testing"
-	"strconv"
 	"os"
+	"strconv"
+	"testing"
 
 	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
@@ -36,6 +36,7 @@ var _ = BeforeSuite(func() {
 	Servers.Notifications = servers.NewNotifications()
 	Servers.Notifications.Compile()
 	Servers.Notifications.Boot()
+	Servers.Notifications.ResetDatabase()
 })
 
 var _ = AfterSuite(func() {

@@ -44,22 +44,44 @@ var _ = Describe("CampaignTypesCollection", func() {
 			fakeCampaignTypesRepository.InsertCall.ReturnCampaignType.ID = "generated-id"
 		})
 
-		It("sets a campaign type within the collection", func() {
+		It("sets a new campaign type within the collection", func() {
 			fakeSendersRepository.GetCall.ReturnSender = models.Sender{
 				ID:       "mysender",
 				Name:     "some-sender",
-				ClientID: "client_id",
+				ClientID: "client-id",
 			}
 
-			returnedCampaignType, err := campaignTypesCollection.Set(fakeDatabaseConnection, campaignType, "client_id")
+			returnedCampaignType, err := campaignTypesCollection.Set(fakeDatabaseConnection, campaignType, "client-id")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(returnedCampaignType.ID).To(Equal("generated-id"))
 			Expect(fakeCampaignTypesRepository.InsertCall.Connection).To(Equal(fakeDatabaseConnection))
+			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.ID).To(BeEmpty())
 			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Name).To(Equal(campaignType.Name))
 			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Description).To(Equal(campaignType.Description))
 			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.Critical).To(Equal(campaignType.Critical))
 			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.TemplateID).To(Equal(campaignType.TemplateID))
 			Expect(fakeCampaignTypesRepository.InsertCall.CampaignType.SenderID).To(Equal(campaignType.SenderID))
+		})
+
+		It("sets an existing campaign type within the collection", func() {
+			fakeSendersRepository.GetCall.ReturnSender = models.Sender{
+				ID:       "mysender",
+				Name:     "some-sender",
+				ClientID: "client-id",
+			}
+			campaignType.ID = "existing-campaign-type-id"
+			fakeCampaignTypesRepository.UpdateCall.ReturnCampaignType.ID = "existing-campaign-type-id"
+
+			returnedCampaignType, err := campaignTypesCollection.Set(fakeDatabaseConnection, campaignType, "client-id")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(returnedCampaignType.ID).To(Equal("existing-campaign-type-id"))
+			Expect(fakeCampaignTypesRepository.UpdateCall.Connection).To(Equal(fakeDatabaseConnection))
+			Expect(fakeCampaignTypesRepository.UpdateCall.CampaignType.ID).To(Equal("existing-campaign-type-id"))
+			Expect(fakeCampaignTypesRepository.UpdateCall.CampaignType.Name).To(Equal(campaignType.Name))
+			Expect(fakeCampaignTypesRepository.UpdateCall.CampaignType.Description).To(Equal(campaignType.Description))
+			Expect(fakeCampaignTypesRepository.UpdateCall.CampaignType.Critical).To(Equal(campaignType.Critical))
+			Expect(fakeCampaignTypesRepository.UpdateCall.CampaignType.TemplateID).To(Equal(campaignType.TemplateID))
+			Expect(fakeCampaignTypesRepository.UpdateCall.CampaignType.SenderID).To(Equal(campaignType.SenderID))
 		})
 
 		Context("failure cases", func() {

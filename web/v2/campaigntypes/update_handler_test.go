@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/collections"
@@ -28,6 +30,7 @@ var _ = Describe("UpdateHandler", func() {
 		database                *fakes.Database
 		tokenHeader             map[string]interface{}
 		tokenClaims             map[string]interface{}
+		guid                    string
 	)
 
 	BeforeEach(func() {
@@ -60,22 +63,6 @@ var _ = Describe("UpdateHandler", func() {
 
 		campaignTypesCollection = fakes.NewCampaignTypesCollection()
 
-		handler = campaigntypes.NewUpdateHandler(campaignTypesCollection)
-	})
-
-	It("updates an existing campaign type", func() {
-		guid, err := uuid.NewV4()
-		Expect(err).NotTo(HaveOccurred())
-
-		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
-			ID:          guid.String(),
-			Name:        "update-campaign-type",
-			Description: "update-campaign-type-description",
-			Critical:    true,
-			TemplateID:  "",
-			SenderID:    "some-sender-id",
-		}
-
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"name":        "update-campaign-type",
 			"description": "update-campaign-type-description",
@@ -84,13 +71,31 @@ var _ = Describe("UpdateHandler", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid.String()), bytes.NewBuffer(requestBody))
+		g, err := uuid.NewV4()
 		Expect(err).NotTo(HaveOccurred())
+		guid = g.String()
+
+		request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+		Expect(err).NotTo(HaveOccurred())
+
+		handler = campaigntypes.NewUpdateHandler(campaignTypesCollection)
+	})
+
+	It("updates an existing campaign type", func() {
+
+		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
+			ID:          guid,
+			Name:        "update-campaign-type",
+			Description: "update-campaign-type-description",
+			Critical:    true,
+			TemplateID:  "",
+			SenderID:    "some-sender-id",
+		}
 
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(campaignTypesCollection.SetCall.CampaignType).To(Equal(collections.CampaignType{
-			ID:          guid.String(),
+			ID:          guid,
 			Name:        "update-campaign-type",
 			Description: "update-campaign-type-description",
 			Critical:    true,
@@ -100,11 +105,25 @@ var _ = Describe("UpdateHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"id": "` + guid.String() + `",
+			"id": "` + guid + `",
 			"name": "update-campaign-type",
 			"description": "update-campaign-type-description",
 			"critical": true,
 			"template_id": ""
 		}`))
+	})
+
+	Context("failure cases", func() {
+		It("returns a 400 when the request JSON cannot be unmarshalled", func() {
+			request.Body = ioutil.NopCloser(strings.NewReader("%%%%"))
+
+			handler.ServeHTTP(writer, request, context)
+
+			Expect(writer.Code).To(Equal(http.StatusBadRequest))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+					"error": "invalid json body"
+			}`))
+
+		})
 	})
 })
