@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/ryanmoran/stack"
 )
@@ -40,22 +39,37 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	}
 
 	database := context.Get("database").(models.DatabaseInterface)
+	campaignType, err := h.campaignTypes.Get(database.Connection(), senderID, campaignTypeID, context.Get("client_id").(string))
+	// campaignType := collections.CampaignType{
+	// 	ID:       campaignTypeID,
+	// 	Name:     *updateRequest.Name,
+	// 	SenderID: senderID,
+	// }
 
-	campaignType, err := h.campaignTypes.Set(database.Connection(), collections.CampaignType{
-		ID:          campaignTypeID,
-		Name:        *updateRequest.Name,
-		Description: *updateRequest.Description,
-		Critical:    *updateRequest.Critical,
-		TemplateID:  *updateRequest.TemplateID,
-		SenderID:    senderID,
-	}, context.Get("client_id").(string))
+	if updateRequest.Description != nil {
+		campaignType.Description = *updateRequest.Description
+	}
+
+	if updateRequest.TemplateID != nil {
+		campaignType.TemplateID = *updateRequest.TemplateID
+	}
+
+	if updateRequest.Critical != nil {
+		campaignType.Critical = *updateRequest.Critical
+	}
+
+	if updateRequest.Name != nil {
+		campaignType.Name = *updateRequest.Name
+	}
+
+	returnCampaignType, err := h.campaignTypes.Set(database.Connection(), campaignType, context.Get("client_id").(string))
 
 	jsonMap := map[string]interface{}{
-		"id":          campaignType.ID,
-		"name":        campaignType.Name,
-		"description": campaignType.Description,
-		"critical":    campaignType.Critical,
-		"template_id": campaignType.TemplateID,
+		"id":          returnCampaignType.ID,
+		"name":        returnCampaignType.Name,
+		"description": returnCampaignType.Description,
+		"critical":    returnCampaignType.Critical,
+		"template_id": returnCampaignType.TemplateID,
 	}
 
 	jsonBody, err := json.Marshal(jsonMap)

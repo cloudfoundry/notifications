@@ -82,6 +82,14 @@ var _ = Describe("UpdateHandler", func() {
 	})
 
 	It("updates an existing campaign type", func() {
+		campaignTypesCollection.GetCall.ReturnCampaignType = collections.CampaignType{
+			ID:          guid,
+			Name:        "my old name",
+			Description: "old description",
+			Critical:    false,
+			TemplateID:  "",
+			SenderID:    "some-sender-id",
+		}
 
 		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
 			ID:          guid,
@@ -113,6 +121,54 @@ var _ = Describe("UpdateHandler", func() {
 		}`))
 	})
 
+	It("works when only the name single field is updated", func() {
+		requestBody, err := json.Marshal(map[string]interface{}{
+			"name": "my new name",
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		campaignTypesCollection.GetCall.ReturnCampaignType = collections.CampaignType{
+			ID:          guid,
+			Name:        "my old name",
+			Description: "old description",
+			Critical:    true,
+			TemplateID:  "",
+			SenderID:    "some-sender-id",
+		}
+
+		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
+			ID:          guid,
+			Name:        "my new name",
+			Description: "old description",
+			Critical:    true,
+			TemplateID:  "",
+			SenderID:    "some-sender-id",
+		}
+
+		request, err := http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+		Expect(err).NotTo(HaveOccurred())
+
+		handler.ServeHTTP(writer, request, context)
+
+		Expect(campaignTypesCollection.SetCall.CampaignType).To(Equal(collections.CampaignType{
+			ID:          guid,
+			Name:        "my new name",
+			Description: "old description",
+			Critical:    true,
+			TemplateID:  "",
+			SenderID:    "some-sender-id",
+		}))
+
+		Expect(writer.Code).To(Equal(http.StatusOK))
+		Expect(writer.Body.String()).To(MatchJSON(`{
+			"id": "` + guid + `",
+			"name": "my new name",
+			"description": "old description",
+			"critical": true,
+			"template_id": ""
+		}`))
+	})
+
 	Context("failure cases", func() {
 		It("returns a 400 when the request JSON cannot be unmarshalled", func() {
 			request.Body = ioutil.NopCloser(strings.NewReader("%%%%"))
@@ -123,7 +179,24 @@ var _ = Describe("UpdateHandler", func() {
 			Expect(writer.Body.String()).To(MatchJSON(`{
 					"error": "invalid json body"
 			}`))
-
 		})
+
+		XIt("returns a 422 if the name field is updated to an empty string", func() {
+			requestBody, err := json.Marshal(map[string]interface{}{
+				"name": "",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(422))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+					"error": "name field cannot be blank"
+			}`))
+		})
+
+		// XIt("returns a 422 if the description field is updated to an empty string")
+
 	})
 })
