@@ -81,7 +81,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		var errorMessage string
 		switch e := err.(type) {
 		case collections.NotFoundError:
-			w.WriteHeader(404)
+			w.WriteHeader(http.StatusNotFound)
 			errorMessage = e.Message
 		default:
 			w.WriteHeader(http.StatusInternalServerError)

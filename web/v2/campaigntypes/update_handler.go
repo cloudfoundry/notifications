@@ -75,7 +75,7 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	}
 
 	database := context.Get("database").(models.DatabaseInterface)
-	campaignType, err := h.campaignTypes.Get(database.Connection(), senderID, campaignTypeID, context.Get("client_id").(string))
+	campaignType, err := h.campaignTypes.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, `{"error": "%s"}`, err.(collections.NotFoundError).Message)
@@ -100,7 +100,9 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	returnCampaignType, err := h.campaignTypes.Set(database.Connection(), campaignType, context.Get("client_id").(string))
 	if err != nil {
-		panic(err)
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, `{"error": "%s"}`, err.(collections.NotFoundError).Message)
+		return
 	}
 
 	jsonMap := map[string]interface{}{

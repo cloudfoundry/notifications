@@ -256,20 +256,7 @@ var _ = Describe("UpdateHandler", func() {
 			}`))
 		})
 
-		PIt("returns a 404 when the sender could not be found", func() {
-			campaignTypesCollection.SetCall.Err = collections.NotFoundError{
-				Err:     errors.New("THIS WAS PRODUCED BY ROBOTS"),
-				Message: "This is for humans.",
-			}
-
-			handler.ServeHTTP(writer, request, context)
-			Expect(writer.Code).To(Equal(http.StatusNotFound))
-			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "This is for humans."
-			}`))
-		})
-
-		It("returns a 404 when the campaign type could not be found", func() {
+		It("returns a 404 when collections.Get() returns a NotFoundError", func() {
 			campaignTypesCollection.GetCall.Err = collections.NotFoundError{
 				Err:     errors.New("THIS WAS PRODUCED BY ROBOTS"),
 				Message: "This is for humans.",
@@ -282,8 +269,23 @@ var _ = Describe("UpdateHandler", func() {
 			}`))
 		})
 
-		// XIt("does the right thing when critical flag is set true but sender does not have UAA critical-write")
+		It("returns a 404 when collections.Set() returns a NotFoundError", func() {
+			campaignTypesCollection.SetCall.Err = collections.NotFoundError{
+				Err:     errors.New("THIS WAS PRODUCED BY ROBOTS"),
+				Message: "This is for humans.",
+			}
 
-		// XIt("allows an update of Critical from true -> false even if the user does not have UAA critical-write")
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusNotFound))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "This is for humans."
+			}`))
+		})
+
+		// It("does the right thing when critical flag is set true but sender does not have UAA critical-write", func(){})
+
+		// It("allows an update of Critical from true -> false even if the user does not have UAA critical-write", func(){})
+
+		// It("returns a 500 when there is a persistence error", func(){})
 	})
 })
