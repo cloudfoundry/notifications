@@ -3,6 +3,7 @@ package campaigntypes_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -61,7 +62,20 @@ var _ = Describe("UpdateHandler", func() {
 
 		writer = httptest.NewRecorder()
 
+		g, err := uuid.NewV4()
+		Expect(err).NotTo(HaveOccurred())
+		guid = g.String()
+
 		campaignTypesCollection = fakes.NewCampaignTypesCollection()
+
+		campaignTypesCollection.GetCall.ReturnCampaignType = collections.CampaignType{
+			ID:          guid,
+			Name:        "my old name",
+			Description: "old description",
+			Critical:    true,
+			TemplateID:  "",
+			SenderID:    "some-sender-id",
+		}
 
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"name":        "update-campaign-type",
@@ -71,10 +85,6 @@ var _ = Describe("UpdateHandler", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		g, err := uuid.NewV4()
-		Expect(err).NotTo(HaveOccurred())
-		guid = g.String()
-
 		request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
@@ -82,15 +92,6 @@ var _ = Describe("UpdateHandler", func() {
 	})
 
 	It("updates an existing campaign type", func() {
-		campaignTypesCollection.GetCall.ReturnCampaignType = collections.CampaignType{
-			ID:          guid,
-			Name:        "my old name",
-			Description: "old description",
-			Critical:    false,
-			TemplateID:  "",
-			SenderID:    "some-sender-id",
-		}
-
 		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
 			ID:          guid,
 			Name:        "update-campaign-type",
@@ -121,20 +122,11 @@ var _ = Describe("UpdateHandler", func() {
 		}`))
 	})
 
-	It("works when only the name single field is updated", func() {
+	It("works when only the name field is updated", func() {
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"name": "my new name",
 		})
 		Expect(err).NotTo(HaveOccurred())
-
-		campaignTypesCollection.GetCall.ReturnCampaignType = collections.CampaignType{
-			ID:          guid,
-			Name:        "my old name",
-			Description: "old description",
-			Critical:    true,
-			TemplateID:  "",
-			SenderID:    "some-sender-id",
-		}
 
 		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
 			ID:          guid,
@@ -169,6 +161,43 @@ var _ = Describe("UpdateHandler", func() {
 		}`))
 	})
 
+	It("works when no parameters are passed into the update", func() {
+		requestBody, err := json.Marshal(map[string]interface{}{})
+		Expect(err).NotTo(HaveOccurred())
+
+		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
+			ID:          guid,
+			Name:        "my old name",
+			Description: "old description",
+			Critical:    true,
+			TemplateID:  "",
+			SenderID:    "some-sender-id",
+		}
+
+		request, err := http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+		Expect(err).NotTo(HaveOccurred())
+
+		handler.ServeHTTP(writer, request, context)
+
+		Expect(campaignTypesCollection.SetCall.CampaignType).To(Equal(collections.CampaignType{
+			ID:          guid,
+			Name:        "my old name",
+			Description: "old description",
+			Critical:    true,
+			TemplateID:  "",
+			SenderID:    "some-sender-id",
+		}))
+
+		Expect(writer.Code).To(Equal(http.StatusOK))
+		Expect(writer.Body.String()).To(MatchJSON(`{
+			"id": "` + guid + `",
+			"name": "my old name",
+			"description": "old description",
+			"critical": true,
+			"template_id": ""
+		}`))
+	})
+
 	Context("failure cases", func() {
 		It("returns a 400 when the request JSON cannot be unmarshalled", func() {
 			request.Body = ioutil.NopCloser(strings.NewReader("%%%%"))
@@ -181,7 +210,7 @@ var _ = Describe("UpdateHandler", func() {
 			}`))
 		})
 
-		XIt("returns a 422 if the name field is updated to an empty string", func() {
+		It("returns a 422 if the name field is updated to an empty string", func() {
 			requestBody, err := json.Marshal(map[string]interface{}{
 				"name": "",
 			})
@@ -196,7 +225,65 @@ var _ = Describe("UpdateHandler", func() {
 			}`))
 		})
 
-		// XIt("returns a 422 if the description field is updated to an empty string")
+		It("returns a 422 if the description field is updated to an empty string", func() {
+			requestBody, err := json.Marshal(map[string]interface{}{
+				"description": "",
+			})
+			Expect(err).NotTo(HaveOccurred())
 
+			request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(422))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+					"error": "description field cannot be blank"
+			}`))
+		})
+
+		It("returns a 422 if the name and description fields are updated to an empty string", func() {
+			requestBody, err := json.Marshal(map[string]interface{}{
+				"name":        "",
+				"description": "",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(422))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "name field cannot be blank, description field cannot be blank"
+			}`))
+		})
+
+		PIt("returns a 404 when the sender could not be found", func() {
+			campaignTypesCollection.SetCall.Err = collections.NotFoundError{
+				Err:     errors.New("THIS WAS PRODUCED BY ROBOTS"),
+				Message: "This is for humans.",
+			}
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusNotFound))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "This is for humans."
+			}`))
+		})
+
+		It("returns a 404 when the campaign type could not be found", func() {
+			campaignTypesCollection.GetCall.Err = collections.NotFoundError{
+				Err:     errors.New("THIS WAS PRODUCED BY ROBOTS"),
+				Message: "This is for humans.",
+			}
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusNotFound))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "This is for humans."
+			}`))
+		})
+
+		// XIt("does the right thing when critical flag is set true but sender does not have UAA critical-write")
+
+		// XIt("allows an update of Critical from true -> false even if the user does not have UAA critical-write")
 	})
 })
