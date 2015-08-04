@@ -9,6 +9,7 @@
   - [Creating a campaign type](#create-campaign-type)
   - [Showing a campaign type](#show-campaign-type)
   - [Listing the campaign types](#list-campaign-types)
+  - [Updating a campaign type](#update-campaign-type)
 
 ## System Status
 
@@ -321,6 +322,57 @@ Content-Type: text/plain; charset=utf-8
 | Fields             | Description                           |
 | ------------------ | ------------------------------------- |
 | campaign_types | The array of campaign types       |
+| id                 | System-generated campaign type ID |
+| name               | Campaign type name                |
+| description        | Campaign type description         |
+| critical           | Critical campaign type flag       |
+| template_id        | Template ID                          |
+
+<a name="update-campaign-type"></a>
+##### Update a Campaign Type
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+
+\* The user token requires `notifications.write` scope.
+\*\* Updating a critical campaign type requires `critical_notifications.write` scope.
+
+###### Route
+```
+PUT /senders/<sender-id>/campaign_types/<campaign-type-id>
+```
+
+###### CURL example
+```
+$ curl -i -X PUT \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  --data '{"name": "new campaign type", "description": "new campaign description", "critical": true}' \
+  http://notifications.example.com/senders/a6c38f92-8fa9-488b-4f4c-7f4d4e0c0fd2/campaign_types/5cbc4458-3dba-481b-74c3-4548114b830b
+
+HTTP/1.1 200 OK
+Content-Length: 146
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 04 Aug 2015 20:47:35 GMT
+
+{"critical":true,"description":"new campaign description","id":"5cbc4458-3dba-481b-74c3-4548114b830b","name":"new campaign type","template_id":""}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields             | Description                           |
+| ------------------ | ------------------------------------- |
 | id                 | System-generated campaign type ID |
 | name               | Campaign type name                |
 | description        | Campaign type description         |
