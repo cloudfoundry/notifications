@@ -35,12 +35,12 @@ func (u UpdateRequest) isValid() (bool, string) {
 
 	if u.includesName() && *u.Name == "" {
 		validFlag = false
-		validationErrors = append(validationErrors, "name can not be blank")
+		validationErrors = append(validationErrors, "name cannot be blank")
 	}
 
 	if u.includesDescription() && *u.Description == "" {
 		validFlag = false
-		validationErrors = append(validationErrors, "description can not be blank")
+		validationErrors = append(validationErrors, "description cannot be blank")
 	}
 
 	return validFlag, strings.Join(validationErrors, ", ")
@@ -125,7 +125,7 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 		if hasCriticalWrite == false {
 			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintf(w, `{ "error": %q }`, "Forbidden: can not update campaign type with critical flag set to true")
+			fmt.Fprintf(w, `{ "error": %q }`, "Forbidden: cannot update campaign type with critical flag set to true")
 			return
 		}
 	}

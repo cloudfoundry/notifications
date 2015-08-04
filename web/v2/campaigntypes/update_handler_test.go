@@ -221,7 +221,7 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-					"error": "name can not be blank"
+					"error": "name cannot be blank"
 			}`))
 		})
 
@@ -236,7 +236,7 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-					"error": "description can not be blank"
+					"error": "description cannot be blank"
 			}`))
 		})
 
@@ -252,7 +252,7 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "name can not be blank, description can not be blank"
+				"error": "name cannot be blank, description cannot be blank"
 			}`))
 		})
 
@@ -301,7 +301,7 @@ var _ = Describe("UpdateHandler", func() {
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusForbidden))
-			Expect(writer.Body.String()).To(MatchJSON(`{ "error": "Forbidden: can not update campaign type with critical flag set to true" }`))
+			Expect(writer.Body.String()).To(MatchJSON(`{ "error": "Forbidden: cannot update campaign type with critical flag set to true" }`))
 			Expect(campaignTypesCollection.SetCall.WasCalled).To(BeFalse())
 		})
 
