@@ -221,7 +221,7 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-					"error": "name field cannot be blank"
+					"error": "name can not be blank"
 			}`))
 		})
 
@@ -236,7 +236,7 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-					"error": "description field cannot be blank"
+					"error": "description can not be blank"
 			}`))
 		})
 
@@ -252,7 +252,7 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "name field cannot be blank, description field cannot be blank"
+				"error": "name can not be blank, description can not be blank"
 			}`))
 		})
 
@@ -282,10 +282,86 @@ var _ = Describe("UpdateHandler", func() {
 			}`))
 		})
 
-		// It("does the right thing when critical flag is set true but sender does not have UAA critical-write", func(){})
+		It("returns a 403 when the client without the critical_notifications.write scope attempts to update a critical campaign type", func() {
+			tokenClaims["scope"] = []string{"notifications.write"}
+			rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
+				return []byte(application.UAAPublicKey), nil
+			})
+			Expect(err).NotTo(HaveOccurred())
+			context.Set("token", token)
 
-		// It("allows an update of Critical from true -> false even if the user does not have UAA critical-write", func(){})
+			requestBody, err := json.Marshal(map[string]interface{}{
+				"description": "new description",
+			})
+			Expect(err).NotTo(HaveOccurred())
 
-		// It("returns a 500 when there is a persistence error", func(){})
+			request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusForbidden))
+			Expect(writer.Body.String()).To(MatchJSON(`{ "error": "Forbidden: can not update campaign type with critical flag set to true" }`))
+			Expect(campaignTypesCollection.SetCall.WasCalled).To(BeFalse())
+		})
+
+		It("allows an update of critical from true to false even if the client does not have the critical_notifications.write scope", func() {
+			campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
+				ID:          guid,
+				Name:        "update-campaign-type",
+				Description: "update-campaign-type-description",
+				Critical:    false,
+				TemplateID:  "",
+				SenderID:    "some-sender-id",
+			}
+
+			tokenClaims["scope"] = []string{"notifications.write"}
+			rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
+				return []byte(application.UAAPublicKey), nil
+			})
+			Expect(err).NotTo(HaveOccurred())
+			context.Set("token", token)
+
+			requestBody, err := json.Marshal(map[string]interface{}{
+				"description": "new description",
+				"critical":    false,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusOK))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"id": "` + guid + `",
+				"name": "update-campaign-type",
+				"description": "update-campaign-type-description",
+				"critical": false,
+				"template_id": ""
+			}`))
+			Expect(campaignTypesCollection.SetCall.WasCalled).To(BeTrue())
+		})
+
+		It("returns a 500 when collections.Get() returns an unexpected error", func() {
+			campaignTypesCollection.GetCall.Err = errors.New("BOOM!")
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "BOOM!"
+			}`))
+		})
+
+		It("returns a 500 when collections.Set() returns an unexpected error", func() {
+			campaignTypesCollection.SetCall.Err = errors.New("BOOM!")
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
+			Expect(writer.Body.String()).To(MatchJSON(`{
+				"error": "BOOM!"
+			}`))
+		})
 	})
 })

@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 )
 
@@ -34,12 +35,12 @@ func (u UpdateRequest) isValid() (bool, string) {
 
 	if u.includesName() && *u.Name == "" {
 		validFlag = false
-		validationErrors = append(validationErrors, "name field cannot be blank")
+		validationErrors = append(validationErrors, "name can not be blank")
 	}
 
 	if u.includesDescription() && *u.Description == "" {
 		validFlag = false
-		validationErrors = append(validationErrors, "description field cannot be blank")
+		validationErrors = append(validationErrors, "description can not be blank")
 	}
 
 	return validFlag, strings.Join(validationErrors, ", ")
@@ -77,9 +78,16 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	database := context.Get("database").(models.DatabaseInterface)
 	campaignType, err := h.campaignTypes.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, `{"error": "%s"}`, err.(collections.NotFoundError).Message)
-		return
+		switch err := err.(type) {
+		case collections.NotFoundError:
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, `{"error": %q}`, err.Message)
+			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, `{"error": %q}`, err.Error())
+			return
+		}
 	}
 
 	if updateRequest.includesName() {
@@ -98,11 +106,34 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		campaignType.TemplateID = *updateRequest.TemplateID
 	}
 
+	if campaignType.Critical == true {
+		hasCriticalWrite := false
+		token := context.Get("token").(*jwt.Token)
+		for _, scope := range token.Claims["scope"].([]interface{}) {
+			if scope.(string) == "critical_notifications.write" {
+				hasCriticalWrite = true
+			}
+		}
+
+		if hasCriticalWrite == false {
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Fprintf(w, `{ "error": %q }`, "Forbidden: can not update campaign type with critical flag set to true")
+			return
+		}
+	}
+
 	returnCampaignType, err := h.campaignTypes.Set(database.Connection(), campaignType, context.Get("client_id").(string))
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintf(w, `{"error": "%s"}`, err.(collections.NotFoundError).Message)
-		return
+		switch err := err.(type) {
+		case collections.NotFoundError:
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, `{"error": %q}`, err.Message)
+			return
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, `{"error": %q}`, err.Error())
+			return
+		}
 	}
 
 	jsonMap := map[string]interface{}{

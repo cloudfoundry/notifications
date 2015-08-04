@@ -11,6 +11,7 @@ type CampaignTypesCollection struct {
 		Conn               models.ConnectionInterface
 		ReturnCampaignType collections.CampaignType
 		Err                error
+		WasCalled          bool
 	}
 
 	ListCall struct {
@@ -29,6 +30,7 @@ func NewCampaignTypesCollection() *CampaignTypesCollection {
 }
 
 func (c *CampaignTypesCollection) Set(conn models.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error) {
+	c.SetCall.WasCalled = true
 	c.SetCall.Conn = conn
 	c.SetCall.CampaignType = campaignType
 	return c.SetCall.ReturnCampaignType, c.SetCall.Err
