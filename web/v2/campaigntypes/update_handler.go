@@ -54,6 +54,14 @@ func (u UpdateRequest) includesDescription() bool {
 	return u.Description != nil
 }
 
+func (u UpdateRequest) includesCritical() bool {
+	return u.Critical != nil
+}
+
+func (u UpdateRequest) includesTemplateID() bool {
+	return u.TemplateID != nil
+}
+
 func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	splitURL := strings.Split(req.URL.Path, "/")
 	campaignTypeID := splitURL[len(splitURL)-1]
@@ -71,7 +79,7 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	validFlag, validationError := updateRequest.isValid()
 	if validFlag == false {
 		w.WriteHeader(422)
-		w.Write([]byte(`{"error": "` + validationError + `"}`))
+		fmt.Fprintf(w, `{"error": %q}`, validationError)
 		return
 	}
 
@@ -98,11 +106,11 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		campaignType.Description = *updateRequest.Description
 	}
 
-	if updateRequest.Critical != nil {
+	if updateRequest.includesCritical() {
 		campaignType.Critical = *updateRequest.Critical
 	}
 
-	if updateRequest.TemplateID != nil {
+	if updateRequest.includesTemplateID() {
 		campaignType.TemplateID = *updateRequest.TemplateID
 	}
 
