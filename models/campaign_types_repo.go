@@ -79,3 +79,9 @@ func (r CampaignTypesRepository) Update(connection ConnectionInterface, campaign
 	}
 	return campaignType, err
 }
+
+func (r CampaignTypesRepository) Delete(connection ConnectionInterface, campaignTypeID string) error {
+	campaignType := CampaignType{ID: campaignTypeID}
+	_, err := connection.Delete(&campaignType)
+	return err
+}

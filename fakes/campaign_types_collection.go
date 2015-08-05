@@ -30,6 +30,14 @@ type CampaignTypesCollection struct {
 		ClientID           string
 		Err                error
 	}
+
+	DeleteCall struct {
+		CampaignTypeID string
+		SenderID       string
+		ClientID       string
+		Conn           models.ConnectionInterface
+		Err            error
+	}
 }
 
 func NewCampaignTypesCollection() *CampaignTypesCollection {
@@ -56,4 +64,13 @@ func (c *CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignT
 	c.GetCall.SenderID = senderID
 	c.GetCall.ClientID = clientID
 	return c.GetCall.ReturnCampaignType, c.GetCall.Err
+}
+
+func (c *CampaignTypesCollection) Delete(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) error {
+	c.DeleteCall.CampaignTypeID = campaignTypeID
+	c.DeleteCall.SenderID = senderID
+	c.DeleteCall.ClientID = clientID
+	c.DeleteCall.Conn = conn
+
+	return c.DeleteCall.Err
 }

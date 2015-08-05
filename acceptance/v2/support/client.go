@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 type Config struct {
@@ -45,9 +46,12 @@ func (c Client) Do(method string, path string, payload map[string]interface{}, t
 	}
 
 	var body map[string]interface{}
-	err = json.Unmarshal(responseBody, &body)
-	if err != nil {
-		return 0, nil, err
+
+	if strings.Contains(string(responseBody), "{") {
+		err = json.Unmarshal(responseBody, &body)
+		if err != nil {
+			return 0, nil, err
+		}
 	}
 
 	return responseCode, body, err

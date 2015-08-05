@@ -46,6 +46,10 @@ type Connection struct {
 		Returns interface{}
 		Err     error
 	}
+
+	DeleteCall struct {
+		Err error
+	}
 }
 
 func NewConnection() *Connection {
@@ -75,7 +79,7 @@ func (conn *Connection) Exec(query string, args ...interface{}) (sql.Result, err
 }
 
 func (conn Connection) Delete(list ...interface{}) (int64, error) {
-	return 0, nil
+	return 0, conn.DeleteCall.Err
 }
 
 func (conn Connection) Insert(list ...interface{}) error {

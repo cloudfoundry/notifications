@@ -20,7 +20,7 @@ type CampaignTypesRepository struct {
 
 	GetCall struct {
 		Connection     models.ConnectionInterface
-		campaignTypeID string
+		CampaignTypeID string
 	}
 
 	GetReturn struct {
@@ -33,6 +33,12 @@ type CampaignTypesRepository struct {
 		CampaignType       models.CampaignType
 		ReturnCampaignType models.CampaignType
 		Err                error
+	}
+
+	DeleteCall struct {
+		Connection     models.ConnectionInterface
+		CampaignTypeID string
+		Err            error
 	}
 }
 
@@ -57,7 +63,7 @@ func (r *CampaignTypesRepository) List(conn models.ConnectionInterface, senderID
 
 func (r *CampaignTypesRepository) Get(conn models.ConnectionInterface, campaignTypeID string) (models.CampaignType, error) {
 	r.GetCall.Connection = conn
-	r.GetCall.campaignTypeID = campaignTypeID
+	r.GetCall.CampaignTypeID = campaignTypeID
 	return r.GetReturn.CampaignType, r.GetReturn.Err
 }
 
@@ -66,4 +72,11 @@ func (r *CampaignTypesRepository) Update(conn models.ConnectionInterface, campai
 	r.UpdateCall.CampaignType = campaignType
 
 	return r.UpdateCall.ReturnCampaignType, r.UpdateCall.Err
+}
+
+func (r *CampaignTypesRepository) Delete(conn models.ConnectionInterface, campaignTypeID string) error {
+	r.DeleteCall.Connection = conn
+	r.DeleteCall.CampaignTypeID = campaignTypeID
+
+	return r.DeleteCall.Err
 }

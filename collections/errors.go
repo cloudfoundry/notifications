@@ -28,3 +28,10 @@ func NewNotFoundError(message string) NotFoundError {
 		Message: message,
 	}
 }
+
+func NewNotFoundErrorWithOriginalError(message string, err error) NotFoundError {
+	return NotFoundError{
+		Err:     err,
+		Message: message,
+	}
+}

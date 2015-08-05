@@ -93,4 +93,19 @@ var _ = Describe("CampaignTypesRouter", func() {
 		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
+
+	It("routes DELETE /senders/{sender_id}/campaign_types/{campaign_type}", func() {
+		s := router.Get("DELETE /senders/{sender_id}/campaign_types/{campaign_type_id}").GetHandler().(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(campaigntypes.DeleteHandler{}))
+		Expect(s.Middleware).To(HaveLen(3))
+
+		requestLogging := s.Middleware[0].(middleware.RequestLogging)
+		Expect(requestLogging).To(Equal(logging))
+
+		authenticator := s.Middleware[1].(middleware.Authenticator)
+		Expect(authenticator).To(Equal(auth))
+
+		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
+		Expect(databaseAllocator).To(Equal(dbAllocator))
+	})
 })

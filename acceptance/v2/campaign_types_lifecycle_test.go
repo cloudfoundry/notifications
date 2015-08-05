@@ -34,7 +34,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 		senderID = response["id"].(string)
 	})
 
-	It("can create, update and show a new campaign type", func() {
+	It("can create, update, show, and delete a new campaign type", func() {
 		var campaignTypeID string
 
 		By("creating a campaign type", func() {
@@ -85,7 +85,6 @@ var _ = Describe("Campaign types lifecycle", func() {
 				"name":        "updated-campaign-type",
 				"description": "still the same great campaign type",
 				"critical":    true,
-				"template_id": "", // TODO: remove this optional field
 			}, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
@@ -106,6 +105,16 @@ var _ = Describe("Campaign types lifecycle", func() {
 			Expect(response["description"]).To(Equal("still the same great campaign type"))
 			Expect(response["critical"]).To(BeTrue())
 			Expect(response["template_id"]).To(BeEmpty())
+		})
+
+		By("deleting the campaign type", func() {
+			status, _, err := client.Do("DELETE", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNoContent))
+
+			status, _, err = client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNotFound))
 		})
 	})
 

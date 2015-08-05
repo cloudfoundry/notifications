@@ -26,6 +26,7 @@ type campaignTypesRepository interface {
 	List(conn models.ConnectionInterface, senderID string) (campaignTypes []models.CampaignType, err error)
 	Get(conn models.ConnectionInterface, id string) (campaignType models.CampaignType, err error)
 	Update(conn models.ConnectionInterface, campaignType models.CampaignType) (updatedCampaignType models.CampaignType, err error)
+	Delete(conn models.ConnectionInterface, campaignTypeID string) error
 }
 
 func NewCampaignTypesCollection(nr campaignTypesRepository, sr sendersRepository) CampaignTypesCollection {
@@ -36,21 +37,10 @@ func NewCampaignTypesCollection(nr campaignTypesRepository, sr sendersRepository
 }
 
 func (nc CampaignTypesCollection) Set(conn models.ConnectionInterface, campaignType CampaignType, clientID string) (CampaignType, error) {
-	senderModel, err := nc.sendersRepository.Get(conn, campaignType.SenderID)
+	sender, err := nc.sendersRepository.Get(conn, campaignType.SenderID)
+	err = validateSender(clientID, campaignType.SenderID, sender, err)
 	if err != nil {
-		switch e := err.(type) {
-		case models.RecordNotFoundError:
-			return CampaignType{}, NotFoundError{
-				Err:     e,
-				Message: fmt.Sprintf("Sender %s not found", campaignType.SenderID),
-			}
-		default:
-			return CampaignType{}, PersistenceError{err}
-		}
-	}
-
-	if senderModel.ClientID != clientID {
-		return CampaignType{}, NewNotFoundError(fmt.Sprintf("Sender %s not found", campaignType.SenderID))
+		return CampaignType{}, err
 	}
 
 	var (
@@ -94,34 +84,15 @@ func (nc CampaignTypesCollection) Set(conn models.ConnectionInterface, campaignT
 
 func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) (CampaignType, error) {
 	sender, err := nc.sendersRepository.Get(conn, senderID)
+	err = validateSender(clientID, senderID, sender, err)
 	if err != nil {
-		switch err.(type) {
-		case models.RecordNotFoundError:
-			return CampaignType{}, NewNotFoundError(fmt.Sprintf("sender %s not found", campaignTypeID))
-		default:
-			return CampaignType{}, PersistenceError{err}
-		}
-	}
-
-	if clientID != sender.ClientID {
-		return CampaignType{}, NewNotFoundError(fmt.Sprintf("sender %s not found", senderID))
+		return CampaignType{}, err
 	}
 
 	campaignType, err := nc.campaignTypesRepository.Get(conn, campaignTypeID)
+	err = validateCampaignType(senderID, campaignTypeID, campaignType, err)
 	if err != nil {
-		switch err.(type) {
-		case models.RecordNotFoundError:
-			return CampaignType{}, NotFoundError{
-				Err:     err,
-				Message: fmt.Sprintf("campaign type %s not found", campaignTypeID),
-			}
-		default:
-			return CampaignType{}, PersistenceError{err}
-		}
-	}
-
-	if senderID != campaignType.SenderID {
-		return CampaignType{}, NewNotFoundError(fmt.Sprintf("campaign type %s not found", campaignTypeID))
+		return CampaignType{}, err
 	}
 
 	return CampaignType{
@@ -135,21 +106,10 @@ func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignT
 }
 
 func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]CampaignType, error) {
-	senderModel, err := nc.sendersRepository.Get(conn, senderID)
+	sender, err := nc.sendersRepository.Get(conn, senderID)
+	err = validateSender(clientID, senderID, sender, err)
 	if err != nil {
-		switch err.(type) {
-		case models.RecordNotFoundError:
-			return []CampaignType{}, NotFoundError{
-				Err:     err,
-				Message: "sender not found",
-			}
-		default:
-			return []CampaignType{}, PersistenceError{err}
-		}
-	}
-
-	if senderModel.ClientID != clientID {
-		return []CampaignType{}, NewNotFoundError("sender not found")
+		return []CampaignType{}, err
 	}
 
 	modelList, err := nc.campaignTypesRepository.List(conn, senderID)
@@ -172,4 +132,54 @@ func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID
 	}
 
 	return campaignTypeList, nil
+}
+
+func (c CampaignTypesCollection) Delete(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) error {
+	sender, err := c.sendersRepository.Get(conn, senderID)
+	err = validateSender(clientID, senderID, sender, err)
+	if err != nil {
+		return err
+	}
+
+	campaignType, err := c.campaignTypesRepository.Get(conn, campaignTypeID)
+	err = validateCampaignType(senderID, campaignTypeID, campaignType, err)
+	if err != nil {
+		return err
+	}
+
+	return c.campaignTypesRepository.Delete(conn, campaignTypeID)
+}
+
+func validateSender(clientID, senderID string, sender models.Sender, err error) error {
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return NewNotFoundErrorWithOriginalError(fmt.Sprintf("sender %s not found", senderID), err)
+		}
+
+		return PersistenceError{err}
+	}
+
+	if sender.ClientID != clientID {
+		return NewNotFoundError(fmt.Sprintf("sender %s not found", senderID))
+	}
+
+	return nil
+}
+
+func validateCampaignType(senderID, campaignTypeID string, campaignType models.CampaignType, err error) error {
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return NewNotFoundErrorWithOriginalError(fmt.Sprintf("campaign type %s not found", campaignTypeID), err)
+		}
+
+		return PersistenceError{err}
+	}
+
+	if campaignType.SenderID != senderID {
+		return NewNotFoundError(fmt.Sprintf("campaign type %s not found", campaignTypeID))
+	}
+
+	return nil
 }

@@ -27,6 +27,111 @@ var _ = Describe("CampaignTypesCollection", func() {
 		fakeDatabaseConnection = fakes.NewConnection()
 	})
 
+	Describe("Delete", func() {
+		BeforeEach(func() {
+			fakeCampaignTypesRepository.GetReturn.CampaignType = models.CampaignType{
+				ID:          "some-campaign-id",
+				Name:        "My cool campaign type",
+				Description: "description",
+				Critical:    false,
+				TemplateID:  "",
+				SenderID:    "mysender",
+			}
+
+			fakeSendersRepository.GetCall.ReturnSender = models.Sender{
+				ID:       "mysender",
+				Name:     "some-name",
+				ClientID: "some-client-random-id",
+			}
+		})
+
+		Context("when the clientID and senderID are valid", func() {
+			It("deletes the given campaign", func() {
+				Expect(campaignTypesCollection.Delete(fakeDatabaseConnection, "some-campaign-id", "mysender", "some-client-random-id")).To(Succeed())
+
+				Expect(fakeSendersRepository.GetCall.Conn).To(Equal(fakeDatabaseConnection))
+				Expect(fakeSendersRepository.GetCall.SenderID).To(Equal("mysender"))
+
+				Expect(fakeCampaignTypesRepository.GetCall.Connection).To(Equal(fakeDatabaseConnection))
+				Expect(fakeCampaignTypesRepository.GetCall.CampaignTypeID).To(Equal("some-campaign-id"))
+
+				Expect(fakeCampaignTypesRepository.DeleteCall.CampaignTypeID).To(Equal("some-campaign-id"))
+				Expect(fakeCampaignTypesRepository.DeleteCall.Connection).To(Equal(fakeDatabaseConnection))
+			})
+		})
+
+		Context("when an error occurs", func() {
+			Context("when the sender does not match the client ID", func() {
+				It("returns an error", func() {
+					err := campaignTypesCollection.Delete(fakeDatabaseConnection, "some-campaign-id", "mysender", "some-other-client-id")
+					Expect(err).To(MatchError(collections.NewNotFoundError("sender mysender not found")))
+				})
+			})
+
+			Context("when the campaign type does not belong to the sender", func() {
+				It("returns an error", func() {
+					fakeSendersRepository.GetCall.ReturnSender = models.Sender{
+						ID:       "othersender",
+						Name:     "some-name",
+						ClientID: "some-other-client-id",
+					}
+
+					err := campaignTypesCollection.Delete(fakeDatabaseConnection, "some-campaign-id", "othersender", "some-other-client-id")
+					Expect(err).To(MatchError(collections.NewNotFoundError("campaign type some-campaign-id not found")))
+				})
+			})
+
+			Context("when the campaign type does not exist", func() {
+				It("returns an error", func() {
+					originalError := models.RecordNotFoundError("record not found")
+					fakeCampaignTypesRepository.GetReturn.CampaignType = models.CampaignType{}
+					fakeCampaignTypesRepository.GetReturn.Err = originalError
+
+					err := campaignTypesCollection.Delete(fakeDatabaseConnection, "some-bad-campaign-id", "mysender", "some-client-random-id")
+					Expect(err).To(MatchError(collections.NewNotFoundErrorWithOriginalError("campaign type some-bad-campaign-id not found", originalError)))
+				})
+			})
+
+			Context("when the sender returns an error", func() {
+				It("returns an error", func() {
+					originalError := models.RecordNotFoundError("record not found")
+					fakeSendersRepository.GetCall.ReturnSender = models.Sender{}
+					fakeSendersRepository.GetCall.Err = originalError
+					err := campaignTypesCollection.Delete(fakeDatabaseConnection, "some-campaign-id", "not-found", "")
+					Expect(err).To(MatchError(collections.NewNotFoundErrorWithOriginalError("sender not-found not found", originalError)))
+				})
+			})
+
+			Context("when the database connection returns some other error while deleting", func() {
+				It("returns the error", func() {
+					fakeCampaignTypesRepository.DeleteCall.Err = errors.New("indeletable")
+
+					err := campaignTypesCollection.Delete(fakeDatabaseConnection, "some-campaign-id", "mysender", "some-client-random-id")
+					Expect(err).To(MatchError("indeletable"))
+				})
+			})
+
+			Context("when the database connection returns some other error while getting sender", func() {
+				It("returns the error", func() {
+					fakeSendersRepository.GetCall.ReturnSender = models.Sender{}
+					fakeSendersRepository.GetCall.Err = errors.New("nope")
+
+					err := campaignTypesCollection.Delete(fakeDatabaseConnection, "some-campaign-id", "not-found", "")
+					Expect(err).To(MatchError(collections.PersistenceError{errors.New("nope")}))
+				})
+			})
+
+			Context("when the database connection returns some other error while getting campaign type", func() {
+				It("returns the error", func() {
+					fakeCampaignTypesRepository.GetReturn.Err = errors.New("undeletable")
+
+					err := campaignTypesCollection.Delete(fakeDatabaseConnection, "some-campaign-id", "mysender", "some-client-random-id")
+					Expect(err).To(MatchError(collections.PersistenceError{errors.New("undeletable")}))
+				})
+			})
+		})
+	})
+
 	Describe("Set", func() {
 		var (
 			campaignType collections.CampaignType
@@ -90,7 +195,7 @@ var _ = Describe("CampaignTypesCollection", func() {
 
 				_, err := campaignTypesCollection.Set(fakeDatabaseConnection, campaignType, "some-client-id")
 				Expect(err).To(MatchError(collections.NotFoundError{
-					Message: "Sender mysender not found",
+					Message: "sender mysender not found",
 					Err:     models.RecordNotFoundError("sender with sender ID ROBOTS not found"),
 				}))
 			})
@@ -103,7 +208,7 @@ var _ = Describe("CampaignTypesCollection", func() {
 				}
 
 				_, err := campaignTypesCollection.Set(fakeDatabaseConnection, campaignType, "some-client-id")
-				Expect(err).To(MatchError(collections.NewNotFoundError("Sender mysender not found")))
+				Expect(err).To(MatchError(collections.NewNotFoundError("sender mysender not found")))
 			})
 		})
 	})
@@ -149,7 +254,7 @@ var _ = Describe("CampaignTypesCollection", func() {
 				}
 				fakeSendersRepository.GetCall.Err = models.RecordNotFoundError("sender not found")
 				_, err := campaignTypesCollection.Get(fakeDatabaseConnection, "some-campaign-type-id", "missing-sender-id", "some-client-id")
-				Expect(err.(collections.NotFoundError).Message).To(Equal("sender some-campaign-type-id not found"))
+				Expect(err.(collections.NotFoundError).Message).To(Equal("sender missing-sender-id not found"))
 			})
 
 			It("returns a not found error if the campaign type does not belong to the sender", func() {
@@ -262,13 +367,12 @@ var _ = Describe("CampaignTypesCollection", func() {
 
 				_, err := campaignTypesCollection.List(fakeDatabaseConnection, "missing-sender-id", "some-client-id")
 				Expect(err).To(MatchError(collections.NotFoundError{
-					Message: "sender not found",
+					Message: "sender missing-sender-id not found",
 					Err:     models.RecordNotFoundError("sender not found"),
 				}))
 			})
 
 			It("generates a not found error when the sender belongs to a different client", func() {
-				fakeCampaignTypesRepository.ListCall.Err = models.RecordNotFoundError("sender not found")
 				fakeSendersRepository.GetCall.ReturnSender = models.Sender{
 					ID:       "some-sender-id",
 					Name:     "some-sender",
@@ -276,7 +380,7 @@ var _ = Describe("CampaignTypesCollection", func() {
 				}
 
 				_, err := campaignTypesCollection.List(fakeDatabaseConnection, "mismatch-sender-id", "some-client-id")
-				Expect(err).To(MatchError(collections.NewNotFoundError("sender not found")))
+				Expect(err).To(MatchError(collections.NewNotFoundError("sender mismatch-sender-id not found")))
 			})
 
 			It("handles unexpected database errors", func() {

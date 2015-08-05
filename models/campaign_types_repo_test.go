@@ -184,7 +184,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 
 	Describe("Update", func() {
 		It("Updates a campaign type in the database", func() {
-			exisitngCampaignType, err := repo.Insert(conn, models.CampaignType{
+			existingCampaignType, err := repo.Insert(conn, models.CampaignType{
 				Name:        "campaign-type",
 				Description: "campaign-type-description",
 				Critical:    false,
@@ -194,7 +194,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			returnCampaignType, err := repo.Update(conn, models.CampaignType{
-				ID:          exisitngCampaignType.ID,
+				ID:          existingCampaignType.ID,
 				Name:        "updated name",
 				Description: "updated description",
 				Critical:    false,
@@ -202,10 +202,10 @@ var _ = Describe("CampaignTypesRepo", func() {
 				SenderID:    "some-sender-id",
 			})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(returnCampaignType.ID).To(Equal(exisitngCampaignType.ID))
+			Expect(returnCampaignType.ID).To(Equal(existingCampaignType.ID))
 			Expect(returnCampaignType.Name).To(Equal("updated name"))
 
-			campaignType, err := repo.Get(conn, exisitngCampaignType.ID)
+			campaignType, err := repo.Get(conn, existingCampaignType.ID)
 			Expect(campaignType.Name).To(Equal("updated name"))
 			Expect(campaignType.Description).To(Equal("updated description"))
 			Expect(campaignType.Critical).To(Equal(false))
@@ -213,7 +213,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 		})
 
 		Context("failure cases", func() {
-			It("Provides a helpful error when no records are updated", func() {
+			It("provides a helpful error when no records are updated", func() {
 				_, err := repo.Update(conn, models.CampaignType{
 					ID:          "I-do-not-exist",
 					Name:        "updated name",
@@ -226,7 +226,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 				Expect(string(err.(models.RecordNotFoundError))).To(Equal("No records updated: Campaign type with id \"I-do-not-exist\" could not be found"))
 			})
 
-			It("It passes along error messagers from the database", func() {
+			It("passes along error messagers from the database", func() {
 				conn := fakes.NewConnection()
 				conn.UpdateCall.Err = errors.New("a database error")
 
@@ -241,6 +241,39 @@ var _ = Describe("CampaignTypesRepo", func() {
 
 				_, err := repo.Update(conn, campaignType)
 				Expect(err).To(MatchError("a database error"))
+			})
+		})
+	})
+
+	Describe("Delete", func() {
+		BeforeEach(func() {
+			_, err := repo.Insert(conn, models.CampaignType{
+				ID:          "my-campaign-id",
+				Name:        "campaign-type",
+				Description: "campaign-type-description",
+				Critical:    false,
+				TemplateID:  "some-template-id",
+				SenderID:    "some-sender-id",
+			})
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("deletes the campaignType from the database", func() {
+			err := repo.Delete(conn, "my-campaign-id")
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = repo.Get(conn, "my-campaign-id")
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+		})
+
+		Context("when an error occurs", func() {
+			It("returns the error", func() {
+				conn := fakes.NewConnection()
+				databaseError := errors.New("The database is not valid")
+				conn.DeleteCall.Err = databaseError
+				err := repo.Delete(conn, "other-campaign-id")
+				Expect(err).To(MatchError(databaseError))
 			})
 		})
 	})
