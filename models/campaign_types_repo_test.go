@@ -259,7 +259,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 		})
 
 		It("deletes the campaignType from the database", func() {
-			err := repo.Delete(conn, "my-campaign-id")
+			err := repo.Delete(conn, models.CampaignType{ID: "my-campaign-id"})
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = repo.Get(conn, "my-campaign-id")
@@ -272,7 +272,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 				conn := fakes.NewConnection()
 				databaseError := errors.New("The database is not valid")
 				conn.DeleteCall.Err = databaseError
-				err := repo.Delete(conn, "other-campaign-id")
+				err := repo.Delete(conn, models.CampaignType{ID: "other-campaign-id"})
 				Expect(err).To(MatchError(databaseError))
 			})
 		})

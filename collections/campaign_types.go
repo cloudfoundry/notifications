@@ -26,7 +26,7 @@ type campaignTypesRepository interface {
 	List(conn models.ConnectionInterface, senderID string) (campaignTypes []models.CampaignType, err error)
 	Get(conn models.ConnectionInterface, id string) (campaignType models.CampaignType, err error)
 	Update(conn models.ConnectionInterface, campaignType models.CampaignType) (updatedCampaignType models.CampaignType, err error)
-	Delete(conn models.ConnectionInterface, campaignTypeID string) error
+	Delete(conn models.ConnectionInterface, campaignType models.CampaignType) error
 }
 
 func NewCampaignTypesCollection(nr campaignTypesRepository, sr sendersRepository) CampaignTypesCollection {
@@ -147,7 +147,7 @@ func (c CampaignTypesCollection) Delete(conn models.ConnectionInterface, campaig
 		return err
 	}
 
-	return c.campaignTypesRepository.Delete(conn, campaignTypeID)
+	return c.campaignTypesRepository.Delete(conn, campaignType)
 }
 
 func validateSender(clientID, senderID string, sender models.Sender, err error) error {

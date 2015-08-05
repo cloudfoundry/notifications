@@ -55,7 +55,7 @@ var _ = Describe("CampaignTypesCollection", func() {
 				Expect(fakeCampaignTypesRepository.GetCall.Connection).To(Equal(fakeDatabaseConnection))
 				Expect(fakeCampaignTypesRepository.GetCall.CampaignTypeID).To(Equal("some-campaign-id"))
 
-				Expect(fakeCampaignTypesRepository.DeleteCall.CampaignTypeID).To(Equal("some-campaign-id"))
+				Expect(fakeCampaignTypesRepository.DeleteCall.CampaignType.ID).To(Equal("some-campaign-id"))
 				Expect(fakeCampaignTypesRepository.DeleteCall.Connection).To(Equal(fakeDatabaseConnection))
 			})
 		})

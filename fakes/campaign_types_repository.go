@@ -36,9 +36,9 @@ type CampaignTypesRepository struct {
 	}
 
 	DeleteCall struct {
-		Connection     models.ConnectionInterface
-		CampaignTypeID string
-		Err            error
+		Connection   models.ConnectionInterface
+		CampaignType models.CampaignType
+		Err          error
 	}
 }
 
@@ -74,9 +74,9 @@ func (r *CampaignTypesRepository) Update(conn models.ConnectionInterface, campai
 	return r.UpdateCall.ReturnCampaignType, r.UpdateCall.Err
 }
 
-func (r *CampaignTypesRepository) Delete(conn models.ConnectionInterface, campaignTypeID string) error {
+func (r *CampaignTypesRepository) Delete(conn models.ConnectionInterface, campaignType models.CampaignType) error {
 	r.DeleteCall.Connection = conn
-	r.DeleteCall.CampaignTypeID = campaignTypeID
+	r.DeleteCall.CampaignType = campaignType
 
 	return r.DeleteCall.Err
 }
