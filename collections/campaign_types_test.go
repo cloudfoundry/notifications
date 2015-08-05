@@ -117,7 +117,7 @@ var _ = Describe("CampaignTypesCollection", func() {
 					fakeSendersRepository.GetCall.Err = errors.New("nope")
 
 					err := campaignTypesCollection.Delete(fakeDatabaseConnection, "some-campaign-id", "not-found", "")
-					Expect(err).To(MatchError(collections.PersistenceError{errors.New("nope")}))
+					Expect(err).To(MatchError(collections.PersistenceError{Err: errors.New("nope")}))
 				})
 			})
 
@@ -126,7 +126,7 @@ var _ = Describe("CampaignTypesCollection", func() {
 					fakeCampaignTypesRepository.GetReturn.Err = errors.New("undeletable")
 
 					err := campaignTypesCollection.Delete(fakeDatabaseConnection, "some-campaign-id", "mysender", "some-client-random-id")
-					Expect(err).To(MatchError(collections.PersistenceError{errors.New("undeletable")}))
+					Expect(err).To(MatchError(collections.PersistenceError{Err: errors.New("undeletable")}))
 				})
 			})
 		})
