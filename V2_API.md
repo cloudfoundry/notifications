@@ -10,6 +10,7 @@
   - [Showing a campaign type](#show-campaign-type)
   - [Listing the campaign types](#list-campaign-types)
   - [Updating a campaign type](#update-campaign-type)
+  - [Deleting a campaign type](#delete-campaign-type)
 
 ## System Status
 
@@ -378,3 +379,42 @@ Date: Tue, 04 Aug 2015 20:47:35 GMT
 | description        | Campaign type description         |
 | critical           | Critical campaign type flag       |
 | template_id        | Template ID                           |
+
+<a name="delete-campaign-type"></a>
+##### Deleting a Campaign Type
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+
+\* The user token requires `notifications.write` scope.
+
+###### Route
+```
+DELETE /senders/<sender-id>/campaign_types/<campaign-type-id>
+```
+
+###### CURL example
+```
+$ curl -i -X DELETE \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/senders/a6c38f92-8fa9-488b-4f4c-7f4d4e0c0fd2/campaign_types/5cbc4458-3dba-481b-74c3-4548114b830b
+
+204 No Content
+RESPONSE HEADERS:
+  Date: Wed, 05 Aug 2015 22:24:15 GMT
+  Connection: close
+RESPONSE BODY:
+```
+
+##### Response
+
+###### Status
+```
+204 No Content
+```
