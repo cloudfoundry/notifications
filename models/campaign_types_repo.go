@@ -68,15 +68,11 @@ func (r CampaignTypesRepository) Get(connection ConnectionInterface, campaignTyp
 }
 
 func (r CampaignTypesRepository) Update(connection ConnectionInterface, campaignType CampaignType) (CampaignType, error) {
-	count, err := connection.Update(&campaignType)
+	_, err := connection.Update(&campaignType)
 	if err != nil {
 		return CampaignType{}, err
 	}
 
-	if count == 0 {
-		err = NewRecordNotFoundError("No records updated: Campaign type with id %q could not be found", campaignType.ID)
-		return CampaignType{}, err
-	}
 	return campaignType, err
 }
 

@@ -79,7 +79,7 @@ func (nc CampaignTypesCollection) Set(conn models.ConnectionInterface, campaignT
 		Critical:    returnCampaignType.Critical,
 		TemplateID:  returnCampaignType.TemplateID,
 		SenderID:    returnCampaignType.SenderID,
-	}, err
+	}, nil
 }
 
 func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) (CampaignType, error) {

@@ -213,19 +213,6 @@ var _ = Describe("CampaignTypesRepo", func() {
 		})
 
 		Context("failure cases", func() {
-			It("provides a helpful error when no records are updated", func() {
-				_, err := repo.Update(conn, models.CampaignType{
-					ID:          "I-do-not-exist",
-					Name:        "updated name",
-					Description: "updated description",
-					Critical:    false,
-					TemplateID:  "updated template id",
-					SenderID:    "some-sender-id",
-				})
-				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
-				Expect(string(err.(models.RecordNotFoundError))).To(Equal("No records updated: Campaign type with id \"I-do-not-exist\" could not be found"))
-			})
-
 			It("passes along error messagers from the database", func() {
 				conn := fakes.NewConnection()
 				conn.UpdateCall.Err = errors.New("a database error")
