@@ -11,13 +11,17 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type ListHandler struct {
-	campaignTypes collection
+type collectionLister interface {
+	List(conn models.ConnectionInterface, senderID, clientID string) ([]collections.CampaignType, error)
 }
 
-func NewListHandler(campaignTypes collection) ListHandler {
+type ListHandler struct {
+	collection collectionLister
+}
+
+func NewListHandler(collection collectionLister) ListHandler {
 	return ListHandler{
-		campaignTypes: campaignTypes,
+		collection: collection,
 	}
 }
 
@@ -40,7 +44,7 @@ func (h ListHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 
 	database := context.Get("database").(models.DatabaseInterface)
 
-	campaignTypes, err := h.campaignTypes.List(database.Connection(), senderID, context.Get("client_id").(string))
+	campaignTypes, err := h.collection.List(database.Connection(), senderID, context.Get("client_id").(string))
 	if err != nil {
 		switch err.(type) {
 		case collections.NotFoundError:

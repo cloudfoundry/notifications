@@ -2,17 +2,10 @@ package campaigntypes
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/collections"
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )
-
-type collection interface {
-	Set(conn models.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error)
-	List(conn models.ConnectionInterface, senderID, clientID string) ([]collections.CampaignType, error)
-	Get(conn models.ConnectionInterface, senderID, campaignTypeID, clientID string) (collections.CampaignType, error)
-}
 
 type RouterConfig struct {
 	RequestLogging          stack.Middleware

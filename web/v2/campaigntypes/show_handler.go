@@ -11,13 +11,17 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type ShowHandler struct {
-	campaignTypes collection
+type collectionGetter interface {
+	Get(conn models.ConnectionInterface, senderID, campaignTypeID, clientID string) (collections.CampaignType, error)
 }
 
-func NewShowHandler(campaignTypes collection) ShowHandler {
+type ShowHandler struct {
+	collection collectionGetter
+}
+
+func NewShowHandler(collection collectionGetter) ShowHandler {
 	return ShowHandler{
-		campaignTypes: campaignTypes,
+		collection: collection,
 	}
 }
 
@@ -46,7 +50,7 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 	}
 
 	database := context.Get("database").(models.DatabaseInterface)
-	campaignType, err := h.campaignTypes.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
+	campaignType, err := h.collection.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
 	if err != nil {
 		var errorMessage string
 		switch e := err.(type) {

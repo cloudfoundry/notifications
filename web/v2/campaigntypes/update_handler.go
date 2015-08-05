@@ -12,13 +12,18 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type UpdateHandler struct {
-	campaignTypes collection
+type collectionUpdater interface {
+	Set(conn models.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error)
+	Get(conn models.ConnectionInterface, senderID, campaignTypeID, clientID string) (collections.CampaignType, error)
 }
 
-func NewUpdateHandler(campaignTypes collection) UpdateHandler {
+type UpdateHandler struct {
+	collection collectionUpdater
+}
+
+func NewUpdateHandler(collection collectionUpdater) UpdateHandler {
 	return UpdateHandler{
-		campaignTypes: campaignTypes,
+		collection: collection,
 	}
 }
 
@@ -84,7 +89,7 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	}
 
 	database := context.Get("database").(models.DatabaseInterface)
-	campaignType, err := h.campaignTypes.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
+	campaignType, err := h.collection.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
 	if err != nil {
 		switch err := err.(type) {
 		case collections.NotFoundError:
@@ -130,7 +135,7 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		}
 	}
 
-	returnCampaignType, err := h.campaignTypes.Set(database.Connection(), campaignType, context.Get("client_id").(string))
+	returnCampaignType, err := h.collection.Set(database.Connection(), campaignType, context.Get("client_id").(string))
 	if err != nil {
 		switch err := err.(type) {
 		case collections.NotFoundError:
