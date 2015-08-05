@@ -16,11 +16,18 @@ type CampaignTypesCollection struct {
 
 	ListCall struct {
 		ReturnCampaignTypeList []collections.CampaignType
+		Conn                   models.ConnectionInterface
+		SenderID               string
+		ClientID               string
 		Err                    error
 	}
 
 	GetCall struct {
 		ReturnCampaignType collections.CampaignType
+		Conn               models.ConnectionInterface
+		CampaignTypeID     string
+		SenderID           string
+		ClientID           string
 		Err                error
 	}
 }
@@ -37,9 +44,16 @@ func (c *CampaignTypesCollection) Set(conn models.ConnectionInterface, campaignT
 }
 
 func (c *CampaignTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]collections.CampaignType, error) {
+	c.ListCall.Conn = conn
+	c.ListCall.SenderID = senderID
+	c.ListCall.ClientID = clientID
 	return c.ListCall.ReturnCampaignTypeList, c.ListCall.Err
 }
 
 func (c *CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) (collections.CampaignType, error) {
+	c.GetCall.Conn = conn
+	c.GetCall.CampaignTypeID = campaignTypeID
+	c.GetCall.SenderID = senderID
+	c.GetCall.ClientID = clientID
 	return c.GetCall.ReturnCampaignType, c.GetCall.Err
 }

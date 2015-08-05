@@ -54,6 +54,11 @@ var _ = Describe("ShowHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
+		Expect(campaignTypesCollection.GetCall.Conn).To(Equal(database.Conn))
+		Expect(campaignTypesCollection.GetCall.CampaignTypeID).To(Equal("campaign-type-id-one"))
+		Expect(campaignTypesCollection.GetCall.SenderID).To(Equal("some-sender-id"))
+		Expect(campaignTypesCollection.GetCall.ClientID).To(Equal("some-client-id"))
+
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
 			"id": "campaign-type-id-one",

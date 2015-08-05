@@ -64,6 +64,10 @@ var _ = Describe("ListHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
+		Expect(campaignTypesCollection.ListCall.Conn).To(Equal(database.Conn))
+		Expect(campaignTypesCollection.ListCall.SenderID).To(Equal("some-sender-id"))
+		Expect(campaignTypesCollection.ListCall.ClientID).To(Equal("some-client-id"))
+
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
 			"campaign_types": [
