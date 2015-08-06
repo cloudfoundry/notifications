@@ -1,139 +1,146 @@
 {
-  "Deps": [
-    {
-      "Comment": "null-24",
-      "ImportPath": "bitbucket.org/chrj/smtpd",
-      "Rev": "10bcb042194e344946fc7d9a6dad3cd87c05ec04"
-    },
-    {
-      "ImportPath": "bitbucket.org/liamstask/goose/lib/goose",
-      "Rev": "8488cc47d90c8a502b1c41a462a6d9cc8ee0a895"
-    },
-    {
-      "Comment": "0.1.0-5-g5d1551f",
-      "ImportPath": "github.com/DATA-DOG/go-sqlmock",
-      "Rev": "5d1551fda1604432bc39198b733897e07f6ee6e9"
-    },
-    {
-      "Comment": "v0.3.2-72-g269246d",
-      "ImportPath": "github.com/PuerkitoBio/goquery",
-      "Rev": "269246d9e7d42d74e1cf929336d128d2ef53e7a5"
-    },
-    {
-      "ImportPath": "github.com/andybalholm/cascadia",
-      "Rev": "54abbbf07a45a3ef346ebe903e0715d9a3c19352"
-    },
-    {
-      "Comment": "v2.2.0-2-g47b263f",
-      "ImportPath": "github.com/dgrijalva/jwt-go",
-      "Rev": "47b263f020574c14765ecc3ea88f0e9447046632"
-    },
-    {
-      "Comment": "v1.7-138-gc44345f",
-      "ImportPath": "github.com/go-gorp/gorp",
-      "Rev": "c44345f52fc81d27c47e6b592dedaf8c28a972eb"
-    },
-    {
-      "Comment": "v1.2",
-      "ImportPath": "github.com/go-sql-driver/mysql",
-      "Rev": "a732e14c62dde3285440047bba97581bc472ae18"
-    },
-    {
-      "ImportPath": "github.com/gorilla/context",
-      "Rev": "1be7a086a5fd6440ef16fe96baeda0c78282b980"
-    },
-    {
-      "ImportPath": "github.com/gorilla/mux",
-      "Rev": "9ede152210fa25c1377d33e867cb828c19316445"
-    },
-    {
-      "Comment": "go.weekly.2011-11-02-17-g0ddb27c",
-      "ImportPath": "github.com/kylelemons/go-gypsy/yaml",
-      "Rev": "0ddb27ce74ade2ca988ec85587d636e10312dfc6"
-    },
-    {
-      "ImportPath": "github.com/lib/pq",
-      "Rev": "c808a1bb644594ca717ac61f71e6b0e454b835e2"
-    },
-    {
-      "ImportPath": "github.com/mattn/go-sqlite3",
-      "Rev": "58c62dc30cda06e4a74e18f6489bb6c112fc6e5d"
-    },
-    {
-      "ImportPath": "github.com/nu7hatch/gouuid",
-      "Rev": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3"
-    },
-    {
-      "Comment": "v1.1.0-32-g291f28e",
-      "ImportPath": "github.com/onsi/ginkgo",
-      "Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-    },
-    {
-      "Comment": "v1.0-50-gd6c945f",
-      "ImportPath": "github.com/onsi/gomega",
-      "Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-    },
-    {
-      "ImportPath": "github.com/pivotal-cf-experimental/rainmaker",
-      "Rev": "4d942cc08bd37d504bb60356a83c560968bb6338"
-    },
-    {
-      "ImportPath": "github.com/pivotal-cf-experimental/warrant",
-      "Rev": "04cf521d549f1f73a77ef64b5255d831681fb649"
-    },
-    {
-      "ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",
-      "Rev": "0b91e8ad4bb6b9e71a6316e1bb6de7414c0e01b2"
-    },
-    {
-      "ImportPath": "github.com/pivotal-golang/conceal",
-      "Rev": "31656578115c62eb24f14f2a2946b018807cb6d2"
-    },
-    {
-      "ImportPath": "github.com/pivotal-golang/lager",
-      "Rev": "c88fa6d6c4d2f8a21a4599785211e41777750d34"
-    },
-    {
-      "ImportPath": "github.com/rubenv/sql-migrate",
-      "Rev": "53184e1edfb4f9655b0fa8dd2c23e7763f452bda"
-    },
-    {
-      "ImportPath": "github.com/ryanmoran/stack",
-      "Rev": "3debe7a5953ad63d7429bd22b186134c6dea6f73"
-    },
-    {
-      "ImportPath": "github.com/ryanmoran/viron",
-      "Rev": "8f906a47a4d52fa6388924aea142466bf90e4cda"
-    },
-    {
-      "Comment": "v1.5.3-12-g1928d33",
-      "ImportPath": "github.com/ziutek/mymysql/godrv",
-      "Rev": "1928d3379a32cc58b535ea2d03c017ade9eb2d0d"
-    },
-    {
-      "Comment": "v1.5.3-12-g1928d33",
-      "ImportPath": "github.com/ziutek/mymysql/mysql",
-      "Rev": "1928d3379a32cc58b535ea2d03c017ade9eb2d0d"
-    },
-    {
-      "Comment": "v1.5.3-12-g1928d33",
-      "ImportPath": "github.com/ziutek/mymysql/native",
-      "Rev": "1928d3379a32cc58b535ea2d03c017ade9eb2d0d"
-    },
-    {
-      "ImportPath": "golang.org/x/net/html",
-      "Rev": "7dbad50ab5b31073856416cdcfeb2796d682f844"
-    },
-    {
-      "ImportPath": "gopkg.in/alexcesaro/quotedprintable.v1",
-      "Rev": "dacd4576c5aafefb89134351dfcf4fbe213cd998"
-    },
-    {
-      "ImportPath": "gopkg.in/gomail.v1",
-      "Rev": "d7294067b867578fbea56a07541dcd0c851e5c41"
-    }
-  ],
-  "GoVersion": "go1.4.2",
-  "ImportPath": "github.com/cloudfoundry-incubator/notifications",
-  "Packages": ["./..."]
+	"ImportPath": "github.com/cloudfoundry-incubator/notifications",
+	"GoVersion": "go1.4.2",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "bitbucket.org/chrj/smtpd",
+			"Comment": "null-24",
+			"Rev": "10bcb042194e344946fc7d9a6dad3cd87c05ec04"
+		},
+		{
+			"ImportPath": "bitbucket.org/liamstask/goose/lib/goose",
+			"Rev": "8488cc47d90c8a502b1c41a462a6d9cc8ee0a895"
+		},
+		{
+			"ImportPath": "github.com/DATA-DOG/go-sqlmock",
+			"Comment": "0.1.0-5-g5d1551f",
+			"Rev": "5d1551fda1604432bc39198b733897e07f6ee6e9"
+		},
+		{
+			"ImportPath": "github.com/PuerkitoBio/goquery",
+			"Comment": "v0.3.2-72-g269246d",
+			"Rev": "269246d9e7d42d74e1cf929336d128d2ef53e7a5"
+		},
+		{
+			"ImportPath": "github.com/andybalholm/cascadia",
+			"Rev": "54abbbf07a45a3ef346ebe903e0715d9a3c19352"
+		},
+		{
+			"ImportPath": "github.com/dgrijalva/jwt-go",
+			"Comment": "v2.2.0-2-g47b263f",
+			"Rev": "47b263f020574c14765ecc3ea88f0e9447046632"
+		},
+		{
+			"ImportPath": "github.com/go-gorp/gorp",
+			"Comment": "v1.7-138-gc44345f",
+			"Rev": "c44345f52fc81d27c47e6b592dedaf8c28a972eb"
+		},
+		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "v1.2",
+			"Rev": "a732e14c62dde3285440047bba97581bc472ae18"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "1be7a086a5fd6440ef16fe96baeda0c78282b980"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "9ede152210fa25c1377d33e867cb828c19316445"
+		},
+		{
+			"ImportPath": "github.com/kylelemons/go-gypsy/yaml",
+			"Comment": "go.weekly.2011-11-02-17-g0ddb27c",
+			"Rev": "0ddb27ce74ade2ca988ec85587d636e10312dfc6"
+		},
+		{
+			"ImportPath": "github.com/lib/pq",
+			"Rev": "c808a1bb644594ca717ac61f71e6b0e454b835e2"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-sqlite3",
+			"Rev": "58c62dc30cda06e4a74e18f6489bb6c112fc6e5d"
+		},
+		{
+			"ImportPath": "github.com/nu7hatch/gouuid",
+			"Rev": "179d4d0c4d8d407a32af483c2354df1d2c91e6c3"
+		},
+		{
+			"ImportPath": "github.com/onsi/ginkgo",
+			"Comment": "v1.1.0-32-g291f28e",
+			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega",
+			"Comment": "v1.0-50-gd6c945f",
+			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
+		},
+		{
+			"ImportPath": "github.com/pivotal-cf-experimental/rainmaker",
+			"Rev": "4d942cc08bd37d504bb60356a83c560968bb6338"
+		},
+		{
+			"ImportPath": "github.com/pivotal-cf-experimental/warrant",
+			"Rev": "04cf521d549f1f73a77ef64b5255d831681fb649"
+		},
+		{
+			"ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",
+			"Rev": "0b91e8ad4bb6b9e71a6316e1bb6de7414c0e01b2"
+		},
+		{
+			"ImportPath": "github.com/pivotal-golang/conceal",
+			"Rev": "31656578115c62eb24f14f2a2946b018807cb6d2"
+		},
+		{
+			"ImportPath": "github.com/pivotal-golang/lager",
+			"Rev": "c88fa6d6c4d2f8a21a4599785211e41777750d34"
+		},
+		{
+			"ImportPath": "github.com/rubenv/sql-migrate",
+			"Rev": "53184e1edfb4f9655b0fa8dd2c23e7763f452bda"
+		},
+		{
+			"ImportPath": "github.com/ryanmoran/stack",
+			"Rev": "3debe7a5953ad63d7429bd22b186134c6dea6f73"
+		},
+		{
+			"ImportPath": "github.com/ryanmoran/viron",
+			"Rev": "8f906a47a4d52fa6388924aea142466bf90e4cda"
+		},
+		{
+			"ImportPath": "github.com/ziutek/mymysql/godrv",
+			"Comment": "v1.5.3-12-g1928d33",
+			"Rev": "1928d3379a32cc58b535ea2d03c017ade9eb2d0d"
+		},
+		{
+			"ImportPath": "github.com/ziutek/mymysql/mysql",
+			"Comment": "v1.5.3-12-g1928d33",
+			"Rev": "1928d3379a32cc58b535ea2d03c017ade9eb2d0d"
+		},
+		{
+			"ImportPath": "github.com/ziutek/mymysql/native",
+			"Comment": "v1.5.3-12-g1928d33",
+			"Rev": "1928d3379a32cc58b535ea2d03c017ade9eb2d0d"
+		},
+		{
+			"ImportPath": "golang.org/x/net/html",
+			"Rev": "7dbad50ab5b31073856416cdcfeb2796d682f844"
+		},
+		{
+			"ImportPath": "gopkg.in/alexcesaro/quotedprintable.v1",
+			"Rev": "dacd4576c5aafefb89134351dfcf4fbe213cd998"
+		},
+		{
+			"ImportPath": "gopkg.in/gomail.v1",
+			"Rev": "d7294067b867578fbea56a07541dcd0c851e5c41"
+		},
+		{
+			"ImportPath": "gopkg.in/gorp.v1",
+			"Comment": "v1.7.1",
+			"Rev": "c87af80f3cc5036b55b83d77171e156791085e2e"
+		}
+	]
 }
