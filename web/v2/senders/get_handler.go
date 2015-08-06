@@ -11,11 +11,15 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type GetHandler struct {
-	senders collection
+type collectionGetter interface {
+	Get(conn models.ConnectionInterface, senderID, clientID string) (retrievedSender collections.Sender, err error)
 }
 
-func NewGetHandler(senders collection) GetHandler {
+type GetHandler struct {
+	senders collectionGetter
+}
+
+func NewGetHandler(senders collectionGetter) GetHandler {
 	return GetHandler{
 		senders: senders,
 	}

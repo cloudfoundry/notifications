@@ -2,11 +2,12 @@ package campaigntypes_test
 
 import (
 	"database/sql"
+	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
+	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/campaigntypes"
-	"github.com/gorilla/mux"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
 
@@ -14,28 +15,32 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("CampaignTypesRouter", func() {
+var _ = Describe("Routes", func() {
 	var (
 		logging     middleware.RequestLogging
 		dbAllocator middleware.DatabaseAllocator
 		auth        middleware.Authenticator
-		router      *mux.Router
+		muxer       web.Muxer
 	)
 
 	BeforeEach(func() {
 		logging = middleware.NewRequestLogging(lager.NewLogger("log-prefix"))
 		auth = middleware.NewAuthenticator("some-public-key", "notifications.write")
 		dbAllocator = middleware.NewDatabaseAllocator(&sql.DB{}, false)
-		router = campaigntypes.NewRouter(campaigntypes.RouterConfig{
+		muxer = web.NewMuxer()
+		campaigntypes.Routes{
 			RequestLogging:          logging,
 			Authenticator:           auth,
 			DatabaseAllocator:       dbAllocator,
 			CampaignTypesCollection: collections.CampaignTypesCollection{},
-		})
+		}.Register(muxer)
 	})
 
 	It("routes POST /senders/{sender_id}/campaign_types", func() {
-		s := router.Get("POST /senders/{sender_id}/campaign_types").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("POST", "/senders/some-sender-id/campaign_types", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(campaigntypes.CreateHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
@@ -50,7 +55,10 @@ var _ = Describe("CampaignTypesRouter", func() {
 	})
 
 	It("routes GET /senders/{sender_id}/campaign_types", func() {
-		s := router.Get("GET /senders/{sender_id}/campaign_types").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("GET", "/senders/some-sender-id/campaign_types", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(campaigntypes.ListHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
@@ -65,7 +73,10 @@ var _ = Describe("CampaignTypesRouter", func() {
 	})
 
 	It("routes GET /senders/{sender_id}/campaign_types/{campaign_type_id}", func() {
-		s := router.Get("GET /senders/{sender_id}/campaign_types/{campaign_type_id}").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("GET", "/senders/some-sender-id/campaign_types/some-campaign-type-id", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(campaigntypes.ShowHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
@@ -80,7 +91,10 @@ var _ = Describe("CampaignTypesRouter", func() {
 	})
 
 	It("routes PUT /senders/{sender_id}/campaign_types/{campaign_type}", func() {
-		s := router.Get("PUT /senders/{sender_id}/campaign_types/{campaign_type_id}").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(campaigntypes.UpdateHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
@@ -95,7 +109,10 @@ var _ = Describe("CampaignTypesRouter", func() {
 	})
 
 	It("routes DELETE /senders/{sender_id}/campaign_types/{campaign_type}", func() {
-		s := router.Get("DELETE /senders/{sender_id}/campaign_types/{campaign_type_id}").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("DELETE", "/senders/some-sender-id/campaign_types/some-campaign-type-id", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(campaigntypes.DeleteHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
