@@ -32,20 +32,20 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 
 	if senderID == "" {
 		writer.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(writer, `{"error": %q}`, "missing sender id")
+		fmt.Fprintf(writer, `{"errors": [%q]}`, "missing sender id")
 		return
 	}
 
 	if campaignTypeID == "" {
 		writer.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(writer, `{"error": %q}`, "missing campaign type id")
+		fmt.Fprintf(writer, `{"errors": [%q]}`, "missing campaign type id")
 		return
 	}
 
 	clientID := context.Get("client_id")
 	if clientID == "" {
 		writer.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(writer, `{"error": %q}`, "missing client id")
+		fmt.Fprintf(writer, `{"errors": [%q]}`, "missing client id")
 		return
 	}
 
@@ -62,7 +62,7 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 			errorMessage = err.Error()
 		}
 
-		fmt.Fprintf(writer, `{"error": "%s"}`, errorMessage)
+		fmt.Fprintf(writer, `{"errors": [%q]}`, errorMessage)
 		return
 	}
 

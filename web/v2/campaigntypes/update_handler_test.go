@@ -206,7 +206,7 @@ var _ = Describe("UpdateHandler", func() {
 
 			Expect(writer.Code).To(Equal(http.StatusBadRequest))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-					"error": "invalid json body"
+					"errors": ["invalid json body"]
 			}`))
 		})
 
@@ -221,7 +221,7 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-					"error": "name cannot be blank"
+					"errors": ["name cannot be blank"]
 			}`))
 		})
 
@@ -236,7 +236,7 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-					"error": "description cannot be blank"
+					"errors": ["description cannot be blank"]
 			}`))
 		})
 
@@ -252,7 +252,7 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "name cannot be blank, description cannot be blank"
+				"errors": ["name cannot be blank, description cannot be blank"]
 			}`))
 		})
 
@@ -265,7 +265,7 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "This is for humans."
+				"errors": ["This is for humans."]
 			}`))
 		})
 
@@ -278,7 +278,7 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "This is for humans."
+				"errors": ["This is for humans."]
 			}`))
 		})
 
@@ -301,7 +301,7 @@ var _ = Describe("UpdateHandler", func() {
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusForbidden))
-			Expect(writer.Body.String()).To(MatchJSON(`{ "error": "Forbidden: cannot update campaign type with critical flag set to true" }`))
+			Expect(writer.Body.String()).To(MatchJSON(`{ "errors": ["Forbidden: cannot update campaign type with critical flag set to true"] }`))
 			Expect(campaignTypesCollection.SetCall.WasCalled).To(BeFalse())
 		})
 
@@ -350,17 +350,17 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "BOOM!"
+				"errors": ["BOOM!"]
 			}`))
 		})
 
-		It("returns a 500 when collections.Set() returns an unexpected error", func() {
+		It("returns a 500 when collections.Set() returns an unexpected errors", func() {
 			campaignTypesCollection.SetCall.Err = errors.New("BOOM!")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "BOOM!"
+				"errors": ["BOOM!"]
 			}`))
 		})
 	})

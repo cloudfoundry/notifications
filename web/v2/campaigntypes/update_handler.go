@@ -77,14 +77,14 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	err := json.NewDecoder(req.Body).Decode(&updateRequest)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error": "invalid json body"}`))
+		w.Write([]byte(`{"errors": ["invalid json body"]}`))
 		return
 	}
 
 	validFlag, validationError := updateRequest.isValid()
 	if validFlag == false {
 		w.WriteHeader(422)
-		fmt.Fprintf(w, `{"error": %q}`, validationError)
+		fmt.Fprintf(w, `{"errors": [%q]}`, validationError)
 		return
 	}
 
@@ -94,11 +94,11 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		switch err := err.(type) {
 		case collections.NotFoundError:
 			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintf(w, `{"error": %q}`, err.Message)
+			fmt.Fprintf(w, `{"errors": [%q]}`, err.Message)
 			return
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, `{"error": %q}`, err.Error())
+			fmt.Fprintf(w, `{"errors": [%q]}`, err.Error())
 			return
 		}
 	}
@@ -130,7 +130,7 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 		if hasCriticalWrite == false {
 			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintf(w, `{ "error": %q }`, "Forbidden: cannot update campaign type with critical flag set to true")
+			fmt.Fprintf(w, `{ "errors": [%q] }`, "Forbidden: cannot update campaign type with critical flag set to true")
 			return
 		}
 	}
@@ -140,11 +140,11 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		switch err := err.(type) {
 		case collections.NotFoundError:
 			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintf(w, `{"error": %q}`, err.Message)
+			fmt.Fprintf(w, `{"errors": [%q]}`, err.Message)
 			return
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, `{"error": %q}`, err.Error())
+			fmt.Fprintf(w, `{"errors": [%q]}`, err.Error())
 			return
 		}
 	}

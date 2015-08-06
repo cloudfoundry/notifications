@@ -40,19 +40,19 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	err := json.NewDecoder(req.Body).Decode(&createRequest)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error": "invalid json body"}`))
+		w.Write([]byte(`{"errors": ["invalid json body"]}`))
 		return
 	}
 
 	if createRequest.Name == "" {
 		w.WriteHeader(422)
-		fmt.Fprintf(w, `{ "error": %q }`, "missing campaign type name")
+		fmt.Fprintf(w, `{ "errors": [%q]}`, "missing campaign type name")
 		return
 	}
 
 	if createRequest.Description == "" {
 		w.WriteHeader(422)
-		fmt.Fprintf(w, `{"error": %q}`, "missing campaign type description")
+		fmt.Fprintf(w, `{"errors": [%q]}`, "missing campaign type description")
 		return
 	}
 
@@ -67,7 +67,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 		if hasCriticalWrite == false {
 			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintf(w, `{ "error": %q }`, http.StatusText(http.StatusForbidden))
+			fmt.Fprintf(w, `{ "errors": [%q]}`, http.StatusText(http.StatusForbidden))
 			return
 		}
 	}
@@ -91,7 +91,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 			w.WriteHeader(http.StatusInternalServerError)
 			errorMessage = err.Error()
 		}
-		fmt.Fprintf(w, `{ "error": "%s" }`, errorMessage)
+		fmt.Fprintf(w, `{ "errors": [%q]}`, errorMessage)
 		return
 	}
 

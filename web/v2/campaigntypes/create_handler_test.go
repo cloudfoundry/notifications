@@ -174,7 +174,7 @@ var _ = Describe("CreateHandler", func() {
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusForbidden))
-			Expect(writer.Body.String()).To(MatchJSON(`{ "error": "Forbidden" }`))
+			Expect(writer.Body.String()).To(MatchJSON(`{ "errors": ["Forbidden"] }`))
 		})
 
 		It("returns a 400 when the JSON request body cannot be unmarshalled", func() {
@@ -185,7 +185,7 @@ var _ = Describe("CreateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusBadRequest))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "invalid json body"
+				"errors": ["invalid json body"]
 			}`))
 		})
 
@@ -203,7 +203,7 @@ var _ = Describe("CreateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "missing campaign type name"
+				"errors": ["missing campaign type name"]
 			}`))
 		})
 
@@ -221,7 +221,7 @@ var _ = Describe("CreateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "missing campaign type description"
+				"errors": ["missing campaign type description"]
 			}`))
 		})
 
@@ -231,7 +231,7 @@ var _ = Describe("CreateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "BOOM!"
+				"errors": ["BOOM!"]
 			}`))
 		})
 
@@ -244,7 +244,7 @@ var _ = Describe("CreateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "This is for humans."
+				"errors": ["This is for humans."]
 			}`))
 		})
 

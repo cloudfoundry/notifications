@@ -150,7 +150,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", otherSenderID, campaignTypeID), nil, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNotFound))
-			Expect(response["error"]).To(Equal(fmt.Sprintf("campaign type %s not found", campaignTypeID)))
+			Expect(response["errors"]).To(Equal([]interface{}{fmt.Sprintf("campaign type %s not found", campaignTypeID)}))
 		})
 	})
 })
