@@ -17,6 +17,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/web/v1/templates"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/campaigntypes"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/senders"
+	templatesv2 "github.com/cloudfoundry-incubator/notifications/web/v2/templates"
 	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 	"github.com/nu7hatch/gouuid"
 )
@@ -180,6 +181,13 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		Authenticator:           notificationsWriteAuthenticator,
 		DatabaseAllocator:       databaseAllocator,
 		CampaignTypesCollection: campaignTypesCollection,
+	}.Register(v2)
+
+	templatesv2.Routes{
+		RequestLogging:      logging,
+		Authenticator:       notificationsWriteAuthenticator,
+		DatabaseAllocator:   databaseAllocator,
+		TemplatesCollection: "",
 	}.Register(v2)
 
 	return VersionRouter{
