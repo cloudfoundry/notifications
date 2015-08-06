@@ -122,8 +122,7 @@ var _ = Describe("Queue", func() {
 			done := make(chan bool)
 			reserveJob := func(id string) {
 				for i := 0; i < 50; i++ {
-					jobChan := queue.Reserve(id)
-					<-jobChan
+					<-queue.Reserve(id)
 					<-time.After(1 * time.Millisecond)
 				}
 				done <- true
@@ -132,8 +131,8 @@ var _ = Describe("Queue", func() {
 			go reserveJob("worker-1")
 			go reserveJob("worker-2")
 
-			Eventually(done, 1*time.Second).Should(Receive())
-			Eventually(done, 1*time.Second).Should(Receive())
+			Eventually(done, 10*time.Second).Should(Receive())
+			Eventually(done, 10*time.Second).Should(Receive())
 
 			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
 			if err != nil {
