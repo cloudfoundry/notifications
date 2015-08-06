@@ -11,6 +11,8 @@
   - [Listing the campaign types](#list-campaign-types)
   - [Updating a campaign type](#update-campaign-type)
   - [Deleting a campaign type](#delete-campaign-type)
+- Templates
+	- [Creating a template](#create-template)
 
 ## System Status
 
@@ -56,7 +58,6 @@ X-Cf-Requestid: 2cf01258-ccff-41e9-6d82-41a4441af4af
 | Fields  | Description        |
 | ------- | ------------------ |
 | version | API version number |
-
 
 ## Senders
 
@@ -418,3 +419,68 @@ RESPONSE BODY:
 ```
 204 No Content
 ```
+
+## Templates
+
+<a name="create-template"></a>
+#### Creating a template
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The user token requires `notifications.write` scope.
+
+###### Route
+```
+POST /template
+```
+###### Params
+
+| Key      | Description                                 |
+| -------- | ------------------------------------------- |
+| name\*   | the human-readable name given to a template |
+| html\*\* | Template html body                          |
+| text\*\* | Template text body                          |
+| subject  | Template subject                            |
+| metadata | Template metadata in JSON format            |
+
+\* required
+\*\* either html or text is required
+
+###### CURL example
+```
+$ curl -i -X POST \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  -d '{"name":"my-template", "text": "template text"}'
+  http://notifications.example.com/templates
+
+HTTP/1.1 201 Created
+Content-Length: 138
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 17 Jul 2015 19:30:32 GMT
+X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
+
+{"html":"","id":"54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5","metadata":{},"name":"my-template","subject":"{{.Subject}}","text":"template text"}
+```
+
+##### Response
+
+###### Status
+```
+201 Created
+```
+
+###### Body
+| Fields   | Description                      |
+| -------- | -------------------------------- |
+| id       | System-generated template ID     |
+| name     | Template name                    |
+| html     | Template html body               |
+| text     | Template text body               |
+| subject  | Template subject                 |
+| metadata | Template metadata in JSON format |
