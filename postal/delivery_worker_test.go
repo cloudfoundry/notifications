@@ -84,7 +84,6 @@ var _ = Describe("DeliveryWorker", func() {
 		database = fakes.NewDatabase()
 		conn = database.Connection()
 		userGUID = "user-123"
-		sender := "from@email.com"
 		sum := md5.Sum([]byte("banana's are so very tasty"))
 		encryptionKey := sum[:]
 		fakeUserEmail = "user-123@example.com"
@@ -100,8 +99,26 @@ var _ = Describe("DeliveryWorker", func() {
 		}
 		receiptsRepo = fakes.NewReceiptsRepo()
 
-		worker = postal.NewDeliveryWorker(id, logger, mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
-			messagesRepo, database, false, sender, encryptionKey, userLoader, templateLoader, receiptsRepo, tokenLoader)
+		worker = postal.NewDeliveryWorker(postal.DeliveryWorkerConfig{
+			ID:            id,
+			Sender:        "from@example.com",
+			Domain:        "http://www.example.com",
+			EncryptionKey: encryptionKey,
+			Logger:        logger,
+			Queue:         queue,
+
+			Database:               database,
+			DBTrace:                false,
+			GlobalUnsubscribesRepo: globalUnsubscribesRepo,
+			UnsubscribesRepo:       unsubscribesRepo,
+			KindsRepo:              kindsRepo,
+			MessagesRepo:           messagesRepo,
+			UserLoader:             userLoader,
+			TemplatesLoader:        templateLoader,
+			ReceiptsRepo:           receiptsRepo,
+			TokenLoader:            tokenLoader,
+			MailClient:             mailClient,
+		})
 
 		messageID = "randomly-generated-guid"
 		delivery = postal.Delivery{
@@ -212,8 +229,23 @@ var _ = Describe("DeliveryWorker", func() {
 		It("logs database operations when database traces are enabled", func() {
 			sum := md5.Sum([]byte("banana's are so very tasty"))
 			encryptionKey := sum[:]
-			worker = postal.NewDeliveryWorker(id, logger, mailClient, queue, globalUnsubscribesRepo, unsubscribesRepo, kindsRepo,
-				messagesRepo, database, true, "from@email.com", encryptionKey, userLoader, templateLoader, receiptsRepo, tokenLoader)
+			worker = postal.NewDeliveryWorker(postal.DeliveryWorkerConfig{
+				ID:         id,
+				Logger:     logger,
+				MailClient: mailClient,
+				Queue:      queue,
+				GlobalUnsubscribesRepo: globalUnsubscribesRepo,
+				UnsubscribesRepo:       unsubscribesRepo,
+				KindsRepo:              kindsRepo,
+				MessagesRepo:           messagesRepo,
+				Database:               database,
+				DBTrace:                true,
+				Sender:                 "from@example.com",
+				EncryptionKey:          encryptionKey,
+				UserLoader:             userLoader,
+				TemplatesLoader:        templateLoader,
+				ReceiptsRepo:           receiptsRepo,
+				TokenLoader:            tokenLoader})
 			worker.Deliver(&job)
 			database.TraceLogger.Printf("some statement")
 
@@ -311,7 +343,7 @@ var _ = Describe("DeliveryWorker", func() {
 
 			Expect(mailClient.Messages).To(HaveLen(1))
 			msg := mailClient.Messages[0]
-			Expect(msg.From).To(Equal("from@email.com"))
+			Expect(msg.From).To(Equal("from@example.com"))
 			Expect(msg.ReplyTo).To(Equal("thesender@example.com"))
 			Expect(msg.To).To(Equal(fakeUserEmail))
 			Expect(msg.Subject).To(Equal("the subject"))

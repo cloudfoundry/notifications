@@ -53,37 +53,54 @@ type DeliveryWorker struct {
 	kindsRepo              KindsRepo
 }
 
+type DeliveryWorkerConfig struct {
+	ID            int
+	Sender        string
+	Domain        string
+	EncryptionKey []byte
+
+	Logger                 lager.Logger
+	MailClient             mail.ClientInterface
+	Queue                  gobble.QueueInterface
+	Database               models.DatabaseInterface
+	DBTrace                bool
+	GlobalUnsubscribesRepo GlobalUnsubscribesRepo
+	UnsubscribesRepo       UnsubscribesRepo
+	KindsRepo              KindsRepo
+	MessagesRepo           MessagesRepo
+	UserLoader             UserLoaderInterface
+	TemplatesLoader        TemplatesLoaderInterface
+	ReceiptsRepo           ReceiptsRepo
+	TokenLoader            TokenLoaderInterface
+}
+
 type TokenLoaderInterface interface {
 	Load(string) (string, error)
 }
 
-func NewDeliveryWorker(id int, logger lager.Logger, mailClient mail.ClientInterface, queue gobble.QueueInterface,
-	globalUnsubscribesRepo GlobalUnsubscribesRepo, unsubscribesRepo UnsubscribesRepo,
-	kindsRepo KindsRepo, messagesRepo MessagesRepo,
-	database models.DatabaseInterface, dbTrace bool, sender string, encryptionKey []byte, userLoader UserLoaderInterface,
-	templatesLoader TemplatesLoaderInterface, receiptsRepo ReceiptsRepo, tokenLoader TokenLoaderInterface) DeliveryWorker {
+func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
 
-	logger = logger.Session("worker", lager.Data{"worker_id": id})
+	logger := config.Logger.Session("worker", lager.Data{"worker_id": config.ID})
 
 	worker := DeliveryWorker{
-		identifier:             id,
+		identifier:             config.ID,
 		baseLogger:             logger,
 		logger:                 logger,
-		mailClient:             mailClient,
-		globalUnsubscribesRepo: globalUnsubscribesRepo,
-		unsubscribesRepo:       unsubscribesRepo,
-		kindsRepo:              kindsRepo,
-		messagesRepo:           messagesRepo,
-		database:               database,
-		dbTrace:                dbTrace,
-		sender:                 sender,
-		encryptionKey:          encryptionKey,
-		userLoader:             userLoader,
-		tokenLoader:            tokenLoader,
-		templatesLoader:        templatesLoader,
-		receiptsRepo:           receiptsRepo,
+		mailClient:             config.MailClient,
+		globalUnsubscribesRepo: config.GlobalUnsubscribesRepo,
+		unsubscribesRepo:       config.UnsubscribesRepo,
+		kindsRepo:              config.KindsRepo,
+		messagesRepo:           config.MessagesRepo,
+		database:               config.Database,
+		dbTrace:                config.DBTrace,
+		sender:                 config.Sender,
+		encryptionKey:          config.EncryptionKey,
+		userLoader:             config.UserLoader,
+		tokenLoader:            config.TokenLoader,
+		templatesLoader:        config.TemplatesLoader,
+		receiptsRepo:           config.ReceiptsRepo,
 	}
-	worker.Worker = gobble.NewWorker(id, queue, worker.Deliver)
+	worker.Worker = gobble.NewWorker(config.ID, config.Queue, worker.Deliver)
 
 	return worker
 }
@@ -255,7 +272,7 @@ func (worker DeliveryWorker) pack(delivery Delivery) (mail.Message, error) {
 		return message, err
 	}
 
-	context := NewMessageContext(delivery, worker.sender, cloak, templates)
+	context := NewMessageContext(delivery, worker.sender, "change-me", cloak, templates)
 	packager := NewPackager()
 
 	message, err = packager.Pack(context)

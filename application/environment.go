@@ -26,6 +26,7 @@ type Environment struct {
 	DBMaxOpenConns        int    `env:"DB_MAX_OPEN_CONNS"`
 	DatabaseURL           string `env:"DATABASE_URL"             env-required:"true"`
 	DefaultUAAScopesList  string `env:"DEFAULT_UAA_SCOPES"`
+	Domain                string `env:"DOMAIN"                   env-required:"true"`
 	EncryptionKey         []byte `env:"ENCRYPTION_KEY"           env-required:"true"`
 	GobbleWaitMaxDuration int    `env:"GOBBLE_WAIT_MAX_DURATION" env-default:"5000"`
 	Port                  int    `env:"PORT"                     env-default:"3000"`

@@ -32,9 +32,10 @@ type MessageContext struct {
 	Endorsement       string
 	OrganizationRole  string
 	RequestReceived   time.Time
+	Domain            string
 }
 
-func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInterface, templates Templates) MessageContext {
+func NewMessageContext(delivery Delivery, sender, domain string, cloak conceal.CloakInterface, templates Templates) MessageContext {
 	options := delivery.Options
 
 	var kindDescription string
@@ -75,6 +76,7 @@ func NewMessageContext(delivery Delivery, sender string, cloak conceal.CloakInte
 		Endorsement:       options.Endorsement,
 		OrganizationRole:  options.Role,
 		RequestReceived:   delivery.RequestReceived,
+		Domain:            domain,
 	}
 
 	if messageContext.Subject == "" {

@@ -18,6 +18,7 @@ var _ = Describe("Environment", func() {
 		"DB_LOGGING_ENABLED",
 		"DB_MAX_OPEN_CONNS",
 		"DEFAULT_UAA_SCOPES",
+		"DOMAIN",
 		"ENCRYPTION_KEY",
 		"GOBBLE_WAIT_MAX_DURATION",
 		"PORT",
@@ -460,6 +461,23 @@ var _ = Describe("Environment", func() {
 				"foo",
 				"bar",
 			}))
+		})
+	})
+
+	Describe("Domain", func() {
+		It("sets the Domain", func() {
+			os.Setenv("DOMAIN", "example.com")
+
+			env := application.NewEnvironment()
+			Expect(env.Domain).To(Equal("example.com"))
+		})
+
+		It("panics if it is not set", func() {
+			os.Setenv("DOMAIN", "")
+
+			Expect(func() {
+				application.NewEnvironment()
+			}).To(Panic())
 		})
 	})
 })

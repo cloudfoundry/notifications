@@ -108,9 +108,28 @@ func (app Application) StartWorkers() {
 		InstanceIndex: app.env.VCAPApplication.InstanceIndex,
 		Count:         WorkerCount,
 	}.Work(func(i int) Worker {
-		worker := postal.NewDeliveryWorker(i, app.mother.Logger(), app.mother.MailClient(), app.mother.Queue(),
-			app.mother.GlobalUnsubscribesRepo(), app.mother.UnsubscribesRepo(), app.mother.KindsRepo(), app.mother.MessagesRepo(),
-			app.mother.Database(), app.env.DBLoggingEnabled, app.env.Sender, app.env.EncryptionKey, postal.NewUserLoader(zonedUAAClient), app.mother.TemplatesLoader(), app.mother.ReceiptsRepo(), uaa.NewTokenLoader(zonedUAAClient))
+		worker := postal.NewDeliveryWorker(postal.DeliveryWorkerConfig{
+			ID:            i,
+			Sender:        app.env.Sender,
+			EncryptionKey: app.env.EncryptionKey,
+			Domain:        app.env.Domain,
+
+			Logger:     app.mother.Logger(),
+			MailClient: app.mother.MailClient(),
+			Queue:      app.mother.Queue(),
+			Database:   app.mother.Database(),
+			DBTrace:    app.env.DBLoggingEnabled,
+
+			GlobalUnsubscribesRepo: app.mother.GlobalUnsubscribesRepo(),
+			UnsubscribesRepo:       app.mother.UnsubscribesRepo(),
+			KindsRepo:              app.mother.KindsRepo(),
+			MessagesRepo:           app.mother.MessagesRepo(),
+			ReceiptsRepo:           app.mother.ReceiptsRepo(),
+
+			UserLoader:      postal.NewUserLoader(zonedUAAClient),
+			TemplatesLoader: app.mother.TemplatesLoader(),
+			TokenLoader:     uaa.NewTokenLoader(zonedUAAClient),
+		})
 		return &worker
 	})
 }
