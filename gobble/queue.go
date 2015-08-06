@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/coopernurse/gorp"
+	"github.com/go-gorp/gorp"
 )
 
 var WaitMaxDuration = 5 * time.Second

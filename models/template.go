@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/coopernurse/gorp"
+	"github.com/go-gorp/gorp"
 	"github.com/nu7hatch/gouuid"
 )
 

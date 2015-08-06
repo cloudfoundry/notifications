@@ -2,7 +2,7 @@ package fakes
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/coopernurse/gorp"
+	"github.com/go-gorp/gorp"
 )
 
 type Database struct {

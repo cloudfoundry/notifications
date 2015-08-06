@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"bitbucket.org/liamstask/goose/lib/goose"
-	"github.com/coopernurse/gorp"
+	"github.com/go-gorp/gorp"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -26,7 +26,7 @@ func NewDatabase(db *sql.DB) *DB {
 		},
 	}
 
-	conn.AddTableWithName(Job{}, "jobs").SetKeys(true, "ID")
+	conn.AddTableWithName(Job{}, "jobs").SetKeys(true, "ID").SetVersionCol("Version")
 
 	return &DB{Connection: conn}
 }

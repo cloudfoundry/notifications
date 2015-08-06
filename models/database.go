@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/coopernurse/gorp"
+	"github.com/go-gorp/gorp"
 	sql_migrate "github.com/rubenv/sql-migrate"
 
 	_ "github.com/go-sql-driver/mysql"
