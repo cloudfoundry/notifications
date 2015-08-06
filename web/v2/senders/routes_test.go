@@ -2,11 +2,12 @@ package senders_test
 
 import (
 	"database/sql"
+	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/collections"
+	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/v2/senders"
-	"github.com/gorilla/mux"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
 
@@ -14,12 +15,12 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Router", func() {
+var _ = Describe("Routes", func() {
 	var (
 		logging     middleware.RequestLogging
 		auth        middleware.Authenticator
 		dbAllocator middleware.DatabaseAllocator
-		router      *mux.Router
+		muxer       web.Muxer
 	)
 
 	BeforeEach(func() {
@@ -27,16 +28,20 @@ var _ = Describe("Router", func() {
 		auth = middleware.NewAuthenticator("some-public-key", "notifications.write")
 		dbAllocator = middleware.NewDatabaseAllocator(&sql.DB{}, false)
 
-		router = senders.NewRouter(senders.RouterConfig{
+		muxer = web.NewMuxer()
+		senders.Routes{
 			RequestLogging:    logging,
 			Authenticator:     auth,
 			DatabaseAllocator: dbAllocator,
 			SendersCollection: collections.SendersCollection{},
-		})
+		}.Register(muxer)
 	})
 
 	It("routes POST /senders", func() {
-		s := router.Get("POST /senders").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("POST", "/senders", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(senders.CreateHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
@@ -51,7 +56,10 @@ var _ = Describe("Router", func() {
 	})
 
 	It("routes GET /senders/{sender_id}", func() {
-		s := router.Get("GET /senders/{sender_id}").GetHandler().(stack.Stack)
+		request, err := http.NewRequest("GET", "/senders/some-sender", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(senders.GetHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 

@@ -10,11 +10,15 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type CreateHandler struct {
-	senders collection
+type collectionSetter interface {
+	Set(conn models.ConnectionInterface, sender collections.Sender) (createdSender collections.Sender, err error)
 }
 
-func NewCreateHandler(senders collection) CreateHandler {
+type CreateHandler struct {
+	senders collectionSetter
+}
+
+func NewCreateHandler(senders collectionSetter) CreateHandler {
 	return CreateHandler{
 		senders: senders,
 	}

@@ -71,12 +71,14 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	databaseAllocator := middleware.NewDatabaseAllocator(mother.SQLDatabase(), config.DBLoggingEnabled)
 	cors := mother.CORS()
 
-	v1 := NewRouterPool()
-	v1.AddMux(info.NewRouter(info.RouterConfig{
+	v1 := NewMuxer()
+
+	info.Routes{
 		Version:        1,
 		RequestLogging: logging,
-	}))
-	v1.AddMux(preferences.NewRouter(preferences.RouterConfig{
+	}.Register(v1)
+
+	preferences.Routes{
 		ErrorWriter:       errorWriter,
 		PreferencesFinder: preferencesFinder,
 		PreferenceUpdater: preferenceUpdater,
@@ -87,24 +89,27 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		NotificationPreferencesReadAuthenticator:  notificationPreferencesReadAuthenticator,
 		NotificationPreferencesWriteAuthenticator: notificationPreferencesWriteAuthenticator,
 		NotificationPreferencesAdminAuthenticator: notificationPreferencesAdminAuthenticator,
-	}))
-	v1.AddMux(clients.NewRouter(clients.RouterConfig{
+	}.Register(v1)
+
+	clients.Routes{
 		ErrorWriter:      errorWriter,
 		TemplateAssigner: templateAssigner,
 
 		RequestLogging:                   logging,
 		DatabaseAllocator:                databaseAllocator,
 		NotificationsManageAuthenticator: notificationsManageAuthenticator,
-	}))
-	v1.AddMux(messages.NewRouter(messages.RouterConfig{
+	}.Register(v1)
+
+	messages.Routes{
 		ErrorWriter:   errorWriter,
 		MessageFinder: messageFinder,
 
 		RequestLogging:                               logging,
 		DatabaseAllocator:                            databaseAllocator,
 		NotificationsWriteOrEmailsWriteAuthenticator: notificationsWriteOrEmailsWriteAuthenticator,
-	}))
-	v1.AddMux(templates.NewRouter(templates.RouterConfig{
+	}.Register(v1)
+
+	templates.Routes{
 		ErrorWriter:               errorWriter,
 		TemplateFinder:            templateFinder,
 		TemplateUpdater:           templateUpdater,
@@ -118,8 +123,9 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		NotificationTemplatesReadAuthenticator:  notificationsTemplateReadAuthenticator,
 		NotificationTemplatesWriteAuthenticator: notificationsTemplateWriteAuthenticator,
 		NotificationsManageAuthenticator:        notificationsManageAuthenticator,
-	}))
-	v1.AddMux(notifications.NewRouter(notifications.RouterConfig{
+	}.Register(v1)
+
+	notifications.Routes{
 		ErrorWriter:          errorWriter,
 		Registrar:            registrar,
 		NotificationsFinder:  notificationsFinder,
@@ -130,8 +136,9 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		DatabaseAllocator:                databaseAllocator,
 		NotificationsWriteAuthenticator:  notificationsWriteAuthenticator,
 		NotificationsManageAuthenticator: notificationsManageAuthenticator,
-	}))
-	v1.AddMux(notify.NewRouter(notify.RouterConfig{
+	}.Register(v1)
+
+	notify.Routes{
 		ErrorWriter:          errorWriter,
 		Notify:               notifyObj,
 		UserStrategy:         userStrategy,
@@ -145,7 +152,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		NotificationsWriteAuthenticator: notificationsWriteAuthenticator,
 		DatabaseAllocator:               databaseAllocator,
 		EmailsWriteAuthenticator:        emailsWriteAuthenticator,
-	}))
+	}.Register(v1)
 
 	// V2
 	sendersRepository := models.NewSendersRepository(uuid.NewV4)
@@ -154,23 +161,26 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	sendersCollection := collections.NewSendersCollection(sendersRepository)
 	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository)
 
-	v2 := NewRouterPool()
-	v2.AddMux(info.NewRouter(info.RouterConfig{
+	v2 := NewMuxer()
+
+	info.Routes{
 		Version:        2,
 		RequestLogging: logging,
-	}))
-	v2.AddMux(senders.NewRouter(senders.RouterConfig{
+	}.Register(v2)
+
+	senders.Routes{
 		RequestLogging:    logging,
 		Authenticator:     notificationsWriteAuthenticator,
 		DatabaseAllocator: databaseAllocator,
 		SendersCollection: sendersCollection,
-	}))
-	v2.AddMux(campaigntypes.NewRouter(campaigntypes.RouterConfig{
+	}.Register(v2)
+
+	campaigntypes.Routes{
 		RequestLogging:          logging,
 		Authenticator:           notificationsWriteAuthenticator,
 		DatabaseAllocator:       databaseAllocator,
 		CampaignTypesCollection: campaignTypesCollection,
-	}))
+	}.Register(v2)
 
 	return VersionRouter{
 		1: v1,
