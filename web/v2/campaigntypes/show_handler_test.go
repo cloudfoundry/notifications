@@ -70,16 +70,16 @@ var _ = Describe("ShowHandler", func() {
 	})
 
 	Context("failure cases", func() {
-		It("returns a 400 when the campaign type ID is an empty string", func() {
+		It("returns a 301 when the campaign type id is missing", func() {
 			var err error
 			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types/", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
-			Expect(writer.Code).To(Equal(http.StatusBadRequest))
-			Expect(writer.Body.String()).To(MatchJSON(`{
-				"errors": ["missing campaign type id"]
-			}`))
+			Expect(writer.Code).To(Equal(http.StatusMovedPermanently))
+			headers := writer.Header()
+			Expect(headers.Get("Location")).To(Equal("/senders/some-sender-id/campaign_types"))
+			Expect(writer.Body.String()).To(BeEmpty())
 		})
 
 		It("returns a 400 when the sender ID is an empty string", func() {

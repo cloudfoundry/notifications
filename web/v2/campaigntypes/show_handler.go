@@ -37,8 +37,9 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 	}
 
 	if campaignTypeID == "" {
-		writer.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(writer, `{"errors": [%q]}`, "missing campaign type id")
+		headers := writer.Header()
+		headers.Set("Location", fmt.Sprintf("/senders/%s/campaign_types", senderID))
+		writer.WriteHeader(http.StatusMovedPermanently)
 		return
 	}
 
