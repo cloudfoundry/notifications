@@ -95,7 +95,7 @@
     },
     {
       "ImportPath": "github.com/rubenv/sql-migrate",
-      "Rev": "f1ae5df07e10d6ba6c8d0cf26615607a2c14cd7a"
+      "Rev": "53184e1edfb4f9655b0fa8dd2c23e7763f452bda"
     },
     {
       "ImportPath": "github.com/ryanmoran/stack",

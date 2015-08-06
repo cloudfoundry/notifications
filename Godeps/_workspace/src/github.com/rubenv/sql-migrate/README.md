@@ -1,13 +1,15 @@
 # sql-migrate
 
-> SQL Schema migration tool for [Go](http://golang.org/). Based on [gorp](https://github.com/coopernurse/gorp) and [goose](https://bitbucket.org/liamstask/goose).
+> SQL Schema migration tool for [Go](http://golang.org/). Based on [gorp](https://github.com/go-gorp/gorp) and [goose](https://bitbucket.org/liamstask/goose).
 
 [![Build Status](https://travis-ci.org/rubenv/sql-migrate.svg?branch=master)](https://travis-ci.org/rubenv/sql-migrate) [![GoDoc](https://godoc.org/github.com/rubenv/sql-migrate?status.png)](https://godoc.org/github.com/rubenv/sql-migrate)
+
+Using [modl](https://github.com/jmoiron/modl)? Check out [modl-migrate](https://github.com/rubenv/modl-migrate).
 
 ## Features
 
 * Usable as a CLI tool or as a library
-* Supports SQLite, PostgreSQL, MySQL, MSSQL and Oracle databases (through [gorp](https://github.com/coopernurse/gorp))
+* Supports SQLite, PostgreSQL, MySQL, MSSQL and Oracle databases (through [gorp](https://github.com/go-gorp/gorp))
 * Can embed migrations into your application
 * Migrations are defined with SQL for full flexibility
 * Atomic migrations
@@ -222,7 +224,7 @@ The resulting slice of migrations will be executed in the given order, so it sho
 
     (The MIT License)
 
-    Copyright (C) 2014 by Ruben Vermeersch <ruben@rocketeer.be>
+    Copyright (C) 2014-2015 by Ruben Vermeersch <ruben@rocketeer.be>
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal

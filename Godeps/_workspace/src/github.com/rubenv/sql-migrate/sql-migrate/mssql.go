@@ -3,8 +3,8 @@
 package main
 
 import (
-	"github.com/coopernurse/gorp"
 	_ "github.com/denisenkom/go-mssqldb"
+	"gopkg.in/gorp.v1"
 )
 
 func init() {

@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/coopernurse/gorp"
 	"github.com/rubenv/sql-migrate"
+	"gopkg.in/gorp.v1"
 	"gopkg.in/yaml.v1"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -35,6 +35,7 @@ type Environment struct {
 	DataSource string `yaml:"datasource"`
 	Dir        string `yaml:"dir"`
 	TableName  string `yaml:"table"`
+	SchemaName string `yaml:"schema"`
 }
 
 func ReadConfig() (map[string]*Environment, error) {
@@ -77,6 +78,10 @@ func GetEnvironment() (*Environment, error) {
 
 	if env.TableName != "" {
 		migrate.SetTable(env.TableName)
+	}
+
+	if env.SchemaName != "" {
+		migrate.SetSchema(env.SchemaName)
 	}
 
 	return env, nil
