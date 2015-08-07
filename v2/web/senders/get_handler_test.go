@@ -70,7 +70,9 @@ var _ = Describe("GetHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "missing sender id"
+				"errors": [
+					"missing sender id"
+				]
 			}`))
 		})
 
@@ -80,7 +82,9 @@ var _ = Describe("GetHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusUnauthorized))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "missing client id"
+				"errors": [
+					"missing client id"
+				]
 			}`))
 		})
 
@@ -96,7 +100,9 @@ var _ = Describe("GetHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "sender not found"
+				"errors": [
+					"sender not found"
+				]
 			}`))
 		})
 
@@ -106,7 +112,9 @@ var _ = Describe("GetHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"error": "BOOM!"
+				"errors": [
+					"BOOM!"
+				]
 			}`))
 		})
 	})

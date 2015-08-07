@@ -31,14 +31,14 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 
 	if senderID == "" {
 		w.WriteHeader(422)
-		fmt.Fprintf(w, `{ "error": "%s" }`, "missing sender id")
+		w.Write([]byte(`{ "errors": [ "missing sender id" ] }`))
 		return
 	}
 
 	clientID := context.Get("client_id")
 	if clientID == "" {
 		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintf(w, `{ "error": "%s" }`, "missing client id")
+		w.Write([]byte(`{ "errors": [ "missing client id" ] }`))
 		return
 	}
 
@@ -48,10 +48,10 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 		switch err.(type) {
 		case collections.NotFoundError:
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(`{ "error": "sender not found" }`))
+			w.Write([]byte(`{ "errors": [ "sender not found" ] }`))
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, `{ "error": "%s" }`, err)
+			fmt.Fprintf(w, `{ "errors": [ "%s" ] }`, err)
 		}
 		return
 	}

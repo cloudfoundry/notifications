@@ -32,7 +32,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	err := json.NewDecoder(req.Body).Decode(&createRequest)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{ "error": "invalid json body" }`))
+		w.Write([]byte(`{ "errors": [ "invalid json body" ] }`))
 		return
 	}
 
@@ -40,14 +40,14 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	if createRequest.Name == "" {
 		w.WriteHeader(422)
-		w.Write([]byte(`{ "error": "missing sender name" }`))
+		w.Write([]byte(`{ "errors": [ "missing sender name" ] }`))
 		return
 	}
 
 	clientID := context.Get("client_id")
 	if clientID == "" {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{ "error": "missing client id" }`))
+		w.Write([]byte(`{ "errors": [ "missing client id" ] }`))
 		return
 	}
 
@@ -57,7 +57,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, `{ "error": "%s" }`, err)
+		fmt.Fprintf(w, `{ "errors": [ "%s" ] }`, err)
 		return
 	}
 
