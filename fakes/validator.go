@@ -1,6 +1,6 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/web/v1/notify"
+import "github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 
 type Validator struct {
 	ValidateErrors []string
