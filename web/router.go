@@ -161,6 +161,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 
 	sendersCollection := collections.NewSendersCollection(sendersRepository)
 	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository)
+	templatesCollection := collections.NewTemplatesCollection()
 
 	v2 := NewMuxer()
 
@@ -187,7 +188,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		RequestLogging:      logging,
 		Authenticator:       notificationsWriteAuthenticator,
 		DatabaseAllocator:   databaseAllocator,
-		TemplatesCollection: "",
+		TemplatesCollection: templatesCollection,
 	}.Register(v2)
 
 	return VersionRouter{

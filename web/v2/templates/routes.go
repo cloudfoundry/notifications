@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/ryanmoran/stack"
 )
@@ -13,9 +14,10 @@ type Routes struct {
 	RequestLogging      stack.Middleware
 	Authenticator       middleware.Authenticator
 	DatabaseAllocator   middleware.DatabaseAllocator
-	TemplatesCollection interface{}
+	TemplatesCollection collections.TemplatesCollection
 }
 
 func (r Routes) Register(m muxer) {
 	m.Handle("POST", "/templates", NewCreateHandler(r.TemplatesCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
+	m.Handle("GET", "/templates/{template_id}", NewGetHandler(r.TemplatesCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
 }
