@@ -1,6 +1,7 @@
 package templates_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 
@@ -46,7 +47,7 @@ var _ = Describe("GetHandler", func() {
 			ID:       "some-template-id",
 			Name:     "an interesting template",
 			Text:     "template text",
-			Html:     "template html",
+			HTML:     "template html",
 			Subject:  "template subject",
 			Metadata: `{ "template": "metadata" }`,
 		}
@@ -69,5 +70,23 @@ var _ = Describe("GetHandler", func() {
 		Expect(collection.GetCall.ClientID).To(Equal("some-client-id"))
 		Expect(collection.GetCall.Conn).To(Equal(database.Conn))
 		Expect(database.ConnectionWasCalled).To(BeTrue())
+	})
+
+	Describe("error cases", func() {
+		It("responds with 404 if the collection Get returns not found", func() {
+			collection.GetCall.Err = collections.NewNotFoundError("it was not found")
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusNotFound))
+			Expect(writer.Body).To(MatchJSON(`{"errors": ["it was not found"]}`))
+		})
+
+		It("responds with 500 if the collection Get fails", func() {
+			collection.GetCall.Err = errors.New("an unknown error")
+
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
+			Expect(writer.Body).To(MatchJSON(`{"errors": ["an unknown error"]}`))
+		})
 	})
 })

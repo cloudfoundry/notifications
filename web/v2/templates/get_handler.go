@@ -2,6 +2,7 @@ package templates
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -31,9 +32,33 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 	database := context.Get("database").(models.DatabaseInterface)
 	clientID := context.Get("client_id").(string)
 
-	template, _ := h.collection.Get(database.Connection(), templateID, clientID)
+	template, err := h.collection.Get(database.Connection(), templateID, clientID)
+	if err != nil {
+		switch e := err.(type) {
+		case collections.NotFoundError:
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte(fmt.Sprintf(`{"errors": [%q]}`, e.Message)))
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf(`{"errors": [%q]}`, e)))
+		}
+		return
+	}
 
-	json, err := json.Marshal(template)
+	var metadata map[string]interface{}
+	err = json.Unmarshal([]byte(template.Metadata), &metadata)
+	if err != nil {
+		panic(err)
+	}
+
+	json, err := json.Marshal(map[string]interface{}{
+		"id":       template.ID,
+		"name":     template.Name,
+		"text":     template.Text,
+		"html":     template.HTML,
+		"subject":  template.Subject,
+		"metadata": metadata,
+	})
 	if err != nil {
 		panic(err)
 	}
