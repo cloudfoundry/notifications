@@ -1,8 +1,8 @@
 package fakes
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/collections"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 )
 
 type CampaignTypesCollection struct {
