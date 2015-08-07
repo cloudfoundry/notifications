@@ -6,7 +6,7 @@ import (
 	"regexp"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 	"github.com/ryanmoran/stack"
 )

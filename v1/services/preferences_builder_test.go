@@ -2,7 +2,7 @@ package services_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

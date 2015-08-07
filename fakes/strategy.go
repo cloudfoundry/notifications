@@ -1,6 +1,6 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/services"
+import "github.com/cloudfoundry-incubator/notifications/v1/services"
 
 type Strategy struct {
 	DispatchCall struct {

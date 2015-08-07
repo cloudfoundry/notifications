@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 )

@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/services"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
+	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

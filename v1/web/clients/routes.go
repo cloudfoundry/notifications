@@ -2,7 +2,7 @@ package clients
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
-	"github.com/cloudfoundry-incubator/notifications/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"

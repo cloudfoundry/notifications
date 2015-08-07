@@ -2,7 +2,7 @@ package fakes
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/services"
 )
 
 type TemplateAssociationLister struct {

@@ -6,25 +6,37 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/fakes"
-	"github.com/cloudfoundry-incubator/notifications/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Space Strategy", func() {
+var _ = Describe("UAA Scope Strategy", func() {
 	var (
-		strategy           services.SpaceStrategy
-		tokenLoader        *fakes.TokenLoader
-		spaceLoader        *fakes.SpaceLoader
-		organizationLoader *fakes.OrganizationLoader
-		enqueuer           *fakes.Enqueuer
-		conn               *fakes.Connection
-		findsUserGUIDs     *fakes.FindsUserGUIDs
-		requestReceived    time.Time
+		strategy        services.UAAScopeStrategy
+		tokenLoader     *fakes.TokenLoader
+		enqueuer        *fakes.Enqueuer
+		conn            *fakes.Connection
+		findsUserGUIDs  *fakes.FindsUserGUIDs
+		requestReceived time.Time
+		defaultScopes   []string
 	)
 
 	BeforeEach(func() {
+		defaultScopes = []string{
+			"cloud_controller.read",
+			"cloud_controller.write",
+			"openid",
+			"approvals.me",
+			"cloud_controller_service_permissions.read",
+			"scim.me",
+			"uaa.user",
+			"password.write",
+			"scim.userids",
+			"oauth.approvals",
+		}
+
 		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
 		conn = fakes.NewConnection()
 		tokenHeader := map[string]interface{}{
@@ -33,53 +45,41 @@ var _ = Describe("Space Strategy", func() {
 		tokenClaims := map[string]interface{}{
 			"client_id": "mister-client",
 			"exp":       int64(3404281214),
-			"iss":       "uaa",
 			"scope":     []string{"notifications.write"},
 		}
 		tokenLoader = fakes.NewTokenLoader()
 		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
 		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
-		findsUserGUIDs.SpaceGuids["space-001"] = []string{"user-123", "user-456"}
-		spaceLoader = fakes.NewSpaceLoader()
-		spaceLoader.Space = cf.CloudControllerSpace{
-			Name:             "production",
-			GUID:             "space-001",
-			OrganizationGUID: "org-001",
-		}
-		organizationLoader = fakes.NewOrganizationLoader()
-		organizationLoader.Organization = cf.CloudControllerOrganization{
-			Name: "the-org",
-			GUID: "org-001",
-		}
-		strategy = services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, enqueuer)
+		findsUserGUIDs.GUIDsWithScopes["great.scope"] = []string{"user-311"}
+		strategy = services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer, defaultScopes)
 	})
 
 	Describe("Dispatch", func() {
 		Context("when the request is valid", func() {
-			It("calls enqueuer.Enqueue with the correct arguments for a space", func() {
+			It("call enqueuer.Enqueue with the correct arguments for an UAA Scope", func() {
 				_, err := strategy.Dispatch(services.Dispatch{
-					GUID:       "space-001",
+					GUID:       "great.scope",
 					Connection: conn,
 					Message: services.DispatchMessage{
 						To:      "dr@strangelove.com",
 						ReplyTo: "reply-to@example.com",
 						Subject: "this is the subject",
-						Text:    "Please reset your password by clicking on this link...",
+						Text:    "Please make sure to leave your bottle in a place that is safe and dry",
 						HTML: services.HTML{
-							BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
+							BodyContent:    "<p>The water bottle needs to be safe and dry</p>",
 							BodyAttributes: "some-html-body-attributes",
 							Head:           "<head></head>",
 							Doctype:        "<html>",
 						},
 					},
 					Kind: services.DispatchKind{
-						ID:          "forgot_password",
-						Description: "Password reminder",
+						ID:          "forgot_waterbottle",
+						Description: "Water Bottle Reminder",
 					},
 					Client: services.DispatchClient{
 						ID:          "mister-client",
-						Description: "Login system",
+						Description: "The Water Bottle System",
 					},
 					VCAPRequest: services.DispatchVCAPRequest{
 						ID:          "some-vcap-request-id",
@@ -89,7 +89,7 @@ var _ = Describe("Space Strategy", func() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 
-				users := []services.User{{GUID: "user-123"}, {GUID: "user-456"}}
+				users := []services.User{{GUID: "user-311"}}
 
 				Expect(enqueuer.EnqueueCall.Args.Connection).To(Equal(conn))
 				Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
@@ -97,33 +97,25 @@ var _ = Describe("Space Strategy", func() {
 					ReplyTo:           "reply-to@example.com",
 					Subject:           "this is the subject",
 					To:                "dr@strangelove.com",
-					KindID:            "forgot_password",
-					KindDescription:   "Password reminder",
-					SourceDescription: "Login system",
-					Text:              "Please reset your password by clicking on this link...",
+					KindID:            "forgot_waterbottle",
+					KindDescription:   "Water Bottle Reminder",
+					SourceDescription: "The Water Bottle System",
+					Text:              "Please make sure to leave your bottle in a place that is safe and dry",
 					HTML: services.HTML{
-						BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
+						BodyContent:    "<p>The water bottle needs to be safe and dry</p>",
 						BodyAttributes: "some-html-body-attributes",
 						Head:           "<head></head>",
 						Doctype:        "<html>",
 					},
-					Endorsement: services.SpaceEndorsement,
+					Endorsement: services.ScopeEndorsement,
 				}))
-				Expect(enqueuer.EnqueueCall.Args.Space).To(Equal(cf.CloudControllerSpace{
-					GUID:             "space-001",
-					Name:             "production",
-					OrganizationGUID: "org-001",
-				}))
-				Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{
-					Name: "the-org",
-					GUID: "org-001",
-				}))
+				Expect(enqueuer.EnqueueCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
+				Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{}))
 				Expect(enqueuer.EnqueueCall.Args.Client).To(Equal("mister-client"))
-				Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal(""))
+				Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal("great.scope"))
 				Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
 				Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
 				Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("uaa"))
-				Expect(tokenLoader.LoadArgument).To(Equal("uaa"))
 			})
 		})
 
@@ -137,21 +129,24 @@ var _ = Describe("Space Strategy", func() {
 				})
 			})
 
-			Context("when spaceLoader fails to load a space", func() {
+			Context("when finds user GUIDs returns an error", func() {
 				It("returns an error", func() {
-					spaceLoader.LoadError = errors.New("BOOM!")
+					findsUserGUIDs.UserGUIDsBelongingToScopeError = errors.New("BOOM!")
 
 					_, err := strategy.Dispatch(services.Dispatch{})
-					Expect(err).To(Equal(errors.New("BOOM!")))
+					Expect(err).To(HaveOccurred())
 				})
 			})
 
-			Context("when findsUserGUIDs returns an err", func() {
+			Context("when an default scope is passed", func() {
 				It("returns an error", func() {
-					findsUserGUIDs.UserGUIDsBelongingToSpaceError = errors.New("BOOM!")
-
-					_, err := strategy.Dispatch(services.Dispatch{})
-					Expect(err).To(Equal(errors.New("BOOM!")))
+					for _, scope := range defaultScopes {
+						_, err := strategy.Dispatch(services.Dispatch{
+							GUID: scope,
+						})
+						Expect(err).To(HaveOccurred())
+						Expect(err).To(MatchError(services.DefaultScopeError{}))
+					}
 				})
 			})
 		})
