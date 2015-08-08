@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/cloudfoundry-incubator/notifications/acceptance/servers"
+	"github.com/cloudfoundry-incubator/notifications/testing/servers"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
