@@ -1,8 +1,8 @@
 package postal_test
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 
 	. "github.com/onsi/ginkgo"

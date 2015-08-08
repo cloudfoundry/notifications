@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

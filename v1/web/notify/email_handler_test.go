@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 
-	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/ryanmoran/stack"
 

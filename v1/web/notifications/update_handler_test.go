@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/fakes"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notifications"
 	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 	"github.com/ryanmoran/stack"

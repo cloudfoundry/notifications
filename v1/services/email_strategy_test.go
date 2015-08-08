@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"

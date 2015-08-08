@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 )

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"

@@ -1,7 +1,7 @@
 package uaa_test
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"

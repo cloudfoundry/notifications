@@ -3,7 +3,7 @@ package preferences_test
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
 	"github.com/cloudfoundry-incubator/notifications/web"
