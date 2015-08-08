@@ -64,7 +64,8 @@ var _ = Describe("GetUserPreferencesHandler", func() {
 	Context("when a client is making a request for an arbitrary user", func() {
 		It("passes the proper user guid to the finder", func() {
 			handler.ServeHTTP(writer, request, context)
-			Expect(preferencesFinder.FindCall.Arguments).To(ConsistOf([]interface{}{database, "af02af02-af02-af02-af02-af02af02af02"}))
+			Expect(preferencesFinder.FindCall.Receives.Database).To(Equal(database))
+			Expect(preferencesFinder.FindCall.Receives.UserGUID).To(Equal("af02af02-af02-af02-af02-af02af02af02"))
 		})
 
 		It("returns a proper JSON response when the Preference object does not error", func() {
@@ -77,9 +78,9 @@ var _ = Describe("GetUserPreferencesHandler", func() {
 
 		Context("when the finder returns an error", func() {
 			It("writes the error to the error writer", func() {
-				preferencesFinder.FindCall.Error = errors.New("wow!!")
+				preferencesFinder.FindCall.Returns.Error = errors.New("wow!!")
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(preferencesFinder.FindCall.Error))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(preferencesFinder.FindCall.Returns.Error))
 			})
 		})
 	})

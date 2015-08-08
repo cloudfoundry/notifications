@@ -6,21 +6,28 @@ import (
 )
 
 type PreferencesFinder struct {
-	ReturnValue services.PreferencesBuilder
-
 	FindCall struct {
-		Arguments []interface{}
-		Error     error
+		Receives struct {
+			Database models.DatabaseInterface
+			UserGUID string
+		}
+		Returns struct {
+			PreferencesBuilder services.PreferencesBuilder
+			Error              error
+		}
 	}
 }
 
-func NewPreferencesFinder(returnValue services.PreferencesBuilder) *PreferencesFinder {
-	return &PreferencesFinder{
-		ReturnValue: returnValue,
-	}
+func NewPreferencesFinder(builder services.PreferencesBuilder) *PreferencesFinder {
+	finder := &PreferencesFinder{}
+	finder.FindCall.Returns.PreferencesBuilder = builder
+
+	return finder
 }
 
-func (fake *PreferencesFinder) Find(database models.DatabaseInterface, userGUID string) (services.PreferencesBuilder, error) {
-	fake.FindCall.Arguments = []interface{}{database, userGUID}
-	return fake.ReturnValue, fake.FindCall.Error
+func (pb *PreferencesFinder) Find(database models.DatabaseInterface, userGUID string) (services.PreferencesBuilder, error) {
+	pb.FindCall.Receives.Database = database
+	pb.FindCall.Receives.UserGUID = userGUID
+
+	return pb.FindCall.Returns.PreferencesBuilder, pb.FindCall.Returns.Error
 }

@@ -91,11 +91,9 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 
 		It("Passes The Correct Arguments to PreferenceUpdater Execute", func() {
 			handler.ServeHTTP(writer, request, context)
-			Expect(len(updater.ExecuteArguments)).To(Equal(4))
+			Expect(reflect.ValueOf(updater.ExecuteCall.Receives.Connection).Pointer()).To(Equal(reflect.ValueOf(conn).Pointer()))
 
-			Expect(reflect.ValueOf(updater.ExecuteArguments[0]).Pointer()).To(Equal(reflect.ValueOf(conn).Pointer()))
-
-			preferencesArguments := updater.ExecuteArguments[1]
+			preferencesArguments := updater.ExecuteCall.Receives.Preferences
 
 			Expect(preferencesArguments).To(ContainElement(models.Preference{
 				ClientID: "raptors",
@@ -113,8 +111,8 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 				Email:    false,
 			}))
 
-			Expect(updater.ExecuteArguments[2]).To(BeTrue())
-			Expect(updater.ExecuteArguments[3]).To(Equal("correct-user"))
+			Expect(updater.ExecuteCall.Receives.GlobalUnsubscribe).To(BeTrue())
+			Expect(updater.ExecuteCall.Receives.UserID).To(Equal("correct-user"))
 		})
 
 		It("Returns a 204 status code when the Preference object does not error", func() {
@@ -178,7 +176,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 				})
 
 				It("delegates MissingKindOrClientErrors as webutil.ValidationError to the ErrorWriter", func() {
-					updater.ExecuteError = services.MissingKindOrClientError("BOOM!")
+					updater.ExecuteCall.Returns.Error = services.MissingKindOrClientError("BOOM!")
 
 					handler.ServeHTTP(writer, request, context)
 
@@ -190,7 +188,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 				})
 
 				It("delegates CriticalKindErrors as webutil.ValidationError to the ErrorWriter", func() {
-					updater.ExecuteError = services.CriticalKindError("BOOM!")
+					updater.ExecuteCall.Returns.Error = services.CriticalKindError("BOOM!")
 
 					handler.ServeHTTP(writer, request, context)
 
@@ -202,7 +200,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 				})
 
 				It("delegates other errors to the ErrorWriter", func() {
-					updater.ExecuteError = errors.New("BOOM!")
+					updater.ExecuteCall.Returns.Error = errors.New("BOOM!")
 
 					handler.ServeHTTP(writer, request, context)
 

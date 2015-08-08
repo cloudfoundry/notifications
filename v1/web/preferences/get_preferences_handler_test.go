@@ -90,7 +90,8 @@ var _ = Describe("GetPreferencesHandler", func() {
 	It("passes the proper user guid into execute", func() {
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(preferencesFinder.FindCall.Arguments).To(ConsistOf([]interface{}{database, "correct-user"}))
+		Expect(preferencesFinder.FindCall.Receives.Database).To(Equal(database))
+		Expect(preferencesFinder.FindCall.Receives.UserGUID).To(Equal("correct-user"))
 	})
 
 	It("returns a proper JSON response when the Preference object does not error", func() {
@@ -113,9 +114,9 @@ var _ = Describe("GetPreferencesHandler", func() {
 
 	Context("when there is an error returned from the finder", func() {
 		It("writes the error to the error writer", func() {
-			preferencesFinder.FindCall.Error = errors.New("boom!")
+			preferencesFinder.FindCall.Returns.Error = errors.New("boom!")
 			handler.ServeHTTP(writer, request, context)
-			Expect(errorWriter.WriteCall.Receives.Error).To(Equal(preferencesFinder.FindCall.Error))
+			Expect(errorWriter.WriteCall.Receives.Error).To(Equal(preferencesFinder.FindCall.Returns.Error))
 		})
 	})
 
