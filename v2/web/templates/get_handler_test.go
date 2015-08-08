@@ -44,7 +44,7 @@ var _ = Describe("GetHandler", func() {
 	})
 
 	It("gets a template", func() {
-		collection.GetCall.ReturnTemplate = collections.Template{
+		collection.GetCall.Returns.Template = collections.Template{
 			ID:       "some-template-id",
 			Name:     "an interesting template",
 			Text:     "template text",
@@ -67,15 +67,15 @@ var _ = Describe("GetHandler", func() {
 			}
 		}`))
 
-		Expect(collection.GetCall.TemplateID).To(Equal("some-template-id"))
-		Expect(collection.GetCall.ClientID).To(Equal("some-client-id"))
-		Expect(collection.GetCall.Conn).To(Equal(database.Conn))
+		Expect(collection.GetCall.Receives.TemplateID).To(Equal("some-template-id"))
+		Expect(collection.GetCall.Receives.ClientID).To(Equal("some-client-id"))
+		Expect(collection.GetCall.Receives.Conn).To(Equal(database.Conn))
 		Expect(database.ConnectionWasCalled).To(BeTrue())
 	})
 
 	Describe("error cases", func() {
 		It("responds with 404 if the collection Get returns not found", func() {
-			collection.GetCall.Err = collections.NewNotFoundError("it was not found")
+			collection.GetCall.Returns.Err = collections.NewNotFoundError("it was not found")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
@@ -83,7 +83,7 @@ var _ = Describe("GetHandler", func() {
 		})
 
 		It("responds with 500 if the collection Get fails", func() {
-			collection.GetCall.Err = errors.New("an unknown error")
+			collection.GetCall.Returns.Err = errors.New("an unknown error")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))

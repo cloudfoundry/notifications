@@ -68,7 +68,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		campaignTypesCollection = fakes.NewCampaignTypesCollection()
 
-		campaignTypesCollection.GetCall.ReturnCampaignType = collections.CampaignType{
+		campaignTypesCollection.GetCall.Returns.CampaignType = collections.CampaignType{
 			ID:          guid,
 			Name:        "my old name",
 			Description: "old description",
@@ -92,7 +92,7 @@ var _ = Describe("UpdateHandler", func() {
 	})
 
 	It("updates an existing campaign type", func() {
-		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
+		campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
 			ID:          guid,
 			Name:        "update-campaign-type",
 			Description: "update-campaign-type-description",
@@ -103,7 +103,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(campaignTypesCollection.SetCall.CampaignType).To(Equal(collections.CampaignType{
+		Expect(campaignTypesCollection.SetCall.Receives.CampaignType).To(Equal(collections.CampaignType{
 			ID:          guid,
 			Name:        "update-campaign-type",
 			Description: "update-campaign-type-description",
@@ -128,7 +128,7 @@ var _ = Describe("UpdateHandler", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
+		campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
 			ID:          guid,
 			Name:        "my new name",
 			Description: "old description",
@@ -142,7 +142,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(campaignTypesCollection.SetCall.CampaignType).To(Equal(collections.CampaignType{
+		Expect(campaignTypesCollection.SetCall.Receives.CampaignType).To(Equal(collections.CampaignType{
 			ID:          guid,
 			Name:        "my new name",
 			Description: "old description",
@@ -165,7 +165,7 @@ var _ = Describe("UpdateHandler", func() {
 		requestBody, err := json.Marshal(map[string]interface{}{})
 		Expect(err).NotTo(HaveOccurred())
 
-		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
+		campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
 			ID:          guid,
 			Name:        "my old name",
 			Description: "old description",
@@ -179,7 +179,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(campaignTypesCollection.SetCall.CampaignType).To(Equal(collections.CampaignType{
+		Expect(campaignTypesCollection.SetCall.Receives.CampaignType).To(Equal(collections.CampaignType{
 			ID:          guid,
 			Name:        "my old name",
 			Description: "old description",
@@ -257,7 +257,7 @@ var _ = Describe("UpdateHandler", func() {
 		})
 
 		It("returns a 404 when collections.Get() returns a NotFoundError", func() {
-			campaignTypesCollection.GetCall.Err = collections.NotFoundError{
+			campaignTypesCollection.GetCall.Returns.Err = collections.NotFoundError{
 				Err:     errors.New("THIS WAS PRODUCED BY ROBOTS"),
 				Message: "This is for humans.",
 			}
@@ -270,7 +270,7 @@ var _ = Describe("UpdateHandler", func() {
 		})
 
 		It("returns a 404 when collections.Set() returns a NotFoundError", func() {
-			campaignTypesCollection.SetCall.Err = collections.NotFoundError{
+			campaignTypesCollection.SetCall.Returns.Err = collections.NotFoundError{
 				Err:     errors.New("THIS WAS PRODUCED BY ROBOTS"),
 				Message: "This is for humans.",
 			}
@@ -306,7 +306,7 @@ var _ = Describe("UpdateHandler", func() {
 		})
 
 		It("allows an update of critical from true to false even if the client does not have the critical_notifications.write scope", func() {
-			campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
+			campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
 				ID:          guid,
 				Name:        "update-campaign-type",
 				Description: "update-campaign-type-description",
@@ -345,7 +345,7 @@ var _ = Describe("UpdateHandler", func() {
 		})
 
 		It("returns a 500 when collections.Get() returns an unexpected error", func() {
-			campaignTypesCollection.GetCall.Err = errors.New("BOOM!")
+			campaignTypesCollection.GetCall.Returns.Err = errors.New("BOOM!")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
@@ -355,7 +355,7 @@ var _ = Describe("UpdateHandler", func() {
 		})
 
 		It("returns a 500 when collections.Set() returns an unexpected errors", func() {
-			campaignTypesCollection.SetCall.Err = errors.New("BOOM!")
+			campaignTypesCollection.SetCall.Returns.Err = errors.New("BOOM!")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))

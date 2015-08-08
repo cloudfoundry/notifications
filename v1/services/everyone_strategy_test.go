@@ -41,7 +41,7 @@ var _ = Describe("Everyone Strategy", func() {
 		tokenLoader.Token = token
 		enqueuer = fakes.NewEnqueuer()
 		allUsers = fakes.NewAllUsers()
-		allUsers.AllUserGUIDsCall.Returns = []string{"user-380", "user-319"}
+		allUsers.AllUserGUIDsCall.Returns.GUIDs = []string{"user-380", "user-319"}
 		strategy = services.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer)
 	})
 
@@ -78,7 +78,7 @@ var _ = Describe("Everyone Strategy", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			var users []services.User
-			for _, guid := range allUsers.AllUserGUIDsCall.Returns {
+			for _, guid := range allUsers.AllUserGUIDsCall.Returns.GUIDs {
 				users = append(users, services.User{GUID: guid})
 			}
 
@@ -108,7 +108,7 @@ var _ = Describe("Everyone Strategy", func() {
 			Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("my-uaa-host"))
 			Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceivedTime))
 			Expect(tokenLoader.LoadArgument).To(Equal("my-uaa-host"))
-			Expect(allUsers.Token).To(Equal(token))
+			Expect(allUsers.AllUserGUIDsCall.Receives.Token).To(Equal(token))
 		})
 	})
 
@@ -124,7 +124,7 @@ var _ = Describe("Everyone Strategy", func() {
 
 		Context("when allUsers fails to load users", func() {
 			It("returns the error", func() {
-				allUsers.AllUserGUIDsCall.Error = errors.New("BOOM!")
+				allUsers.AllUserGUIDsCall.Returns.Error = errors.New("BOOM!")
 				_, err := strategy.Dispatch(services.Dispatch{})
 
 				Expect(err).To(Equal(errors.New("BOOM!")))

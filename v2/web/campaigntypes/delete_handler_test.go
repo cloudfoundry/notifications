@@ -46,17 +46,17 @@ var _ = Describe("DeleteHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(writer.Code).To(Equal(http.StatusNoContent))
-		Expect(campaignTypesCollection.DeleteCall.CampaignTypeID).To(Equal("some-campaign-type-id"))
-		Expect(campaignTypesCollection.DeleteCall.SenderID).To(Equal("some-sender-id"))
-		Expect(campaignTypesCollection.DeleteCall.ClientID).To(Equal("some-client-id"))
-		Expect(campaignTypesCollection.DeleteCall.Conn).To(Equal(database.Conn))
+		Expect(campaignTypesCollection.DeleteCall.Receives.CampaignTypeID).To(Equal("some-campaign-type-id"))
+		Expect(campaignTypesCollection.DeleteCall.Receives.SenderID).To(Equal("some-sender-id"))
+		Expect(campaignTypesCollection.DeleteCall.Receives.ClientID).To(Equal("some-client-id"))
+		Expect(campaignTypesCollection.DeleteCall.Receives.Conn).To(Equal(database.Conn))
 		Expect(writer.Body.String()).To(BeEmpty())
 	})
 
 	Context("when an error occurs", func() {
 		Context("when the campaign type cannot be found", func() {
 			BeforeEach(func() {
-				campaignTypesCollection.DeleteCall.Err = collections.NewNotFoundError("Campaign type some-campaign-type-id not found")
+				campaignTypesCollection.DeleteCall.Returns.Err = collections.NewNotFoundError("Campaign type some-campaign-type-id not found")
 			})
 
 			It("returns a 404 and the error", func() {
@@ -73,7 +73,7 @@ var _ = Describe("DeleteHandler", func() {
 
 		Context("when the collection delete call returns an error", func() {
 			BeforeEach(func() {
-				campaignTypesCollection.DeleteCall.Err = errors.New("nope")
+				campaignTypesCollection.DeleteCall.Returns.Err = errors.New("nope")
 			})
 
 			It("returns a 500 and the error", func() {

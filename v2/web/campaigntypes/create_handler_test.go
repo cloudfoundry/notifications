@@ -55,7 +55,7 @@ var _ = Describe("CreateHandler", func() {
 
 		writer = httptest.NewRecorder()
 		campaignTypesCollection = fakes.NewCampaignTypesCollection()
-		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
+		campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
 			ID:          "some-campaign-type-id",
 			Name:        "some-campaign-type",
 			Description: "some-campaign-type-description",
@@ -81,14 +81,14 @@ var _ = Describe("CreateHandler", func() {
 	It("creates a campaign type", func() {
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(campaignTypesCollection.SetCall.CampaignType).To(Equal(collections.CampaignType{
+		Expect(campaignTypesCollection.SetCall.Receives.CampaignType).To(Equal(collections.CampaignType{
 			Name:        "some-campaign-type",
 			Description: "some-campaign-type-description",
 			Critical:    false,
 			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
 		}))
-		Expect(campaignTypesCollection.SetCall.Conn).To(Equal(database.Conn))
+		Expect(campaignTypesCollection.SetCall.Receives.Conn).To(Equal(database.Conn))
 		Expect(database.ConnectionWasCalled).To(BeTrue())
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
@@ -110,7 +110,7 @@ var _ = Describe("CreateHandler", func() {
 		Expect(err).NotTo(HaveOccurred())
 		context.Set("token", token)
 
-		campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
+		campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
 			ID:          "some-campaign-type-id",
 			Name:        "some-campaign-type",
 			Description: "some-campaign-type-description",
@@ -132,7 +132,7 @@ var _ = Describe("CreateHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(campaignTypesCollection.SetCall.CampaignType).To(Equal(collections.CampaignType{
+		Expect(campaignTypesCollection.SetCall.Receives.CampaignType).To(Equal(collections.CampaignType{
 			Name:        "some-campaign-type",
 			Description: "some-campaign-type-description",
 			Critical:    true,
@@ -152,7 +152,7 @@ var _ = Describe("CreateHandler", func() {
 
 	Context("failure cases", func() {
 		It("returns a 403 when the client without the critical_notifications.write scope attempts to create a critical campaign type", func() {
-			campaignTypesCollection.SetCall.ReturnCampaignType = collections.CampaignType{
+			campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
 				ID:          "some-campaign-type-id",
 				Name:        "some-campaign-type",
 				Description: "some-campaign-type-description",
@@ -226,7 +226,7 @@ var _ = Describe("CreateHandler", func() {
 		})
 
 		It("returns a 500 when there is a persistence error", func() {
-			campaignTypesCollection.SetCall.Err = errors.New("BOOM!")
+			campaignTypesCollection.SetCall.Returns.Err = errors.New("BOOM!")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
@@ -236,7 +236,7 @@ var _ = Describe("CreateHandler", func() {
 		})
 
 		It("returns a 404 when the sender could not be found", func() {
-			campaignTypesCollection.SetCall.Err = collections.NotFoundError{
+			campaignTypesCollection.SetCall.Returns.Err = collections.NotFoundError{
 				Err:     errors.New("THIS WAS PRODUCED BY ROBOTS"),
 				Message: "This is for humans.",
 			}

@@ -7,18 +7,26 @@ import (
 
 type SendersCollection struct {
 	SetCall struct {
-		Conn         models.ConnectionInterface
-		Sender       collections.Sender
-		ReturnSender collections.Sender
-		Err          error
+		Receives struct {
+			Conn   models.ConnectionInterface
+			Sender collections.Sender
+		}
+		Returns struct {
+			Sender collections.Sender
+			Err    error
+		}
 	}
 
 	GetCall struct {
-		Conn         models.ConnectionInterface
-		SenderID     string
-		ClientID     string
-		ReturnSender collections.Sender
-		Err          error
+		Receives struct {
+			Conn     models.ConnectionInterface
+			SenderID string
+			ClientID string
+		}
+		Returns struct {
+			Sender collections.Sender
+			Err    error
+		}
 	}
 }
 
@@ -27,14 +35,16 @@ func NewSendersCollection() *SendersCollection {
 }
 
 func (c *SendersCollection) Set(conn models.ConnectionInterface, sender collections.Sender) (collections.Sender, error) {
-	c.SetCall.Conn = conn
-	c.SetCall.Sender = sender
-	return c.SetCall.ReturnSender, c.SetCall.Err
+	c.SetCall.Receives.Conn = conn
+	c.SetCall.Receives.Sender = sender
+
+	return c.SetCall.Returns.Sender, c.SetCall.Returns.Err
 }
 
 func (c *SendersCollection) Get(conn models.ConnectionInterface, senderID, clientID string) (collections.Sender, error) {
-	c.GetCall.Conn = conn
-	c.GetCall.SenderID = senderID
-	c.GetCall.ClientID = clientID
-	return c.GetCall.ReturnSender, c.GetCall.Err
+	c.GetCall.Receives.Conn = conn
+	c.GetCall.Receives.SenderID = senderID
+	c.GetCall.Receives.ClientID = clientID
+
+	return c.GetCall.Returns.Sender, c.GetCall.Returns.Err
 }

@@ -31,7 +31,7 @@ var _ = Describe("GetHandler", func() {
 		context.Set("database", database)
 
 		sendersCollection = fakes.NewSendersCollection()
-		sendersCollection.GetCall.ReturnSender = collections.Sender{
+		sendersCollection.GetCall.Returns.Sender = collections.Sender{
 			ID:   "some-sender-id",
 			Name: "some-sender",
 		}
@@ -48,7 +48,7 @@ var _ = Describe("GetHandler", func() {
 	It("gets a sender", func() {
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(sendersCollection.GetCall.Conn).To(Equal(database.Conn))
+		Expect(sendersCollection.GetCall.Receives.Conn).To(Equal(database.Conn))
 		Expect(database.ConnectionWasCalled).To(BeTrue())
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
@@ -57,8 +57,8 @@ var _ = Describe("GetHandler", func() {
 			"name": "some-sender"
 		}`))
 
-		Expect(sendersCollection.GetCall.SenderID).To(Equal("some-sender-id"))
-		Expect(sendersCollection.GetCall.ClientID).To(Equal("some-client-id"))
+		Expect(sendersCollection.GetCall.Receives.SenderID).To(Equal("some-sender-id"))
+		Expect(sendersCollection.GetCall.Receives.ClientID).To(Equal("some-client-id"))
 	})
 
 	Context("failure cases", func() {
@@ -89,7 +89,7 @@ var _ = Describe("GetHandler", func() {
 		})
 
 		It("returns a 404 when the sender does not exist", func() {
-			sendersCollection.GetCall.Err = collections.NotFoundError{
+			sendersCollection.GetCall.Returns.Err = collections.NotFoundError{
 				Err: errors.New("sender not found"),
 			}
 
@@ -107,7 +107,7 @@ var _ = Describe("GetHandler", func() {
 		})
 
 		It("returns a 500 when the collection indicates a system error", func() {
-			sendersCollection.GetCall.Err = errors.New("BOOM!")
+			sendersCollection.GetCall.Returns.Err = errors.New("BOOM!")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))

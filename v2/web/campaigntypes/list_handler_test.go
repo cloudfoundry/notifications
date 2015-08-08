@@ -39,7 +39,7 @@ var _ = Describe("ListHandler", func() {
 	})
 
 	It("returns a list of campaign types", func() {
-		campaignTypesCollection.ListCall.ReturnCampaignTypeList = []collections.CampaignType{
+		campaignTypesCollection.ListCall.Returns.CampaignTypeList = []collections.CampaignType{
 			{
 				ID:          "campaign-type-id-one",
 				Name:        "first-campaign-type",
@@ -64,9 +64,9 @@ var _ = Describe("ListHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(campaignTypesCollection.ListCall.Conn).To(Equal(database.Conn))
-		Expect(campaignTypesCollection.ListCall.SenderID).To(Equal("some-sender-id"))
-		Expect(campaignTypesCollection.ListCall.ClientID).To(Equal("some-client-id"))
+		Expect(campaignTypesCollection.ListCall.Receives.Conn).To(Equal(database.Conn))
+		Expect(campaignTypesCollection.ListCall.Receives.SenderID).To(Equal("some-sender-id"))
+		Expect(campaignTypesCollection.ListCall.Receives.ClientID).To(Equal("some-client-id"))
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
@@ -104,7 +104,7 @@ var _ = Describe("ListHandler", func() {
 
 	Context("failure cases", func() {
 		It("returns a 404 when the sender does not exist", func() {
-			campaignTypesCollection.ListCall.Err = collections.NotFoundError{
+			campaignTypesCollection.ListCall.Returns.Err = collections.NotFoundError{
 				Err: errors.New("sender not found"),
 			}
 
@@ -146,7 +146,7 @@ var _ = Describe("ListHandler", func() {
 		})
 
 		It("returns a 500 when the collection indicates a system error", func() {
-			campaignTypesCollection.ListCall.Err = errors.New("BOOM!")
+			campaignTypesCollection.ListCall.Returns.Err = errors.New("BOOM!")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types", nil)

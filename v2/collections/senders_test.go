@@ -27,7 +27,7 @@ var _ = Describe("SendersCollection", func() {
 
 	Describe("Set", func() {
 		BeforeEach(func() {
-			sendersRepository.InsertCall.ReturnSender = models.Sender{
+			sendersRepository.InsertCall.Returns.Sender = models.Sender{
 				ID:       "some-sender-id",
 				Name:     "some-sender",
 				ClientID: "some-client-id",
@@ -46,17 +46,17 @@ var _ = Describe("SendersCollection", func() {
 				ClientID: "some-client-id",
 			}))
 
-			Expect(sendersRepository.InsertCall.Conn).To(Equal(conn))
-			Expect(sendersRepository.InsertCall.Sender).To(Equal(models.Sender{
+			Expect(sendersRepository.InsertCall.Receives.Conn).To(Equal(conn))
+			Expect(sendersRepository.InsertCall.Receives.Sender).To(Equal(models.Sender{
 				Name:     "some-sender",
 				ClientID: "some-client-id",
 			}))
 		})
 
 		It("will idempotently add duplicates", func() {
-			sendersRepository.InsertCall.ReturnSender = models.Sender{}
-			sendersRepository.InsertCall.Err = models.DuplicateRecordError{}
-			sendersRepository.GetByClientIDAndNameCall.ReturnSender = models.Sender{
+			sendersRepository.InsertCall.Returns.Sender = models.Sender{}
+			sendersRepository.InsertCall.Returns.Err = models.DuplicateRecordError{}
+			sendersRepository.GetByClientIDAndNameCall.Returns.Sender = models.Sender{
 				ID:       "some-sender-id",
 				Name:     "some-sender",
 				ClientID: "some-client-id",
@@ -73,15 +73,15 @@ var _ = Describe("SendersCollection", func() {
 				Name:     "some-sender",
 				ClientID: "some-client-id",
 			}))
-			Expect(sendersRepository.GetByClientIDAndNameCall.Conn).To(Equal(conn))
-			Expect(sendersRepository.GetByClientIDAndNameCall.ClientID).To(Equal("some-client-id"))
-			Expect(sendersRepository.GetByClientIDAndNameCall.Name).To(Equal("some-sender"))
+			Expect(sendersRepository.GetByClientIDAndNameCall.Receives.Conn).To(Equal(conn))
+			Expect(sendersRepository.GetByClientIDAndNameCall.Receives.ClientID).To(Equal("some-client-id"))
+			Expect(sendersRepository.GetByClientIDAndNameCall.Receives.Name).To(Equal("some-sender"))
 		})
 
 		Context("failure cases", func() {
 			It("handles unexpected database errors", func() {
-				sendersRepository.InsertCall.ReturnSender = models.Sender{}
-				sendersRepository.InsertCall.Err = errors.New("BOOM!")
+				sendersRepository.InsertCall.Returns.Sender = models.Sender{}
+				sendersRepository.InsertCall.Returns.Err = errors.New("BOOM!")
 
 				_, err := sendersCollection.Set(conn, collections.Sender{
 					Name:     "some-sender",
@@ -93,11 +93,11 @@ var _ = Describe("SendersCollection", func() {
 			})
 
 			It("returns a persistence error when the sender cannot be found by client id and name", func() {
-				sendersRepository.InsertCall.ReturnSender = models.Sender{}
-				sendersRepository.InsertCall.Err = models.DuplicateRecordError{}
+				sendersRepository.InsertCall.Returns.Sender = models.Sender{}
+				sendersRepository.InsertCall.Returns.Err = models.DuplicateRecordError{}
 
-				sendersRepository.GetByClientIDAndNameCall.ReturnSender = models.Sender{}
-				sendersRepository.GetByClientIDAndNameCall.Err = errors.New("BOOM!")
+				sendersRepository.GetByClientIDAndNameCall.Returns.Sender = models.Sender{}
+				sendersRepository.GetByClientIDAndNameCall.Returns.Err = errors.New("BOOM!")
 
 				_, err := sendersCollection.Set(conn, collections.Sender{
 					Name:     "some-sender",
@@ -112,7 +112,7 @@ var _ = Describe("SendersCollection", func() {
 
 	Describe("Get", func() {
 		BeforeEach(func() {
-			sendersRepository.GetCall.ReturnSender = models.Sender{
+			sendersRepository.GetCall.Returns.Sender = models.Sender{
 				ID:       "some-sender-id",
 				Name:     "some-sender",
 				ClientID: "some-client-id",
@@ -128,13 +128,13 @@ var _ = Describe("SendersCollection", func() {
 				ClientID: "some-client-id",
 			}))
 
-			Expect(sendersRepository.GetCall.Conn).To(Equal(conn))
-			Expect(sendersRepository.GetCall.SenderID).To(Equal("some-sender-id"))
+			Expect(sendersRepository.GetCall.Receives.Conn).To(Equal(conn))
+			Expect(sendersRepository.GetCall.Receives.SenderID).To(Equal("some-sender-id"))
 		})
 
 		Context("failure cases", func() {
 			It("generates a not found error when the sender does not exist", func() {
-				sendersRepository.GetCall.Err = models.RecordNotFoundError("sender not found")
+				sendersRepository.GetCall.Returns.Err = models.RecordNotFoundError("sender not found")
 
 				_, err := sendersCollection.Get(conn, "some-sender-id", "some-client-id")
 				Expect(err).To(MatchError(collections.NotFoundError{
@@ -149,8 +149,8 @@ var _ = Describe("SendersCollection", func() {
 			})
 
 			It("handles unexpected database errors", func() {
-				sendersRepository.GetCall.ReturnSender = models.Sender{}
-				sendersRepository.GetCall.Err = errors.New("BOOM!")
+				sendersRepository.GetCall.Returns.Sender = models.Sender{}
+				sendersRepository.GetCall.Returns.Err = errors.New("BOOM!")
 
 				_, err := sendersCollection.Get(conn, "some-sender-id", "some-client-id")
 				Expect(err).To(MatchError(collections.PersistenceError{

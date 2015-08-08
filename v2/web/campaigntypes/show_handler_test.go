@@ -40,7 +40,7 @@ var _ = Describe("ShowHandler", func() {
 	})
 
 	It("returns information on a given campaign type", func() {
-		campaignTypesCollection.GetCall.ReturnCampaignType = collections.CampaignType{
+		campaignTypesCollection.GetCall.Returns.CampaignType = collections.CampaignType{
 			ID:          "campaign-type-id-one",
 			Name:        "first-campaign-type",
 			Description: "first-campaign-type-description",
@@ -54,10 +54,10 @@ var _ = Describe("ShowHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(campaignTypesCollection.GetCall.Conn).To(Equal(database.Conn))
-		Expect(campaignTypesCollection.GetCall.CampaignTypeID).To(Equal("campaign-type-id-one"))
-		Expect(campaignTypesCollection.GetCall.SenderID).To(Equal("some-sender-id"))
-		Expect(campaignTypesCollection.GetCall.ClientID).To(Equal("some-client-id"))
+		Expect(campaignTypesCollection.GetCall.Receives.Conn).To(Equal(database.Conn))
+		Expect(campaignTypesCollection.GetCall.Receives.CampaignTypeID).To(Equal("campaign-type-id-one"))
+		Expect(campaignTypesCollection.GetCall.Receives.SenderID).To(Equal("some-sender-id"))
+		Expect(campaignTypesCollection.GetCall.Receives.ClientID).To(Equal("some-client-id"))
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
@@ -109,7 +109,7 @@ var _ = Describe("ShowHandler", func() {
 		})
 
 		It("returns a 404 when the campaign type does not exist", func() {
-			campaignTypesCollection.GetCall.Err = collections.NewNotFoundError("campaign type not found")
+			campaignTypesCollection.GetCall.Returns.Err = collections.NewNotFoundError("campaign type not found")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types/missing-campaign-type-id", nil)
@@ -123,7 +123,7 @@ var _ = Describe("ShowHandler", func() {
 		})
 
 		It("returns a 404 when the sender does not exist", func() {
-			campaignTypesCollection.GetCall.Err = collections.NewNotFoundError("sender not found")
+			campaignTypesCollection.GetCall.Returns.Err = collections.NewNotFoundError("sender not found")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/missing-sender-id/campaign_types/some-campaign-type-id", nil)
@@ -137,7 +137,7 @@ var _ = Describe("ShowHandler", func() {
 		})
 
 		It("returns a 500 when the collection indicates a system error", func() {
-			campaignTypesCollection.GetCall.Err = errors.New("BOOM!")
+			campaignTypesCollection.GetCall.Returns.Err = errors.New("BOOM!")
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types/some-campaign-type-id", nil)

@@ -34,7 +34,7 @@ var _ = Describe("CreateHandler", func() {
 		context.Set("database", database)
 
 		sendersCollection = fakes.NewSendersCollection()
-		sendersCollection.SetCall.ReturnSender = collections.Sender{
+		sendersCollection.SetCall.Returns.Sender = collections.Sender{
 			ID:   "some-sender-id",
 			Name: "some-sender",
 		}
@@ -55,9 +55,9 @@ var _ = Describe("CreateHandler", func() {
 	It("creates a sender", func() {
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(sendersCollection.SetCall.Conn).To(Equal(database.Conn))
+		Expect(sendersCollection.SetCall.Receives.Conn).To(Equal(database.Conn))
 		Expect(database.ConnectionWasCalled).To(BeTrue())
-		Expect(sendersCollection.SetCall.Sender).To(Equal(collections.Sender{
+		Expect(sendersCollection.SetCall.Receives.Sender).To(Equal(collections.Sender{
 			Name:     "some-sender",
 			ClientID: "some-client-id",
 		}))
@@ -111,7 +111,7 @@ var _ = Describe("CreateHandler", func() {
 		})
 
 		It("returns a 500 when the collection indicates a system error", func() {
-			sendersCollection.SetCall.Err = errors.New("BOOM!")
+			sendersCollection.SetCall.Returns.Err = errors.New("BOOM!")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))

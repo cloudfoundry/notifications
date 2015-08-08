@@ -4,25 +4,37 @@ import "github.com/cloudfoundry-incubator/notifications/models"
 
 type SendersRepository struct {
 	InsertCall struct {
-		Conn         models.ConnectionInterface
-		Sender       models.Sender
-		ReturnSender models.Sender
-		Err          error
+		Receives struct {
+			Conn   models.ConnectionInterface
+			Sender models.Sender
+		}
+		Returns struct {
+			Sender models.Sender
+			Err    error
+		}
 	}
 
 	GetCall struct {
-		Conn         models.ConnectionInterface
-		SenderID     string
-		ReturnSender models.Sender
-		Err          error
+		Receives struct {
+			Conn     models.ConnectionInterface
+			SenderID string
+		}
+		Returns struct {
+			Sender models.Sender
+			Err    error
+		}
 	}
 
 	GetByClientIDAndNameCall struct {
-		ReturnSender models.Sender
-		Err          error
-		Conn         models.ConnectionInterface
-		ClientID     string
-		Name         string
+		Receives struct {
+			Conn     models.ConnectionInterface
+			ClientID string
+			Name     string
+		}
+		Returns struct {
+			Sender models.Sender
+			Err    error
+		}
 	}
 }
 
@@ -31,20 +43,23 @@ func NewSendersRepository() *SendersRepository {
 }
 
 func (s *SendersRepository) Insert(conn models.ConnectionInterface, sender models.Sender) (models.Sender, error) {
-	s.InsertCall.Conn = conn
-	s.InsertCall.Sender = sender
-	return s.InsertCall.ReturnSender, s.InsertCall.Err
+	s.InsertCall.Receives.Conn = conn
+	s.InsertCall.Receives.Sender = sender
+
+	return s.InsertCall.Returns.Sender, s.InsertCall.Returns.Err
 }
 
 func (s *SendersRepository) Get(conn models.ConnectionInterface, senderID string) (models.Sender, error) {
-	s.GetCall.Conn = conn
-	s.GetCall.SenderID = senderID
-	return s.GetCall.ReturnSender, s.GetCall.Err
+	s.GetCall.Receives.Conn = conn
+	s.GetCall.Receives.SenderID = senderID
+
+	return s.GetCall.Returns.Sender, s.GetCall.Returns.Err
 }
 
 func (s *SendersRepository) GetByClientIDAndName(conn models.ConnectionInterface, clientID, name string) (models.Sender, error) {
-	s.GetByClientIDAndNameCall.Conn = conn
-	s.GetByClientIDAndNameCall.ClientID = clientID
-	s.GetByClientIDAndNameCall.Name = name
-	return s.GetByClientIDAndNameCall.ReturnSender, s.GetByClientIDAndNameCall.Err
+	s.GetByClientIDAndNameCall.Receives.Conn = conn
+	s.GetByClientIDAndNameCall.Receives.ClientID = clientID
+	s.GetByClientIDAndNameCall.Receives.Name = name
+
+	return s.GetByClientIDAndNameCall.Returns.Sender, s.GetByClientIDAndNameCall.Returns.Err
 }
