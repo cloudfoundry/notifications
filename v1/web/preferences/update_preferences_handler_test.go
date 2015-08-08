@@ -143,8 +143,8 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).ToNot(BeNil())
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
+				Expect(errorWriter.WriteCall.Receives.Error).ToNot(BeNil())
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
 				Expect(conn.BeginWasCalled).To(BeFalse())
 				Expect(conn.CommitWasCalled).To(BeFalse())
 				Expect(conn.RollbackWasCalled).To(BeFalse())
@@ -170,7 +170,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 						context.Set("token", token)
 
 						handler.ServeHTTP(writer, request, context)
-						Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.MissingUserTokenError("")))
+						Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.MissingUserTokenError("")))
 						Expect(conn.BeginWasCalled).To(BeFalse())
 						Expect(conn.CommitWasCalled).To(BeFalse())
 						Expect(conn.RollbackWasCalled).To(BeFalse())
@@ -182,7 +182,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 
 					handler.ServeHTTP(writer, request, context)
 
-					Expect(errorWriter.Error).To(Equal(webutil.ValidationError([]string{"BOOM!"})))
+					Expect(errorWriter.WriteCall.Receives.Error).To(Equal(webutil.ValidationError([]string{"BOOM!"})))
 
 					Expect(conn.BeginWasCalled).To(BeTrue())
 					Expect(conn.CommitWasCalled).To(BeFalse())
@@ -194,7 +194,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 
 					handler.ServeHTTP(writer, request, context)
 
-					Expect(errorWriter.Error).To(Equal(webutil.ValidationError([]string{"BOOM!"})))
+					Expect(errorWriter.WriteCall.Receives.Error).To(Equal(webutil.ValidationError([]string{"BOOM!"})))
 
 					Expect(conn.BeginWasCalled).To(BeTrue())
 					Expect(conn.CommitWasCalled).To(BeFalse())
@@ -206,7 +206,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 
 					handler.ServeHTTP(writer, request, context)
 
-					Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
+					Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("BOOM!")))
 
 					Expect(conn.BeginWasCalled).To(BeTrue())
 					Expect(conn.CommitWasCalled).To(BeFalse())
@@ -225,7 +225,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
 				Expect(conn.BeginWasCalled).To(BeFalse())
 				Expect(conn.CommitWasCalled).To(BeFalse())
 				Expect(conn.RollbackWasCalled).To(BeFalse())
@@ -246,7 +246,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
 				Expect(conn.BeginWasCalled).To(BeFalse())
 				Expect(conn.CommitWasCalled).To(BeFalse())
 				Expect(conn.RollbackWasCalled).To(BeFalse())
@@ -256,7 +256,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 				conn.CommitError = "transaction error, oh no"
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(models.NewTransactionCommitError("transaction error, oh no")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(models.NewTransactionCommitError("transaction error, oh no")))
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeTrue())
 				Expect(conn.RollbackWasCalled).To(BeFalse())

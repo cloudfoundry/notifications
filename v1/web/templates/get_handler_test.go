@@ -95,7 +95,7 @@ var _ = Describe("GetHandler", func() {
 
 			It("writes the error to the errorWriter", func() {
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("BOOM!")))
 			})
 		})
 	})

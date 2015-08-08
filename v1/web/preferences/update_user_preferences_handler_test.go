@@ -144,8 +144,8 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 
 					handler.ServeHTTP(writer, request, context)
 
-					Expect(errorWriter.Error).ToNot(BeNil())
-					Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
+					Expect(errorWriter.WriteCall.Receives.Error).ToNot(BeNil())
+					Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
 					Expect(connection.BeginWasCalled).To(BeFalse())
 					Expect(connection.CommitWasCalled).To(BeFalse())
 					Expect(connection.RollbackWasCalled).To(BeFalse())
@@ -157,7 +157,7 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(Equal(webutil.ValidationError([]string{"BOOM!"})))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(webutil.ValidationError([]string{"BOOM!"})))
 
 				Expect(connection.BeginWasCalled).To(BeTrue())
 				Expect(connection.CommitWasCalled).To(BeFalse())
@@ -169,7 +169,7 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(Equal(webutil.ValidationError([]string{"BOOM!"})))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(webutil.ValidationError([]string{"BOOM!"})))
 
 				Expect(connection.BeginWasCalled).To(BeTrue())
 				Expect(connection.CommitWasCalled).To(BeFalse())
@@ -181,7 +181,7 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("BOOM!")))
 
 				Expect(connection.BeginWasCalled).To(BeTrue())
 				Expect(connection.CommitWasCalled).To(BeFalse())
@@ -193,7 +193,7 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(models.NewTransactionCommitError("transaction error!!!")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(models.NewTransactionCommitError("transaction error!!!")))
 
 				Expect(connection.BeginWasCalled).To(BeTrue())
 				Expect(connection.CommitWasCalled).To(BeTrue())

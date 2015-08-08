@@ -72,7 +72,7 @@ var _ = Describe("AssignTemplateHandler", func() {
 		}
 
 		handler.ServeHTTP(w, request, context)
-		Expect(errorWriter.Error).To(Equal(errors.New("banana")))
+		Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("banana")))
 	})
 
 	It("writes a ParseError to the error writer when request body is invalid", func() {
@@ -85,6 +85,6 @@ var _ = Describe("AssignTemplateHandler", func() {
 		}
 
 		handler.ServeHTTP(w, request, context)
-		Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ParseError{}))
+		Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ParseError{}))
 	})
 })

@@ -46,7 +46,7 @@ var _ = Describe("EveryoneHandler", func() {
 
 		Context("when notifyObj.Execute returns a successful response", func() {
 			It("returns the JSON representation of the response", func() {
-				notifyObj.ExecuteCall.Response = []byte("hello")
+				notifyObj.ExecuteCall.Returns.Response = []byte("hello")
 
 				handler.ServeHTTP(writer, request, context)
 
@@ -57,22 +57,22 @@ var _ = Describe("EveryoneHandler", func() {
 			It("delegates to the notifyObj object with the correct arguments", func() {
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(reflect.ValueOf(notifyObj.ExecuteCall.Args.Connection).Pointer()).To(Equal(reflect.ValueOf(connection).Pointer()))
-				Expect(notifyObj.ExecuteCall.Args.Request).To(Equal(request))
-				Expect(notifyObj.ExecuteCall.Args.Context).To(Equal(context))
-				Expect(notifyObj.ExecuteCall.Args.GUID).To(Equal(""))
-				Expect(notifyObj.ExecuteCall.Args.Strategy).To(Equal(strategy))
-				Expect(notifyObj.ExecuteCall.Args.Validator).To(BeAssignableToTypeOf(notify.GUIDValidator{}))
-				Expect(notifyObj.ExecuteCall.Args.VCAPRequestID).To(Equal("some-request-id"))
+				Expect(reflect.ValueOf(notifyObj.ExecuteCall.Receives.Connection).Pointer()).To(Equal(reflect.ValueOf(connection).Pointer()))
+				Expect(notifyObj.ExecuteCall.Receives.Request).To(Equal(request))
+				Expect(notifyObj.ExecuteCall.Receives.Context).To(Equal(context))
+				Expect(notifyObj.ExecuteCall.Receives.GUID).To(Equal(""))
+				Expect(notifyObj.ExecuteCall.Receives.Strategy).To(Equal(strategy))
+				Expect(notifyObj.ExecuteCall.Receives.Validator).To(BeAssignableToTypeOf(notify.GUIDValidator{}))
+				Expect(notifyObj.ExecuteCall.Receives.VCAPRequestID).To(Equal("some-request-id"))
 			})
 		})
 
 		Context("when notifyObj.Execute returns an error", func() {
 			It("propagates the error", func() {
-				notifyObj.ExecuteCall.Error = errors.New("BOOM!")
+				notifyObj.ExecuteCall.Returns.Error = errors.New("BOOM!")
 
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(Equal(notifyObj.ExecuteCall.Error))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(notifyObj.ExecuteCall.Returns.Error))
 			})
 		})
 	})

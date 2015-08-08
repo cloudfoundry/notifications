@@ -3,7 +3,11 @@ package fakes
 import "net/http"
 
 type ErrorWriter struct {
-	Error error
+	WriteCall struct {
+		Receives struct {
+			Error error
+		}
+	}
 }
 
 func NewErrorWriter() *ErrorWriter {
@@ -11,6 +15,6 @@ func NewErrorWriter() *ErrorWriter {
 }
 
 func (writer *ErrorWriter) Write(w http.ResponseWriter, err error) {
-	writer.Error = err
+	writer.WriteCall.Receives.Error = err
 	w.WriteHeader(http.StatusTeapot)
 }

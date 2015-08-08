@@ -73,7 +73,7 @@ var _ = Describe("UpdateDefaultHandler", func() {
 
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
+			Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
 		})
 	})
 
@@ -83,7 +83,7 @@ var _ = Describe("UpdateDefaultHandler", func() {
 
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(errorWriter.Error).To(MatchError(errors.New("updating default template error")))
+			Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(errors.New("updating default template error")))
 		})
 	})
 })

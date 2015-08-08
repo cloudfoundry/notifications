@@ -46,7 +46,7 @@ var _ = Describe("GetHandler", func() {
 
 	Describe("ServeHTTP", func() {
 		It("Returns the status of the given message from the finder", func() {
-			messageFinder.Messages[messageID] = services.Message{
+			messageFinder.FindCall.Returns.Message = services.Message{
 				Status: "The generic status returned",
 			}
 
@@ -57,16 +57,17 @@ var _ = Describe("GetHandler", func() {
 				"status": "The generic status returned"
 			}`))
 
-			Expect(messageFinder.FindCall.Arguments).To(ConsistOf([]interface{}{database, messageID}))
+			Expect(messageFinder.FindCall.Receives.Database).To(Equal(database))
+			Expect(messageFinder.FindCall.Receives.MessageID).To(Equal(messageID))
 		})
 
 		Context("When the finder errors", func() {
 			It("Delegates to the error writer", func() {
 				findError := errors.New("The finder returns a generic error")
-				messageFinder.FindCall.Error = findError
+				messageFinder.FindCall.Returns.Error = findError
 
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(Equal(findError))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(findError))
 			})
 		})
 	})

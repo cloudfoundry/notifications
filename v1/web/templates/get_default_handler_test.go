@@ -73,6 +73,6 @@ var _ = Describe("GetDefaultHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(errorWriter.Error).To(MatchError(errors.New("BANANA!!!")))
+		Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(errors.New("BANANA!!!")))
 	})
 })

@@ -99,7 +99,7 @@ var _ = Describe("ListAssociationsHandler", func() {
 				lister.ListCall.Error = errors.New("db failed or something")
 
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(MatchError(errors.New("db failed or something")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(errors.New("db failed or something")))
 			})
 		})
 	})

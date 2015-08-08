@@ -80,7 +80,7 @@ var _ = Describe("CreateHandler", func() {
 				}
 
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
 			})
 
 			It("Writes a validation error to the errorwriter when the request is missing the html field", func() {
@@ -90,7 +90,7 @@ var _ = Describe("CreateHandler", func() {
 					panic(err)
 				}
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
 			})
 
 			It("writes a parse error for an invalid request", func() {
@@ -100,13 +100,13 @@ var _ = Describe("CreateHandler", func() {
 					panic(err)
 				}
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ParseError{}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ParseError{}))
 			})
 
 			It("returns a 500 for all other error cases", func() {
 				creator.CreateCall.Error = errors.New("my new error")
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.TemplateCreateError{}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.TemplateCreateError{}))
 			})
 		})
 	})

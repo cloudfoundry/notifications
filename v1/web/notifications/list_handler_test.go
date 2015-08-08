@@ -82,7 +82,7 @@ var _ = Describe("ListHandler", func() {
 
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(errorWriter.Error).To(BeNil())
+			Expect(errorWriter.WriteCall.Receives.Error).To(BeNil())
 			Expect(writer.Code).To(Equal(http.StatusOK))
 			Expect(writer.Body.Bytes()).To(MatchJSON(`{
 				"client-123": {
@@ -128,7 +128,7 @@ var _ = Describe("ListHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(Equal(errors.New("BANANA!!!")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("BANANA!!!")))
 			})
 		})
 	})

@@ -184,7 +184,7 @@ var _ = Describe("RegistrationHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(postal.UAAScopesError("waaaaat")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(postal.UAAScopesError("waaaaat")))
 
 				Expect(conn.BeginWasCalled).To(BeFalse())
 				Expect(conn.CommitWasCalled).To(BeFalse())
@@ -197,7 +197,7 @@ var _ = Describe("RegistrationHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ParseError{}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ParseError{}))
 
 				Expect(conn.BeginWasCalled).To(BeFalse())
 				Expect(conn.CommitWasCalled).To(BeFalse())
@@ -213,7 +213,7 @@ var _ = Describe("RegistrationHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
 
 				Expect(conn.BeginWasCalled).To(BeFalse())
 				Expect(conn.CommitWasCalled).To(BeFalse())
@@ -225,7 +225,7 @@ var _ = Describe("RegistrationHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("BOOM!")))
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeFalse())
@@ -237,7 +237,7 @@ var _ = Describe("RegistrationHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.Error).To(Equal(errors.New("BOOM!")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("BOOM!")))
 
 				Expect(conn.BeginWasCalled).To(BeTrue())
 				Expect(conn.CommitWasCalled).To(BeFalse())
@@ -252,7 +252,7 @@ var _ = Describe("RegistrationHandler", func() {
 				Expect(conn.CommitWasCalled).To(BeTrue())
 				Expect(conn.RollbackWasCalled).To(BeFalse())
 
-				Expect(errorWriter.Error).To(Equal(errors.New("transaction commit error")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("transaction commit error")))
 			})
 		})
 	})

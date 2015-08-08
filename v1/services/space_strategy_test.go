@@ -48,7 +48,7 @@ var _ = Describe("Space Strategy", func() {
 			OrganizationGUID: "org-001",
 		}
 		organizationLoader = fakes.NewOrganizationLoader()
-		organizationLoader.Organization = cf.CloudControllerOrganization{
+		organizationLoader.LoadCall.Returns.Organization = cf.CloudControllerOrganization{
 			Name: "the-org",
 			GUID: "org-001",
 		}
@@ -91,9 +91,12 @@ var _ = Describe("Space Strategy", func() {
 
 				users := []services.User{{GUID: "user-123"}, {GUID: "user-456"}}
 
-				Expect(enqueuer.EnqueueCall.Args.Connection).To(Equal(conn))
-				Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
-				Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(services.Options{
+				Expect(organizationLoader.LoadCall.Receives.OrganizationGUID).To(Equal("org-001"))
+				Expect(organizationLoader.LoadCall.Receives.Token).To(Equal(tokenLoader.Token))
+
+				Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(conn))
+				Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal(users))
+				Expect(enqueuer.EnqueueCall.Receives.Options).To(Equal(services.Options{
 					ReplyTo:           "reply-to@example.com",
 					Subject:           "this is the subject",
 					To:                "dr@strangelove.com",
@@ -109,20 +112,20 @@ var _ = Describe("Space Strategy", func() {
 					},
 					Endorsement: services.SpaceEndorsement,
 				}))
-				Expect(enqueuer.EnqueueCall.Args.Space).To(Equal(cf.CloudControllerSpace{
+				Expect(enqueuer.EnqueueCall.Receives.Space).To(Equal(cf.CloudControllerSpace{
 					GUID:             "space-001",
 					Name:             "production",
 					OrganizationGUID: "org-001",
 				}))
-				Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{
+				Expect(enqueuer.EnqueueCall.Receives.Org).To(Equal(cf.CloudControllerOrganization{
 					Name: "the-org",
 					GUID: "org-001",
 				}))
-				Expect(enqueuer.EnqueueCall.Args.Client).To(Equal("mister-client"))
-				Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal(""))
-				Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
-				Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
-				Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("uaa"))
+				Expect(enqueuer.EnqueueCall.Receives.Client).To(Equal("mister-client"))
+				Expect(enqueuer.EnqueueCall.Receives.Scope).To(Equal(""))
+				Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal("some-vcap-request-id"))
+				Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceived))
+				Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("uaa"))
 				Expect(tokenLoader.LoadArgument).To(Equal("uaa"))
 			})
 		})

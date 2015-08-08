@@ -51,7 +51,7 @@ var _ = Describe("DeleteHandler", func() {
 			It("writes the error to the errorWriter", func() {
 				deleter.DeleteCall.Error = errors.New("BOOM!")
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(Equal(deleter.DeleteCall.Error))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(deleter.DeleteCall.Error))
 			})
 		})
 	})

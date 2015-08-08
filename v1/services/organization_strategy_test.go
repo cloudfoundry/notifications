@@ -41,7 +41,7 @@ var _ = Describe("Organization Strategy", func() {
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
 		findsUserGUIDs.OrganizationGuids["org-001"] = []string{"user-123", "user-456"}
 		organizationLoader = fakes.NewOrganizationLoader()
-		organizationLoader.Organization = cf.CloudControllerOrganization{
+		organizationLoader.LoadCall.Returns.Organization = cf.CloudControllerOrganization{
 			Name: "my-org",
 			GUID: "org-001",
 		}
@@ -87,9 +87,12 @@ var _ = Describe("Organization Strategy", func() {
 					{GUID: "user-456"},
 				}
 
-				Expect(enqueuer.EnqueueCall.Args.Connection).To(Equal(conn))
-				Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
-				Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(services.Options{
+				Expect(organizationLoader.LoadCall.Receives.OrganizationGUID).To(Equal("org-001"))
+				Expect(organizationLoader.LoadCall.Receives.Token).To(Equal(tokenLoader.Token))
+
+				Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(conn))
+				Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal(users))
+				Expect(enqueuer.EnqueueCall.Receives.Options).To(Equal(services.Options{
 					ReplyTo:           "reply-to@example.com",
 					Subject:           "this is the subject",
 					To:                "dr@strangelove.com",
@@ -105,16 +108,16 @@ var _ = Describe("Organization Strategy", func() {
 					},
 					Endorsement: services.OrganizationEndorsement,
 				}))
-				Expect(enqueuer.EnqueueCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
-				Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{
+				Expect(enqueuer.EnqueueCall.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+				Expect(enqueuer.EnqueueCall.Receives.Org).To(Equal(cf.CloudControllerOrganization{
 					Name: "my-org",
 					GUID: "org-001",
 				}))
-				Expect(enqueuer.EnqueueCall.Args.Client).To(Equal("mister-client"))
-				Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal(""))
-				Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
-				Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
-				Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("testzone1"))
+				Expect(enqueuer.EnqueueCall.Receives.Client).To(Equal("mister-client"))
+				Expect(enqueuer.EnqueueCall.Receives.Scope).To(Equal(""))
+				Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal("some-vcap-request-id"))
+				Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceived))
+				Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("testzone1"))
 				Expect(tokenLoader.LoadArgument).To(Equal("testzone1"))
 			})
 
@@ -151,7 +154,7 @@ var _ = Describe("Organization Strategy", func() {
 					})
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(services.Options{
+					Expect(enqueuer.EnqueueCall.Receives.Options).To(Equal(services.Options{
 						ReplyTo:           "reply-to@example.com",
 						Subject:           "this is the subject",
 						To:                "dr@strangelove.com",
@@ -184,7 +187,7 @@ var _ = Describe("Organization Strategy", func() {
 
 			Context("when organizationLoader fails to load an organization", func() {
 				It("returns the error", func() {
-					organizationLoader.LoadError = errors.New("BOOM!")
+					organizationLoader.LoadCall.Returns.Error = errors.New("BOOM!")
 
 					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))

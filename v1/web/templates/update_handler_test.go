@@ -82,7 +82,7 @@ var _ = Describe("UpdateHandler", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					handler.ServeHTTP(writer, request, context)
-					Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
+					Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
 				})
 			})
 
@@ -93,7 +93,7 @@ var _ = Describe("UpdateHandler", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					handler.ServeHTTP(writer, request, context)
-					Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
+					Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
 				})
 			})
 
@@ -105,7 +105,7 @@ var _ = Describe("UpdateHandler", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					handler.ServeHTTP(writer, request, context)
-					Expect(errorWriter.Error).To(MatchError(models.TemplateUpdateError{Message: "My New Error"}))
+					Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(models.TemplateUpdateError{Message: "My New Error"}))
 				})
 			})
 		})

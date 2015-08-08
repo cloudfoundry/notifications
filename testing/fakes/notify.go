@@ -11,7 +11,7 @@ import (
 
 type Notify struct {
 	ExecuteCall struct {
-		Args struct {
+		Receives struct {
 			Connection    models.ConnectionInterface
 			Request       *http.Request
 			Context       stack.Context
@@ -20,8 +20,10 @@ type Notify struct {
 			Validator     notify.ValidatorInterface
 			VCAPRequestID string
 		}
-		Response []byte
-		Error    error
+		Returns struct {
+			Response []byte
+			Error    error
+		}
 	}
 }
 
@@ -29,16 +31,16 @@ func NewNotify() *Notify {
 	return &Notify{}
 }
 
-func (fake *Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
+func (n *Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
 	guid string, strategy services.StrategyInterface, validator notify.ValidatorInterface, vcapRequestID string) ([]byte, error) {
 
-	fake.ExecuteCall.Args.Connection = connection
-	fake.ExecuteCall.Args.Request = req
-	fake.ExecuteCall.Args.Context = context
-	fake.ExecuteCall.Args.GUID = guid
-	fake.ExecuteCall.Args.Strategy = strategy
-	fake.ExecuteCall.Args.Validator = validator
-	fake.ExecuteCall.Args.VCAPRequestID = vcapRequestID
+	n.ExecuteCall.Receives.Connection = connection
+	n.ExecuteCall.Receives.Request = req
+	n.ExecuteCall.Receives.Context = context
+	n.ExecuteCall.Receives.GUID = guid
+	n.ExecuteCall.Receives.Strategy = strategy
+	n.ExecuteCall.Receives.Validator = validator
+	n.ExecuteCall.Receives.VCAPRequestID = vcapRequestID
 
-	return fake.ExecuteCall.Response, fake.ExecuteCall.Error
+	return n.ExecuteCall.Returns.Response, n.ExecuteCall.Returns.Error
 }

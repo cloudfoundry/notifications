@@ -79,7 +79,7 @@ var _ = Describe("GetUserPreferencesHandler", func() {
 			It("writes the error to the error writer", func() {
 				preferencesFinder.FindCall.Error = errors.New("wow!!")
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(Equal(preferencesFinder.FindCall.Error))
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(preferencesFinder.FindCall.Error))
 			})
 		})
 	})

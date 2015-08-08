@@ -115,7 +115,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 		It("writes the error to the error writer", func() {
 			preferencesFinder.FindCall.Error = errors.New("boom!")
 			handler.ServeHTTP(writer, request, context)
-			Expect(errorWriter.Error).To(Equal(preferencesFinder.FindCall.Error))
+			Expect(errorWriter.WriteCall.Receives.Error).To(Equal(preferencesFinder.FindCall.Error))
 		})
 	})
 
@@ -140,7 +140,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 			context.Set("token", token)
 
 			handler.ServeHTTP(writer, request, context)
-			Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.MissingUserTokenError("")))
+			Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.MissingUserTokenError("")))
 		})
 	})
 })

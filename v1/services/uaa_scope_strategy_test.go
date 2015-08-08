@@ -91,9 +91,9 @@ var _ = Describe("UAA Scope Strategy", func() {
 
 				users := []services.User{{GUID: "user-311"}}
 
-				Expect(enqueuer.EnqueueCall.Args.Connection).To(Equal(conn))
-				Expect(enqueuer.EnqueueCall.Args.Users).To(Equal(users))
-				Expect(enqueuer.EnqueueCall.Args.Options).To(Equal(services.Options{
+				Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(conn))
+				Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal(users))
+				Expect(enqueuer.EnqueueCall.Receives.Options).To(Equal(services.Options{
 					ReplyTo:           "reply-to@example.com",
 					Subject:           "this is the subject",
 					To:                "dr@strangelove.com",
@@ -109,13 +109,13 @@ var _ = Describe("UAA Scope Strategy", func() {
 					},
 					Endorsement: services.ScopeEndorsement,
 				}))
-				Expect(enqueuer.EnqueueCall.Args.Space).To(Equal(cf.CloudControllerSpace{}))
-				Expect(enqueuer.EnqueueCall.Args.Org).To(Equal(cf.CloudControllerOrganization{}))
-				Expect(enqueuer.EnqueueCall.Args.Client).To(Equal("mister-client"))
-				Expect(enqueuer.EnqueueCall.Args.Scope).To(Equal("great.scope"))
-				Expect(enqueuer.EnqueueCall.Args.VCAPRequestID).To(Equal("some-vcap-request-id"))
-				Expect(enqueuer.EnqueueCall.Args.RequestReceived).To(Equal(requestReceived))
-				Expect(enqueuer.EnqueueCall.Args.UAAHost).To(Equal("uaa"))
+				Expect(enqueuer.EnqueueCall.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+				Expect(enqueuer.EnqueueCall.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+				Expect(enqueuer.EnqueueCall.Receives.Client).To(Equal("mister-client"))
+				Expect(enqueuer.EnqueueCall.Receives.Scope).To(Equal("great.scope"))
+				Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal("some-vcap-request-id"))
+				Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceived))
+				Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("uaa"))
 			})
 		})
 

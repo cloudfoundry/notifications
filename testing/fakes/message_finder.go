@@ -6,21 +6,25 @@ import (
 )
 
 type MessageFinder struct {
-	Messages map[string]services.Message
-
 	FindCall struct {
-		Arguments []interface{}
-		Error     error
+		Receives struct {
+			Database  models.DatabaseInterface
+			MessageID string
+		}
+		Returns struct {
+			Message services.Message
+			Error   error
+		}
 	}
 }
 
 func NewMessageFinder() *MessageFinder {
-	return &MessageFinder{
-		Messages: map[string]services.Message{},
-	}
+	return &MessageFinder{}
 }
 
-func (finder *MessageFinder) Find(database models.DatabaseInterface, messageID string) (services.Message, error) {
-	finder.FindCall.Arguments = []interface{}{database, messageID}
-	return finder.Messages[messageID], finder.FindCall.Error
+func (f *MessageFinder) Find(database models.DatabaseInterface, messageID string) (services.Message, error) {
+	f.FindCall.Receives.Database = database
+	f.FindCall.Receives.MessageID = messageID
+
+	return f.FindCall.Returns.Message, f.FindCall.Returns.Error
 }

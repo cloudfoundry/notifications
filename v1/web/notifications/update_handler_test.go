@@ -48,20 +48,21 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNoContent))
 
-			Expect(updater.UpdateCall.Arguments).To(ConsistOf([]interface{}{database, models.Kind{
+			Expect(updater.UpdateCall.Receives.Database).To(Equal(database))
+			Expect(updater.UpdateCall.Receives.Notification).To(Equal(models.Kind{
 				Description: "test kind",
 				Critical:    false,
 				TemplateID:  "template-name",
 				ClientID:    "this-client",
 				ID:          "this-kind",
-			}}))
+			}))
 		})
 
 		Context("when an error occurs", func() {
 			It("propagates the error returned from the updater into the error writer", func() {
-				updater.UpdateCall.Error = errors.New("error occurred while updating notification")
+				updater.UpdateCall.Returns.Error = errors.New("error occurred while updating notification")
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(MatchError(errors.New("error occurred while updating notification")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(errors.New("error occurred while updating notification")))
 			})
 
 			It("writes a params validation error when the request is semantically invalid", func() {
@@ -70,7 +71,7 @@ var _ = Describe("UpdateHandler", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
 			})
 		})
 	})
