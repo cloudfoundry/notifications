@@ -84,7 +84,7 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
 		token.Claims["user_id"] = strings.TrimSuffix(req.Form.Get("code"), "-code")
 	}
 
-	tokenString, err := token.SignedString([]byte(ReadFile("/acceptance/fixtures/private.pem")))
+	tokenString, err := token.SignedString([]byte(ReadFile("/testing/fixtures/private.pem")))
 	if err != nil {
 		panic(err)
 	}
@@ -103,7 +103,7 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
 var UAAGetTokenKey = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 	response, err := json.Marshal(map[string]string{
 		"alg":   "SHA256withRSA",
-		"value": ReadFile("/acceptance/fixtures/public.pem"),
+		"value": ReadFile("/testing/fixtures/public.pem"),
 	})
 	if err != nil {
 		panic(err)
