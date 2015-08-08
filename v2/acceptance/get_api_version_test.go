@@ -3,7 +3,7 @@ package v2
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/acceptance/v2/support"
+	"github.com/cloudfoundry-incubator/notifications/v2/acceptance/support"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

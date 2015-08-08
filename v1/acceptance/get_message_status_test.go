@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/acceptance/v1/support"
+	"github.com/cloudfoundry-incubator/notifications/v1/acceptance/support"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"

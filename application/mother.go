@@ -42,11 +42,11 @@ func (m *Mother) Queue() gobble.QueueInterface {
 	})
 }
 
-func (m Mother) UserStrategy() services.UserStrategy {
+func (m *Mother) UserStrategy() services.UserStrategy {
 	return services.NewUserStrategy(m.Enqueuer())
 }
 
-func (m Mother) SpaceStrategy() services.SpaceStrategy {
+func (m *Mother) SpaceStrategy() services.SpaceStrategy {
 	env := NewEnvironment()
 	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
@@ -60,7 +60,7 @@ func (m Mother) SpaceStrategy() services.SpaceStrategy {
 	return services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, enqueuer)
 }
 
-func (m Mother) OrganizationStrategy() services.OrganizationStrategy {
+func (m *Mother) OrganizationStrategy() services.OrganizationStrategy {
 	env := NewEnvironment()
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
 
@@ -73,7 +73,7 @@ func (m Mother) OrganizationStrategy() services.OrganizationStrategy {
 	return services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, enqueuer)
 }
 
-func (m Mother) EveryoneStrategy() services.EveryoneStrategy {
+func (m *Mother) EveryoneStrategy() services.EveryoneStrategy {
 	env := NewEnvironment()
 	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
 	tokenLoader := uaa.NewTokenLoader(uaaClient)
@@ -83,7 +83,7 @@ func (m Mother) EveryoneStrategy() services.EveryoneStrategy {
 	return services.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer)
 }
 
-func (m Mother) UAAScopeStrategy() services.UAAScopeStrategy {
+func (m *Mother) UAAScopeStrategy() services.UAAScopeStrategy {
 	env := NewEnvironment()
 	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
 	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
@@ -95,24 +95,24 @@ func (m Mother) UAAScopeStrategy() services.UAAScopeStrategy {
 	return services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer, env.DefaultUAAScopes)
 }
 
-func (m Mother) EmailStrategy() services.EmailStrategy {
+func (m *Mother) EmailStrategy() services.EmailStrategy {
 	return services.NewEmailStrategy(m.Enqueuer())
 }
 
-func (m Mother) NotificationsFinder() services.NotificationsFinder {
+func (m *Mother) NotificationsFinder() services.NotificationsFinder {
 	clientsRepo, kindsRepo := m.Repos()
 	return services.NewNotificationsFinder(clientsRepo, kindsRepo)
 }
-func (m Mother) NotificationsUpdater() services.NotificationsUpdater {
+func (m *Mother) NotificationsUpdater() services.NotificationsUpdater {
 	_, kindsRepo := m.Repos()
 	return services.NewNotificationsUpdater(kindsRepo)
 }
 
-func (m Mother) Enqueuer() services.Enqueuer {
+func (m *Mother) Enqueuer() services.Enqueuer {
 	return services.NewEnqueuer(m.Queue(), uuid.NewV4, m.MessagesRepo())
 }
 
-func (m Mother) TemplatesLoader() postal.TemplatesLoader {
+func (m *Mother) TemplatesLoader() postal.TemplatesLoader {
 	database := m.Database()
 	clientsRepo, kindsRepo := m.Repos()
 	templatesRepo := m.TemplatesRepo()
@@ -120,7 +120,7 @@ func (m Mother) TemplatesLoader() postal.TemplatesLoader {
 	return postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
 }
 
-func (m Mother) MailClient() *mail.Client {
+func (m *Mother) MailClient() *mail.Client {
 	env := NewEnvironment()
 	mailConfig := mail.Config{
 		User:           env.SMTPUser,
@@ -146,30 +146,30 @@ func (m Mother) MailClient() *mail.Client {
 	return mail.NewClient(mailConfig)
 }
 
-func (m Mother) Repos() (models.ClientsRepo, models.KindsRepo) {
+func (m *Mother) Repos() (models.ClientsRepo, models.KindsRepo) {
 	return models.NewClientsRepo(), m.KindsRepo()
 }
 
-func (m Mother) Logger() lager.Logger {
+func (m *Mother) Logger() lager.Logger {
 	logger := lager.NewLogger("notifications")
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
 
 	return logger
 }
 
-func (m Mother) Logging() middleware.RequestLogging {
+func (m *Mother) Logging() middleware.RequestLogging {
 	return middleware.NewRequestLogging(m.Logger())
 }
 
-func (m Mother) ErrorWriter() webutil.ErrorWriter {
+func (m *Mother) ErrorWriter() webutil.ErrorWriter {
 	return webutil.NewErrorWriter()
 }
 
-func (m Mother) Authenticator(scopes ...string) middleware.Authenticator {
+func (m *Mother) Authenticator(scopes ...string) middleware.Authenticator {
 	return middleware.NewAuthenticator(UAAPublicKey, scopes...)
 }
 
-func (m Mother) Registrar() services.Registrar {
+func (m *Mother) Registrar() services.Registrar {
 	clientsRepo, kindsRepo := m.Repos()
 	return services.NewRegistrar(clientsRepo, kindsRepo)
 }
@@ -212,23 +212,23 @@ func (m *Mother) Database() models.DatabaseInterface {
 	return database
 }
 
-func (m Mother) PreferencesFinder() *services.PreferencesFinder {
+func (m *Mother) PreferencesFinder() *services.PreferencesFinder {
 	return services.NewPreferencesFinder(models.NewPreferencesRepo(), m.GlobalUnsubscribesRepo())
 }
 
-func (m Mother) PreferenceUpdater() services.PreferenceUpdater {
+func (m *Mother) PreferenceUpdater() services.PreferenceUpdater {
 	return services.NewPreferenceUpdater(m.GlobalUnsubscribesRepo(), m.UnsubscribesRepo(), m.KindsRepo())
 }
 
-func (m Mother) TemplateFinder() services.TemplateFinder {
+func (m *Mother) TemplateFinder() services.TemplateFinder {
 	return services.NewTemplateFinder(m.TemplatesRepo())
 }
 
-func (m Mother) MessageFinder() services.MessageFinder {
+func (m *Mother) MessageFinder() services.MessageFinder {
 	return services.NewMessageFinder(m.MessagesRepo())
 }
 
-func (m Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
+func (m *Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
 	services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister) {
 
 	clientsRepo, kindsRepo := m.Repos()
@@ -243,31 +243,31 @@ func (m Mother) TemplateServiceObjects() (services.TemplateCreator, services.Tem
 		services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo)
 }
 
-func (m Mother) KindsRepo() models.KindsRepo {
+func (m *Mother) KindsRepo() models.KindsRepo {
 	return models.NewKindsRepo()
 }
 
-func (m Mother) UnsubscribesRepo() models.UnsubscribesRepo {
+func (m *Mother) UnsubscribesRepo() models.UnsubscribesRepo {
 	return models.NewUnsubscribesRepo()
 }
 
-func (m Mother) GlobalUnsubscribesRepo() models.GlobalUnsubscribesRepo {
+func (m *Mother) GlobalUnsubscribesRepo() models.GlobalUnsubscribesRepo {
 	return models.NewGlobalUnsubscribesRepo()
 }
 
-func (m Mother) TemplatesRepo() models.TemplatesRepo {
+func (m *Mother) TemplatesRepo() models.TemplatesRepo {
 	return models.NewTemplatesRepo()
 }
 
-func (m Mother) MessagesRepo() models.MessagesRepo {
+func (m *Mother) MessagesRepo() models.MessagesRepo {
 	return models.NewMessagesRepo()
 }
 
-func (m Mother) ReceiptsRepo() models.ReceiptsRepo {
+func (m *Mother) ReceiptsRepo() models.ReceiptsRepo {
 	return models.NewReceiptsRepo()
 }
 
-func (m Mother) CORS() middleware.CORS {
+func (m *Mother) CORS() middleware.CORS {
 	env := NewEnvironment()
 	return middleware.NewCORS(env.CORSOrigin)
 }

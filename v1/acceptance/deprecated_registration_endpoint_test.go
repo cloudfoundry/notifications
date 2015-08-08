@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/acceptance/v1/support"
 	"github.com/cloudfoundry-incubator/notifications/application"
+	"github.com/cloudfoundry-incubator/notifications/v1/acceptance/support"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

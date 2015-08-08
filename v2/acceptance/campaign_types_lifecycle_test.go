@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/acceptance/v2/support"
+	"github.com/cloudfoundry-incubator/notifications/v2/acceptance/support"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
