@@ -3,14 +3,25 @@ package fakes
 import "github.com/cloudfoundry-incubator/notifications/postal"
 
 type TemplatesLoader struct {
-	Templates postal.Templates
-	LoadError error
+	LoadTemplatesCall struct {
+		Receives struct {
+			ClientID string
+			KindID   string
+		}
+		Returns struct {
+			Templates postal.Templates
+			Error     error
+		}
+	}
 }
 
 func NewTemplatesLoader() *TemplatesLoader {
 	return &TemplatesLoader{}
 }
 
-func (fake *TemplatesLoader) LoadTemplates(clientID, kindID string) (postal.Templates, error) {
-	return fake.Templates, fake.LoadError
+func (tl *TemplatesLoader) LoadTemplates(clientID, kindID string) (postal.Templates, error) {
+	tl.LoadTemplatesCall.Receives.ClientID = clientID
+	tl.LoadTemplatesCall.Receives.KindID = kindID
+
+	return tl.LoadTemplatesCall.Returns.Templates, tl.LoadTemplatesCall.Returns.Error
 }

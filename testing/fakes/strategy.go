@@ -4,9 +4,13 @@ import "github.com/cloudfoundry-incubator/notifications/v1/services"
 
 type Strategy struct {
 	DispatchCall struct {
-		Dispatch  services.Dispatch
-		Responses []services.Response
-		Error     error
+		Receives struct {
+			Dispatch services.Dispatch
+		}
+		Returns struct {
+			Responses []services.Response
+			Error     error
+		}
 	}
 }
 
@@ -15,6 +19,7 @@ func NewStrategy() *Strategy {
 }
 
 func (s *Strategy) Dispatch(dispatch services.Dispatch) ([]services.Response, error) {
-	s.DispatchCall.Dispatch = dispatch
-	return s.DispatchCall.Responses, s.DispatchCall.Error
+	s.DispatchCall.Receives.Dispatch = dispatch
+
+	return s.DispatchCall.Returns.Responses, s.DispatchCall.Returns.Error
 }

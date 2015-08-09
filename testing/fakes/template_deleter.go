@@ -4,8 +4,13 @@ import "github.com/cloudfoundry-incubator/notifications/models"
 
 type TemplateDeleter struct {
 	DeleteCall struct {
-		Arguments []interface{}
-		Error     error
+		Receives struct {
+			Database   models.DatabaseInterface
+			TemplateID string
+		}
+		Returns struct {
+			Error error
+		}
 	}
 }
 
@@ -13,7 +18,9 @@ func NewTemplateDeleter() *TemplateDeleter {
 	return &TemplateDeleter{}
 }
 
-func (fake *TemplateDeleter) Delete(database models.DatabaseInterface, templateID string) error {
-	fake.DeleteCall.Arguments = []interface{}{database, templateID}
-	return fake.DeleteCall.Error
+func (td *TemplateDeleter) Delete(database models.DatabaseInterface, templateID string) error {
+	td.DeleteCall.Receives.Database = database
+	td.DeleteCall.Receives.TemplateID = templateID
+
+	return td.DeleteCall.Returns.Error
 }

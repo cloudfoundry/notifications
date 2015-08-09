@@ -88,11 +88,13 @@ var _ = Describe("DeliveryWorker", func() {
 		encryptionKey := sum[:]
 		fakeUserEmail = "user-123@example.com"
 		userLoader = fakes.NewUserLoader()
-		userLoader.Users["user-123"] = uaa.User{Emails: []string{fakeUserEmail}}
-		userLoader.Users["user-456"] = uaa.User{Emails: []string{"user-456@example.com"}}
+		userLoader.LoadCall.Returns.Users = map[string]uaa.User{
+			"user-123": {Emails: []string{fakeUserEmail}},
+			"user-456": {Emails: []string{"user-456@example.com"}},
+		}
 		tokenLoader = fakes.NewTokenLoader()
 		templateLoader = fakes.NewTemplatesLoader()
-		templateLoader.Templates = postal.Templates{
+		templateLoader.LoadTemplatesCall.Returns.Templates = postal.Templates{
 			Text:    "{{.Text}}",
 			HTML:    "<p>{{.HTML}}</p>",
 			Subject: "{{.Subject}}",
@@ -175,7 +177,7 @@ var _ = Describe("DeliveryWorker", func() {
 			job := gobble.NewJob(delivery)
 			worker.Deliver(&job)
 
-			Expect(tokenLoader.LoadArgument).To(Equal("zoned-uaa-host"))
+			Expect(tokenLoader.LoadCall.Receives.UAAHost).To(Equal("zoned-uaa-host"))
 		})
 	})
 
@@ -306,7 +308,7 @@ var _ = Describe("DeliveryWorker", func() {
 				delivery.UAAHost = "zoned-uaa-host"
 				job = gobble.NewJob(delivery)
 
-				tokenLoader.LoadError = errors.New("failed to load a zoned UAA token")
+				tokenLoader.LoadCall.Returns.Error = errors.New("failed to load a zoned UAA token")
 				worker.Deliver(&job)
 
 				Expect(job.RetryCount).To(Equal(1))
@@ -603,7 +605,9 @@ var _ = Describe("DeliveryWorker", func() {
 			Context("when the recipient has no emails", func() {
 				BeforeEach(func() {
 					delivery.Email = ""
-					userLoader.Users["user-123"] = uaa.User{}
+					userLoader.LoadCall.Returns.Users = map[string]uaa.User{
+						"user-123": {},
+					}
 					job = gobble.NewJob(delivery)
 
 					worker.Deliver(&job)
@@ -760,7 +764,7 @@ var _ = Describe("DeliveryWorker", func() {
 
 		Context("when the template contains syntax errors", func() {
 			BeforeEach(func() {
-				templateLoader.Templates = postal.Templates{
+				templateLoader.LoadTemplatesCall.Returns.Templates = postal.Templates{
 					Text:    "This message is a test of the endorsement broadcast system. \n\n {{.Text}} \n\n ==Endorsement== \n {{.Endorsement} \n ==End Endorsement==",
 					HTML:    "<h3>This message is a test of the Endorsement Broadcast System</h3><p>{{.HTML}}</p><h3>Endorsement:</h3><p>{.Endorsement}</p>",
 					Subject: "Endorsement Test: {{.Subject}}",

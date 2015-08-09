@@ -32,6 +32,7 @@ var _ = Describe("CreateHandler", func() {
 	Describe("ServeHTTP", func() {
 		BeforeEach(func() {
 			creator = fakes.NewTemplateCreator()
+			creator.CreateCall.Returns.TemplateGUID = "template-guid"
 			errorWriter = fakes.NewErrorWriter()
 			writer = httptest.NewRecorder()
 			body := bytes.NewBuffer([]byte{})
@@ -55,20 +56,18 @@ var _ = Describe("CreateHandler", func() {
 
 		It("calls create on its Creator with the correct arguments", func() {
 			handler.ServeHTTP(writer, request, context)
-			body := string(writer.Body.Bytes())
 
-			Expect(creator.CreateCall.Arguments).To(ConsistOf([]interface{}{
-				database,
-				models.Template{
-					Name:     "Emergency Template",
-					Text:     "Message to: {{.To}}. Raptor Alert.",
-					HTML:     "<p>{{.ClientID}} you should run.</p>",
-					Subject:  "Raptor Containment Unit Breached",
-					Metadata: "{}",
-				},
+			Expect(creator.CreateCall.Receives.Database).To(Equal(database))
+			Expect(creator.CreateCall.Receives.Template).To(Equal(models.Template{
+				Name:     "Emergency Template",
+				Text:     "Message to: {{.To}}. Raptor Alert.",
+				HTML:     "<p>{{.ClientID}} you should run.</p>",
+				Subject:  "Raptor Containment Unit Breached",
+				Metadata: "{}",
 			}))
+
 			Expect(writer.Code).To(Equal(http.StatusCreated))
-			Expect(body).To(Equal(`{"template_id":"guid"}`))
+			Expect(writer.Body.String()).To(MatchJSON(`{"template_id":"template-guid"}`))
 		})
 
 		Context("when an errors occurs", func() {
@@ -104,7 +103,7 @@ var _ = Describe("CreateHandler", func() {
 			})
 
 			It("returns a 500 for all other error cases", func() {
-				creator.CreateCall.Error = errors.New("my new error")
+				creator.CreateCall.Returns.Error = errors.New("my new error")
 				handler.ServeHTTP(writer, request, context)
 				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.TemplateCreateError{}))
 			})

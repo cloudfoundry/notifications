@@ -18,11 +18,8 @@ type PreferencesFinder struct {
 	}
 }
 
-func NewPreferencesFinder(builder services.PreferencesBuilder) *PreferencesFinder {
-	finder := &PreferencesFinder{}
-	finder.FindCall.Returns.PreferencesBuilder = builder
-
-	return finder
+func NewPreferencesFinder() *PreferencesFinder {
+	return &PreferencesFinder{}
 }
 
 func (pb *PreferencesFinder) Find(database models.DatabaseInterface, userGUID string) (services.PreferencesBuilder, error) {

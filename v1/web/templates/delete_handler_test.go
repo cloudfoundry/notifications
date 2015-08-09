@@ -43,15 +43,18 @@ var _ = Describe("DeleteHandler", func() {
 
 		It("calls delete on the repo", func() {
 			handler.ServeHTTP(writer, request, context)
-			Expect(deleter.DeleteCall.Arguments).To(ConsistOf([]interface{}{database, "template-id-123"}))
+
 			Expect(writer.Code).To(Equal(http.StatusNoContent))
+			Expect(deleter.DeleteCall.Receives.Database).To(Equal(database))
+			Expect(deleter.DeleteCall.Receives.TemplateID).To(Equal("template-id-123"))
 		})
 
 		Context("When the deleter errors", func() {
 			It("writes the error to the errorWriter", func() {
-				deleter.DeleteCall.Error = errors.New("BOOM!")
+				deleter.DeleteCall.Returns.Error = errors.New("BOOM!")
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(deleter.DeleteCall.Error))
+
+				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("BOOM!")))
 			})
 		})
 	})

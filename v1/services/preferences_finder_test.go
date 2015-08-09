@@ -41,7 +41,9 @@ var _ = Describe("PreferencesFinder", func() {
 
 		fakeGlobalUnsubscribesRepo := fakes.NewGlobalUnsubscribesRepo()
 		fakeGlobalUnsubscribesRepo.Set(fakes.NewConnection(), "correct-user", true)
-		preferencesRepo = fakes.NewPreferencesRepo(preferences)
+		preferencesRepo = fakes.NewPreferencesRepo()
+		preferencesRepo.FindNonCriticalPreferencesCall.Returns.Preferences = preferences
+
 		database = fakes.NewDatabase()
 
 		finder = services.NewPreferencesFinder(preferencesRepo, fakeGlobalUnsubscribesRepo)
@@ -58,15 +60,18 @@ var _ = Describe("PreferencesFinder", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultPreferences).To(Equal(expectedResult))
 
+			Expect(preferencesRepo.FindNonCriticalPreferencesCall.Receives.Connection).To(Equal(database.Connection()))
+			Expect(preferencesRepo.FindNonCriticalPreferencesCall.Receives.UserGUID).To(Equal("correct-user"))
+
 			Expect(database.ConnectionWasCalled).To(BeTrue())
 		})
 
 		Context("when the preferences repo returns an error", func() {
 			It("should propagate the error", func() {
-				preferencesRepo.FindError = errors.New("BOOM!")
+				preferencesRepo.FindNonCriticalPreferencesCall.Returns.Error = errors.New("BOOM!")
 
 				_, err := finder.Find(database, "correct-user")
-				Expect(err).To(Equal(preferencesRepo.FindError))
+				Expect(err).To(Equal(preferencesRepo.FindNonCriticalPreferencesCall.Returns.Error))
 			})
 		})
 	})

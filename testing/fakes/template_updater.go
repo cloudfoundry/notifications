@@ -4,8 +4,14 @@ import "github.com/cloudfoundry-incubator/notifications/models"
 
 type TemplateUpdater struct {
 	UpdateCall struct {
-		Arguments []interface{}
-		Error     error
+		Receives struct {
+			Database   models.DatabaseInterface
+			TemplateID string
+			Template   models.Template
+		}
+		Returns struct {
+			Error error
+		}
 	}
 }
 
@@ -13,8 +19,10 @@ func NewTemplateUpdater() *TemplateUpdater {
 	return &TemplateUpdater{}
 }
 
-func (fake *TemplateUpdater) Update(database models.DatabaseInterface, templateID string, template models.Template) error {
-	fake.UpdateCall.Arguments = []interface{}{database, templateID, template}
+func (tu *TemplateUpdater) Update(database models.DatabaseInterface, templateID string, template models.Template) error {
+	tu.UpdateCall.Receives.Database = database
+	tu.UpdateCall.Receives.TemplateID = templateID
+	tu.UpdateCall.Receives.Template = template
 
-	return fake.UpdateCall.Error
+	return tu.UpdateCall.Returns.Error
 }

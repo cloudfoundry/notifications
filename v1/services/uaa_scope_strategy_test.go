@@ -48,7 +48,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 			"scope":     []string{"notifications.write"},
 		}
 		tokenLoader = fakes.NewTokenLoader()
-		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
+		tokenLoader.LoadCall.Returns.Token = fakes.BuildToken(tokenHeader, tokenClaims)
 		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
 		findsUserGUIDs.GUIDsWithScopes["great.scope"] = []string{"user-311"}
@@ -122,7 +122,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 		Context("failure cases", func() {
 			Context("when token loader fails to return a token", func() {
 				It("returns an error", func() {
-					tokenLoader.LoadError = errors.New("BOOM!")
+					tokenLoader.LoadCall.Returns.Error = errors.New("BOOM!")
 
 					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))

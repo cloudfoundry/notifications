@@ -6,11 +6,14 @@ import (
 )
 
 type TemplateLister struct {
-	Templates map[string]services.TemplateSummary
-
 	ListCall struct {
-		Arguments []interface{}
-		Error     error
+		Receives struct {
+			Database models.DatabaseInterface
+		}
+		Returns struct {
+			TemplateSummaries map[string]services.TemplateSummary
+			Error             error
+		}
 	}
 }
 
@@ -18,7 +21,8 @@ func NewTemplateLister() *TemplateLister {
 	return &TemplateLister{}
 }
 
-func (lister *TemplateLister) List(database models.DatabaseInterface) (map[string]services.TemplateSummary, error) {
-	lister.ListCall.Arguments = []interface{}{database}
-	return lister.Templates, lister.ListCall.Error
+func (tl *TemplateLister) List(database models.DatabaseInterface) (map[string]services.TemplateSummary, error) {
+	tl.ListCall.Receives.Database = database
+
+	return tl.ListCall.Returns.TemplateSummaries, tl.ListCall.Returns.Error
 }

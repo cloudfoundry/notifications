@@ -46,7 +46,7 @@ var _ = Describe("ListHandler", func() {
 			}
 
 			lister = fakes.NewTemplateLister()
-			lister.Templates = testTemplates
+			lister.ListCall.Returns.TemplateSummaries = testTemplates
 
 			writer = httptest.NewRecorder()
 			errorWriter = fakes.NewErrorWriter()
@@ -67,7 +67,7 @@ var _ = Describe("ListHandler", func() {
 
 			It("calls list on its lister", func() {
 				handler.ServeHTTP(writer, request, context)
-				Expect(lister.ListCall.Arguments).To(ConsistOf([]interface{}{database}))
+				Expect(lister.ListCall.Receives.Database).To(Equal(database))
 			})
 
 			It("writes out the lister's response", func() {
@@ -87,7 +87,7 @@ var _ = Describe("ListHandler", func() {
 
 		Context("when the lister errors", func() {
 			BeforeEach(func() {
-				lister.ListCall.Error = errors.New("BOOM!")
+				lister.ListCall.Returns.Error = errors.New("BOOM!")
 
 				var err error
 				request, err = http.NewRequest("GET", "/templates", bytes.NewBuffer([]byte{}))

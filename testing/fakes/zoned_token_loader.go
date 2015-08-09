@@ -1,9 +1,15 @@
 package fakes
 
 type TokenLoader struct {
-	Token        string
-	LoadArgument string
-	LoadError    error
+	LoadCall struct {
+		Receives struct {
+			UAAHost string
+		}
+		Returns struct {
+			Token string
+			Error error
+		}
+	}
 }
 
 func NewTokenLoader() *TokenLoader {
@@ -11,6 +17,7 @@ func NewTokenLoader() *TokenLoader {
 }
 
 func (t *TokenLoader) Load(uaaHost string) (string, error) {
-	t.LoadArgument = uaaHost
-	return t.Token, t.LoadError
+	t.LoadCall.Receives.UAAHost = uaaHost
+
+	return t.LoadCall.Returns.Token, t.LoadCall.Returns.Error
 }

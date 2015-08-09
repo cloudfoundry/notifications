@@ -52,11 +52,14 @@ var _ = Describe("AssignTemplateHandler", func() {
 		handler.ServeHTTP(w, request, context)
 
 		Expect(w.Code).To(Equal(http.StatusNoContent))
-		Expect(templateAssigner.AssignToNotificationArguments).To(Equal([]interface{}{database, "my-client", "my-notification", "my-template"}))
+		Expect(templateAssigner.AssignToNotificationCall.Receives.Database).To(Equal(database))
+		Expect(templateAssigner.AssignToNotificationCall.Receives.ClientID).To(Equal("my-client"))
+		Expect(templateAssigner.AssignToNotificationCall.Receives.NotificationID).To(Equal("my-notification"))
+		Expect(templateAssigner.AssignToNotificationCall.Receives.TemplateID).To(Equal("my-template"))
 	})
 
 	It("delegates to the error writer when the assigner errors", func() {
-		templateAssigner.AssignToNotificationError = errors.New("banana")
+		templateAssigner.AssignToNotificationCall.Returns.Error = errors.New("banana")
 		body, err := json.Marshal(map[string]string{
 			"template": "my-template",
 		})

@@ -57,7 +57,9 @@ var _ = Describe("GetUserPreferencesHandler", func() {
 		context = stack.NewContext()
 		context.Set("database", database)
 
-		preferencesFinder = fakes.NewPreferencesFinder(builder)
+		preferencesFinder = fakes.NewPreferencesFinder()
+		preferencesFinder.FindCall.Returns.PreferencesBuilder = builder
+
 		handler = preferences.NewGetUserPreferencesHandler(preferencesFinder, errorWriter)
 	})
 

@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
 	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
@@ -21,7 +20,7 @@ var _ = Describe("Routes", func() {
 		muxer = web.NewMuxer()
 		preferences.Routes{
 			ErrorWriter:       fakes.NewErrorWriter(),
-			PreferencesFinder: fakes.NewPreferencesFinder(services.PreferencesBuilder{}),
+			PreferencesFinder: fakes.NewPreferencesFinder(),
 			PreferenceUpdater: fakes.NewPreferenceUpdater(),
 
 			CORS:                                      middleware.CORS{},

@@ -37,12 +37,12 @@ var _ = Describe("Space Strategy", func() {
 			"scope":     []string{"notifications.write"},
 		}
 		tokenLoader = fakes.NewTokenLoader()
-		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
+		tokenLoader.LoadCall.Returns.Token = fakes.BuildToken(tokenHeader, tokenClaims)
 		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
 		findsUserGUIDs.SpaceGuids["space-001"] = []string{"user-123", "user-456"}
 		spaceLoader = fakes.NewSpaceLoader()
-		spaceLoader.Space = cf.CloudControllerSpace{
+		spaceLoader.LoadCall.Returns.Space = cf.CloudControllerSpace{
 			Name:             "production",
 			GUID:             "space-001",
 			OrganizationGUID: "org-001",
@@ -92,7 +92,10 @@ var _ = Describe("Space Strategy", func() {
 				users := []services.User{{GUID: "user-123"}, {GUID: "user-456"}}
 
 				Expect(organizationLoader.LoadCall.Receives.OrganizationGUID).To(Equal("org-001"))
-				Expect(organizationLoader.LoadCall.Receives.Token).To(Equal(tokenLoader.Token))
+				Expect(organizationLoader.LoadCall.Receives.Token).To(Equal(tokenLoader.LoadCall.Returns.Token))
+
+				Expect(spaceLoader.LoadCall.Receives.SpaceGUID).To(Equal("space-001"))
+				Expect(spaceLoader.LoadCall.Receives.Token).To(Equal(tokenLoader.LoadCall.Returns.Token))
 
 				Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(conn))
 				Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal(users))
@@ -126,14 +129,14 @@ var _ = Describe("Space Strategy", func() {
 				Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal("some-vcap-request-id"))
 				Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceived))
 				Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("uaa"))
-				Expect(tokenLoader.LoadArgument).To(Equal("uaa"))
+				Expect(tokenLoader.LoadCall.Receives.UAAHost).To(Equal("uaa"))
 			})
 		})
 
 		Context("failure cases", func() {
 			Context("when token loader fails to return a token", func() {
 				It("returns an error", func() {
-					tokenLoader.LoadError = errors.New("BOOM!")
+					tokenLoader.LoadCall.Returns.Error = errors.New("BOOM!")
 
 					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))
@@ -142,7 +145,7 @@ var _ = Describe("Space Strategy", func() {
 
 			Context("when spaceLoader fails to load a space", func() {
 				It("returns an error", func() {
-					spaceLoader.LoadError = errors.New("BOOM!")
+					spaceLoader.LoadCall.Returns.Error = errors.New("BOOM!")
 
 					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))

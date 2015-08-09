@@ -36,7 +36,7 @@ var _ = Describe("Organization Strategy", func() {
 			"scope":     []string{"notifications.write"},
 		}
 		tokenLoader = fakes.NewTokenLoader()
-		tokenLoader.Token = fakes.BuildToken(tokenHeader, tokenClaims)
+		tokenLoader.LoadCall.Returns.Token = fakes.BuildToken(tokenHeader, tokenClaims)
 		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
 		findsUserGUIDs.OrganizationGuids["org-001"] = []string{"user-123", "user-456"}
@@ -88,7 +88,7 @@ var _ = Describe("Organization Strategy", func() {
 				}
 
 				Expect(organizationLoader.LoadCall.Receives.OrganizationGUID).To(Equal("org-001"))
-				Expect(organizationLoader.LoadCall.Receives.Token).To(Equal(tokenLoader.Token))
+				Expect(organizationLoader.LoadCall.Receives.Token).To(Equal(tokenLoader.LoadCall.Returns.Token))
 
 				Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(conn))
 				Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal(users))
@@ -118,7 +118,7 @@ var _ = Describe("Organization Strategy", func() {
 				Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal("some-vcap-request-id"))
 				Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceived))
 				Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("testzone1"))
-				Expect(tokenLoader.LoadArgument).To(Equal("testzone1"))
+				Expect(tokenLoader.LoadCall.Receives.UAAHost).To(Equal("testzone1"))
 			})
 
 			Context("when the org role field is set", func() {
@@ -178,7 +178,7 @@ var _ = Describe("Organization Strategy", func() {
 		Context("failure cases", func() {
 			Context("when token loader fails to return a token", func() {
 				It("returns an error", func() {
-					tokenLoader.LoadError = errors.New("BOOM!")
+					tokenLoader.LoadCall.Returns.Error = errors.New("BOOM!")
 
 					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))

@@ -83,7 +83,9 @@ var _ = Describe("GetPreferencesHandler", func() {
 		})
 		builder.GlobalUnsubscribe = true
 
-		preferencesFinder = fakes.NewPreferencesFinder(builder)
+		preferencesFinder = fakes.NewPreferencesFinder()
+		preferencesFinder.FindCall.Returns.PreferencesBuilder = builder
+
 		handler = preferences.NewGetPreferencesHandler(preferencesFinder, errorWriter)
 	})
 

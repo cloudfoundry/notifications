@@ -53,11 +53,13 @@ var _ = Describe("AssignTemplateHandler", func() {
 
 		Expect(w.Code).To(Equal(http.StatusNoContent))
 
-		Expect(templateAssigner.AssignToClientArguments).To(Equal([]interface{}{database, "my-client", "my-template"}))
+		Expect(templateAssigner.AssignToClientCall.Receives.Database).To(Equal(database))
+		Expect(templateAssigner.AssignToClientCall.Receives.ClientID).To(Equal("my-client"))
+		Expect(templateAssigner.AssignToClientCall.Receives.TemplateID).To(Equal("my-template"))
 	})
 
 	It("delegates to the error writer when the assigner errors", func() {
-		templateAssigner.AssignToClientError = errors.New("banana")
+		templateAssigner.AssignToClientCall.Returns.Error = errors.New("banana")
 		body, err := json.Marshal(map[string]string{
 			"template": "my-template",
 		})

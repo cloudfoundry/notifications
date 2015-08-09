@@ -34,7 +34,7 @@ var _ = Describe("GetHandler", func() {
 			finder = fakes.NewTemplateFinder()
 			templateID = "theTemplateID"
 
-			finder.Templates[templateID] = models.Template{
+			finder.FindByIDCall.Returns.Template = models.Template{
 				Name:     "The Name of The Template",
 				Subject:  "All about the {{.Subject}}",
 				Text:     "the template {{variable}}",
@@ -59,7 +59,8 @@ var _ = Describe("GetHandler", func() {
 
 			It("calls find on its finder with appropriate arguments", func() {
 				handler.ServeHTTP(writer, request, context)
-				Expect(finder.FindByIDCall.Arguments).To(ConsistOf([]interface{}{database, templateID}))
+				Expect(finder.FindByIDCall.Receives.Database).To(Equal(database))
+				Expect(finder.FindByIDCall.Receives.TemplateID).To(Equal(templateID))
 			})
 
 			It("writes out the finder's response", func() {
@@ -84,7 +85,7 @@ var _ = Describe("GetHandler", func() {
 
 		Context("when the finder errors", func() {
 			BeforeEach(func() {
-				finder.FindByIDCall.Error = errors.New("BOOM!")
+				finder.FindByIDCall.Returns.Error = errors.New("BOOM!")
 
 				var err error
 				request, err = http.NewRequest("GET", "/templates/someTemplateID", bytes.NewBuffer([]byte{}))

@@ -26,7 +26,7 @@ var _ = Describe("GetDefaultHandler", func() {
 	BeforeEach(func() {
 		errorWriter = fakes.NewErrorWriter()
 		templateFinder = fakes.NewTemplateFinder()
-		templateFinder.Templates[models.DefaultTemplateID] = models.Template{
+		templateFinder.FindByIDCall.Returns.Template = models.Template{
 			ID:       models.DefaultTemplateID,
 			Name:     "Default Template",
 			Subject:  "CF Notification: {{.Subject}}",
@@ -34,6 +34,7 @@ var _ = Describe("GetDefaultHandler", func() {
 			HTML:     "<p>Default Template</p> {{.HTML}}",
 			Metadata: "{}",
 		}
+
 		database = fakes.NewDatabase()
 		context = stack.NewContext()
 		context.Set("database", database)
@@ -43,9 +44,7 @@ var _ = Describe("GetDefaultHandler", func() {
 
 	It("responds with a 200 status code and JSON representation of the template", func() {
 		request, err := http.NewRequest("GET", "/default_template", nil)
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
 		writer := httptest.NewRecorder()
 
 		handler.ServeHTTP(writer, request, context)
@@ -59,16 +58,15 @@ var _ = Describe("GetDefaultHandler", func() {
 			"metadata": {}
 		}`))
 
-		Expect(templateFinder.FindByIDCall.Arguments).To(ConsistOf([]interface{}{database, models.DefaultTemplateID}))
+		Expect(templateFinder.FindByIDCall.Receives.Database).To(Equal(database))
+		Expect(templateFinder.FindByIDCall.Receives.TemplateID).To(Equal(models.DefaultTemplateID))
 	})
 
 	It("delegates error handling to the error writer", func() {
-		templateFinder.FindByIDCall.Error = errors.New("BANANA!!!")
+		templateFinder.FindByIDCall.Returns.Error = errors.New("BANANA!!!")
 
 		request, err := http.NewRequest("GET", "/default_template", nil)
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
 		writer := httptest.NewRecorder()
 
 		handler.ServeHTTP(writer, request, context)

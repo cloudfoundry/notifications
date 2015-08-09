@@ -52,13 +52,15 @@ var _ = Describe("UpdateDefaultHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(writer.Code).To(Equal(http.StatusNoContent))
-		Expect(updater.UpdateCall.Arguments).To(ConsistOf([]interface{}{database, models.DefaultTemplateID, models.Template{
+		Expect(updater.UpdateCall.Receives.Database).To(Equal(database))
+		Expect(updater.UpdateCall.Receives.TemplateID).To(Equal(models.DefaultTemplateID))
+		Expect(updater.UpdateCall.Receives.Template).To(Equal(models.Template{
 			Name:     "Defaultish Template",
 			Subject:  "{{.Subject}}",
 			HTML:     "<p>something</p>",
 			Text:     "something",
 			Metadata: `{"hello": true}`,
-		}}))
+		}))
 	})
 
 	Context("when the request is not valid", func() {
@@ -79,7 +81,7 @@ var _ = Describe("UpdateDefaultHandler", func() {
 
 	Context("when the updater errors", func() {
 		It("delegates the error handling to the error writer", func() {
-			updater.UpdateCall.Error = errors.New("updating default template error")
+			updater.UpdateCall.Returns.Error = errors.New("updating default template error")
 
 			handler.ServeHTTP(writer, request, context)
 

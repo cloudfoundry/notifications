@@ -6,21 +6,25 @@ import (
 )
 
 type TemplateAssociationLister struct {
-	Associations map[string][]services.TemplateAssociation
-
 	ListCall struct {
-		Arguments []interface{}
-		Error     error
+		Receives struct {
+			Database   models.DatabaseInterface
+			TemplateID string
+		}
+		Returns struct {
+			Associations []services.TemplateAssociation
+			Error        error
+		}
 	}
 }
 
 func NewTemplateAssociationLister() *TemplateAssociationLister {
-	return &TemplateAssociationLister{
-		Associations: make(map[string][]services.TemplateAssociation),
-	}
+	return &TemplateAssociationLister{}
 }
 
-func (lister *TemplateAssociationLister) List(database models.DatabaseInterface, templateID string) ([]services.TemplateAssociation, error) {
-	lister.ListCall.Arguments = []interface{}{database, templateID}
-	return lister.Associations[templateID], lister.ListCall.Error
+func (l *TemplateAssociationLister) List(database models.DatabaseInterface, templateID string) ([]services.TemplateAssociation, error) {
+	l.ListCall.Receives.Database = database
+	l.ListCall.Receives.TemplateID = templateID
+
+	return l.ListCall.Returns.Associations, l.ListCall.Returns.Error
 }

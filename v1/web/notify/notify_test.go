@@ -115,7 +115,7 @@ var _ = Describe("Notify", func() {
 				_, err := handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(strategy.DispatchCall.Dispatch).To(Equal(services.Dispatch{
+				Expect(strategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
 					GUID:       "space-001",
 					Connection: conn,
 					Client: services.DispatchClient{
@@ -151,9 +151,9 @@ var _ = Describe("Notify", func() {
 
 				Expect(finder.ClientAndKindCall.Arguments).To(ConsistOf([]interface{}{database, "mister-client", "test_email"}))
 
-				Expect(registrar.RegisterCall.Arguments.Connection).To(Equal(conn))
-				Expect(registrar.RegisterCall.Arguments.Client).To(Equal(client))
-				Expect(registrar.RegisterCall.Arguments.Kinds).To(ConsistOf([]models.Kind{kind}))
+				Expect(registrar.RegisterCall.Receives.Connection).To(Equal(conn))
+				Expect(registrar.RegisterCall.Receives.Client).To(Equal(client))
+				Expect(registrar.RegisterCall.Receives.Kinds).To(ConsistOf([]models.Kind{kind}))
 			})
 
 			Context("failure cases", func() {
@@ -193,7 +193,7 @@ var _ = Describe("Notify", func() {
 
 				Context("when the strategy dispatch method returns errors", func() {
 					It("returns the error", func() {
-						strategy.DispatchCall.Error = errors.New("BOOM!")
+						strategy.DispatchCall.Returns.Error = errors.New("BOOM!")
 
 						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
 						Expect(err).To(Equal(errors.New("BOOM!")))
@@ -211,7 +211,7 @@ var _ = Describe("Notify", func() {
 
 				Context("when the registrar returns errors", func() {
 					It("returns the error", func() {
-						registrar.RegisterCall.Error = errors.New("BOOM!")
+						registrar.RegisterCall.Returns.Error = errors.New("BOOM!")
 
 						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
 						Expect(err).To(Equal(errors.New("BOOM!")))

@@ -38,7 +38,7 @@ var _ = Describe("Everyone Strategy", func() {
 		tokenLoader = fakes.NewTokenLoader()
 
 		token = fakes.BuildToken(tokenHeader, tokenClaims)
-		tokenLoader.Token = token
+		tokenLoader.LoadCall.Returns.Token = token
 		enqueuer = fakes.NewEnqueuer()
 		allUsers = fakes.NewAllUsers()
 		allUsers.AllUserGUIDsCall.Returns.GUIDs = []string{"user-380", "user-319"}
@@ -107,7 +107,7 @@ var _ = Describe("Everyone Strategy", func() {
 			Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal("some-vcap-request-id"))
 			Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("my-uaa-host"))
 			Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceivedTime))
-			Expect(tokenLoader.LoadArgument).To(Equal("my-uaa-host"))
+			Expect(tokenLoader.LoadCall.Receives.UAAHost).To(Equal("my-uaa-host"))
 			Expect(allUsers.AllUserGUIDsCall.Receives.Token).To(Equal(token))
 		})
 	})
@@ -115,7 +115,7 @@ var _ = Describe("Everyone Strategy", func() {
 	Context("failure cases", func() {
 		Context("when token loader fails to return a token", func() {
 			It("returns an error", func() {
-				tokenLoader.LoadError = errors.New("BOOM!")
+				tokenLoader.LoadCall.Returns.Error = errors.New("BOOM!")
 				_, err := strategy.Dispatch(services.Dispatch{})
 
 				Expect(err).To(Equal(errors.New("BOOM!")))

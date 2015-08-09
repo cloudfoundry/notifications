@@ -47,13 +47,15 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNoContent))
 
-			Expect(updater.UpdateCall.Arguments).To(ConsistOf([]interface{}{database, "a-template-id", models.Template{
+			Expect(updater.UpdateCall.Receives.Database).To(Equal(database))
+			Expect(updater.UpdateCall.Receives.TemplateID).To(Equal("a-template-id"))
+			Expect(updater.UpdateCall.Receives.Template).To(Equal(models.Template{
 				Name:     "An Interesting Template",
 				Subject:  "very interesting subject",
 				Text:     "Here's the msg {{.Text}}",
 				HTML:     "<p>turkey gobble</p>",
 				Metadata: "{}",
-			}}))
+			}))
 		})
 
 		It("can update a template without a subject field", func() {
@@ -99,7 +101,7 @@ var _ = Describe("UpdateHandler", func() {
 
 			Describe("when the update returns an error", func() {
 				It("returns the error", func() {
-					updater.UpdateCall.Error = models.TemplateUpdateError{Message: "My New Error"}
+					updater.UpdateCall.Returns.Error = models.TemplateUpdateError{Message: "My New Error"}
 					body := []byte(`{"name": "a temlate name", "html": "<p>my html</p>"}`)
 					request, err = http.NewRequest("PUT", "/templates/a-template-id", bytes.NewBuffer(body))
 					Expect(err).NotTo(HaveOccurred())

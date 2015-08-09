@@ -3,22 +3,25 @@ package fakes
 import "github.com/cloudfoundry-incubator/notifications/models"
 
 type TemplateFinder struct {
-	Templates map[string]models.Template
-
 	FindByIDCall struct {
-		Arguments []interface{}
-		Error     error
+		Receives struct {
+			Database   models.DatabaseInterface
+			TemplateID string
+		}
+		Returns struct {
+			Template models.Template
+			Error    error
+		}
 	}
 }
 
 func NewTemplateFinder() *TemplateFinder {
-	return &TemplateFinder{
-		Templates: map[string]models.Template{},
-	}
+	return &TemplateFinder{}
 }
 
-func (fake *TemplateFinder) FindByID(database models.DatabaseInterface, templateID string) (models.Template, error) {
-	fake.FindByIDCall.Arguments = []interface{}{database, templateID}
+func (tf *TemplateFinder) FindByID(database models.DatabaseInterface, templateID string) (models.Template, error) {
+	tf.FindByIDCall.Receives.Database = database
+	tf.FindByIDCall.Receives.TemplateID = templateID
 
-	return fake.Templates[templateID], fake.FindByIDCall.Error
+	return tf.FindByIDCall.Returns.Template, tf.FindByIDCall.Returns.Error
 }

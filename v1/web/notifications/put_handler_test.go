@@ -105,9 +105,9 @@ var _ = Describe("PutHandler", func() {
 		It("passes the correct arguments to Register", func() {
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(registrar.RegisterCall.Arguments.Connection).To(Equal(conn))
-			Expect(registrar.RegisterCall.Arguments.Client).To(Equal(client))
-			Expect(registrar.RegisterCall.Arguments.Kinds).To(ConsistOf(kinds))
+			Expect(registrar.RegisterCall.Receives.Connection).To(Equal(conn))
+			Expect(registrar.RegisterCall.Receives.Client).To(Equal(client))
+			Expect(registrar.RegisterCall.Receives.Kinds).To(ConsistOf(kinds))
 
 			Expect(conn.BeginWasCalled).To(BeTrue())
 			Expect(conn.CommitWasCalled).To(BeTrue())
@@ -117,9 +117,9 @@ var _ = Describe("PutHandler", func() {
 		It("passes the correct arguments to Prune", func() {
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(registrar.PruneCall.Arguments.Connection).To(Equal(conn))
-			Expect(registrar.PruneCall.Arguments.Client).To(Equal(client))
-			Expect(registrar.PruneCall.Arguments.Kinds).To(ConsistOf(kinds))
+			Expect(registrar.PruneCall.Receives.Connection).To(Equal(conn))
+			Expect(registrar.PruneCall.Receives.Client).To(Equal(client))
+			Expect(registrar.PruneCall.Receives.Kinds).To(ConsistOf(kinds))
 
 			Expect(conn.BeginWasCalled).To(BeTrue())
 			Expect(conn.CommitWasCalled).To(BeTrue())
@@ -218,7 +218,7 @@ var _ = Describe("PutHandler", func() {
 			})
 
 			It("delegates registrar register errors to the ErrorWriter", func() {
-				registrar.RegisterCall.Error = errors.New("BOOM!")
+				registrar.RegisterCall.Returns.Error = errors.New("BOOM!")
 
 				handler.ServeHTTP(writer, request, context)
 
@@ -230,7 +230,7 @@ var _ = Describe("PutHandler", func() {
 			})
 
 			It("delegates registrar prune errors to the ErrorWriter", func() {
-				registrar.PruneCall.Error = errors.New("BOOM!")
+				registrar.PruneCall.Returns.Error = errors.New("BOOM!")
 
 				handler.ServeHTTP(writer, request, context)
 

@@ -37,7 +37,7 @@ var _ = Describe("ListAssociationsHandler", func() {
 
 		templateID = "banana-template"
 		lister = fakes.NewTemplateAssociationLister()
-		lister.Associations[templateID] = []services.TemplateAssociation{
+		lister.ListCall.Returns.Associations = []services.TemplateAssociation{
 			{
 				ClientID: "some-client",
 			},
@@ -90,13 +90,14 @@ var _ = Describe("ListAssociationsHandler", func() {
 			Notification: "another-notification",
 		}))
 
-		Expect(lister.ListCall.Arguments).To(ConsistOf([]interface{}{database, templateID}))
+		Expect(lister.ListCall.Receives.Database).To(Equal(database))
+		Expect(lister.ListCall.Receives.TemplateID).To(Equal(templateID))
 	})
 
 	Context("when errors occur", func() {
 		Context("when the lister service returns an error", func() {
 			It("delegates to the error handler", func() {
-				lister.ListCall.Error = errors.New("db failed or something")
+				lister.ListCall.Returns.Error = errors.New("db failed or something")
 
 				handler.ServeHTTP(writer, request, context)
 				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(errors.New("db failed or something")))

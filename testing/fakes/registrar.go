@@ -4,22 +4,26 @@ import "github.com/cloudfoundry-incubator/notifications/models"
 
 type Registrar struct {
 	RegisterCall struct {
-		Arguments struct {
+		Receives struct {
 			Connection models.ConnectionInterface
 			Client     models.Client
 			Kinds      []models.Kind
 		}
-		Error error
+		Returns struct {
+			Error error
+		}
 	}
 
 	PruneCall struct {
-		Arguments struct {
+		Called   bool
+		Receives struct {
 			Connection models.ConnectionInterface
 			Client     models.Client
 			Kinds      []models.Kind
 		}
-		Called bool
-		Error  error
+		Returns struct {
+			Error error
+		}
 	}
 }
 
@@ -27,19 +31,19 @@ func NewRegistrar() *Registrar {
 	return &Registrar{}
 }
 
-func (fake *Registrar) Register(conn models.ConnectionInterface, client models.Client, kinds []models.Kind) error {
-	fake.RegisterCall.Arguments.Connection = conn
-	fake.RegisterCall.Arguments.Client = client
-	fake.RegisterCall.Arguments.Kinds = kinds
+func (r *Registrar) Register(conn models.ConnectionInterface, client models.Client, kinds []models.Kind) error {
+	r.RegisterCall.Receives.Connection = conn
+	r.RegisterCall.Receives.Client = client
+	r.RegisterCall.Receives.Kinds = kinds
 
-	return fake.RegisterCall.Error
+	return r.RegisterCall.Returns.Error
 }
 
-func (fake *Registrar) Prune(conn models.ConnectionInterface, client models.Client, kinds []models.Kind) error {
-	fake.PruneCall.Called = true
-	fake.PruneCall.Arguments.Connection = conn
-	fake.PruneCall.Arguments.Client = client
-	fake.PruneCall.Arguments.Kinds = kinds
+func (r *Registrar) Prune(conn models.ConnectionInterface, client models.Client, kinds []models.Kind) error {
+	r.PruneCall.Called = true
+	r.PruneCall.Receives.Connection = conn
+	r.PruneCall.Receives.Client = client
+	r.PruneCall.Receives.Kinds = kinds
 
-	return fake.PruneCall.Error
+	return r.PruneCall.Returns.Error
 }
