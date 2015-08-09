@@ -36,7 +36,7 @@ func NewCampaignTypesCollection(nr campaignTypesRepository, sr sendersRepository
 	}
 }
 
-func (nc CampaignTypesCollection) Set(conn models.ConnectionInterface, campaignType CampaignType, clientID string) (CampaignType, error) {
+func (nc CampaignTypesCollection) Set(conn ConnectionInterface, campaignType CampaignType, clientID string) (CampaignType, error) {
 	sender, err := nc.sendersRepository.Get(conn, campaignType.SenderID)
 	err = validateSender(clientID, campaignType.SenderID, sender, err)
 	if err != nil {
@@ -82,7 +82,7 @@ func (nc CampaignTypesCollection) Set(conn models.ConnectionInterface, campaignT
 	}, nil
 }
 
-func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) (CampaignType, error) {
+func (nc CampaignTypesCollection) Get(conn ConnectionInterface, campaignTypeID, senderID, clientID string) (CampaignType, error) {
 	sender, err := nc.sendersRepository.Get(conn, senderID)
 	err = validateSender(clientID, senderID, sender, err)
 	if err != nil {
@@ -105,7 +105,7 @@ func (nc CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignT
 	}, nil
 }
 
-func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]CampaignType, error) {
+func (nc CampaignTypesCollection) List(conn ConnectionInterface, senderID, clientID string) ([]CampaignType, error) {
 	sender, err := nc.sendersRepository.Get(conn, senderID)
 	err = validateSender(clientID, senderID, sender, err)
 	if err != nil {
@@ -134,7 +134,7 @@ func (nc CampaignTypesCollection) List(conn models.ConnectionInterface, senderID
 	return campaignTypeList, nil
 }
 
-func (c CampaignTypesCollection) Delete(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) error {
+func (c CampaignTypesCollection) Delete(conn ConnectionInterface, campaignTypeID, senderID, clientID string) error {
 	sender, err := c.sendersRepository.Get(conn, senderID)
 	err = validateSender(clientID, senderID, sender, err)
 	if err != nil {

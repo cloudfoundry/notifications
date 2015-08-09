@@ -20,7 +20,7 @@ type TemplatesCollection struct {
 
 	GetCall struct {
 		Receives struct {
-			Conn       models.ConnectionInterface
+			Conn       collections.ConnectionInterface
 			TemplateID string
 			ClientID   string
 		}
@@ -43,7 +43,7 @@ func (c *TemplatesCollection) Set(conn models.ConnectionInterface, template coll
 	return c.SetCall.Returns.Template, c.SetCall.Returns.Err
 }
 
-func (c *TemplatesCollection) Get(conn models.ConnectionInterface, templateID, clientID string) (collections.Template, error) {
+func (c *TemplatesCollection) Get(conn collections.ConnectionInterface, templateID, clientID string) (collections.Template, error) {
 	c.GetCall.Receives.Conn = conn
 	c.GetCall.Receives.TemplateID = templateID
 	c.GetCall.Receives.ClientID = clientID

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/ryanmoran/stack"
 )
@@ -15,8 +14,8 @@ type DeleteHandler struct {
 }
 
 type collectionDeleter interface {
-	Get(conn models.ConnectionInterface, senderID, campaignTypeID, clientID string) (collections.CampaignType, error)
-	Delete(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) error
+	Get(conn collections.ConnectionInterface, senderID, campaignTypeID, clientID string) (collections.CampaignType, error)
+	Delete(conn collections.ConnectionInterface, campaignTypeID, senderID, clientID string) error
 }
 
 func NewDeleteHandler(campaignTypesCollection collectionDeleter) DeleteHandler {
@@ -30,7 +29,7 @@ func (h DeleteHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	campaignTypeID := splitURL[len(splitURL)-1]
 	senderID := splitURL[len(splitURL)-3]
 
-	database := context.Get("database").(models.DatabaseInterface)
+	database := context.Get("database").(DatabaseInterface)
 	if err := h.collection.Delete(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string)); err != nil {
 		switch t := err.(type) {
 		case collections.NotFoundError:

@@ -6,14 +6,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 )
 
 type collectionSetter interface {
-	Set(conn models.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error)
+	Set(conn collections.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error)
 }
 
 type CreateHandler struct {
@@ -72,7 +71,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		}
 	}
 
-	database := context.Get("database").(models.DatabaseInterface)
+	database := context.Get("database").(DatabaseInterface)
 
 	campaignType, err := h.collection.Set(database.Connection(), collections.CampaignType{
 		Name:        createRequest.Name,

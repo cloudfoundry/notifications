@@ -1,7 +1,5 @@
 package collections
 
-import "github.com/cloudfoundry-incubator/notifications/models"
-
 type Template struct {
 	ID       string
 	Name     string
@@ -18,6 +16,6 @@ func NewTemplatesCollection() TemplatesCollection {
 	return TemplatesCollection{}
 }
 
-func (c TemplatesCollection) Get(conn models.ConnectionInterface, templateID, clientID string) (Template, error) {
+func (c TemplatesCollection) Get(conn ConnectionInterface, templateID, clientID string) (Template, error) {
 	panic("not implemented")
 }

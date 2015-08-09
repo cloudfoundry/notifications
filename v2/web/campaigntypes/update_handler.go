@@ -6,15 +6,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 )
 
 type collectionUpdater interface {
-	Set(conn models.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error)
-	Get(conn models.ConnectionInterface, senderID, campaignTypeID, clientID string) (collections.CampaignType, error)
+	Set(conn collections.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error)
+	Get(conn collections.ConnectionInterface, senderID, campaignTypeID, clientID string) (collections.CampaignType, error)
 }
 
 type UpdateHandler struct {
@@ -88,7 +87,7 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
-	database := context.Get("database").(models.DatabaseInterface)
+	database := context.Get("database").(DatabaseInterface)
 	campaignType, err := h.collection.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
 	if err != nil {
 		switch err := err.(type) {

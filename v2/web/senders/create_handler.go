@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/ryanmoran/stack"
 )
 
 type collectionSetter interface {
-	Set(conn models.ConnectionInterface, sender collections.Sender) (createdSender collections.Sender, err error)
+	Set(conn collections.ConnectionInterface, sender collections.Sender) (createdSender collections.Sender, err error)
 }
 
 type CreateHandler struct {
@@ -36,7 +35,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
-	database := context.Get("database").(models.DatabaseInterface)
+	database := context.Get("database").(DatabaseInterface)
 
 	if createRequest.Name == "" {
 		w.WriteHeader(422)

@@ -1,15 +1,12 @@
 package fakes
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/models"
-	"github.com/cloudfoundry-incubator/notifications/v2/collections"
-)
+import "github.com/cloudfoundry-incubator/notifications/v2/collections"
 
 type CampaignTypesCollection struct {
 	SetCall struct {
 		Receives struct {
 			CampaignType collections.CampaignType
-			Conn         models.ConnectionInterface
+			Conn         collections.ConnectionInterface
 		}
 		Returns struct {
 			CampaignType collections.CampaignType
@@ -20,7 +17,7 @@ type CampaignTypesCollection struct {
 
 	ListCall struct {
 		Receives struct {
-			Conn     models.ConnectionInterface
+			Conn     collections.ConnectionInterface
 			SenderID string
 			ClientID string
 		}
@@ -32,7 +29,7 @@ type CampaignTypesCollection struct {
 
 	GetCall struct {
 		Receives struct {
-			Conn           models.ConnectionInterface
+			Conn           collections.ConnectionInterface
 			CampaignTypeID string
 			SenderID       string
 			ClientID       string
@@ -45,7 +42,7 @@ type CampaignTypesCollection struct {
 
 	DeleteCall struct {
 		Receives struct {
-			Conn           models.ConnectionInterface
+			Conn           collections.ConnectionInterface
 			CampaignTypeID string
 			SenderID       string
 			ClientID       string
@@ -60,7 +57,7 @@ func NewCampaignTypesCollection() *CampaignTypesCollection {
 	return &CampaignTypesCollection{}
 }
 
-func (c *CampaignTypesCollection) Set(conn models.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error) {
+func (c *CampaignTypesCollection) Set(conn collections.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error) {
 	c.SetCall.WasCalled = true
 	c.SetCall.Receives.Conn = conn
 	c.SetCall.Receives.CampaignType = campaignType
@@ -68,7 +65,7 @@ func (c *CampaignTypesCollection) Set(conn models.ConnectionInterface, campaignT
 	return c.SetCall.Returns.CampaignType, c.SetCall.Returns.Err
 }
 
-func (c *CampaignTypesCollection) List(conn models.ConnectionInterface, senderID, clientID string) ([]collections.CampaignType, error) {
+func (c *CampaignTypesCollection) List(conn collections.ConnectionInterface, senderID, clientID string) ([]collections.CampaignType, error) {
 	c.ListCall.Receives.Conn = conn
 	c.ListCall.Receives.SenderID = senderID
 	c.ListCall.Receives.ClientID = clientID
@@ -76,7 +73,7 @@ func (c *CampaignTypesCollection) List(conn models.ConnectionInterface, senderID
 	return c.ListCall.Returns.CampaignTypeList, c.ListCall.Returns.Err
 }
 
-func (c *CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) (collections.CampaignType, error) {
+func (c *CampaignTypesCollection) Get(conn collections.ConnectionInterface, campaignTypeID, senderID, clientID string) (collections.CampaignType, error) {
 	c.GetCall.Receives.Conn = conn
 	c.GetCall.Receives.CampaignTypeID = campaignTypeID
 	c.GetCall.Receives.SenderID = senderID
@@ -85,7 +82,7 @@ func (c *CampaignTypesCollection) Get(conn models.ConnectionInterface, campaignT
 	return c.GetCall.Returns.CampaignType, c.GetCall.Returns.Err
 }
 
-func (c *CampaignTypesCollection) Delete(conn models.ConnectionInterface, campaignTypeID, senderID, clientID string) error {
+func (c *CampaignTypesCollection) Delete(conn collections.ConnectionInterface, campaignTypeID, senderID, clientID string) error {
 	c.DeleteCall.Receives.CampaignTypeID = campaignTypeID
 	c.DeleteCall.Receives.SenderID = senderID
 	c.DeleteCall.Receives.ClientID = clientID

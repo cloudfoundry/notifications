@@ -6,13 +6,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/ryanmoran/stack"
 )
 
 type collectionGetter interface {
-	Get(conn models.ConnectionInterface, senderID, clientID string) (retrievedSender collections.Sender, err error)
+	Get(conn collections.ConnectionInterface, senderID, clientID string) (retrievedSender collections.Sender, err error)
 }
 
 type GetHandler struct {
@@ -42,7 +41,7 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 		return
 	}
 
-	database := context.Get("database").(models.DatabaseInterface)
+	database := context.Get("database").(DatabaseInterface)
 	sender, err := h.senders.Get(database.Connection(), senderID, context.Get("client_id").(string))
 	if err != nil {
 		switch err.(type) {
