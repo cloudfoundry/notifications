@@ -15,17 +15,19 @@ var _ = Describe("Migrator", func() {
 			provider       *fakes.PersistenceProvider
 			database       *fakes.Database
 			gobbleDatabase *fakes.GobbleDatabase
+			dbMigrator     *fakes.DatabaseMigrator
 		)
 
 		BeforeEach(func() {
 			database = fakes.NewDatabase()
 			gobbleDatabase = &fakes.GobbleDatabase{}
 			provider = fakes.NewPersistenceProvider(database, gobbleDatabase)
+			dbMigrator = fakes.NewDatabaseMigrator()
 		})
 
 		Context("when configured to run migrations", func() {
 			BeforeEach(func() {
-				migrator = application.NewMigrator(provider, true, "/my-migrations/dir", "/my-gobble/dir")
+				migrator = application.NewMigrator(provider, dbMigrator, true, "/my-migrations/dir", "/my-gobble/dir", "/my-templates/dir")
 				migrator.Migrate()
 			})
 
@@ -35,18 +37,21 @@ var _ = Describe("Migrator", func() {
 			})
 
 			It("migrates the notifications database", func() {
-				Expect(database.MigrateWasCalled).To(BeTrue())
-				Expect(database.MigrationsPath).To(Equal("/my-migrations/dir"))
+				Expect(dbMigrator.MigrateCall.Called).To(BeTrue())
+				Expect(dbMigrator.MigrateCall.Receives.DB).To(Equal(database.RawConnection()))
+				Expect(dbMigrator.MigrateCall.Receives.MigrationsPath).To(Equal("/my-migrations/dir"))
 			})
 
 			It("seeds the database", func() {
-				Expect(database.SeedWasCalled).To(BeTrue())
+				Expect(dbMigrator.SeedCall.Called).To(BeTrue())
+				Expect(dbMigrator.SeedCall.Receives.Database).To(Equal(database))
+				Expect(dbMigrator.SeedCall.Receives.DefaultTemplatePath).To(Equal("/my-templates/dir"))
 			})
 		})
 
 		Context("when configured to skip migrations", func() {
 			BeforeEach(func() {
-				migrator = application.NewMigrator(provider, false, "these-dont-matter", "these-dont-matter")
+				migrator = application.NewMigrator(provider, dbMigrator, false, "these-dont-matter", "these-dont-matter", "these-dont-matter")
 				migrator.Migrate()
 			})
 
@@ -55,12 +60,13 @@ var _ = Describe("Migrator", func() {
 			})
 
 			It("does not migrate the notifications database", func() {
-				Expect(database.MigrateWasCalled).To(BeFalse())
+				Expect(dbMigrator.MigrateCall.Called).To(BeFalse())
 			})
 
 			It("does not seed the database", func() {
-				Expect(database.SeedWasCalled).To(BeFalse())
+				Expect(dbMigrator.SeedCall.Called).To(BeFalse())
 			})
+
 		})
 	})
 })

@@ -24,7 +24,7 @@ func NewDatabaseAllocator(sqlDB *sql.DB, trace bool) DatabaseAllocator {
 
 func (ware DatabaseAllocator) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) bool {
 	db := models.NewDatabase(ware.DB, models.Config{})
-	db.Setup()
+	models.Setup(db)
 
 	logger := gorpCompatibleLogger{
 		logger: context.Get("logger").(lager.Logger).WithData(lager.Data{

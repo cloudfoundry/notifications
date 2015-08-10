@@ -20,7 +20,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 		TruncateTables()
 		repo = models.NewCampaignTypesRepository(fakes.NewIncrementingGUIDGenerator().Generate)
 		db := models.NewDatabase(sqlDB, models.Config{})
-		db.Setup()
+		models.Setup(db)
 		conn = db.Connection()
 	})
 

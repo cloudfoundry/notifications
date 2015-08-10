@@ -14,7 +14,7 @@ var _ = Describe("Transaction", func() {
 	BeforeEach(func() {
 		TruncateTables()
 		db := models.NewDatabase(sqlDB, models.Config{})
-		db.Setup()
+		models.Setup(db)
 		conn = db.Connection()
 		transaction = conn.Transaction()
 	})

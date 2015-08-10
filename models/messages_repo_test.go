@@ -19,7 +19,7 @@ var _ = Describe("MessagesRepo", func() {
 		repo = models.NewMessagesRepo()
 		db := models.NewDatabase(sqlDB, models.Config{})
 		conn = db.Connection()
-		db.Setup()
+		models.Setup(db)
 		message = models.Message{
 			ID:     "message-id-123",
 			Status: postal.StatusDelivered,

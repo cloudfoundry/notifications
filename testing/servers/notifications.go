@@ -115,16 +115,21 @@ func (s Notifications) MigrateDatabase() {
 	env := application.NewEnvironment()
 	database, gobbleDB := fetchDatabases()
 
-	database.Migrate(env.ModelMigrationsPath)
+	migrator := models.DatabaseMigrator{}
+	migrator.Migrate(database.RawConnection(), env.ModelMigrationsPath)
+
 	gobbleDB.Migrate(env.GobbleMigrationsPath)
 }
 
 func (s Notifications) ResetDatabase() {
+	env := application.NewEnvironment()
 	database, gobbleDB := fetchDatabases()
 
-	database.Setup()
+	models.Setup(database)
 	database.Connection().(*models.Connection).TruncateTables()
-	database.Seed()
+
+	migrator := models.DatabaseMigrator{}
+	migrator.Seed(database, path.Join(env.RootPath, "templates", "default.json"))
 
 	gobbleDB.Connection.TruncateTables()
 }

@@ -21,7 +21,7 @@ var _ = Describe("PreferencesRepo", func() {
 		TruncateTables()
 
 		db := models.NewDatabase(sqlDB, models.Config{})
-		db.Setup()
+		models.Setup(db)
 
 		conn = db.Connection().(*models.Connection)
 

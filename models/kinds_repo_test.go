@@ -22,7 +22,7 @@ var _ = Describe("KindsRepo", func() {
 		TruncateTables()
 		repo = models.NewKindsRepo()
 		db := models.NewDatabase(sqlDB, models.Config{})
-		db.Setup()
+		models.Setup(db)
 		conn = db.Connection().(*models.Connection)
 	})
 

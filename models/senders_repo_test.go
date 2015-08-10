@@ -18,7 +18,7 @@ var _ = Describe("SendersRepo", func() {
 		TruncateTables()
 		repo = models.NewSendersRepository(fakes.NewIncrementingGUIDGenerator().Generate)
 		db := models.NewDatabase(sqlDB, models.Config{})
-		db.Setup()
+		models.Setup(db)
 		conn = db.Connection()
 	})
 

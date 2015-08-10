@@ -15,7 +15,7 @@ var _ = Describe("GlobalUnsubscribesRepo", func() {
 		BeforeEach(func() {
 			TruncateTables()
 			db := models.NewDatabase(sqlDB, models.Config{})
-			db.Setup()
+			models.Setup(db)
 			conn = db.Connection().(*models.Connection)
 			repo = models.NewGlobalUnsubscribesRepo()
 		})

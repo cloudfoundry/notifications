@@ -19,7 +19,7 @@ var _ = Describe("TemplatesRepo", func() {
 		TruncateTables()
 		repo = models.NewTemplatesRepo()
 		db := models.NewDatabase(sqlDB, models.Config{})
-		db.Setup()
+		models.Setup(db)
 		conn = db.Connection()
 		createdAt = time.Now().Add(-1 * time.Hour).Truncate(1 * time.Second).UTC()
 

@@ -16,7 +16,7 @@ var _ = Describe("UnsubscribesRepo", func() {
 		repo = models.NewUnsubscribesRepo()
 
 		db := models.NewDatabase(sqlDB, models.Config{})
-		db.Setup()
+		models.Setup(db)
 		conn = db.Connection().(*models.Connection)
 	})
 

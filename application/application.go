@@ -4,9 +4,11 @@ import (
 	"errors"
 	"log"
 	"os"
+	"path"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/web"
@@ -24,11 +26,11 @@ type Application struct {
 
 func NewApplication(mother *Mother) Application {
 	env := NewEnvironment()
-
+	databaseMigrator := models.DatabaseMigrator{}
 	return Application{
 		env:      env,
 		mother:   mother,
-		migrator: NewMigrator(mother, env.VCAPApplication.InstanceIndex == 0, env.ModelMigrationsPath, env.GobbleMigrationsPath),
+		migrator: NewMigrator(mother, databaseMigrator, env.VCAPApplication.InstanceIndex == 0, env.ModelMigrationsPath, env.GobbleMigrationsPath, path.Join(env.RootPath, "templates", "default.json")),
 	}
 }
 

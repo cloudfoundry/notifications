@@ -208,7 +208,7 @@ func (m *Mother) Database() models.DatabaseInterface {
 	if env.DBLoggingEnabled {
 		database.TraceOn("[DB]", log.New(os.Stdout, "", 0))
 	}
-	database.Setup()
+	models.Setup(database)
 	return database
 }
 

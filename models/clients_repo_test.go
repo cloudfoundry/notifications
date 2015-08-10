@@ -22,7 +22,7 @@ var _ = Describe("ClientsRepo", func() {
 		TruncateTables()
 		repo = models.NewClientsRepo()
 		db := models.NewDatabase(sqlDB, models.Config{})
-		db.Setup()
+		models.Setup(db)
 		conn = db.Connection()
 	})
 

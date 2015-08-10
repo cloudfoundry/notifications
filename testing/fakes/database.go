@@ -1,6 +1,8 @@
 package fakes
 
 import (
+	"database/sql"
+
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/go-gorp/gorp"
 )
@@ -8,16 +10,15 @@ import (
 type Database struct {
 	Conn                *Connection
 	ConnectionWasCalled bool
-	SeedWasCalled       bool
-	MigrateWasCalled    bool
-	MigrationsPath      string
 	TracePrefix         string
 	TraceLogger         gorp.GorpLogger
+	rawDB               *sql.DB
 }
 
 func NewDatabase() *Database {
 	return &Database{
-		Conn: NewConnection(),
+		Conn:  NewConnection(),
+		rawDB: &sql.DB{},
 	}
 }
 
@@ -31,16 +32,8 @@ func (fake *Database) TraceOn(prefix string, logger gorp.GorpLogger) {
 	fake.TraceLogger = logger
 }
 
-func (fake *Database) Seed() {
-	fake.SeedWasCalled = true
-}
-
-func (fake *Database) Migrate(migrationsPath string) {
-	fake.MigrationsPath = migrationsPath
-	fake.MigrateWasCalled = true
-}
-
-func (*Database) Setup() {
+func (fake *Database) RawConnection() *sql.DB {
+	return fake.rawDB
 }
 
 type SQLDatabase struct {
