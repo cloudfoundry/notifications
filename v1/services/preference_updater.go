@@ -3,11 +3,12 @@ package services
 import (
 	"fmt"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
 
 type PreferenceUpdaterInterface interface {
-	Execute(models.ConnectionInterface, []models.Preference, bool, string) error
+	Execute(db.ConnectionInterface, []models.Preference, bool, string) error
 }
 
 type PreferenceUpdater struct {
@@ -24,7 +25,7 @@ func NewPreferenceUpdater(globalUnsubscribesRepo GlobalUnsubscribesRepo, unsubsc
 	}
 }
 
-func (updater PreferenceUpdater) Execute(conn models.ConnectionInterface, preferences []models.Preference, globalUnsubscribe bool, userID string) error {
+func (updater PreferenceUpdater) Execute(conn db.ConnectionInterface, preferences []models.Preference, globalUnsubscribe bool, userID string) error {
 	err := updater.globalUnsubscribesRepo.Set(conn, userID, globalUnsubscribe)
 	if err != nil {
 		return err

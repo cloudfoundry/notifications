@@ -1,10 +1,13 @@
 package services
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type TemplateAssignerInterface interface {
-	AssignToClient(models.DatabaseInterface, string, string) error
-	AssignToNotification(models.DatabaseInterface, string, string, string) error
+	AssignToClient(db.DatabaseInterface, string, string) error
+	AssignToNotification(db.DatabaseInterface, string, string, string) error
 }
 
 type TemplateAssigner struct {
@@ -21,7 +24,7 @@ func NewTemplateAssigner(clientsRepo ClientsRepo, kindsRepo KindsRepo, templates
 	}
 }
 
-func (assigner TemplateAssigner) AssignToClient(database models.DatabaseInterface, clientID, templateID string) error {
+func (assigner TemplateAssigner) AssignToClient(database db.DatabaseInterface, clientID, templateID string) error {
 	conn := database.Connection()
 
 	if templateID == "" {
@@ -48,7 +51,7 @@ func (assigner TemplateAssigner) AssignToClient(database models.DatabaseInterfac
 	return nil
 }
 
-func (assigner TemplateAssigner) AssignToNotification(database models.DatabaseInterface, clientID, notificationID, templateID string) error {
+func (assigner TemplateAssigner) AssignToNotification(database db.DatabaseInterface, clientID, notificationID, templateID string) error {
 	conn := database.Connection()
 
 	if templateID == "" {
@@ -80,7 +83,7 @@ func (assigner TemplateAssigner) AssignToNotification(database models.DatabaseIn
 	return nil
 }
 
-func (assigner TemplateAssigner) findTemplate(conn models.ConnectionInterface, templateID string) error {
+func (assigner TemplateAssigner) findTemplate(conn db.ConnectionInterface, templateID string) error {
 	if templateID == "" {
 		return nil
 	}

@@ -3,7 +3,7 @@ package fakes
 import (
 	"database/sql"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/webutil"
@@ -69,7 +69,7 @@ func (mother Mother) TemplateServiceObjects() (services.TemplateCreator, service
 	return services.TemplateCreator{}, services.TemplateFinder{}, services.TemplateUpdater{}, services.TemplateDeleter{}, services.TemplateLister{}, services.TemplateAssigner{}, services.TemplateAssociationLister{}
 }
 
-func (mother Mother) Database() models.DatabaseInterface {
+func (mother Mother) Database() db.DatabaseInterface {
 	return NewDatabase()
 }
 

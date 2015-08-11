@@ -1,11 +1,14 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type SendersRepository struct {
 	InsertCall struct {
 		Receives struct {
-			Conn   models.ConnectionInterface
+			Conn   db.ConnectionInterface
 			Sender models.Sender
 		}
 		Returns struct {
@@ -16,7 +19,7 @@ type SendersRepository struct {
 
 	GetCall struct {
 		Receives struct {
-			Conn     models.ConnectionInterface
+			Conn     db.ConnectionInterface
 			SenderID string
 		}
 		Returns struct {
@@ -27,7 +30,7 @@ type SendersRepository struct {
 
 	GetByClientIDAndNameCall struct {
 		Receives struct {
-			Conn     models.ConnectionInterface
+			Conn     db.ConnectionInterface
 			ClientID string
 			Name     string
 		}
@@ -42,21 +45,21 @@ func NewSendersRepository() *SendersRepository {
 	return &SendersRepository{}
 }
 
-func (s *SendersRepository) Insert(conn models.ConnectionInterface, sender models.Sender) (models.Sender, error) {
+func (s *SendersRepository) Insert(conn db.ConnectionInterface, sender models.Sender) (models.Sender, error) {
 	s.InsertCall.Receives.Conn = conn
 	s.InsertCall.Receives.Sender = sender
 
 	return s.InsertCall.Returns.Sender, s.InsertCall.Returns.Err
 }
 
-func (s *SendersRepository) Get(conn models.ConnectionInterface, senderID string) (models.Sender, error) {
+func (s *SendersRepository) Get(conn db.ConnectionInterface, senderID string) (models.Sender, error) {
 	s.GetCall.Receives.Conn = conn
 	s.GetCall.Receives.SenderID = senderID
 
 	return s.GetCall.Returns.Sender, s.GetCall.Returns.Err
 }
 
-func (s *SendersRepository) GetByClientIDAndName(conn models.ConnectionInterface, clientID, name string) (models.Sender, error) {
+func (s *SendersRepository) GetByClientIDAndName(conn db.ConnectionInterface, clientID, name string) (models.Sender, error) {
 	s.GetByClientIDAndNameCall.Receives.Conn = conn
 	s.GetByClientIDAndNameCall.Receives.ClientID = clientID
 	s.GetByClientIDAndNameCall.Receives.Name = name

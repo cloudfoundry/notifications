@@ -3,7 +3,7 @@ package fakes
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/ryanmoran/stack"
@@ -12,7 +12,7 @@ import (
 type Notify struct {
 	ExecuteCall struct {
 		Receives struct {
-			Connection    models.ConnectionInterface
+			Connection    db.ConnectionInterface
 			Request       *http.Request
 			Context       stack.Context
 			GUID          string
@@ -31,7 +31,7 @@ func NewNotify() *Notify {
 	return &Notify{}
 }
 
-func (n *Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
+func (n *Notify) Execute(connection db.ConnectionInterface, req *http.Request, context stack.Context,
 	guid string, strategy services.StrategyInterface, validator notify.ValidatorInterface, vcapRequestID string) ([]byte, error) {
 
 	n.ExecuteCall.Receives.Connection = connection

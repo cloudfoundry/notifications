@@ -1,4 +1,4 @@
-package models_test
+package db_test
 
 import (
 	"database/sql"
@@ -12,9 +12,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestModelsSuite(t *testing.T) {
+func TestDBSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Models Suite")
+	RunSpecs(t, "DB Suite")
 }
 
 var sqlDB *sql.DB
@@ -39,23 +39,4 @@ func TruncateTables() {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func findReceipt(conn db.ConnectionInterface, userGUID, clientID, kindID string) (models.Receipt, error) {
-	receipt := models.Receipt{}
-	err := conn.SelectOne(&receipt, "SELECT * FROM  `receipts` WHERE `user_guid` = ? AND `client_id` = ? AND `kind_id` = ?", userGUID, clientID, kindID)
-	if err != nil {
-		return models.Receipt{}, err
-	}
-
-	return receipt, nil
-}
-
-func createReceipt(conn db.ConnectionInterface, receipt models.Receipt) (models.Receipt, error) {
-	err := conn.Insert(&receipt)
-	if err != nil {
-		return models.Receipt{}, err
-	}
-
-	return receipt, nil
 }

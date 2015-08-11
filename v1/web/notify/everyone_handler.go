@@ -3,7 +3,7 @@ package notify
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
@@ -23,7 +23,7 @@ func NewEveryoneHandler(notify NotifyInterface, errWriter errorWriter, strategy 
 }
 
 func (h EveryoneHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	connection := context.Get("database").(models.DatabaseInterface).Connection()
+	connection := context.Get("database").(db.DatabaseInterface).Connection()
 	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
 
 	output, err := h.notify.Execute(connection, req, context, "", h.strategy, GUIDValidator{}, vcapRequestID)

@@ -3,6 +3,8 @@ package models
 import (
 	"database/sql"
 	"time"
+
+	"github.com/cloudfoundry-incubator/notifications/db"
 )
 
 type GlobalUnsubscribesRepo struct{}
@@ -11,7 +13,7 @@ func NewGlobalUnsubscribesRepo() GlobalUnsubscribesRepo {
 	return GlobalUnsubscribesRepo{}
 }
 
-func (repo GlobalUnsubscribesRepo) Set(conn ConnectionInterface, userGUID string, unsubscribe bool) error {
+func (repo GlobalUnsubscribesRepo) Set(conn db.ConnectionInterface, userGUID string, unsubscribe bool) error {
 	globalUnsubscribe, err := repo.find(conn, userGUID)
 	if err != nil {
 		if err != sql.ErrNoRows {
@@ -40,7 +42,7 @@ func (repo GlobalUnsubscribesRepo) Set(conn ConnectionInterface, userGUID string
 	return nil
 }
 
-func (repo GlobalUnsubscribesRepo) Get(conn ConnectionInterface, userGUID string) (bool, error) {
+func (repo GlobalUnsubscribesRepo) Get(conn db.ConnectionInterface, userGUID string) (bool, error) {
 	_, err := repo.find(conn, userGUID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -52,7 +54,7 @@ func (repo GlobalUnsubscribesRepo) Get(conn ConnectionInterface, userGUID string
 	return true, nil
 }
 
-func (repo GlobalUnsubscribesRepo) find(conn ConnectionInterface, userGUID string) (GlobalUnsubscribe, error) {
+func (repo GlobalUnsubscribesRepo) find(conn db.ConnectionInterface, userGUID string) (GlobalUnsubscribe, error) {
 	globalUnsubscribe := GlobalUnsubscribe{}
 	err := conn.SelectOne(&globalUnsubscribe, "SELECT * FROM `global_unsubscribes` WHERE `user_id` = ?", userGUID)
 	if err != nil {

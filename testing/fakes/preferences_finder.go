@@ -1,14 +1,14 @@
 package fakes
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 )
 
 type PreferencesFinder struct {
 	FindCall struct {
 		Receives struct {
-			Database models.DatabaseInterface
+			Database db.DatabaseInterface
 			UserGUID string
 		}
 		Returns struct {
@@ -22,7 +22,7 @@ func NewPreferencesFinder() *PreferencesFinder {
 	return &PreferencesFinder{}
 }
 
-func (pb *PreferencesFinder) Find(database models.DatabaseInterface, userGUID string) (services.PreferencesBuilder, error) {
+func (pb *PreferencesFinder) Find(database db.DatabaseInterface, userGUID string) (services.PreferencesBuilder, error) {
 	pb.FindCall.Receives.Database = database
 	pb.FindCall.Receives.UserGUID = userGUID
 

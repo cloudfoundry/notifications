@@ -3,13 +3,13 @@ package services
 import (
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 )
 
 type Dispatch struct {
 	GUID       string
 	Role       string
-	Connection models.ConnectionInterface
+	Connection db.ConnectionInterface
 	UAAHost    string
 
 	VCAPRequest DispatchVCAPRequest

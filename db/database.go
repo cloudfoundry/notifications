@@ -1,4 +1,4 @@
-package models
+package db
 
 import (
 	"database/sql"
@@ -39,6 +39,14 @@ func NewDatabase(db *sql.DB, config Config) *DB {
 }
 
 func (database *DB) Connection() ConnectionInterface {
+	return database.connection
+}
+
+type TableMapInterface interface {
+	AddTableWithName(i interface{}, name string) *gorp.TableMap
+}
+
+func (database *DB) TableMap() TableMapInterface {
 	return database.connection
 }
 

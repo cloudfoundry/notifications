@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
@@ -44,7 +45,7 @@ type DeliveryWorker struct {
 	userLoader      UserLoaderInterface
 	templatesLoader TemplatesLoaderInterface
 	tokenLoader     TokenLoaderInterface
-	database        models.DatabaseInterface
+	database        db.DatabaseInterface
 
 	messagesRepo           MessagesRepo
 	receiptsRepo           ReceiptsRepo
@@ -62,7 +63,7 @@ type DeliveryWorkerConfig struct {
 	Logger                 lager.Logger
 	MailClient             mail.ClientInterface
 	Queue                  gobble.QueueInterface
-	Database               models.DatabaseInterface
+	Database               db.DatabaseInterface
 	DBTrace                bool
 	GlobalUnsubscribesRepo GlobalUnsubscribesRepo
 	UnsubscribesRepo       UnsubscribesRepo
@@ -250,7 +251,7 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 	return true
 }
 
-func (worker DeliveryWorker) isCritical(conn models.ConnectionInterface, kindID, clientID string) bool {
+func (worker DeliveryWorker) isCritical(conn db.ConnectionInterface, kindID, clientID string) bool {
 	kind, err := worker.kindsRepo.Find(conn, kindID, clientID)
 	if _, ok := err.(models.RecordNotFoundError); ok {
 		return false

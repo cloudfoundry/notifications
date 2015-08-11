@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 	"github.com/ryanmoran/stack"
@@ -35,7 +35,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	template := templateParams.ToModel()
 
-	templateID, err := h.creator.Create(context.Get("database").(models.DatabaseInterface), template)
+	templateID, err := h.creator.Create(context.Get("database").(db.DatabaseInterface), template)
 	if err != nil {
 		h.errorWriter.Write(w, webutil.TemplateCreateError{})
 		return

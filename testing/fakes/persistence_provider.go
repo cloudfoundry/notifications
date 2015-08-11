@@ -1,8 +1,8 @@
 package fakes
 
 import (
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
-	"github.com/cloudfoundry-incubator/notifications/models"
 )
 
 type PersistenceProvider struct {
@@ -17,7 +17,7 @@ func NewPersistenceProvider(database *Database, gobbleDatabase *GobbleDatabase) 
 	}
 }
 
-func (pp *PersistenceProvider) Database() models.DatabaseInterface {
+func (pp *PersistenceProvider) Database() db.DatabaseInterface {
 	return pp.database
 }
 

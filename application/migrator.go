@@ -3,18 +3,18 @@ package application
 import (
 	"database/sql"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
-	"github.com/cloudfoundry-incubator/notifications/models"
 )
 
 type persistenceProvider interface {
-	Database() models.DatabaseInterface
+	Database() db.DatabaseInterface
 	GobbleDatabase() gobble.DatabaseInterface
 }
 
 type dbMigrator interface {
 	Migrate(db *sql.DB, migrationsPath string)
-	Seed(db models.DatabaseInterface, defaultTemplatePath string)
+	Seed(db db.DatabaseInterface, defaultTemplatePath string)
 }
 
 type Migrator struct {

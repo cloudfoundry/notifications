@@ -3,7 +3,7 @@ package fakes
 import (
 	"database/sql"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/go-gorp/gorp"
 )
 
@@ -22,7 +22,7 @@ func NewDatabase() *Database {
 	}
 }
 
-func (fake *Database) Connection() models.ConnectionInterface {
+func (fake *Database) Connection() db.ConnectionInterface {
 	fake.ConnectionWasCalled = true
 	return fake.Conn
 }

@@ -3,6 +3,8 @@ package models
 import (
 	"database/sql"
 	"time"
+
+	"github.com/cloudfoundry-incubator/notifications/db"
 )
 
 type TemplatesRepo struct{}
@@ -11,7 +13,7 @@ func NewTemplatesRepo() TemplatesRepo {
 	return TemplatesRepo{}
 }
 
-func (repo TemplatesRepo) FindByID(conn ConnectionInterface, templateID string) (Template, error) {
+func (repo TemplatesRepo) FindByID(conn db.ConnectionInterface, templateID string) (Template, error) {
 	template := Template{}
 	err := conn.SelectOne(&template, "SELECT * FROM `templates` WHERE `id`=?", templateID)
 	if err != nil {
@@ -23,7 +25,7 @@ func (repo TemplatesRepo) FindByID(conn ConnectionInterface, templateID string) 
 	return template, nil
 }
 
-func (repo TemplatesRepo) Update(conn ConnectionInterface, templateID string, template Template) (Template, error) {
+func (repo TemplatesRepo) Update(conn db.ConnectionInterface, templateID string, template Template) (Template, error) {
 	existingTemplate, err := repo.FindByID(conn, templateID)
 	if err != nil {
 		if _, ok := err.(RecordNotFoundError); ok {
@@ -46,7 +48,7 @@ func (repo TemplatesRepo) Update(conn ConnectionInterface, templateID string, te
 	return template, nil
 }
 
-func (repo TemplatesRepo) ListIDsAndNames(conn ConnectionInterface) ([]Template, error) {
+func (repo TemplatesRepo) ListIDsAndNames(conn db.ConnectionInterface) ([]Template, error) {
 	templates := []Template{}
 	_, err := conn.Select(&templates, "SELECT ID, Name FROM `templates`")
 	if err != nil {
@@ -55,7 +57,7 @@ func (repo TemplatesRepo) ListIDsAndNames(conn ConnectionInterface) ([]Template,
 	return templates, nil
 }
 
-func (repo TemplatesRepo) Create(conn ConnectionInterface, template Template) (Template, error) {
+func (repo TemplatesRepo) Create(conn db.ConnectionInterface, template Template) (Template, error) {
 	err := conn.Insert(&template)
 	if err != nil {
 		return Template{}, err
@@ -64,7 +66,7 @@ func (repo TemplatesRepo) Create(conn ConnectionInterface, template Template) (T
 	return template, nil
 }
 
-func (repo TemplatesRepo) Destroy(conn ConnectionInterface, templateID string) error {
+func (repo TemplatesRepo) Destroy(conn db.ConnectionInterface, templateID string) error {
 	template, err := repo.FindByID(conn, templateID)
 	if err != nil {
 		return err

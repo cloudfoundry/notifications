@@ -4,14 +4,14 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 )
 
 type Enqueuer struct {
 	EnqueueCall struct {
 		Receives struct {
-			Connection      models.ConnectionInterface
+			Connection      db.ConnectionInterface
 			Users           []services.User
 			Options         services.Options
 			Space           cf.CloudControllerSpace
@@ -32,7 +32,7 @@ func NewEnqueuer() *Enqueuer {
 	return &Enqueuer{}
 }
 
-func (m *Enqueuer) Enqueue(conn models.ConnectionInterface, users []services.User, options services.Options,
+func (m *Enqueuer) Enqueue(conn db.ConnectionInterface, users []services.User, options services.Options,
 	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []services.Response {
 
 	m.EnqueueCall.Receives.Connection = conn

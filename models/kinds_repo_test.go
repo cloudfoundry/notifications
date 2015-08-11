@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 
@@ -15,15 +16,15 @@ import (
 var _ = Describe("KindsRepo", func() {
 	var (
 		repo models.KindsRepo
-		conn *models.Connection
+		conn *db.Connection
 	)
 
 	BeforeEach(func() {
 		TruncateTables()
 		repo = models.NewKindsRepo()
-		db := models.NewDatabase(sqlDB, models.Config{})
-		models.Setup(db)
-		conn = db.Connection().(*models.Connection)
+		database := db.NewDatabase(sqlDB, db.Config{})
+		models.Setup(database)
+		conn = database.Connection().(*db.Connection)
 	})
 
 	Describe("Update", func() {

@@ -1,11 +1,14 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type PreferenceUpdater struct {
 	ExecuteCall struct {
 		Receives struct {
-			Connection        models.ConnectionInterface
+			Connection        db.ConnectionInterface
 			Preferences       []models.Preference
 			GlobalUnsubscribe bool
 			UserID            string
@@ -20,7 +23,7 @@ func NewPreferenceUpdater() *PreferenceUpdater {
 	return &PreferenceUpdater{}
 }
 
-func (pu *PreferenceUpdater) Execute(conn models.ConnectionInterface, preferences []models.Preference, globalUnsubscribe bool, userID string) error {
+func (pu *PreferenceUpdater) Execute(conn db.ConnectionInterface, preferences []models.Preference, globalUnsubscribe bool, userID string) error {
 	pu.ExecuteCall.Receives.Connection = conn
 	pu.ExecuteCall.Receives.Preferences = preferences
 	pu.ExecuteCall.Receives.GlobalUnsubscribe = globalUnsubscribe

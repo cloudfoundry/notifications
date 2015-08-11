@@ -3,6 +3,7 @@ package notifications
 import (
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
@@ -23,7 +24,7 @@ func NewPutHandler(registrar services.RegistrarInterface, errWriter errorWriter)
 }
 
 func (h PutHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	database := context.Get("database").(models.DatabaseInterface)
+	database := context.Get("database").(db.DatabaseInterface)
 	connection := database.Connection()
 
 	parameters, err := NewClientRegistrationParams(req.Body)

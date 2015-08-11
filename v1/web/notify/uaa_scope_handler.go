@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
@@ -24,7 +24,7 @@ func NewUAAScopeHandler(notify NotifyInterface, errWriter errorWriter, strategy 
 }
 
 func (h UAAScopeHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	conn := context.Get("database").(models.DatabaseInterface).Connection()
+	conn := context.Get("database").(db.DatabaseInterface).Connection()
 	scope := strings.TrimPrefix(req.URL.Path, "/uaa_scopes/")
 	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
 

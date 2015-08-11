@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
@@ -20,7 +21,7 @@ var _ = Describe("MessageGC", func() {
 	var oldMessageID string
 	var newMessageID string
 	var database *fakes.Database
-	var conn models.ConnectionInterface
+	var conn db.ConnectionInterface
 	var loggerBuffer *bytes.Buffer
 	var lifetime time.Duration
 	var pollingInterval time.Duration

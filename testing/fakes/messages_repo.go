@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
 
@@ -22,7 +23,7 @@ func NewMessagesRepo() *MessagesRepo {
 	}
 }
 
-func (fake MessagesRepo) FindByID(conn models.ConnectionInterface, messageID string) (models.Message, error) {
+func (fake MessagesRepo) FindByID(conn db.ConnectionInterface, messageID string) (models.Message, error) {
 	if fake.FindByIDError != nil {
 		return models.Message{}, fake.FindByIDError
 	}
@@ -34,13 +35,13 @@ func (fake MessagesRepo) FindByID(conn models.ConnectionInterface, messageID str
 	return message, fake.FindByIDError
 }
 
-func (fake MessagesRepo) Upsert(conn models.ConnectionInterface, message models.Message) (models.Message, error) {
+func (fake MessagesRepo) Upsert(conn db.ConnectionInterface, message models.Message) (models.Message, error) {
 	fake.Messages[message.ID] = message
 
 	return message, fake.UpsertError
 }
 
-func (fake *MessagesRepo) DeleteBefore(conn models.ConnectionInterface, thresholdTime time.Time) (int, error) {
+func (fake *MessagesRepo) DeleteBefore(conn db.ConnectionInterface, thresholdTime time.Time) (int, error) {
 	count := 0
 	for key, message := range fake.Messages {
 		if message.UpdatedAt.Before(thresholdTime) {

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
 
@@ -107,7 +108,7 @@ func (conn *Connection) Update(list ...interface{}) (int64, error) {
 	return 0, conn.UpdateCall.Err
 }
 
-func (conn *Connection) Transaction() models.TransactionInterface {
+func (conn *Connection) Transaction() db.TransactionInterface {
 	return conn
 }
 

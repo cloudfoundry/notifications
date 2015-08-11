@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/onsi/ginkgo"
@@ -126,7 +127,7 @@ func (s Notifications) ResetDatabase() {
 	database, gobbleDB := fetchDatabases()
 
 	models.Setup(database)
-	database.Connection().(*models.Connection).TruncateTables()
+	database.Connection().(*db.Connection).TruncateTables()
 
 	migrator := models.DatabaseMigrator{}
 	migrator.Seed(database, path.Join(env.RootPath, "templates", "default.json"))
@@ -146,14 +147,14 @@ func freePort() string {
 	return addressParts[1]
 }
 
-func fetchDatabases() (*models.DB, *gobble.DB) {
+func fetchDatabases() (*db.DB, *gobble.DB) {
 	env := application.NewEnvironment()
 	sqlDB, err := sql.Open("mysql", env.DatabaseURL)
 	if err != nil {
 		ginkgo.Fail(err.Error(), 1)
 	}
 
-	database := models.NewDatabase(sqlDB, models.Config{DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json")})
+	database := db.NewDatabase(sqlDB, db.Config{DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json")})
 	gobbleDB := gobble.NewDatabase(sqlDB)
 
 	return database, gobbleDB

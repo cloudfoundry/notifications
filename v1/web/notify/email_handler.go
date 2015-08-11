@@ -3,7 +3,7 @@ package notify
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
@@ -33,7 +33,7 @@ func NewEmailHandler(notify NotifyInterface, errWriter errorWriter, strategy ser
 
 func (h EmailHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
-	database := context.Get("database").(models.DatabaseInterface)
+	database := context.Get("database").(db.DatabaseInterface)
 	conn := database.Connection()
 
 	output, err := h.notify.Execute(conn, req, context, "", h.strategy, EmailValidator{}, vcapRequestID)

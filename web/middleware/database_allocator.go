@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
@@ -23,7 +24,7 @@ func NewDatabaseAllocator(sqlDB *sql.DB, trace bool) DatabaseAllocator {
 }
 
 func (ware DatabaseAllocator) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) bool {
-	db := models.NewDatabase(ware.DB, models.Config{})
+	db := db.NewDatabase(ware.DB, db.Config{})
 	models.Setup(db)
 
 	logger := gorpCompatibleLogger{

@@ -1,9 +1,12 @@
 package services
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type NotificationsUpdaterInterface interface {
-	Update(models.DatabaseInterface, models.Kind) error
+	Update(db.DatabaseInterface, models.Kind) error
 }
 
 type NotificationsUpdater struct {
@@ -16,7 +19,7 @@ func NewNotificationsUpdater(kindsRepo KindsRepo) NotificationsUpdater {
 	}
 }
 
-func (updater NotificationsUpdater) Update(database models.DatabaseInterface, notification models.Kind) error {
+func (updater NotificationsUpdater) Update(database db.DatabaseInterface, notification models.Kind) error {
 	_, err := updater.kindsRepo.Update(database.Connection(), notification)
 	if err != nil {
 		return err

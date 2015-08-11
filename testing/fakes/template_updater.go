@@ -1,11 +1,14 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type TemplateUpdater struct {
 	UpdateCall struct {
 		Receives struct {
-			Database   models.DatabaseInterface
+			Database   db.DatabaseInterface
 			TemplateID string
 			Template   models.Template
 		}
@@ -19,7 +22,7 @@ func NewTemplateUpdater() *TemplateUpdater {
 	return &TemplateUpdater{}
 }
 
-func (tu *TemplateUpdater) Update(database models.DatabaseInterface, templateID string, template models.Template) error {
+func (tu *TemplateUpdater) Update(database db.DatabaseInterface, templateID string, template models.Template) error {
 	tu.UpdateCall.Receives.Database = database
 	tu.UpdateCall.Receives.TemplateID = templateID
 	tu.UpdateCall.Receives.Template = template

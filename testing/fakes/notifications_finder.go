@@ -1,6 +1,9 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type NotificationsFinder struct {
 	Clients map[string]models.Client
@@ -24,7 +27,7 @@ func NewNotificationsFinder() *NotificationsFinder {
 	}
 }
 
-func (finder *NotificationsFinder) AllClientsAndNotifications(database models.DatabaseInterface) ([]models.Client, []models.Kind, error) {
+func (finder *NotificationsFinder) AllClientsAndNotifications(database db.DatabaseInterface) ([]models.Client, []models.Kind, error) {
 	var (
 		clients []models.Client
 		kinds   []models.Kind
@@ -43,7 +46,7 @@ func (finder *NotificationsFinder) AllClientsAndNotifications(database models.Da
 	return clients, kinds, finder.AllClientsAndNotificationsCall.Error
 }
 
-func (finder *NotificationsFinder) ClientAndKind(database models.DatabaseInterface, clientID, kindID string) (models.Client, models.Kind, error) {
+func (finder *NotificationsFinder) ClientAndKind(database db.DatabaseInterface, clientID, kindID string) (models.Client, models.Kind, error) {
 	finder.ClientAndKindCall.Arguments = []interface{}{database, clientID, kindID}
 	return finder.Clients[clientID], finder.Kinds[kindID+"|"+clientID], finder.ClientAndKindCall.Error
 }

@@ -1,5 +1,7 @@
 package models
 
+import "github.com/cloudfoundry-incubator/notifications/db"
+
 type PreferencesRepo struct {
 	unsubscribesRepo UnsubscribesRepo
 }
@@ -8,7 +10,7 @@ func NewPreferencesRepo() PreferencesRepo {
 	return PreferencesRepo{}
 }
 
-func (repo PreferencesRepo) FindNonCriticalPreferences(conn ConnectionInterface, userGUID string) ([]Preference, error) {
+func (repo PreferencesRepo) FindNonCriticalPreferences(conn db.ConnectionInterface, userGUID string) ([]Preference, error) {
 	preferences := []Preference{}
 	sql := `SELECT kinds.id as kind_id, kinds.client_id as client_id, kinds.description as kind_description, clients.description as source_description, IFNULL(receipts.count, 0) as count
             FROM kinds

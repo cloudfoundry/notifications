@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 )
 
@@ -9,7 +10,7 @@ type TemplateSummary struct {
 }
 
 type TemplateListerInterface interface {
-	List(models.DatabaseInterface) (map[string]TemplateSummary, error)
+	List(db.DatabaseInterface) (map[string]TemplateSummary, error)
 }
 type TemplateLister struct {
 	templatesRepo TemplatesRepo
@@ -21,7 +22,7 @@ func NewTemplateLister(templatesRepo TemplatesRepo) TemplateLister {
 	}
 }
 
-func (lister TemplateLister) List(database models.DatabaseInterface) (map[string]TemplateSummary, error) {
+func (lister TemplateLister) List(database db.DatabaseInterface) (map[string]TemplateSummary, error) {
 	templates, err := lister.templatesRepo.ListIDsAndNames(database.Connection())
 	if err != nil {
 		return map[string]TemplateSummary{}, err

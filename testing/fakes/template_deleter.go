@@ -1,11 +1,11 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import "github.com/cloudfoundry-incubator/notifications/db"
 
 type TemplateDeleter struct {
 	DeleteCall struct {
 		Receives struct {
-			Database   models.DatabaseInterface
+			Database   db.DatabaseInterface
 			TemplateID string
 		}
 		Returns struct {
@@ -18,7 +18,7 @@ func NewTemplateDeleter() *TemplateDeleter {
 	return &TemplateDeleter{}
 }
 
-func (td *TemplateDeleter) Delete(database models.DatabaseInterface, templateID string) error {
+func (td *TemplateDeleter) Delete(database db.DatabaseInterface, templateID string) error {
 	td.DeleteCall.Receives.Database = database
 	td.DeleteCall.Receives.TemplateID = templateID
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 	"github.com/ryanmoran/stack"
@@ -42,7 +42,7 @@ func (h AssignTemplateHandler) ServeHTTP(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	database := context.Get("database").(models.DatabaseInterface)
+	database := context.Get("database").(db.DatabaseInterface)
 	err = h.templateAssigner.AssignToClient(database, clientID, templateAssignment.Template)
 	if err != nil {
 		h.errorWriter.Write(w, err)

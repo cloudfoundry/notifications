@@ -1,6 +1,9 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type KindsRepo struct {
 	Kinds                    map[string]models.Kind
@@ -19,7 +22,7 @@ func NewKindsRepo() *KindsRepo {
 	}
 }
 
-func (fake *KindsRepo) Create(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
+func (fake *KindsRepo) Create(conn db.ConnectionInterface, kind models.Kind) (models.Kind, error) {
 	if kind.TemplateID == "" {
 		kind.TemplateID = models.DefaultTemplateID
 	}
@@ -33,7 +36,7 @@ func (fake *KindsRepo) Create(conn models.ConnectionInterface, kind models.Kind)
 	return kind, nil
 }
 
-func (fake *KindsRepo) Update(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
+func (fake *KindsRepo) Update(conn db.ConnectionInterface, kind models.Kind) (models.Kind, error) {
 	if fake.UpdateError != nil {
 		return kind, fake.UpdateError
 	}
@@ -51,13 +54,13 @@ func (fake *KindsRepo) Update(conn models.ConnectionInterface, kind models.Kind)
 	return kind, nil
 }
 
-func (fake *KindsRepo) Upsert(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
+func (fake *KindsRepo) Upsert(conn db.ConnectionInterface, kind models.Kind) (models.Kind, error) {
 	key := kind.ID + kind.ClientID
 	fake.Kinds[key] = kind
 	return kind, fake.UpsertError
 }
 
-func (fake *KindsRepo) Find(conn models.ConnectionInterface, id, clientID string) (models.Kind, error) {
+func (fake *KindsRepo) Find(conn db.ConnectionInterface, id, clientID string) (models.Kind, error) {
 	if fake.FindError != nil {
 		return models.Kind{}, fake.FindError
 	}
@@ -68,7 +71,7 @@ func (fake *KindsRepo) Find(conn models.ConnectionInterface, id, clientID string
 	return models.Kind{}, models.NewRecordNotFoundError("Kind %q %q could not be found", id, clientID)
 }
 
-func (fake *KindsRepo) FindByClient(conn models.ConnectionInterface, clientID string) ([]models.Kind, error) {
+func (fake *KindsRepo) FindByClient(conn db.ConnectionInterface, clientID string) ([]models.Kind, error) {
 	kinds := []models.Kind{}
 
 	for _, kind := range fake.Kinds {
@@ -80,7 +83,7 @@ func (fake *KindsRepo) FindByClient(conn models.ConnectionInterface, clientID st
 	return kinds, nil
 }
 
-func (fake *KindsRepo) FindAll(conn models.ConnectionInterface) ([]models.Kind, error) {
+func (fake *KindsRepo) FindAll(conn db.ConnectionInterface) ([]models.Kind, error) {
 	var kinds []models.Kind
 
 	for _, kind := range fake.Kinds {
@@ -90,12 +93,12 @@ func (fake *KindsRepo) FindAll(conn models.ConnectionInterface) ([]models.Kind, 
 	return kinds, nil
 }
 
-func (fake *KindsRepo) Trim(conn models.ConnectionInterface, clientID string, kindIDs []string) (int, error) {
+func (fake *KindsRepo) Trim(conn db.ConnectionInterface, clientID string, kindIDs []string) (int, error) {
 	fake.TrimArguments = []interface{}{clientID, kindIDs}
 	return 0, fake.TrimError
 }
 
-func (fake *KindsRepo) FindAllByTemplateID(conn models.ConnectionInterface, templateID string) ([]models.Kind, error) {
+func (fake *KindsRepo) FindAllByTemplateID(conn db.ConnectionInterface, templateID string) ([]models.Kind, error) {
 	var kinds []models.Kind
 	for _, kind := range fake.Kinds {
 		if kind.TemplateID == templateID {

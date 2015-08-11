@@ -30,8 +30,8 @@ function fail() {
 }
 
 if [[ -z "$1" ]]; then
-    run -r -skipPackage=acceptance,models,gobble -p=true ./
-    run ./models ./gobble
+    run -r -skipPackage=acceptance,models,gobble,db -p=true ./
+    run ./models ./gobble ./db
 else
     run $@
 fi

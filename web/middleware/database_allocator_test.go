@@ -9,6 +9,7 @@ import (
 	"reflect"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/pivotal-golang/lager"
@@ -56,10 +57,10 @@ var _ = Describe("Database Allocator", func() {
 		result := ware.ServeHTTP(writer, request, context)
 		Expect(result).To(BeTrue())
 
-		database, ok := context.Get("database").(*models.DB)
+		database, ok := context.Get("database").(*db.DB)
 		Expect(ok).To(BeTrue())
 
-		connection, ok := database.Connection().(*models.Connection)
+		connection, ok := database.Connection().(*db.Connection)
 		Expect(ok).To(BeTrue())
 		Expect(connection.DbMap.Db).To(Equal(sqlDB))
 
@@ -72,7 +73,7 @@ var _ = Describe("Database Allocator", func() {
 			result := ware.ServeHTTP(writer, request, context)
 			Expect(result).To(BeTrue())
 
-			database := context.Get("database").(*models.DB)
+			database := context.Get("database").(*db.DB)
 			conn := database.Connection()
 			conn.Exec("SELECT * FROM `posts` WHERE `id` = ? AND `tag` = ?", 1234, "banana")
 
@@ -97,7 +98,7 @@ var _ = Describe("Database Allocator", func() {
 			result := ware.ServeHTTP(writer, request, context)
 			Expect(result).To(BeTrue())
 
-			database := context.Get("database").(*models.DB)
+			database := context.Get("database").(*db.DB)
 			conn := database.Connection()
 			conn.Exec("SELECT * FROM `posts` WHERE `id` = ? AND `tag` = ?", 1234, "banana")
 

@@ -2,6 +2,7 @@ package models_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/application"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -10,8 +11,8 @@ import (
 
 var _ = Describe("DatabaseMigrator", func() {
 	var (
-		db                  *models.DB
-		connection          *models.Connection
+		database            *db.DB
+		connection          *db.Connection
 		dbMigrator          models.DatabaseMigrator
 		defaultTemplatePath string
 	)
@@ -20,11 +21,11 @@ var _ = Describe("DatabaseMigrator", func() {
 		TruncateTables()
 		env := application.NewEnvironment()
 		defaultTemplatePath = env.RootPath + "/templates/default.json"
-		db = models.NewDatabase(sqlDB, models.Config{
+		database = db.NewDatabase(sqlDB, db.Config{
 			DefaultTemplatePath: defaultTemplatePath,
 		})
-		models.Setup(db)
-		connection = db.Connection().(*models.Connection)
+		models.Setup(database)
+		connection = database.Connection().(*db.Connection)
 		dbMigrator = models.DatabaseMigrator{}
 	})
 
@@ -72,7 +73,7 @@ var _ = Describe("DatabaseMigrator", func() {
 			_, err := repo.FindByID(connection, models.DefaultTemplateID)
 			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 
-			dbMigrator.Seed(db, defaultTemplatePath)
+			dbMigrator.Seed(database, defaultTemplatePath)
 			template, err := repo.FindByID(connection, models.DefaultTemplateID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(template.Name).To(Equal("Default Template"))
@@ -84,15 +85,15 @@ var _ = Describe("DatabaseMigrator", func() {
 
 		It("can be called multiple times without panicking", func() {
 			Expect(func() {
-				dbMigrator.Seed(db, defaultTemplatePath)
-				dbMigrator.Seed(db, defaultTemplatePath)
-				dbMigrator.Seed(db, defaultTemplatePath)
+				dbMigrator.Seed(database, defaultTemplatePath)
+				dbMigrator.Seed(database, defaultTemplatePath)
+				dbMigrator.Seed(database, defaultTemplatePath)
 			}).NotTo(Panic())
 		})
 
 		Context("when it has not been overridden", func() {
 			It("re-seeds the default template when the file is updated", func() {
-				dbMigrator.Seed(db, defaultTemplatePath)
+				dbMigrator.Seed(database, defaultTemplatePath)
 
 				template, err := repo.FindByID(connection, models.DefaultTemplateID)
 				Expect(err).NotTo(HaveOccurred())
@@ -106,7 +107,7 @@ var _ = Describe("DatabaseMigrator", func() {
 				_, err = connection.Update(&template)
 				Expect(err).NotTo(HaveOccurred())
 
-				dbMigrator.Seed(db, defaultTemplatePath)
+				dbMigrator.Seed(database, defaultTemplatePath)
 
 				template, err = repo.FindByID(connection, models.DefaultTemplateID)
 				Expect(err).NotTo(HaveOccurred())
@@ -121,7 +122,7 @@ var _ = Describe("DatabaseMigrator", func() {
 
 		Context("when it has been overridden", func() {
 			It("does not re-seed the default template", func() {
-				dbMigrator.Seed(db, defaultTemplatePath)
+				dbMigrator.Seed(database, defaultTemplatePath)
 
 				template, err := repo.FindByID(connection, models.DefaultTemplateID)
 				Expect(err).NotTo(HaveOccurred())
@@ -135,7 +136,7 @@ var _ = Describe("DatabaseMigrator", func() {
 				_, err = repo.Update(connection, models.DefaultTemplateID, template)
 				Expect(err).NotTo(HaveOccurred())
 
-				dbMigrator.Seed(db, defaultTemplatePath)
+				dbMigrator.Seed(database, defaultTemplatePath)
 
 				template, err = repo.FindByID(connection, models.DefaultTemplateID)
 				Expect(err).NotTo(HaveOccurred())

@@ -4,12 +4,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 )
 
 type MessageGC struct {
 	messagesRepo    messagesRepoInterface
-	db              models.DatabaseInterface
+	db              db.DatabaseInterface
 	lifetime        time.Duration
 	logger          *log.Logger
 	timer           <-chan time.Time
@@ -17,10 +17,10 @@ type MessageGC struct {
 }
 
 type messagesRepoInterface interface {
-	DeleteBefore(models.ConnectionInterface, time.Time) (int, error)
+	DeleteBefore(db.ConnectionInterface, time.Time) (int, error)
 }
 
-func NewMessageGC(lifetime time.Duration, db models.DatabaseInterface,
+func NewMessageGC(lifetime time.Duration, db db.DatabaseInterface,
 	messagesRepo messagesRepoInterface, pollingInterval time.Duration, logger *log.Logger) MessageGC {
 	return MessageGC{
 		messagesRepo:    messagesRepo,

@@ -1,4 +1,4 @@
-package models
+package db
 
 type Config struct {
 	DefaultTemplatePath string

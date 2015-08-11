@@ -3,7 +3,7 @@ package templates
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
@@ -21,7 +21,7 @@ func NewListHandler(templateLister services.TemplateListerInterface, errWriter e
 }
 
 func (h ListHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	templates, err := h.lister.List(context.Get("database").(models.DatabaseInterface))
+	templates, err := h.lister.List(context.Get("database").(db.DatabaseInterface))
 	if err != nil {
 		h.errorWriter.Write(w, err)
 		return

@@ -1,6 +1,6 @@
 package services
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import "github.com/cloudfoundry-incubator/notifications/db"
 
 type PreferencesFinder struct {
 	preferencesRepo        PreferencesRepo
@@ -8,7 +8,7 @@ type PreferencesFinder struct {
 }
 
 type PreferencesFinderInterface interface {
-	Find(models.DatabaseInterface, string) (PreferencesBuilder, error)
+	Find(db.DatabaseInterface, string) (PreferencesBuilder, error)
 }
 
 func NewPreferencesFinder(preferencesRepo PreferencesRepo, globalUnsubscribesRepo GlobalUnsubscribesRepo) *PreferencesFinder {
@@ -18,7 +18,7 @@ func NewPreferencesFinder(preferencesRepo PreferencesRepo, globalUnsubscribesRep
 	}
 }
 
-func (finder PreferencesFinder) Find(database models.DatabaseInterface, userGUID string) (PreferencesBuilder, error) {
+func (finder PreferencesFinder) Find(database db.DatabaseInterface, userGUID string) (PreferencesBuilder, error) {
 	conn := database.Connection()
 	builder := NewPreferencesBuilder()
 

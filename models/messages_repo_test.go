@@ -3,6 +3,7 @@ package models_test
 import (
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	. "github.com/onsi/ginkgo"
@@ -11,13 +12,13 @@ import (
 
 var _ = Describe("MessagesRepo", func() {
 	var repo models.MessagesRepo
-	var conn models.ConnectionInterface
+	var conn db.ConnectionInterface
 	var message models.Message
 
 	BeforeEach(func() {
 		TruncateTables()
 		repo = models.NewMessagesRepo()
-		db := models.NewDatabase(sqlDB, models.Config{})
+		db := db.NewDatabase(sqlDB, db.Config{})
 		conn = db.Connection()
 		models.Setup(db)
 		message = models.Message{

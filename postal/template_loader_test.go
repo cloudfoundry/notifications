@@ -3,6 +3,7 @@ package postal_test
 import (
 	"errors"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
@@ -17,7 +18,7 @@ var _ = Describe("TemplateLoader", func() {
 		clientsRepo   *fakes.ClientsRepo
 		kindsRepo     *fakes.KindsRepo
 		templatesRepo *fakes.TemplatesRepo
-		conn          models.ConnectionInterface
+		conn          db.ConnectionInterface
 		database      *fakes.Database
 	)
 

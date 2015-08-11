@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -60,7 +61,7 @@ var _ = Describe("DeliveryWorker", func() {
 		kindsRepo              *fakes.KindsRepo
 		messagesRepo           *fakes.MessagesRepo
 		database               *fakes.Database
-		conn                   models.ConnectionInterface
+		conn                   db.ConnectionInterface
 		userLoader             *fakes.UserLoader
 		userGUID               string
 		fakeUserEmail          string

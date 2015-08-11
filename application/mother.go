@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/models"
@@ -199,10 +200,10 @@ func (m *Mother) SQLDatabase() *sql.DB {
 	return m.sqlDB
 }
 
-func (m *Mother) Database() models.DatabaseInterface {
+func (m *Mother) Database() db.DatabaseInterface {
 	env := NewEnvironment()
 
-	database := models.NewDatabase(m.SQLDatabase(), models.Config{
+	database := db.NewDatabase(m.SQLDatabase(), db.Config{
 		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
 	})
 	if env.DBLoggingEnabled {

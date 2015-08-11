@@ -1,10 +1,13 @@
 package services
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type RegistrarInterface interface {
-	Register(models.ConnectionInterface, models.Client, []models.Kind) error
-	Prune(models.ConnectionInterface, models.Client, []models.Kind) error
+	Register(db.ConnectionInterface, models.Client, []models.Kind) error
+	Prune(db.ConnectionInterface, models.Client, []models.Kind) error
 }
 
 type Registrar struct {
@@ -20,7 +23,7 @@ func NewRegistrar(clientsRepo ClientsRepo, kindsRepo KindsRepo) Registrar {
 
 }
 
-func (registrar Registrar) Register(conn models.ConnectionInterface, client models.Client, kinds []models.Kind) error {
+func (registrar Registrar) Register(conn db.ConnectionInterface, client models.Client, kinds []models.Kind) error {
 	_, err := registrar.clientsRepo.Upsert(conn, client)
 	if err != nil {
 		return err
@@ -39,7 +42,7 @@ func (registrar Registrar) Register(conn models.ConnectionInterface, client mode
 	return nil
 }
 
-func (registrar Registrar) Prune(conn models.ConnectionInterface, client models.Client, kinds []models.Kind) error {
+func (registrar Registrar) Prune(conn db.ConnectionInterface, client models.Client, kinds []models.Kind) error {
 	kindIDs := []string{}
 	for _, kind := range kinds {
 		kindIDs = append(kindIDs, kind.ID)

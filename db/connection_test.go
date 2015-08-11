@@ -1,23 +1,23 @@
-package models_test
+package db_test
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Connection", func() {
-	var conn *models.Connection
+	var conn *db.Connection
 
 	BeforeEach(func() {
-		conn = &models.Connection{}
+		conn = &db.Connection{}
 	})
 
 	Describe("Transaction", func() {
 		It("returns an uninitialized transaction", func() {
 			transaction := conn.Transaction()
-			Expect(transaction).To(BeAssignableToTypeOf(&models.Transaction{}))
+			Expect(transaction).To(BeAssignableToTypeOf(&db.Transaction{}))
 		})
 	})
 })

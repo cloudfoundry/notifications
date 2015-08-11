@@ -3,6 +3,7 @@ package preferences
 import (
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/valiant"
@@ -24,7 +25,7 @@ func NewUpdatePreferencesHandler(preferenceUpdater services.PreferenceUpdaterInt
 }
 
 func (h UpdatePreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	database := context.Get("database").(models.DatabaseInterface)
+	database := context.Get("database").(db.DatabaseInterface)
 	connection := database.Connection()
 
 	token := context.Get("token").(*jwt.Token)

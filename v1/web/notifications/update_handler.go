@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"regexp"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/ryanmoran/stack"
 )
@@ -25,7 +26,7 @@ func NewUpdateHandler(notificationsUpdater NotificationsUpdaterInterface, errWri
 }
 
 type NotificationsUpdaterInterface interface {
-	Update(models.DatabaseInterface, models.Kind) error
+	Update(db.DatabaseInterface, models.Kind) error
 }
 
 func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
@@ -41,7 +42,7 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	matches := regex.FindStringSubmatch(req.URL.Path)
 	clientID, notificationID := matches[1], matches[2]
 
-	err = h.updater.Update(context.Get("database").(models.DatabaseInterface), updateParams.ToModel(clientID, notificationID))
+	err = h.updater.Update(context.Get("database").(db.DatabaseInterface), updateParams.ToModel(clientID, notificationID))
 	if err != nil {
 		h.errorWriter.Write(w, err)
 		return

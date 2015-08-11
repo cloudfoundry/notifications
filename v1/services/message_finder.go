@@ -1,18 +1,21 @@
 package services
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type Message struct {
 	Status string
 }
 
 type MessagesRepoInterface interface {
-	FindByID(models.ConnectionInterface, string) (models.Message, error)
-	Upsert(models.ConnectionInterface, models.Message) (models.Message, error)
+	FindByID(db.ConnectionInterface, string) (models.Message, error)
+	Upsert(db.ConnectionInterface, models.Message) (models.Message, error)
 }
 
 type MessageFinderInterface interface {
-	Find(models.DatabaseInterface, string) (Message, error)
+	Find(db.DatabaseInterface, string) (Message, error)
 }
 
 type MessageFinder struct {
@@ -25,7 +28,7 @@ func NewMessageFinder(repo MessagesRepoInterface) MessageFinder {
 	}
 }
 
-func (finder MessageFinder) Find(database models.DatabaseInterface, messageID string) (Message, error) {
+func (finder MessageFinder) Find(database db.DatabaseInterface, messageID string) (Message, error) {
 	message, err := finder.repo.FindByID(database.Connection(), messageID)
 	if err != nil {
 		return Message{}, err

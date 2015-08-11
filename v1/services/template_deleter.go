@@ -1,9 +1,9 @@
 package services
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import "github.com/cloudfoundry-incubator/notifications/db"
 
 type TemplateDeleterInterface interface {
-	Delete(models.DatabaseInterface, string) error
+	Delete(db.DatabaseInterface, string) error
 }
 
 type TemplateDeleter struct {
@@ -16,7 +16,7 @@ func NewTemplateDeleter(templatesRepo TemplatesRepo) TemplateDeleter {
 	}
 }
 
-func (deleter TemplateDeleter) Delete(database models.DatabaseInterface, templateID string) error {
+func (deleter TemplateDeleter) Delete(database db.DatabaseInterface, templateID string) error {
 	connection := database.Connection()
 	return deleter.templatesRepo.Destroy(connection, templateID)
 }

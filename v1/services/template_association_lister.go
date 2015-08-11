@@ -1,6 +1,6 @@
 package services
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import "github.com/cloudfoundry-incubator/notifications/db"
 
 type TemplateAssociation struct {
 	ClientID       string
@@ -8,7 +8,7 @@ type TemplateAssociation struct {
 }
 
 type TemplateAssociationListerInterface interface {
-	List(models.DatabaseInterface, string) ([]TemplateAssociation, error)
+	List(db.DatabaseInterface, string) ([]TemplateAssociation, error)
 }
 
 type TemplateAssociationLister struct {
@@ -25,7 +25,7 @@ func NewTemplateAssociationLister(clientsRepo ClientsRepo, kindsRepo KindsRepo, 
 	}
 }
 
-func (lister TemplateAssociationLister) List(database models.DatabaseInterface, templateID string) ([]TemplateAssociation, error) {
+func (lister TemplateAssociationLister) List(database db.DatabaseInterface, templateID string) ([]TemplateAssociation, error) {
 	associations := []TemplateAssociation{}
 	conn := database.Connection()
 

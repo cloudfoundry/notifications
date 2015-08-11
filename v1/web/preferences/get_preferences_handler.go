@@ -3,7 +3,7 @@ package preferences
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 	"github.com/dgrijalva/jwt-go"
@@ -36,7 +36,7 @@ func (h GetPreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http.Reques
 
 	userID := token.Claims["user_id"].(string)
 
-	parsed, err := h.preferencesFinder.Find(context.Get("database").(models.DatabaseInterface), userID)
+	parsed, err := h.preferencesFinder.Find(context.Get("database").(db.DatabaseInterface), userID)
 	if err != nil {
 		h.errorWriter.Write(w, err)
 		return

@@ -3,7 +3,7 @@ package fakes
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 )
 
 type UnsubscribesRepo struct {
@@ -16,13 +16,13 @@ func NewUnsubscribesRepo() *UnsubscribesRepo {
 	}
 }
 
-func (fake *UnsubscribesRepo) Set(conn models.ConnectionInterface, userID, clientID, kindID string, unsubscribe bool) error {
+func (fake *UnsubscribesRepo) Set(conn db.ConnectionInterface, userID, clientID, kindID string, unsubscribe bool) error {
 	key := fmt.Sprintf("%s|%s|%s", userID, clientID, kindID)
 	fake.store[key] = unsubscribe
 	return nil
 }
 
-func (fake *UnsubscribesRepo) Get(conn models.ConnectionInterface, userID, clientID, kindID string) (bool, error) {
+func (fake *UnsubscribesRepo) Get(conn db.ConnectionInterface, userID, clientID, kindID string) (bool, error) {
 	key := fmt.Sprintf("%s|%s|%s", userID, clientID, kindID)
 	return fake.store[key], nil
 }

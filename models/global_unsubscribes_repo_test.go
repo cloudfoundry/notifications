@@ -1,6 +1,7 @@
 package models_test
 
 import (
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -9,14 +10,14 @@ import (
 
 var _ = Describe("GlobalUnsubscribesRepo", func() {
 	var repo models.GlobalUnsubscribesRepo
-	var conn *models.Connection
+	var conn *db.Connection
 
 	Describe("Set/Get", func() {
 		BeforeEach(func() {
 			TruncateTables()
-			db := models.NewDatabase(sqlDB, models.Config{})
-			models.Setup(db)
-			conn = db.Connection().(*models.Connection)
+			database := db.NewDatabase(sqlDB, db.Config{})
+			models.Setup(database)
+			conn = database.Connection().(*db.Connection)
 			repo = models.NewGlobalUnsubscribesRepo()
 		})
 

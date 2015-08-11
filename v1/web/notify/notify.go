@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
@@ -16,7 +17,7 @@ import (
 )
 
 type NotifyInterface interface {
-	Execute(models.ConnectionInterface, *http.Request, stack.Context, string, services.StrategyInterface, ValidatorInterface, string) ([]byte, error)
+	Execute(db.ConnectionInterface, *http.Request, stack.Context, string, services.StrategyInterface, ValidatorInterface, string) ([]byte, error)
 }
 
 type Notify struct {
@@ -35,7 +36,7 @@ type ValidatorInterface interface {
 	Validate(*NotifyParams) bool
 }
 
-func (h Notify) Execute(connection models.ConnectionInterface, req *http.Request, context stack.Context,
+func (h Notify) Execute(connection db.ConnectionInterface, req *http.Request, context stack.Context,
 	guid string, strategy services.StrategyInterface, validator ValidatorInterface, vcapRequestID string) ([]byte, error) {
 	parameters, err := NewNotifyParams(req.Body)
 	if err != nil {
@@ -59,7 +60,7 @@ func (h Notify) Execute(connection models.ConnectionInterface, req *http.Request
 	}
 	uaaHost := tokenIssuerURL.Scheme + "://" + tokenIssuerURL.Host
 
-	client, kind, err := h.finder.ClientAndKind(context.Get("database").(models.DatabaseInterface), clientID, parameters.KindID)
+	client, kind, err := h.finder.ClientAndKind(context.Get("database").(db.DatabaseInterface), clientID, parameters.KindID)
 	if err != nil {
 		return []byte{}, err
 	}

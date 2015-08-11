@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/nu7hatch/gouuid"
@@ -41,7 +42,7 @@ type Delivery struct {
 }
 
 type EnqueuerInterface interface {
-	Enqueue(models.ConnectionInterface, []User, Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string, string, string, time.Time) []Response
+	Enqueue(db.ConnectionInterface, []User, Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string, string, string, time.Time) []Response
 }
 
 type Enqueuer struct {
@@ -58,7 +59,7 @@ func NewEnqueuer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc, 
 	}
 }
 
-func (enqueuer Enqueuer) Enqueue(conn models.ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []Response {
+func (enqueuer Enqueuer) Enqueue(conn db.ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []Response {
 
 	responses := []Response{}
 	jobsByMessageID := map[string]gobble.Job{}

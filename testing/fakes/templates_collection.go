@@ -1,14 +1,14 @@
 package fakes
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 )
 
 type TemplatesCollection struct {
 	SetCall struct {
 		Receives struct {
-			Conn     models.ConnectionInterface
+			Conn     db.ConnectionInterface
 			Template collections.Template
 			ClientID string
 		}
@@ -35,7 +35,7 @@ func NewTemplatesCollection() *TemplatesCollection {
 	return &TemplatesCollection{}
 }
 
-func (c *TemplatesCollection) Set(conn models.ConnectionInterface, template collections.Template, clientID string) (collections.Template, error) {
+func (c *TemplatesCollection) Set(conn db.ConnectionInterface, template collections.Template, clientID string) (collections.Template, error) {
 	c.SetCall.Receives.Conn = conn
 	c.SetCall.Receives.Template = template
 	c.SetCall.Receives.ClientID = clientID

@@ -3,6 +3,8 @@ package models
 import (
 	"database/sql"
 	"strings"
+
+	"github.com/cloudfoundry-incubator/notifications/db"
 )
 
 type CampaignTypesRepository struct {
@@ -15,7 +17,7 @@ func NewCampaignTypesRepository(guidGenerator guidGeneratorFunc) CampaignTypesRe
 	}
 }
 
-func (r CampaignTypesRepository) Insert(connection ConnectionInterface, campaignType CampaignType) (CampaignType, error) {
+func (r CampaignTypesRepository) Insert(connection db.ConnectionInterface, campaignType CampaignType) (CampaignType, error) {
 	if campaignType.ID == "" {
 		id, err := r.guidGenerator()
 		if err != nil {
@@ -35,7 +37,7 @@ func (r CampaignTypesRepository) Insert(connection ConnectionInterface, campaign
 	return campaignType, nil
 }
 
-func (r CampaignTypesRepository) GetBySenderIDAndName(connection ConnectionInterface, senderID, name string) (CampaignType, error) {
+func (r CampaignTypesRepository) GetBySenderIDAndName(connection db.ConnectionInterface, senderID, name string) (CampaignType, error) {
 	var campaignType CampaignType
 	err := connection.SelectOne(&campaignType, "SELECT * FROM `campaign_types` WHERE `sender_id` = ? AND `name` = ?", senderID, name)
 	if err != nil {
@@ -48,13 +50,13 @@ func (r CampaignTypesRepository) GetBySenderIDAndName(connection ConnectionInter
 	return campaignType, nil
 }
 
-func (r CampaignTypesRepository) List(connection ConnectionInterface, senderID string) ([]CampaignType, error) {
+func (r CampaignTypesRepository) List(connection db.ConnectionInterface, senderID string) ([]CampaignType, error) {
 	campaignTypeList := []CampaignType{}
 	_, err := connection.Select(&campaignTypeList, "SELECT * FROM `campaign_types` WHERE `sender_id` = ?", senderID)
 	return campaignTypeList, err
 }
 
-func (r CampaignTypesRepository) Get(connection ConnectionInterface, campaignTypeID string) (CampaignType, error) {
+func (r CampaignTypesRepository) Get(connection db.ConnectionInterface, campaignTypeID string) (CampaignType, error) {
 	campaignType := CampaignType{}
 	err := connection.SelectOne(&campaignType, "SELECT * FROM `campaign_types` WHERE `id` = ?", campaignTypeID)
 	if err != nil {
@@ -67,7 +69,7 @@ func (r CampaignTypesRepository) Get(connection ConnectionInterface, campaignTyp
 	return campaignType, nil
 }
 
-func (r CampaignTypesRepository) Update(connection ConnectionInterface, campaignType CampaignType) (CampaignType, error) {
+func (r CampaignTypesRepository) Update(connection db.ConnectionInterface, campaignType CampaignType) (CampaignType, error) {
 	_, err := connection.Update(&campaignType)
 	if err != nil {
 		return CampaignType{}, err
@@ -76,7 +78,7 @@ func (r CampaignTypesRepository) Update(connection ConnectionInterface, campaign
 	return campaignType, err
 }
 
-func (r CampaignTypesRepository) Delete(connection ConnectionInterface, campaignType CampaignType) error {
+func (r CampaignTypesRepository) Delete(connection db.ConnectionInterface, campaignType CampaignType) error {
 	_, err := connection.Delete(&campaignType)
 	return err
 }

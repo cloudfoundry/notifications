@@ -1,6 +1,7 @@
 package models_test
 
 import (
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 
@@ -11,13 +12,13 @@ import (
 var _ = Describe("SendersRepo", func() {
 	var (
 		repo models.SendersRepository
-		conn models.ConnectionInterface
+		conn db.ConnectionInterface
 	)
 
 	BeforeEach(func() {
 		TruncateTables()
 		repo = models.NewSendersRepository(fakes.NewIncrementingGUIDGenerator().Generate)
-		db := models.NewDatabase(sqlDB, models.Config{})
+		db := db.NewDatabase(sqlDB, db.Config{})
 		models.Setup(db)
 		conn = db.Connection()
 	})

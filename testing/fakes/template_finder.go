@@ -1,11 +1,14 @@
 package fakes
 
-import "github.com/cloudfoundry-incubator/notifications/models"
+import (
+	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/models"
+)
 
 type TemplateFinder struct {
 	FindByIDCall struct {
 		Receives struct {
-			Database   models.DatabaseInterface
+			Database   db.DatabaseInterface
 			TemplateID string
 		}
 		Returns struct {
@@ -19,7 +22,7 @@ func NewTemplateFinder() *TemplateFinder {
 	return &TemplateFinder{}
 }
 
-func (tf *TemplateFinder) FindByID(database models.DatabaseInterface, templateID string) (models.Template, error) {
+func (tf *TemplateFinder) FindByID(database db.DatabaseInterface, templateID string) (models.Template, error) {
 	tf.FindByIDCall.Receives.Database = database
 	tf.FindByIDCall.Receives.TemplateID = templateID
 

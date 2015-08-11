@@ -1,6 +1,7 @@
-package models_test
+package db_test
 
 import (
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
 	. "github.com/onsi/ginkgo"
@@ -8,12 +9,12 @@ import (
 )
 
 var _ = Describe("Transaction", func() {
-	var transaction models.TransactionInterface
-	var conn models.ConnectionInterface
+	var transaction db.TransactionInterface
+	var conn db.ConnectionInterface
 
 	BeforeEach(func() {
 		TruncateTables()
-		db := models.NewDatabase(sqlDB, models.Config{})
+		db := db.NewDatabase(sqlDB, db.Config{})
 		models.Setup(db)
 		conn = db.Connection()
 		transaction = conn.Transaction()
