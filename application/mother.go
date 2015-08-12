@@ -12,9 +12,10 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
+	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web/webutil"
@@ -147,8 +148,8 @@ func (m *Mother) MailClient() *mail.Client {
 	return mail.NewClient(mailConfig)
 }
 
-func (m *Mother) Repos() (models.ClientsRepo, models.KindsRepo) {
-	return models.NewClientsRepo(), m.KindsRepo()
+func (m *Mother) Repos() (v1models.ClientsRepo, v1models.KindsRepo) {
+	return v1models.NewClientsRepo(), m.KindsRepo()
 }
 
 func (m *Mother) Logger() lager.Logger {
@@ -214,7 +215,7 @@ func (m *Mother) Database() db.DatabaseInterface {
 }
 
 func (m *Mother) PreferencesFinder() *services.PreferencesFinder {
-	return services.NewPreferencesFinder(models.NewPreferencesRepo(), m.GlobalUnsubscribesRepo())
+	return services.NewPreferencesFinder(v1models.NewPreferencesRepo(), m.GlobalUnsubscribesRepo())
 }
 
 func (m *Mother) PreferenceUpdater() services.PreferenceUpdater {
@@ -244,28 +245,28 @@ func (m *Mother) TemplateServiceObjects() (services.TemplateCreator, services.Te
 		services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo)
 }
 
-func (m *Mother) KindsRepo() models.KindsRepo {
-	return models.NewKindsRepo()
+func (m *Mother) KindsRepo() v1models.KindsRepo {
+	return v1models.NewKindsRepo()
 }
 
-func (m *Mother) UnsubscribesRepo() models.UnsubscribesRepo {
-	return models.NewUnsubscribesRepo()
+func (m *Mother) UnsubscribesRepo() v1models.UnsubscribesRepo {
+	return v1models.NewUnsubscribesRepo()
 }
 
-func (m *Mother) GlobalUnsubscribesRepo() models.GlobalUnsubscribesRepo {
-	return models.NewGlobalUnsubscribesRepo()
+func (m *Mother) GlobalUnsubscribesRepo() v1models.GlobalUnsubscribesRepo {
+	return v1models.NewGlobalUnsubscribesRepo()
 }
 
-func (m *Mother) TemplatesRepo() models.TemplatesRepo {
-	return models.NewTemplatesRepo()
+func (m *Mother) TemplatesRepo() v1models.TemplatesRepo {
+	return v1models.NewTemplatesRepo()
 }
 
-func (m *Mother) MessagesRepo() models.MessagesRepo {
-	return models.NewMessagesRepo()
+func (m *Mother) MessagesRepo() v1models.MessagesRepo {
+	return v1models.NewMessagesRepo()
 }
 
-func (m *Mother) ReceiptsRepo() models.ReceiptsRepo {
-	return models.NewReceiptsRepo()
+func (m *Mother) ReceiptsRepo() v1models.ReceiptsRepo {
+	return v1models.NewReceiptsRepo()
 }
 
 func (m *Mother) CORS() middleware.CORS {

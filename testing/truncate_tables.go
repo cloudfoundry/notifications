@@ -3,12 +3,13 @@ package testing
 import (
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/models"
+	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
 )
 
 func TruncateTables(database *db.DB) {
 	env := application.NewEnvironment()
-	dbMigrator := models.DatabaseMigrator{}
+	dbMigrator := v1models.DatabaseMigrator{}
 	dbMigrator.Migrate(database.RawConnection(), env.ModelMigrationsPath)
 	models.Setup(database)
 

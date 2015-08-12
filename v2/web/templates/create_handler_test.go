@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"strings"
 
+	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/templates"
 	"github.com/ryanmoran/stack"
 
@@ -16,15 +18,20 @@ import (
 
 var _ = Describe("CreateHandler", func() {
 	var (
-		handler templates.CreateHandler
-		context stack.Context
-		writer  *httptest.ResponseRecorder
-		request *http.Request
+		handler             templates.CreateHandler
+		templatesCollection *fakes.TemplatesCollection
+		context             stack.Context
+		writer              *httptest.ResponseRecorder
+		request             *http.Request
+		database            *fakes.Database
 	)
 
 	BeforeEach(func() {
 		context = stack.NewContext()
 		context.Set("client_id", "some-client-id")
+
+		database = fakes.NewDatabase()
+		context.Set("database", database)
 
 		writer = httptest.NewRecorder()
 
@@ -40,10 +47,20 @@ var _ = Describe("CreateHandler", func() {
 		request, err = http.NewRequest("POST", "/templates", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
-		handler = templates.NewCreateHandler("")
+		templatesCollection = fakes.NewTemplatesCollection()
+		handler = templates.NewCreateHandler(templatesCollection)
 	})
 
 	It("creates a template", func() {
+		templatesCollection.SetCall.Returns.Template = collections.Template{
+			ID:       "some-template-id",
+			Name:     "an interesting template",
+			HTML:     "template html",
+			Text:     "template text",
+			Subject:  "template subject",
+			Metadata: `{"template": "metadata"}`,
+		}
+
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
@@ -60,6 +77,14 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	It("creates a template with only name and text", func() {
+		templatesCollection.SetCall.Returns.Template = collections.Template{
+			ID:       "some-template-id",
+			Name:     "an interesting template",
+			Text:     "this is my text",
+			Subject:  "{{.Subject}}",
+			Metadata: "{}",
+		}
+
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"name": "an interesting template",
 			"text": "this is my text",
@@ -69,6 +94,9 @@ var _ = Describe("CreateHandler", func() {
 		request, err = http.NewRequest("POST", "/templates", bytes.NewBuffer(requestBody))
 
 		handler.ServeHTTP(writer, request, context)
+
+		Expect(templatesCollection.SetCall.Receives.Template.Subject).To(Equal("{{.Subject}}"))
+		Expect(templatesCollection.SetCall.Receives.Template.Metadata).To(Equal("{}"))
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
 		Expect(writer.Body.String()).To(MatchJSON(`{
@@ -82,6 +110,14 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	It("creates a template with only name and html", func() {
+		templatesCollection.SetCall.Returns.Template = collections.Template{
+			ID:       "some-template-id",
+			Name:     "an interesting template",
+			HTML:     "template html",
+			Subject:  "{{.Subject}}",
+			Metadata: "{}",
+		}
+
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"name": "an interesting template",
 			"html": "template html",
@@ -91,6 +127,9 @@ var _ = Describe("CreateHandler", func() {
 		request, err = http.NewRequest("POST", "/templates", bytes.NewBuffer(requestBody))
 
 		handler.ServeHTTP(writer, request, context)
+
+		Expect(templatesCollection.SetCall.Receives.Template.Subject).To(Equal("{{.Subject}}"))
+		Expect(templatesCollection.SetCall.Receives.Template.Metadata).To(Equal("{}"))
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
 		Expect(writer.Body.String()).To(MatchJSON(`{
@@ -104,6 +143,14 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	It("defaults subject when it is empty string", func() {
+		templatesCollection.SetCall.Returns.Template = collections.Template{
+			ID:       "some-template-id",
+			Name:     "an interesting template",
+			HTML:     "template html",
+			Subject:  "{{.Subject}}",
+			Metadata: "{}",
+		}
+
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"name":    "an interesting template",
 			"html":    "template html",
@@ -114,6 +161,8 @@ var _ = Describe("CreateHandler", func() {
 		request, err = http.NewRequest("POST", "/templates", bytes.NewBuffer(requestBody))
 
 		handler.ServeHTTP(writer, request, context)
+
+		Expect(templatesCollection.SetCall.Receives.Template.Subject).To(Equal("{{.Subject}}"))
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
 		Expect(writer.Body.String()).To(MatchJSON(`{

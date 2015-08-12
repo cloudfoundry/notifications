@@ -158,10 +158,11 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 	// V2
 	sendersRepository := models.NewSendersRepository(uuid.NewV4)
 	campaignTypesRepository := models.NewCampaignTypesRepository(uuid.NewV4)
+	templatesRepository := models.NewTemplatesRepository(uuid.NewV4)
 
 	sendersCollection := collections.NewSendersCollection(sendersRepository)
 	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository)
-	templatesCollection := collections.NewTemplatesCollection()
+	templatesCollection := collections.NewTemplatesCollection(templatesRepository)
 
 	v2 := NewMuxer()
 

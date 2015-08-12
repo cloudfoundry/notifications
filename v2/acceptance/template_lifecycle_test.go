@@ -34,7 +34,7 @@ var _ = Describe("Template lifecycle", func() {
 		token = GetClientTokenFor("my-client", "uaa")
 	})
 
-	PIt("can create a new template and retrieve it", func() {
+	It("can create a new template and retrieve it", func() {
 		var createTemplate template
 
 		By("creating a template", func() {
