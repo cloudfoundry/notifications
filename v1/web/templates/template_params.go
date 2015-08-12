@@ -5,7 +5,7 @@ import (
 	"io"
 	"text/template"
 
-	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/valiant"
 	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 )
