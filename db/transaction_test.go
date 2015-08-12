@@ -4,6 +4,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
 
+	"github.com/cloudfoundry-incubator/notifications/testing"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -13,9 +14,8 @@ var _ = Describe("Transaction", func() {
 	var conn db.ConnectionInterface
 
 	BeforeEach(func() {
-		TruncateTables()
 		db := db.NewDatabase(sqlDB, db.Config{})
-		models.Setup(db)
+		testing.TruncateTables(db)
 		conn = db.Connection()
 		transaction = conn.Transaction()
 	})

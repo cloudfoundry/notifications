@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/testing"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 
 	. "github.com/onsi/ginkgo"
@@ -20,10 +21,10 @@ var _ = Describe("KindsRepo", func() {
 	)
 
 	BeforeEach(func() {
-		TruncateTables()
+
 		repo = models.NewKindsRepo()
 		database := db.NewDatabase(sqlDB, db.Config{})
-		models.Setup(database)
+		testing.TruncateTables(database)
 		conn = database.Connection().(*db.Connection)
 	})
 

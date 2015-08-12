@@ -5,6 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/testing"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 
 	. "github.com/onsi/ginkgo"
@@ -18,11 +19,10 @@ var _ = Describe("CampaignTypesRepo", func() {
 	)
 
 	BeforeEach(func() {
-		TruncateTables()
 		repo = models.NewCampaignTypesRepository(fakes.NewIncrementingGUIDGenerator().Generate)
-		db := db.NewDatabase(sqlDB, db.Config{})
-		models.Setup(db)
-		conn = db.Connection()
+		database := db.NewDatabase(sqlDB, db.Config{})
+		testing.TruncateTables(database)
+		conn = database.Connection()
 	})
 
 	Describe("Insert", func() {

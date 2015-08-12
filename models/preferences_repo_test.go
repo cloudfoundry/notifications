@@ -3,6 +3,7 @@ package models_test
 import (
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,10 +20,8 @@ var _ = Describe("PreferencesRepo", func() {
 	)
 
 	BeforeEach(func() {
-		TruncateTables()
-
 		database := db.NewDatabase(sqlDB, db.Config{})
-		models.Setup(database)
+		testing.TruncateTables(database)
 
 		conn = database.Connection().(*db.Connection)
 

@@ -2,3 +2,4 @@
 /bin/bosh-lite_deploy
 /bin/env/development
 /templates/overrides
+/notifications.iml

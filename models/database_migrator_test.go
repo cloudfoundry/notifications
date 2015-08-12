@@ -4,6 +4,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/models"
+	"github.com/cloudfoundry-incubator/notifications/testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,13 +19,12 @@ var _ = Describe("DatabaseMigrator", func() {
 	)
 
 	BeforeEach(func() {
-		TruncateTables()
 		env := application.NewEnvironment()
 		defaultTemplatePath = env.RootPath + "/templates/default.json"
 		database = db.NewDatabase(sqlDB, db.Config{
 			DefaultTemplatePath: defaultTemplatePath,
 		})
-		models.Setup(database)
+		testing.TruncateTables(database)
 		connection = database.Connection().(*db.Connection)
 		dbMigrator = models.DatabaseMigrator{}
 	})

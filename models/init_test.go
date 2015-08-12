@@ -27,20 +27,6 @@ var _ = BeforeEach(func() {
 	Expect(err).NotTo(HaveOccurred())
 })
 
-func TruncateTables() {
-	database := db.NewDatabase(sqlDB, db.Config{})
-	env := application.NewEnvironment()
-	dbMigrator := models.DatabaseMigrator{}
-	dbMigrator.Migrate(database.RawConnection(), env.ModelMigrationsPath)
-	models.Setup(database)
-
-	connection := database.Connection().(*db.Connection)
-	err := connection.TruncateTables()
-	if err != nil {
-		panic(err)
-	}
-}
-
 func findReceipt(conn db.ConnectionInterface, userGUID, clientID, kindID string) (models.Receipt, error) {
 	receipt := models.Receipt{}
 	err := conn.SelectOne(&receipt, "SELECT * FROM  `receipts` WHERE `user_guid` = ? AND `client_id` = ? AND `kind_id` = ?", userGUID, clientID, kindID)
