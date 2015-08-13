@@ -47,8 +47,8 @@ var _ = BeforeEach(func() {
 	Servers.Notifications.ResetDatabase()
 })
 
-func GetClientTokenFor(clientID, zone string) uaa.Token {
-	token, err := GetUAAClientFor(clientID, zone).GetClientToken()
+func GetClientTokenFor(clientID string) uaa.Token {
+	token, err := GetUAAClientFor(clientID).GetClientToken()
 	if err != nil {
 		panic(err)
 	}
@@ -56,6 +56,6 @@ func GetClientTokenFor(clientID, zone string) uaa.Token {
 	return token
 }
 
-func GetUAAClientFor(clientID string, zone string) uaa.UAA {
+func GetUAAClientFor(clientID string) uaa.UAA {
 	return uaa.NewUAA("", Servers.UAA.ServerURL, clientID, "secret", "")
 }

@@ -134,15 +134,16 @@ var _ = Describe("SendersCollection", func() {
 
 		Context("failure cases", func() {
 			It("generates a not found error when the sender does not exist", func() {
-				sendersRepository.GetCall.Returns.Err = models.RecordNotFoundError("sender not found")
+				recordNotFoundError := models.NewRecordNotFoundError("sender not found")
+				sendersRepository.GetCall.Returns.Err = recordNotFoundError
 
 				_, err := sendersCollection.Get(conn, "some-sender-id", "some-client-id")
-				Expect(err).To(MatchError(collections.NotFoundError{models.RecordNotFoundError("sender not found")}))
+				Expect(err).To(MatchError(collections.NotFoundError{recordNotFoundError}))
 			})
 
 			It("generates a not found error when the sender belongs to a different client", func() {
 				_, err := sendersCollection.Get(conn, "some-sender-id", "mismatch-client-id")
-				Expect(err).To(MatchError(collections.NotFoundError{errors.New("sender not found")}))
+				Expect(err).To(MatchError(collections.NotFoundError{errors.New(`Sender with id "some-sender-id" could not be found`)}))
 			})
 
 			It("handles unexpected database errors", func() {

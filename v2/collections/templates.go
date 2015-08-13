@@ -1,7 +1,7 @@
 package collections
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
@@ -72,7 +72,7 @@ func (c TemplatesCollection) Get(conn ConnectionInterface, templateID, clientID 
 		}
 	}
 	if model.ClientID != clientID {
-		return Template{}, NotFoundError{errors.New("Record not found")}
+		return Template{}, NotFoundError{fmt.Errorf("Template with id %q could not be found", templateID)}
 	}
 
 	return Template{

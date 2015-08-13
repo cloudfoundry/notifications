@@ -113,7 +113,7 @@ var _ = Describe("TemplatesCollection", func() {
 
 		Context("failure cases", func() {
 			It("returns a not found error if the template does not exist", func() {
-				templatesRepository.GetCall.Returns.Err = models.RecordNotFoundError("")
+				templatesRepository.GetCall.Returns.Err = models.NewRecordNotFoundError("")
 				_, err := templatesCollection.Get(conn, "missing-template-id", "some-client-id")
 				Expect(err).To(BeAssignableToTypeOf(collections.NotFoundError{}))
 			})

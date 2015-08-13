@@ -1,7 +1,7 @@
 package collections
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
@@ -65,7 +65,7 @@ func (sc SendersCollection) Get(conn ConnectionInterface, senderID, clientID str
 	}
 
 	if clientID != model.ClientID {
-		return Sender{}, NotFoundError{errors.New("sender not found")}
+		return Sender{}, NotFoundError{fmt.Errorf("Sender with id %q could not be found", senderID)}
 	}
 
 	return Sender{

@@ -54,7 +54,7 @@ var _ = Describe("SendersRepo", func() {
 	})
 
 	Describe("Get", func() {
-		It("fetches the sender given a sender_id", func() {
+		It("fetches the sender given a sender id", func() {
 			createdSender, err := repo.Insert(conn, models.Sender{
 				Name:     "some-sender",
 				ClientID: "some-client-id",
@@ -67,7 +67,7 @@ var _ = Describe("SendersRepo", func() {
 		})
 
 		Context("failure cases", func() {
-			It("fails to fetch the sender given a non-existent sender_id", func() {
+			It("fails to fetch the sender given a non-existent sender id", func() {
 				_, err := repo.Insert(conn, models.Sender{
 					Name:     "some-sender",
 					ClientID: "some-client-id",
@@ -75,8 +75,8 @@ var _ = Describe("SendersRepo", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = repo.Get(conn, "some-other-sender-id")
-				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
-				Expect(err.Error()).To(Equal(`Record Not Found: Sender with sender_id "some-other-sender-id" could not be found`))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError{}))
+				Expect(err.Error()).To(Equal(`Sender with id "some-other-sender-id" could not be found`))
 			})
 		})
 	})
@@ -102,8 +102,8 @@ var _ = Describe("SendersRepo", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = repo.GetByClientIDAndName(conn, "some-other-client-id", "some-sender")
-			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
-			Expect(err.Error()).To(Equal(`Record Not Found: Sender with client_id "some-other-client-id" and name "some-sender" could not be found`))
+			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError{}))
+			Expect(err.Error()).To(Equal(`Sender with client_id "some-other-client-id" and name "some-sender" could not be found`))
 		})
 	})
 })

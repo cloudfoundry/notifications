@@ -90,7 +90,7 @@ var _ = Describe("GetHandler", func() {
 
 		It("returns a 404 when the sender does not exist", func() {
 			sendersCollection.GetCall.Returns.Err = collections.NotFoundError{
-				Err: errors.New("sender not found"),
+				Err: errors.New("sender with id \"non-existent-sender-id\" not found"),
 			}
 
 			var err error
@@ -101,7 +101,7 @@ var _ = Describe("GetHandler", func() {
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
 			Expect(writer.Body.String()).To(MatchJSON(`{
 				"errors": [
-					"sender not found"
+					"sender with id \"non-existent-sender-id\" not found"
 				]
 			}`))
 		})

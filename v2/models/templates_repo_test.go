@@ -66,7 +66,7 @@ var _ = Describe("TemplatesRepo", func() {
 		Context("failure cases", func() {
 			It("returns not found error if it happens", func() {
 				_, err := repo.Get(conn, "missing-template-id")
-				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError{}))
 			})
 		})
 	})

@@ -47,11 +47,11 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 		switch err.(type) {
 		case collections.NotFoundError:
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(`{ "errors": [ "sender not found" ] }`))
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, `{ "errors": [ "%s" ] }`, err)
 		}
+
+		fmt.Fprintf(w, `{ "errors": [ %q ] }`, err)
 		return
 	}
 

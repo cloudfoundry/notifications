@@ -1,7 +1,6 @@
 package collections
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
@@ -163,7 +162,7 @@ func validateSender(clientID, senderID string, sender models.Sender, err error) 
 	}
 
 	if sender.ClientID != clientID {
-		return NotFoundError{errors.New(fmt.Sprintf("sender %s not found", senderID))}
+		return NotFoundError{fmt.Errorf("Sender with id %q could not be found", senderID)}
 	}
 
 	return nil
@@ -180,7 +179,7 @@ func validateCampaignType(senderID, campaignTypeID string, campaignType models.C
 	}
 
 	if campaignType.SenderID != senderID {
-		return NotFoundError{errors.New(fmt.Sprintf("campaign type %s not found", campaignTypeID))}
+		return NotFoundError{fmt.Errorf("Campaign type with id %q could not be found", campaignTypeID)}
 	}
 
 	return nil

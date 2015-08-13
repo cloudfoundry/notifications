@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
@@ -42,7 +43,7 @@ func (r CampaignTypesRepository) GetBySenderIDAndName(connection db.ConnectionIn
 	err := connection.SelectOne(&campaignType, "SELECT * FROM `campaign_types` WHERE `sender_id` = ? AND `name` = ?", senderID, name)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = NewRecordNotFoundError("Campaign type with sender_id %q and name %q could not be found", senderID, name)
+			err = RecordNotFoundError{fmt.Errorf("Campaign type with sender_id %q and name %q could not be found", senderID, name)}
 		}
 		return CampaignType{}, err
 	}
@@ -61,7 +62,7 @@ func (r CampaignTypesRepository) Get(connection db.ConnectionInterface, campaign
 	err := connection.SelectOne(&campaignType, "SELECT * FROM `campaign_types` WHERE `id` = ?", campaignTypeID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = NewRecordNotFoundError("Campaign type with id %q could not be found", campaignTypeID)
+			err = RecordNotFoundError{fmt.Errorf("Campaign type with id %q could not be found", campaignTypeID)}
 		}
 		return campaignType, err
 	}

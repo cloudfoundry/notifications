@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
@@ -43,7 +44,7 @@ func (r SendersRepository) Get(conn db.ConnectionInterface, senderID string) (Se
 	err := conn.SelectOne(&sender, "SELECT * FROM `senders` WHERE `id` = ?", senderID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = NewRecordNotFoundError("Sender with sender_id %q could not be found", senderID)
+			err = RecordNotFoundError{fmt.Errorf("Sender with id %q could not be found", senderID)}
 		}
 		return sender, err
 	}
@@ -56,7 +57,7 @@ func (r SendersRepository) GetByClientIDAndName(conn db.ConnectionInterface, cli
 	err := conn.SelectOne(&sender, "SELECT * FROM `senders` WHERE `client_id` = ? AND `name` = ?", clientID, name)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = NewRecordNotFoundError("Sender with client_id %q and name %q could not be found", clientID, name)
+			err = RecordNotFoundError{fmt.Errorf("Sender with client_id %q and name %q could not be found", clientID, name)}
 		}
 		return sender, err
 	}

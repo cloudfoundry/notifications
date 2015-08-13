@@ -31,7 +31,7 @@ var _ = Describe("Template lifecycle", func() {
 			Host:  Servers.Notifications.URL(),
 			Trace: Trace,
 		})
-		token = GetClientTokenFor("my-client", "uaa")
+		token = GetClientTokenFor("my-client")
 	})
 
 	It("can create a new template and retrieve it", func() {
@@ -89,8 +89,8 @@ var _ = Describe("Template lifecycle", func() {
 		})
 	})
 
-	It("returns appropriate error messages", func() {
-		By("failing to create a template", func() {
+	Context("failure states", func() {
+		It("returns a 409 with the correct error message when a template already exists", func() {
 			status, response, err := client.Do("POST", "/templates", map[string]interface{}{
 				"name":    "An interesting template",
 				"text":    "template text",
@@ -115,6 +115,41 @@ var _ = Describe("Template lifecycle", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusConflict))
 			Expect(response["errors"]).To(ContainElement("Template with name \"An interesting template\" already exists"))
+		})
+
+		It("returns a 404 when the template cannot be retrieved", func() {
+			status, response, err := client.Do("GET", "/templates/missing-template-id", nil, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNotFound))
+			Expect(response["errors"]).To(ContainElement("Template with id \"missing-template-id\" could not be found"))
+		})
+
+		It("returns a 404 when the template belongs to a different client", func() {
+			var templateID string
+
+			By("creating a template for one client", func() {
+				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
+					"name":    "An interesting template",
+					"text":    "template text",
+					"html":    "template html",
+					"subject": "template subject",
+					"metadata": map[string]interface{}{
+						"template": "metadata",
+					},
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				templateID = response["id"].(string)
+			})
+
+			By("attempting to access the created template as another client", func() {
+				token := GetClientTokenFor("other-client")
+				status, response, err := client.Do("GET", fmt.Sprintf("/templates/%s", templateID), nil, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusNotFound))
+				Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Template with id %q could not be found", templateID)))
+			})
 		})
 	})
 })

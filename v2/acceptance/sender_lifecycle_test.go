@@ -22,14 +22,11 @@ var _ = Describe("Sender lifecycle", func() {
 			Host:  Servers.Notifications.URL(),
 			Trace: Trace,
 		})
-		token = GetClientTokenFor("my-client", "uaa")
+		token = GetClientTokenFor("my-client")
 	})
 
 	It("can create and read a new sender", func() {
-		var sender struct {
-			ID   string
-			Name string
-		}
+		var senderID string
 
 		By("creating a sender", func() {
 			status, response, err := client.Do("POST", "/senders", map[string]interface{}{
@@ -38,18 +35,71 @@ var _ = Describe("Sender lifecycle", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
-			sender.ID = response["id"].(string)
-			sender.Name = response["name"].(string)
+			Expect(response["name"]).To(Equal("My Cool App"))
 
-			Expect(sender.Name).To(Equal("My Cool App"))
+			senderID = response["id"].(string)
 		})
 
 		By("getting the sender", func() {
-			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s", sender.ID), nil, token.Access)
+			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
-			Expect(response["id"]).To(Equal(sender.ID))
+			Expect(response["id"]).To(Equal(senderID))
 			Expect(response["name"]).To(Equal("My Cool App"))
+		})
+	})
+
+	It("returns a 201 when a sender already exists", func() {
+		var senderID string
+
+		By("creating a sender", func() {
+			status, response, err := client.Do("POST", "/senders", map[string]interface{}{
+				"name": "My Cool App",
+			}, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+
+			senderID = response["id"].(string)
+		})
+
+		By("creating another sender with the same name", func() {
+			status, response, err := client.Do("POST", "/senders", map[string]interface{}{
+				"name": "My Cool App",
+			}, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+			Expect(response["id"]).To(Equal(senderID))
+		})
+	})
+
+	Context("failure states", func() {
+		It("returns a 404 when the sender cannot be retrieved", func() {
+			status, response, err := client.Do("GET", "/senders/missing-sender-id", nil, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNotFound))
+			Expect(response["errors"]).To(ContainElement("Sender with id \"missing-sender-id\" could not be found"))
+		})
+
+		It("returns a 404 when the sender belongs to another client", func() {
+			var senderID string
+
+			By("creating a sender for one client", func() {
+				status, response, err := client.Do("POST", "/senders", map[string]interface{}{
+					"name": "My Cool App",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				senderID = response["id"].(string)
+			})
+
+			By("attempting to access the created sender as another client", func() {
+				token := GetClientTokenFor("other-client")
+				status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusNotFound))
+				Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Sender with id %q could not be found", senderID)))
+			})
 		})
 	})
 })

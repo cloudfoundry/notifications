@@ -2,19 +2,16 @@ package models
 
 import "fmt"
 
-func NewRecordNotFoundError(format string, arguments ...interface{}) RecordNotFoundError {
-	return RecordNotFoundError(fmt.Sprintf(format, arguments...))
+type RecordNotFoundError struct {
+	Err error
 }
 
-type RecordNotFoundError string
+func NewRecordNotFoundError(format string, args ...interface{}) RecordNotFoundError {
+	return RecordNotFoundError{fmt.Errorf(format, args...)}
+}
 
 func (err RecordNotFoundError) Error() string {
-	message := "Record Not Found"
-	if err != "" {
-		message = fmt.Sprintf("%s: %s", message, string(err))
-	}
-
-	return message
+	return err.Err.Error()
 }
 
 type DuplicateRecordError struct {

@@ -80,7 +80,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 		Context("failure cases", func() {
 			It("fails to fetch the campaign type given a non-existent sender_id and name", func() {
 				_, err := repo.GetBySenderIDAndName(conn, "another-sender-id", "some-campaign-type")
-				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError{}))
 			})
 
 			It("passes along error messages from the database", func() {
@@ -170,7 +170,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = repo.Get(conn, "missing-campaign-type-id")
-				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError{}))
 			})
 
 			It("passes along error messages from the database", func() {
@@ -252,7 +252,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 
 			_, err = repo.Get(conn, "my-campaign-id")
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError{}))
 		})
 
 		Context("when an error occurs", func() {

@@ -45,7 +45,7 @@ func (r TemplatesRepository) Get(conn db.ConnectionInterface, templateID string)
 	err := conn.SelectOne(&template, "SELECT * FROM `v2_templates` WHERE `id` = ?", templateID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = NewRecordNotFoundError("Template with id %q could not be found", templateID)
+			err = RecordNotFoundError{fmt.Errorf("Template with id %q could not be found", templateID)}
 		}
 
 		return template, err
