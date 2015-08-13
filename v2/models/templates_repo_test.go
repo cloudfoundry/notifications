@@ -32,6 +32,22 @@ var _ = Describe("TemplatesRepo", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdTemplate.ID).To(Equal("deadbeef-aabb-ccdd-eeff-001122334455"))
 		})
+
+		Context("failure cases", func() {
+			It("returns an error if it happens", func() {
+				_, err := repo.Insert(conn, models.Template{
+					Name:     "some-template",
+					ClientID: "some-client-id",
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = repo.Insert(conn, models.Template{
+					Name:     "some-template",
+					ClientID: "some-client-id",
+				})
+				Expect(err).To(BeAssignableToTypeOf(models.DuplicateRecordError{}))
+			})
+		})
 	})
 
 	Describe("Get", func() {
@@ -45,6 +61,13 @@ var _ = Describe("TemplatesRepo", func() {
 			template, err := repo.Get(conn, createdTemplate.ID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(template).To(Equal(createdTemplate))
+		})
+
+		Context("failure cases", func() {
+			It("returns not found error if it happens", func() {
+				_, err := repo.Get(conn, "missing-template-id")
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+			})
 		})
 	})
 })

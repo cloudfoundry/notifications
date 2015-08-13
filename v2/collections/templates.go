@@ -40,7 +40,12 @@ func (c TemplatesCollection) Set(conn ConnectionInterface, template Template) (c
 		ClientID: template.ClientID,
 	})
 	if err != nil {
-		panic(err)
+		switch err.(type) {
+		case models.DuplicateRecordError:
+			return Template{}, err // todo
+		default:
+			return Template{}, PersistenceError{err}
+		}
 	}
 
 	return Template{
@@ -57,8 +62,17 @@ func (c TemplatesCollection) Set(conn ConnectionInterface, template Template) (c
 func (c TemplatesCollection) Get(conn ConnectionInterface, templateID, clientID string) (Template, error) {
 	model, err := c.repo.Get(conn, templateID)
 	if err != nil {
-		panic(err)
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return Template{}, NewNotFoundError(err.Error())
+		default:
+			return Template{}, PersistenceError{err}
+		}
 	}
+	if model.ClientID != clientID {
+		return Template{}, NewNotFoundError("Record not found")
+	}
+
 	return Template{
 		ID:       model.ID,
 		Name:     model.Name,

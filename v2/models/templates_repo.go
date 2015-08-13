@@ -1,6 +1,10 @@
 package models
 
-import "github.com/cloudfoundry-incubator/notifications/db"
+import (
+	"database/sql"
+
+	"github.com/cloudfoundry-incubator/notifications/db"
+)
 
 type TemplatesRepository struct {
 	generateGUID guidGeneratorFunc
@@ -18,10 +22,18 @@ func (r TemplatesRepository) Insert(conn db.ConnectionInterface, template Templa
 		panic(err)
 	}
 
+	present, err := r.templateWithNameAndClientIDIsPresent(conn, template.Name, template.ClientID)
+	if err != nil {
+		return template, err
+	}
+	if present {
+		return template, DuplicateRecordError{}
+	}
+
 	template.ID = guid.String()
 	err = conn.Insert(&template)
 	if err != nil {
-		panic(err)
+		return template, err
 	}
 
 	return template, nil
@@ -31,7 +43,24 @@ func (r TemplatesRepository) Get(conn db.ConnectionInterface, templateID string)
 	template := Template{}
 	err := conn.SelectOne(&template, "SELECT * FROM `v2_templates` WHERE `id` = ?", templateID)
 	if err != nil {
-		panic(err)
+		if err == sql.ErrNoRows {
+			err = NewRecordNotFoundError("Template with id %q could not be found", templateID)
+		}
+
+		return template, err
 	}
 	return template, nil
+}
+
+func (r TemplatesRepository) templateWithNameAndClientIDIsPresent(conn db.ConnectionInterface, name, clientID string) (bool, error) {
+	err := conn.SelectOne(&Template{}, "SELECT * FROM `v2_templates` WHERE `name` = ? AND `client_id` = ?", name, clientID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, nil
 }

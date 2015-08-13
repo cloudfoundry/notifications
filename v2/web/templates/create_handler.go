@@ -2,6 +2,7 @@ package templates
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
@@ -81,6 +82,11 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		Metadata: string(metadata),
 		ClientID: clientID,
 	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, `{"errors": [ %q ]}`, err.Error())
+		return
+	}
 
 	var decodedMetadata map[string]interface{}
 	err = json.Unmarshal([]byte(template.Metadata), &decodedMetadata)

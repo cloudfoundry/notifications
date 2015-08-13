@@ -3,6 +3,7 @@ package templates_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -282,7 +283,11 @@ var _ = Describe("CreateHandler", func() {
 			}`))
 		})
 
-		PIt("returns a 500 when the collection indicates a system error", func() {
+		It("returns a 500 when the collection indicates a system error", func() {
+			templatesCollection.SetCall.Returns.Err = errors.New("The database is bad")
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
+			Expect(writer.Body.String()).To(MatchJSON(`{ "errors": ["The database is bad"] }`))
 		})
 	})
 })
