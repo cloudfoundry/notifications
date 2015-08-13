@@ -88,4 +88,33 @@ var _ = Describe("Template lifecycle", func() {
 			Expect(getTemplate.Metadata).To(Equal(createTemplate.Metadata))
 		})
 	})
+
+	It("returns appropriate error messages", func() {
+		By("failing to create a template", func() {
+			status, response, err := client.Do("POST", "/templates", map[string]interface{}{
+				"name":    "An interesting template",
+				"text":    "template text",
+				"html":    "template html",
+				"subject": "template subject",
+				"metadata": map[string]interface{}{
+					"template": "metadata",
+				},
+			}, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+
+			status, response, err = client.Do("POST", "/templates", map[string]interface{}{
+				"name":    "An interesting template",
+				"text":    "template text",
+				"html":    "template html",
+				"subject": "template subject",
+				"metadata": map[string]interface{}{
+					"template": "metadata",
+				},
+			}, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusConflict))
+			Expect(response["errors"]).To(ContainElement("Template with name \"An interesting template\" already exists"))
+		})
+	})
 })

@@ -58,20 +58,14 @@ func (sc SendersCollection) Get(conn ConnectionInterface, senderID, clientID str
 	if err != nil {
 		switch e := err.(type) {
 		case models.RecordNotFoundError:
-			return Sender{}, NotFoundError{
-				Err:     e,
-				Message: string(e),
-			}
+			return Sender{}, NotFoundError{e}
 		default:
 			return Sender{}, PersistenceError{err}
 		}
 	}
 
 	if clientID != model.ClientID {
-		return Sender{}, NotFoundError{
-			Err:     errors.New("sender not found"),
-			Message: "sender not found",
-		}
+		return Sender{}, NotFoundError{errors.New("sender not found")}
 	}
 
 	return Sender{

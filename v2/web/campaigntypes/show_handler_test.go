@@ -109,7 +109,7 @@ var _ = Describe("ShowHandler", func() {
 		})
 
 		It("returns a 404 when the campaign type does not exist", func() {
-			campaignTypesCollection.GetCall.Returns.Err = collections.NewNotFoundError("campaign type not found")
+			campaignTypesCollection.GetCall.Returns.Err = collections.NotFoundError{errors.New("campaign type not found")}
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaign_types/missing-campaign-type-id", nil)
@@ -123,7 +123,7 @@ var _ = Describe("ShowHandler", func() {
 		})
 
 		It("returns a 404 when the sender does not exist", func() {
-			campaignTypesCollection.GetCall.Returns.Err = collections.NewNotFoundError("sender not found")
+			campaignTypesCollection.GetCall.Returns.Err = collections.NotFoundError{errors.New("sender not found")}
 
 			var err error
 			request, err = http.NewRequest("GET", "/senders/missing-sender-id/campaign_types/some-campaign-type-id", nil)

@@ -31,14 +31,14 @@ func (h DeleteHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	database := context.Get("database").(DatabaseInterface)
 	if err := h.collection.Delete(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string)); err != nil {
-		switch t := err.(type) {
+		switch err.(type) {
 		case collections.NotFoundError:
 			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintf(w, `{"errors": [%q]}`, t.Message)
+			fmt.Fprintf(w, `{"errors": [%q]}`, err)
 			return
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, `{"errors": ["Delete failed with error: %s"]}`, err.Error())
+			fmt.Fprintf(w, `{"errors": ["Delete failed with error: %s"]}`, err)
 			return
 		}
 	}

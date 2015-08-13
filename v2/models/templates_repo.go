@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 )
@@ -27,7 +28,7 @@ func (r TemplatesRepository) Insert(conn db.ConnectionInterface, template Templa
 		return template, err
 	}
 	if present {
-		return template, DuplicateRecordError{}
+		return template, DuplicateRecordError{fmt.Errorf("Template with name %q already exists", template.Name)}
 	}
 
 	template.ID = guid.String()

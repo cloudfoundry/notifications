@@ -1,37 +1,25 @@
 package collections
 
-import (
-	"errors"
-	"fmt"
-)
-
 type PersistenceError struct {
 	Err error
 }
 
 func (e PersistenceError) Error() string {
-	return fmt.Sprintf("persistence error: %s", e.Err)
+	return e.Err.Error()
 }
 
 type NotFoundError struct {
-	Message string
-	Err     error
+	Err error
 }
 
 func (e NotFoundError) Error() string {
-	return fmt.Sprintf("not found error: %s", e.Message)
+	return e.Err.Error()
 }
 
-func NewNotFoundError(message string) NotFoundError {
-	return NotFoundError{
-		Err:     errors.New(message),
-		Message: message,
-	}
+type DuplicateRecordError struct {
+	Err error
 }
 
-func NewNotFoundErrorWithOriginalError(message string, err error) NotFoundError {
-	return NotFoundError{
-		Err:     err,
-		Message: message,
-	}
+func (e DuplicateRecordError) Error() string {
+	return e.Err.Error()
 }

@@ -65,7 +65,7 @@ var _ = Describe("TemplatesCollection", func() {
 					ClientID: "some-client-id",
 				})
 
-				Expect(err).To(Equal(models.DuplicateRecordError{}))
+				Expect(err).To(BeAssignableToTypeOf(collections.DuplicateRecordError{}))
 			})
 
 			It("returns a persistence error for anything else", func() {

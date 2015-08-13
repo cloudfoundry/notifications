@@ -283,6 +283,12 @@ var _ = Describe("CreateHandler", func() {
 			}`))
 		})
 
+		It("returns a 409 when a template with the same name already exists", func() {
+			templatesCollection.SetCall.Returns.Err = collections.DuplicateRecordError{errors.New("")}
+			handler.ServeHTTP(writer, request, context)
+			Expect(writer.Code).To(Equal(http.StatusConflict))
+		})
+
 		It("returns a 500 when the collection indicates a system error", func() {
 			templatesCollection.SetCall.Returns.Err = errors.New("The database is bad")
 			handler.ServeHTTP(writer, request, context)

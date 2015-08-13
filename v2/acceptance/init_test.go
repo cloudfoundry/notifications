@@ -36,12 +36,15 @@ var _ = BeforeSuite(func() {
 	Servers.Notifications = servers.NewNotifications()
 	Servers.Notifications.Compile()
 	Servers.Notifications.Boot()
-	Servers.Notifications.ResetDatabase()
 })
 
 var _ = AfterSuite(func() {
 	Servers.Notifications.Close()
 	Servers.Notifications.Destroy()
+})
+
+var _ = BeforeEach(func() {
+	Servers.Notifications.ResetDatabase()
 })
 
 func GetClientTokenFor(clientID, zone string) uaa.Token {

@@ -28,7 +28,7 @@ if [[ $EXIT_CODE = 0 ]]; then
     echo
     pushd $DIR/.. > /dev/null 2>&1
         set +e
-        find . -path ./Godeps -prune -o -type f -print | grep "\.go$" | xargs go tool vet
+        find . -path ./Godeps -prune -o -type f -print | grep "\.go$" | xargs go tool vet -composites=false
         EXIT_CODE=$?
         set -e
     popd > /dev/null 2>&1

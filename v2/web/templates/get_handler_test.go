@@ -75,7 +75,7 @@ var _ = Describe("GetHandler", func() {
 
 	Describe("error cases", func() {
 		It("responds with 404 if the collection Get returns not found", func() {
-			collection.GetCall.Returns.Err = collections.NewNotFoundError("it was not found")
+			collection.GetCall.Returns.Err = collections.NotFoundError{errors.New("it was not found")}
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNotFound))

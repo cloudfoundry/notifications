@@ -257,28 +257,22 @@ var _ = Describe("UpdateHandler", func() {
 		})
 
 		It("returns a 404 when collections.Get() returns a NotFoundError", func() {
-			campaignTypesCollection.GetCall.Returns.Err = collections.NotFoundError{
-				Err:     errors.New("THIS WAS PRODUCED BY ROBOTS"),
-				Message: "This is for humans.",
-			}
+			campaignTypesCollection.GetCall.Returns.Err = collections.NotFoundError{errors.New("campaign type not found")}
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"errors": ["This is for humans."]
+				"errors": ["campaign type not found"]
 			}`))
 		})
 
 		It("returns a 404 when collections.Set() returns a NotFoundError", func() {
-			campaignTypesCollection.SetCall.Returns.Err = collections.NotFoundError{
-				Err:     errors.New("THIS WAS PRODUCED BY ROBOTS"),
-				Message: "This is for humans.",
-			}
+			campaignTypesCollection.SetCall.Returns.Err = collections.NotFoundError{errors.New("campaign type not found")}
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"errors": ["This is for humans."]
+				"errors": ["campaign type not found"]
 			}`))
 		})
 

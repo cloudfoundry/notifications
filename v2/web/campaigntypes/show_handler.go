@@ -52,17 +52,14 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 	database := context.Get("database").(DatabaseInterface)
 	campaignType, err := h.collection.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
 	if err != nil {
-		var errorMessage string
-		switch e := err.(type) {
+		switch err.(type) {
 		case collections.NotFoundError:
-			errorMessage = e.Message
 			writer.WriteHeader(http.StatusNotFound)
 		default:
 			writer.WriteHeader(http.StatusInternalServerError)
-			errorMessage = err.Error()
 		}
 
-		fmt.Fprintf(writer, `{"errors": [%q]}`, errorMessage)
+		fmt.Fprintf(writer, `{"errors": [%q]}`, err)
 		return
 	}
 

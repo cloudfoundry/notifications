@@ -1,6 +1,8 @@
 package collections
 
 import (
+	"errors"
+
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 )
@@ -42,7 +44,7 @@ func (c TemplatesCollection) Set(conn ConnectionInterface, template Template) (c
 	if err != nil {
 		switch err.(type) {
 		case models.DuplicateRecordError:
-			return Template{}, err // todo
+			return Template{}, DuplicateRecordError{err}
 		default:
 			return Template{}, PersistenceError{err}
 		}
@@ -64,13 +66,13 @@ func (c TemplatesCollection) Get(conn ConnectionInterface, templateID, clientID 
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
-			return Template{}, NewNotFoundError(err.Error())
+			return Template{}, NotFoundError{err}
 		default:
 			return Template{}, PersistenceError{err}
 		}
 	}
 	if model.ClientID != clientID {
-		return Template{}, NewNotFoundError("Record not found")
+		return Template{}, NotFoundError{errors.New("Record not found")}
 	}
 
 	return Template{

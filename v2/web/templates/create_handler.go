@@ -83,8 +83,14 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		ClientID: clientID,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(w, `{"errors": [ %q ]}`, err.Error())
+		switch err.(type) {
+		case collections.DuplicateRecordError:
+			w.WriteHeader(http.StatusConflict)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		fmt.Fprintf(w, `{"errors": [ %q ]}`, err)
 		return
 	}
 

@@ -17,10 +17,12 @@ func (err RecordNotFoundError) Error() string {
 	return message
 }
 
-type DuplicateRecordError struct{}
+type DuplicateRecordError struct {
+	Err error
+}
 
 func (err DuplicateRecordError) Error() string {
-	return "Duplicate Record"
+	return err.Err.Error()
 }
 
 type TransactionCommitError struct {

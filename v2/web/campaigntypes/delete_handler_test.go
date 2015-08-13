@@ -56,7 +56,7 @@ var _ = Describe("DeleteHandler", func() {
 	Context("when an error occurs", func() {
 		Context("when the campaign type cannot be found", func() {
 			BeforeEach(func() {
-				campaignTypesCollection.DeleteCall.Returns.Err = collections.NewNotFoundError("Campaign type some-campaign-type-id not found")
+				campaignTypesCollection.DeleteCall.Returns.Err = collections.NotFoundError{errors.New("Campaign type some-campaign-type-id not found")}
 			})
 
 			It("returns a 404 and the error", func() {

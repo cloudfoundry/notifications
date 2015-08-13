@@ -33,14 +33,13 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 
 	template, err := h.collection.Get(database.Connection(), templateID, clientID)
 	if err != nil {
-		switch e := err.(type) {
+		switch err.(type) {
 		case collections.NotFoundError:
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(fmt.Sprintf(`{"errors": [%q]}`, e.Message)))
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf(`{"errors": [%q]}`, e)))
 		}
+		w.Write([]byte(fmt.Sprintf(`{"errors": [%q]}`, err)))
 		return
 	}
 

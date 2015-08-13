@@ -90,16 +90,14 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	database := context.Get("database").(DatabaseInterface)
 	campaignType, err := h.collection.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
 	if err != nil {
-		switch err := err.(type) {
+		switch err.(type) {
 		case collections.NotFoundError:
 			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintf(w, `{"errors": [%q]}`, err.Message)
-			return
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, `{"errors": [%q]}`, err.Error())
-			return
 		}
+		fmt.Fprintf(w, `{"errors": [%q]}`, err)
+		return
 	}
 
 	if updateRequest.includesName() {
@@ -136,16 +134,14 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	returnCampaignType, err := h.collection.Set(database.Connection(), campaignType, context.Get("client_id").(string))
 	if err != nil {
-		switch err := err.(type) {
+		switch err.(type) {
 		case collections.NotFoundError:
 			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprintf(w, `{"errors": [%q]}`, err.Message)
-			return
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, `{"errors": [%q]}`, err.Error())
-			return
 		}
+		fmt.Fprintf(w, `{"errors": [%q]}`, err)
+		return
 	}
 
 	jsonMap := map[string]interface{}{
