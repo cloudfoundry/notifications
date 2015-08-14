@@ -7,12 +7,14 @@
 	- [Retrieving a sender](#retrieve-sender)
 - Campaign types
   - [Creating a campaign type](#create-campaign-type)
-  - [Showing a campaign type](#show-campaign-type)
+  - [Retrieving a campaign type](#retrieve-campaign-type)
   - [Listing the campaign types](#list-campaign-types)
   - [Updating a campaign type](#update-campaign-type)
   - [Deleting a campaign type](#delete-campaign-type)
 - Templates
 	- [Creating a template](#create-template)
+	- [Retrieving a template](#retrieve-template)
+	- [Deleting a template](#delete-template)
 
 ## System Status
 
@@ -232,8 +234,8 @@ X-Cf-Requestid: 6106873b-14ea-4fd9-6418-946c1651e4ac
 | critical      | Critical campaign type flag       |
 | template_id   | Template ID                           |
 
-<a name="show-campaign-type"></a>
-#### Showing A Campaign type
+<a name="retrieve-campaign-type"></a>
+#### Retrieving A Campaign type
 
 ##### Request
 
@@ -484,3 +486,105 @@ X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 | text     | Template text body               |
 | subject  | Template subject                 |
 | metadata | Template metadata in JSON format |
+
+<a name="retrieve-template"></a>
+#### Retrieving a template
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The user token requires `notifications.write` scope.
+
+###### Route
+```
+GET /template/{templateID}
+```
+###### Params
+
+| Key          | Description                                |
+| ------------ | ------------------------------------------ |
+| templateID\* | the "id" returned when creating a template |
+
+\* required
+
+###### CURL example
+```
+$ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/templates/54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5
+
+HTTP/1.1 200 OK
+Content-Length: 138
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 17 Jul 2015 19:30:32 GMT
+X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
+
+{"html":"","id":"54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5","metadata":{},"name":"my-template","subject":"{{.Subject}}","text":"template text"}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields   | Description                      |
+| -------- | -------------------------------- |
+| id       | System-generated template ID     |
+| name     | Template name                    |
+| html     | Template html body               |
+| text     | Template text body               |
+| subject  | Template subject                 |
+| metadata | Template metadata in JSON format |
+
+<a name="delete-template"></a>
+#### Deleting a template
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The user token requires `notifications.write` scope.
+
+###### Route
+```
+DELETE /template/{templateID}
+```
+###### Params
+
+| Key          | Description                                |
+| ------------ | ------------------------------------------ |
+| templateID\* | the "id" returned when creating a template |
+
+\* required
+
+###### CURL example
+```
+$ curl -i -X DELETE \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/templates/54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5
+
+HTTP/1.1 204 No Content
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 17 Jul 2015 19:30:32 GMT
+X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
