@@ -43,7 +43,6 @@ type mother interface {
 	NotificationsUpdater() services.NotificationsUpdater
 	MessageFinder() services.MessageFinder
 	Logging() middleware.RequestLogging
-	ErrorWriter() webutil.ErrorWriter
 	Authenticator(...string) middleware.Authenticator
 	SQLDatabase() *sql.DB
 	CORS() middleware.CORS
@@ -65,7 +64,7 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 	notificationsUpdater := mom.NotificationsUpdater()
 	messageFinder := mom.MessageFinder()
 	logging := mom.Logging()
-	errorWriter := mom.ErrorWriter()
+	errorWriter := webutil.NewErrorWriter()
 	notificationsWriteAuthenticator := mom.Authenticator("notifications.write")
 	notificationsManageAuthenticator := mom.Authenticator("notifications.manage")
 	notificationPreferencesReadAuthenticator := mom.Authenticator("notification_preferences.read")

@@ -6,7 +6,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	v1web "github.com/cloudfoundry-incubator/notifications/v1/web"
-	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	v2web "github.com/cloudfoundry-incubator/notifications/v2/web"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 )
@@ -26,7 +25,6 @@ type MotherInterface interface {
 	MessageFinder() services.MessageFinder
 	TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister)
 	Logging() middleware.RequestLogging
-	ErrorWriter() webutil.ErrorWriter
 	Authenticator(...string) middleware.Authenticator
 	CORS() middleware.CORS
 	SQLDatabase() *sql.DB
