@@ -13,7 +13,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
-	"github.com/cloudfoundry-incubator/notifications/web/webutil"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 

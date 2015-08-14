@@ -5,8 +5,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
-	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 )
 
 type Mother struct{}

@@ -7,7 +7,7 @@ import (
 	"regexp"
 
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
-	"github.com/cloudfoundry-incubator/notifications/web/webutil"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 )
 
 var kindIDFormat = regexp.MustCompile(`^[0-9a-zA-Z_\-.]+$`)

@@ -17,8 +17,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
-	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )

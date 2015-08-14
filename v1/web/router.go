@@ -12,8 +12,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
-	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
 )

@@ -6,8 +6,8 @@ import (
 	"text/template"
 
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/cloudfoundry-incubator/notifications/valiant"
-	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 )
 
 type TemplateParams struct {

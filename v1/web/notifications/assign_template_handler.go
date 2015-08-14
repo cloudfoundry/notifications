@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
-	"github.com/cloudfoundry-incubator/notifications/web/webutil"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/ryanmoran/stack"
 )
 

@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
-	"github.com/cloudfoundry-incubator/notifications/web/webutil"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

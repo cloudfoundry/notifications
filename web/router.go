@@ -6,9 +6,9 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	v1web "github.com/cloudfoundry-incubator/notifications/v1/web"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	v2web "github.com/cloudfoundry-incubator/notifications/v2/web"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
-	"github.com/cloudfoundry-incubator/notifications/web/webutil"
 )
 
 type MotherInterface interface {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/cloudfoundry-incubator/notifications/web/webutil"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 )
 
 type ClientRegistrationParams struct {
