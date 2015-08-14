@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/v1/web/info"
+	"github.com/cloudfoundry-incubator/notifications/v2/web/info"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -29,7 +29,7 @@ var _ = Describe("GetHandler", func() {
 
 			Expect(writer.Code).To(Equal(http.StatusOK))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"version": 1
+				"version": 2
 			}`))
 		})
 	})

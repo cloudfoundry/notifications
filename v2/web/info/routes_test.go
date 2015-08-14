@@ -3,7 +3,7 @@ package info_test
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/v1/web/info"
+	"github.com/cloudfoundry-incubator/notifications/v2/web/info"
 	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/ryanmoran/stack"
