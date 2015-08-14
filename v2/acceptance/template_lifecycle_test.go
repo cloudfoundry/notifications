@@ -11,15 +11,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-type template struct {
-	ID       string
-	Name     string
-	Text     string
-	Html     string
-	Subject  string
-	Metadata map[string]interface{}
-}
-
 var _ = Describe("Template lifecycle", func() {
 	var (
 		client *support.Client
@@ -34,8 +25,8 @@ var _ = Describe("Template lifecycle", func() {
 		token = GetClientTokenFor("my-client")
 	})
 
-	It("can create a new template and retrieve it", func() {
-		var createTemplate template
+	It("can create a new template, retrieve it and delete it again", func() {
+		var templateID string
 
 		By("creating a template", func() {
 			status, response, err := client.Do("POST", "/templates", map[string]interface{}{
@@ -50,42 +41,43 @@ var _ = Describe("Template lifecycle", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
-			createTemplate.ID = response["id"].(string)
-			createTemplate.Name = response["name"].(string)
-			createTemplate.Text = response["text"].(string)
-			createTemplate.Html = response["html"].(string)
-			createTemplate.Subject = response["subject"].(string)
-			createTemplate.Metadata = response["metadata"].(map[string]interface{})
+			templateID = response["id"].(string)
 
-			Expect(createTemplate.ID).NotTo(BeEmpty())
-			Expect(createTemplate.Name).To(Equal("An interesting template"))
-			Expect(createTemplate.Text).To(Equal("template text"))
-			Expect(createTemplate.Html).To(Equal("template html"))
-			Expect(createTemplate.Subject).To(Equal("template subject"))
-			Expect(createTemplate.Metadata).To(Equal(map[string]interface{}{
+			Expect(templateID).NotTo(BeEmpty())
+			Expect(response["name"]).To(Equal("An interesting template"))
+			Expect(response["text"]).To(Equal("template text"))
+			Expect(response["html"]).To(Equal("template html"))
+			Expect(response["subject"]).To(Equal("template subject"))
+			Expect(response["metadata"]).To(Equal(map[string]interface{}{
 				"template": "metadata",
 			}))
 		})
 
-		By("getting a template", func() {
-			status, response, err := client.Do("GET", fmt.Sprintf("/templates/%s", createTemplate.ID), nil, token.Access)
+		By("getting the template", func() {
+			status, response, err := client.Do("GET", fmt.Sprintf("/templates/%s", templateID), nil, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
-			var getTemplate template
-			getTemplate.ID = response["id"].(string)
-			getTemplate.Name = response["name"].(string)
-			getTemplate.Text = response["text"].(string)
-			getTemplate.Html = response["html"].(string)
-			getTemplate.Subject = response["subject"].(string)
-			getTemplate.Metadata = response["metadata"].(map[string]interface{})
+			Expect(response["id"]).To(Equal(templateID))
+			Expect(response["name"]).To(Equal("An interesting template"))
+			Expect(response["text"]).To(Equal("template text"))
+			Expect(response["html"]).To(Equal("template html"))
+			Expect(response["subject"]).To(Equal("template subject"))
+			Expect(response["metadata"]).To(Equal(map[string]interface{}{
+				"template": "metadata",
+			}))
+		})
 
-			Expect(getTemplate.ID).To(Equal(createTemplate.ID))
-			Expect(getTemplate.Name).To(Equal(createTemplate.Name))
-			Expect(getTemplate.Html).To(Equal(createTemplate.Html))
-			Expect(getTemplate.Text).To(Equal(createTemplate.Text))
-			Expect(getTemplate.Subject).To(Equal(createTemplate.Subject))
-			Expect(getTemplate.Metadata).To(Equal(createTemplate.Metadata))
+		By("deleting the template", func() {
+			status, _, err := client.Do("DELETE", fmt.Sprintf("/templates/%s", templateID), nil, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNoContent))
+		})
+
+		By("failing to get the deleted template", func() {
+			status, _, err := client.Do("GET", fmt.Sprintf("/templates/%s", templateID), nil, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNotFound))
 		})
 	})
 
@@ -150,6 +142,13 @@ var _ = Describe("Template lifecycle", func() {
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Template with id %q could not be found", templateID)))
 			})
+		})
+
+		It("returns a 404 when the template to delete does not exist", func() {
+			status, response, err := client.Do("DELETE", "/templates/missing-template-id", nil, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNotFound))
+			Expect(response["errors"]).To(ContainElement("Template with id \"missing-template-id\" could not be found"))
 		})
 	})
 })

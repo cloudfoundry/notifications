@@ -70,4 +70,27 @@ var _ = Describe("TemplatesRepo", func() {
 			})
 		})
 	})
+
+	Describe("Delete", func() {
+		It("deletes the template given a template_id", func() {
+			template, err := repo.Insert(conn, models.Template{
+				Name:     "some-template",
+				ClientID: "some-client-id",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			err = repo.Delete(conn, template.ID)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = repo.Get(conn, template.ID)
+			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError{}))
+		})
+
+		Context("failure cases", func() {
+			It("returns not found error if it happens", func() {
+				err := repo.Delete(conn, "missing-template-id")
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError{}))
+			})
+		})
+	})
 })

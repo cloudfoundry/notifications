@@ -20,6 +20,7 @@ type Template struct {
 type templatesRepository interface {
 	Insert(conn db.ConnectionInterface, template models.Template) (createdTemplate models.Template, err error)
 	Get(conn db.ConnectionInterface, templateID string) (retrievedTemplate models.Template, err error)
+	Delete(conn db.ConnectionInterface, templateID string) error
 }
 
 type TemplatesCollection struct {
@@ -84,4 +85,18 @@ func (c TemplatesCollection) Get(conn ConnectionInterface, templateID, clientID 
 		Metadata: model.Metadata,
 		ClientID: model.ClientID,
 	}, nil
+}
+
+func (c TemplatesCollection) Delete(conn ConnectionInterface, templateID string) error {
+	err := c.repo.Delete(conn, templateID)
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return NotFoundError{err}
+		default:
+			return PersistenceError{err}
+		}
+	}
+
+	return nil
 }

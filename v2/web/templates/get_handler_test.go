@@ -69,7 +69,7 @@ var _ = Describe("GetHandler", func() {
 
 		Expect(collection.GetCall.Receives.TemplateID).To(Equal("some-template-id"))
 		Expect(collection.GetCall.Receives.ClientID).To(Equal("some-client-id"))
-		Expect(collection.GetCall.Receives.Conn).To(Equal(database.Conn))
+		Expect(collection.GetCall.Receives.Connection).To(Equal(database.Conn))
 		Expect(database.ConnectionWasCalled).To(BeTrue())
 	})
 

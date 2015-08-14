@@ -51,12 +51,19 @@ var _ = Describe("TemplatesCollection", func() {
 				Subject:  "{{.Subject}}",
 				ClientID: "some-client-id",
 			}))
-			Expect(templatesRepository.InsertCall.Receives.Template.Name).To(Equal("some-template"))
+
+			Expect(templatesRepository.InsertCall.Receives.Connection).To(Equal(conn))
+			Expect(templatesRepository.InsertCall.Receives.Template).To(Equal(models.Template{
+				Name:     "some-template",
+				HTML:     "<h1>My Cool Template</h1>",
+				Subject:  "{{.Subject}}",
+				ClientID: "some-client-id",
+			}))
 		})
 
 		Context("failure cases", func() {
 			It("returns a DuplicateRecordError if the repo returns it", func() {
-				templatesRepository.InsertCall.Returns.Err = models.DuplicateRecordError{}
+				templatesRepository.InsertCall.Returns.Error = models.DuplicateRecordError{}
 
 				_, err := templatesCollection.Set(conn, collections.Template{
 					Name:     "some-template",
@@ -69,7 +76,7 @@ var _ = Describe("TemplatesCollection", func() {
 			})
 
 			It("returns a persistence error for anything else", func() {
-				templatesRepository.InsertCall.Returns.Err = errors.New("failed to save")
+				templatesRepository.InsertCall.Returns.Error = errors.New("failed to save")
 
 				_, err := templatesCollection.Set(conn, collections.Template{
 					Name:     "some-template",
@@ -107,13 +114,13 @@ var _ = Describe("TemplatesCollection", func() {
 				ClientID: "some-client-id",
 			}))
 
-			Expect(templatesRepository.GetCall.Receives.Conn).To(Equal(conn))
+			Expect(templatesRepository.GetCall.Receives.Connection).To(Equal(conn))
 			Expect(templatesRepository.GetCall.Receives.TemplateID).To(Equal("some-template-id"))
 		})
 
 		Context("failure cases", func() {
 			It("returns a not found error if the template does not exist", func() {
-				templatesRepository.GetCall.Returns.Err = models.NewRecordNotFoundError("")
+				templatesRepository.GetCall.Returns.Error = models.NewRecordNotFoundError("")
 				_, err := templatesCollection.Get(conn, "missing-template-id", "some-client-id")
 				Expect(err).To(BeAssignableToTypeOf(collections.NotFoundError{}))
 			})
@@ -131,9 +138,33 @@ var _ = Describe("TemplatesCollection", func() {
 			})
 
 			It("returns a persistence error if one occurs", func() {
-				templatesRepository.GetCall.Returns.Err = errors.New("failed to retrieve")
+				templatesRepository.GetCall.Returns.Error = errors.New("failed to retrieve")
 				_, err := templatesCollection.Get(conn, "some-template-id", "some-client-id")
 				Expect(err).To(BeAssignableToTypeOf(collections.PersistenceError{}))
+			})
+		})
+	})
+
+	Describe("Delete", func() {
+		It("deletes a template from the collection", func() {
+			err := templatesCollection.Delete(conn, "some-template-id")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(templatesRepository.DeleteCall.Receives.Connection).To(Equal(conn))
+			Expect(templatesRepository.DeleteCall.Receives.TemplateID).To(Equal("some-template-id"))
+		})
+
+		Context("failure cases", func() {
+			It("returns a not found error if the template does not exist", func() {
+				templatesRepository.DeleteCall.Returns.Error = models.NewRecordNotFoundError("")
+				err := templatesCollection.Delete(conn, "missing-template-id")
+				Expect(err).To(BeAssignableToTypeOf(collections.NotFoundError{}))
+			})
+
+			It("returns a persistence error if one occurs", func() {
+				templatesRepository.DeleteCall.Returns.Error = errors.New("failed to delete")
+				err := templatesCollection.Delete(conn, "some-template-id")
+				Expect(err).To(MatchError(collections.PersistenceError{errors.New("failed to delete")}))
 			})
 		})
 	})
