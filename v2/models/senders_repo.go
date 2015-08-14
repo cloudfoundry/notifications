@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -21,7 +20,7 @@ func NewSendersRepository(guidGenerator guidGeneratorFunc) SendersRepository {
 	}
 }
 
-func (r SendersRepository) Insert(conn db.ConnectionInterface, sender Sender) (Sender, error) {
+func (r SendersRepository) Insert(conn ConnectionInterface, sender Sender) (Sender, error) {
 	guid, err := r.generateGUID()
 	if err != nil {
 		panic(err)
@@ -39,7 +38,7 @@ func (r SendersRepository) Insert(conn db.ConnectionInterface, sender Sender) (S
 	return sender, nil
 }
 
-func (r SendersRepository) Get(conn db.ConnectionInterface, senderID string) (Sender, error) {
+func (r SendersRepository) Get(conn ConnectionInterface, senderID string) (Sender, error) {
 	sender := Sender{}
 	err := conn.SelectOne(&sender, "SELECT * FROM `senders` WHERE `id` = ?", senderID)
 	if err != nil {
@@ -52,7 +51,7 @@ func (r SendersRepository) Get(conn db.ConnectionInterface, senderID string) (Se
 	return sender, nil
 }
 
-func (r SendersRepository) GetByClientIDAndName(conn db.ConnectionInterface, clientID, name string) (Sender, error) {
+func (r SendersRepository) GetByClientIDAndName(conn ConnectionInterface, clientID, name string) (Sender, error) {
 	sender := Sender{}
 	err := conn.SelectOne(&sender, "SELECT * FROM `senders` WHERE `client_id` = ? AND `name` = ?", clientID, name)
 	if err != nil {

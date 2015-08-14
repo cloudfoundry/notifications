@@ -3,7 +3,6 @@ package collections
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 )
 
@@ -22,12 +21,12 @@ type CampaignTypesCollection struct {
 }
 
 type campaignTypesRepository interface {
-	Insert(conn db.ConnectionInterface, campaignType models.CampaignType) (createdCampaignType models.CampaignType, err error)
-	GetBySenderIDAndName(conn db.ConnectionInterface, senderID string, name string) (campaignType models.CampaignType, err error)
-	List(conn db.ConnectionInterface, senderID string) (campaignTypes []models.CampaignType, err error)
-	Get(conn db.ConnectionInterface, id string) (campaignType models.CampaignType, err error)
-	Update(conn db.ConnectionInterface, campaignType models.CampaignType) (updatedCampaignType models.CampaignType, err error)
-	Delete(conn db.ConnectionInterface, campaignType models.CampaignType) error
+	Insert(conn models.ConnectionInterface, campaignType models.CampaignType) (createdCampaignType models.CampaignType, err error)
+	GetBySenderIDAndName(conn models.ConnectionInterface, senderID string, name string) (campaignType models.CampaignType, err error)
+	List(conn models.ConnectionInterface, senderID string) (campaignTypes []models.CampaignType, err error)
+	Get(conn models.ConnectionInterface, id string) (campaignType models.CampaignType, err error)
+	Update(conn models.ConnectionInterface, campaignType models.CampaignType) (updatedCampaignType models.CampaignType, err error)
+	Delete(conn models.ConnectionInterface, campaignType models.CampaignType) error
 }
 
 func NewCampaignTypesCollection(nr campaignTypesRepository, sr sendersRepository) CampaignTypesCollection {

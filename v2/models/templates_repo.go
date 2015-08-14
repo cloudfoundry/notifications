@@ -3,8 +3,6 @@ package models
 import (
 	"database/sql"
 	"fmt"
-
-	"github.com/cloudfoundry-incubator/notifications/db"
 )
 
 type TemplatesRepository struct {
@@ -17,7 +15,7 @@ func NewTemplatesRepository(guidGenerator guidGeneratorFunc) TemplatesRepository
 	}
 }
 
-func (r TemplatesRepository) Insert(conn db.ConnectionInterface, template Template) (Template, error) {
+func (r TemplatesRepository) Insert(conn ConnectionInterface, template Template) (Template, error) {
 	guid, err := r.generateGUID()
 	if err != nil {
 		panic(err)
@@ -40,7 +38,7 @@ func (r TemplatesRepository) Insert(conn db.ConnectionInterface, template Templa
 	return template, nil
 }
 
-func (r TemplatesRepository) Get(conn db.ConnectionInterface, templateID string) (Template, error) {
+func (r TemplatesRepository) Get(conn ConnectionInterface, templateID string) (Template, error) {
 	template := Template{}
 	err := conn.SelectOne(&template, "SELECT * FROM `v2_templates` WHERE `id` = ?", templateID)
 	if err != nil {
@@ -53,7 +51,7 @@ func (r TemplatesRepository) Get(conn db.ConnectionInterface, templateID string)
 	return template, nil
 }
 
-func (r TemplatesRepository) Delete(conn db.ConnectionInterface, templateID string) error {
+func (r TemplatesRepository) Delete(conn ConnectionInterface, templateID string) error {
 	template, err := r.Get(conn, templateID)
 	if err != nil {
 		return err
@@ -67,7 +65,7 @@ func (r TemplatesRepository) Delete(conn db.ConnectionInterface, templateID stri
 	return nil
 }
 
-func (r TemplatesRepository) templateWithNameAndClientIDIsPresent(conn db.ConnectionInterface, name, clientID string) (bool, error) {
+func (r TemplatesRepository) templateWithNameAndClientIDIsPresent(conn ConnectionInterface, name, clientID string) (bool, error) {
 	err := conn.SelectOne(&Template{}, "SELECT * FROM `v2_templates` WHERE `name` = ? AND `client_id` = ?", name, clientID)
 	if err != nil {
 		if err == sql.ErrNoRows {

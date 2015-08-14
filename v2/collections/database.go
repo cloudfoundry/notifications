@@ -1,11 +1,11 @@
 package collections
 
-import "github.com/cloudfoundry-incubator/notifications/db"
+import "github.com/cloudfoundry-incubator/notifications/v2/models"
 
 type DatabaseInterface interface {
-	db.DatabaseInterface
+	models.DatabaseInterface
 }
 
 type ConnectionInterface interface {
-	db.ConnectionInterface
+	models.ConnectionInterface
 }

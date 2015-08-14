@@ -3,7 +3,6 @@ package collections
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 )
 
@@ -18,9 +17,9 @@ type Template struct {
 }
 
 type templatesRepository interface {
-	Insert(conn db.ConnectionInterface, template models.Template) (createdTemplate models.Template, err error)
-	Get(conn db.ConnectionInterface, templateID string) (retrievedTemplate models.Template, err error)
-	Delete(conn db.ConnectionInterface, templateID string) error
+	Insert(conn models.ConnectionInterface, template models.Template) (createdTemplate models.Template, err error)
+	Get(conn models.ConnectionInterface, templateID string) (retrievedTemplate models.Template, err error)
+	Delete(conn models.ConnectionInterface, templateID string) error
 }
 
 type TemplatesCollection struct {

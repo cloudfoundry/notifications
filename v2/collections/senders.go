@@ -3,7 +3,6 @@ package collections
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 )
 
@@ -14,9 +13,9 @@ type Sender struct {
 }
 
 type sendersRepository interface {
-	Insert(conn db.ConnectionInterface, sender models.Sender) (insertedSender models.Sender, err error)
-	Get(conn db.ConnectionInterface, senderID string) (retrievedSender models.Sender, err error)
-	GetByClientIDAndName(conn db.ConnectionInterface, clientID, name string) (retrievedSender models.Sender, err error)
+	Insert(conn models.ConnectionInterface, sender models.Sender) (insertedSender models.Sender, err error)
+	Get(conn models.ConnectionInterface, senderID string) (retrievedSender models.Sender, err error)
+	GetByClientIDAndName(conn models.ConnectionInterface, clientID, name string) (retrievedSender models.Sender, err error)
 }
 
 type SendersCollection struct {
