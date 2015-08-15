@@ -3,7 +3,6 @@ package templates
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
@@ -28,7 +27,7 @@ func (h UpdateDefaultHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	err = h.updater.Update(context.Get("database").(db.DatabaseInterface), models.DefaultTemplateID, template.ToModel())
+	err = h.updater.Update(context.Get("database").(DatabaseInterface), models.DefaultTemplateID, template.ToModel())
 	if err != nil {
 		h.errorWriter.Write(w, err)
 	}

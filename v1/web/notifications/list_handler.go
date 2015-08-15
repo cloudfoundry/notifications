@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
@@ -37,7 +36,7 @@ func NewListHandler(notificationsFinder services.NotificationsFinderInterface, e
 }
 
 func (h ListHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	clients, notifications, err := h.finder.AllClientsAndNotifications(context.Get("database").(db.DatabaseInterface))
+	clients, notifications, err := h.finder.AllClientsAndNotifications(context.Get("database").(DatabaseInterface))
 	if err != nil {
 		h.errorWriter.Write(w, err)
 		return

@@ -1,14 +1,14 @@
 package fakes
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/v1/services"
 )
 
 type NotificationUpdater struct {
 	UpdateCall struct {
 		Receives struct {
-			Database     db.DatabaseInterface
+			Database     services.DatabaseInterface
 			Notification models.Kind
 		}
 		Returns struct {
@@ -17,7 +17,7 @@ type NotificationUpdater struct {
 	}
 }
 
-func (f *NotificationUpdater) Update(database db.DatabaseInterface, notification models.Kind) error {
+func (f *NotificationUpdater) Update(database services.DatabaseInterface, notification models.Kind) error {
 	f.UpdateCall.Receives.Database = database
 	f.UpdateCall.Receives.Notification = notification
 

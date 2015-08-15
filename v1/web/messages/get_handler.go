@@ -5,13 +5,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
 
 type GetHandler struct {
-	finder      MessageFinderInterface
+	finder      messageFinder
 	errorWriter errorWriter
 }
 
@@ -19,13 +18,13 @@ type errorWriter interface {
 	Write(writer http.ResponseWriter, err error)
 }
 
-type MessageFinderInterface interface {
-	Find(db.DatabaseInterface, string) (services.Message, error)
+type messageFinder interface {
+	Find(services.DatabaseInterface, string) (services.Message, error)
 }
 
-func NewGetHandler(messageFinder MessageFinderInterface, errWriter errorWriter) GetHandler {
+func NewGetHandler(finder messageFinder, errWriter errorWriter) GetHandler {
 	return GetHandler{
-		finder:      messageFinder,
+		finder:      finder,
 		errorWriter: errWriter,
 	}
 }
@@ -33,7 +32,7 @@ func NewGetHandler(messageFinder MessageFinderInterface, errWriter errorWriter) 
 func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	messageID := strings.Split(req.URL.Path, "/messages/")[1]
 
-	message, err := h.finder.Find(context.Get("database").(db.DatabaseInterface), messageID)
+	message, err := h.finder.Find(context.Get("database").(DatabaseInterface), messageID)
 	if err != nil {
 		h.errorWriter.Write(w, err)
 		return

@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
@@ -24,7 +23,7 @@ func NewOrganizationHandler(notify NotifyInterface, errWriter errorWriter, strat
 }
 
 func (h OrganizationHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	conn := context.Get("database").(db.DatabaseInterface).Connection()
+	conn := context.Get("database").(DatabaseInterface).Connection()
 	orgGUID := strings.TrimPrefix(req.URL.Path, "/organizations/")
 	vcapRequestID := context.Get(VCAPRequestIDKey).(string)
 

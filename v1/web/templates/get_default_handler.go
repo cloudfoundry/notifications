@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
@@ -23,7 +22,7 @@ func NewGetDefaultHandler(finder services.TemplateFinderInterface, errWriter err
 }
 
 func (h GetDefaultHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	template, err := h.finder.FindByID(context.Get("database").(db.DatabaseInterface), models.DefaultTemplateID)
+	template, err := h.finder.FindByID(context.Get("database").(DatabaseInterface), models.DefaultTemplateID)
 	if err != nil {
 		h.errorWriter.Write(w, err)
 		return

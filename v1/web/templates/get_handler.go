@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
@@ -33,7 +32,7 @@ func NewGetHandler(templateFinder services.TemplateFinderInterface, errWriter er
 func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	templateID := strings.Split(req.URL.Path, "/templates/")[1]
 
-	template, err := h.finder.FindByID(context.Get("database").(db.DatabaseInterface), templateID)
+	template, err := h.finder.FindByID(context.Get("database").(DatabaseInterface), templateID)
 	if err != nil {
 		h.errorWriter.Write(w, err)
 		return

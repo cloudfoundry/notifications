@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
@@ -24,7 +23,7 @@ func NewDeleteHandler(deleter services.TemplateDeleterInterface, errWriter error
 func (h DeleteHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	templateID := strings.Split(req.URL.Path, "/templates/")[1]
 
-	err := h.deleter.Delete(context.Get("database").(db.DatabaseInterface), templateID)
+	err := h.deleter.Delete(context.Get("database").(DatabaseInterface), templateID)
 	if err != nil {
 		h.errorWriter.Write(w, err)
 	}

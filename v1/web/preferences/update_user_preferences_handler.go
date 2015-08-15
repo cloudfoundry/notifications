@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
@@ -26,7 +25,7 @@ func NewUpdateUserPreferencesHandler(preferenceUpdater services.PreferenceUpdate
 }
 
 func (h UpdateUserPreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
-	database := context.Get("database").(db.DatabaseInterface)
+	database := context.Get("database").(DatabaseInterface)
 	connection := database.Connection()
 
 	userGUID := regexp.MustCompile(".*/user_preferences/(.*)").FindStringSubmatch(req.URL.Path)[1]

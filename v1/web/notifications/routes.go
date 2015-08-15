@@ -23,7 +23,7 @@ type Routes struct {
 	Registrar            services.RegistrarInterface
 	TemplateAssigner     services.TemplateAssignerInterface
 	NotificationsFinder  services.NotificationsFinderInterface
-	NotificationsUpdater services.NotificationsUpdaterInterface
+	NotificationsUpdater notificationsUpdater
 }
 
 func (r Routes) Register(m muxer) {

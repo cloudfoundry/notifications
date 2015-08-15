@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
@@ -24,7 +23,7 @@ func NewGetUserPreferencesHandler(preferencesFinder services.PreferencesFinderIn
 func (h GetUserPreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	userGUID := strings.TrimPrefix(req.URL.Path, "/user_preferences/")
 
-	parsed, err := h.preferencesFinder.Find(context.Get("database").(db.DatabaseInterface), userGUID)
+	parsed, err := h.preferencesFinder.Find(context.Get("database").(DatabaseInterface), userGUID)
 	if err != nil {
 		h.errorWriter.Write(w, err)
 		return

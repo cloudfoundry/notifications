@@ -14,10 +14,6 @@ type MessagesRepoInterface interface {
 	Upsert(db.ConnectionInterface, models.Message) (models.Message, error)
 }
 
-type MessageFinderInterface interface {
-	Find(db.DatabaseInterface, string) (Message, error)
-}
-
 type MessageFinder struct {
 	repo MessagesRepoInterface
 }
@@ -28,7 +24,7 @@ func NewMessageFinder(repo MessagesRepoInterface) MessageFinder {
 	}
 }
 
-func (finder MessageFinder) Find(database db.DatabaseInterface, messageID string) (Message, error) {
+func (finder MessageFinder) Find(database DatabaseInterface, messageID string) (Message, error) {
 	message, err := finder.repo.FindByID(database.Connection(), messageID)
 	if err != nil {
 		return Message{}, err

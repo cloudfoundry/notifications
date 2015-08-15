@@ -2,7 +2,6 @@ package messages
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/ryanmoran/stack"
@@ -18,7 +17,7 @@ type Routes struct {
 	NotificationsWriteOrEmailsWriteAuthenticator stack.Middleware
 	DatabaseAllocator                            stack.Middleware
 
-	MessageFinder services.MessageFinderInterface
+	MessageFinder messageFinder
 	ErrorWriter   errorWriter
 }
 
