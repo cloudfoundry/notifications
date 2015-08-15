@@ -75,7 +75,7 @@ func (env *Environment) parseDefaultUAAScopes() {
 }
 
 func (env *Environment) inferMigrationsDirs() {
-	env.ModelMigrationsPath = path.Join(env.RootPath, "models", "migrations")
+	env.ModelMigrationsPath = path.Join(env.RootPath, "db", "migrations")
 	env.GobbleMigrationsPath = path.Join(env.RootPath, "gobble", "migrations")
 }
 

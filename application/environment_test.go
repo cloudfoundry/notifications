@@ -101,7 +101,7 @@ var _ = Describe("Environment", func() {
 		It("infers the right location", func() {
 			os.Setenv("ROOT_PATH", "/tmp/foo")
 			env := application.NewEnvironment()
-			Expect(env.ModelMigrationsPath).To(Equal("/tmp/foo/models/migrations"))
+			Expect(env.ModelMigrationsPath).To(Equal("/tmp/foo/db/migrations"))
 		})
 	})
 
