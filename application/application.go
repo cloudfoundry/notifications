@@ -152,6 +152,9 @@ func (app Application) StartServer(logger lager.Logger) {
 		Port:             app.env.Port,
 		Logger:           logger,
 		DBLoggingEnabled: app.env.DBLoggingEnabled,
+		UAAPublicKey:     UAAPublicKey,
+		CORSOrigin:       app.env.CORSOrigin,
+		SQLDB:            app.mother.SQLDatabase(),
 	})
 }
 

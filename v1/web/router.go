@@ -8,13 +8,14 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/web/clients"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/info"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/messages"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notifications"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
+	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
 )
 
@@ -26,6 +27,9 @@ type muxer interface {
 
 type Config struct {
 	DBLoggingEnabled bool
+	Logger           lager.Logger
+	UAAPublicKey     string
+	CORSOrigin       string
 }
 
 type mother interface {
@@ -42,10 +46,7 @@ type mother interface {
 	TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister)
 	NotificationsUpdater() services.NotificationsUpdater
 	MessageFinder() services.MessageFinder
-	Logging() middleware.RequestLogging
-	Authenticator(...string) middleware.Authenticator
 	SQLDatabase() *sql.DB
-	CORS() middleware.CORS
 }
 
 func NewRouter(mx muxer, mom mother, config Config) http.Handler {
@@ -63,19 +64,20 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 	templateCreator, templateFinder, templateUpdater, templateDeleter, templateLister, templateAssigner, templateAssociationLister := mom.TemplateServiceObjects()
 	notificationsUpdater := mom.NotificationsUpdater()
 	messageFinder := mom.MessageFinder()
-	logging := mom.Logging()
 	errorWriter := webutil.NewErrorWriter()
-	notificationsWriteAuthenticator := mom.Authenticator("notifications.write")
-	notificationsManageAuthenticator := mom.Authenticator("notifications.manage")
-	notificationPreferencesReadAuthenticator := mom.Authenticator("notification_preferences.read")
-	notificationPreferencesWriteAuthenticator := mom.Authenticator("notification_preferences.write")
-	notificationPreferencesAdminAuthenticator := mom.Authenticator("notification_preferences.admin")
-	emailsWriteAuthenticator := mom.Authenticator("emails.write")
-	notificationsTemplateWriteAuthenticator := mom.Authenticator("notification_templates.write")
-	notificationsTemplateReadAuthenticator := mom.Authenticator("notification_templates.read")
-	notificationsWriteOrEmailsWriteAuthenticator := mom.Authenticator("notifications.write", "emails.write")
+
+	logging := middleware.NewRequestLogging(config.Logger)
+	notificationsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.write")
+	notificationsManageAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.manage")
+	notificationPreferencesReadAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notification_preferences.read")
+	notificationPreferencesWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notification_preferences.write")
+	notificationPreferencesAdminAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notification_preferences.admin")
+	emailsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "emails.write")
+	notificationsTemplateWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notification_templates.write")
+	notificationsTemplateReadAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notification_templates.read")
+	notificationsWriteOrEmailsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.write", "emails.write")
 	databaseAllocator := middleware.NewDatabaseAllocator(mom.SQLDatabase(), config.DBLoggingEnabled)
-	cors := mom.CORS()
+	cors := middleware.NewCORS(config.CORSOrigin)
 
 	info.Routes{
 		RequestLogging: logging,

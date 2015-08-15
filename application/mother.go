@@ -18,7 +18,6 @@ import (
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
@@ -159,16 +158,8 @@ func (m *Mother) Logger() lager.Logger {
 	return logger
 }
 
-func (m *Mother) Logging() middleware.RequestLogging {
-	return middleware.NewRequestLogging(m.Logger())
-}
-
 func (m *Mother) ErrorWriter() webutil.ErrorWriter {
 	return webutil.NewErrorWriter()
-}
-
-func (m *Mother) Authenticator(scopes ...string) middleware.Authenticator {
-	return middleware.NewAuthenticator(UAAPublicKey, scopes...)
 }
 
 func (m *Mother) Registrar() services.Registrar {
@@ -267,9 +258,4 @@ func (m *Mother) MessagesRepo() v1models.MessagesRepo {
 
 func (m *Mother) ReceiptsRepo() v1models.ReceiptsRepo {
 	return v1models.NewReceiptsRepo()
-}
-
-func (m *Mother) CORS() middleware.CORS {
-	env := NewEnvironment()
-	return middleware.NewCORS(env.CORSOrigin)
 }

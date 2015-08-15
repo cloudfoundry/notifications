@@ -8,11 +8,12 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/info"
+	"github.com/cloudfoundry-incubator/notifications/v2/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/senders"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/templates"
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/gorilla/mux"
 	"github.com/nu7hatch/gouuid"
+	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
 )
 
@@ -23,19 +24,20 @@ type muxer interface {
 }
 
 type mother interface {
-	Logging() middleware.RequestLogging
-	Authenticator(...string) middleware.Authenticator
-	SQLDatabase() *sql.DB
+	SQLDatabase()
 }
 
 type Config struct {
 	DBLoggingEnabled bool
+	SQLDB            *sql.DB
+	Logger           lager.Logger
+	UAAPublicKey     string
 }
 
-func NewRouter(mx muxer, mom mother, config Config) http.Handler {
-	logging := mom.Logging()
-	notificationsWriteAuthenticator := mom.Authenticator("notifications.write")
-	databaseAllocator := middleware.NewDatabaseAllocator(mom.SQLDatabase(), config.DBLoggingEnabled)
+func NewRouter(mx muxer, config Config) http.Handler {
+	logging := middleware.NewRequestLogging(config.Logger)
+	notificationsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.write")
+	databaseAllocator := middleware.NewDatabaseAllocator(config.SQLDB, config.DBLoggingEnabled)
 
 	sendersRepository := models.NewSendersRepository(uuid.NewV4)
 	campaignTypesRepository := models.NewCampaignTypesRepository(uuid.NewV4)

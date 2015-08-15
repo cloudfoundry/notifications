@@ -7,7 +7,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	v1web "github.com/cloudfoundry-incubator/notifications/v1/web"
 	v2web "github.com/cloudfoundry-incubator/notifications/v2/web"
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 )
 
 type MotherInterface interface {
@@ -24,19 +23,26 @@ type MotherInterface interface {
 	PreferenceUpdater() services.PreferenceUpdater
 	MessageFinder() services.MessageFinder
 	TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister)
-	Logging() middleware.RequestLogging
-	Authenticator(...string) middleware.Authenticator
-	CORS() middleware.CORS
 	SQLDatabase() *sql.DB
 }
 
 func NewRouter(mother MotherInterface, config Config) http.Handler {
+	v1 := v1web.NewRouter(NewMuxer(), mother, v1web.Config{
+		DBLoggingEnabled: config.DBLoggingEnabled,
+		Logger:           config.Logger,
+		UAAPublicKey:     config.UAAPublicKey,
+		CORSOrigin:       config.CORSOrigin,
+	})
+
+	v2 := v2web.NewRouter(NewMuxer(), v2web.Config{
+		DBLoggingEnabled: config.DBLoggingEnabled,
+		SQLDB:            config.SQLDB,
+		Logger:           config.Logger,
+		UAAPublicKey:     config.UAAPublicKey,
+	})
+
 	return VersionRouter{
-		1: v1web.NewRouter(NewMuxer(), mother, v1web.Config{
-			DBLoggingEnabled: config.DBLoggingEnabled,
-		}),
-		2: v2web.NewRouter(NewMuxer(), mother, v2web.Config{
-			DBLoggingEnabled: config.DBLoggingEnabled,
-		}),
+		1: v1,
+		2: v2,
 	}
 }

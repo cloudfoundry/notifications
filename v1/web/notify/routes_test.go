@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/cloudfoundry-incubator/notifications/web"
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"

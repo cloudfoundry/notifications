@@ -1,6 +1,7 @@
 package web
 
 import (
+	"database/sql"
 	"net/http"
 	"strconv"
 
@@ -11,6 +12,9 @@ type Config struct {
 	Port             int
 	Logger           lager.Logger
 	DBLoggingEnabled bool
+	UAAPublicKey     string
+	CORSOrigin       string
+	SQLDB            *sql.DB
 }
 
 type Server struct{}

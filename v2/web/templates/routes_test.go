@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
+	"github.com/cloudfoundry-incubator/notifications/v2/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/web"
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
 

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/web/middleware"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
 	"github.com/gorilla/mux"
 
 	. "github.com/onsi/ginkgo"
