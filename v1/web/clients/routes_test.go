@@ -19,6 +19,7 @@ var _ = Describe("Routes", func() {
 	BeforeEach(func() {
 		muxer = web.NewMuxer()
 		clients.Routes{
+			RequestCounter:                   middleware.RequestCounter{},
 			RequestLogging:                   middleware.RequestLogging{},
 			DatabaseAllocator:                middleware.DatabaseAllocator{},
 			NotificationsManageAuthenticator: middleware.Authenticator{Scopes: []string{"notifications.manage"}},

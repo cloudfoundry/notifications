@@ -28,6 +28,7 @@ var _ = Describe("Routes", func() {
 			UAAScopeStrategy:     fakes.NewStrategy(),
 			EmailStrategy:        fakes.NewStrategy(),
 
+			RequestCounter:                  middleware.RequestCounter{},
 			RequestLogging:                  middleware.RequestLogging{},
 			DatabaseAllocator:               middleware.DatabaseAllocator{},
 			NotificationsWriteAuthenticator: middleware.Authenticator{Scopes: []string{"notifications.write"}},

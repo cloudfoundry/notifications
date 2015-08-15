@@ -24,6 +24,7 @@ var _ = Describe("Routes", func() {
 			PreferenceUpdater: fakes.NewPreferenceUpdater(),
 
 			CORS:                                      middleware.CORS{},
+			RequestCounter:                            middleware.RequestCounter{},
 			RequestLogging:                            middleware.RequestLogging{},
 			DatabaseAllocator:                         middleware.DatabaseAllocator{},
 			NotificationPreferencesReadAuthenticator:  middleware.Authenticator{Scopes: []string{"notification_preferences.read"}},

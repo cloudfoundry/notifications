@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/clients"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/info"
@@ -66,6 +67,7 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 	messageFinder := mom.MessageFinder()
 	errorWriter := webutil.NewErrorWriter()
 
+	requestCounter := middleware.NewRequestCounter(mx.GetRouter(), metrics.DefaultLogger)
 	logging := middleware.NewRequestLogging(config.Logger)
 	notificationsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.write")
 	notificationsManageAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.manage")
@@ -80,41 +82,52 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 	cors := middleware.NewCORS(config.CORSOrigin)
 
 	info.Routes{
+		RequestCounter: requestCounter,
 		RequestLogging: logging,
 	}.Register(mx)
 
 	preferences.Routes{
-		ErrorWriter:       errorWriter,
-		PreferencesFinder: preferencesFinder,
-		PreferenceUpdater: preferenceUpdater,
-
 		CORS:                                      cors,
+		RequestCounter:                            requestCounter,
 		RequestLogging:                            logging,
 		DatabaseAllocator:                         databaseAllocator,
 		NotificationPreferencesReadAuthenticator:  notificationPreferencesReadAuthenticator,
 		NotificationPreferencesWriteAuthenticator: notificationPreferencesWriteAuthenticator,
 		NotificationPreferencesAdminAuthenticator: notificationPreferencesAdminAuthenticator,
+
+		ErrorWriter:       errorWriter,
+		PreferencesFinder: preferencesFinder,
+		PreferenceUpdater: preferenceUpdater,
 	}.Register(mx)
 
 	clients.Routes{
-		ErrorWriter:      errorWriter,
-		TemplateAssigner: templateAssigner,
-
+		RequestCounter:                   requestCounter,
 		RequestLogging:                   logging,
 		DatabaseAllocator:                databaseAllocator,
 		NotificationsManageAuthenticator: notificationsManageAuthenticator,
+
+		ErrorWriter:      errorWriter,
+		TemplateAssigner: templateAssigner,
 	}.Register(mx)
 
 	messages.Routes{
-		ErrorWriter:   errorWriter,
-		MessageFinder: messageFinder,
-
+		RequestCounter:                               requestCounter,
 		RequestLogging:                               logging,
 		DatabaseAllocator:                            databaseAllocator,
 		NotificationsWriteOrEmailsWriteAuthenticator: notificationsWriteOrEmailsWriteAuthenticator,
+
+		ErrorWriter:   errorWriter,
+		MessageFinder: messageFinder,
 	}.Register(mx)
 
 	templates.Routes{
+		RequestCounter:                          requestCounter,
+		RequestLogging:                          logging,
+		DatabaseAllocator:                       databaseAllocator,
+		NotificationTemplatesReadAuthenticator:  notificationsTemplateReadAuthenticator,
+		NotificationTemplatesWriteAuthenticator: notificationsTemplateWriteAuthenticator,
+		NotificationsManageAuthenticator:        notificationsManageAuthenticator,
+
 		ErrorWriter:               errorWriter,
 		TemplateFinder:            templateFinder,
 		TemplateUpdater:           templateUpdater,
@@ -122,28 +135,29 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 		TemplateDeleter:           templateDeleter,
 		TemplateLister:            templateLister,
 		TemplateAssociationLister: templateAssociationLister,
-
-		RequestLogging:                          logging,
-		DatabaseAllocator:                       databaseAllocator,
-		NotificationTemplatesReadAuthenticator:  notificationsTemplateReadAuthenticator,
-		NotificationTemplatesWriteAuthenticator: notificationsTemplateWriteAuthenticator,
-		NotificationsManageAuthenticator:        notificationsManageAuthenticator,
 	}.Register(mx)
 
 	notifications.Routes{
+		RequestCounter:                   requestCounter,
+		RequestLogging:                   logging,
+		DatabaseAllocator:                databaseAllocator,
+		NotificationsWriteAuthenticator:  notificationsWriteAuthenticator,
+		NotificationsManageAuthenticator: notificationsManageAuthenticator,
+
 		ErrorWriter:          errorWriter,
 		Registrar:            registrar,
 		NotificationsFinder:  notificationsFinder,
 		NotificationsUpdater: notificationsUpdater,
 		TemplateAssigner:     templateAssigner,
-
-		RequestLogging:                   logging,
-		DatabaseAllocator:                databaseAllocator,
-		NotificationsWriteAuthenticator:  notificationsWriteAuthenticator,
-		NotificationsManageAuthenticator: notificationsManageAuthenticator,
 	}.Register(mx)
 
 	notify.Routes{
+		RequestCounter:                  requestCounter,
+		RequestLogging:                  logging,
+		NotificationsWriteAuthenticator: notificationsWriteAuthenticator,
+		DatabaseAllocator:               databaseAllocator,
+		EmailsWriteAuthenticator:        emailsWriteAuthenticator,
+
 		ErrorWriter:          errorWriter,
 		Notify:               notifyObj,
 		UserStrategy:         userStrategy,
@@ -152,11 +166,6 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 		EveryoneStrategy:     everyoneStrategy,
 		UAAScopeStrategy:     uaaScopeStrategy,
 		EmailStrategy:        emailStrategy,
-
-		RequestLogging:                  logging,
-		NotificationsWriteAuthenticator: notificationsWriteAuthenticator,
-		DatabaseAllocator:               databaseAllocator,
-		EmailsWriteAuthenticator:        emailsWriteAuthenticator,
 	}.Register(mx)
 
 	return mx

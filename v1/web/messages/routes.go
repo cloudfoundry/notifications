@@ -1,18 +1,13 @@
 package messages
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/metrics"
-	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
-	"github.com/gorilla/mux"
-	"github.com/ryanmoran/stack"
-)
+import "github.com/ryanmoran/stack"
 
 type muxer interface {
 	Handle(method, path string, handler stack.Handler, middleware ...stack.Middleware)
-	GetRouter() *mux.Router
 }
 
 type Routes struct {
+	RequestCounter                               stack.Middleware
 	RequestLogging                               stack.Middleware
 	NotificationsWriteOrEmailsWriteAuthenticator stack.Middleware
 	DatabaseAllocator                            stack.Middleware
@@ -22,6 +17,5 @@ type Routes struct {
 }
 
 func (r Routes) Register(m muxer) {
-	requestCounter := middleware.NewRequestCounter(m.GetRouter(), metrics.DefaultLogger)
-	m.Handle("GET", "/messages/{message_id}", NewGetHandler(r.MessageFinder, r.ErrorWriter), r.RequestLogging, requestCounter, r.NotificationsWriteOrEmailsWriteAuthenticator, r.DatabaseAllocator)
+	m.Handle("GET", "/messages/{message_id}", NewGetHandler(r.MessageFinder, r.ErrorWriter), r.RequestLogging, r.RequestCounter, r.NotificationsWriteOrEmailsWriteAuthenticator, r.DatabaseAllocator)
 }

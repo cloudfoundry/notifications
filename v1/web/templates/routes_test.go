@@ -27,6 +27,7 @@ var _ = Describe("Routes", func() {
 			TemplateLister:            fakes.NewTemplateLister(),
 			TemplateAssociationLister: fakes.NewTemplateAssociationLister(),
 
+			RequestCounter:                          middleware.RequestCounter{},
 			RequestLogging:                          middleware.RequestLogging{},
 			DatabaseAllocator:                       middleware.DatabaseAllocator{},
 			NotificationsManageAuthenticator:        middleware.Authenticator{Scopes: []string{"notifications.manage"}},
