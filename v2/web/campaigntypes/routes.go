@@ -2,7 +2,6 @@ package campaigntypes
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
-	"github.com/cloudfoundry-incubator/notifications/v2/web/middleware"
 	"github.com/ryanmoran/stack"
 )
 
@@ -12,8 +11,8 @@ type muxer interface {
 
 type Routes struct {
 	RequestLogging          stack.Middleware
-	Authenticator           middleware.Authenticator
-	DatabaseAllocator       middleware.DatabaseAllocator
+	Authenticator           stack.Middleware
+	DatabaseAllocator       stack.Middleware
 	CampaignTypesCollection collections.CampaignTypesCollection
 }
 

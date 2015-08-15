@@ -18,6 +18,7 @@ var _ = Describe("Routes", func() {
 	BeforeEach(func() {
 		muxer = web.NewMuxer()
 		info.Routes{
+			RequestCounter: middleware.RequestCounter{},
 			RequestLogging: middleware.RequestLogging{},
 		}.Register(muxer)
 	})

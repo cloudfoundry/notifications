@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
@@ -35,6 +36,7 @@ type Config struct {
 }
 
 func NewRouter(mx muxer, config Config) http.Handler {
+	requestCounter := middleware.NewRequestCounter(mx.GetRouter(), metrics.DefaultLogger)
 	logging := middleware.NewRequestLogging(config.Logger)
 	notificationsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.write")
 	databaseAllocator := middleware.NewDatabaseAllocator(config.SQLDB, config.DBLoggingEnabled)
@@ -48,6 +50,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	templatesCollection := collections.NewTemplatesCollection(templatesRepository)
 
 	info.Routes{
+		RequestCounter: requestCounter,
 		RequestLogging: logging,
 	}.Register(mx)
 
