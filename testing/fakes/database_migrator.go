@@ -3,7 +3,7 @@ package fakes
 import (
 	"database/sql"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 )
 
 type DatabaseMigrator struct {
@@ -17,7 +17,7 @@ type DatabaseMigrator struct {
 	SeedCall struct {
 		Called   bool
 		Receives struct {
-			Database            db.DatabaseInterface
+			Database            models.DatabaseInterface
 			DefaultTemplatePath string
 		}
 	}
@@ -33,7 +33,7 @@ func (d *DatabaseMigrator) Migrate(db *sql.DB, migrationsPath string) {
 	d.MigrateCall.Receives.MigrationsPath = migrationsPath
 }
 
-func (d *DatabaseMigrator) Seed(database db.DatabaseInterface, defaultTemplatePath string) {
+func (d *DatabaseMigrator) Seed(database models.DatabaseInterface, defaultTemplatePath string) {
 	d.SeedCall.Called = true
 	d.SeedCall.Receives.Database = database
 	d.SeedCall.Receives.DefaultTemplatePath = defaultTemplatePath

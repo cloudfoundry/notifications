@@ -41,6 +41,10 @@ type Delivery struct {
 	RequestReceived time.Time
 }
 
+type messagesRepoUpserter interface {
+	Upsert(models.ConnectionInterface, models.Message) (models.Message, error)
+}
+
 type EnqueuerInterface interface {
 	Enqueue(db.ConnectionInterface, []User, Options, cf.CloudControllerSpace, cf.CloudControllerOrganization, string, string, string, string, time.Time) []Response
 }
@@ -48,10 +52,10 @@ type EnqueuerInterface interface {
 type Enqueuer struct {
 	queue         gobble.QueueInterface
 	guidGenerator GUIDGenerationFunc
-	messagesRepo  MessagesRepoInterface
+	messagesRepo  messagesRepoUpserter
 }
 
-func NewEnqueuer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc, messagesRepo MessagesRepoInterface) Enqueuer {
+func NewEnqueuer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc, messagesRepo messagesRepoUpserter) Enqueuer {
 	return Enqueuer{
 		queue:         queue,
 		guidGenerator: guidGenerator,

@@ -1,24 +1,20 @@
 package services
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
-)
+import "github.com/cloudfoundry-incubator/notifications/v1/models"
 
 type Message struct {
 	Status string
 }
 
-type MessagesRepoInterface interface {
-	FindByID(db.ConnectionInterface, string) (models.Message, error)
-	Upsert(db.ConnectionInterface, models.Message) (models.Message, error)
+type messagesRepoFinder interface {
+	FindByID(models.ConnectionInterface, string) (models.Message, error)
 }
 
 type MessageFinder struct {
-	repo MessagesRepoInterface
+	repo messagesRepoFinder
 }
 
-func NewMessageFinder(repo MessagesRepoInterface) MessageFinder {
+func NewMessageFinder(repo messagesRepoFinder) MessageFinder {
 	return MessageFinder{
 		repo: repo,
 	}

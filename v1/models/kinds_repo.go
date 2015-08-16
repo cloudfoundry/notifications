@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"strings"
 	"time"
-
-	"github.com/cloudfoundry-incubator/notifications/db"
 )
 
 type IDSet []string
@@ -25,7 +23,7 @@ func NewKindsRepo() KindsRepo {
 	return KindsRepo{}
 }
 
-func (repo KindsRepo) create(conn db.ConnectionInterface, kind Kind) (Kind, error) {
+func (repo KindsRepo) create(conn ConnectionInterface, kind Kind) (Kind, error) {
 	err := conn.Insert(&kind)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
@@ -36,7 +34,7 @@ func (repo KindsRepo) create(conn db.ConnectionInterface, kind Kind) (Kind, erro
 	return kind, nil
 }
 
-func (repo KindsRepo) Find(conn db.ConnectionInterface, id, clientID string) (Kind, error) {
+func (repo KindsRepo) Find(conn ConnectionInterface, id, clientID string) (Kind, error) {
 	kind := Kind{}
 	err := conn.SelectOne(&kind, "SELECT * FROM `kinds` WHERE `id` = ? AND `client_id` = ?", id, clientID)
 	if err != nil {
@@ -48,7 +46,7 @@ func (repo KindsRepo) Find(conn db.ConnectionInterface, id, clientID string) (Ki
 	return kind, nil
 }
 
-func (repo KindsRepo) FindAll(conn db.ConnectionInterface) ([]Kind, error) {
+func (repo KindsRepo) FindAll(conn ConnectionInterface) ([]Kind, error) {
 	kinds := []Kind{}
 	_, err := conn.Select(&kinds, `SELECT * FROM kinds`)
 
@@ -59,7 +57,7 @@ func (repo KindsRepo) FindAll(conn db.ConnectionInterface) ([]Kind, error) {
 	return kinds, nil
 }
 
-func (repo KindsRepo) Update(conn db.ConnectionInterface, kind Kind) (Kind, error) {
+func (repo KindsRepo) Update(conn ConnectionInterface, kind Kind) (Kind, error) {
 	existingKind, err := repo.Find(conn, kind.ID, kind.ClientID)
 	if err != nil {
 		return kind, err
@@ -80,7 +78,7 @@ func (repo KindsRepo) Update(conn db.ConnectionInterface, kind Kind) (Kind, erro
 	return repo.Find(conn, kind.ID, kind.ClientID)
 }
 
-func (repo KindsRepo) Upsert(conn db.ConnectionInterface, kind Kind) (Kind, error) {
+func (repo KindsRepo) Upsert(conn ConnectionInterface, kind Kind) (Kind, error) {
 	existingKind, err := repo.Find(conn, kind.ID, kind.ClientID)
 	kind.Primary = existingKind.Primary
 
@@ -99,7 +97,7 @@ func (repo KindsRepo) Upsert(conn db.ConnectionInterface, kind Kind) (Kind, erro
 	}
 }
 
-func (repo KindsRepo) Trim(conn db.ConnectionInterface, clientID string, kindIDs []string) (int, error) {
+func (repo KindsRepo) Trim(conn ConnectionInterface, clientID string, kindIDs []string) (int, error) {
 	kinds, err := repo.findAllByClientID(conn, clientID)
 	if err != nil {
 		return 0, err
@@ -118,7 +116,7 @@ func (repo KindsRepo) Trim(conn db.ConnectionInterface, clientID string, kindIDs
 	return int(count), err
 }
 
-func (repo KindsRepo) findAllByClientID(conn db.ConnectionInterface, clientID string) ([]Kind, error) {
+func (repo KindsRepo) findAllByClientID(conn ConnectionInterface, clientID string) ([]Kind, error) {
 	var kinds []Kind
 	results, err := conn.Select(Kind{}, "SELECT * FROM `kinds` WHERE `client_id` = ?", clientID)
 	if err != nil {
@@ -130,7 +128,7 @@ func (repo KindsRepo) findAllByClientID(conn db.ConnectionInterface, clientID st
 	return kinds, nil
 }
 
-func (repo KindsRepo) FindAllByTemplateID(conn db.ConnectionInterface, templateID string) ([]Kind, error) {
+func (repo KindsRepo) FindAllByTemplateID(conn ConnectionInterface, templateID string) ([]Kind, error) {
 	kinds := []Kind{}
 	_, err := conn.Select(&kinds, "SELECT * FROM `kinds` WHERE `template_id` = ?", templateID)
 	if err != nil {

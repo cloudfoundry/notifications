@@ -6,8 +6,6 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
-
 	sql_migrate "github.com/rubenv/sql-migrate"
 )
 
@@ -27,7 +25,7 @@ func (d DatabaseMigrator) Migrate(db *sql.DB, migrationsPath string) {
 	}
 }
 
-func (d DatabaseMigrator) Seed(database db.DatabaseInterface, defaultTemplatePath string) {
+func (d DatabaseMigrator) Seed(database DatabaseInterface, defaultTemplatePath string) {
 	repo := NewTemplatesRepo()
 	bytes, err := ioutil.ReadFile(defaultTemplatePath)
 	if err != nil {

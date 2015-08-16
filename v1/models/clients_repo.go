@@ -3,8 +3,6 @@ package models
 import (
 	"database/sql"
 	"strings"
-
-	"github.com/cloudfoundry-incubator/notifications/db"
 )
 
 type ClientsRepo struct{}
@@ -13,7 +11,7 @@ func NewClientsRepo() ClientsRepo {
 	return ClientsRepo{}
 }
 
-func (repo ClientsRepo) create(conn db.ConnectionInterface, client Client) (Client, error) {
+func (repo ClientsRepo) create(conn ConnectionInterface, client Client) (Client, error) {
 	err := conn.Insert(&client)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
@@ -24,7 +22,7 @@ func (repo ClientsRepo) create(conn db.ConnectionInterface, client Client) (Clie
 	return client, nil
 }
 
-func (repo ClientsRepo) Find(conn db.ConnectionInterface, id string) (Client, error) {
+func (repo ClientsRepo) Find(conn ConnectionInterface, id string) (Client, error) {
 	client := Client{}
 	err := conn.SelectOne(&client, "SELECT * FROM `clients` WHERE `id` = ?", id)
 	if err != nil {
@@ -36,7 +34,7 @@ func (repo ClientsRepo) Find(conn db.ConnectionInterface, id string) (Client, er
 	return client, nil
 }
 
-func (repo ClientsRepo) FindAll(conn db.ConnectionInterface) ([]Client, error) {
+func (repo ClientsRepo) FindAll(conn ConnectionInterface) ([]Client, error) {
 	clients := []Client{}
 	_, err := conn.Select(&clients, "SELECT * FROM `clients`")
 	if err != nil {
@@ -46,7 +44,7 @@ func (repo ClientsRepo) FindAll(conn db.ConnectionInterface) ([]Client, error) {
 	return clients, nil
 }
 
-func (repo ClientsRepo) Update(conn db.ConnectionInterface, client Client) (Client, error) {
+func (repo ClientsRepo) Update(conn ConnectionInterface, client Client) (Client, error) {
 	if client.TemplateID == DoNotSetTemplateID {
 		existingClient, err := repo.Find(conn, client.ID)
 		if err != nil {
@@ -64,7 +62,7 @@ func (repo ClientsRepo) Update(conn db.ConnectionInterface, client Client) (Clie
 	return repo.Find(conn, client.ID)
 }
 
-func (repo ClientsRepo) Upsert(conn db.ConnectionInterface, client Client) (Client, error) {
+func (repo ClientsRepo) Upsert(conn ConnectionInterface, client Client) (Client, error) {
 	existingClient, err := repo.Find(conn, client.ID)
 	client.Primary = existingClient.Primary
 	client.CreatedAt = existingClient.CreatedAt
@@ -84,7 +82,7 @@ func (repo ClientsRepo) Upsert(conn db.ConnectionInterface, client Client) (Clie
 	}
 }
 
-func (repo ClientsRepo) FindAllByTemplateID(conn db.ConnectionInterface, templateID string) ([]Client, error) {
+func (repo ClientsRepo) FindAllByTemplateID(conn ConnectionInterface, templateID string) ([]Client, error) {
 	clients := []Client{}
 	_, err := conn.Select(&clients, "SELECT * FROM `clients` WHERE `template_id` = ?", templateID)
 	if err != nil {

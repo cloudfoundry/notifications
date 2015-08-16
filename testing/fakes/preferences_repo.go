@@ -1,14 +1,11 @@
 package fakes
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
-)
+import "github.com/cloudfoundry-incubator/notifications/v1/models"
 
 type PreferencesRepo struct {
 	FindNonCriticalPreferencesCall struct {
 		Receives struct {
-			Connection db.ConnectionInterface
+			Connection models.ConnectionInterface
 			UserGUID   string
 		}
 		Returns struct {
@@ -22,7 +19,7 @@ func NewPreferencesRepo() *PreferencesRepo {
 	return &PreferencesRepo{}
 }
 
-func (pr *PreferencesRepo) FindNonCriticalPreferences(conn db.ConnectionInterface, userGUID string) ([]models.Preference, error) {
+func (pr *PreferencesRepo) FindNonCriticalPreferences(conn models.ConnectionInterface, userGUID string) ([]models.Preference, error) {
 	pr.FindNonCriticalPreferencesCall.Receives.Connection = conn
 	pr.FindNonCriticalPreferencesCall.Receives.UserGUID = userGUID
 

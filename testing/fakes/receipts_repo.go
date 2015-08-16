@@ -3,7 +3,7 @@ package fakes
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 )
 
 type ReceiptsRepo struct {
@@ -17,7 +17,7 @@ func NewReceiptsRepo() *ReceiptsRepo {
 	return &ReceiptsRepo{}
 }
 
-func (fake *ReceiptsRepo) CreateReceipts(conn db.ConnectionInterface, userGUIDs []string, clientID, kindID string) error {
+func (fake *ReceiptsRepo) CreateReceipts(conn models.ConnectionInterface, userGUIDs []string, clientID, kindID string) error {
 	if fake.CreateReceiptsError {
 		return errors.New("a database error")
 	}

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 )
 
 type MessageGC struct {
@@ -17,7 +18,7 @@ type MessageGC struct {
 }
 
 type messagesRepoInterface interface {
-	DeleteBefore(db.ConnectionInterface, time.Time) (int, error)
+	DeleteBefore(models.ConnectionInterface, time.Time) (int, error)
 }
 
 func NewMessageGC(lifetime time.Duration, db db.DatabaseInterface,

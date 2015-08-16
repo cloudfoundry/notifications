@@ -3,8 +3,6 @@ package models
 import (
 	"database/sql"
 	"time"
-
-	"github.com/cloudfoundry-incubator/notifications/db"
 )
 
 type MessagesRepo struct {
@@ -14,7 +12,7 @@ func NewMessagesRepo() MessagesRepo {
 	return MessagesRepo{}
 }
 
-func (repo MessagesRepo) Create(conn db.ConnectionInterface, message Message) (Message, error) {
+func (repo MessagesRepo) Create(conn ConnectionInterface, message Message) (Message, error) {
 	err := conn.Insert(&message)
 	if err != nil {
 		return Message{}, err
@@ -22,7 +20,7 @@ func (repo MessagesRepo) Create(conn db.ConnectionInterface, message Message) (M
 	return message, nil
 }
 
-func (repo MessagesRepo) FindByID(conn db.ConnectionInterface, messageID string) (Message, error) {
+func (repo MessagesRepo) FindByID(conn ConnectionInterface, messageID string) (Message, error) {
 	message := Message{}
 	err := conn.SelectOne(&message, "SELECT * FROM `messages` WHERE `id`=?", messageID)
 	if err != nil {
@@ -34,7 +32,7 @@ func (repo MessagesRepo) FindByID(conn db.ConnectionInterface, messageID string)
 	return message, nil
 }
 
-func (repo MessagesRepo) Update(conn db.ConnectionInterface, message Message) (Message, error) {
+func (repo MessagesRepo) Update(conn ConnectionInterface, message Message) (Message, error) {
 	_, err := conn.Update(&message)
 	if err != nil {
 		return message, err
@@ -43,7 +41,7 @@ func (repo MessagesRepo) Update(conn db.ConnectionInterface, message Message) (M
 	return repo.FindByID(conn, message.ID)
 }
 
-func (repo MessagesRepo) Upsert(conn db.ConnectionInterface, message Message) (Message, error) {
+func (repo MessagesRepo) Upsert(conn ConnectionInterface, message Message) (Message, error) {
 	_, err := repo.FindByID(conn, message.ID)
 
 	switch err.(type) {
@@ -56,7 +54,7 @@ func (repo MessagesRepo) Upsert(conn db.ConnectionInterface, message Message) (M
 	}
 }
 
-func (repo MessagesRepo) DeleteBefore(conn db.ConnectionInterface, threshold time.Time) (int, error) {
+func (repo MessagesRepo) DeleteBefore(conn ConnectionInterface, threshold time.Time) (int, error) {
 	result, err := conn.Exec("DELETE FROM `messages` WHERE `updated_at` < ?", threshold.UTC())
 	if err != nil {
 		return 0, err

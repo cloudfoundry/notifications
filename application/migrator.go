@@ -5,6 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 )
 
 type persistenceProvider interface {
@@ -14,7 +15,7 @@ type persistenceProvider interface {
 
 type dbMigrator interface {
 	Migrate(db *sql.DB, migrationsPath string)
-	Seed(db db.DatabaseInterface, defaultTemplatePath string)
+	Seed(db models.DatabaseInterface, defaultTemplatePath string)
 }
 
 type Migrator struct {
