@@ -16,6 +16,6 @@ func TestUAASuite(t *testing.T) {
 	metrics.DefaultLogger = log.New(buffer, "", 0)
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "UAA Suite")
+	RunSpecs(t, "uaa")
 	metrics.DefaultLogger = metricsLogger
 }

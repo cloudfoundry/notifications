@@ -19,7 +19,7 @@ var sqlDB *sql.DB
 
 func TestGobbleSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Gobble Suite")
+	RunSpecs(t, "gobble")
 }
 
 var _ = BeforeSuite(func() {

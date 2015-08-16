@@ -14,7 +14,7 @@ import (
 
 func TestModelsSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Models Suite")
+	RunSpecs(t, "v1/models")
 }
 
 var sqlDB *sql.DB

@@ -15,7 +15,7 @@ func TestWebSuite(t *testing.T) {
 	fakes.RegisterFastTokenSigningMethod()
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web Suite")
+	RunSpecs(t, "web")
 }
 
 func ExpectToContainMiddlewareStack(actualMiddleware []stack.Middleware, expectedMiddleware ...stack.Middleware) {

@@ -15,7 +15,7 @@ func TestWebV1PreferencesSuite(t *testing.T) {
 	fakes.RegisterFastTokenSigningMethod()
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web V1 Preferences Suite")
+	RunSpecs(t, "v1/web/preferences")
 }
 
 func ExpectToContainMiddlewareStack(actualMiddleware []stack.Middleware, expectedMiddleware ...stack.Middleware) {

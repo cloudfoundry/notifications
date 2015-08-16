@@ -1,15 +1,11 @@
 package services
 
-import (
-	"time"
-
-	"github.com/cloudfoundry-incubator/notifications/db"
-)
+import "time"
 
 type Dispatch struct {
 	GUID       string
 	Role       string
-	Connection db.ConnectionInterface
+	Connection ConnectionInterface
 	UAAHost    string
 
 	VCAPRequest DispatchVCAPRequest

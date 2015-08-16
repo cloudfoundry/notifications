@@ -9,5 +9,5 @@ import (
 
 func TestUAASuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Collections Suite")
+	RunSpecs(t, "v2/collections")
 }

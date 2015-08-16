@@ -9,5 +9,5 @@ import (
 
 func TestValiantSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Valiant Suite")
+	RunSpecs(t, "valiant")
 }

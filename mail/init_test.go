@@ -17,7 +17,7 @@ import (
 
 func TestMailSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Mail Suite")
+	RunSpecs(t, "mail")
 }
 
 const (

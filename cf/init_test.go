@@ -16,7 +16,7 @@ func TestCFSuite(t *testing.T) {
 	metrics.DefaultLogger = log.New(buffer, "", 0)
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "CF Suite")
+	RunSpecs(t, "cf")
 
 	metrics.DefaultLogger = metricsLogger
 }

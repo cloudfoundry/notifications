@@ -9,5 +9,5 @@ import (
 
 func TestWebV2SendersSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web V2 Senders Suite")
+	RunSpecs(t, "v2/web/senders")
 }

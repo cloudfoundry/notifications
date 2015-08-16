@@ -11,7 +11,7 @@ import (
 
 func TestWebV1ClientsSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web V1 Clients Suite")
+	RunSpecs(t, "v1/web/clients")
 }
 
 func ExpectToContainMiddlewareStack(actualMiddleware []stack.Middleware, expectedMiddleware ...stack.Middleware) {

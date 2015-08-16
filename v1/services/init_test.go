@@ -13,5 +13,5 @@ func TestWebHandlersServicesSuite(t *testing.T) {
 	fakes.RegisterFastTokenSigningMethod()
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Services Suite")
+	RunSpecs(t, "v1/services")
 }

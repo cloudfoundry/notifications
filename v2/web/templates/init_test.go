@@ -9,5 +9,5 @@ import (
 
 func TestWebV2TemplatesSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web V2 Templates Suite")
+	RunSpecs(t, "v2/web/templates")
 }

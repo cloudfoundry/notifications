@@ -12,7 +12,7 @@ import (
 
 func TestWebV1InfoSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web V1 Info Suite")
+	RunSpecs(t, "v1/web/info")
 }
 
 func ExpectToContainMiddlewareStack(actualMiddleware []stack.Middleware, expectedMiddleware ...stack.Middleware) {

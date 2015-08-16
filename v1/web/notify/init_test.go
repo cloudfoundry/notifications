@@ -15,7 +15,7 @@ func TestWebV1NotifySuite(t *testing.T) {
 	fakes.RegisterFastTokenSigningMethod()
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web V1 Notify Suite")
+	RunSpecs(t, "v1/web/notify")
 }
 
 func ExpectToContainMiddlewareStack(actualMiddleware []stack.Middleware, expectedMiddleware ...stack.Middleware) {

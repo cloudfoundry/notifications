@@ -12,7 +12,7 @@ import (
 
 func TestWebV1TemplatesSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web V1 Templates Suite")
+	RunSpecs(t, "v1/web/templates")
 }
 
 func ExpectToContainMiddlewareStack(actualMiddleware []stack.Middleware, expectedMiddleware ...stack.Middleware) {

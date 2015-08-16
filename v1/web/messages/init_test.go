@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/ryanmoran/stack"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/ryanmoran/stack"
 )
 
 func TestWebV1MessagesSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web V1 Messages Suite")
+	RunSpecs(t, "v1/web/messages")
 }
 
 func ExpectToContainMiddlewareStack(actualMiddleware []stack.Middleware, expectedMiddleware ...stack.Middleware) {

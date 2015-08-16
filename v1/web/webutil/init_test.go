@@ -20,7 +20,7 @@ func TestWebutilSuite(t *testing.T) {
 	metrics.DefaultLogger = log.New(buffer, "", 0)
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Webutil Suite")
+	RunSpecs(t, "v1/web/webutil")
 
 	metrics.DefaultLogger = metricsLogger
 }

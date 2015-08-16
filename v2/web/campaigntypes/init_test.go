@@ -12,5 +12,5 @@ func TestWebV2CampaignTypesSuite(t *testing.T) {
 	fakes.RegisterFastTokenSigningMethod()
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Web V2 Campaign types Suite")
+	RunSpecs(t, "v2/web/campaigntypes")
 }

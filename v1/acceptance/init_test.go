@@ -27,7 +27,7 @@ var (
 
 func TestAcceptanceSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "V1 Acceptance Suite")
+	RunSpecs(t, "v1/acceptance")
 }
 
 var _ = BeforeSuite(func() {

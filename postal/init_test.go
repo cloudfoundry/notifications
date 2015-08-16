@@ -20,7 +20,7 @@ func TestPostalSuite(t *testing.T) {
 	metrics.DefaultLogger = log.New(buffer, "", 0)
 
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Postal Suite")
+	RunSpecs(t, "postal")
 
 	metrics.DefaultLogger = metricsLogger
 }

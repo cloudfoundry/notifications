@@ -12,7 +12,7 @@ import (
 
 func TestDBSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "DB Suite")
+	RunSpecs(t, "db")
 }
 
 var sqlDB *sql.DB
