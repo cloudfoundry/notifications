@@ -10,7 +10,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/middleware"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
@@ -64,7 +64,7 @@ var _ = Describe("Database Allocator", func() {
 		Expect(ok).To(BeTrue())
 		Expect(connection.DbMap.Db).To(Equal(sqlDB))
 
-		_, err := connection.DbMap.TableFor(reflect.TypeOf(models.Client{}), false)
+		_, err := connection.DbMap.TableFor(reflect.TypeOf(models.Sender{}), false)
 		Expect(err).NotTo(HaveOccurred())
 	})
 

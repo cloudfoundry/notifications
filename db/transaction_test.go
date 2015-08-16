@@ -2,16 +2,18 @@ package db_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/testing"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 
-	"github.com/cloudfoundry-incubator/notifications/testing"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Transaction", func() {
-	var transaction db.TransactionInterface
-	var conn db.ConnectionInterface
+	var (
+		transaction db.TransactionInterface
+		conn        db.ConnectionInterface
+	)
 
 	BeforeEach(func() {
 		db := db.NewDatabase(sqlDB, db.Config{})
@@ -23,28 +25,20 @@ var _ = Describe("Transaction", func() {
 	Describe("Begin/Commit", func() {
 		It("commits the transaction to the database", func() {
 			err := transaction.Begin()
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			repo := models.NewClientsRepo()
 			_, err = repo.Upsert(transaction, models.Client{
 				ID:          "my-client",
 				Description: "My Client",
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			err = transaction.Commit()
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			client, err := repo.Find(conn, "my-client")
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(client.ID).To(Equal("my-client"))
 			Expect(client.Description).To(Equal("My Client"))
@@ -54,23 +48,17 @@ var _ = Describe("Transaction", func() {
 	Describe("Begin/Rollback", func() {
 		It("rolls back the transaction from the database", func() {
 			err := transaction.Begin()
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			repo := models.NewClientsRepo()
 			_, err = repo.Upsert(transaction, models.Client{
 				ID:          "my-client",
 				Description: "My Client",
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			err = transaction.Rollback()
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			_, err = repo.Find(conn, "my-client")
 			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
