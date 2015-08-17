@@ -110,6 +110,38 @@ var _ = Describe("SendersCollection", func() {
 		})
 	})
 
+	Describe("List", func() {
+		It("will list all senders in the collection", func() {
+			sendersRepository.ListCall.Returns.Senders = []models.Sender{
+				{
+					ID:       "some-sender-id",
+					Name:     "some-sender",
+					ClientID: "some-client-id",
+				},
+			}
+
+			senders, err := sendersCollection.List(conn, "some-client-id")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(len(senders)).To(Equal(1))
+			Expect(senders[0].ID).To(Equal("some-sender-id"))
+
+			Expect(sendersRepository.ListCall.Receives.Conn).To(Equal(conn))
+			Expect(sendersRepository.ListCall.Receives.ClientID).To(Equal("some-client-id"))
+		})
+
+		Context("failure cases", func() {
+			It("handles unexpected database errors", func() {
+				sendersRepository.ListCall.Returns.Err = errors.New("BOOM!")
+
+				_, err := sendersCollection.List(conn, "some-client-id")
+				Expect(err).To(MatchError(collections.PersistenceError{
+					Err: errors.New("BOOM!"),
+				}))
+			})
+		})
+	})
+
 	Describe("Get", func() {
 		BeforeEach(func() {
 			sendersRepository.GetCall.Returns.Sender = models.Sender{

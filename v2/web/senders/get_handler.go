@@ -29,8 +29,9 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 	senderID := splitURL[len(splitURL)-1]
 
 	if senderID == "" {
-		w.WriteHeader(422)
-		w.Write([]byte(`{ "errors": [ "missing sender id" ] }`))
+		headers := w.Header()
+		headers.Set("Location", "/senders")
+		w.WriteHeader(http.StatusMovedPermanently)
 		return
 	}
 

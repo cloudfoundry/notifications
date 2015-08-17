@@ -23,9 +23,10 @@ var _ = Describe("Sender lifecycle", func() {
 			Trace: Trace,
 		})
 		token = GetClientTokenFor("my-client")
+
 	})
 
-	It("can create and read a new sender", func() {
+	It("can create, list and read a new sender", func() {
 		var senderID string
 
 		By("creating a sender", func() {
@@ -38,6 +39,26 @@ var _ = Describe("Sender lifecycle", func() {
 			Expect(response["name"]).To(Equal("My Cool App"))
 
 			senderID = response["id"].(string)
+		})
+
+		By("creating a sender with a different token", func() {
+			otherToken := GetClientTokenFor("otherclient")
+			status, _, err := client.Do("POST", "/senders", map[string]interface{}{
+				"name": "My Cool App",
+			}, otherToken.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+		})
+
+		By("listing all senders", func() {
+			status, response, err := client.Do("GET", "/senders", nil, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+
+			senders := response["senders"].([]interface{})
+			Expect(len(senders)).To(Equal(1))
+			sender := senders[0].(map[string]interface{})
+			Expect(sender["id"]).To(Equal(senderID))
 		})
 
 		By("getting the sender", func() {

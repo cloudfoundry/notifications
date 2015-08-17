@@ -14,6 +14,7 @@ type Sender struct {
 
 type sendersRepository interface {
 	Insert(conn models.ConnectionInterface, sender models.Sender) (insertedSender models.Sender, err error)
+	List(conn models.ConnectionInterface, clientID string) (retrievedSenderList []models.Sender, er error)
 	Get(conn models.ConnectionInterface, senderID string) (retrievedSender models.Sender, err error)
 	GetByClientIDAndName(conn models.ConnectionInterface, clientID, name string) (retrievedSender models.Sender, err error)
 }
@@ -50,6 +51,27 @@ func (sc SendersCollection) Set(conn ConnectionInterface, sender Sender) (Sender
 		Name:     model.Name,
 		ClientID: model.ClientID,
 	}, nil
+}
+
+func (sc SendersCollection) List(conn ConnectionInterface, clientID string) ([]Sender, error) {
+	senderList := []Sender{}
+
+	models, err := sc.repo.List(conn, clientID)
+	if err != nil {
+		return senderList, PersistenceError{err}
+	}
+
+	for _, model := range models {
+		sender := Sender{
+			ID:       model.ID,
+			Name:     model.Name,
+			ClientID: model.ClientID,
+		}
+
+		senderList = append(senderList, sender)
+	}
+
+	return senderList, nil
 }
 
 func (sc SendersCollection) Get(conn ConnectionInterface, senderID, clientID string) (Sender, error) {

@@ -14,6 +14,17 @@ type SendersCollection struct {
 		}
 	}
 
+	ListCall struct {
+		Receives struct {
+			Conn     collections.ConnectionInterface
+			ClientID string
+		}
+		Returns struct {
+			SenderList []collections.Sender
+			Err        error
+		}
+	}
+
 	GetCall struct {
 		Receives struct {
 			Conn     collections.ConnectionInterface
@@ -44,4 +55,11 @@ func (c *SendersCollection) Get(conn collections.ConnectionInterface, senderID, 
 	c.GetCall.Receives.ClientID = clientID
 
 	return c.GetCall.Returns.Sender, c.GetCall.Returns.Err
+}
+
+func (c *SendersCollection) List(conn collections.ConnectionInterface, clientID string) ([]collections.Sender, error) {
+	c.ListCall.Receives.Conn = conn
+	c.ListCall.Receives.ClientID = clientID
+
+	return c.ListCall.Returns.SenderList, c.ListCall.Returns.Err
 }

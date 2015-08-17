@@ -62,18 +62,16 @@ var _ = Describe("GetHandler", func() {
 	})
 
 	Context("failure cases", func() {
-		It("returns a 422 when the URL does not include a sender_id", func() {
+		It("returns a 301 when the sender id is missing", func() {
 			var err error
 			request, err = http.NewRequest("GET", "/senders/", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
-			Expect(writer.Code).To(Equal(422))
-			Expect(writer.Body.String()).To(MatchJSON(`{
-				"errors": [
-					"missing sender id"
-				]
-			}`))
+			Expect(writer.Code).To(Equal(http.StatusMovedPermanently))
+			headers := writer.Header()
+			Expect(headers.Get("Location")).To(Equal("/senders"))
+			Expect(writer.Body.String()).To(BeEmpty())
 		})
 
 		It("returns a 401 when the client id is missing", func() {

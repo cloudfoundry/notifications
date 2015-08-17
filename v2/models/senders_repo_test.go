@@ -1,6 +1,8 @@
 package models_test
 
 import (
+	"errors"
+
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/testing"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
@@ -50,6 +52,36 @@ var _ = Describe("SendersRepo", func() {
 
 			_, err = repo.Insert(conn, sender)
 			Expect(err).To(MatchError(models.DuplicateRecordError{}))
+		})
+	})
+
+	Describe("List", func() {
+		It("lists the senders given a client id", func() {
+			createdSender, err := repo.Insert(conn, models.Sender{
+				Name:     "some-sender",
+				ClientID: "some-client-id",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = repo.Insert(conn, models.Sender{
+				Name:     "some-sender",
+				ClientID: "other-client-id",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			senders, err := repo.List(conn, createdSender.ClientID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(senders)).To(Equal(1))
+			Expect(senders[0].ID).To(Equal(createdSender.ID))
+		})
+
+		It("returns any error that was encountered", func() {
+			connection := fakes.NewConnection()
+
+			connection.SelectCall.Err = errors.New("potatoes")
+
+			_, err := repo.List(connection, "doesnt-matter")
+			Expect(err).To(MatchError(errors.New("potatoes")))
 		})
 	})
 

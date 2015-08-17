@@ -4,6 +4,7 @@
 	- [Check service status](#get-info)
 - Senders
 	- [Creating a sender](#create-sender)
+  - [Listing the senders](#list-senders)
 	- [Retrieving a sender](#retrieve-sender)
 - Campaign types
   - [Creating a campaign type](#create-campaign-type)
@@ -116,6 +117,51 @@ X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 | ------ | ---------------------------- |
 | id     | System-generated sender ID   |
 | name   | Sender name                  |
+
+<a name="list-senders"></a>
+#### Listing Senders
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The user token requires `notifications.write` scope.
+
+###### Route
+```
+GET /senders
+```
+
+###### CURL Example
+```
+$ curl -i -X GET \
+  -H "Authorization: bearer <CLIENT-TOKEN>" \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  http://notifications.example.com/senders
+
+HTTP/1.1 200 OK
+Date: Mon, 17 Aug 2015 21:39:31 GMT
+Content-Length: 145
+Content-Type: text/plain; charset=utf-8
+
+{"senders":[{"id":"abb9b009-d3c3-4de2-43f0-341e671e2f3d","name":"sender one"},{"id":"379c5b3d-d3ec-4148-6608-68638ca977c5","name":"sender two"}]}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields | Description |
+| ------ | ----------- |
+| id     | Sender ID   |
+| name   | Sender name |
 
 <a name="retrieve-sender"></a>
 #### Retrieving a sender
