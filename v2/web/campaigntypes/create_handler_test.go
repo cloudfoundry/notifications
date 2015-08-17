@@ -174,7 +174,7 @@ var _ = Describe("CreateHandler", func() {
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusForbidden))
-			Expect(writer.Body.String()).To(MatchJSON(`{ "errors": ["Forbidden"] }`))
+			Expect(writer.Body.String()).To(MatchJSON(`{ "errors": ["You do not have permission to create critical campaign types"] }`))
 		})
 
 		It("returns a 400 when the JSON request body cannot be unmarshalled", func() {

@@ -131,7 +131,18 @@ var _ = Describe("Campaign types lifecycle", func() {
 	})
 
 	Context("failure cases", func() {
-		PIt("returns a 403 when the client does not have access to create a critical campaign type", func() {})
+		It("returns a 403 when the client does not have access to create a critical campaign type", func() {
+			token = GetClientTokenFor("non-critical-client")
+			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
+				"name":        "some-campaign-type",
+				"description": "a great campaign type",
+				"critical":    true,
+			}, token.Access)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusForbidden))
+			Expect(response["errors"]).To(ContainElement(`You do not have permission to create critical campaign types`))
+		})
 
 		It("returns a 404 when the campaign type cannot be retrieved", func() {
 			var senderID string

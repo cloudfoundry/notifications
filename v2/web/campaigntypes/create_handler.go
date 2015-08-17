@@ -66,7 +66,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 		if hasCriticalWrite == false {
 			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprintf(w, `{ "errors": [%q]}`, http.StatusText(http.StatusForbidden))
+			w.Write([]byte(`{ "errors": [ "You do not have permission to create critical campaign types" ]}`))
 			return
 		}
 	}
