@@ -46,7 +46,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	templatesRepository := models.NewTemplatesRepository(uuid.NewV4)
 
 	sendersCollection := collections.NewSendersCollection(sendersRepository)
-	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository)
+	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository, templatesRepository)
 	templatesCollection := collections.NewTemplatesCollection(templatesRepository)
 
 	info.Routes{

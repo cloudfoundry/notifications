@@ -68,7 +68,7 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 		"name":        campaignType.Name,
 		"description": campaignType.Description,
 		"critical":    campaignType.Critical,
-		"template_id": "",
+		"template_id": campaignType.TemplateID,
 	}
 
 	jsonBody, err := json.Marshal(jsonMap)

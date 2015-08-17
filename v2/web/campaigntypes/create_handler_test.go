@@ -235,16 +235,14 @@ var _ = Describe("CreateHandler", func() {
 			}`))
 		})
 
-		It("returns a 404 when the sender could not be found", func() {
-			campaignTypesCollection.SetCall.Returns.Err = collections.NotFoundError{errors.New("campaign type not found")}
+		It("returns a 404 when the collection returns a NotFoundError", func() {
+			campaignTypesCollection.SetCall.Returns.Err = collections.NotFoundError{errors.New("something not found")}
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"errors": ["campaign type not found"]
+				"errors": ["something not found"]
 			}`))
 		})
-
-		PIt("returns a 422 when the template_id is not valid for the given client", func() {})
 	})
 })

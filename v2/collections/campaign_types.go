@@ -18,6 +18,7 @@ type CampaignType struct {
 type CampaignTypesCollection struct {
 	campaignTypesRepository campaignTypesRepository
 	sendersRepository       sendersRepository
+	templatesRepository     templatesRepository
 }
 
 type campaignTypesRepository interface {
@@ -29,10 +30,11 @@ type campaignTypesRepository interface {
 	Delete(conn models.ConnectionInterface, campaignType models.CampaignType) error
 }
 
-func NewCampaignTypesCollection(nr campaignTypesRepository, sr sendersRepository) CampaignTypesCollection {
+func NewCampaignTypesCollection(nr campaignTypesRepository, sr sendersRepository, tr templatesRepository) CampaignTypesCollection {
 	return CampaignTypesCollection{
 		campaignTypesRepository: nr,
 		sendersRepository:       sr,
+		templatesRepository:     tr,
 	}
 }
 
@@ -41,6 +43,14 @@ func (nc CampaignTypesCollection) Set(conn ConnectionInterface, campaignType Cam
 	err = validateSender(clientID, campaignType.SenderID, sender, err)
 	if err != nil {
 		return CampaignType{}, err
+	}
+
+	if campaignType.TemplateID != "" {
+		template, err := nc.templatesRepository.Get(conn, campaignType.TemplateID)
+		err = validateTemplate(clientID, template, err)
+		if err != nil {
+			return CampaignType{}, err
+		}
 	}
 
 	var (
@@ -179,6 +189,22 @@ func validateCampaignType(senderID, campaignTypeID string, campaignType models.C
 
 	if campaignType.SenderID != senderID {
 		return NotFoundError{fmt.Errorf("Campaign type with id %q could not be found", campaignTypeID)}
+	}
+
+	return nil
+}
+
+func validateTemplate(clientID string, template models.Template, err error) error {
+	if err != nil {
+		if _, ok := err.(models.RecordNotFoundError); ok {
+			return NotFoundError{err}
+		}
+
+		return PersistenceError{err}
+	}
+
+	if clientID != template.ClientID {
+		return NotFoundError{fmt.Errorf("Template with id %q could not be found", template.ID)}
 	}
 
 	return nil

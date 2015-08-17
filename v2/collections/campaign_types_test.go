@@ -16,14 +16,16 @@ var _ = Describe("CampaignTypesCollection", func() {
 		campaignTypesCollection     collections.CampaignTypesCollection
 		fakeCampaignTypesRepository *fakes.CampaignTypesRepository
 		fakeSendersRepository       *fakes.SendersRepository
+		fakeTemplatesRepository     *fakes.TemplatesRepository
 		fakeDatabaseConnection      *fakes.Connection
 	)
 
 	BeforeEach(func() {
 		fakeCampaignTypesRepository = fakes.NewCampaignTypesRepository()
 		fakeSendersRepository = fakes.NewSendersRepository()
+		fakeTemplatesRepository = fakes.NewTemplatesRepository()
 
-		campaignTypesCollection = collections.NewCampaignTypesCollection(fakeCampaignTypesRepository, fakeSendersRepository)
+		campaignTypesCollection = collections.NewCampaignTypesCollection(fakeCampaignTypesRepository, fakeSendersRepository, fakeTemplatesRepository)
 		fakeDatabaseConnection = fakes.NewConnection()
 	})
 
@@ -211,6 +213,77 @@ var _ = Describe("CampaignTypesCollection", func() {
 
 				_, err := campaignTypesCollection.Set(fakeDatabaseConnection, campaignType, "some-client-id")
 				Expect(err).To(MatchError(collections.NotFoundError{errors.New(`Sender with id "mysender" could not be found`)}))
+			})
+
+			Context("when the template does not exist", func() {
+				It("returns a NotFoundError", func() {
+					campaignType = collections.CampaignType{
+						Name:        "My cool campaign type",
+						Description: "description",
+						Critical:    false,
+						TemplateID:  "missing-template-id",
+						SenderID:    "mysender",
+					}
+
+					originalError := models.NewRecordNotFoundError("record not found")
+					fakeSendersRepository.GetCall.Returns.Sender = models.Sender{
+						ID:       "senderID",
+						Name:     "I dont matter",
+						ClientID: "some-client-id",
+					}
+					fakeTemplatesRepository.GetCall.Returns.Error = originalError
+					_, err := campaignTypesCollection.Set(fakeDatabaseConnection, campaignType, "some-client-id")
+					Expect(err).To(MatchError(collections.NotFoundError{originalError}))
+				})
+			})
+
+			Context("when the template belongs to a different client", func() {
+				It("returns a NotFoundError", func() {
+					campaignType = collections.CampaignType{
+						Name:        "My cool campaign type",
+						Description: "description",
+						Critical:    false,
+						TemplateID:  "missing-template-id",
+						SenderID:    "senderID",
+					}
+
+					fakeSendersRepository.GetCall.Returns.Sender = models.Sender{
+						ID:       "senderID",
+						Name:     "I dont matter",
+						ClientID: "some-client-id",
+					}
+					fakeTemplatesRepository.GetCall.Returns.Template = models.Template{
+						ID:       "templateID",
+						Name:     "template name",
+						Text:     "email body",
+						ClientID: "other-client-id",
+					}
+
+					_, err := campaignTypesCollection.Set(fakeDatabaseConnection, campaignType, "some-client-id")
+					Expect(err).To(MatchError(collections.NotFoundError{errors.New(`Template with id "templateID" could not be found`)}))
+				})
+			})
+
+			Context("when the template cannot be retrieved due to persistence issues", func() {
+				It("returns a NotFoundError", func() {
+					campaignType = collections.CampaignType{
+						Name:        "My cool campaign type",
+						Description: "description",
+						Critical:    false,
+						TemplateID:  "missing-template-id",
+						SenderID:    "senderID",
+					}
+
+					fakeSendersRepository.GetCall.Returns.Sender = models.Sender{
+						ID:       "senderID",
+						Name:     "I dont matter",
+						ClientID: "some-client-id",
+					}
+					fakeTemplatesRepository.GetCall.Returns.Error = errors.New("failed to retrieve template")
+
+					_, err := campaignTypesCollection.Set(fakeDatabaseConnection, campaignType, "some-client-id")
+					Expect(err).To(MatchError(collections.PersistenceError{errors.New(`failed to retrieve template`)}))
+				})
 			})
 		})
 	})

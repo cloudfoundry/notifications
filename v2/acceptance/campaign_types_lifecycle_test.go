@@ -35,7 +35,18 @@ var _ = Describe("Campaign types lifecycle", func() {
 	})
 
 	It("can create, update, show, and delete a new campaign type", func() {
-		var campaignTypeID string
+		var campaignTypeID, templateID string
+
+		By("creating a template", func() {
+			status, response, err := client.Do("POST", "/templates", map[string]interface{}{
+				"name": "some-template-name",
+				"text": "email body",
+			}, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+
+			templateID = response["id"].(string)
+		})
 
 		By("creating a campaign type", func() {
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
@@ -85,6 +96,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 				"name":        "updated-campaign-type",
 				"description": "still the same great campaign type",
 				"critical":    true,
+				"template_id": templateID,
 			}, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
@@ -92,7 +104,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			Expect(response["name"]).To(Equal("updated-campaign-type"))
 			Expect(response["description"]).To(Equal("still the same great campaign type"))
 			Expect(response["critical"]).To(BeTrue())
-			Expect(response["template_id"]).To(BeEmpty())
+			Expect(response["template_id"]).To(Equal(templateID))
 		})
 
 		By("showing the updated campaign type", func() {
@@ -104,7 +116,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			Expect(response["name"]).To(Equal("updated-campaign-type"))
 			Expect(response["description"]).To(Equal("still the same great campaign type"))
 			Expect(response["critical"]).To(BeTrue())
-			Expect(response["template_id"]).To(BeEmpty())
+			Expect(response["template_id"]).To(Equal(templateID))
 		})
 
 		By("deleting the campaign type", func() {
@@ -243,6 +255,62 @@ var _ = Describe("Campaign types lifecycle", func() {
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Sender with id %q could not be found", senderID)))
 			})
+		})
+
+		It("returns a 404 when attempting to create a campaign type with an unknown template", func() {
+			By("creating a campaign type with an unknown template", func() {
+				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
+					"name":        "some-campaign-type",
+					"description": "a great campaign type",
+					"template_id": "missing-template-id",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusNotFound))
+				Expect(response["errors"]).To(ContainElement(`Template with id "missing-template-id" could not be found`))
+			})
+		})
+
+		It("returns a 404 when attempting to update a campaign type with someone else's template", func() {
+			var campaignTypeID, templateID string
+
+			By("creating a campaign type", func() {
+				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
+					"name":        "some-campaign-type",
+					"description": "a great campaign type",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				campaignTypeID = response["id"].(string)
+
+				Expect(response["name"]).To(Equal("some-campaign-type"))
+				Expect(response["description"]).To(Equal("a great campaign type"))
+				Expect(response["critical"]).To(BeFalse())
+				Expect(response["template_id"]).To(BeEmpty())
+			})
+
+			By("creating a template for another client", func() {
+				token := GetClientTokenFor("other-client")
+				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
+					"name": "some-template-name",
+					"text": "email body",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				templateID = response["id"].(string)
+			})
+
+			By("attempting to update the campaign type with that template", func() {
+				token := GetClientTokenFor("my-client")
+				status, response, err := client.Do("PUT", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), map[string]interface{}{
+					"template_id": templateID,
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusNotFound))
+				Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Template with id %q could not be found", templateID)))
+			})
+
 		})
 	})
 })
