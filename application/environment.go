@@ -3,6 +3,7 @@ package application
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 
@@ -63,6 +64,7 @@ func NewEnvironment() Environment {
 	}
 
 	env.parseDatabaseURL()
+	env.expandRoot()
 	env.validateSMTPAuthMechanism()
 	env.inferMigrationsDirs()
 	env.parseDefaultUAAScopes()
@@ -72,6 +74,10 @@ func NewEnvironment() Environment {
 
 func (env *Environment) parseDefaultUAAScopes() {
 	env.DefaultUAAScopes = strings.Split(env.DefaultUAAScopesList, ",")
+}
+
+func (env *Environment) expandRoot() {
+	env.RootPath = os.ExpandEnv(env.RootPath)
 }
 
 func (env *Environment) inferMigrationsDirs() {

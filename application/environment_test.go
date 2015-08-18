@@ -351,6 +351,14 @@ var _ = Describe("Environment", func() {
 
 			Expect(env.RootPath).To(Equal("bananaDAMAGE"))
 		})
+
+		It("expands the path when needed", func() {
+			os.Setenv("HOME", "bananaDAMAGE")
+			os.Setenv("ROOT_PATH", "$HOME")
+			env := application.NewEnvironment()
+
+			Expect(env.RootPath).To(Equal("bananaDAMAGE"))
+		})
 	})
 
 	Describe("TestMode config", func() {
