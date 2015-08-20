@@ -14,7 +14,7 @@ var _ = Describe("Get a list of all notifications", func() {
 		client := support.NewClient(Servers.Notifications.URL())
 
 		By("setting the notifications for several clients", func() {
-			status, err := client.Notifications.Register(GetClientTokenFor("client-123", "uaa").Access, support.RegisterClient{
+			status, err := client.Notifications.Register(GetClientTokenFor("client-123").Access, support.RegisterClient{
 				SourceName: "source name stuff",
 				Notifications: map[string]support.RegisterNotification{
 					"kind-asd": {
@@ -30,7 +30,7 @@ var _ = Describe("Get a list of all notifications", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNoContent))
 
-			status, err = client.Notifications.Register(GetClientTokenFor("client-456", "uaa").Access, support.RegisterClient{
+			status, err = client.Notifications.Register(GetClientTokenFor("client-456").Access, support.RegisterClient{
 				SourceName: "raptors",
 				Notifications: map[string]support.RegisterNotification{
 					"dino-kind": {
@@ -46,7 +46,7 @@ var _ = Describe("Get a list of all notifications", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNoContent))
 
-			status, err = client.Notifications.Register(GetClientTokenFor("client-890", "uaa").Access, support.RegisterClient{
+			status, err = client.Notifications.Register(GetClientTokenFor("client-890").Access, support.RegisterClient{
 				SourceName: "this client has no notifications",
 			})
 			Expect(err).NotTo(HaveOccurred())
@@ -54,7 +54,7 @@ var _ = Describe("Get a list of all notifications", func() {
 		})
 
 		By("confirming that all the notifications were registered", func() {
-			status, list, err := client.Notifications.List(GetClientTokenFor("notifications-sender", "uaa").Access)
+			status, list, err := client.Notifications.List(GetClientTokenFor("notifications-sender").Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 			Expect(list).To(HaveLen(3))

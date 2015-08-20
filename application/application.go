@@ -9,6 +9,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/strategy"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/web"
@@ -115,6 +116,7 @@ func (app Application) StartWorkers() {
 			Sender:        app.env.Sender,
 			EncryptionKey: app.env.EncryptionKey,
 			Domain:        app.env.Domain,
+			UAAHost:       app.env.UAAHost,
 
 			Logger:     app.mother.Logger(),
 			MailClient: app.mother.MailClient(),
@@ -128,9 +130,10 @@ func (app Application) StartWorkers() {
 			MessagesRepo:           app.mother.MessagesRepo(),
 			ReceiptsRepo:           app.mother.ReceiptsRepo(),
 
-			UserLoader:      postal.NewUserLoader(zonedUAAClient),
-			TemplatesLoader: app.mother.TemplatesLoader(),
-			TokenLoader:     uaa.NewTokenLoader(zonedUAAClient),
+			UserLoader:         postal.NewUserLoader(zonedUAAClient),
+			TemplatesLoader:    app.mother.TemplatesLoader(),
+			TokenLoader:        uaa.NewTokenLoader(zonedUAAClient),
+			StrategyDeterminer: strategy.Determiner{UserStrategy: app.mother.UserStrategy()},
 		})
 		return &worker
 	})

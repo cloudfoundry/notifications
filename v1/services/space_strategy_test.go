@@ -73,6 +73,7 @@ var _ = Describe("Space Strategy", func() {
 							Doctype:        "<html>",
 						},
 					},
+					TemplateID: "some-template-id",
 					Kind: services.DispatchKind{
 						ID:          "forgot_password",
 						Description: "Password reminder",
@@ -107,6 +108,7 @@ var _ = Describe("Space Strategy", func() {
 					KindDescription:   "Password reminder",
 					SourceDescription: "Login system",
 					Text:              "Please reset your password by clicking on this link...",
+					TemplateID:        "some-template-id",
 					HTML: services.HTML{
 						BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
 						BodyAttributes: "some-html-body-attributes",

@@ -21,7 +21,7 @@ var _ = Describe("notifications can be registered, using the deprecated /registr
 
 		clientID := "notifications-sender"
 		notificationID := "acceptance-test"
-		clientToken := GetClientTokenFor(clientID, "uaa")
+		clientToken := GetClientTokenFor(clientID)
 		client := support.NewClient(Servers.Notifications.URL())
 		userID := "user-123"
 

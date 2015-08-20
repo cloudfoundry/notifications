@@ -16,7 +16,7 @@ var _ = Describe("Send a notification to an email using default template", func(
 	It("sends a single notification to an email", func() {
 		var response support.NotifyResponse
 		clientID := "notifications-sender"
-		clientToken := GetClientTokenFor(clientID, "uaa")
+		clientToken := GetClientTokenFor(clientID)
 		client := support.NewClient(Servers.Notifications.URL())
 
 		By("registering a notifications", func() {
@@ -71,7 +71,7 @@ var _ = Describe("Send a notification to an email using default template", func(
 		})
 
 		By("confirming that the client notifications list remains unaffected", func() {
-			status, list, err := client.Notifications.List(GetClientTokenFor("notifications-sender", "uaa").Access)
+			status, list, err := client.Notifications.List(GetClientTokenFor("notifications-sender").Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 			Expect(list).To(HaveLen(1))

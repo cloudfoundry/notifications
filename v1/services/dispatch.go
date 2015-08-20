@@ -7,6 +7,7 @@ type Dispatch struct {
 	Role       string
 	Connection ConnectionInterface
 	UAAHost    string
+	TemplateID string
 
 	VCAPRequest DispatchVCAPRequest
 	Message     DispatchMessage

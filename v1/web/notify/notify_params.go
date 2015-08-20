@@ -44,14 +44,22 @@ func NewNotifyParams(body io.ReadCloser) (NotifyParams, error) {
 		return notify, err
 	}
 
-	notify.formatEmail()
-
-	err = notify.extractHTML()
+	err = notify.FormatEmailAndExtractHTML()
 	if err != nil {
 		return notify, err
 	}
 
 	return notify, nil
+}
+
+func (notify *NotifyParams) FormatEmailAndExtractHTML() error {
+	notify.formatEmail()
+
+	err := notify.extractHTML()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (notify *NotifyParams) formatEmail() {

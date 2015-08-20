@@ -30,7 +30,7 @@ var _ = BeforeSuite(func() {
 	Servers.SMTP = servers.NewSMTP()
 	Servers.SMTP.Boot()
 
-	Servers.UAA = servers.NewUAA("uaa")
+	Servers.UAA = servers.NewUAA()
 	Servers.UAA.Boot()
 
 	Servers.Notifications = servers.NewNotifications()

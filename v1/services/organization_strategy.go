@@ -34,6 +34,7 @@ func (strategy OrganizationStrategy) Dispatch(dispatch Dispatch) ([]Response, er
 		SourceDescription: dispatch.Client.Description,
 		Endorsement:       OrganizationEndorsement,
 		Text:              dispatch.Message.Text,
+		TemplateID:        dispatch.TemplateID,
 		Role:              dispatch.Role,
 		HTML: HTML{
 			BodyContent:    dispatch.Message.HTML.BodyContent,

@@ -17,6 +17,9 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/pivotal-golang/lager"
 
+	"github.com/cloudfoundry-incubator/notifications/v2/collections"
+	v2Queue "github.com/cloudfoundry-incubator/notifications/v2/queue"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -61,6 +64,7 @@ var _ = Describe("DeliveryWorker", func() {
 		kindsRepo              *fakes.KindsRepo
 		messagesRepo           *fakes.MessagesRepo
 		database               *fakes.Database
+		strategyDeterminer     *fakes.StrategyDeterminer
 		conn                   db.ConnectionInterface
 		userLoader             *fakes.UserLoader
 		userGUID               string
@@ -84,6 +88,7 @@ var _ = Describe("DeliveryWorker", func() {
 		messagesRepo = fakes.NewMessagesRepo()
 		database = fakes.NewDatabase()
 		conn = database.Connection()
+		strategyDeterminer = fakes.NewStrategyDeterminer()
 		userGUID = "user-123"
 		sum := md5.Sum([]byte("banana's are so very tasty"))
 		encryptionKey := sum[:]
@@ -105,7 +110,8 @@ var _ = Describe("DeliveryWorker", func() {
 		worker = postal.NewDeliveryWorker(postal.DeliveryWorkerConfig{
 			ID:            id,
 			Sender:        "from@example.com",
-			Domain:        "http://www.example.com",
+			Domain:        "example.com",
+			UAAHost:       "https://uaa.example.com",
 			EncryptionKey: encryptionKey,
 			Logger:        logger,
 			Queue:         queue,
@@ -121,18 +127,19 @@ var _ = Describe("DeliveryWorker", func() {
 			ReceiptsRepo:           receiptsRepo,
 			TokenLoader:            tokenLoader,
 			MailClient:             mailClient,
+			StrategyDeterminer:     strategyDeterminer,
 		})
 
 		messageID = "randomly-generated-guid"
 		delivery = postal.Delivery{
 			ClientID: "some-client",
 			UserGUID: userGUID,
-			UAAHost:  "canonical-uaa-host",
 			Options: postal.Options{
-				Subject: "the subject",
-				Text:    "body content",
-				ReplyTo: "thesender@example.com",
-				KindID:  "some-kind",
+				Subject:    "the subject",
+				Text:       "body content",
+				ReplyTo:    "thesender@example.com",
+				KindID:     "some-kind",
+				TemplateID: "some-template-id",
 			},
 			MessageID:     messageID,
 			VCAPRequestID: "some-request-id",
@@ -173,12 +180,10 @@ var _ = Describe("DeliveryWorker", func() {
 
 	Describe("Deliver to zone", func() {
 		It("makes a call to getNewClientToken for a zone during a delivery", func() {
-			delivery.UAAHost = "zoned-uaa-host"
-
 			job := gobble.NewJob(delivery)
 			worker.Deliver(&job)
 
-			Expect(tokenLoader.LoadCall.Receives.UAAHost).To(Equal("zoned-uaa-host"))
+			Expect(tokenLoader.LoadCall.Receives.UAAHost).To(Equal("https://uaa.example.com"))
 		})
 	})
 
@@ -187,6 +192,42 @@ var _ = Describe("DeliveryWorker", func() {
 
 		BeforeEach(func() {
 			job = gobble.NewJob(delivery)
+		})
+
+		Context("when Deliver receives a campaign", func() {
+			BeforeEach(func() {
+				campaignJob := v2Queue.CampaignJob{JobType: "campaign", Campaign: collections.Campaign{}}
+				job = gobble.NewJob(campaignJob)
+			})
+
+			It("sends the job to the strategyDeterminer", func() {
+				worker.Deliver(&job)
+				Expect(strategyDeterminer.DetermineCall.Receives.Job).To(Equal(job))
+				Expect(receiptsRepo.WasCalled).To(BeFalse())
+			})
+
+			It("logs that it is determining the strategy", func() {
+				worker.Deliver(&job)
+				lines, err := parseLogLines(buffer.Bytes())
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(lines).To(ContainElement(logLine{
+					Source:   "notifications",
+					Message:  "notifications.worker.determining-strategy",
+					LogLevel: int(lager.INFO),
+					Data: map[string]interface{}{
+						"session":   "1",
+						"worker_id": float64(1234),
+					},
+				}))
+			})
+		})
+
+		Context("when Deliver does not receive a campaign", func() {
+			It("does not send the job to the strategyDeterminer", func() {
+				worker.Deliver(&job)
+				Expect(strategyDeterminer.DetermineCall.WasCalled).To(BeFalse())
+			})
 		})
 
 		It("logs the email address of the recipient", func() {
@@ -207,6 +248,15 @@ var _ = Describe("DeliveryWorker", func() {
 					"vcap_request_id": "some-request-id",
 				},
 			}))
+		})
+
+		It("loads the correct template", func() {
+			worker.Deliver(&job)
+
+			Expect(templateLoader.LoadTemplatesCall.Receives.ClientID).To(Equal("some-client"))
+			Expect(templateLoader.LoadTemplatesCall.Receives.KindID).To(Equal("some-kind"))
+			Expect(templateLoader.LoadTemplatesCall.Receives.TemplateID).To(Equal("some-template-id"))
+
 		})
 
 		It("logs successful delivery", func() {
@@ -306,7 +356,6 @@ var _ = Describe("DeliveryWorker", func() {
 
 		Context("when loading a zoned token fails", func() {
 			It("retries the job", func() {
-				delivery.UAAHost = "zoned-uaa-host"
 				job = gobble.NewJob(delivery)
 
 				tokenLoader.LoadCall.Returns.Error = errors.New("failed to load a zoned UAA token")

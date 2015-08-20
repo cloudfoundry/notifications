@@ -19,7 +19,7 @@ var _ = Describe("Sending notifications to users with certain scopes", func() {
 
 		client := support.NewClient(Servers.Notifications.URL())
 		clientID := "notifications-sender"
-		clientToken := GetClientTokenFor(clientID, "uaa")
+		clientToken := GetClientTokenFor(clientID)
 		scope := "this.scope"
 
 		By("registering a client with a notification", func() {
@@ -105,7 +105,7 @@ var _ = Describe("Sending notifications to users with certain scopes", func() {
 		var templateID string
 		client := support.NewClient(Servers.Notifications.URL())
 		clientID := "notifications-sender"
-		clientToken := GetClientTokenFor(clientID, "uaa")
+		clientToken := GetClientTokenFor(clientID)
 		scope := "openid"
 
 		By("registering a client with a notification", func() {

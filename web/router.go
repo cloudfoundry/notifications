@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	v1web "github.com/cloudfoundry-incubator/notifications/v1/web"
 	v2web "github.com/cloudfoundry-incubator/notifications/v2/web"
@@ -24,6 +25,7 @@ type MotherInterface interface {
 	MessageFinder() services.MessageFinder
 	TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister)
 	SQLDatabase() *sql.DB
+	Queue() gobble.QueueInterface
 }
 
 func NewRouter(mother MotherInterface, config Config) http.Handler {
@@ -39,6 +41,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		SQLDB:            config.SQLDB,
 		Logger:           config.Logger,
 		UAAPublicKey:     config.UAAPublicKey,
+		Queue:            mother.Queue(),
 	})
 
 	return VersionRouter{

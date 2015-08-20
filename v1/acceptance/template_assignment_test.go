@@ -22,7 +22,7 @@ var _ = Describe("Assign Templates", func() {
 	BeforeEach(func() {
 		notificationID = "acceptance-test"
 		clientID = "notifications-admin"
-		clientToken = GetClientTokenFor(clientID, "uaa")
+		clientToken = GetClientTokenFor(clientID)
 		client = support.NewClient(Servers.Notifications.URL())
 	})
 

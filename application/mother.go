@@ -18,6 +18,8 @@ import (
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
+	"github.com/cloudfoundry-incubator/notifications/v2/collections"
+	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
@@ -118,7 +120,10 @@ func (m *Mother) TemplatesLoader() postal.TemplatesLoader {
 	clientsRepo, kindsRepo := m.Repos()
 	templatesRepo := m.TemplatesRepo()
 
-	return postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
+	v2templatesRepo := v2models.NewTemplatesRepository(uuid.NewV4)
+	templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
+
+	return postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo, templatesCollection)
 }
 
 func (m *Mother) MailClient() *mail.Client {

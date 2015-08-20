@@ -4,9 +4,12 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
+	"github.com/cloudfoundry-incubator/notifications/v2/queue"
+	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigns"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/info"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/middleware"
@@ -33,6 +36,7 @@ type Config struct {
 	SQLDB            *sql.DB
 	Logger           lager.Logger
 	UAAPublicKey     string
+	Queue            gobble.QueueInterface
 }
 
 func NewRouter(mx muxer, config Config) http.Handler {
@@ -48,6 +52,9 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	sendersCollection := collections.NewSendersCollection(sendersRepository)
 	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository, templatesRepository)
 	templatesCollection := collections.NewTemplatesCollection(templatesRepository)
+
+	campaignEnqueuer := queue.NewCampaignEnqueuer(config.Queue)
+	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer)
 
 	info.Routes{
 		RequestCounter: requestCounter,
@@ -73,6 +80,13 @@ func NewRouter(mx muxer, config Config) http.Handler {
 		Authenticator:       notificationsWriteAuthenticator,
 		DatabaseAllocator:   databaseAllocator,
 		TemplatesCollection: templatesCollection,
+	}.Register(mx)
+
+	campaigns.Routes{
+		RequestLogging:      logging,
+		Authenticator:       notificationsWriteAuthenticator,
+		DatabaseAllocator:   databaseAllocator,
+		CampaignsCollection: campaignsCollection,
 	}.Register(mx)
 
 	return mx

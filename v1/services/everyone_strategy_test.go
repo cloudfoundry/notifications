@@ -53,6 +53,7 @@ var _ = Describe("Everyone Strategy", func() {
 					ID:          "welcome_user",
 					Description: "Your Official Welcome",
 				},
+				TemplateID: "some-template-id",
 				Client: services.DispatchClient{
 					ID:          "my-client",
 					Description: "Welcome system",
@@ -92,6 +93,7 @@ var _ = Describe("Everyone Strategy", func() {
 				KindDescription:   "Your Official Welcome",
 				SourceDescription: "Welcome system",
 				Text:              "Welcome to the system, now get off my lawn.",
+				TemplateID:        "some-template-id",
 				HTML: services.HTML{
 					BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
 					BodyAttributes: "some-html-body-attributes",

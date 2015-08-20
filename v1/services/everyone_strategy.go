@@ -29,6 +29,7 @@ func (strategy EveryoneStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		KindDescription:   dispatch.Kind.Description,
 		SourceDescription: dispatch.Client.Description,
 		Text:              dispatch.Message.Text,
+		TemplateID:        dispatch.TemplateID,
 		HTML: HTML{
 			BodyContent:    dispatch.Message.HTML.BodyContent,
 			BodyAttributes: dispatch.Message.HTML.BodyAttributes,

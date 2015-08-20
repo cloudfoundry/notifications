@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,12 +15,13 @@ import (
 
 var _ = Describe("TemplateLoader", func() {
 	var (
-		loader        postal.TemplatesLoader
-		clientsRepo   *fakes.ClientsRepo
-		kindsRepo     *fakes.KindsRepo
-		templatesRepo *fakes.TemplatesRepo
-		conn          db.ConnectionInterface
-		database      *fakes.Database
+		loader              postal.TemplatesLoader
+		clientsRepo         *fakes.ClientsRepo
+		kindsRepo           *fakes.KindsRepo
+		templatesRepo       *fakes.TemplatesRepo
+		conn                db.ConnectionInterface
+		database            *fakes.Database
+		templatesCollection *fakes.TemplatesCollection
 	)
 
 	BeforeEach(func() {
@@ -28,7 +30,8 @@ var _ = Describe("TemplateLoader", func() {
 		templatesRepo = fakes.NewTemplatesRepo()
 		database = fakes.NewDatabase()
 		conn = database.Connection()
-		loader = postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
+		templatesCollection = fakes.NewTemplatesCollection()
+		loader = postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo, templatesCollection)
 	})
 
 	Describe("LoadTemplates", func() {
@@ -86,7 +89,7 @@ var _ = Describe("TemplateLoader", func() {
 			})
 
 			It("returns the template belonging to the kind", func() {
-				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id")
+				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id", "")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(templates).To(Equal(postal.Templates{
 					HTML:    "<p>kind template</p>",
@@ -117,7 +120,7 @@ var _ = Describe("TemplateLoader", func() {
 			})
 
 			It("returns the template belonging to the client", func() {
-				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id")
+				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id", "")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(templates).To(Equal(postal.Templates{
 					HTML:    "<p>client template</p>",
@@ -127,9 +130,33 @@ var _ = Describe("TemplateLoader", func() {
 			})
 		})
 
+		Context("when a templateID is passed", func() {
+			BeforeEach(func() {
+				templatesCollection.GetCall.Returns.Template = collections.Template{
+					Text:     "some testing text",
+					Subject:  "some subject",
+					HTML:     "<p>v2 awesome</p>",
+					ClientID: "my-client-id",
+				}
+			})
+
+			It("returns the template", func() {
+				templates, err := loader.LoadTemplates("my-client-id", "", "some-v2-template-id")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(templates).To(Equal(postal.Templates{
+					HTML:    "<p>v2 awesome</p>",
+					Text:    "some testing text",
+					Subject: "some subject",
+				}))
+				Expect(templatesCollection.GetCall.Receives.TemplateID).To(Equal("some-v2-template-id"))
+				Expect(templatesCollection.GetCall.Receives.Connection).To(Equal(conn))
+				Expect(templatesCollection.GetCall.Receives.ClientID).To(Equal("my-client-id"))
+			})
+		})
+
 		Context("when the neither client nor kind has a template", func() {
 			It("returns the default template", func() {
-				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id")
+				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id", "")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(templates).To(Equal(postal.Templates{
 					HTML:    "<p>The default template</p>",
@@ -141,7 +168,7 @@ var _ = Describe("TemplateLoader", func() {
 
 		Context("when kindID is an empty string", func() {
 			It("does not look for a template belonging to the kind", func() {
-				templates, err := loader.LoadTemplates("my-client-id", "")
+				templates, err := loader.LoadTemplates("my-client-id", "", "")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(templates).To(Equal(postal.Templates{
 					HTML:    "<p>The default template</p>",
@@ -157,7 +184,7 @@ var _ = Describe("TemplateLoader", func() {
 			})
 
 			It("bubbles up the error", func() {
-				_, err := loader.LoadTemplates("my-client-id", "my-kind-id")
+				_, err := loader.LoadTemplates("my-client-id", "my-kind-id", "")
 				Expect(err).To(HaveOccurred())
 			})
 
@@ -169,7 +196,7 @@ var _ = Describe("TemplateLoader", func() {
 			})
 
 			It("bubbles up the error", func() {
-				_, err := loader.LoadTemplates("my-client-id", "my-kind-id")
+				_, err := loader.LoadTemplates("my-client-id", "my-kind-id", "")
 				Expect(err).To(HaveOccurred())
 			})
 		})

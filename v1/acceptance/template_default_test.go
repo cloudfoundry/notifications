@@ -20,7 +20,7 @@ var _ = Describe("Default Template", func() {
 	)
 
 	BeforeEach(func() {
-		clientToken = GetClientTokenFor("notifications-admin", "uaa")
+		clientToken = GetClientTokenFor("notifications-admin")
 		client = support.NewClient(Servers.Notifications.URL())
 	})
 

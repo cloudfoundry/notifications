@@ -73,6 +73,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 							Doctype:        "<html>",
 						},
 					},
+					TemplateID: "some-template-id",
 					Kind: services.DispatchKind{
 						ID:          "forgot_waterbottle",
 						Description: "Water Bottle Reminder",
@@ -101,6 +102,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 					KindDescription:   "Water Bottle Reminder",
 					SourceDescription: "The Water Bottle System",
 					Text:              "Please make sure to leave your bottle in a place that is safe and dry",
+					TemplateID:        "some-template-id",
 					HTML: services.HTML{
 						BodyContent:    "<p>The water bottle needs to be safe and dry</p>",
 						BodyAttributes: "some-html-body-attributes",

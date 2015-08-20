@@ -3,7 +3,7 @@ package fakes
 import "github.com/cloudfoundry-incubator/notifications/gobble"
 
 type Queue struct {
-	jobs          map[int]gobble.Job
+	Jobs          map[int]gobble.Job
 	availableJobs chan gobble.Job
 	pk            int
 	EnqueueError  error
@@ -11,7 +11,7 @@ type Queue struct {
 
 func NewQueue() *Queue {
 	return &Queue{
-		jobs:          make(map[int]gobble.Job),
+		Jobs:          make(map[int]gobble.Job),
 		availableJobs: make(chan gobble.Job),
 	}
 }
@@ -30,7 +30,7 @@ func (q *Queue) Enqueue(job gobble.Job) (gobble.Job, error) {
 		q.availableJobs <- job
 	}()
 
-	q.jobs[job.ID] = job
+	q.Jobs[job.ID] = job
 
 	return job, nil
 }
@@ -47,7 +47,7 @@ func (q *Queue) Reserve(string) <-chan gobble.Job {
 }
 
 func (q *Queue) Dequeue(job gobble.Job) {
-	delete(q.jobs, job.ID)
+	delete(q.Jobs, job.ID)
 }
 
 func (q *Queue) Requeue(job gobble.Job) {
@@ -57,13 +57,13 @@ func (q *Queue) Requeue(job gobble.Job) {
 func (q *Queue) Unlock() {}
 
 func (q *Queue) Len() (int, error) {
-	return len(q.jobs), nil
+	return len(q.Jobs), nil
 }
 
 func (q *Queue) RetryQueueLengths() (map[int]int, error) {
 	lengths := map[int]int{}
 
-	for _, job := range q.jobs {
+	for _, job := range q.Jobs {
 		lengths[job.RetryCount] = lengths[job.RetryCount] + 1
 	}
 

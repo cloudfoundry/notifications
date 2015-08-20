@@ -39,6 +39,7 @@ var _ = Describe("EmailStrategy", func() {
 					ID:          "some-kind-id",
 					Description: "description of a kind",
 				},
+				TemplateID: "some-template-id",
 				Message: services.DispatchMessage{
 					ReplyTo: "reply-to@example.com",
 					Subject: "this is the subject",
@@ -68,6 +69,7 @@ var _ = Describe("EmailStrategy", func() {
 				KindDescription:   "description of a kind",
 				SourceDescription: "description of a client",
 				Text:              "email text",
+				TemplateID:        "some-template-id",
 				HTML: services.HTML{
 					BodyContent:    "some html body content",
 					BodyAttributes: "some html body attributes",

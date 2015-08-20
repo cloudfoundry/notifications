@@ -70,6 +70,7 @@ var _ = Describe("Organization Strategy", func() {
 						ID:          "forgot_password",
 						Description: "Password reminder",
 					},
+					TemplateID: "some-template-id",
 					Client: services.DispatchClient{
 						ID:          "mister-client",
 						Description: "Login system",
@@ -100,6 +101,7 @@ var _ = Describe("Organization Strategy", func() {
 					KindDescription:   "Password reminder",
 					SourceDescription: "Login system",
 					Text:              "Please reset your password by clicking on this link...",
+					TemplateID:        "some-template-id",
 					HTML: services.HTML{
 						BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
 						BodyAttributes: "some-html-body-attributes",

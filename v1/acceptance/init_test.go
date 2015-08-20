@@ -21,7 +21,6 @@ var (
 		SMTP          *servers.SMTP
 		CC            servers.CC
 		UAA           *servers.UAA
-		ZonedUAA      *servers.UAA
 	}
 )
 
@@ -36,10 +35,7 @@ var _ = BeforeSuite(func() {
 	Servers.SMTP = servers.NewSMTP()
 	Servers.SMTP.Boot()
 
-	Servers.ZonedUAA = servers.NewUAA("testzone1")
-	Servers.ZonedUAA.Boot()
-
-	Servers.UAA = servers.NewUAA("uaa")
+	Servers.UAA = servers.NewUAA()
 	Servers.UAA.Boot()
 
 	Servers.CC = servers.NewCC()
@@ -56,7 +52,6 @@ var _ = AfterSuite(func() {
 	Servers.Notifications.Destroy()
 	Servers.CC.Close()
 	Servers.UAA.Close()
-	Servers.ZonedUAA.Close()
 	Servers.SMTP.Close()
 })
 
@@ -65,8 +60,8 @@ var _ = BeforeEach(func() {
 	Servers.SMTP.Reset()
 })
 
-func GetClientTokenFor(clientID, zone string) uaa.Token {
-	token, err := GetUAAClientFor(clientID, zone).GetClientToken()
+func GetClientTokenFor(clientID string) uaa.Token {
+	token, err := GetUAAClientFor(clientID).GetClientToken()
 	if err != nil {
 		panic(err)
 	}
@@ -75,7 +70,7 @@ func GetClientTokenFor(clientID, zone string) uaa.Token {
 }
 
 func GetUserTokenFor(code string) uaa.Token {
-	token, err := GetUAAClientFor("notifications-sender", "uaa").Exchange(code)
+	token, err := GetUAAClientFor("notifications-sender").Exchange(code)
 	if err != nil {
 		panic(err)
 	}
@@ -83,12 +78,6 @@ func GetUserTokenFor(code string) uaa.Token {
 	return token
 }
 
-func GetUAAClientFor(clientID string, zone string) uaa.UAA {
-	var host string
-	if zone == "testzone1" {
-		host = Servers.ZonedUAA.ServerURL
-	} else {
-		host = Servers.UAA.ServerURL
-	}
-	return uaa.NewUAA("", host, clientID, "secret", "")
+func GetUAAClientFor(clientID string) uaa.UAA {
+	return uaa.NewUAA("", Servers.UAA.ServerURL, clientID, "secret", "")
 }

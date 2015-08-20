@@ -11,6 +11,7 @@ type ReceiptsRepo struct {
 	ClientID            string
 	KindID              string
 	CreateReceiptsError bool
+	WasCalled           bool
 }
 
 func NewReceiptsRepo() *ReceiptsRepo {
@@ -25,6 +26,7 @@ func (fake *ReceiptsRepo) CreateReceipts(conn models.ConnectionInterface, userGU
 	fake.CreateUserGUIDs = userGUIDs
 	fake.ClientID = clientID
 	fake.KindID = kindID
+	fake.WasCalled = true
 
 	return nil
 }

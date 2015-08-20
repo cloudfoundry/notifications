@@ -25,6 +25,7 @@ type Options struct {
 	To                string
 	Role              string
 	Endorsement       string
+	TemplateID        string
 }
 
 type Delivery struct {

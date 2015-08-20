@@ -37,15 +37,17 @@ type DeliveryWorker struct {
 	sender        string
 	encryptionKey []byte
 	identifier    int
+	uaaHost       string
 
 	baseLogger lager.Logger
 	logger     lager.Logger
 
-	mailClient      mail.ClientInterface
-	userLoader      UserLoaderInterface
-	templatesLoader TemplatesLoaderInterface
-	tokenLoader     TokenLoaderInterface
-	database        db.DatabaseInterface
+	mailClient         mail.ClientInterface
+	userLoader         UserLoaderInterface
+	templatesLoader    TemplatesLoaderInterface
+	tokenLoader        TokenLoaderInterface
+	strategyDeterminer StrategyDeterminerInterface
+	database           db.DatabaseInterface
 
 	messagesRepo           MessagesRepo
 	receiptsRepo           ReceiptsRepo
@@ -59,6 +61,7 @@ type DeliveryWorkerConfig struct {
 	Sender        string
 	Domain        string
 	EncryptionKey []byte
+	UAAHost       string
 
 	Logger                 lager.Logger
 	MailClient             mail.ClientInterface
@@ -73,20 +76,25 @@ type DeliveryWorkerConfig struct {
 	TemplatesLoader        TemplatesLoaderInterface
 	ReceiptsRepo           ReceiptsRepo
 	TokenLoader            TokenLoaderInterface
+	StrategyDeterminer     StrategyDeterminerInterface
 }
 
 type TokenLoaderInterface interface {
 	Load(string) (string, error)
 }
 
-func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
+type StrategyDeterminerInterface interface {
+	Determine(conn db.ConnectionInterface, uaaHost string, job gobble.Job)
+}
 
+func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
 	logger := config.Logger.Session("worker", lager.Data{"worker_id": config.ID})
 
 	worker := DeliveryWorker{
 		identifier:             config.ID,
 		baseLogger:             logger,
 		logger:                 logger,
+		uaaHost:                config.UAAHost,
 		mailClient:             config.MailClient,
 		globalUnsubscribesRepo: config.GlobalUnsubscribesRepo,
 		unsubscribesRepo:       config.UnsubscribesRepo,
@@ -100,6 +108,7 @@ func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
 		tokenLoader:            config.TokenLoader,
 		templatesLoader:        config.TemplatesLoader,
 		receiptsRepo:           config.ReceiptsRepo,
+		strategyDeterminer:     config.StrategyDeterminer,
 	}
 	worker.Worker = gobble.NewWorker(config.ID, config.Queue, worker.Deliver)
 
@@ -107,9 +116,28 @@ func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
 }
 
 func (worker DeliveryWorker) Deliver(job *gobble.Job) {
-	var delivery Delivery
+	var campaignJob struct {
+		JobType string
+	}
 
-	err := job.Unmarshal(&delivery)
+	err := job.Unmarshal(&campaignJob)
+	if err != nil {
+		metrics.NewMetric("counter", map[string]interface{}{
+			"name": "notifications.worker.panic.json",
+		}).Log()
+
+		worker.retry("UNKNOWN", "UNKNOWN", job)
+		return
+	}
+
+	if campaignJob.JobType == "campaign" {
+		worker.logger.Info("determining-strategy")
+		worker.strategyDeterminer.Determine(worker.database.Connection(), worker.uaaHost, *job)
+		return
+	}
+
+	var delivery Delivery
+	err = job.Unmarshal(&delivery)
 	if err != nil {
 		metrics.NewMetric("counter", map[string]interface{}{
 			"name": "notifications.worker.panic.json",
@@ -137,7 +165,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 	if delivery.Email == "" {
 		var token string
 
-		token, err = worker.tokenLoader.Load(delivery.UAAHost)
+		token, err = worker.tokenLoader.Load(worker.uaaHost)
 		if err != nil {
 			worker.retry(delivery.MessageID, delivery.Email, job)
 			return
@@ -268,7 +296,7 @@ func (worker DeliveryWorker) pack(delivery Delivery) (mail.Message, error) {
 		panic(err)
 	}
 
-	templates, err := worker.templatesLoader.LoadTemplates(delivery.ClientID, delivery.Options.KindID)
+	templates, err := worker.templatesLoader.LoadTemplates(delivery.ClientID, delivery.Options.KindID, delivery.Options.TemplateID)
 	if err != nil {
 		return message, err
 	}

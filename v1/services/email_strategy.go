@@ -24,6 +24,7 @@ func (strategy EmailStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		SourceDescription: dispatch.Client.Description,
 		Endorsement:       EmailEndorsement,
 		Text:              dispatch.Message.Text,
+		TemplateID:        dispatch.TemplateID,
 		HTML: HTML{
 			BodyContent:    dispatch.Message.HTML.BodyContent,
 			BodyAttributes: dispatch.Message.HTML.BodyAttributes,

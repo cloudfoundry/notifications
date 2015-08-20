@@ -32,6 +32,7 @@ func (strategy SpaceStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		SourceDescription: dispatch.Client.Description,
 		Endorsement:       SpaceEndorsement,
 		Text:              dispatch.Message.Text,
+		TemplateID:        dispatch.TemplateID,
 		Role:              dispatch.Role,
 		HTML: HTML{
 			BodyContent:    dispatch.Message.HTML.BodyContent,
