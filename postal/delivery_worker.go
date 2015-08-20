@@ -37,6 +37,7 @@ type DeliveryWorker struct {
 	sender        string
 	encryptionKey []byte
 	identifier    int
+	domain        string
 	uaaHost       string
 
 	baseLogger lager.Logger
@@ -94,6 +95,7 @@ func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
 		identifier:             config.ID,
 		baseLogger:             logger,
 		logger:                 logger,
+		domain:                 config.Domain,
 		uaaHost:                config.UAAHost,
 		mailClient:             config.MailClient,
 		globalUnsubscribesRepo: config.GlobalUnsubscribesRepo,
@@ -301,7 +303,7 @@ func (worker DeliveryWorker) pack(delivery Delivery) (mail.Message, error) {
 		return message, err
 	}
 
-	context := NewMessageContext(delivery, worker.sender, "change-me", cloak, templates)
+	context := NewMessageContext(delivery, worker.sender, worker.domain, cloak, templates)
 	packager := NewPackager()
 
 	message, err = packager.Pack(context)

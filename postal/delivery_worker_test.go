@@ -101,7 +101,7 @@ var _ = Describe("DeliveryWorker", func() {
 		tokenLoader = fakes.NewTokenLoader()
 		templateLoader = fakes.NewTemplatesLoader()
 		templateLoader.LoadTemplatesCall.Returns.Templates = postal.Templates{
-			Text:    "{{.Text}}",
+			Text:    "{{.Text}} {{.Domain}}",
 			HTML:    "<p>{{.HTML}}</p>",
 			Subject: "{{.Subject}}",
 		}
@@ -402,7 +402,7 @@ var _ = Describe("DeliveryWorker", func() {
 			Expect(msg.Body).To(ConsistOf([]mail.Part{
 				{
 					ContentType: "text/plain",
-					Content:     "body content",
+					Content:     "body content example.com",
 				},
 			}))
 			Expect(msg.Headers).To(ContainElement("X-CF-Client-ID: some-client"))
