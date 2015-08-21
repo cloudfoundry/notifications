@@ -14,13 +14,15 @@ import (
 
 var _ = Describe("Send a notification to a user", func() {
 	It("sends a single notification email to a user", func() {
-		var templateID string
-		var response support.NotifyResponse
-		env := application.NewEnvironment()
-		clientID := "notifications-sender"
-		clientToken := GetClientTokenFor(clientID)
-		client := support.NewClient(Servers.Notifications.URL())
-		userID := "user-123"
+		var (
+			templateID  string
+			response    support.NotifyResponse
+			env         = application.NewEnvironment()
+			clientID    = "notifications-sender"
+			clientToken = GetClientTokenFor(clientID)
+			client      = support.NewClient(Servers.Notifications.URL())
+			userID      = "user-123"
+		)
 
 		By("registering a notification", func() {
 			code, err := client.Notifications.Register(clientToken.Access, support.RegisterClient{
@@ -101,6 +103,76 @@ var _ = Describe("Send a notification to a user", func() {
 					Expect(reqRecTime).To(BeTemporally("~", time.Now(), 5*time.Minute))
 				}
 			}
+		})
+	})
+
+	It("retries deliveries when they fail to be sent", func() {
+		var (
+			templateID  string
+			response    support.NotifyResponse
+			clientID    = "notifications-sender"
+			clientToken = GetClientTokenFor(clientID)
+			client      = support.NewClient(Servers.Notifications.URL())
+			userID      = "user-malformed-email"
+		)
+
+		By("registering a notification", func() {
+			code, err := client.Notifications.Register(clientToken.Access, support.RegisterClient{
+				SourceName: "Notifications Sender",
+				Notifications: map[string]support.RegisterNotification{
+					"acceptance-test": {
+						Description: "Acceptance Test",
+					},
+				},
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(code).To(Equal(http.StatusNoContent))
+		})
+
+		By("creating a new template", func() {
+			var status int
+			var err error
+			status, templateID, err = client.Templates.Create(clientToken.Access, support.Template{
+				Name:    "Star Wars",
+				Subject: "Awesomeness {{.Subject}}",
+				HTML:    "<p>Millenium Falcon</p>{{.HTML}}<b>{{.Endorsement}}</b>",
+				Text:    "Millenium Falcon\n{{.Text}}\n{{.Endorsement}}",
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+			Expect(templateID).NotTo(BeNil())
+		})
+
+		By("assigning the template to a client", func() {
+			status, err := client.Templates.AssignToClient(clientToken.Access, clientID, templateID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusNoContent))
+		})
+
+		By("sending a notifications to a user", func() {
+			status, responses, err := client.Notify.User(clientToken.Access, userID, support.Notify{
+				KindID:  "acceptance-test",
+				HTML:    "<p>this is an acceptance%40test</p>",
+				Text:    "hello from the acceptance test",
+				Subject: "my-special-subject",
+				ReplyTo: "males@example.com",
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+
+			Expect(responses).To(HaveLen(1))
+			response = responses[0]
+			Expect(response.Status).To(Equal("queued"))
+			Expect(response.Recipient).To(Equal(userID))
+			Expect(GUIDRegex.MatchString(response.NotificationID)).To(BeTrue())
+			Expect(response.VCAPRequestID).To(Equal("some-totally-fake-vcap-request-id"))
+		})
+
+		By("verifying that the message never gets sent", func() {
+			Consistently(func() int {
+				return len(Servers.SMTP.Deliveries)
+			}).Should(Equal(0))
 		})
 	})
 })

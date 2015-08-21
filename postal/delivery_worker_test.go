@@ -73,6 +73,7 @@ var _ = Describe("DeliveryWorker", func() {
 		tokenLoader            *fakes.TokenLoader
 		messageID              string
 		messageStatusUpdater   *fakes.MessageStatusUpdater
+		deliveryFailureHandler *fakes.DeliveryFailureHandler
 	)
 
 	BeforeEach(func() {
@@ -106,6 +107,7 @@ var _ = Describe("DeliveryWorker", func() {
 		}
 		receiptsRepo = fakes.NewReceiptsRepo()
 		messageStatusUpdater = fakes.NewMessageStatusUpdater()
+		deliveryFailureHandler = fakes.NewDeliveryFailureHandler()
 
 		worker = postal.NewDeliveryWorker(postal.DeliveryWorkerConfig{
 			ID:            id,
@@ -128,6 +130,7 @@ var _ = Describe("DeliveryWorker", func() {
 			MailClient:             mailClient,
 			StrategyDeterminer:     strategyDeterminer,
 			MessageStatusUpdater:   messageStatusUpdater,
+			DeliveryFailureHandler: deliveryFailureHandler,
 		})
 
 		messageID = "randomly-generated-guid"
@@ -185,26 +188,28 @@ var _ = Describe("DeliveryWorker", func() {
 	})
 
 	Describe("Deliver", func() {
-		var job gobble.Job
+		var job *gobble.Job
 
 		BeforeEach(func() {
-			job = gobble.NewJob(delivery)
+			j := gobble.NewJob(delivery)
+			job = &j
 		})
 
 		Context("when Deliver receives a campaign", func() {
 			BeforeEach(func() {
 				campaignJob := v2Queue.CampaignJob{JobType: "campaign", Campaign: collections.Campaign{}}
-				job = gobble.NewJob(campaignJob)
+				j := gobble.NewJob(campaignJob)
+				job = &j
 			})
 
 			It("sends the job to the strategyDeterminer", func() {
-				worker.Deliver(&job)
-				Expect(strategyDeterminer.DetermineCall.Receives.Job).To(Equal(job))
+				worker.Deliver(job)
+				Expect(strategyDeterminer.DetermineCall.Receives.Job).To(Equal(*job))
 				Expect(receiptsRepo.WasCalled).To(BeFalse())
 			})
 
 			It("logs that it is determining the strategy", func() {
-				worker.Deliver(&job)
+				worker.Deliver(job)
 				lines, err := parseLogLines(buffer.Bytes())
 				Expect(err).NotTo(HaveOccurred())
 
@@ -222,13 +227,13 @@ var _ = Describe("DeliveryWorker", func() {
 
 		Context("when Deliver does not receive a campaign", func() {
 			It("does not send the job to the strategyDeterminer", func() {
-				worker.Deliver(&job)
+				worker.Deliver(job)
 				Expect(strategyDeterminer.DetermineCall.WasCalled).To(BeFalse())
 			})
 		})
 
 		It("logs the email address of the recipient", func() {
-			worker.Deliver(&job)
+			worker.Deliver(job)
 
 			lines, err := parseLogLines(buffer.Bytes())
 			Expect(err).NotTo(HaveOccurred())
@@ -248,7 +253,7 @@ var _ = Describe("DeliveryWorker", func() {
 		})
 
 		It("loads the correct template", func() {
-			worker.Deliver(&job)
+			worker.Deliver(job)
 
 			Expect(templateLoader.LoadTemplatesCall.Receives.ClientID).To(Equal("some-client"))
 			Expect(templateLoader.LoadTemplatesCall.Receives.KindID).To(Equal("some-kind"))
@@ -257,7 +262,7 @@ var _ = Describe("DeliveryWorker", func() {
 		})
 
 		It("logs successful delivery", func() {
-			worker.Deliver(&job)
+			worker.Deliver(job)
 
 			lines, err := parseLogLines(buffer.Bytes())
 			Expect(err).NotTo(HaveOccurred())
@@ -297,7 +302,7 @@ var _ = Describe("DeliveryWorker", func() {
 				TokenLoader:            tokenLoader,
 				MessageStatusUpdater:   messageStatusUpdater,
 			})
-			worker.Deliver(&job)
+			worker.Deliver(job)
 			database.TraceLogger.Printf("some statement")
 
 			Expect(database.TracePrefix).To(BeEmpty())
@@ -319,13 +324,13 @@ var _ = Describe("DeliveryWorker", func() {
 		})
 
 		It("does not log database operations when database traces are disabled", func() {
-			worker.Deliver(&job)
+			worker.Deliver(job)
 			Expect(database.TraceLogger).To(BeNil())
 			Expect(database.TracePrefix).To(BeEmpty())
 		})
 
 		It("updates the message status as delivered", func() {
-			worker.Deliver(&job)
+			worker.Deliver(job)
 
 			Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 			Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
@@ -334,7 +339,7 @@ var _ = Describe("DeliveryWorker", func() {
 		})
 
 		It("creates a reciept for the delivery", func() {
-			worker.Deliver(&job)
+			worker.Deliver(job)
 
 			Expect(receiptsRepo.ClientID).To(Equal("some-client"))
 			Expect(receiptsRepo.KindID).To(Equal("some-kind"))
@@ -344,25 +349,28 @@ var _ = Describe("DeliveryWorker", func() {
 		Context("when the receipt fails to be created", func() {
 			It("retries the job", func() {
 				receiptsRepo.CreateReceiptsError = true
-				worker.Deliver(&job)
+				worker.Deliver(job)
 
-				Expect(job.RetryCount).To(Equal(1))
+				Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
+				Expect(deliveryFailureHandler.HandleCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 			})
 		})
 
 		Context("when loading a zoned token fails", func() {
 			It("retries the job", func() {
-				job = gobble.NewJob(delivery)
+				j := gobble.NewJob(delivery)
+				job = &j
 
 				tokenLoader.LoadCall.Returns.Error = errors.New("failed to load a zoned UAA token")
-				worker.Deliver(&job)
+				worker.Deliver(job)
 
-				Expect(job.RetryCount).To(Equal(1))
+				Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
+				Expect(deliveryFailureHandler.HandleCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 			})
 		})
 
 		It("ensures message delivery", func() {
-			worker.Deliver(&job)
+			worker.Deliver(job)
 
 			Expect(mailClient.Messages).To(HaveLen(1))
 			msg := mailClient.Messages[0]
@@ -395,7 +403,7 @@ var _ = Describe("DeliveryWorker", func() {
 		})
 
 		It("should connect and send the message with the worker's logger session", func() {
-			worker.Deliver(&job)
+			worker.Deliver(job)
 			Expect(mailClient.ConnectLogger.SessionName()).To(Equal("notifications.worker"))
 			Expect(mailClient.SendLogger.SessionName()).To(Equal("notifications.worker"))
 		})
@@ -407,13 +415,15 @@ var _ = Describe("DeliveryWorker", func() {
 				})
 
 				It("marks the job for retry", func() {
-					worker.Deliver(&job)
-					Expect(len(mailClient.Messages)).To(Equal(0))
-					Expect(job.ShouldRetry).To(BeTrue())
+					worker.Deliver(job)
+
+					Expect(mailClient.Messages).To(HaveLen(0))
+					Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
+					Expect(deliveryFailureHandler.HandleCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 				})
 
 				It("logs an SMTP send error", func() {
-					worker.Deliver(&job)
+					worker.Deliver(job)
 
 					lines, err := parseLogLines(buffer.Bytes())
 					Expect(err).NotTo(HaveOccurred())
@@ -434,7 +444,7 @@ var _ = Describe("DeliveryWorker", func() {
 				})
 
 				It("updates the message status as failed", func() {
-					worker.Deliver(&job)
+					worker.Deliver(job)
 
 					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
@@ -446,7 +456,7 @@ var _ = Describe("DeliveryWorker", func() {
 			Context("and the error is a connect error", func() {
 				It("logs an SMTP connection error", func() {
 					mailClient.ConnectError = errors.New("server timeout")
-					worker.Deliver(&job)
+					worker.Deliver(job)
 
 					lines, err := parseLogLines(buffer.Bytes())
 					Expect(err).NotTo(HaveOccurred())
@@ -475,79 +485,12 @@ var _ = Describe("DeliveryWorker", func() {
 
 					mailClient.ConnectError = errors.New("BOOM!")
 					messageID := jobDelivery.MessageID
-					worker.Deliver(&job)
+					worker.Deliver(job)
 
 					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
 					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusUnavailable))
 					Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
-				})
-
-				It("sets the retry duration using an exponential backoff algorithm", func() {
-					mailClient.ConnectError = errors.New("BOOM!")
-					worker.Deliver(&job)
-
-					Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 10*time.Second))
-					Expect(job.RetryCount).To(Equal(1))
-
-					lines, err := parseLogLines(buffer.Bytes())
-					Expect(err).NotTo(HaveOccurred())
-
-					line := lines[1]
-					Expect(line.Source).To(Equal("notifications"))
-					Expect(line.Message).To(Equal("notifications.worker.delivery-failed-retrying"))
-					Expect(line.LogLevel).To(Equal(int(lager.INFO)))
-					Expect(line.Data).To(HaveKeyWithValue("session", "1"))
-					Expect(line.Data).To(HaveKeyWithValue("recipient", "user-123@example.com"))
-					Expect(line.Data).To(HaveKeyWithValue("worker_id", float64(1234)))
-					Expect(line.Data).To(HaveKeyWithValue("message_id", "randomly-generated-guid"))
-					Expect(line.Data).To(HaveKeyWithValue("retry_count", float64(1)))
-					Expect(line.Data).To(HaveKeyWithValue("vcap_request_id", "some-request-id"))
-
-					Expect(line.Data).To(HaveKey("active_at"))
-					activeAt, err := time.Parse(time.RFC3339, line.Data["active_at"].(string))
-					Expect(err).NotTo(HaveOccurred())
-					Expect(activeAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 10*time.Second))
-
-					worker.Deliver(&job)
-					Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(2*time.Minute), 10*time.Second))
-					Expect(job.RetryCount).To(Equal(2))
-
-					worker.Deliver(&job)
-					Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(4*time.Minute), 10*time.Second))
-					Expect(job.RetryCount).To(Equal(3))
-
-					worker.Deliver(&job)
-					Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(8*time.Minute), 10*time.Second))
-					Expect(job.RetryCount).To(Equal(4))
-
-					worker.Deliver(&job)
-					Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(16*time.Minute), 10*time.Second))
-					Expect(job.RetryCount).To(Equal(5))
-
-					worker.Deliver(&job)
-					Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(32*time.Minute), 10*time.Second))
-					Expect(job.RetryCount).To(Equal(6))
-
-					worker.Deliver(&job)
-					Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(64*time.Minute), 10*time.Second))
-					Expect(job.RetryCount).To(Equal(7))
-
-					worker.Deliver(&job)
-					Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(128*time.Minute), 10*time.Second))
-					Expect(job.RetryCount).To(Equal(8))
-
-					worker.Deliver(&job)
-					Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(256*time.Minute), 10*time.Second))
-					Expect(job.RetryCount).To(Equal(9))
-
-					worker.Deliver(&job)
-					Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(512*time.Minute), 10*time.Second))
-					Expect(job.RetryCount).To(Equal(10))
-
-					job.ShouldRetry = false
-					worker.Deliver(&job)
-					Expect(job.ShouldRetry).To(BeFalse())
 				})
 			})
 		})
@@ -558,7 +501,7 @@ var _ = Describe("DeliveryWorker", func() {
 				if err != nil {
 					panic(err)
 				}
-				worker.Deliver(&job)
+				worker.Deliver(job)
 			})
 
 			It("logs that the user has unsubscribed from this notification", func() {
@@ -598,9 +541,10 @@ var _ = Describe("DeliveryWorker", func() {
 					userLoader.LoadCall.Returns.Users = map[string]uaa.User{
 						"user-123": {},
 					}
-					job = gobble.NewJob(delivery)
+					j := gobble.NewJob(delivery)
+					job = &j
 
-					worker.Deliver(&job)
+					worker.Deliver(job)
 				})
 
 				It("logs the info", func() {
@@ -632,9 +576,10 @@ var _ = Describe("DeliveryWorker", func() {
 			Context("when the recipient's first email address is missing an @ symbol", func() {
 				BeforeEach(func() {
 					delivery.Email = "nope"
-					job = gobble.NewJob(delivery)
+					j := gobble.NewJob(delivery)
+					job = &j
 
-					worker.Deliver(&job)
+					worker.Deliver(job)
 				})
 
 				It("logs the info", func() {
@@ -671,7 +616,7 @@ var _ = Describe("DeliveryWorker", func() {
 			})
 
 			It("logs that the user has unsubscribed from this notification", func() {
-				worker.Deliver(&job)
+				worker.Deliver(job)
 
 				lines, err := parseLogLines(buffer.Bytes())
 				Expect(err).NotTo(HaveOccurred())
@@ -691,7 +636,7 @@ var _ = Describe("DeliveryWorker", func() {
 			})
 
 			It("updates the message status as undeliverable", func() {
-				worker.Deliver(&job)
+				worker.Deliver(job)
 
 				Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 				Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
@@ -701,7 +646,7 @@ var _ = Describe("DeliveryWorker", func() {
 
 			Context("and the notification is not registered", func() {
 				It("does not send the email", func() {
-					worker.Deliver(&job)
+					worker.Deliver(job)
 
 					Expect(len(mailClient.Messages)).To(Equal(0))
 				})
@@ -720,7 +665,7 @@ var _ = Describe("DeliveryWorker", func() {
 					}
 				})
 				It("does not send the email", func() {
-					worker.Deliver(&job)
+					worker.Deliver(job)
 
 					Expect(len(mailClient.Messages)).To(Equal(0))
 				})
@@ -740,7 +685,7 @@ var _ = Describe("DeliveryWorker", func() {
 				})
 
 				It("does send the email", func() {
-					worker.Deliver(&job)
+					worker.Deliver(job)
 
 					Expect(len(mailClient.Messages)).To(Equal(1))
 				})
@@ -754,22 +699,25 @@ var _ = Describe("DeliveryWorker", func() {
 					HTML:    "<h3>This message is a test of the Endorsement Broadcast System</h3><p>{{.HTML}}</p><h3>Endorsement:</h3><p>{.Endorsement}</p>",
 					Subject: "Endorsement Test: {{.Subject}}",
 				}
-				job = gobble.NewJob(delivery)
+				j := gobble.NewJob(delivery)
+				job = &j
 			})
 
 			It("does not panic", func() {
 				Expect(func() {
-					worker.Deliver(&job)
+					worker.Deliver(job)
 				}).ToNot(Panic())
 			})
 
 			It("marks the job for retry later", func() {
-				worker.Deliver(&job)
-				Expect(job.RetryCount).To(Equal(1))
+				worker.Deliver(job)
+
+				Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
+				Expect(deliveryFailureHandler.HandleCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 			})
 
 			It("logs that the packer errored", func() {
-				worker.Deliver(&job)
+				worker.Deliver(job)
 
 				lines, err := parseLogLines(buffer.Bytes())
 				Expect(err).NotTo(HaveOccurred())
@@ -789,7 +737,7 @@ var _ = Describe("DeliveryWorker", func() {
 			})
 
 			It("updates the message status as failed", func() {
-				worker.Deliver(&job)
+				worker.Deliver(job)
 
 				Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 				Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
@@ -805,14 +753,15 @@ var _ = Describe("DeliveryWorker", func() {
 
 			It("does not crash the process", func() {
 				Expect(func() {
-					worker.Deliver(&job)
+					worker.Deliver(job)
 				}).ToNot(Panic())
 			})
 
 			It("marks the job for retry later", func() {
-				worker.Deliver(&job)
-				Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 10*time.Second))
-				Expect(job.RetryCount).To(Equal(1))
+				worker.Deliver(job)
+
+				Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
+				Expect(deliveryFailureHandler.HandleCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 			})
 		})
 	})

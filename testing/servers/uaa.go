@@ -128,6 +128,12 @@ var UAAGetUser = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request)
 	for _, part := range filterParts {
 		matches := queryRegexp.FindAllStringSubmatch(part, 1)
 		match := matches[0]
+
+		if match[1] == "user-malformed-email" {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{}`))
+		}
+
 		if user, ok := UAAUsers[match[1]]; ok {
 			resources = append(resources, user)
 		}

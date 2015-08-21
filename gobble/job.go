@@ -36,3 +36,7 @@ func (job *Job) Retry(duration time.Duration) {
 	job.ActiveAt = time.Now().Add(duration)
 	job.ShouldRetry = true
 }
+
+func (job *Job) State() (int, time.Time) {
+	return job.RetryCount, job.ActiveAt
+}

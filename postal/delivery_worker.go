@@ -2,7 +2,6 @@ package postal
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"time"
 
@@ -55,6 +54,7 @@ type DeliveryWorker struct {
 	unsubscribesRepo       UnsubscribesRepo
 	kindsRepo              KindsRepo
 	messageStatusUpdater   messageStatusUpdaterInterface
+	deliveryFailureHandler deliveryFailureHandlerInterface
 }
 
 type DeliveryWorkerConfig struct {
@@ -78,6 +78,7 @@ type DeliveryWorkerConfig struct {
 	TokenLoader            TokenLoaderInterface
 	StrategyDeterminer     StrategyDeterminerInterface
 	MessageStatusUpdater   messageStatusUpdaterInterface
+	DeliveryFailureHandler deliveryFailureHandlerInterface
 }
 
 type TokenLoaderInterface interface {
@@ -90,6 +91,10 @@ type StrategyDeterminerInterface interface {
 
 type messageStatusUpdaterInterface interface {
 	Update(conn models.ConnectionInterface, messageID, messageStatus string, logger lager.Logger)
+}
+
+type deliveryFailureHandlerInterface interface {
+	Handle(job Retryable, logger lager.Logger)
 }
 
 func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
@@ -120,6 +125,7 @@ func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
 		receiptsRepo:           config.ReceiptsRepo,
 		strategyDeterminer:     config.StrategyDeterminer,
 		messageStatusUpdater:   config.MessageStatusUpdater,
+		deliveryFailureHandler: config.DeliveryFailureHandler,
 	}
 	worker.Worker = gobble.NewWorker(config.ID, config.Queue, worker.Deliver)
 
@@ -137,7 +143,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 			"name": "notifications.worker.panic.json",
 		}).Log()
 
-		worker.retry("UNKNOWN", "UNKNOWN", job)
+		worker.retry(job)
 		return
 	}
 
@@ -154,7 +160,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 			"name": "notifications.worker.panic.json",
 		}).Log()
 
-		worker.retry("UNKNOWN", "UNKNOWN", job)
+		worker.retry(job)
 		return
 	}
 
@@ -169,7 +175,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 
 	err = worker.receiptsRepo.CreateReceipts(worker.database.Connection(), []string{delivery.UserGUID}, delivery.ClientID, delivery.Options.KindID)
 	if err != nil {
-		worker.retry(delivery.MessageID, delivery.Email, job)
+		worker.retry(job)
 		return
 	}
 
@@ -178,13 +184,13 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 
 		token, err = worker.tokenLoader.Load(worker.uaaHost)
 		if err != nil {
-			worker.retry(delivery.MessageID, delivery.Email, job)
+			worker.retry(job)
 			return
 		}
 
 		users, err := worker.userLoader.Load([]string{delivery.UserGUID}, token)
 		if err != nil || len(users) < 1 {
-			worker.retry(delivery.MessageID, delivery.Email, job)
+			worker.retry(job)
 			return
 		}
 
@@ -202,7 +208,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 		status := worker.deliver(delivery)
 
 		if status != StatusDelivered {
-			worker.retry(delivery.MessageID, delivery.Email, job)
+			worker.retry(job)
 			return
 		} else {
 			metrics.NewMetric("counter", map[string]interface{}{
@@ -235,20 +241,8 @@ func (worker DeliveryWorker) deliver(delivery Delivery) string {
 	return status
 }
 
-func (worker DeliveryWorker) retry(messageID, recipient string, job *gobble.Job) {
-	if job.RetryCount < 10 {
-		duration := time.Duration(int64(math.Pow(2, float64(job.RetryCount))))
-		job.Retry(duration * time.Minute)
-
-		worker.logger.Info("delivery-failed-retrying", lager.Data{
-			"retry_count": job.RetryCount,
-			"active_at":   job.ActiveAt.Format(time.RFC3339),
-		})
-	}
-
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.worker.retry",
-	}).Log()
+func (worker DeliveryWorker) retry(job *gobble.Job) {
+	worker.deliveryFailureHandler.Handle(job, worker.logger)
 }
 
 func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {

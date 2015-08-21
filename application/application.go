@@ -129,10 +129,11 @@ func (app Application) StartWorkers() {
 			KindsRepo:              app.mother.KindsRepo(),
 			ReceiptsRepo:           app.mother.ReceiptsRepo(),
 
-			UserLoader:           postal.NewUserLoader(zonedUAAClient),
-			TemplatesLoader:      app.mother.TemplatesLoader(),
-			TokenLoader:          uaa.NewTokenLoader(zonedUAAClient),
-			MessageStatusUpdater: postal.NewMessageStatusUpdater(app.mother.MessagesRepo()),
+			UserLoader:             postal.NewUserLoader(zonedUAAClient),
+			TemplatesLoader:        app.mother.TemplatesLoader(),
+			TokenLoader:            uaa.NewTokenLoader(zonedUAAClient),
+			MessageStatusUpdater:   postal.NewMessageStatusUpdater(app.mother.MessagesRepo()),
+			DeliveryFailureHandler: postal.NewDeliveryFailureHandler(),
 
 			StrategyDeterminer: strategy.Determiner{
 				UserStrategy: app.mother.UserStrategy(),

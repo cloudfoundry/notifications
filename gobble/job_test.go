@@ -58,4 +58,18 @@ var _ = Describe("Job", func() {
 			Expect(job.ShouldRetry).To(BeTrue())
 		})
 	})
+
+	Describe("State", func() {
+		It("returns the current retry count and active at values", func() {
+			expectedActiveAt := time.Now().Add(-5 * time.Minute)
+
+			job := gobble.NewJob("the data")
+			job.RetryCount = 4
+			job.ActiveAt = expectedActiveAt
+
+			retryCount, activeAt := job.State()
+			Expect(retryCount).To(Equal(4))
+			Expect(activeAt).To(Equal(expectedActiveAt))
+		})
+	})
 })
