@@ -50,11 +50,11 @@ type DeliveryWorker struct {
 	strategyDeterminer StrategyDeterminerInterface
 	database           db.DatabaseInterface
 
-	messagesRepo           MessagesRepo
 	receiptsRepo           ReceiptsRepo
 	globalUnsubscribesRepo GlobalUnsubscribesRepo
 	unsubscribesRepo       UnsubscribesRepo
 	kindsRepo              KindsRepo
+	messageStatusUpdater   messageStatusUpdaterInterface
 }
 
 type DeliveryWorkerConfig struct {
@@ -72,12 +72,12 @@ type DeliveryWorkerConfig struct {
 	GlobalUnsubscribesRepo GlobalUnsubscribesRepo
 	UnsubscribesRepo       UnsubscribesRepo
 	KindsRepo              KindsRepo
-	MessagesRepo           MessagesRepo
 	UserLoader             UserLoaderInterface
 	TemplatesLoader        TemplatesLoaderInterface
 	ReceiptsRepo           ReceiptsRepo
 	TokenLoader            TokenLoaderInterface
 	StrategyDeterminer     StrategyDeterminerInterface
+	MessageStatusUpdater   messageStatusUpdaterInterface
 }
 
 type TokenLoaderInterface interface {
@@ -86,6 +86,10 @@ type TokenLoaderInterface interface {
 
 type StrategyDeterminerInterface interface {
 	Determine(conn db.ConnectionInterface, uaaHost string, job gobble.Job)
+}
+
+type messageStatusUpdaterInterface interface {
+	Update(conn models.ConnectionInterface, messageID, messageStatus string, logger lager.Logger)
 }
 
 func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
@@ -106,7 +110,6 @@ func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
 		globalUnsubscribesRepo: config.GlobalUnsubscribesRepo,
 		unsubscribesRepo:       config.UnsubscribesRepo,
 		kindsRepo:              config.KindsRepo,
-		messagesRepo:           config.MessagesRepo,
 		database:               config.Database,
 		dbTrace:                config.DBTrace,
 		sender:                 config.Sender,
@@ -116,6 +119,7 @@ func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
 		templatesLoader:        config.TemplatesLoader,
 		receiptsRepo:           config.ReceiptsRepo,
 		strategyDeterminer:     config.StrategyDeterminer,
+		messageStatusUpdater:   config.MessageStatusUpdater,
 	}
 	worker.Worker = gobble.NewWorker(config.ID, config.Queue, worker.Deliver)
 
@@ -221,23 +225,14 @@ func (worker DeliveryWorker) deliver(delivery Delivery) string {
 	message, err := worker.packager.Pack(context)
 	if err != nil {
 		worker.logger.Info("template-pack-failed")
-		worker.updateMessageStatus(delivery.MessageID, StatusFailed, delivery.Email)
+		worker.messageStatusUpdater.Update(worker.database.Connection(), delivery.MessageID, StatusFailed, worker.logger)
 		return StatusFailed
 	}
 
 	status := worker.sendMail(delivery.MessageID, message)
-	worker.updateMessageStatus(delivery.MessageID, status, delivery.Email)
+	worker.messageStatusUpdater.Update(worker.database.Connection(), delivery.MessageID, status, worker.logger)
 
 	return status
-}
-
-func (worker DeliveryWorker) updateMessageStatus(messageID, status, recipient string) {
-	_, err := worker.messagesRepo.Upsert(worker.database.Connection(), models.Message{ID: messageID, Status: status})
-	if err != nil {
-		worker.logger.Error("failed-message-status-upsert", err, lager.Data{
-			"status": status,
-		})
-	}
 }
 
 func (worker DeliveryWorker) retry(messageID, recipient string, job *gobble.Job) {
@@ -265,26 +260,26 @@ func (worker DeliveryWorker) shouldDeliver(delivery Delivery) bool {
 	globallyUnsubscribed, err := worker.globalUnsubscribesRepo.Get(conn, delivery.UserGUID)
 	if err != nil || globallyUnsubscribed {
 		worker.logger.Info("user-unsubscribed")
-		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable, delivery.Email)
+		worker.messageStatusUpdater.Update(worker.database.Connection(), delivery.MessageID, StatusUndeliverable, worker.logger)
 		return false
 	}
 
 	isUnsubscribed, err := worker.unsubscribesRepo.Get(conn, delivery.UserGUID, delivery.ClientID, delivery.Options.KindID)
 	if err != nil || isUnsubscribed {
 		worker.logger.Info("user-unsubscribed")
-		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable, delivery.Email)
+		worker.messageStatusUpdater.Update(worker.database.Connection(), delivery.MessageID, StatusUndeliverable, worker.logger)
 		return false
 	}
 
 	if delivery.Email == "" {
 		worker.logger.Info("no-email-address-for-user")
-		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable, delivery.Email)
+		worker.messageStatusUpdater.Update(worker.database.Connection(), delivery.MessageID, StatusUndeliverable, worker.logger)
 		return false
 	}
 
 	if !strings.Contains(delivery.Email, "@") {
 		worker.logger.Info("malformatted-email-address")
-		worker.updateMessageStatus(delivery.MessageID, StatusUndeliverable, delivery.Email)
+		worker.messageStatusUpdater.Update(worker.database.Connection(), delivery.MessageID, StatusUndeliverable, worker.logger)
 		return false
 	}
 

@@ -62,7 +62,6 @@ var _ = Describe("DeliveryWorker", func() {
 		unsubscribesRepo       *fakes.UnsubscribesRepo
 		globalUnsubscribesRepo *fakes.GlobalUnsubscribesRepo
 		kindsRepo              *fakes.KindsRepo
-		messagesRepo           *fakes.MessagesRepo
 		database               *fakes.Database
 		strategyDeterminer     *fakes.StrategyDeterminer
 		conn                   db.ConnectionInterface
@@ -73,6 +72,7 @@ var _ = Describe("DeliveryWorker", func() {
 		receiptsRepo           *fakes.ReceiptsRepo
 		tokenLoader            *fakes.TokenLoader
 		messageID              string
+		messageStatusUpdater   *fakes.MessageStatusUpdater
 	)
 
 	BeforeEach(func() {
@@ -85,7 +85,6 @@ var _ = Describe("DeliveryWorker", func() {
 		unsubscribesRepo = fakes.NewUnsubscribesRepo()
 		globalUnsubscribesRepo = fakes.NewGlobalUnsubscribesRepo()
 		kindsRepo = fakes.NewKindsRepo()
-		messagesRepo = fakes.NewMessagesRepo()
 		database = fakes.NewDatabase()
 		conn = database.Connection()
 		strategyDeterminer = fakes.NewStrategyDeterminer()
@@ -106,6 +105,7 @@ var _ = Describe("DeliveryWorker", func() {
 			Subject: "{{.Subject}}",
 		}
 		receiptsRepo = fakes.NewReceiptsRepo()
+		messageStatusUpdater = fakes.NewMessageStatusUpdater()
 
 		worker = postal.NewDeliveryWorker(postal.DeliveryWorkerConfig{
 			ID:            id,
@@ -121,13 +121,13 @@ var _ = Describe("DeliveryWorker", func() {
 			GlobalUnsubscribesRepo: globalUnsubscribesRepo,
 			UnsubscribesRepo:       unsubscribesRepo,
 			KindsRepo:              kindsRepo,
-			MessagesRepo:           messagesRepo,
 			UserLoader:             userLoader,
 			TemplatesLoader:        templateLoader,
 			ReceiptsRepo:           receiptsRepo,
 			TokenLoader:            tokenLoader,
 			MailClient:             mailClient,
 			StrategyDeterminer:     strategyDeterminer,
+			MessageStatusUpdater:   messageStatusUpdater,
 		})
 
 		messageID = "randomly-generated-guid"
@@ -144,9 +144,6 @@ var _ = Describe("DeliveryWorker", func() {
 			MessageID:     messageID,
 			VCAPRequestID: "some-request-id",
 		}
-
-		_, err := messagesRepo.Upsert(database.Connection(), models.Message{ID: messageID, Status: postal.StatusQueued})
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	Describe("Work", func() {
@@ -290,7 +287,6 @@ var _ = Describe("DeliveryWorker", func() {
 				GlobalUnsubscribesRepo: globalUnsubscribesRepo,
 				UnsubscribesRepo:       unsubscribesRepo,
 				KindsRepo:              kindsRepo,
-				MessagesRepo:           messagesRepo,
 				Database:               database,
 				DBTrace:                true,
 				Sender:                 "from@example.com",
@@ -298,7 +294,9 @@ var _ = Describe("DeliveryWorker", func() {
 				UserLoader:             userLoader,
 				TemplatesLoader:        templateLoader,
 				ReceiptsRepo:           receiptsRepo,
-				TokenLoader:            tokenLoader})
+				TokenLoader:            tokenLoader,
+				MessageStatusUpdater:   messageStatusUpdater,
+			})
 			worker.Deliver(&job)
 			database.TraceLogger.Printf("some statement")
 
@@ -326,15 +324,13 @@ var _ = Describe("DeliveryWorker", func() {
 			Expect(database.TracePrefix).To(BeEmpty())
 		})
 
-		It("upserts the StatusDelivered to the database", func() {
+		It("updates the message status as delivered", func() {
 			worker.Deliver(&job)
 
-			message, err := messagesRepo.FindByID(conn, messageID)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(message.Status).To(Equal(postal.StatusDelivered))
+			Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
+			Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
+			Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusDelivered))
+			Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 		})
 
 		It("creates a reciept for the delivery", func() {
@@ -362,31 +358,6 @@ var _ = Describe("DeliveryWorker", func() {
 				worker.Deliver(&job)
 
 				Expect(job.RetryCount).To(Equal(1))
-			})
-		})
-
-		Context("when the StatusDelivered failed to be upserted to the database", func() {
-			It("logs the error", func() {
-				messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
-				worker.Deliver(&job)
-
-				lines, err := parseLogLines(buffer.Bytes())
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(lines).To(ContainElement(logLine{
-					Source:   "notifications",
-					Message:  "notifications.worker.failed-message-status-upsert",
-					LogLevel: int(lager.ERROR),
-					Data: map[string]interface{}{
-						"session":         "1",
-						"error":           messagesRepo.UpsertError.Error(),
-						"recipient":       "user-123@example.com",
-						"worker_id":       float64(1234),
-						"message_id":      "randomly-generated-guid",
-						"status":          postal.StatusDelivered,
-						"vcap_request_id": "some-request-id",
-					},
-				}))
 			})
 		})
 
@@ -462,40 +433,13 @@ var _ = Describe("DeliveryWorker", func() {
 					}))
 				})
 
-				It("upserts the StatusFailed to the database", func() {
+				It("updates the message status as failed", func() {
 					worker.Deliver(&job)
 
-					message, err := messagesRepo.FindByID(conn, messageID)
-					if err != nil {
-						panic(err)
-					}
-
-					Expect(message.Status).To(Equal(postal.StatusFailed))
-				})
-
-				Context("when the StatusFailed fails to be upserted into the db", func() {
-					It("logs the failure", func() {
-						messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
-						worker.Deliver(&job)
-
-						lines, err := parseLogLines(buffer.Bytes())
-						Expect(err).NotTo(HaveOccurred())
-
-						Expect(lines).To(ContainElement(logLine{
-							Source:   "notifications",
-							Message:  "notifications.worker.failed-message-status-upsert",
-							LogLevel: int(lager.ERROR),
-							Data: map[string]interface{}{
-								"session":         "1",
-								"error":           messagesRepo.UpsertError.Error(),
-								"recipient":       "user-123@example.com",
-								"worker_id":       float64(1234),
-								"message_id":      "randomly-generated-guid",
-								"status":          postal.StatusFailed,
-								"vcap_request_id": "some-request-id",
-							},
-						}))
-					})
+					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusFailed))
+					Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 				})
 			})
 
@@ -522,7 +466,7 @@ var _ = Describe("DeliveryWorker", func() {
 					}))
 				})
 
-				It("upserts the StatusUnavailable to the database", func() {
+				It("updates the message status as unavailable", func() {
 					var jobDelivery postal.Delivery
 					err := job.Unmarshal(&jobDelivery)
 					if err != nil {
@@ -533,12 +477,10 @@ var _ = Describe("DeliveryWorker", func() {
 					messageID := jobDelivery.MessageID
 					worker.Deliver(&job)
 
-					message, err := messagesRepo.FindByID(conn, messageID)
-					if err != nil {
-						panic(err)
-					}
-
-					Expect(message.Status).To(Equal(postal.StatusUnavailable))
+					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusUnavailable))
+					Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 				})
 
 				It("sets the retry duration using an exponential backoff algorithm", func() {
@@ -641,13 +583,11 @@ var _ = Describe("DeliveryWorker", func() {
 				Expect(mailClient.Messages).To(HaveLen(0))
 			})
 
-			It("upserts the StatusUndeliverable to the database", func() {
-				message, err := messagesRepo.FindByID(conn, messageID)
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(message.Status).To(Equal(postal.StatusUndeliverable))
+			It("updates the message status as undeliverable", func() {
+				Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
+				Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
+				Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusUndeliverable))
+				Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 			})
 		})
 
@@ -681,13 +621,11 @@ var _ = Describe("DeliveryWorker", func() {
 					}))
 				})
 
-				It("upserts the StatusUndeliverable to the database", func() {
-					message, err := messagesRepo.FindByID(conn, messageID)
-					if err != nil {
-						panic(err)
-					}
-
-					Expect(message.Status).To(Equal(postal.StatusUndeliverable))
+				It("updates the message status as undeliverable", func() {
+					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusUndeliverable))
+					Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 				})
 			})
 
@@ -717,13 +655,11 @@ var _ = Describe("DeliveryWorker", func() {
 					}))
 				})
 
-				It("upserts the StatusUndeliverable to the database", func() {
-					message, err := messagesRepo.FindByID(conn, messageID)
-					if err != nil {
-						panic(err)
-					}
-
-					Expect(message.Status).To(Equal(postal.StatusUndeliverable))
+				It("updates the message status as undeliverable", func() {
+					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusUndeliverable))
+					Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 				})
 			})
 		})
@@ -754,14 +690,13 @@ var _ = Describe("DeliveryWorker", func() {
 				}))
 			})
 
-			It("upserts the StatusUndeliverable to the database", func() {
+			It("updates the message status as undeliverable", func() {
 				worker.Deliver(&job)
-				message, err := messagesRepo.FindByID(conn, messageID)
-				if err != nil {
-					panic(err)
-				}
 
-				Expect(message.Status).To(Equal(postal.StatusUndeliverable))
+				Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
+				Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
+				Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusUndeliverable))
+				Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 			})
 
 			Context("and the notification is not registered", func() {
@@ -853,37 +788,13 @@ var _ = Describe("DeliveryWorker", func() {
 				}))
 			})
 
-			It("upserts the StatusFailed to the database", func() {
+			It("updates the message status as failed", func() {
 				worker.Deliver(&job)
 
-				message, err := messagesRepo.FindByID(conn, messageID)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(message.Status).To(Equal(postal.StatusFailed))
-			})
-
-			Context("when the StatusFailed fails to be upserted into the db", func() {
-				It("logs the failure", func() {
-					messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
-					worker.Deliver(&job)
-
-					lines, err := parseLogLines(buffer.Bytes())
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(lines).To(ContainElement(logLine{
-						Source:   "notifications",
-						Message:  "notifications.worker.failed-message-status-upsert",
-						LogLevel: int(lager.ERROR),
-						Data: map[string]interface{}{
-							"session":         "1",
-							"error":           messagesRepo.UpsertError.Error(),
-							"recipient":       "user-123@example.com",
-							"worker_id":       float64(1234),
-							"message_id":      "randomly-generated-guid",
-							"status":          postal.StatusFailed,
-							"vcap_request_id": "some-request-id",
-						},
-					}))
-				})
+				Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
+				Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
+				Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusFailed))
+				Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 			})
 		})
 
@@ -902,38 +813,6 @@ var _ = Describe("DeliveryWorker", func() {
 				worker.Deliver(&job)
 				Expect(job.ActiveAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 10*time.Second))
 				Expect(job.RetryCount).To(Equal(1))
-			})
-		})
-
-		Context("when the message status fails to be upserted into the db", func() {
-			It("logs the failure", func() {
-				messagesRepo.UpsertError = errors.New("An unforseen error in upserting to our db")
-				worker.Deliver(&job)
-
-				lines, err := parseLogLines(buffer.Bytes())
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(lines).To(ContainElement(logLine{
-					Source:   "notifications",
-					Message:  "notifications.worker.failed-message-status-upsert",
-					LogLevel: int(lager.ERROR),
-					Data: map[string]interface{}{
-						"session":         "1",
-						"error":           messagesRepo.UpsertError.Error(),
-						"recipient":       "user-123@example.com",
-						"worker_id":       float64(1234),
-						"message_id":      "randomly-generated-guid",
-						"status":          postal.StatusDelivered,
-						"vcap_request_id": "some-request-id",
-					},
-				}))
-			})
-
-			It("still delivers the message", func() {
-				worker.Deliver(&job)
-
-				Expect(mailClient.Messages).To(HaveLen(1))
-				Expect(mailClient.Messages[0].To).To(Equal(fakeUserEmail))
 			})
 		})
 	})

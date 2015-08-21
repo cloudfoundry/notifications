@@ -127,13 +127,16 @@ func (app Application) StartWorkers() {
 			GlobalUnsubscribesRepo: app.mother.GlobalUnsubscribesRepo(),
 			UnsubscribesRepo:       app.mother.UnsubscribesRepo(),
 			KindsRepo:              app.mother.KindsRepo(),
-			MessagesRepo:           app.mother.MessagesRepo(),
 			ReceiptsRepo:           app.mother.ReceiptsRepo(),
 
-			UserLoader:         postal.NewUserLoader(zonedUAAClient),
-			TemplatesLoader:    app.mother.TemplatesLoader(),
-			TokenLoader:        uaa.NewTokenLoader(zonedUAAClient),
-			StrategyDeterminer: strategy.Determiner{UserStrategy: app.mother.UserStrategy()},
+			UserLoader:           postal.NewUserLoader(zonedUAAClient),
+			TemplatesLoader:      app.mother.TemplatesLoader(),
+			TokenLoader:          uaa.NewTokenLoader(zonedUAAClient),
+			MessageStatusUpdater: postal.NewMessageStatusUpdater(app.mother.MessagesRepo()),
+
+			StrategyDeterminer: strategy.Determiner{
+				UserStrategy: app.mother.UserStrategy(),
+			},
 		})
 		return &worker
 	})
