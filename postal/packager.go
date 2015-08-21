@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/mail"
+	"github.com/pivotal-golang/conceal"
 )
 
 const HTMLWrapperTemplate = `{{.HTMLComponents.Doctype}}
@@ -18,13 +19,28 @@ const HTMLWrapperTemplate = `{{.HTMLComponents.Doctype}}
 	</body>
 </html>`
 
-type Packager struct{}
-
-func NewPackager() Packager {
-	return Packager{}
+type Packager struct {
+	templatesLoader TemplatesLoaderInterface
+	cloak           conceal.CloakInterface
 }
 
-func (packager Packager) Pack(context MessageContext) (mail.Message, error) {
+func NewPackager(templatesLoader TemplatesLoaderInterface, cloak conceal.CloakInterface) Packager {
+	return Packager{
+		templatesLoader: templatesLoader,
+		cloak:           cloak,
+	}
+}
+
+func (packager *Packager) PrepareContext(delivery Delivery, sender, domain string) (MessageContext, error) {
+	templates, err := packager.templatesLoader.LoadTemplates(delivery.ClientID, delivery.Options.KindID, delivery.Options.TemplateID)
+	if err != nil {
+		panic(err)
+	}
+
+	return NewMessageContext(delivery, sender, domain, packager.cloak, templates), nil
+}
+
+func (packager *Packager) Pack(context MessageContext) (mail.Message, error) {
 	parts, err := packager.CompileParts(context)
 	if err != nil {
 		return mail.Message{}, err
@@ -50,7 +66,7 @@ func (packager Packager) Pack(context MessageContext) (mail.Message, error) {
 	}, nil
 }
 
-func (packager Packager) CompileParts(context MessageContext) ([]mail.Part, error) {
+func (packager *Packager) CompileParts(context MessageContext) ([]mail.Part, error) {
 	var parts []mail.Part
 	var err error
 
@@ -94,7 +110,7 @@ func (packager Packager) CompileParts(context MessageContext) ([]mail.Part, erro
 	return parts, nil
 }
 
-func (packager Packager) compileTemplate(context MessageContext, theTemplate string, escapeContext bool) (string, error) {
+func (packager *Packager) compileTemplate(context MessageContext, theTemplate string, escapeContext bool) (string, error) {
 	buffer := bytes.NewBuffer([]byte{})
 
 	source, err := template.New("compileTemplate").Parse(theTemplate)

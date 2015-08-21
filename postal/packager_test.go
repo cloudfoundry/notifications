@@ -6,6 +6,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -13,33 +14,56 @@ import (
 
 var _ = Describe("Packager", func() {
 	var (
-		packager postal.Packager
-		context  postal.MessageContext
-		client   mail.Client
+		packager        postal.Packager
+		context         postal.MessageContext
+		client          mail.Client
+		templatesLoader *fakes.TemplatesLoader
+		delivery        postal.Delivery
+		cloak           *fakes.Cloak
 	)
 
 	BeforeEach(func() {
 		client = mail.Client{}
-		html := postal.HTML{
-			BodyContent:    "<p>user supplied banana html</p>",
-			BodyAttributes: "class=\"bananaBody\"",
-			Head:           "<title>The title</title>",
-			Doctype:        "<!DOCTYPE html>",
+		templatesLoader = fakes.NewTemplatesLoader()
+		cloak = fakes.NewCloak()
+
+		delivery = postal.Delivery{
+			UserGUID: "some-user-guid",
+			ClientID: "some-client-id",
+			Options: postal.Options{
+				Subject:    "Some crazy subject",
+				TemplateID: "some-template-id",
+				KindID:     "some-kind-id",
+				HTML: postal.HTML{
+					BodyContent:    "<p>user supplied banana html</p>",
+					BodyAttributes: "class=\"bananaBody\"",
+					Head:           "<title>The title</title>",
+					Doctype:        "<!DOCTYPE html>",
+				},
+				Text: "some-text",
+			},
 		}
+
+		packager = postal.NewPackager(templatesLoader, cloak)
 
 		requestReceivedTime, _ := time.Parse(time.RFC3339Nano, "2015-06-08T14:38:03.180764129-07:00")
 
 		context = postal.MessageContext{
-			From:            "banana man",
-			ReplyTo:         "awesomeness",
-			To:              "endless monkeys",
-			Subject:         "we will be eaten",
-			ClientID:        "3&3",
-			MessageID:       "4'4",
-			Text:            "User <supplied> \"banana\" text",
-			UserGUID:        "user-123",
-			HTMLComponents:  html,
-			HTML:            html.BodyContent,
+			From:      "banana man",
+			ReplyTo:   "awesomeness",
+			To:        "endless monkeys",
+			Subject:   "we will be eaten",
+			ClientID:  "3&3",
+			MessageID: "4'4",
+			Text:      "User <supplied> \"banana\" text",
+			UserGUID:  "user-123",
+			HTMLComponents: postal.HTML{
+				BodyContent:    "<p>user supplied banana html</p>",
+				BodyAttributes: "class=\"bananaBody\"",
+				Head:           "<title>The title</title>",
+				Doctype:        "<!DOCTYPE html>",
+			},
+			HTML:            "<p>user supplied banana html</p>",
 			Space:           "development",
 			Organization:    "banana",
 			TextTemplate:    "Banana preamble {{.Text}} {{.ClientID}} {{.MessageID}} {{.UserGUID}}\n{{.Endorsement}}",
@@ -48,7 +72,53 @@ var _ = Describe("Packager", func() {
 			Endorsement:     "This is an endorsement for the {{.Space}} space and {{.Organization}} org.",
 			RequestReceived: requestReceivedTime,
 		}
-		packager = postal.NewPackager()
+	})
+
+	Describe("PrepareContext", func() {
+		BeforeEach(func() {
+			templatesLoader.LoadTemplatesCall.Returns.Templates = postal.Templates{
+				Name:    "some-name",
+				Subject: "subject template: {{.Subject}}",
+				Text:    "Some {{.Text}} text",
+				HTML:    "<h1>{{.HTML}}</h1>",
+			}
+		})
+
+		It("sets the context on the Packager", func() {
+			cloak.VeilCall.Returns.CipherText = []byte("some-encrypted-text")
+
+			var err error
+			context, err = packager.PrepareContext(delivery, "some-sender@example.com", "example.com")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(templatesLoader.LoadTemplatesCall.Receives.ClientID).To(Equal("some-client-id"))
+			Expect(templatesLoader.LoadTemplatesCall.Receives.KindID).To(Equal("some-kind-id"))
+			Expect(templatesLoader.LoadTemplatesCall.Receives.TemplateID).To(Equal("some-template-id"))
+
+			Expect(cloak.VeilCall.Receives.PlainText).To(Equal([]byte("some-user-guid|some-client-id|some-kind-id")))
+
+			Expect(context).To(Equal(postal.MessageContext{
+				UnsubscribeID: "some-encrypted-text",
+				Domain:        "example.com",
+				From:          "some-sender@example.com",
+				Subject:       "Some crazy subject",
+				UserGUID:      "some-user-guid",
+				ClientID:      "some-client-id",
+				Text:          "some-text",
+				HTML:          "<p>user supplied banana html</p>",
+				HTMLComponents: postal.HTML{
+					BodyContent:    "<p>user supplied banana html</p>",
+					BodyAttributes: "class=\"bananaBody\"",
+					Head:           "<title>The title</title>",
+					Doctype:        "<!DOCTYPE html>",
+				},
+				TextTemplate:      "Some {{.Text}} text",
+				HTMLTemplate:      "<h1>{{.HTML}}</h1>",
+				SubjectTemplate:   "subject template: {{.Subject}}",
+				KindDescription:   "some-kind-id",
+				SourceDescription: "some-client-id",
+			}))
+		})
 	})
 
 	Describe("Pack", func() {
@@ -120,7 +190,6 @@ Banana preamble <p>user supplied banana html</p> User &lt;supplied&gt; &#34;bana
 		Context("when no html is set", func() {
 			It("only sends a plaintext of the email", func() {
 				context.HTML = ""
-				packager = postal.NewPackager()
 
 				parts, err := packager.CompileParts(context)
 				if err != nil {
@@ -141,7 +210,6 @@ This is an endorsement for the development space and banana org.`
 		Context("when no text is set", func() {
 			It("omits the plaintext portion of the email", func() {
 				context.Text = ""
-				packager = postal.NewPackager()
 
 				parts, err := packager.CompileParts(context)
 				if err != nil {

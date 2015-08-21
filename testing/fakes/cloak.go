@@ -1,15 +1,39 @@
 package fakes
 
 type Cloak struct {
-	EncryptedResult []byte
-	DataToEncrypt   []byte
+	VeilCall struct {
+		Receives struct {
+			PlainText []byte
+		}
+		Returns struct {
+			CipherText []byte
+			Error      error
+		}
+	}
+
+	UnveilCall struct {
+		Receives struct {
+			CipherText []byte
+		}
+		Returns struct {
+			PlainText []byte
+			Error     error
+		}
+	}
 }
 
-func (cloaker *Cloak) Veil(data []byte) ([]byte, error) {
-	cloaker.DataToEncrypt = data
-	return cloaker.EncryptedResult, nil
+func NewCloak() *Cloak {
+	return &Cloak{}
 }
 
-func (cloaker *Cloak) Unveil(data []byte) ([]byte, error) {
-	return []byte("what"), nil
+func (c *Cloak) Veil(plaintext []byte) ([]byte, error) {
+	c.VeilCall.Receives.PlainText = plaintext
+
+	return c.VeilCall.Returns.CipherText, c.VeilCall.Returns.Error
+}
+
+func (c *Cloak) Unveil(ciphertext []byte) ([]byte, error) {
+	c.UnveilCall.Receives.CipherText = ciphertext
+
+	return c.UnveilCall.Returns.PlainText, c.UnveilCall.Returns.Error
 }

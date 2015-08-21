@@ -33,16 +33,16 @@ type Delivery struct {
 type DeliveryWorker struct {
 	gobble.Worker
 
-	dbTrace       bool
-	sender        string
-	encryptionKey []byte
-	identifier    int
-	domain        string
-	uaaHost       string
+	dbTrace    bool
+	sender     string
+	identifier int
+	domain     string
+	uaaHost    string
 
 	baseLogger lager.Logger
 	logger     lager.Logger
 
+	packager           Packager
 	mailClient         mail.ClientInterface
 	userLoader         UserLoaderInterface
 	templatesLoader    TemplatesLoaderInterface
@@ -91,6 +91,11 @@ type StrategyDeterminerInterface interface {
 func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
 	logger := config.Logger.Session("worker", lager.Data{"worker_id": config.ID})
 
+	cloak, err := conceal.NewCloak(config.EncryptionKey)
+	if err != nil {
+		panic(err)
+	}
+
 	worker := DeliveryWorker{
 		identifier:             config.ID,
 		baseLogger:             logger,
@@ -105,7 +110,7 @@ func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
 		database:               config.Database,
 		dbTrace:                config.DBTrace,
 		sender:                 config.Sender,
-		encryptionKey:          config.EncryptionKey,
+		packager:               NewPackager(config.TemplatesLoader, cloak),
 		userLoader:             config.UserLoader,
 		tokenLoader:            config.TokenLoader,
 		templatesLoader:        config.TemplatesLoader,
@@ -208,7 +213,12 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 }
 
 func (worker DeliveryWorker) deliver(delivery Delivery) string {
-	message, err := worker.pack(delivery)
+	context, err := worker.packager.PrepareContext(delivery, worker.sender, worker.domain)
+	if err != nil {
+		panic(err)
+	}
+
+	message, err := worker.packager.Pack(context)
 	if err != nil {
 		worker.logger.Info("template-pack-failed")
 		worker.updateMessageStatus(delivery.MessageID, StatusFailed, delivery.Email)
@@ -288,30 +298,6 @@ func (worker DeliveryWorker) isCritical(conn db.ConnectionInterface, kindID, cli
 	}
 
 	return kind.Critical
-}
-
-func (worker DeliveryWorker) pack(delivery Delivery) (mail.Message, error) {
-	var message mail.Message
-
-	cloak, err := conceal.NewCloak([]byte(worker.encryptionKey))
-	if err != nil {
-		panic(err)
-	}
-
-	templates, err := worker.templatesLoader.LoadTemplates(delivery.ClientID, delivery.Options.KindID, delivery.Options.TemplateID)
-	if err != nil {
-		return message, err
-	}
-
-	context := NewMessageContext(delivery, worker.sender, worker.domain, cloak, templates)
-	packager := NewPackager()
-
-	message, err = packager.Pack(context)
-	if err != nil {
-		return message, err
-	}
-
-	return message, nil
 }
 
 func (worker DeliveryWorker) sendMail(messageID string, message mail.Message) string {

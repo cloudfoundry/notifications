@@ -67,14 +67,15 @@ var _ = Describe("MessageContext", func() {
 			RequestReceived: reqReceived,
 		}
 
-		cloak = &fakes.Cloak{
-			EncryptedResult: []byte("the-encoded-result"),
-		}
+		cloak = fakes.NewCloak()
+		cloak.VeilCall.Returns.CipherText = []byte("the-encoded-result")
 	})
 
 	Describe("NewMessageContext", func() {
 		It("returns the appropriate MessageContext when all options are specified", func() {
 			context := postal.NewMessageContext(delivery, sender, domain, cloak, templates)
+
+			Expect(cloak.VeilCall.Receives.PlainText).To(Equal([]byte("the-user|the-client-id|the-kind-id")))
 
 			Expect(context.From).To(Equal(sender))
 			Expect(context.ReplyTo).To(Equal(options.ReplyTo))
@@ -97,7 +98,6 @@ var _ = Describe("MessageContext", func() {
 			Expect(context.OrganizationGUID).To(Equal("my-super-lovely-guid"))
 			Expect(context.UnsubscribeID).To(Equal("the-encoded-result"))
 			Expect(context.Scope).To(Equal("this.scope"))
-			Expect(cloak.DataToEncrypt).To(Equal([]byte("the-user|the-client-id|the-kind-id")))
 			Expect(context.Endorsement).To(Equal("this is the endorsement"))
 			Expect(context.OrganizationRole).To(Equal("OrgRole"))
 			Expect(context.RequestReceived).To(Equal(reqReceived))
