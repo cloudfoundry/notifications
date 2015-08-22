@@ -10,6 +10,10 @@ type campaignTypesGetter interface {
 	Get(conn models.ConnectionInterface, campaignTypeID string) (models.CampaignType, error)
 }
 
+type templatesGetter interface {
+	Get(conn models.ConnectionInterface, templateID string) (models.Template, error)
+}
+
 type Campaign struct {
 	ID             string
 	SendTo         map[string]string
@@ -25,12 +29,14 @@ type Campaign struct {
 type CampaignsCollection struct {
 	enqueuer          campaignEnqueuer
 	campaignTypesRepo campaignTypesGetter
+	templatesRepo     templatesGetter
 }
 
-func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaignTypesGetter) CampaignsCollection {
+func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter) CampaignsCollection {
 	return CampaignsCollection{
 		enqueuer:          enqueuer,
 		campaignTypesRepo: campaignTypesRepo,
+		templatesRepo:     templatesRepo,
 	}
 }
 
@@ -46,9 +52,19 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign)
 		campaign.TemplateID = campaignType.TemplateID
 	}
 
-	err := c.enqueuer.Enqueue(campaign, "campaign")
+	_, err := c.templatesRepo.Get(conn, campaign.TemplateID)
 	if err != nil {
-		return campaign, PersistenceError{Err: err}
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return Campaign{}, NotFoundError{err}
+		default:
+			return Campaign{}, PersistenceError{err}
+		}
+	}
+
+	err = c.enqueuer.Enqueue(campaign, "campaign")
+	if err != nil {
+		return Campaign{}, PersistenceError{Err: err}
 	}
 
 	return campaign, nil

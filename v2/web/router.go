@@ -54,7 +54,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	templatesCollection := collections.NewTemplatesCollection(templatesRepository)
 
 	campaignEnqueuer := queue.NewCampaignEnqueuer(config.Queue)
-	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignTypesRepository)
+	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignTypesRepository, templatesRepository)
 
 	info.Routes{
 		RequestCounter: requestCounter,

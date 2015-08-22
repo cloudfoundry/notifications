@@ -56,11 +56,17 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		HTML:           request.HTML,
 		Subject:        request.Subject,
 		TemplateID:     request.TemplateID,
-		ReplyTo:  request.ReplyTo,
-		ClientID: context.Get("client_id").(string),
+		ReplyTo:        request.ReplyTo,
+		ClientID:       context.Get("client_id").(string),
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		switch err.(type) {
+		case collections.NotFoundError:
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
 		fmt.Fprintf(w, `{"errors": [%q]}`, err.Error())
 		return
 	}

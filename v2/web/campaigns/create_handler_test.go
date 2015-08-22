@@ -183,12 +183,21 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	Context("when an error occurs", func() {
-		Context("when the collection returns an error", func() {
+		Context("when the collection returns an unknown error", func() {
 			It("returns a 500 and the corresponding error", func() {
 				campaignsCollection.CreateCall.Returns.Err = errors.New("some fantastic error")
 				handler.ServeHTTP(writer, request, context)
 				Expect(writer.Code).To(Equal(http.StatusInternalServerError))
 				Expect(writer.Body.String()).To(MatchJSON(`{"errors": ["some fantastic error"]}`))
+			})
+		})
+
+		Context("when the collection returns a not found error", func() {
+			It("returns a 404 and the corresponding error", func() {
+				campaignsCollection.CreateCall.Returns.Err = collections.NotFoundError{errors.New("the entire datacenter has gone away")}
+				handler.ServeHTTP(writer, request, context)
+				Expect(writer.Code).To(Equal(http.StatusNotFound))
+				Expect(writer.Body.String()).To(MatchJSON(`{"errors": ["the entire datacenter has gone away"]}`))
 			})
 		})
 
