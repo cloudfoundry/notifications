@@ -1,7 +1,13 @@
 package collections
 
+import "github.com/cloudfoundry-incubator/notifications/v2/models"
+
 type campaignEnqueuer interface {
 	Enqueue(campaign Campaign, jobType string) error
+}
+
+type campaignTypesGetter interface {
+	Get(conn models.ConnectionInterface, campaignTypeID string) (models.CampaignType, error)
 }
 
 type Campaign struct {
@@ -17,17 +23,28 @@ type Campaign struct {
 }
 
 type CampaignsCollection struct {
-	enqueuer campaignEnqueuer
+	enqueuer          campaignEnqueuer
+	campaignTypesRepo campaignTypesGetter
 }
 
-func NewCampaignsCollection(enqueuer campaignEnqueuer) CampaignsCollection {
+func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaignTypesGetter) CampaignsCollection {
 	return CampaignsCollection{
-		enqueuer: enqueuer,
+		enqueuer:          enqueuer,
+		campaignTypesRepo: campaignTypesRepo,
 	}
 }
 
 func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign) (Campaign, error) {
 	campaign.ID = "some-random-id"
+
+	if campaign.TemplateID == "" {
+		campaignType, err := c.campaignTypesRepo.Get(conn, campaign.CampaignTypeID)
+		if err != nil {
+			panic(err)
+		}
+
+		campaign.TemplateID = campaignType.TemplateID
+	}
 
 	err := c.enqueuer.Enqueue(campaign, "campaign")
 	if err != nil {

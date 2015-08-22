@@ -132,6 +132,7 @@ var UAAGetUser = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request)
 		if match[1] == "user-malformed-email" {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(`{}`))
+			return
 		}
 
 		if user, ok := UAAUsers[match[1]]; ok {

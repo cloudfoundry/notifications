@@ -45,6 +45,7 @@ var _ = AfterSuite(func() {
 
 var _ = BeforeEach(func() {
 	Servers.Notifications.ResetDatabase()
+	Servers.SMTP.Reset()
 })
 
 func GetClientTokenFor(clientID string) uaa.Token {
