@@ -135,6 +135,7 @@ var _ = Describe("CampaignsCollection", func() {
 							ClientID:       "some-client-id",
 						}
 					})
+
 					It("returns an error if the templateID is not found", func() {
 						templatesRepo.GetCall.Returns.Error = models.RecordNotFoundError{}
 
@@ -151,7 +152,37 @@ var _ = Describe("CampaignsCollection", func() {
 					})
 				})
 
-				PIt("returns an error if the campaignTypeID is not found", func() {})
+				Context("when checking if the campaign type exists", func() {
+					var campaign collections.Campaign
+
+					BeforeEach(func() {
+						campaign = collections.Campaign{
+							SendTo:         map[string]string{"user": "some-guid"},
+							CampaignTypeID: "some-id",
+							Text:           "some-test",
+							HTML:           "no-html",
+							Subject:        "some-subject",
+							TemplateID:     "error",
+							ReplyTo:        "nothing@example.com",
+							ClientID:       "some-client-id",
+						}
+					})
+
+					It("returns an error if the campaignTypeID is not found", func() {
+						campaignTypesRepo.GetCall.Returns.Err = models.RecordNotFoundError{}
+
+						_, err := collection.Create(database.Connection(), campaign)
+						Expect(err).To(MatchError(collections.NotFoundError{models.RecordNotFoundError{}}))
+					})
+
+					It("returns a persistence error if there is some other error", func() {
+						dbError := errors.New("the database is shutting off")
+						campaignTypesRepo.GetCall.Returns.Err = dbError
+
+						_, err := collection.Create(database.Connection(), campaign)
+						Expect(err).To(MatchError(collections.PersistenceError{dbError}))
+					})
+				})
 			})
 		})
 	})

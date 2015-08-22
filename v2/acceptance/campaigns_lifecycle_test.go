@@ -186,7 +186,40 @@ var _ = Describe("Campaigns lifecycle", func() {
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement("Template with id \"missing-template-id\" could not be found"))
 			})
+		})
+	})
 
+	Context("when the campaign type ID does not exist", func() {
+		It("returns a 404 with an error message", func() {
+			var templateID string
+
+			By("creating a template", func() {
+				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
+					"name":    "Acceptance Template",
+					"text":    "{{.Text}} campaign type template",
+					"html":    "{{.HTML}}",
+					"subject": "{{.Subject}}",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				templateID = response["id"].(string)
+			})
+
+			By("sending the campaign", func() {
+				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
+					"send_to": map[string]interface{}{
+						"user": "user-111",
+					},
+					"campaign_type_id": "missing-campaign-type-id",
+					"text":             "campaign body",
+					"subject":          "campaign subject",
+					"template_id":      templateID,
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusNotFound))
+				Expect(response["errors"]).To(ContainElement("Campaign type with id \"missing-campaign-type-id\" could not be found"))
+			})
 		})
 	})
 

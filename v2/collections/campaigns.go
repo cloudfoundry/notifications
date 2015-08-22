@@ -43,16 +43,21 @@ func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaig
 func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign) (Campaign, error) {
 	campaign.ID = "some-random-id"
 
-	if campaign.TemplateID == "" {
-		campaignType, err := c.campaignTypesRepo.Get(conn, campaign.CampaignTypeID)
-		if err != nil {
-			panic(err)
+	campaignType, err := c.campaignTypesRepo.Get(conn, campaign.CampaignTypeID)
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return Campaign{}, NotFoundError{err}
+		default:
+			return Campaign{}, PersistenceError{err}
 		}
+	}
 
+	if campaign.TemplateID == "" {
 		campaign.TemplateID = campaignType.TemplateID
 	}
 
-	_, err := c.templatesRepo.Get(conn, campaign.TemplateID)
+	_, err = c.templatesRepo.Get(conn, campaign.TemplateID)
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
