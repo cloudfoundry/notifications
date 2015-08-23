@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/ryanmoran/stack"
 
@@ -19,29 +19,29 @@ var _ = Describe("EmailHandler", func() {
 		var (
 			handler     notify.EmailHandler
 			writer      *httptest.ResponseRecorder
-			errorWriter *fakes.ErrorWriter
-			notifyObj   *fakes.Notify
+			errorWriter *mocks.ErrorWriter
+			notifyObj   *mocks.Notify
 			context     stack.Context
-			connection  *fakes.Connection
+			connection  *mocks.Connection
 			request     *http.Request
-			strategy    *fakes.Strategy
-			database    *fakes.Database
+			strategy    *mocks.Strategy
+			database    *mocks.Database
 		)
 
 		BeforeEach(func() {
-			errorWriter = fakes.NewErrorWriter()
+			errorWriter = mocks.NewErrorWriter()
 			writer = httptest.NewRecorder()
-			database = fakes.NewDatabase()
-			connection = fakes.NewConnection()
+			database = mocks.NewDatabase()
+			connection = mocks.NewConnection()
 			database.Conn = connection
 			request = &http.Request{}
-			strategy = fakes.NewStrategy()
+			strategy = mocks.NewStrategy()
 
 			context = stack.NewContext()
 			context.Set(notify.VCAPRequestIDKey, "some-request-id")
 			context.Set("database", database)
 
-			notifyObj = fakes.NewNotify()
+			notifyObj = mocks.NewNotify()
 			handler = notify.NewEmailHandler(notifyObj, errorWriter, strategy)
 		})
 

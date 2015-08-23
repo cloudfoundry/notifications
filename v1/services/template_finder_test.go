@@ -3,7 +3,7 @@ package services_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -14,14 +14,14 @@ import (
 var _ = Describe("Finder", func() {
 	var (
 		finder        services.TemplateFinder
-		templatesRepo *fakes.TemplatesRepo
-		database      *fakes.Database
+		templatesRepo *mocks.TemplatesRepo
+		database      *mocks.Database
 	)
 
 	Describe("#FindByID", func() {
 		BeforeEach(func() {
-			templatesRepo = fakes.NewTemplatesRepo()
-			database = fakes.NewDatabase()
+			templatesRepo = mocks.NewTemplatesRepo()
+			database = mocks.NewDatabase()
 
 			finder = services.NewTemplateFinder(templatesRepo)
 		})

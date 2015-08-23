@@ -3,7 +3,7 @@ package services_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -14,14 +14,14 @@ import (
 var _ = Describe("Deleter", func() {
 	var (
 		deleter       services.TemplateDeleter
-		templatesRepo *fakes.TemplatesRepo
-		database      *fakes.Database
+		templatesRepo *mocks.TemplatesRepo
+		database      *mocks.Database
 	)
 
 	BeforeEach(func() {
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 
-		templatesRepo = fakes.NewTemplatesRepo()
+		templatesRepo = mocks.NewTemplatesRepo()
 		_, err := templatesRepo.Create(database.Connection(), models.Template{
 			ID: "templateID",
 		})

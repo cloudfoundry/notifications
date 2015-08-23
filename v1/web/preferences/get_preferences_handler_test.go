@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
@@ -26,18 +26,18 @@ var _ = Describe("GetPreferencesHandler", func() {
 		handler           preferences.GetPreferencesHandler
 		writer            *httptest.ResponseRecorder
 		request           *http.Request
-		preferencesFinder *fakes.PreferencesFinder
-		errorWriter       *fakes.ErrorWriter
+		preferencesFinder *mocks.PreferencesFinder
+		errorWriter       *mocks.ErrorWriter
 		builder           services.PreferencesBuilder
 		context           stack.Context
-		database          *fakes.Database
+		database          *mocks.Database
 
 		TRUE  = true
 		FALSE = false
 	)
 
 	BeforeEach(func() {
-		errorWriter = fakes.NewErrorWriter()
+		errorWriter = mocks.NewErrorWriter()
 
 		writer = httptest.NewRecorder()
 		body, err := json.Marshal(map[string]string{
@@ -65,7 +65,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 			return []byte(application.UAAPublicKey), nil
 		})
 
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 
 		context = stack.NewContext()
 		context.Set("token", token)
@@ -84,7 +84,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 		})
 		builder.GlobalUnsubscribe = true
 
-		preferencesFinder = fakes.NewPreferencesFinder()
+		preferencesFinder = mocks.NewPreferencesFinder()
 		preferencesFinder.FindCall.Returns.PreferencesBuilder = builder
 
 		handler = preferences.NewGetPreferencesHandler(preferencesFinder, errorWriter)

@@ -2,7 +2,7 @@ package application_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -12,17 +12,17 @@ var _ = Describe("Migrator", func() {
 	Describe("Migrate", func() {
 		var (
 			migrator       application.Migrator
-			provider       *fakes.PersistenceProvider
-			database       *fakes.Database
-			gobbleDatabase *fakes.GobbleDatabase
-			dbMigrator     *fakes.DatabaseMigrator
+			provider       *mocks.PersistenceProvider
+			database       *mocks.Database
+			gobbleDatabase *mocks.GobbleDatabase
+			dbMigrator     *mocks.DatabaseMigrator
 		)
 
 		BeforeEach(func() {
-			database = fakes.NewDatabase()
-			gobbleDatabase = &fakes.GobbleDatabase{}
-			provider = fakes.NewPersistenceProvider(database, gobbleDatabase)
-			dbMigrator = fakes.NewDatabaseMigrator()
+			database = mocks.NewDatabase()
+			gobbleDatabase = &mocks.GobbleDatabase{}
+			provider = mocks.NewPersistenceProvider(database, gobbleDatabase)
+			dbMigrator = mocks.NewDatabaseMigrator()
 		})
 
 		Context("when configured to run migrations", func() {

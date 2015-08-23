@@ -3,7 +3,7 @@ package services_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -14,9 +14,9 @@ import (
 var _ = Describe("PreferencesFinder", func() {
 	var (
 		finder          *services.PreferencesFinder
-		preferencesRepo *fakes.PreferencesRepo
+		preferencesRepo *mocks.PreferencesRepo
 		preferences     []models.Preference
-		database        *fakes.Database
+		database        *mocks.Database
 	)
 
 	BeforeEach(func() {
@@ -39,12 +39,12 @@ var _ = Describe("PreferencesFinder", func() {
 			},
 		}
 
-		fakeGlobalUnsubscribesRepo := fakes.NewGlobalUnsubscribesRepo()
-		fakeGlobalUnsubscribesRepo.Set(fakes.NewConnection(), "correct-user", true)
-		preferencesRepo = fakes.NewPreferencesRepo()
+		fakeGlobalUnsubscribesRepo := mocks.NewGlobalUnsubscribesRepo()
+		fakeGlobalUnsubscribesRepo.Set(mocks.NewConnection(), "correct-user", true)
+		preferencesRepo = mocks.NewPreferencesRepo()
 		preferencesRepo.FindNonCriticalPreferencesCall.Returns.Preferences = preferences
 
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 
 		finder = services.NewPreferencesFinder(preferencesRepo, fakeGlobalUnsubscribesRepo)
 	})

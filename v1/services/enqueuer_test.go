@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
@@ -19,21 +19,21 @@ var _ = Describe("Enqueuer", func() {
 		enqueuer     services.Enqueuer
 		logger       *log.Logger
 		buffer       *bytes.Buffer
-		queue        *fakes.Queue
-		conn         *fakes.Connection
+		queue        *mocks.Queue
+		conn         *mocks.Connection
 		space        cf.CloudControllerSpace
 		org          cf.CloudControllerOrganization
-		messagesRepo *fakes.MessagesRepo
+		messagesRepo *mocks.MessagesRepo
 		reqReceived  time.Time
 	)
 
 	BeforeEach(func() {
 		buffer = bytes.NewBuffer([]byte{})
 		logger = log.New(buffer, "", 0)
-		queue = fakes.NewQueue()
-		conn = fakes.NewConnection()
-		messagesRepo = fakes.NewMessagesRepo()
-		enqueuer = services.NewEnqueuer(queue, fakes.NewIncrementingGUIDGenerator().Generate, messagesRepo)
+		queue = mocks.NewQueue()
+		conn = mocks.NewConnection()
+		messagesRepo = mocks.NewMessagesRepo()
+		enqueuer = services.NewEnqueuer(queue, mocks.NewIncrementingGUIDGenerator().Generate, messagesRepo)
 		space = cf.CloudControllerSpace{Name: "the-space"}
 		org = cf.CloudControllerOrganization{Name: "the-org"}
 		reqReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:40:12.207187819-07:00")

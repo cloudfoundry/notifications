@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
@@ -15,10 +15,10 @@ var _ = Describe("SpaceLoader", func() {
 	Describe("Load", func() {
 		var loader services.SpaceLoader
 		var token string
-		var cc *fakes.CloudController
+		var cc *mocks.CloudController
 
 		BeforeEach(func() {
-			cc = fakes.NewCloudController()
+			cc = mocks.NewCloudController()
 			cc.Spaces = map[string]cf.CloudControllerSpace{
 				"space-001": {
 					GUID:             "space-001",

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/templates"
 	"github.com/ryanmoran/stack"
@@ -19,14 +19,14 @@ var _ = Describe("DeleteHandler", func() {
 		handler    templates.DeleteHandler
 		writer     *httptest.ResponseRecorder
 		request    *http.Request
-		database   *fakes.Database
-		collection *fakes.TemplatesCollection
+		database   *mocks.Database
+		collection *mocks.TemplatesCollection
 		context    stack.Context
 	)
 
 	BeforeEach(func() {
 		writer = httptest.NewRecorder()
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 
 		context = stack.NewContext()
 		context.Set("database", database)
@@ -36,7 +36,7 @@ var _ = Describe("DeleteHandler", func() {
 		request, err = http.NewRequest("DELETE", "/templates/some-template-id", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		collection = fakes.NewTemplatesCollection()
+		collection = mocks.NewTemplatesCollection()
 		handler = templates.NewDeleteHandler(collection)
 	})
 

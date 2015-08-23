@@ -3,7 +3,7 @@ package services_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -15,17 +15,17 @@ var _ = Describe("PreferenceUpdater", func() {
 	Describe("Execute", func() {
 		var doorOpen models.Unsubscribe
 		var barking models.Unsubscribe
-		var unsubscribesRepo *fakes.UnsubscribesRepo
-		var kindsRepo *fakes.KindsRepo
-		var fakeGlobalUnsubscribesRepo *fakes.GlobalUnsubscribesRepo
-		var conn *fakes.Connection
+		var unsubscribesRepo *mocks.UnsubscribesRepo
+		var kindsRepo *mocks.KindsRepo
+		var fakeGlobalUnsubscribesRepo *mocks.GlobalUnsubscribesRepo
+		var conn *mocks.Connection
 		var updater services.PreferenceUpdater
 
 		BeforeEach(func() {
-			conn = fakes.NewConnection()
-			unsubscribesRepo = fakes.NewUnsubscribesRepo()
-			kindsRepo = fakes.NewKindsRepo()
-			fakeGlobalUnsubscribesRepo = fakes.NewGlobalUnsubscribesRepo()
+			conn = mocks.NewConnection()
+			unsubscribesRepo = mocks.NewUnsubscribesRepo()
+			kindsRepo = mocks.NewKindsRepo()
+			fakeGlobalUnsubscribesRepo = mocks.NewGlobalUnsubscribesRepo()
 			updater = services.NewPreferenceUpdater(fakeGlobalUnsubscribesRepo, unsubscribesRepo, kindsRepo)
 		})
 

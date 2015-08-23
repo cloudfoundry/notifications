@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
@@ -16,15 +16,15 @@ var _ = Describe("EmailStrategy", func() {
 
 	Describe("Dispatch", func() {
 		var (
-			enqueuer        *fakes.Enqueuer
-			conn            *fakes.Connection
+			enqueuer        *mocks.Enqueuer
+			conn            *mocks.Connection
 			requestReceived time.Time
 		)
 
 		BeforeEach(func() {
-			enqueuer = fakes.NewEnqueuer()
+			enqueuer = mocks.NewEnqueuer()
 			emailStrategy = services.NewEmailStrategy(enqueuer)
-			conn = fakes.NewConnection()
+			conn = mocks.NewConnection()
 			requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
 		})
 

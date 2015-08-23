@@ -5,7 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 
@@ -16,21 +16,21 @@ import (
 var _ = Describe("TemplateLoader", func() {
 	var (
 		loader              postal.TemplatesLoader
-		clientsRepo         *fakes.ClientsRepo
-		kindsRepo           *fakes.KindsRepo
-		templatesRepo       *fakes.TemplatesRepo
+		clientsRepo         *mocks.ClientsRepo
+		kindsRepo           *mocks.KindsRepo
+		templatesRepo       *mocks.TemplatesRepo
 		conn                db.ConnectionInterface
-		database            *fakes.Database
-		templatesCollection *fakes.TemplatesCollection
+		database            *mocks.Database
+		templatesCollection *mocks.TemplatesCollection
 	)
 
 	BeforeEach(func() {
-		clientsRepo = fakes.NewClientsRepo()
-		kindsRepo = fakes.NewKindsRepo()
-		templatesRepo = fakes.NewTemplatesRepo()
-		database = fakes.NewDatabase()
+		clientsRepo = mocks.NewClientsRepo()
+		kindsRepo = mocks.NewKindsRepo()
+		templatesRepo = mocks.NewTemplatesRepo()
+		database = mocks.NewDatabase()
 		conn = database.Connection()
-		templatesCollection = fakes.NewTemplatesCollection()
+		templatesCollection = mocks.NewTemplatesCollection()
 		loader = postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo, templatesCollection)
 	})
 

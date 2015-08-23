@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/templates"
 	"github.com/ryanmoran/stack"
@@ -20,18 +20,18 @@ import (
 var _ = Describe("CreateHandler", func() {
 	var (
 		handler             templates.CreateHandler
-		templatesCollection *fakes.TemplatesCollection
+		templatesCollection *mocks.TemplatesCollection
 		context             stack.Context
 		writer              *httptest.ResponseRecorder
 		request             *http.Request
-		database            *fakes.Database
+		database            *mocks.Database
 	)
 
 	BeforeEach(func() {
 		context = stack.NewContext()
 		context.Set("client_id", "some-client-id")
 
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 		context.Set("database", database)
 
 		writer = httptest.NewRecorder()
@@ -48,7 +48,7 @@ var _ = Describe("CreateHandler", func() {
 		request, err = http.NewRequest("POST", "/templates", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
-		templatesCollection = fakes.NewTemplatesCollection()
+		templatesCollection = mocks.NewTemplatesCollection()
 		handler = templates.NewCreateHandler(templatesCollection)
 	})
 

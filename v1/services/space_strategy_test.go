@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -16,18 +16,18 @@ import (
 var _ = Describe("Space Strategy", func() {
 	var (
 		strategy           services.SpaceStrategy
-		tokenLoader        *fakes.TokenLoader
-		spaceLoader        *fakes.SpaceLoader
-		organizationLoader *fakes.OrganizationLoader
-		enqueuer           *fakes.Enqueuer
-		conn               *fakes.Connection
-		findsUserGUIDs     *fakes.FindsUserGUIDs
+		tokenLoader        *mocks.TokenLoader
+		spaceLoader        *mocks.SpaceLoader
+		organizationLoader *mocks.OrganizationLoader
+		enqueuer           *mocks.Enqueuer
+		conn               *mocks.Connection
+		findsUserGUIDs     *mocks.FindsUserGUIDs
 		requestReceived    time.Time
 	)
 
 	BeforeEach(func() {
 		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
-		conn = fakes.NewConnection()
+		conn = mocks.NewConnection()
 		tokenHeader := map[string]interface{}{
 			"alg": "FAST",
 		}
@@ -37,18 +37,18 @@ var _ = Describe("Space Strategy", func() {
 			"iss":       "uaa",
 			"scope":     []string{"notifications.write"},
 		}
-		tokenLoader = fakes.NewTokenLoader()
+		tokenLoader = mocks.NewTokenLoader()
 		tokenLoader.LoadCall.Returns.Token = helpers.BuildToken(tokenHeader, tokenClaims)
-		enqueuer = fakes.NewEnqueuer()
-		findsUserGUIDs = fakes.NewFindsUserGUIDs()
+		enqueuer = mocks.NewEnqueuer()
+		findsUserGUIDs = mocks.NewFindsUserGUIDs()
 		findsUserGUIDs.SpaceGuids["space-001"] = []string{"user-123", "user-456"}
-		spaceLoader = fakes.NewSpaceLoader()
+		spaceLoader = mocks.NewSpaceLoader()
 		spaceLoader.LoadCall.Returns.Space = cf.CloudControllerSpace{
 			Name:             "production",
 			GUID:             "space-001",
 			OrganizationGUID: "org-001",
 		}
-		organizationLoader = fakes.NewOrganizationLoader()
+		organizationLoader = mocks.NewOrganizationLoader()
 		organizationLoader.LoadCall.Returns.Organization = cf.CloudControllerOrganization{
 			Name: "the-org",
 			GUID: "org-001",

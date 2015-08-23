@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"reflect"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/ryanmoran/stack"
 
@@ -21,27 +21,27 @@ var _ = Describe("OrganizationHandler", func() {
 			handler     notify.OrganizationHandler
 			writer      *httptest.ResponseRecorder
 			request     *http.Request
-			notifyObj   *fakes.Notify
+			notifyObj   *mocks.Notify
 			context     stack.Context
-			connection  *fakes.Connection
-			errorWriter *fakes.ErrorWriter
-			strategy    *fakes.Strategy
+			connection  *mocks.Connection
+			errorWriter *mocks.ErrorWriter
+			strategy    *mocks.Strategy
 		)
 
 		BeforeEach(func() {
 			writer = httptest.NewRecorder()
 			request = &http.Request{URL: &url.URL{Path: "/organizations/org-001"}}
-			strategy = fakes.NewStrategy()
-			connection = fakes.NewConnection()
-			database := fakes.NewDatabase()
+			strategy = mocks.NewStrategy()
+			connection = mocks.NewConnection()
+			database := mocks.NewDatabase()
 			database.Conn = connection
-			errorWriter = fakes.NewErrorWriter()
+			errorWriter = mocks.NewErrorWriter()
 
 			context = stack.NewContext()
 			context.Set(notify.VCAPRequestIDKey, "some-request-id")
 			context.Set("database", database)
 
-			notifyObj = fakes.NewNotify()
+			notifyObj = mocks.NewNotify()
 			handler = notify.NewOrganizationHandler(notifyObj, errorWriter, strategy)
 		})
 

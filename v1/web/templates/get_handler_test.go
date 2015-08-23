@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/ryanmoran/stack"
@@ -22,16 +22,16 @@ var _ = Describe("GetHandler", func() {
 		request     *http.Request
 		writer      *httptest.ResponseRecorder
 		context     stack.Context
-		finder      *fakes.TemplateFinder
-		errorWriter *fakes.ErrorWriter
-		database    *fakes.Database
+		finder      *mocks.TemplateFinder
+		errorWriter *mocks.ErrorWriter
+		database    *mocks.Database
 	)
 
 	Describe("ServeHTTP", func() {
 		var templateID string
 
 		BeforeEach(func() {
-			finder = fakes.NewTemplateFinder()
+			finder = mocks.NewTemplateFinder()
 			templateID = "theTemplateID"
 
 			finder.FindByIDCall.Returns.Template = models.Template{
@@ -42,8 +42,8 @@ var _ = Describe("GetHandler", func() {
 				Metadata: `{"hello": "world"}`,
 			}
 			writer = httptest.NewRecorder()
-			errorWriter = fakes.NewErrorWriter()
-			database = fakes.NewDatabase()
+			errorWriter = mocks.NewErrorWriter()
+			database = mocks.NewDatabase()
 			context = stack.NewContext()
 			context.Set("database", database)
 

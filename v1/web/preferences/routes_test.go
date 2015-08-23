@@ -3,7 +3,7 @@ package preferences_test
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
 	"github.com/cloudfoundry-incubator/notifications/web"
@@ -19,9 +19,9 @@ var _ = Describe("Routes", func() {
 	BeforeEach(func() {
 		muxer = web.NewMuxer()
 		preferences.Routes{
-			ErrorWriter:       fakes.NewErrorWriter(),
-			PreferencesFinder: fakes.NewPreferencesFinder(),
-			PreferenceUpdater: fakes.NewPreferenceUpdater(),
+			ErrorWriter:       mocks.NewErrorWriter(),
+			PreferencesFinder: mocks.NewPreferencesFinder(),
+			PreferenceUpdater: mocks.NewPreferenceUpdater(),
 
 			CORS:                                      middleware.CORS{},
 			RequestCounter:                            middleware.RequestCounter{},

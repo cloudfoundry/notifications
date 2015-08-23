@@ -3,7 +3,7 @@ package collections_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 
@@ -14,19 +14,19 @@ import (
 var _ = Describe("CampaignTypesCollection", func() {
 	var (
 		campaignTypesCollection     collections.CampaignTypesCollection
-		fakeCampaignTypesRepository *fakes.CampaignTypesRepository
-		fakeSendersRepository       *fakes.SendersRepository
-		fakeTemplatesRepository     *fakes.TemplatesRepository
-		fakeDatabaseConnection      *fakes.Connection
+		fakeCampaignTypesRepository *mocks.CampaignTypesRepository
+		fakeSendersRepository       *mocks.SendersRepository
+		fakeTemplatesRepository     *mocks.TemplatesRepository
+		fakeDatabaseConnection      *mocks.Connection
 	)
 
 	BeforeEach(func() {
-		fakeCampaignTypesRepository = fakes.NewCampaignTypesRepository()
-		fakeSendersRepository = fakes.NewSendersRepository()
-		fakeTemplatesRepository = fakes.NewTemplatesRepository()
+		fakeCampaignTypesRepository = mocks.NewCampaignTypesRepository()
+		fakeSendersRepository = mocks.NewSendersRepository()
+		fakeTemplatesRepository = mocks.NewTemplatesRepository()
 
 		campaignTypesCollection = collections.NewCampaignTypesCollection(fakeCampaignTypesRepository, fakeSendersRepository, fakeTemplatesRepository)
-		fakeDatabaseConnection = fakes.NewConnection()
+		fakeDatabaseConnection = mocks.NewConnection()
 	})
 
 	Describe("Delete", func() {

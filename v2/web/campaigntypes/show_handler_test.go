@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
 	"github.com/ryanmoran/stack"
@@ -17,11 +17,11 @@ import (
 var _ = Describe("ShowHandler", func() {
 	var (
 		handler                 campaigntypes.ShowHandler
-		campaignTypesCollection *fakes.CampaignTypesCollection
+		campaignTypesCollection *mocks.CampaignTypesCollection
 		context                 stack.Context
 		writer                  *httptest.ResponseRecorder
 		request                 *http.Request
-		database                *fakes.Database
+		database                *mocks.Database
 	)
 
 	BeforeEach(func() {
@@ -29,12 +29,12 @@ var _ = Describe("ShowHandler", func() {
 
 		context.Set("client_id", "some-client-id")
 
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 		context.Set("database", database)
 
 		writer = httptest.NewRecorder()
 
-		campaignTypesCollection = fakes.NewCampaignTypesCollection()
+		campaignTypesCollection = mocks.NewCampaignTypesCollection()
 
 		handler = campaigntypes.NewShowHandler(campaignTypesCollection)
 	})

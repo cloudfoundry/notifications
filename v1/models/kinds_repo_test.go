@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 
@@ -267,7 +267,7 @@ var _ = Describe("KindsRepo", func() {
 					ClientID:    "my-client",
 				}
 
-				conn := fakes.NewConnection()
+				conn := mocks.NewConnection()
 				conn.SelectOneCall.Returns = kind
 				conn.SelectOneCall.Errs = []error{sql.ErrNoRows, nil, nil}
 				conn.InsertCall.Err = errors.New("Duplicate entry")

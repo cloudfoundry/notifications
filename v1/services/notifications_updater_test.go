@@ -3,7 +3,7 @@ package services_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -14,15 +14,15 @@ import (
 var _ = Describe("NotificationUpdater", func() {
 	var (
 		notificationsUpdater services.NotificationsUpdater
-		kindsRepo            *fakes.KindsRepo
-		database             *fakes.Database
+		kindsRepo            *mocks.KindsRepo
+		database             *mocks.Database
 		clientID             string
 		notificationID       string
 	)
 
 	BeforeEach(func() {
-		kindsRepo = fakes.NewKindsRepo()
-		database = fakes.NewDatabase()
+		kindsRepo = mocks.NewKindsRepo()
+		database = mocks.NewDatabase()
 		clientID = "my-current-client-id"
 		notificationID = "my-current-kind-id"
 

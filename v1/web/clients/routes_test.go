@@ -3,7 +3,7 @@ package clients_test
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/clients"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web"
@@ -24,8 +24,8 @@ var _ = Describe("Routes", func() {
 			DatabaseAllocator:                middleware.DatabaseAllocator{},
 			NotificationsManageAuthenticator: middleware.Authenticator{Scopes: []string{"notifications.manage"}},
 
-			ErrorWriter:      fakes.NewErrorWriter(),
-			TemplateAssigner: fakes.NewTemplateAssigner(),
+			ErrorWriter:      mocks.NewErrorWriter(),
+			TemplateAssigner: mocks.NewTemplateAssigner(),
 		}.Register(muxer)
 	})
 

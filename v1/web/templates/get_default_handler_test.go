@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/ryanmoran/stack"
@@ -17,15 +17,15 @@ import (
 var _ = Describe("GetDefaultHandler", func() {
 	var (
 		handler        templates.GetDefaultHandler
-		templateFinder *fakes.TemplateFinder
-		errorWriter    *fakes.ErrorWriter
-		database       *fakes.Database
+		templateFinder *mocks.TemplateFinder
+		errorWriter    *mocks.ErrorWriter
+		database       *mocks.Database
 		context        stack.Context
 	)
 
 	BeforeEach(func() {
-		errorWriter = fakes.NewErrorWriter()
-		templateFinder = fakes.NewTemplateFinder()
+		errorWriter = mocks.NewErrorWriter()
+		templateFinder = mocks.NewTemplateFinder()
 		templateFinder.FindByIDCall.Returns.Template = models.Template{
 			ID:       models.DefaultTemplateID,
 			Name:     "Default Template",
@@ -35,7 +35,7 @@ var _ = Describe("GetDefaultHandler", func() {
 			Metadata: "{}",
 		}
 
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 		context = stack.NewContext()
 		context.Set("database", database)
 

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/clients"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/ryanmoran/stack"
@@ -19,16 +19,16 @@ import (
 var _ = Describe("AssignTemplateHandler", func() {
 	var (
 		handler          clients.AssignTemplateHandler
-		templateAssigner *fakes.TemplateAssigner
-		errorWriter      *fakes.ErrorWriter
+		templateAssigner *mocks.TemplateAssigner
+		errorWriter      *mocks.ErrorWriter
 		context          stack.Context
-		database         *fakes.Database
+		database         *mocks.Database
 	)
 
 	BeforeEach(func() {
-		templateAssigner = fakes.NewTemplateAssigner()
-		errorWriter = fakes.NewErrorWriter()
-		database = fakes.NewDatabase()
+		templateAssigner = mocks.NewTemplateAssigner()
+		errorWriter = mocks.NewErrorWriter()
+		database = mocks.NewDatabase()
 		context = stack.NewContext()
 		context.Set("database", database)
 

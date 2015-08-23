@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
@@ -13,12 +13,12 @@ import (
 
 var _ = Describe("FindsUserGUIDs", func() {
 	var finder services.FindsUserGUIDs
-	var cc *fakes.CloudController
-	var uaa *fakes.ZonedUAAClient
+	var cc *mocks.CloudController
+	var uaa *mocks.ZonedUAAClient
 
 	BeforeEach(func() {
-		cc = fakes.NewCloudController()
-		uaa = fakes.NewZonedUAAClient()
+		cc = mocks.NewCloudController()
+		uaa = mocks.NewZonedUAAClient()
 		finder = services.NewFindsUserGUIDs(cc, uaa)
 	})
 

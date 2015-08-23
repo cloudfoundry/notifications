@@ -3,7 +3,7 @@ package services_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -14,17 +14,17 @@ import (
 var _ = Describe("Registrar", func() {
 	var (
 		registrar   services.Registrar
-		clientsRepo *fakes.ClientsRepo
-		kindsRepo   *fakes.KindsRepo
-		conn        *fakes.Connection
+		clientsRepo *mocks.ClientsRepo
+		kindsRepo   *mocks.KindsRepo
+		conn        *mocks.Connection
 		kinds       []models.Kind
 	)
 
 	BeforeEach(func() {
-		clientsRepo = fakes.NewClientsRepo()
-		kindsRepo = fakes.NewKindsRepo()
+		clientsRepo = mocks.NewClientsRepo()
+		kindsRepo = mocks.NewKindsRepo()
 		registrar = services.NewRegistrar(clientsRepo, kindsRepo)
-		conn = fakes.NewConnection()
+		conn = mocks.NewConnection()
 	})
 
 	Describe("Register", func() {

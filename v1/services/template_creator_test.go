@@ -3,7 +3,7 @@ package services_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -14,21 +14,21 @@ import (
 var _ = Describe("Creator", func() {
 	Describe("Create", func() {
 		var (
-			templatesRepo *fakes.TemplatesRepo
+			templatesRepo *mocks.TemplatesRepo
 			template      models.Template
 			creator       services.TemplateCreator
-			database      *fakes.Database
+			database      *mocks.Database
 		)
 
 		BeforeEach(func() {
-			templatesRepo = fakes.NewTemplatesRepo()
+			templatesRepo = mocks.NewTemplatesRepo()
 			template = models.Template{
 				Name:    "Big Hero 6 Template",
 				Text:    "Adorable robot.",
 				HTML:    "<p>Many heroes.</p>",
 				Subject: "Robots and Heroes",
 			}
-			database = fakes.NewDatabase()
+			database = mocks.NewDatabase()
 			creator = services.NewTemplateCreator(templatesRepo)
 		})
 

@@ -3,7 +3,7 @@ package collections_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 
@@ -14,15 +14,15 @@ import (
 var _ = Describe("TemplatesCollection", func() {
 	var (
 		templatesCollection collections.TemplatesCollection
-		templatesRepository *fakes.TemplatesRepository
-		conn                *fakes.Connection
+		templatesRepository *mocks.TemplatesRepository
+		conn                *mocks.Connection
 	)
 
 	BeforeEach(func() {
-		templatesRepository = fakes.NewTemplatesRepository()
+		templatesRepository = mocks.NewTemplatesRepository()
 
 		templatesCollection = collections.NewTemplatesCollection(templatesRepository)
-		conn = fakes.NewConnection()
+		conn = mocks.NewConnection()
 	})
 
 	Describe("Set", func() {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,7 +17,7 @@ var _ = Describe("MessageContext", func() {
 	var options postal.Options
 	var html postal.HTML
 	var delivery postal.Delivery
-	var cloak *fakes.Cloak
+	var cloak *mocks.Cloak
 	var reqReceived time.Time
 
 	BeforeEach(func() {
@@ -67,7 +67,7 @@ var _ = Describe("MessageContext", func() {
 			RequestReceived: reqReceived,
 		}
 
-		cloak = fakes.NewCloak()
+		cloak = mocks.NewCloak()
 		cloak.VeilCall.Returns.CipherText = []byte("the-encoded-result")
 	})
 

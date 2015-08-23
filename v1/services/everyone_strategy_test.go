@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -16,17 +16,17 @@ import (
 var _ = Describe("Everyone Strategy", func() {
 	var (
 		strategy            services.EveryoneStrategy
-		tokenLoader         *fakes.TokenLoader
+		tokenLoader         *mocks.TokenLoader
 		token               string
-		allUsers            *fakes.AllUsers
-		enqueuer            *fakes.Enqueuer
-		conn                *fakes.Connection
+		allUsers            *mocks.AllUsers
+		enqueuer            *mocks.Enqueuer
+		conn                *mocks.Connection
 		requestReceivedTime time.Time
 	)
 
 	BeforeEach(func() {
 		requestReceivedTime, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:38:03.180764129-07:00")
-		conn = fakes.NewConnection()
+		conn = mocks.NewConnection()
 		tokenHeader := map[string]interface{}{
 			"alg": "FAST",
 		}
@@ -36,12 +36,12 @@ var _ = Describe("Everyone Strategy", func() {
 			"iss":       "my-uaa-host",
 			"scope":     []string{"notifications.write"},
 		}
-		tokenLoader = fakes.NewTokenLoader()
+		tokenLoader = mocks.NewTokenLoader()
 
 		token = helpers.BuildToken(tokenHeader, tokenClaims)
 		tokenLoader.LoadCall.Returns.Token = token
-		enqueuer = fakes.NewEnqueuer()
-		allUsers = fakes.NewAllUsers()
+		enqueuer = mocks.NewEnqueuer()
+		allUsers = mocks.NewAllUsers()
 		allUsers.AllUserGUIDsCall.Returns.GUIDs = []string{"user-380", "user-319"}
 		strategy = services.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer)
 	})

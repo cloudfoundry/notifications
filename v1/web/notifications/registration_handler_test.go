@@ -11,7 +11,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notifications"
@@ -28,19 +28,19 @@ var _ = Describe("RegistrationHandler", func() {
 		handler     notifications.RegistrationHandler
 		writer      *httptest.ResponseRecorder
 		request     *http.Request
-		errorWriter *fakes.ErrorWriter
-		conn        *fakes.Connection
-		registrar   *fakes.Registrar
+		errorWriter *mocks.ErrorWriter
+		conn        *mocks.Connection
+		registrar   *mocks.Registrar
 		client      models.Client
 		kinds       []models.Kind
 		context     stack.Context
 	)
 
 	BeforeEach(func() {
-		conn = fakes.NewConnection()
-		errorWriter = fakes.NewErrorWriter()
-		registrar = fakes.NewRegistrar()
-		database := fakes.NewDatabase()
+		conn = mocks.NewConnection()
+		errorWriter = mocks.NewErrorWriter()
+		registrar = mocks.NewRegistrar()
+		database := mocks.NewDatabase()
 		database.Conn = conn
 		writer = httptest.NewRecorder()
 		requestBody, err := json.Marshal(map[string]interface{}{

@@ -3,7 +3,7 @@ package collections_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 
@@ -15,18 +15,18 @@ var _ = Describe("CampaignsCollection", func() {
 	Describe("Create", func() {
 		Context("when the audience is a user", func() {
 			var (
-				database          *fakes.Database
-				enqueuer          *fakes.CampaignEnqueuer
+				database          *mocks.Database
+				enqueuer          *mocks.CampaignEnqueuer
 				collection        collections.CampaignsCollection
-				campaignTypesRepo *fakes.CampaignTypesRepository
-				templatesRepo     *fakes.TemplatesRepository
+				campaignTypesRepo *mocks.CampaignTypesRepository
+				templatesRepo     *mocks.TemplatesRepository
 			)
 
 			BeforeEach(func() {
-				database = fakes.NewDatabase()
-				enqueuer = fakes.NewCampaignEnqueuer()
-				campaignTypesRepo = fakes.NewCampaignTypesRepository()
-				templatesRepo = fakes.NewTemplatesRepository()
+				database = mocks.NewDatabase()
+				enqueuer = mocks.NewCampaignEnqueuer()
+				campaignTypesRepo = mocks.NewCampaignTypesRepository()
+				templatesRepo = mocks.NewTemplatesRepository()
 
 				collection = collections.NewCampaignsCollection(enqueuer, campaignTypesRepo, templatesRepo)
 			})

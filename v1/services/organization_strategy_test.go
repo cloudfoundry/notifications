@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -16,17 +16,17 @@ import (
 var _ = Describe("Organization Strategy", func() {
 	var (
 		strategy           services.OrganizationStrategy
-		tokenLoader        *fakes.TokenLoader
-		organizationLoader *fakes.OrganizationLoader
-		enqueuer           *fakes.Enqueuer
-		conn               *fakes.Connection
-		findsUserGUIDs     *fakes.FindsUserGUIDs
+		tokenLoader        *mocks.TokenLoader
+		organizationLoader *mocks.OrganizationLoader
+		enqueuer           *mocks.Enqueuer
+		conn               *mocks.Connection
+		findsUserGUIDs     *mocks.FindsUserGUIDs
 		requestReceived    time.Time
 	)
 
 	BeforeEach(func() {
 		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:38:03.180764129-07:00")
-		conn = fakes.NewConnection()
+		conn = mocks.NewConnection()
 		tokenHeader := map[string]interface{}{
 			"alg": "FAST",
 		}
@@ -36,12 +36,12 @@ var _ = Describe("Organization Strategy", func() {
 			"iss":       "testzone1",
 			"scope":     []string{"notifications.write"},
 		}
-		tokenLoader = fakes.NewTokenLoader()
+		tokenLoader = mocks.NewTokenLoader()
 		tokenLoader.LoadCall.Returns.Token = helpers.BuildToken(tokenHeader, tokenClaims)
-		enqueuer = fakes.NewEnqueuer()
-		findsUserGUIDs = fakes.NewFindsUserGUIDs()
+		enqueuer = mocks.NewEnqueuer()
+		findsUserGUIDs = mocks.NewFindsUserGUIDs()
 		findsUserGUIDs.OrganizationGuids["org-001"] = []string{"user-123", "user-456"}
-		organizationLoader = fakes.NewOrganizationLoader()
+		organizationLoader = mocks.NewOrganizationLoader()
 		organizationLoader.LoadCall.Returns.Organization = cf.CloudControllerOrganization{
 			Name: "my-org",
 			GUID: "org-001",

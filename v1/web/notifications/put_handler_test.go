@@ -11,7 +11,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notifications"
@@ -28,20 +28,20 @@ var _ = Describe("PutHandler", func() {
 		handler     notifications.PutHandler
 		writer      *httptest.ResponseRecorder
 		request     *http.Request
-		errorWriter *fakes.ErrorWriter
-		conn        *fakes.Connection
-		registrar   *fakes.Registrar
+		errorWriter *mocks.ErrorWriter
+		conn        *mocks.Connection
+		registrar   *mocks.Registrar
 		client      models.Client
 		kinds       []models.Kind
 		context     stack.Context
 	)
 
 	BeforeEach(func() {
-		conn = fakes.NewConnection()
-		database := fakes.NewDatabase()
+		conn = mocks.NewConnection()
+		database := mocks.NewDatabase()
 		database.Conn = conn
-		errorWriter = fakes.NewErrorWriter()
-		registrar = fakes.NewRegistrar()
+		errorWriter = mocks.NewErrorWriter()
+		registrar = mocks.NewRegistrar()
 		writer = httptest.NewRecorder()
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"source_name": "Raptor Containment Unit",

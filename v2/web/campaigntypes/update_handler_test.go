@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
@@ -25,11 +25,11 @@ import (
 var _ = Describe("UpdateHandler", func() {
 	var (
 		handler                 campaigntypes.UpdateHandler
-		campaignTypesCollection *fakes.CampaignTypesCollection
+		campaignTypesCollection *mocks.CampaignTypesCollection
 		context                 stack.Context
 		writer                  *httptest.ResponseRecorder
 		request                 *http.Request
-		database                *fakes.Database
+		database                *mocks.Database
 		tokenHeader             map[string]interface{}
 		tokenClaims             map[string]interface{}
 		guid                    string
@@ -40,7 +40,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		context.Set("client_id", "some-client-id")
 
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 		context.Set("database", database)
 
 		tokenHeader = map[string]interface{}{
@@ -67,7 +67,7 @@ var _ = Describe("UpdateHandler", func() {
 		Expect(err).NotTo(HaveOccurred())
 		guid = g.String()
 
-		campaignTypesCollection = fakes.NewCampaignTypesCollection()
+		campaignTypesCollection = mocks.NewCampaignTypesCollection()
 
 		campaignTypesCollection.GetCall.Returns.CampaignType = collections.CampaignType{
 			ID:          guid,

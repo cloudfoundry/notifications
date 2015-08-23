@@ -8,7 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 
 	. "github.com/onsi/ginkgo"
@@ -17,10 +17,10 @@ import (
 
 var _ = Describe("MessageGC", func() {
 	var messageGC postal.MessageGC
-	var repo *fakes.MessagesRepo
+	var repo *mocks.MessagesRepo
 	var oldMessageID string
 	var newMessageID string
-	var database *fakes.Database
+	var database *mocks.Database
 	var conn db.ConnectionInterface
 	var loggerBuffer *bytes.Buffer
 	var lifetime time.Duration
@@ -29,9 +29,9 @@ var _ = Describe("MessageGC", func() {
 	BeforeEach(func() {
 		loggerBuffer = bytes.NewBuffer([]byte{})
 		logger := log.New(loggerBuffer, "", 0)
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 		conn = database.Connection()
-		repo = fakes.NewMessagesRepo()
+		repo = mocks.NewMessagesRepo()
 		lifetime = 2 * time.Minute
 		pollingInterval = 500 * time.Millisecond
 		messageGC = postal.NewMessageGC(lifetime, database, repo, pollingInterval, logger)

@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/pivotal-golang/lager"
 
@@ -16,15 +16,15 @@ import (
 var _ = Describe("MessageStatusUpdater", func() {
 	var (
 		updater      postal.MessageStatusUpdater
-		messagesRepo *fakes.MessagesRepository
+		messagesRepo *mocks.MessagesRepository
 		logger       lager.Logger
 		buffer       *bytes.Buffer
-		conn         *fakes.Connection
+		conn         *mocks.Connection
 	)
 
 	BeforeEach(func() {
-		conn = fakes.NewConnection()
-		messagesRepo = fakes.NewMessagesRepository()
+		conn = mocks.NewConnection()
+		messagesRepo = mocks.NewMessagesRepository()
 
 		buffer = bytes.NewBuffer([]byte{})
 		logger = lager.NewLogger("notifications")

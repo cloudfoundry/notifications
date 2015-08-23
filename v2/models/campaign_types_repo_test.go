@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 
@@ -19,7 +19,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 	)
 
 	BeforeEach(func() {
-		repo = models.NewCampaignTypesRepository(fakes.NewIncrementingGUIDGenerator().Generate)
+		repo = models.NewCampaignTypesRepository(mocks.NewIncrementingGUIDGenerator().Generate)
 		database := db.NewDatabase(sqlDB, db.Config{})
 		helpers.TruncateTables(database)
 		conn = database.Connection()
@@ -43,7 +43,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 
 		Context("failure cases", func() {
 			It("passes along error messages from the database", func() {
-				conn := fakes.NewConnection()
+				conn := mocks.NewConnection()
 				conn.InsertCall.Err = errors.New("a useful database error message")
 
 				campaignType := models.CampaignType{
@@ -84,7 +84,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 			})
 
 			It("passes along error messages from the database", func() {
-				conn := fakes.NewConnection()
+				conn := mocks.NewConnection()
 				conn.SelectOneCall.Errs = []error{errors.New("a useful database error message")}
 				_, err := repo.GetBySenderIDAndName(conn, "some-sender-id", "some-campaign-type")
 				Expect(err).To(MatchError("a useful database error message"))
@@ -133,7 +133,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 
 		Context("failure cases", func() {
 			It("returns errors", func() {
-				conn := fakes.NewConnection()
+				conn := mocks.NewConnection()
 				conn.SelectCall.Err = errors.New("BOOM!")
 				_, err := repo.List(conn, "some-sender-id")
 				Expect(err).To(MatchError("BOOM!"))
@@ -174,7 +174,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 			})
 
 			It("passes along error messages from the database", func() {
-				conn := fakes.NewConnection()
+				conn := mocks.NewConnection()
 				conn.SelectOneCall.Errs = []error{errors.New("a useful database error message")}
 				_, err := repo.Get(conn, "campaign-type-id")
 				Expect(err).To(MatchError("a useful database error message"))
@@ -215,7 +215,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 
 		Context("failure cases", func() {
 			It("passes along error messagers from the database", func() {
-				conn := fakes.NewConnection()
+				conn := mocks.NewConnection()
 				conn.UpdateCall.Err = errors.New("a database error")
 
 				campaignType := models.CampaignType{
@@ -257,7 +257,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 
 		Context("when an error occurs", func() {
 			It("returns the error", func() {
-				conn := fakes.NewConnection()
+				conn := mocks.NewConnection()
 				databaseError := errors.New("The database is not valid")
 				conn.DeleteCall.Err = databaseError
 				err := repo.Delete(conn, models.CampaignType{ID: "other-campaign-id"})

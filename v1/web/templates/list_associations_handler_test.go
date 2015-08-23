@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/ryanmoran/stack"
@@ -26,9 +26,9 @@ var _ = Describe("ListAssociationsHandler", func() {
 		templateID  string
 		writer      *httptest.ResponseRecorder
 		request     *http.Request
-		lister      *fakes.TemplateAssociationLister
-		errorWriter *fakes.ErrorWriter
-		database    *fakes.Database
+		lister      *mocks.TemplateAssociationLister
+		errorWriter *mocks.ErrorWriter
+		database    *mocks.Database
 		context     stack.Context
 	)
 
@@ -36,7 +36,7 @@ var _ = Describe("ListAssociationsHandler", func() {
 		var err error
 
 		templateID = "banana-template"
-		lister = fakes.NewTemplateAssociationLister()
+		lister = mocks.NewTemplateAssociationLister()
 		lister.ListCall.Returns.Associations = []services.TemplateAssociation{
 			{
 				ClientID: "some-client",
@@ -51,13 +51,13 @@ var _ = Describe("ListAssociationsHandler", func() {
 			},
 		}
 
-		errorWriter = fakes.NewErrorWriter()
+		errorWriter = mocks.NewErrorWriter()
 
 		writer = httptest.NewRecorder()
 		request, err = http.NewRequest("GET", "/templates/"+templateID+"/associations", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 		context = stack.NewContext()
 		context.Set("database", database)
 

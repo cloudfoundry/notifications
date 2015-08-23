@@ -9,7 +9,7 @@ import (
 	"reflect"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
@@ -28,15 +28,15 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 			handler     preferences.UpdatePreferencesHandler
 			writer      *httptest.ResponseRecorder
 			request     *http.Request
-			updater     *fakes.PreferenceUpdater
-			errorWriter *fakes.ErrorWriter
-			conn        *fakes.Connection
+			updater     *mocks.PreferenceUpdater
+			errorWriter *mocks.ErrorWriter
+			conn        *mocks.Connection
 			context     stack.Context
 		)
 
 		BeforeEach(func() {
-			conn = fakes.NewConnection()
-			database := fakes.NewDatabase()
+			conn = mocks.NewConnection()
+			database := mocks.NewDatabase()
 			database.Conn = conn
 			builder := services.NewPreferencesBuilder()
 
@@ -83,8 +83,8 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 			context.Set("token", token)
 			context.Set("database", database)
 
-			errorWriter = fakes.NewErrorWriter()
-			updater = fakes.NewPreferenceUpdater()
+			errorWriter = mocks.NewErrorWriter()
+			updater = mocks.NewPreferenceUpdater()
 			writer = httptest.NewRecorder()
 
 			handler = preferences.NewUpdatePreferencesHandler(updater, errorWriter)

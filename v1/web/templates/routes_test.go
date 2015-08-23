@@ -3,7 +3,7 @@ package templates_test
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/web"
@@ -19,13 +19,13 @@ var _ = Describe("Routes", func() {
 	BeforeEach(func() {
 		muxer = web.NewMuxer()
 		templates.Routes{
-			ErrorWriter:               fakes.NewErrorWriter(),
-			TemplateFinder:            fakes.NewTemplateFinder(),
-			TemplateUpdater:           fakes.NewTemplateUpdater(),
-			TemplateCreator:           fakes.NewTemplateCreator(),
-			TemplateDeleter:           fakes.NewTemplateDeleter(),
-			TemplateLister:            fakes.NewTemplateLister(),
-			TemplateAssociationLister: fakes.NewTemplateAssociationLister(),
+			ErrorWriter:               mocks.NewErrorWriter(),
+			TemplateFinder:            mocks.NewTemplateFinder(),
+			TemplateUpdater:           mocks.NewTemplateUpdater(),
+			TemplateCreator:           mocks.NewTemplateCreator(),
+			TemplateDeleter:           mocks.NewTemplateDeleter(),
+			TemplateLister:            mocks.NewTemplateLister(),
+			TemplateAssociationLister: mocks.NewTemplateAssociationLister(),
 
 			RequestCounter:                          middleware.RequestCounter{},
 			RequestLogging:                          middleware.RequestLogging{},

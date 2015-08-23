@@ -3,7 +3,7 @@ package notify_test
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/cloudfoundry-incubator/notifications/web"
@@ -19,14 +19,14 @@ var _ = Describe("Routes", func() {
 	BeforeEach(func() {
 		muxer = web.NewMuxer()
 		notify.Routes{
-			Notify:               fakes.NewNotify(),
-			ErrorWriter:          fakes.NewErrorWriter(),
-			UserStrategy:         fakes.NewStrategy(),
-			SpaceStrategy:        fakes.NewStrategy(),
-			OrganizationStrategy: fakes.NewStrategy(),
-			EveryoneStrategy:     fakes.NewStrategy(),
-			UAAScopeStrategy:     fakes.NewStrategy(),
-			EmailStrategy:        fakes.NewStrategy(),
+			Notify:               mocks.NewNotify(),
+			ErrorWriter:          mocks.NewErrorWriter(),
+			UserStrategy:         mocks.NewStrategy(),
+			SpaceStrategy:        mocks.NewStrategy(),
+			OrganizationStrategy: mocks.NewStrategy(),
+			EveryoneStrategy:     mocks.NewStrategy(),
+			UAAScopeStrategy:     mocks.NewStrategy(),
+			EmailStrategy:        mocks.NewStrategy(),
 
 			RequestCounter:                  middleware.RequestCounter{},
 			RequestLogging:                  middleware.RequestLogging{},

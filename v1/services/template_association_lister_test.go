@@ -3,7 +3,7 @@ package services_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -16,18 +16,18 @@ var _ = Describe("TemplateAssociationLister", func() {
 		lister               services.TemplateAssociationLister
 		expectedAssociations []services.TemplateAssociation
 		templateID           string
-		clientsRepo          *fakes.ClientsRepo
-		kindsRepo            *fakes.KindsRepo
-		templatesRepo        *fakes.TemplatesRepo
-		database             *fakes.Database
+		clientsRepo          *mocks.ClientsRepo
+		kindsRepo            *mocks.KindsRepo
+		templatesRepo        *mocks.TemplatesRepo
+		database             *mocks.Database
 	)
 
 	Describe("List", func() {
 		BeforeEach(func() {
-			clientsRepo = fakes.NewClientsRepo()
-			kindsRepo = fakes.NewKindsRepo()
-			templatesRepo = fakes.NewTemplatesRepo()
-			database = fakes.NewDatabase()
+			clientsRepo = mocks.NewClientsRepo()
+			kindsRepo = mocks.NewKindsRepo()
+			templatesRepo = mocks.NewTemplatesRepo()
+			database = mocks.NewDatabase()
 
 			templateID = "a-template-id"
 			_, err := templatesRepo.Create(database.Connection(), models.Template{

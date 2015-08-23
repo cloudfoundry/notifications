@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
 	. "github.com/onsi/ginkgo"
@@ -19,14 +19,14 @@ var _ = Describe("DeleteHandler", func() {
 		writer                  *httptest.ResponseRecorder
 		request                 *http.Request
 		handler                 campaigntypes.DeleteHandler
-		campaignTypesCollection *fakes.CampaignTypesCollection
-		database                *fakes.Database
+		campaignTypesCollection *mocks.CampaignTypesCollection
+		database                *mocks.Database
 	)
 
 	BeforeEach(func() {
 		context = stack.NewContext()
 
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 		context.Set("database", database)
 
 		context.Set("client_id", "some-client-id")
@@ -37,7 +37,7 @@ var _ = Describe("DeleteHandler", func() {
 		request, err = http.NewRequest("DELETE", "/senders/some-sender-id/campaign_types/some-campaign-type-id", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		campaignTypesCollection = fakes.NewCampaignTypesCollection()
+		campaignTypesCollection = mocks.NewCampaignTypesCollection()
 
 		handler = campaigntypes.NewDeleteHandler(campaignTypesCollection)
 	})

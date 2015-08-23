@@ -6,7 +6,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,15 +17,15 @@ var _ = Describe("Packager", func() {
 		packager        postal.Packager
 		context         postal.MessageContext
 		client          mail.Client
-		templatesLoader *fakes.TemplatesLoader
+		templatesLoader *mocks.TemplatesLoader
 		delivery        postal.Delivery
-		cloak           *fakes.Cloak
+		cloak           *mocks.Cloak
 	)
 
 	BeforeEach(func() {
 		client = mail.Client{}
-		templatesLoader = fakes.NewTemplatesLoader()
-		cloak = fakes.NewCloak()
+		templatesLoader = mocks.NewTemplatesLoader()
+		cloak = mocks.NewCloak()
 
 		delivery = postal.Delivery{
 			UserGUID: "some-user-guid",

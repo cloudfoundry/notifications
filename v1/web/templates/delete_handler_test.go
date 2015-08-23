@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/ryanmoran/stack"
 
@@ -17,20 +17,20 @@ import (
 var _ = Describe("DeleteHandler", func() {
 	var (
 		handler     templates.DeleteHandler
-		errorWriter *fakes.ErrorWriter
+		errorWriter *mocks.ErrorWriter
 		writer      *httptest.ResponseRecorder
 		request     *http.Request
 		context     stack.Context
-		deleter     *fakes.TemplateDeleter
+		deleter     *mocks.TemplateDeleter
 		err         error
-		database    *fakes.Database
+		database    *mocks.Database
 	)
 
 	Describe("ServeHTTP", func() {
 		BeforeEach(func() {
-			deleter = fakes.NewTemplateDeleter()
-			errorWriter = fakes.NewErrorWriter()
-			database = fakes.NewDatabase()
+			deleter = mocks.NewTemplateDeleter()
+			errorWriter = mocks.NewErrorWriter()
+			database = mocks.NewDatabase()
 			writer = httptest.NewRecorder()
 			request, err = http.NewRequest("DELETE", "/templates/template-id-123", bytes.NewBuffer([]byte{}))
 			Expect(err).NotTo(HaveOccurred())

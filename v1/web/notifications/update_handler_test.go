@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notifications"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
@@ -23,21 +23,21 @@ var _ = Describe("UpdateHandler", func() {
 		writer      *httptest.ResponseRecorder
 		request     *http.Request
 		context     stack.Context
-		updater     *fakes.NotificationUpdater
-		errorWriter *fakes.ErrorWriter
-		database    *fakes.Database
+		updater     *mocks.NotificationUpdater
+		errorWriter *mocks.ErrorWriter
+		database    *mocks.Database
 	)
 
 	Describe("ServeHTTP", func() {
 		BeforeEach(func() {
-			updater = &fakes.NotificationUpdater{}
-			errorWriter = fakes.NewErrorWriter()
+			updater = &mocks.NotificationUpdater{}
+			errorWriter = mocks.NewErrorWriter()
 			writer = httptest.NewRecorder()
 			body := []byte(`{"description": "test kind", "critical": false, "template": "template-name"}`)
 			request, err = http.NewRequest("PUT", "/clients/this-client/notifications/this-kind", bytes.NewBuffer(body))
 			Expect(err).NotTo(HaveOccurred())
 
-			database = fakes.NewDatabase()
+			database = mocks.NewDatabase()
 			context = stack.NewContext()
 			context.Set("database", database)
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notifications"
 	"github.com/ryanmoran/stack"
@@ -19,24 +19,24 @@ var _ = Describe("ListHandler", func() {
 		handler             notifications.ListHandler
 		writer              *httptest.ResponseRecorder
 		request             *http.Request
-		errorWriter         *fakes.ErrorWriter
-		notificationsFinder *fakes.NotificationsFinder
+		errorWriter         *mocks.ErrorWriter
+		notificationsFinder *mocks.NotificationsFinder
 		err                 error
-		database            *fakes.Database
+		database            *mocks.Database
 		context             stack.Context
 	)
 
 	BeforeEach(func() {
-		errorWriter = fakes.NewErrorWriter()
+		errorWriter = mocks.NewErrorWriter()
 		writer = httptest.NewRecorder()
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 		context = stack.NewContext()
 		context.Set("database", database)
 
 		request, err = http.NewRequest("GET", "/notifications", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		notificationsFinder = fakes.NewNotificationsFinder()
+		notificationsFinder = mocks.NewNotificationsFinder()
 		handler = notifications.NewListHandler(notificationsFinder, errorWriter)
 	})
 

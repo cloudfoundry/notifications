@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
@@ -15,15 +15,15 @@ import (
 var _ = Describe("UserStrategy", func() {
 	var (
 		strategy        services.UserStrategy
-		enqueuer        *fakes.Enqueuer
-		conn            *fakes.Connection
+		enqueuer        *mocks.Enqueuer
+		conn            *mocks.Connection
 		requestReceived time.Time
 	)
 
 	BeforeEach(func() {
 		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
-		conn = fakes.NewConnection()
-		enqueuer = fakes.NewEnqueuer()
+		conn = mocks.NewConnection()
+		enqueuer = mocks.NewEnqueuer()
 		strategy = services.NewUserStrategy(enqueuer)
 	})
 

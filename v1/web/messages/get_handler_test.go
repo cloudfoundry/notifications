@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/messages"
 	"github.com/ryanmoran/stack"
@@ -17,22 +17,22 @@ import (
 var _ = Describe("GetHandler", func() {
 	var (
 		handler       messages.GetHandler
-		errorWriter   *fakes.ErrorWriter
+		errorWriter   *mocks.ErrorWriter
 		writer        *httptest.ResponseRecorder
 		request       *http.Request
 		messageID     string
 		err           error
-		messageFinder *fakes.MessageFinder
-		database      *fakes.Database
+		messageFinder *mocks.MessageFinder
+		database      *mocks.Database
 		context       stack.Context
 	)
 
 	BeforeEach(func() {
-		errorWriter = fakes.NewErrorWriter()
-		messageFinder = fakes.NewMessageFinder()
+		errorWriter = mocks.NewErrorWriter()
+		messageFinder = mocks.NewMessageFinder()
 		writer = httptest.NewRecorder()
 		messageID = "message-123"
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 		context = stack.NewContext()
 		context.Set("database", database)
 

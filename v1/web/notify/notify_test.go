@@ -10,7 +10,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
@@ -28,20 +28,20 @@ var _ = Describe("Notify", func() {
 		Context("When Emailing a user or a group", func() {
 			var (
 				handler         notify.Notify
-				finder          *fakes.NotificationsFinder
-				validator       *fakes.Validator
-				registrar       *fakes.Registrar
+				finder          *mocks.NotificationsFinder
+				validator       *mocks.Validator
+				registrar       *mocks.Registrar
 				request         *http.Request
 				rawToken        string
 				client          models.Client
 				kind            models.Kind
-				conn            *fakes.Connection
-				strategy        *fakes.Strategy
+				conn            *mocks.Connection
+				strategy        *mocks.Strategy
 				context         stack.Context
 				tokenHeader     map[string]interface{}
 				tokenClaims     map[string]interface{}
 				vcapRequestID   string
-				database        *fakes.Database
+				database        *mocks.Database
 				reqReceivedTime time.Time
 			)
 
@@ -56,11 +56,11 @@ var _ = Describe("Notify", func() {
 					ClientID:    "mister-client",
 					Critical:    true,
 				}
-				finder = fakes.NewNotificationsFinder()
+				finder = mocks.NewNotificationsFinder()
 				finder.Clients["mister-client"] = client
 				finder.Kinds["test_email|mister-client"] = kind
 
-				registrar = fakes.NewRegistrar()
+				registrar = mocks.NewRegistrar()
 
 				body, err := json.Marshal(map[string]string{
 					"kind_id":  "test_email",
@@ -94,7 +94,7 @@ var _ = Describe("Notify", func() {
 					return []byte(application.UAAPublicKey), nil
 				})
 
-				database = fakes.NewDatabase()
+				database = mocks.NewDatabase()
 
 				reqReceivedTime, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:32:11.660762586-07:00")
 
@@ -105,9 +105,9 @@ var _ = Describe("Notify", func() {
 
 				vcapRequestID = "some-request-id"
 
-				conn = fakes.NewConnection()
-				strategy = fakes.NewStrategy()
-				validator = &fakes.Validator{}
+				conn = mocks.NewConnection()
+				strategy = mocks.NewStrategy()
+				validator = &mocks.Validator{}
 
 				handler = notify.NewNotify(finder, registrar)
 			})

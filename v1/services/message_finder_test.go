@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -15,15 +15,15 @@ import (
 var _ = Describe("MessageFinder.Find", func() {
 	var (
 		finder       services.MessageFinder
-		messagesRepo *fakes.MessagesRepo
+		messagesRepo *mocks.MessagesRepo
 		messageID    string
-		database     *fakes.Database
+		database     *mocks.Database
 	)
 
 	BeforeEach(func() {
-		messagesRepo = fakes.NewMessagesRepo()
+		messagesRepo = mocks.NewMessagesRepo()
 		messageID = "a-message-id"
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 
 		finder = services.NewMessageFinder(messagesRepo)
 	})

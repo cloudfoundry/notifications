@@ -3,7 +3,7 @@ package strategy_test
 import (
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/strategy"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
@@ -14,12 +14,12 @@ import (
 var _ = Describe("Determiner", func() {
 	var (
 		determiner   strategy.Determiner
-		userStrategy *fakes.Strategy
-		database     *fakes.Database
+		userStrategy *mocks.Strategy
+		database     *mocks.Database
 	)
 	BeforeEach(func() {
-		userStrategy = fakes.NewStrategy()
-		database = fakes.NewDatabase()
+		userStrategy = mocks.NewStrategy()
+		database = mocks.NewDatabase()
 		determiner = strategy.Determiner{
 			UserStrategy: userStrategy,
 		}

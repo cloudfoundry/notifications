@@ -3,7 +3,7 @@ package queue_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 
@@ -13,13 +13,13 @@ import (
 
 var _ = Describe("Enqueuer", func() {
 	var (
-		gobble   *fakes.Queue
+		gobble   *mocks.Queue
 		enqueuer queue.CampaignEnqueuer
 		campaign collections.Campaign
 	)
 
 	BeforeEach(func() {
-		gobble = fakes.NewQueue()
+		gobble = mocks.NewQueue()
 		enqueuer = queue.NewCampaignEnqueuer(gobble)
 		campaign = collections.Campaign{
 			ID: "27",

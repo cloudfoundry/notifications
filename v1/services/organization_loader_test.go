@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
@@ -15,10 +15,10 @@ var _ = Describe("OrganizationLoader", func() {
 	Describe("Load", func() {
 		var loader services.OrganizationLoader
 		var token string
-		var cc *fakes.CloudController
+		var cc *mocks.CloudController
 
 		BeforeEach(func() {
-			cc = fakes.NewCloudController()
+			cc = mocks.NewCloudController()
 			cc.Orgs = map[string]cf.CloudControllerOrganization{
 				"org-001": {
 					GUID: "org-001",

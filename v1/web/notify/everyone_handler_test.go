@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"reflect"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/ryanmoran/stack"
 
@@ -20,27 +20,27 @@ var _ = Describe("EveryoneHandler", func() {
 			handler     notify.EveryoneHandler
 			writer      *httptest.ResponseRecorder
 			request     *http.Request
-			errorWriter *fakes.ErrorWriter
-			notifyObj   *fakes.Notify
+			errorWriter *mocks.ErrorWriter
+			notifyObj   *mocks.Notify
 			context     stack.Context
-			connection  *fakes.Connection
-			strategy    *fakes.Strategy
+			connection  *mocks.Connection
+			strategy    *mocks.Strategy
 		)
 
 		BeforeEach(func() {
-			errorWriter = fakes.NewErrorWriter()
+			errorWriter = mocks.NewErrorWriter()
 			writer = httptest.NewRecorder()
 			request = &http.Request{}
-			strategy = fakes.NewStrategy()
-			connection = fakes.NewConnection()
-			database := fakes.NewDatabase()
+			strategy = mocks.NewStrategy()
+			connection = mocks.NewConnection()
+			database := mocks.NewDatabase()
 			database.Conn = connection
 
 			context = stack.NewContext()
 			context.Set("database", database)
 			context.Set(notify.VCAPRequestIDKey, "some-request-id")
 
-			notifyObj = fakes.NewNotify()
+			notifyObj = mocks.NewNotify()
 			handler = notify.NewEveryoneHandler(notifyObj, errorWriter, strategy)
 		})
 

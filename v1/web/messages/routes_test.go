@@ -3,7 +3,7 @@ package messages_test
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/messages"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/web"
@@ -24,8 +24,8 @@ var _ = Describe("Routes", func() {
 			DatabaseAllocator:                            middleware.DatabaseAllocator{},
 			NotificationsWriteOrEmailsWriteAuthenticator: middleware.Authenticator{Scopes: []string{"notifications.write", "emails.write"}},
 
-			ErrorWriter:   fakes.NewErrorWriter(),
-			MessageFinder: fakes.NewMessageFinder(),
+			ErrorWriter:   mocks.NewErrorWriter(),
+			MessageFinder: mocks.NewMessageFinder(),
 		}.Register(muxer)
 	})
 

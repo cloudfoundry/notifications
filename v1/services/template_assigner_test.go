@@ -3,7 +3,7 @@ package services_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -13,18 +13,18 @@ import (
 
 var _ = Describe("TemplateAssigner", func() {
 	var assigner services.TemplateAssigner
-	var kindsRepo *fakes.KindsRepo
-	var clientsRepo *fakes.ClientsRepo
-	var templatesRepo *fakes.TemplatesRepo
-	var conn *fakes.Connection
-	var database *fakes.Database
+	var kindsRepo *mocks.KindsRepo
+	var clientsRepo *mocks.ClientsRepo
+	var templatesRepo *mocks.TemplatesRepo
+	var conn *mocks.Connection
+	var database *mocks.Database
 
 	BeforeEach(func() {
-		conn = fakes.NewConnection()
-		database = fakes.NewDatabase()
-		clientsRepo = fakes.NewClientsRepo()
-		kindsRepo = fakes.NewKindsRepo()
-		templatesRepo = fakes.NewTemplatesRepo()
+		conn = mocks.NewConnection()
+		database = mocks.NewDatabase()
+		clientsRepo = mocks.NewClientsRepo()
+		kindsRepo = mocks.NewKindsRepo()
+		templatesRepo = mocks.NewTemplatesRepo()
 		assigner = services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo)
 	})
 

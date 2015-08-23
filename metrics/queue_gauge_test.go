@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,13 +17,13 @@ var _ = Describe("QueueGauge", func() {
 	var (
 		gauge  metrics.QueueGauge
 		timer  chan time.Time
-		queue  *fakes.Queue
+		queue  *mocks.Queue
 		buffer *bytes.Buffer
 	)
 
 	BeforeEach(func() {
 		buffer = bytes.NewBuffer([]byte{})
-		queue = fakes.NewQueue()
+		queue = mocks.NewQueue()
 		timer = make(chan time.Time, 10)
 		gauge = metrics.NewQueueGauge(queue, metrics.NewLogger(buffer), timer)
 	})

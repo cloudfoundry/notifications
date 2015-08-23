@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"reflect"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/ryanmoran/stack"
 
@@ -21,27 +21,27 @@ var _ = Describe("SpaceHandler", func() {
 			handler     notify.SpaceHandler
 			writer      *httptest.ResponseRecorder
 			request     *http.Request
-			notifyObj   *fakes.Notify
+			notifyObj   *mocks.Notify
 			context     stack.Context
-			connection  *fakes.Connection
-			strategy    *fakes.Strategy
-			errorWriter *fakes.ErrorWriter
+			connection  *mocks.Connection
+			strategy    *mocks.Strategy
+			errorWriter *mocks.ErrorWriter
 		)
 
 		BeforeEach(func() {
 			writer = httptest.NewRecorder()
 			request = &http.Request{URL: &url.URL{Path: "/spaces/space-001"}}
-			strategy = fakes.NewStrategy()
-			database := fakes.NewDatabase()
-			connection = fakes.NewConnection()
+			strategy = mocks.NewStrategy()
+			database := mocks.NewDatabase()
+			connection = mocks.NewConnection()
 			database.Conn = connection
-			errorWriter = fakes.NewErrorWriter()
+			errorWriter = mocks.NewErrorWriter()
 
 			context = stack.NewContext()
 			context.Set("database", database)
 			context.Set(notify.VCAPRequestIDKey, "some-request-id")
 
-			notifyObj = fakes.NewNotify()
+			notifyObj = mocks.NewNotify()
 			handler = notify.NewSpaceHandler(notifyObj, errorWriter, strategy)
 		})
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 
@@ -19,7 +19,7 @@ var _ = Describe("SendersRepo", func() {
 	)
 
 	BeforeEach(func() {
-		repo = models.NewSendersRepository(fakes.NewIncrementingGUIDGenerator().Generate)
+		repo = models.NewSendersRepository(mocks.NewIncrementingGUIDGenerator().Generate)
 		database := db.NewDatabase(sqlDB, db.Config{})
 		helpers.TruncateTables(database)
 		conn = database.Connection()
@@ -76,7 +76,7 @@ var _ = Describe("SendersRepo", func() {
 		})
 
 		It("returns any error that was encountered", func() {
-			connection := fakes.NewConnection()
+			connection := mocks.NewConnection()
 
 			connection.SelectCall.Err = errors.New("potatoes")
 

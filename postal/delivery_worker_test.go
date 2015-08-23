@@ -12,7 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/pivotal-golang/lager"
@@ -52,28 +52,28 @@ func parseLogLines(b []byte) ([]logLine, error) {
 
 var _ = Describe("DeliveryWorker", func() {
 	var (
-		mailClient             *fakes.MailClient
+		mailClient             *mocks.MailClient
 		worker                 postal.DeliveryWorker
 		id                     int
 		logger                 lager.Logger
 		buffer                 *bytes.Buffer
 		delivery               postal.Delivery
-		queue                  *fakes.Queue
-		unsubscribesRepo       *fakes.UnsubscribesRepo
-		globalUnsubscribesRepo *fakes.GlobalUnsubscribesRepo
-		kindsRepo              *fakes.KindsRepo
-		database               *fakes.Database
-		strategyDeterminer     *fakes.StrategyDeterminer
+		queue                  *mocks.Queue
+		unsubscribesRepo       *mocks.UnsubscribesRepo
+		globalUnsubscribesRepo *mocks.GlobalUnsubscribesRepo
+		kindsRepo              *mocks.KindsRepo
+		database               *mocks.Database
+		strategyDeterminer     *mocks.StrategyDeterminer
 		conn                   db.ConnectionInterface
-		userLoader             *fakes.UserLoader
+		userLoader             *mocks.UserLoader
 		userGUID               string
 		fakeUserEmail          string
-		templateLoader         *fakes.TemplatesLoader
-		receiptsRepo           *fakes.ReceiptsRepo
-		tokenLoader            *fakes.TokenLoader
+		templateLoader         *mocks.TemplatesLoader
+		receiptsRepo           *mocks.ReceiptsRepo
+		tokenLoader            *mocks.TokenLoader
 		messageID              string
-		messageStatusUpdater   *fakes.MessageStatusUpdater
-		deliveryFailureHandler *fakes.DeliveryFailureHandler
+		messageStatusUpdater   *mocks.MessageStatusUpdater
+		deliveryFailureHandler *mocks.DeliveryFailureHandler
 	)
 
 	BeforeEach(func() {
@@ -81,33 +81,33 @@ var _ = Describe("DeliveryWorker", func() {
 		id = 1234
 		logger = lager.NewLogger("notifications")
 		logger.RegisterSink(lager.NewWriterSink(buffer, lager.DEBUG))
-		mailClient = fakes.NewMailClient()
-		queue = fakes.NewQueue()
-		unsubscribesRepo = fakes.NewUnsubscribesRepo()
-		globalUnsubscribesRepo = fakes.NewGlobalUnsubscribesRepo()
-		kindsRepo = fakes.NewKindsRepo()
-		database = fakes.NewDatabase()
+		mailClient = mocks.NewMailClient()
+		queue = mocks.NewQueue()
+		unsubscribesRepo = mocks.NewUnsubscribesRepo()
+		globalUnsubscribesRepo = mocks.NewGlobalUnsubscribesRepo()
+		kindsRepo = mocks.NewKindsRepo()
+		database = mocks.NewDatabase()
 		conn = database.Connection()
-		strategyDeterminer = fakes.NewStrategyDeterminer()
+		strategyDeterminer = mocks.NewStrategyDeterminer()
 		userGUID = "user-123"
 		sum := md5.Sum([]byte("banana's are so very tasty"))
 		encryptionKey := sum[:]
 		fakeUserEmail = "user-123@example.com"
-		userLoader = fakes.NewUserLoader()
+		userLoader = mocks.NewUserLoader()
 		userLoader.LoadCall.Returns.Users = map[string]uaa.User{
 			"user-123": {Emails: []string{fakeUserEmail}},
 			"user-456": {Emails: []string{"user-456@example.com"}},
 		}
-		tokenLoader = fakes.NewTokenLoader()
-		templateLoader = fakes.NewTemplatesLoader()
+		tokenLoader = mocks.NewTokenLoader()
+		templateLoader = mocks.NewTemplatesLoader()
 		templateLoader.LoadTemplatesCall.Returns.Templates = postal.Templates{
 			Text:    "{{.Text}} {{.Domain}}",
 			HTML:    "<p>{{.HTML}}</p>",
 			Subject: "{{.Subject}}",
 		}
-		receiptsRepo = fakes.NewReceiptsRepo()
-		messageStatusUpdater = fakes.NewMessageStatusUpdater()
-		deliveryFailureHandler = fakes.NewDeliveryFailureHandler()
+		receiptsRepo = mocks.NewReceiptsRepo()
+		messageStatusUpdater = mocks.NewMessageStatusUpdater()
+		deliveryFailureHandler = mocks.NewDeliveryFailureHandler()
 
 		worker = postal.NewDeliveryWorker(postal.DeliveryWorkerConfig{
 			ID:            id,

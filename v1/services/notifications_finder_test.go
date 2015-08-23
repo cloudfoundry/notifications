@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
@@ -15,15 +15,15 @@ import (
 var _ = Describe("NotificationsFinder", func() {
 	var (
 		finder      services.NotificationsFinder
-		clientsRepo *fakes.ClientsRepo
-		kindsRepo   *fakes.KindsRepo
-		database    *fakes.Database
+		clientsRepo *mocks.ClientsRepo
+		kindsRepo   *mocks.KindsRepo
+		database    *mocks.Database
 	)
 
 	BeforeEach(func() {
-		clientsRepo = fakes.NewClientsRepo()
-		kindsRepo = fakes.NewKindsRepo()
-		database = fakes.NewDatabase()
+		clientsRepo = mocks.NewClientsRepo()
+		kindsRepo = mocks.NewKindsRepo()
+		database = mocks.NewDatabase()
 		finder = services.NewNotificationsFinder(clientsRepo, kindsRepo)
 	})
 

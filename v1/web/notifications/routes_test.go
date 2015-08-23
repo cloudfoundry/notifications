@@ -3,7 +3,7 @@ package notifications_test
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notifications"
 	"github.com/cloudfoundry-incubator/notifications/web"
@@ -25,10 +25,10 @@ var _ = Describe("Routes", func() {
 			NotificationsWriteAuthenticator:  middleware.Authenticator{Scopes: []string{"notifications.write"}},
 			NotificationsManageAuthenticator: middleware.Authenticator{Scopes: []string{"notifications.manage"}},
 
-			Registrar:            fakes.NewRegistrar(),
-			ErrorWriter:          fakes.NewErrorWriter(),
-			NotificationsFinder:  fakes.NewNotificationsFinder(),
-			NotificationsUpdater: &fakes.NotificationUpdater{},
+			Registrar:            mocks.NewRegistrar(),
+			ErrorWriter:          mocks.NewErrorWriter(),
+			NotificationsFinder:  mocks.NewNotificationsFinder(),
+			NotificationsUpdater: &mocks.NotificationUpdater{},
 		}.Register(muxer)
 	})
 

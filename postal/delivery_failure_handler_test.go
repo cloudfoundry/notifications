@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
@@ -14,14 +14,14 @@ import (
 
 var _ = Describe("DeliveryFailureHandler", func() {
 	var (
-		job     *fakes.GobbleJob
+		job     *mocks.GobbleJob
 		buffer  *bytes.Buffer
 		logger  lager.Logger
 		handler postal.DeliveryFailureHandler
 	)
 
 	BeforeEach(func() {
-		job = fakes.NewGobbleJob()
+		job = mocks.NewGobbleJob()
 		buffer = bytes.NewBuffer([]byte{})
 		logger = lager.NewLogger("notifications")
 		logger.RegisterSink(lager.NewWriterSink(buffer, lager.INFO))

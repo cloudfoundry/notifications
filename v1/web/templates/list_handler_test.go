@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/ryanmoran/stack"
@@ -22,10 +22,10 @@ var _ = Describe("ListHandler", func() {
 		request       *http.Request
 		writer        *httptest.ResponseRecorder
 		context       stack.Context
-		lister        *fakes.TemplateLister
-		errorWriter   *fakes.ErrorWriter
+		lister        *mocks.TemplateLister
+		errorWriter   *mocks.ErrorWriter
 		testTemplates map[string]services.TemplateSummary
-		database      *fakes.Database
+		database      *mocks.Database
 	)
 
 	Describe("ServeHTTP", func() {
@@ -45,13 +45,13 @@ var _ = Describe("ListHandler", func() {
 				},
 			}
 
-			lister = fakes.NewTemplateLister()
+			lister = mocks.NewTemplateLister()
 			lister.ListCall.Returns.TemplateSummaries = testTemplates
 
 			writer = httptest.NewRecorder()
-			errorWriter = fakes.NewErrorWriter()
+			errorWriter = mocks.NewErrorWriter()
 
-			database = fakes.NewDatabase()
+			database = mocks.NewDatabase()
 			context = stack.NewContext()
 			context.Set("database", database)
 

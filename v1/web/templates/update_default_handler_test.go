@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
@@ -22,15 +22,15 @@ var _ = Describe("UpdateDefaultHandler", func() {
 		writer      *httptest.ResponseRecorder
 		request     *http.Request
 		context     stack.Context
-		updater     *fakes.TemplateUpdater
-		errorWriter *fakes.ErrorWriter
-		database    *fakes.Database
+		updater     *mocks.TemplateUpdater
+		errorWriter *mocks.ErrorWriter
+		database    *mocks.Database
 	)
 
 	BeforeEach(func() {
 		var err error
-		updater = fakes.NewTemplateUpdater()
-		errorWriter = fakes.NewErrorWriter()
+		updater = mocks.NewTemplateUpdater()
+		errorWriter = mocks.NewErrorWriter()
 		writer = httptest.NewRecorder()
 		request, err = http.NewRequest("PUT", "/default_template", strings.NewReader(`{
 			"name": "Defaultish Template",
@@ -41,7 +41,7 @@ var _ = Describe("UpdateDefaultHandler", func() {
 		}`))
 		Expect(err).NotTo(HaveOccurred())
 
-		database = fakes.NewDatabase()
+		database = mocks.NewDatabase()
 		context = stack.NewContext()
 		context.Set("database", database)
 

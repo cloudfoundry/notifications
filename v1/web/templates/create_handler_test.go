@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
@@ -24,16 +24,16 @@ var _ = Describe("CreateHandler", func() {
 		writer      *httptest.ResponseRecorder
 		request     *http.Request
 		context     stack.Context
-		creator     *fakes.TemplateCreator
-		errorWriter *fakes.ErrorWriter
-		database    *fakes.Database
+		creator     *mocks.TemplateCreator
+		errorWriter *mocks.ErrorWriter
+		database    *mocks.Database
 	)
 
 	Describe("ServeHTTP", func() {
 		BeforeEach(func() {
-			creator = fakes.NewTemplateCreator()
+			creator = mocks.NewTemplateCreator()
 			creator.CreateCall.Returns.TemplateGUID = "template-guid"
-			errorWriter = fakes.NewErrorWriter()
+			errorWriter = mocks.NewErrorWriter()
 			writer = httptest.NewRecorder()
 			body := bytes.NewBuffer([]byte{})
 			err := json.NewEncoder(body).Encode(map[string]interface{}{
@@ -44,7 +44,7 @@ var _ = Describe("CreateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			database = fakes.NewDatabase()
+			database = mocks.NewDatabase()
 			context = stack.NewContext()
 			context.Set("database", database)
 
