@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/testing"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 
 	. "github.com/onsi/ginkgo"
@@ -20,7 +20,7 @@ var _ = Describe("TemplatesRepo", func() {
 	BeforeEach(func() {
 		repo = models.NewTemplatesRepo()
 		database := db.NewDatabase(sqlDB, db.Config{})
-		testing.TruncateTables(database)
+		helpers.TruncateTables(database)
 		conn = database.Connection()
 		createdAt = time.Now().Add(-1 * time.Hour).Truncate(1 * time.Second).UTC()
 

@@ -2,8 +2,8 @@ package models_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/testing"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 
 	. "github.com/onsi/ginkgo"
@@ -18,7 +18,7 @@ var _ = Describe("TemplatesRepo", func() {
 
 	BeforeEach(func() {
 		database := db.NewDatabase(sqlDB, db.Config{})
-		testing.TruncateTables(database)
+		helpers.TruncateTables(database)
 		repo = models.NewTemplatesRepository(fakes.NewIncrementingGUIDGenerator().Generate)
 		conn = database.Connection()
 	})

@@ -3,7 +3,7 @@ package models_test
 import (
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/testing"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 
 	. "github.com/onsi/ginkgo"
@@ -24,7 +24,7 @@ var _ = Describe("DatabaseMigrator", func() {
 		database = db.NewDatabase(sqlDB, db.Config{
 			DefaultTemplatePath: defaultTemplatePath,
 		})
-		testing.TruncateTables(database)
+		helpers.TruncateTables(database)
 		connection = database.Connection().(*db.Connection)
 		dbMigrator = models.DatabaseMigrator{}
 	})

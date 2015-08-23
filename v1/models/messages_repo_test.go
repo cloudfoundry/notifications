@@ -5,7 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 
 	. "github.com/onsi/ginkgo"
@@ -20,7 +20,7 @@ var _ = Describe("MessagesRepo", func() {
 	BeforeEach(func() {
 		repo = models.NewMessagesRepo()
 		database := db.NewDatabase(sqlDB, db.Config{})
-		testing.TruncateTables(database)
+		helpers.TruncateTables(database)
 		conn = database.Connection()
 		message = models.Message{
 			ID:     "message-id-123",

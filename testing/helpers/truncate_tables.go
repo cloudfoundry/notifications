@@ -1,4 +1,4 @@
-package testing
+package helpers
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/application"

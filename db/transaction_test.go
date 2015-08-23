@@ -2,7 +2,7 @@ package db_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/testing"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 
 	. "github.com/onsi/ginkgo"
@@ -17,7 +17,7 @@ var _ = Describe("Transaction", func() {
 
 	BeforeEach(func() {
 		db := db.NewDatabase(sqlDB, db.Config{})
-		testing.TruncateTables(db)
+		helpers.TruncateTables(db)
 		conn = db.Connection()
 		transaction = conn.Transaction()
 	})
