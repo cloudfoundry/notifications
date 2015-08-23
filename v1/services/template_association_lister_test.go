@@ -16,7 +16,7 @@ var _ = Describe("TemplateAssociationLister", func() {
 		lister               services.TemplateAssociationLister
 		expectedAssociations []services.TemplateAssociation
 		templateID           string
-		clientsRepo          *mocks.ClientsRepo
+		clientsRepo          *mocks.ClientsRepository
 		kindsRepo            *mocks.KindsRepo
 		templatesRepo        *mocks.TemplatesRepo
 		database             *mocks.Database
@@ -24,7 +24,7 @@ var _ = Describe("TemplateAssociationLister", func() {
 
 	Describe("List", func() {
 		BeforeEach(func() {
-			clientsRepo = mocks.NewClientsRepo()
+			clientsRepo = mocks.NewClientsRepository()
 			kindsRepo = mocks.NewKindsRepo()
 			templatesRepo = mocks.NewTemplatesRepo()
 			database = mocks.NewDatabase()
@@ -53,31 +53,26 @@ var _ = Describe("TemplateAssociationLister", func() {
 					},
 				}
 
-				_, err := clientsRepo.Create(database.Connection(), models.Client{
-					ID:         "some-client",
-					TemplateID: templateID,
-				})
-				if err != nil {
-					panic(err)
+				clientsRepo.FindAllByTemplateIDCall.Returns.Clients = []models.Client{
+					{
+						ID:         "some-client",
+						TemplateID: templateID,
+					},
 				}
 
-				_, err = kindsRepo.Create(database.Connection(), models.Kind{
+				_, err := kindsRepo.Create(database.Connection(), models.Kind{
 					ID:         "some-notification",
 					ClientID:   "some-client",
 					TemplateID: templateID,
 				})
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				_, err = kindsRepo.Create(database.Connection(), models.Kind{
 					ID:         "another-notification",
 					ClientID:   "another-client",
 					TemplateID: templateID,
 				})
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("returns the full list of associations", func() {
@@ -92,7 +87,7 @@ var _ = Describe("TemplateAssociationLister", func() {
 		Context("when errors occur", func() {
 			Context("when the clients repo returns an error", func() {
 				It("returns the underlying error", func() {
-					clientsRepo.FindAllByTemplateIDCall.Error = errors.New("something bad happened")
+					clientsRepo.FindAllByTemplateIDCall.Returns.Error = errors.New("something bad happened")
 
 					_, err := lister.List(database, templateID)
 					Expect(err).To(MatchError(errors.New("something bad happened")))

@@ -16,7 +16,7 @@ import (
 var _ = Describe("TemplateLoader", func() {
 	var (
 		loader              postal.TemplatesLoader
-		clientsRepo         *mocks.ClientsRepo
+		clientsRepo         *mocks.ClientsRepository
 		kindsRepo           *mocks.KindsRepo
 		templatesRepo       *mocks.TemplatesRepo
 		conn                db.ConnectionInterface
@@ -25,7 +25,7 @@ var _ = Describe("TemplateLoader", func() {
 	)
 
 	BeforeEach(func() {
-		clientsRepo = mocks.NewClientsRepo()
+		clientsRepo = mocks.NewClientsRepository()
 		kindsRepo = mocks.NewKindsRepo()
 		templatesRepo = mocks.NewTemplatesRepo()
 		database = mocks.NewDatabase()
@@ -36,25 +36,20 @@ var _ = Describe("TemplateLoader", func() {
 
 	Describe("LoadTemplates", func() {
 		var kind models.Kind
-		var client models.Client
 
 		BeforeEach(func() {
 			var err error
 
-			client, err = clientsRepo.Create(conn, models.Client{
-				ID: "my-client-id",
-			})
-			if err != nil {
-				panic(err)
+			clientsRepo.FindCall.Returns.Client = models.Client{
+				ID:         "my-client-id",
+				TemplateID: models.DefaultTemplateID,
 			}
 
 			kind, err = kindsRepo.Create(conn, models.Kind{
 				ID:       "my-kind-id",
-				ClientID: client.ID,
+				ClientID: "my-client-id",
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			_, err = templatesRepo.Create(conn, models.Template{
 				ID:      models.DefaultTemplateID,
@@ -63,9 +58,7 @@ var _ = Describe("TemplateLoader", func() {
 				Text:    "The default template",
 				Subject: "default subject",
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		Context("when the kind has a template", func() {
@@ -77,15 +70,11 @@ var _ = Describe("TemplateLoader", func() {
 					Text:    "some kind template text",
 					Subject: "kind subject",
 				})
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				kind.TemplateID = template.ID
 				_, err = kindsRepo.Update(conn, kind)
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("returns the template belonging to the kind", func() {
@@ -108,14 +97,11 @@ var _ = Describe("TemplateLoader", func() {
 					Text:    "some client template text",
 					Subject: "client subject",
 				})
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
-				client.TemplateID = template.ID
-				_, err = clientsRepo.Update(conn, client)
-				if err != nil {
-					panic(err)
+				clientsRepo.FindCall.Returns.Client = models.Client{
+					ID:         "my-client-id",
+					TemplateID: template.ID,
 				}
 			})
 
@@ -143,6 +129,7 @@ var _ = Describe("TemplateLoader", func() {
 			It("returns the template", func() {
 				templates, err := loader.LoadTemplates("my-client-id", "", "some-v2-template-id")
 				Expect(err).ToNot(HaveOccurred())
+
 				Expect(templates).To(Equal(postal.Templates{
 					HTML:    "<p>v2 awesome</p>",
 					Text:    "some testing text",
@@ -192,7 +179,7 @@ var _ = Describe("TemplateLoader", func() {
 
 		Context("when the clients repo has an error", func() {
 			BeforeEach(func() {
-				clientsRepo.FindCall.Error = errors.New("BOOM!")
+				clientsRepo.FindCall.Returns.Error = errors.New("BOOM!")
 			})
 
 			It("bubbles up the error", func() {

@@ -15,13 +15,13 @@ import (
 var _ = Describe("NotificationsFinder", func() {
 	var (
 		finder      services.NotificationsFinder
-		clientsRepo *mocks.ClientsRepo
+		clientsRepo *mocks.ClientsRepository
 		kindsRepo   *mocks.KindsRepo
 		database    *mocks.Database
 	)
 
 	BeforeEach(func() {
-		clientsRepo = mocks.NewClientsRepo()
+		clientsRepo = mocks.NewClientsRepository()
 		kindsRepo = mocks.NewKindsRepo()
 		database = mocks.NewDatabase()
 		finder = services.NewNotificationsFinder(clientsRepo, kindsRepo)
@@ -29,69 +29,70 @@ var _ = Describe("NotificationsFinder", func() {
 
 	Describe("ClientAndKind", func() {
 		var (
-			raptors models.Client
-			breach  models.Kind
+			breach models.Kind
 		)
 
 		BeforeEach(func() {
-			raptors = models.Client{
-				ID:        "raptors",
-				CreatedAt: time.Now(),
+			clientsRepo.FindCall.Returns.Client = models.Client{
+				ID: "some-client-id",
 			}
-			clientsRepo.Clients["raptors"] = raptors
 
 			breach = models.Kind{
 				ID:        "perimeter_breach",
-				ClientID:  "raptors",
+				ClientID:  "some-client-id",
 				CreatedAt: time.Now(),
 			}
 			kindsRepo.Kinds[breach.ID+breach.ClientID] = breach
 		})
 
 		It("retrieves clients and kinds from the database", func() {
-			client, kind, err := finder.ClientAndKind(database, "raptors", "perimeter_breach")
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(client).To(Equal(raptors))
+			client, kind, err := finder.ClientAndKind(database, "some-client-id", "perimeter_breach")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(client).To(Equal(models.Client{
+				ID: "some-client-id",
+			}))
 			Expect(kind).To(Equal(breach))
 		})
 
 		Context("when the client cannot be found", func() {
 			It("returns an empty models.Client", func() {
-				client, _, err := finder.ClientAndKind(database, "bad-client-id", "perimeter_breach")
+				clientsRepo.FindCall.Returns.Error = models.RecordNotFoundError("not found")
+
+				client, _, err := finder.ClientAndKind(database, "missing-client-id", "perimeter_breach")
+				Expect(err).NotTo(HaveOccurred())
 				Expect(client).To(Equal(models.Client{
-					ID: "bad-client-id",
+					ID: "missing-client-id",
 				}))
-				Expect(err).To(BeNil())
 			})
 		})
 
 		Context("when the kind cannot be found", func() {
 			It("returns an empty models.Kind", func() {
-				client, kind, err := finder.ClientAndKind(database, "raptors", "bad-kind-id")
-				Expect(client).To(Equal(raptors))
+				client, kind, err := finder.ClientAndKind(database, "some-client-id", "bad-kind-id")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(client).To(Equal(models.Client{
+					ID: "some-client-id",
+				}))
 				Expect(kind).To(Equal(models.Kind{
 					ID:       "bad-kind-id",
-					ClientID: "raptors",
+					ClientID: "some-client-id",
 				}))
-				Expect(err).To(BeNil())
 			})
 		})
 
 		Context("when the repo returns an error other than RecordNotFoundError", func() {
 			It("returns the error", func() {
-				clientsRepo.FindCall.Error = errors.New("BOOM!")
-				_, _, err := finder.ClientAndKind(database, "raptors", "perimeter_breach")
-				Expect(err).To(Equal(errors.New("BOOM!")))
+				clientsRepo.FindCall.Returns.Error = errors.New("BOOM!")
+
+				_, _, err := finder.ClientAndKind(database, "some-client-id", "perimeter_breach")
+				Expect(err).To(MatchError(errors.New("BOOM!")))
 			})
 		})
 
 		Context("when the kinds repo returns an error other than RecordNotFoundError", func() {
 			It("returns the error", func() {
 				kindsRepo.FindError = errors.New("BOOM!")
-				_, _, err := finder.ClientAndKind(database, "raptors", "perimeter_breach")
+				_, _, err := finder.ClientAndKind(database, "some-client-id", "perimeter_breach")
 				Expect(err).To(Equal(errors.New("BOOM!")))
 			})
 		})
@@ -124,11 +125,7 @@ var _ = Describe("NotificationsFinder", func() {
 				CreatedAt:   time.Now(),
 			}
 
-			clientsRepo.Clients = map[string]models.Client{
-				"the-imitation-game": imitationGame,
-				"big-hero-6":         bigHero6,
-				"star-wars":          starWars,
-			}
+			clientsRepo.FindAllCall.Returns.Clients = []models.Client{imitationGame, bigHero6, starWars}
 
 			multiSaber = models.Kind{
 				ID:          "multi-light-saber",
@@ -161,12 +158,6 @@ var _ = Describe("NotificationsFinder", func() {
 		})
 
 		It("returns all clients with their associated notifications", func() {
-			clients := []models.Client{}
-			for _, client := range clientsRepo.Clients {
-				clients = append(clients, client)
-			}
-
-			clientsRepo.AllClients = clients
 			clients, notifications, err := finder.AllClientsAndNotifications(database)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(clients).To(HaveLen(3))

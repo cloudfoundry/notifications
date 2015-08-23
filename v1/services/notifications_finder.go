@@ -24,9 +24,11 @@ func NewNotificationsFinder(clientsRepo ClientsRepo, kindsRepo KindsRepo) Notifi
 }
 
 func (finder NotificationsFinder) AllClientsAndNotifications(database db.DatabaseInterface) ([]models.Client, []models.Kind, error) {
-	var clients []models.Client
-	var notifications []models.Kind
-	var err error
+	var (
+		clients       []models.Client
+		notifications []models.Kind
+		err           error
+	)
 
 	clients, err = finder.clientsRepo.FindAll(database.Connection())
 	if err != nil {

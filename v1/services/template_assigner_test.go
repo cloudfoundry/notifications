@@ -12,67 +12,64 @@ import (
 )
 
 var _ = Describe("TemplateAssigner", func() {
-	var assigner services.TemplateAssigner
-	var kindsRepo *mocks.KindsRepo
-	var clientsRepo *mocks.ClientsRepo
-	var templatesRepo *mocks.TemplatesRepo
-	var conn *mocks.Connection
-	var database *mocks.Database
+	var (
+		assigner      services.TemplateAssigner
+		kindsRepo     *mocks.KindsRepo
+		clientsRepo   *mocks.ClientsRepository
+		templatesRepo *mocks.TemplatesRepo
+		conn          *mocks.Connection
+		database      *mocks.Database
+	)
 
 	BeforeEach(func() {
 		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
-		clientsRepo = mocks.NewClientsRepo()
+		clientsRepo = mocks.NewClientsRepository()
 		kindsRepo = mocks.NewKindsRepo()
 		templatesRepo = mocks.NewTemplatesRepo()
 		assigner = services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo)
 	})
 
 	Describe("AssignToClient", func() {
-		var client models.Client
-
 		BeforeEach(func() {
 			var err error
 
-			client, err = clientsRepo.Create(conn, models.Client{
+			clientsRepo.FindCall.Returns.Client = models.Client{
 				ID: "my-client",
-			})
-			if err != nil {
-				panic(err)
 			}
 
 			_, err = templatesRepo.Create(conn, models.Template{
 				ID: "default",
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			_, err = templatesRepo.Create(conn, models.Template{
 				ID: "my-template",
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("assigns the template to the given client", func() {
 			err := assigner.AssignToClient(database, "my-client", "my-template")
 			Expect(err).NotTo(HaveOccurred())
 
-			client, err := clientsRepo.Find(conn, "my-client")
-			if err != nil {
-				panic(err)
-			}
+			Expect(clientsRepo.FindCall.Receives.Connection).To(Equal(conn))
+			Expect(clientsRepo.FindCall.Receives.ClientID).To(Equal("my-client"))
 
-			Expect(client.TemplateID).To(Equal("my-template"))
+			Expect(clientsRepo.UpdateCall.Receives.Connection).To(Equal(conn))
+			Expect(clientsRepo.UpdateCall.Receives.Client).To(Equal(models.Client{
+				ID:         "my-client",
+				TemplateID: "my-template",
+			}))
 		})
 
 		Context("when the request includes a non-existant id", func() {
 			It("reports that the client cannot be found", func() {
-				err := assigner.AssignToClient(database, "bad-client", "my-template")
+				clientsRepo.FindCall.Returns.Error = models.RecordNotFoundError("not found")
+
+				err := assigner.AssignToClient(database, "missing-client", "my-template")
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("not found")))
 			})
 
 			It("reports that the template cannot be found", func() {
@@ -84,11 +81,9 @@ var _ = Describe("TemplateAssigner", func() {
 
 		Context("when the request should reset the template assignment", func() {
 			BeforeEach(func() {
-				var err error
-				client.TemplateID = "some-random-template"
-				client, err = clientsRepo.Update(conn, client)
-				if err != nil {
-					panic(err)
+				clientsRepo.FindCall.Returns.Client = models.Client{
+					ID:         "my-client",
+					TemplateID: "some-random-template",
 				}
 			})
 
@@ -96,31 +91,36 @@ var _ = Describe("TemplateAssigner", func() {
 				err := assigner.AssignToClient(database, "my-client", "")
 				Expect(err).NotTo(HaveOccurred())
 
-				client, err = clientsRepo.Find(conn, "my-client")
-				if err != nil {
-					panic(err)
-				}
+				Expect(clientsRepo.FindCall.Receives.Connection).To(Equal(conn))
+				Expect(clientsRepo.FindCall.Receives.ClientID).To(Equal("my-client"))
 
-				Expect(client.TemplateID).To(Equal(models.DefaultTemplateID))
+				Expect(clientsRepo.UpdateCall.Receives.Connection).To(Equal(conn))
+				Expect(clientsRepo.UpdateCall.Receives.Client).To(Equal(models.Client{
+					ID:         "my-client",
+					TemplateID: models.DefaultTemplateID,
+				}))
 			})
 
 			It("allows template id of default template id to reset the assignment", func() {
 				err := assigner.AssignToClient(database, "my-client", models.DefaultTemplateID)
 				Expect(err).NotTo(HaveOccurred())
 
-				client, err = clientsRepo.Find(conn, "my-client")
-				if err != nil {
-					panic(err)
-				}
+				Expect(clientsRepo.FindCall.Receives.Connection).To(Equal(conn))
+				Expect(clientsRepo.FindCall.Receives.ClientID).To(Equal("my-client"))
 
-				Expect(client.TemplateID).To(Equal(models.DefaultTemplateID))
+				Expect(clientsRepo.UpdateCall.Receives.Connection).To(Equal(conn))
+				Expect(clientsRepo.UpdateCall.Receives.Client).To(Equal(models.Client{
+					ID:         "my-client",
+					TemplateID: models.DefaultTemplateID,
+				}))
 			})
 		})
 
 		Context("when it gets an error it doesn't understand", func() {
 			Context("on finding the client", func() {
 				It("returns any errors it doesn't understand", func() {
-					clientsRepo.FindCall.Error = errors.New("database connection failure")
+					clientsRepo.FindCall.Returns.Error = errors.New("database connection failure")
+
 					err := assigner.AssignToClient(database, "my-client", "my-template")
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal("database connection failure"))
@@ -138,7 +138,8 @@ var _ = Describe("TemplateAssigner", func() {
 
 			Context("on updating the client", func() {
 				It("Returns the error", func() {
-					clientsRepo.UpdateCall.Error = errors.New("database fail")
+					clientsRepo.UpdateCall.Returns.Error = errors.New("database fail")
+
 					err := assigner.AssignToClient(database, "my-client", "my-template")
 					Expect(err).To(HaveOccurred())
 				})
@@ -151,34 +152,25 @@ var _ = Describe("TemplateAssigner", func() {
 		var kind models.Kind
 
 		BeforeEach(func() {
-			client, err := clientsRepo.Create(conn, models.Client{
+			clientsRepo.FindCall.Returns.Client = models.Client{
 				ID: "my-client",
-			})
-			if err != nil {
-				panic(err)
 			}
 
-			_, err = templatesRepo.Create(conn, models.Template{
+			_, err := templatesRepo.Create(conn, models.Template{
 				ID: "default",
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			kind, err = kindsRepo.Create(conn, models.Kind{
 				ID:       "my-kind",
-				ClientID: client.ID,
+				ClientID: "my-client",
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			_, err = templatesRepo.Create(conn, models.Template{
 				ID: "my-template",
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("assigns the template to the given kind", func() {
@@ -186,9 +178,7 @@ var _ = Describe("TemplateAssigner", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			kind, err = kindsRepo.Find(conn, "my-kind", "my-client")
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(kind.TemplateID).To(Equal("my-template"))
 		})
@@ -218,9 +208,7 @@ var _ = Describe("TemplateAssigner", func() {
 				var err error
 				kind.TemplateID = "some-random-template"
 				kind, err = kindsRepo.Update(conn, kind)
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("allows template id of empty string to reset the assignment", func() {
@@ -228,10 +216,7 @@ var _ = Describe("TemplateAssigner", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				kind, err = kindsRepo.Find(conn, "my-kind", "my-client")
-				if err != nil {
-					panic(err)
-				}
-
+				Expect(err).NotTo(HaveOccurred())
 				Expect(kind.TemplateID).To(Equal(models.DefaultTemplateID))
 			})
 
@@ -240,10 +225,7 @@ var _ = Describe("TemplateAssigner", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				kind, err = kindsRepo.Find(conn, "my-kind", "my-client")
-				if err != nil {
-					panic(err)
-				}
-
+				Expect(err).NotTo(HaveOccurred())
 				Expect(kind.TemplateID).To(Equal(models.DefaultTemplateID))
 			})
 		})
@@ -251,7 +233,8 @@ var _ = Describe("TemplateAssigner", func() {
 		Context("when it gets an error it doesn't understand", func() {
 			Context("on finding the client", func() {
 				It("returns any errors it doesn't understand", func() {
-					clientsRepo.FindCall.Error = errors.New("database connection failure")
+					clientsRepo.FindCall.Returns.Error = errors.New("database connection failure")
+
 					err := assigner.AssignToNotification(database, "my-client", "my-kind", "my-template")
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal("database connection failure"))

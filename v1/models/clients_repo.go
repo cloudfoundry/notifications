@@ -11,17 +11,6 @@ func NewClientsRepo() ClientsRepo {
 	return ClientsRepo{}
 }
 
-func (repo ClientsRepo) create(conn ConnectionInterface, client Client) (Client, error) {
-	err := conn.Insert(&client)
-	if err != nil {
-		if strings.Contains(err.Error(), "Duplicate entry") {
-			err = DuplicateRecordError{}
-		}
-		return client, err
-	}
-	return client, nil
-}
-
 func (repo ClientsRepo) Find(conn ConnectionInterface, id string) (Client, error) {
 	client := Client{}
 	err := conn.SelectOne(&client, "SELECT * FROM `clients` WHERE `id` = ?", id)
@@ -90,4 +79,15 @@ func (repo ClientsRepo) FindAllByTemplateID(conn ConnectionInterface, templateID
 	}
 
 	return clients, nil
+}
+
+func (repo ClientsRepo) create(conn ConnectionInterface, client Client) (Client, error) {
+	err := conn.Insert(&client)
+	if err != nil {
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			err = DuplicateRecordError{}
+		}
+		return client, err
+	}
+	return client, nil
 }
