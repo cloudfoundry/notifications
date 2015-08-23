@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 func TestPostalSuite(t *testing.T) {
-	fakes.RegisterFastTokenSigningMethod()
+	helpers.RegisterFastTokenSigningMethod()
 
 	buffer := bytes.NewBuffer([]byte{})
 	metricsLogger := metrics.DefaultLogger

@@ -14,6 +14,7 @@ type DatabaseMigrator struct {
 			MigrationsPath string
 		}
 	}
+
 	SeedCall struct {
 		Called   bool
 		Receives struct {

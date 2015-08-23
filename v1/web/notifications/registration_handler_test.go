@@ -12,6 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notifications"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
@@ -69,7 +70,7 @@ var _ = Describe("RegistrationHandler", func() {
 			"exp":       int64(3404281214),
 			"scope":     []string{"notifications.write", "critical_notifications.write"},
 		}
-		rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+		rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 		request.Header.Set("Authorization", "Bearer "+rawToken)
 
 		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
@@ -172,7 +173,7 @@ var _ = Describe("RegistrationHandler", func() {
 					"exp":       int64(3404281214),
 					"scope":     []string{"notifications.write"},
 				}
-				rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+				rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 				request.Header.Set("Authorization", "Bearer "+rawToken)
 
 				token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {

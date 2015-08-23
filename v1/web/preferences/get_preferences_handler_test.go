@@ -9,6 +9,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
@@ -60,7 +61,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 			panic(err)
 		}
 
-		token, err := jwt.Parse(fakes.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(helpers.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
 			return []byte(application.UAAPublicKey), nil
 		})
 
@@ -135,7 +136,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 				panic(err)
 			}
 
-			token, err := jwt.Parse(fakes.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
+			token, err := jwt.Parse(helpers.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
 				return []byte(application.UAAPublicKey), nil
 			})
 

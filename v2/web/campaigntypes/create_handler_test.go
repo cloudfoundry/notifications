@@ -10,6 +10,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
 	"github.com/dgrijalva/jwt-go"
@@ -46,7 +47,7 @@ var _ = Describe("CreateHandler", func() {
 			"exp":       int64(3404281214),
 			"scope":     []string{"notifications.write"},
 		}
-		rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+		rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 			return []byte(application.UAAPublicKey), nil
 		})
@@ -103,7 +104,7 @@ var _ = Describe("CreateHandler", func() {
 
 	It("requires critical_notifications.write to create a critical campaign type", func() {
 		tokenClaims["scope"] = []string{"notifications.write", "critical_notifications.write"}
-		rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+		rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 			return []byte(application.UAAPublicKey), nil
 		})

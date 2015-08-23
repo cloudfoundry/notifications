@@ -12,6 +12,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
 	"github.com/dgrijalva/jwt-go"
@@ -53,7 +54,7 @@ var _ = Describe("UpdateHandler", func() {
 				"critical_notifications.write",
 			},
 		}
-		rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+		rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 			return []byte(application.UAAPublicKey), nil
 		})
@@ -278,7 +279,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		It("returns a 403 when the client without the critical_notifications.write scope attempts to update a critical campaign type", func() {
 			tokenClaims["scope"] = []string{"notifications.write"}
-			rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+			rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 				return []byte(application.UAAPublicKey), nil
 			})
@@ -310,7 +311,7 @@ var _ = Describe("UpdateHandler", func() {
 			}
 
 			tokenClaims["scope"] = []string{"notifications.write"}
-			rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+			rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 				return []byte(application.UAAPublicKey), nil
 			})

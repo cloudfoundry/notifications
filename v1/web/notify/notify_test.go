@@ -11,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
@@ -81,7 +82,7 @@ var _ = Describe("Notify", func() {
 					"exp":       int64(3404281214),
 					"scope":     []string{"notifications.write", "critical_notifications.write"},
 				}
-				rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
+				rawToken = helpers.BuildToken(tokenHeader, tokenClaims)
 
 				request, err = http.NewRequest("POST", "/spaces/space-001", bytes.NewBuffer(body))
 				if err != nil {
@@ -221,7 +222,7 @@ var _ = Describe("Notify", func() {
 				Context("when trying to send a critical notification without the correct scope", func() {
 					It("returns an error", func() {
 						tokenClaims["scope"] = []interface{}{"notifications.write"}
-						rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
+						rawToken = helpers.BuildToken(tokenHeader, tokenClaims)
 						token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 							return []byte(application.UAAPublicKey), nil
 						})
@@ -236,7 +237,7 @@ var _ = Describe("Notify", func() {
 				Context("when the token is mal-formed", func() {
 					It("returns the error", func() {
 						tokenClaims["iss"] = "%gh&%ij?"
-						rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
+						rawToken = helpers.BuildToken(tokenHeader, tokenClaims)
 						token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
 							return []byte(application.UAAPublicKey), nil
 						})

@@ -3,6 +3,7 @@ package postal_test
 import (
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -10,9 +11,11 @@ import (
 )
 
 var _ = Describe("UserLoader", func() {
-	var loader postal.UserLoader
-	var token string
-	var uaaClient *fakes.ZonedUAAClient
+	var (
+		loader    postal.UserLoader
+		token     string
+		uaaClient *fakes.ZonedUAAClient
+	)
 
 	Describe("Load", func() {
 		BeforeEach(func() {
@@ -24,7 +27,7 @@ var _ = Describe("UserLoader", func() {
 				"exp":       int64(3404281214),
 				"scope":     []string{"notifications.write"},
 			}
-			token = fakes.BuildToken(tokenHeader, tokenClaims)
+			token = helpers.BuildToken(tokenHeader, tokenClaims)
 
 			uaaClient = fakes.NewZonedUAAClient()
 			uaaClient.UsersByID = map[string]uaa.User{

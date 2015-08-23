@@ -6,6 +6,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
@@ -48,7 +49,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 			"scope":     []string{"notifications.write"},
 		}
 		tokenLoader = fakes.NewTokenLoader()
-		tokenLoader.LoadCall.Returns.Token = fakes.BuildToken(tokenHeader, tokenClaims)
+		tokenLoader.LoadCall.Returns.Token = helpers.BuildToken(tokenHeader, tokenClaims)
 		enqueuer = fakes.NewEnqueuer()
 		findsUserGUIDs = fakes.NewFindsUserGUIDs()
 		findsUserGUIDs.GUIDsWithScopes["great.scope"] = []string{"user-311"}

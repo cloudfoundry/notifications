@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
@@ -49,7 +49,7 @@ var _ = Describe("Authenticator", func() {
 				"exp":       3404281214,
 				"scope":     []string{"gaben.scope"},
 			}
-			rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
+			rawToken = helpers.BuildToken(tokenHeader, tokenClaims)
 
 			requestBody, err := json.Marshal(map[string]string{
 				"kind": "forgot_password",
@@ -127,7 +127,7 @@ var _ = Describe("Authenticator", func() {
 				"cid":       "mister-client",
 				"exp":       1404281214,
 			}
-			rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
+			rawToken = helpers.BuildToken(tokenHeader, tokenClaims)
 
 			requestBody, err := json.Marshal(map[string]string{
 				"kind": "forgot_password",
@@ -204,7 +204,7 @@ var _ = Describe("Authenticator", func() {
 				"exp":       3404281214,
 				"scope":     []string{"cloud_controller.admin"},
 			}
-			rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
+			rawToken = helpers.BuildToken(tokenHeader, tokenClaims)
 
 			requestBody, err := json.Marshal(map[string]string{
 				"kind": "forgot_password",
@@ -248,7 +248,7 @@ var _ = Describe("Authenticator", func() {
 				"cid":       "mister-client",
 				"exp":       3404281214,
 			}
-			rawToken = fakes.BuildToken(tokenHeader, tokenClaims)
+			rawToken = helpers.BuildToken(tokenHeader, tokenClaims)
 
 			requestBody, err := json.Marshal(map[string]string{
 				"kind": "forgot_password",

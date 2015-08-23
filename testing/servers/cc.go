@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 )
@@ -113,7 +113,7 @@ var CCGetOrg = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 var CCGetOrgUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 	token := strings.Split(req.Header.Get("Authorization"), " ")[1]
 	jwtToken, _ := jwt.Parse(token, func(*jwt.Token) (interface{}, error) {
-		return []byte(fakes.UAAPublicKey), nil
+		return []byte(helpers.UAAPublicKey), nil
 	})
 
 	var json string
@@ -422,7 +422,7 @@ var CCGetSpaceUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Req
 	}`
 	token := strings.Split(req.Header.Get("Authorization"), " ")[1]
 	jwtToken, _ := jwt.Parse(token, func(*jwt.Token) (interface{}, error) {
-		return []byte(fakes.UAAPublicKey), nil
+		return []byte(helpers.UAAPublicKey), nil
 	})
 
 	var json string

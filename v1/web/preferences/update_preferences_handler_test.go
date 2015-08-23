@@ -10,6 +10,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
@@ -70,7 +71,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 				"exp":     int64(3404281214),
 			}
 
-			rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+			rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 			request.Header.Set("Authorization", "Bearer "+rawToken)
 
 			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
@@ -136,7 +137,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 					"exp":     int64(3404281214),
 				}
 
-				rawToken := fakes.BuildToken(tokenHeader, tokenClaims)
+				rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 				request.Header.Set("Authorization", "Bearer "+rawToken)
 
 				handler.ServeHTTP(writer, request, context)
@@ -160,7 +161,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 						request, err := http.NewRequest("PATCH", "/user_preferences", nil)
 						Expect(err).NotTo(HaveOccurred())
 
-						token, err := jwt.Parse(fakes.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
+						token, err := jwt.Parse(helpers.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
 							return []byte(application.UAAPublicKey), nil
 						})
 						Expect(err).NotTo(HaveOccurred())

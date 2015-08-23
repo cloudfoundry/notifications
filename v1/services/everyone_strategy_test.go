@@ -6,6 +6,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
@@ -37,7 +38,7 @@ var _ = Describe("Everyone Strategy", func() {
 		}
 		tokenLoader = fakes.NewTokenLoader()
 
-		token = fakes.BuildToken(tokenHeader, tokenClaims)
+		token = helpers.BuildToken(tokenHeader, tokenClaims)
 		tokenLoader.LoadCall.Returns.Token = token
 		enqueuer = fakes.NewEnqueuer()
 		allUsers = fakes.NewAllUsers()

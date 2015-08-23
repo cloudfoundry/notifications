@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/fakes"
+	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
@@ -12,7 +12,7 @@ import (
 )
 
 func TestWebV1PreferencesSuite(t *testing.T) {
-	fakes.RegisterFastTokenSigningMethod()
+	helpers.RegisterFastTokenSigningMethod()
 
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "v1/web/preferences")
