@@ -9,12 +9,17 @@ import (
 )
 
 type Config struct {
+	DBLoggingEnabled bool
+	SkipVerifySSL    bool
 	Port             int
 	Logger           lager.Logger
-	DBLoggingEnabled bool
-	UAAPublicKey     string
 	CORSOrigin       string
 	SQLDB            *sql.DB
+
+	UAAPublicKey    string
+	UAAHost         string
+	UAAClientID     string
+	UAAClientSecret string
 }
 
 type Server struct{}

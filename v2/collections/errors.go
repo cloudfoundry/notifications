@@ -23,3 +23,11 @@ type DuplicateRecordError struct {
 func (e DuplicateRecordError) Error() string {
 	return e.Err.Error()
 }
+
+type UnknownError struct {
+	Err error
+}
+
+func (e UnknownError) Error() string {
+	return e.Err.Error()
+}

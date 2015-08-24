@@ -1,6 +1,10 @@
 package collections
 
-import "github.com/cloudfoundry-incubator/notifications/v2/models"
+import (
+	"fmt"
+
+	"github.com/cloudfoundry-incubator/notifications/v2/models"
+)
 
 type campaignEnqueuer interface {
 	Enqueue(campaign Campaign, jobType string) error
@@ -12,6 +16,10 @@ type campaignTypesGetter interface {
 
 type templatesGetter interface {
 	Get(conn models.ConnectionInterface, templateID string) (models.Template, error)
+}
+
+type userExistenceChecker interface {
+	Exists(guid string) (bool, error)
 }
 
 type Campaign struct {
@@ -30,18 +38,30 @@ type CampaignsCollection struct {
 	enqueuer          campaignEnqueuer
 	campaignTypesRepo campaignTypesGetter
 	templatesRepo     templatesGetter
+	userFinder        userExistenceChecker
 }
 
-func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter) CampaignsCollection {
+func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, userFinder userExistenceChecker) CampaignsCollection {
 	return CampaignsCollection{
 		enqueuer:          enqueuer,
 		campaignTypesRepo: campaignTypesRepo,
 		templatesRepo:     templatesRepo,
+		userFinder:        userFinder,
 	}
 }
 
 func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign) (Campaign, error) {
 	campaign.ID = "some-random-id"
+	userGUID := campaign.SendTo["user"]
+
+	exists, err := c.userFinder.Exists(userGUID)
+	if err != nil {
+		return Campaign{}, UnknownError{err}
+	}
+
+	if !exists {
+		return Campaign{}, NotFoundError{fmt.Errorf("The user %q cannot be found", userGUID)}
+	}
 
 	campaignType, err := c.campaignTypesRepo.Get(conn, campaign.CampaignTypeID)
 	if err != nil {

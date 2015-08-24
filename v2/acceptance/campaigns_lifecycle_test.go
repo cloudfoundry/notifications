@@ -154,7 +154,48 @@ var _ = Describe("Campaigns lifecycle", func() {
 	})
 
 	Context("when the audience is non-existent", func() {
-		PIt("returns a 404 with an error message", func() {})
+		It("returns a 404 with an error message", func() {
+			var campaignTypeID, templateID string
+
+			By("creating a template", func() {
+				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
+					"name":    "Acceptance Template",
+					"text":    "{{.Text}}",
+					"html":    "{{.HTML}}",
+					"subject": "{{.Subject}}",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				templateID = response["id"].(string)
+			})
+
+			By("creating a campaign type", func() {
+				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
+					"name":        "some-campaign-type-name",
+					"description": "acceptance campaign type",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				campaignTypeID = response["id"].(string)
+			})
+
+			By("sending the campaign", func() {
+				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
+					"send_to": map[string]interface{}{
+						"user": "missing-user",
+					},
+					"campaign_type_id": campaignTypeID,
+					"text":             "campaign body",
+					"subject":          "campaign subject",
+					"template_id":      templateID,
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(404))
+				Expect(response["errors"]).To(Equal([]interface{}{"The user \"missing-user\" cannot be found"}))
+			})
+		})
 	})
 
 	Context("when the template ID doesn't exist", func() {

@@ -38,10 +38,14 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 
 	v2 := v2web.NewRouter(NewMuxer(), v2web.Config{
 		DBLoggingEnabled: config.DBLoggingEnabled,
+		SkipVerifySSL:    config.SkipVerifySSL,
 		SQLDB:            config.SQLDB,
 		Logger:           config.Logger,
-		UAAPublicKey:     config.UAAPublicKey,
 		Queue:            mother.Queue(),
+		UAAPublicKey:     config.UAAPublicKey,
+		UAAHost:          config.UAAHost,
+		UAAClientID:      config.UAAClientID,
+		UAAClientSecret:  config.UAAClientSecret,
 	})
 
 	return VersionRouter{

@@ -156,12 +156,17 @@ func (app Application) StartMessageGC() {
 
 func (app Application) StartServer(logger lager.Logger) {
 	web.NewServer().Run(app.mother, web.Config{
+		DBLoggingEnabled: app.env.DBLoggingEnabled,
+		SkipVerifySSL:    !app.env.VerifySSL,
 		Port:             app.env.Port,
 		Logger:           logger,
-		DBLoggingEnabled: app.env.DBLoggingEnabled,
-		UAAPublicKey:     UAAPublicKey,
 		CORSOrigin:       app.env.CORSOrigin,
 		SQLDB:            app.mother.SQLDatabase(),
+
+		UAAPublicKey:    UAAPublicKey,
+		UAAHost:         app.env.UAAHost,
+		UAAClientID:     app.env.UAAClientID,
+		UAAClientSecret: app.env.UAAClientSecret,
 	})
 }
 

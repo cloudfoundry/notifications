@@ -321,7 +321,6 @@ var _ = Describe("Campaign types lifecycle", func() {
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Template with id %q could not be found", templateID)))
 			})
-
 		})
 	})
 })

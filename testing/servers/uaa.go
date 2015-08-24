@@ -26,8 +26,9 @@ func NewUAA() *UAA {
 	router := mux.NewRouter()
 	router.HandleFunc("/oauth/token", UAAPostOAuthToken).Methods("POST")
 	router.HandleFunc("/token_key", UAAGetTokenKey).Methods("GET")
-	router.Path("/Users").Queries("filter", "").Handler(UAAGetUser).Methods("GET")
+	router.Path("/Users").Queries("filter", "").Handler(UAAGetUserFilter).Methods("GET")
 	router.HandleFunc("/Users", UAAGetUsers).Methods("GET")
+	router.HandleFunc("/Users/{userGUID}", UAAGetUser).Methods("GET")
 	router.HandleFunc("/Groups", UAAGetUsersByScope).Methods("GET")
 	router.HandleFunc("/{anything:.*}", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		fmt.Printf("UAA ROUTE REQUEST ---> %+v\n", req)
@@ -115,7 +116,7 @@ var UAAGetTokenKey = http.HandlerFunc(func(w http.ResponseWriter, req *http.Requ
 	w.Write(response)
 })
 
-var UAAGetUser = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+var UAAGetUserFilter = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 	err := req.ParseForm()
 	if err != nil {
 		panic(err)
@@ -147,6 +148,24 @@ var UAAGetUser = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request)
 		"totalResults": 1,
 		"schemas":      []string{"urn:scim:schemas:core:1.0"},
 	})
+	if err != nil {
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
+})
+
+var UAAGetUser = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	userGUID := mux.Vars(req)["userGUID"]
+
+	user, ok := UAAUsers[userGUID]
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	response, err := json.Marshal(user)
 	if err != nil {
 		panic(err)
 	}

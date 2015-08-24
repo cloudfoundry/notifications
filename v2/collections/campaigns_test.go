@@ -20,6 +20,7 @@ var _ = Describe("CampaignsCollection", func() {
 				collection        collections.CampaignsCollection
 				campaignTypesRepo *mocks.CampaignTypesRepository
 				templatesRepo     *mocks.TemplatesRepository
+				userFinder        *mocks.UserFinder
 			)
 
 			BeforeEach(func() {
@@ -27,8 +28,10 @@ var _ = Describe("CampaignsCollection", func() {
 				enqueuer = mocks.NewCampaignEnqueuer()
 				campaignTypesRepo = mocks.NewCampaignTypesRepository()
 				templatesRepo = mocks.NewTemplatesRepository()
+				userFinder = mocks.NewUserFinder()
+				userFinder.ExistsCall.Returns.Exists = true
 
-				collection = collections.NewCampaignsCollection(enqueuer, campaignTypesRepo, templatesRepo)
+				collection = collections.NewCampaignsCollection(enqueuer, campaignTypesRepo, templatesRepo, userFinder)
 			})
 
 			Context("enqueuing a campaignJob", func() {
@@ -98,6 +101,26 @@ var _ = Describe("CampaignsCollection", func() {
 					ReplyTo:        "nothing@example.com",
 					ClientID:       "some-client-id",
 				}))
+			})
+
+			Context("when the user does not exist", func() {
+				It("returns a not found error", func() {
+					campaign := collections.Campaign{
+						SendTo:         map[string]string{"user": "missing-user"},
+						CampaignTypeID: "some-id",
+						Text:           "some-test",
+						HTML:           "no-html",
+						Subject:        "some-subject",
+						TemplateID:     "whoa-a-template-id",
+						ReplyTo:        "nothing@example.com",
+						ClientID:       "some-client-id",
+					}
+
+					userFinder.ExistsCall.Returns.Exists = false
+
+					_, err := collection.Create(database.Connection(), campaign)
+					Expect(err).To(MatchError(collections.NotFoundError{errors.New("The user \"missing-user\" cannot be found")}))
+				})
 			})
 
 			Context("when an error happens", func() {
@@ -181,6 +204,30 @@ var _ = Describe("CampaignsCollection", func() {
 
 						_, err := collection.Create(database.Connection(), campaign)
 						Expect(err).To(MatchError(collections.PersistenceError{dbError}))
+					})
+				})
+
+				Context("when checking the user exists", func() {
+					var campaign collections.Campaign
+
+					BeforeEach(func() {
+						campaign = collections.Campaign{
+							SendTo:         map[string]string{"user": "some-guid"},
+							CampaignTypeID: "some-id",
+							Text:           "some-test",
+							HTML:           "no-html",
+							Subject:        "some-subject",
+							TemplateID:     "error",
+							ReplyTo:        "nothing@example.com",
+							ClientID:       "some-client-id",
+						}
+					})
+
+					It("returns an error", func() {
+						userFinder.ExistsCall.Returns.Error = errors.New("some error")
+
+						_, err := collection.Create(database.Connection(), campaign)
+						Expect(err).To(MatchError(collections.UnknownError{errors.New("some error")}))
 					})
 				})
 			})
