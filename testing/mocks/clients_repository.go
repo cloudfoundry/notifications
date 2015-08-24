@@ -2,8 +2,6 @@ package mocks
 
 import "github.com/cloudfoundry-incubator/notifications/v1/models"
 
-// TODO: cbm
-
 type ClientsRepository struct {
 	FindCall struct {
 		Receives struct {

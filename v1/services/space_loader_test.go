@@ -13,57 +13,56 @@ import (
 
 var _ = Describe("SpaceLoader", func() {
 	Describe("Load", func() {
-		var loader services.SpaceLoader
-		var token string
-		var cc *mocks.CloudController
+		var (
+			loader services.SpaceLoader
+			cc     *mocks.CloudController
+		)
 
 		BeforeEach(func() {
 			cc = mocks.NewCloudController()
-			cc.Spaces = map[string]cf.CloudControllerSpace{
-				"space-001": {
-					GUID:             "space-001",
-					Name:             "space-name",
-					OrganizationGUID: "org-001",
-				},
+			cc.LoadSpaceCall.Returns.Space = cf.CloudControllerSpace{
+				GUID:             "space-001",
+				Name:             "space-name",
+				OrganizationGUID: "org-001",
 			}
+
 			loader = services.NewSpaceLoader(cc)
 		})
 
 		It("returns the space", func() {
-			space, err := loader.Load("space-001", token)
-			if err != nil {
-				panic(err)
-			}
-
+			space, err := loader.Load("space-001", "some-token")
+			Expect(err).NotTo(HaveOccurred())
 			Expect(space).To(Equal(cf.CloudControllerSpace{
 				GUID:             "space-001",
 				Name:             "space-name",
 				OrganizationGUID: "org-001",
 			}))
+
+			Expect(cc.LoadSpaceCall.Receives.SpaceGUID).To(Equal("space-001"))
+			Expect(cc.LoadSpaceCall.Receives.Token).To(Equal("some-token"))
 		})
 
 		Context("when the space cannot be found", func() {
 			It("returns an error object", func() {
-				_, err := loader.Load("space-doesnotexist", token)
+				cc.LoadSpaceCall.Returns.Error = cf.NewFailure(404, "not found")
 
-				Expect(err).To(BeAssignableToTypeOf(services.CCNotFoundError("")))
-				Expect(err.Error()).To(Equal(`CloudController Error: CloudController Failure (404): {"code":40004,"description":"The app space could not be found: space-doesnotexist","error_code":"CF-SpaceNotFound"}`))
+				_, err := loader.Load("missing-space", "some-token")
+				Expect(err).To(Equal(services.CCNotFoundError("CloudController Failure (404): not found")))
 			})
 		})
 
 		Context("when Load returns any other type of error", func() {
 			It("returns a CCDownError when the error is cf.Failure", func() {
-				failure := cf.NewFailure(401, "BOOM!")
-				cc.LoadSpaceError = failure
-				_, err := loader.Load("space-001", token)
+				cc.LoadSpaceCall.Returns.Error = cf.NewFailure(401, "BOOM!")
 
-				Expect(err).To(Equal(services.CCDownError(failure.Error())))
+				_, err := loader.Load("space-001", "some-token")
+				Expect(err).To(Equal(services.CCDownError("CloudController Failure (401): BOOM!")))
 			})
 
 			It("returns the same error for all other cases", func() {
-				cc.LoadSpaceError = errors.New("BOOM!")
-				_, err := loader.Load("space-001", token)
+				cc.LoadSpaceCall.Returns.Error = errors.New("BOOM!")
 
+				_, err := loader.Load("space-001", "some-token")
 				Expect(err).To(Equal(errors.New("BOOM!")))
 			})
 		})

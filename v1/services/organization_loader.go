@@ -16,8 +16,8 @@ func NewOrganizationLoader(cloudController cf.CloudControllerInterface) Organiza
 	}
 }
 
-func (loader OrganizationLoader) Load(organizationGUID string, token string) (cf.CloudControllerOrganization, error) {
-	organization, err := loader.cloudController.LoadOrganization(organizationGUID, token)
+func (loader OrganizationLoader) Load(orgGUID string, token string) (cf.CloudControllerOrganization, error) {
+	organization, err := loader.cloudController.LoadOrganization(orgGUID, token)
 	if err != nil {
 		return cf.CloudControllerOrganization{}, CCErrorFor(err)
 	}

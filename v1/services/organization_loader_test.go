@@ -13,59 +13,55 @@ import (
 
 var _ = Describe("OrganizationLoader", func() {
 	Describe("Load", func() {
-		var loader services.OrganizationLoader
-		var token string
-		var cc *mocks.CloudController
+		var (
+			loader services.OrganizationLoader
+			cc     *mocks.CloudController
+		)
 
 		BeforeEach(func() {
 			cc = mocks.NewCloudController()
-			cc.Orgs = map[string]cf.CloudControllerOrganization{
-				"org-001": {
-					GUID: "org-001",
-					Name: "org-name",
-				},
-				"org-123": {
-					GUID: "org-123",
-					Name: "org-piggies",
-				},
+
+			cc.LoadOrganizationCall.Returns.Organization = cf.CloudControllerOrganization{
+				GUID: "org-001",
+				Name: "org-name",
 			}
+
 			loader = services.NewOrganizationLoader(cc)
 		})
 
 		It("returns the org", func() {
-			org, err := loader.Load("org-001", token)
-			if err != nil {
-				panic(err)
-			}
-
+			org, err := loader.Load("org-001", "some-token")
+			Expect(err).NotTo(HaveOccurred())
 			Expect(org).To(Equal(cf.CloudControllerOrganization{
 				GUID: "org-001",
 				Name: "org-name",
 			}))
+
+			Expect(cc.LoadOrganizationCall.Receives.OrgGUID).To(Equal("org-001"))
+			Expect(cc.LoadOrganizationCall.Receives.Token).To(Equal("some-token"))
 		})
 
 		Context("when the org cannot be found", func() {
 			It("returns an error object", func() {
-				_, err := loader.Load("org-doesnotexist", token)
+				cc.LoadOrganizationCall.Returns.Error = cf.NewFailure(404, "BOOM!")
 
-				Expect(err).To(BeAssignableToTypeOf(services.CCNotFoundError("")))
-				Expect(err.Error()).To(Equal(`CloudController Error: CloudController Failure (404): {"code":30003,"description":"The organization could not be found: org-doesnotexist","error_code":"CF-OrganizationNotFound"}`))
+				_, err := loader.Load("missing-org", "some-token")
+				Expect(err).To(Equal(services.CCNotFoundError("CloudController Failure (404): BOOM!")))
 			})
 		})
 
 		Context("when Load returns any other type of error", func() {
 			It("returns a CCDownError when the error is cf.Failure", func() {
-				failure := cf.NewFailure(401, "BOOM!")
-				cc.LoadOrganizationError = failure
-				_, err := loader.Load("org-001", token)
+				cc.LoadOrganizationCall.Returns.Error = cf.NewFailure(401, "BOOM!")
 
-				Expect(err).To(Equal(services.CCDownError(failure.Error())))
+				_, err := loader.Load("org-001", "some-token")
+				Expect(err).To(Equal(services.CCDownError("CloudController Failure (401): BOOM!")))
 			})
 
 			It("returns the same error for all other cases", func() {
-				cc.LoadOrganizationError = errors.New("BOOM!")
-				_, err := loader.Load("org-001", token)
+				cc.LoadOrganizationCall.Returns.Error = errors.New("BOOM!")
 
+				_, err := loader.Load("org-001", "some-token")
 				Expect(err).To(Equal(errors.New("BOOM!")))
 			})
 		})
