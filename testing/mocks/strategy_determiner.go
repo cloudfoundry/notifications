@@ -12,6 +12,11 @@ type StrategyDeterminer struct {
 			UAAHost    string
 			Job        gobble.Job
 		}
+
+		Returns struct {
+			Error error
+		}
+
 		WasCalled bool
 	}
 }
@@ -20,9 +25,11 @@ func NewStrategyDeterminer() *StrategyDeterminer {
 	return &StrategyDeterminer{}
 }
 
-func (s *StrategyDeterminer) Determine(conn db.ConnectionInterface, uaaHost string, job gobble.Job) {
+func (s *StrategyDeterminer) Determine(conn db.ConnectionInterface, uaaHost string, job gobble.Job) error {
 	s.DetermineCall.Receives.Connection = conn
 	s.DetermineCall.Receives.UAAHost = uaaHost
 	s.DetermineCall.Receives.Job = job
 	s.DetermineCall.WasCalled = true
+
+	return s.DetermineCall.Returns.Error
 }

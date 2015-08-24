@@ -35,6 +35,9 @@ var _ = Describe("CreateHandler", func() {
 		context.Set("client_id", "my-client")
 
 		campaignsCollection = mocks.NewCampaignsCollection()
+		campaignsCollection.CreateCall.Returns.Campaign = collections.Campaign{
+			ID: "my-campaign-id",
+		}
 
 		writer = httptest.NewRecorder()
 
@@ -58,10 +61,6 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	It("sends a campaign to a user", func() {
-		campaignsCollection.CreateCall.Returns.Campaign = collections.Campaign{
-			ID: "my-campaign-id",
-		}
-
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(campaignsCollection.CreateCall.Receives.Conn).To(Equal(database.Connection()))

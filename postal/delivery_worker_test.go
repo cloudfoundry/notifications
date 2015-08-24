@@ -223,6 +223,38 @@ var _ = Describe("DeliveryWorker", func() {
 					},
 				}))
 			})
+
+			Context("when the campaign cannot be determined", func() {
+				BeforeEach(func() {
+					strategyDeterminer.DetermineCall.Returns.Error = errors.New("looks like that worked out pretty well")
+					campaignJob := v2Queue.CampaignJob{JobType: "campaign", Campaign: collections.Campaign{}}
+					j := gobble.NewJob(campaignJob)
+					job = &j
+
+					worker.Deliver(job)
+				})
+
+				It("retries the job", func() {
+					Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
+					Expect(deliveryFailureHandler.HandleCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
+				})
+
+				It("logs the error", func() {
+					lines, err := parseLogLines(buffer.Bytes())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(lines).To(ContainElement(logLine{
+						Source:   "notifications",
+						Message:  "notifications.worker.determining-strategy-failed",
+						LogLevel: int(lager.ERROR),
+						Data: map[string]interface{}{
+							"session":   "1",
+							"worker_id": float64(1234),
+							"error":     "looks like that worked out pretty well",
+						},
+					}))
+				})
+			})
 		})
 
 		Context("when Deliver does not receive a campaign", func() {

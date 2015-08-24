@@ -16,12 +16,12 @@ type dispatcher interface {
 	Dispatch(dispatch services.Dispatch) ([]services.Response, error)
 }
 
-func (d Determiner) Determine(conn db.ConnectionInterface, uaaHost string, job gobble.Job) {
+func (d Determiner) Determine(conn db.ConnectionInterface, uaaHost string, job gobble.Job) error {
 	var campaignJob queue.CampaignJob
 
 	err := job.Unmarshal(&campaignJob)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	params := notify.NotifyParams{
@@ -55,6 +55,8 @@ func (d Determiner) Determine(conn db.ConnectionInterface, uaaHost string, job g
 		},
 	})
 	if err != nil {
-		panic(err)
+		return err
 	}
+
+	return nil
 }

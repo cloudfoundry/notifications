@@ -86,7 +86,7 @@ type TokenLoaderInterface interface {
 }
 
 type StrategyDeterminerInterface interface {
-	Determine(conn db.ConnectionInterface, uaaHost string, job gobble.Job)
+	Determine(conn db.ConnectionInterface, uaaHost string, job gobble.Job) error
 }
 
 type messageStatusUpdaterInterface interface {
@@ -149,7 +149,10 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 
 	if campaignJob.JobType == "campaign" {
 		worker.logger.Info("determining-strategy")
-		worker.strategyDeterminer.Determine(worker.database.Connection(), worker.uaaHost, *job)
+		if err := worker.strategyDeterminer.Determine(worker.database.Connection(), worker.uaaHost, *job); err != nil {
+			worker.logger.Error("determining-strategy-failed", err)
+		}
+		worker.retry(job)
 		return
 	}
 

@@ -1,6 +1,8 @@
 package strategy_test
 
 import (
+	"errors"
+
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/strategy"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
@@ -26,7 +28,7 @@ var _ = Describe("Determiner", func() {
 	})
 
 	It("determines the strategy and calls it", func() {
-		determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+		err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 			Campaign: collections.Campaign{
 				ID:             "some-id",
 				SendTo:         map[string]string{"user": "some-user-guid"},
@@ -40,6 +42,7 @@ var _ = Describe("Determiner", func() {
 			},
 		}))
 
+		Expect(err).NotTo(HaveOccurred())
 		Expect(userStrategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
 			GUID:       "some-user-guid",
 			UAAHost:    "some-uaa-host",
@@ -62,11 +65,17 @@ var _ = Describe("Determiner", func() {
 
 	Context("when an error occurs", func() {
 		Context("when the campaign cannot be unmarshalled", func() {
-			PIt("returns the error", func() {
+			It("returns the error", func() {
+				err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob("%%"))
+				Expect(err).To(MatchError("json: cannot unmarshal string into Go value of type queue.CampaignJob"))
 			})
 		})
+
 		Context("when dispatch errors", func() {
-			PIt("returns the error", func() {
+			It("returns the error", func() {
+				userStrategy.DispatchCall.Returns.Error = errors.New("some error")
+				err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{}))
+				Expect(err).To(MatchError(errors.New("some error")))
 			})
 		})
 	})
