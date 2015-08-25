@@ -1,11 +1,11 @@
 # Notifications V2 Documentation
 
 - System Status
-	- [Check service status](#get-info)
+  - [Check service status](#get-info)
 - Senders
-	- [Creating a sender](#create-sender)
+  - [Creating a sender](#create-sender)
   - [Listing the senders](#list-senders)
-	- [Retrieving a sender](#retrieve-sender)
+  - [Retrieving a sender](#retrieve-sender)
 - Campaign types
   - [Creating a campaign type](#create-campaign-type)
   - [Retrieving a campaign type](#retrieve-campaign-type)
@@ -13,9 +13,11 @@
   - [Updating a campaign type](#update-campaign-type)
   - [Deleting a campaign type](#delete-campaign-type)
 - Templates
-	- [Creating a template](#create-template)
-	- [Retrieving a template](#retrieve-template)
-	- [Deleting a template](#delete-template)
+  - [Creating a template](#create-template)
+  - [Retrieving a template](#retrieve-template)
+  - [Deleting a template](#delete-template)
+- Campaigns
+  - [Sending a campaign](#send-campaign)
 
 ## System Status
 
@@ -74,7 +76,7 @@ X-Cf-Requestid: 2cf01258-ccff-41e9-6d82-41a4441af4af
 X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
-\* The user token requires `notifications.write` scope.
+\* The token requires `notifications.write` scope.
 
 ###### Route
 ```
@@ -128,7 +130,7 @@ X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
-\* The user token requires `notifications.write` scope.
+\* The token requires `notifications.write` scope.
 
 ###### Route
 ```
@@ -173,7 +175,7 @@ Content-Type: text/plain; charset=utf-8
 X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
-\* The user token requires `notifications.write` scope.
+\* The token requires `notifications.write` scope.
 
 ###### Route
 ```
@@ -229,7 +231,7 @@ X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
 X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
-\* The user token requires `notifications.write` scope.
+\* The token requires `notifications.write` scope.
 \*\* Creation of a critical campaign type requires `critical_notifications.write` scope.
 
 ###### Route
@@ -290,7 +292,7 @@ X-Cf-Requestid: 6106873b-14ea-4fd9-6418-946c1651e4ac
 X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
-\* The user token requires `notifications.write` scope.
+\* The token requires `notifications.write` scope.
 
 ###### Route
 ```
@@ -339,7 +341,7 @@ RESPONSE BODY:
 X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
-\* The user token requires `notifications.write` scope.
+\* The token requires `notifications.write` scope.
 \*\* Creation of a critical campaign type requires `critical_notifications.write` scope.
 
 ###### Route
@@ -389,7 +391,7 @@ X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
 
-\* The user token requires `notifications.write` scope.
+\* The token requires `notifications.write` scope.
 \*\* Updating a critical campaign type requires `critical_notifications.write` scope.
 
 ###### Route
@@ -440,7 +442,7 @@ X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
 
-\* The user token requires `notifications.write` scope.
+\* The token requires `notifications.write` scope.
 
 ###### Route
 ```
@@ -480,7 +482,7 @@ RESPONSE BODY:
 X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
-\* The user token requires `notifications.write` scope.
+\* The token requires `notifications.write` scope.
 
 ###### Route
 ```
@@ -543,7 +545,7 @@ X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
-\* The user token requires `notifications.write` scope.
+\* The token requires `notifications.write` scope.
 
 ###### Route
 ```
@@ -600,7 +602,7 @@ X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 X-NOTIFICATIONS-VERSION: 2
 Authorization: Bearer <CLIENT-TOKEN>
 ```
-\* The user token requires `notifications.write` scope.
+\* The token requires `notifications.write` scope.
 
 ###### Route
 ```
@@ -634,3 +636,78 @@ X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 ```
 200 OK
 ```
+
+## Campaigns
+
+<a name="send-campaign"></a>
+#### Sending a campaign
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The token requires `notifications.write` scope.
+\*\* Sending a critical campaign type requires `critical_notifications.write` scope.
+
+###### Route
+```
+POST /sender/{sender-id}/campaigns
+```
+###### Params
+
+| Key                | Description                               |
+| ------------------ | ----------------------------------------- |
+| send_to\*          | audience to deliver to |
+| campaign_type_id\* | id of the previously created campaign |
+| text\*\*		     | the text of your email |
+| html\*\*		     | the html of your email |
+| subject\*		     | subject of the email |
+| template_id	     | the id of the template you would like to use |
+| reply_to		     | email address used for replies |
+
+\* required
+\*\* either text or html have to be set, not both
+
+###### Supported Audience Types
+- user
+
+###### CURL example
+```
+$ curl -i -X POST \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  -d '{
+  	"send_to": {
+		"user": "c033fc5a-5878-45ca-8f7b-66f1857cfabc"
+	},
+	"campaign_type_id":"49b3bad1-a897-44eb-ab38-05c5725dfcb8",
+  	"text":"this is an email",
+	"subject":"this is a subject",
+	"template_id":"8a947854-68d0-4914-9740-12e60743b0b9"
+  }'
+  http://notifications.example.com/senders/555a8e36-89da-48a2-8091-01881acd5051/campaigns
+
+HTTP/1.1 202 Accepted
+Content-Length: 57
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 17 Jul 2015 19:30:32 GMT
+X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
+
+{ "campaign_id": "7e45da15-acac-441d-912f-e18d306eae83"}
+```
+
+##### Response
+
+###### Status
+```
+202 Accepted
+```
+
+###### Body
+| Fields      | Description                  |
+| ----------- | ---------------------------- |
+| campaign_id | System-generated campaign ID |
+

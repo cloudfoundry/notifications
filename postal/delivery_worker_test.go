@@ -224,6 +224,12 @@ var _ = Describe("DeliveryWorker", func() {
 				}))
 			})
 
+			It("does not retry the job", func() {
+				worker.Deliver(job)
+
+				Expect(deliveryFailureHandler.HandleCall.WasCalled).To(BeFalse())
+			})
+
 			Context("when the campaign cannot be determined", func() {
 				BeforeEach(func() {
 					strategyDeterminer.DetermineCall.Returns.Error = errors.New("looks like that worked out pretty well")

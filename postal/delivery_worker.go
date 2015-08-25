@@ -151,8 +151,9 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 		worker.logger.Info("determining-strategy")
 		if err := worker.strategyDeterminer.Determine(worker.database.Connection(), worker.uaaHost, *job); err != nil {
 			worker.logger.Error("determining-strategy-failed", err)
+			worker.retry(job)
 		}
-		worker.retry(job)
+
 		return
 	}
 

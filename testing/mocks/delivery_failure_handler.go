@@ -7,7 +7,8 @@ import (
 
 type DeliveryFailureHandler struct {
 	HandleCall struct {
-		Receives struct {
+		WasCalled bool
+		Receives  struct {
 			Job    postal.Retryable
 			Logger lager.Logger
 		}
@@ -19,6 +20,7 @@ func NewDeliveryFailureHandler() *DeliveryFailureHandler {
 }
 
 func (h *DeliveryFailureHandler) Handle(job postal.Retryable, logger lager.Logger) {
+	h.HandleCall.WasCalled = true
 	h.HandleCall.Receives.Job = job
 	h.HandleCall.Receives.Logger = logger
 }
