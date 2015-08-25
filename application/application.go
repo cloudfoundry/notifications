@@ -135,9 +135,7 @@ func (app Application) StartWorkers() {
 			MessageStatusUpdater:   postal.NewMessageStatusUpdater(app.mother.MessagesRepo()),
 			DeliveryFailureHandler: postal.NewDeliveryFailureHandler(),
 
-			StrategyDeterminer: strategy.Determiner{
-				UserStrategy: app.mother.UserStrategy(),
-			},
+			StrategyDeterminer: strategy.NewStrategyDeterminer(app.mother.UserStrategy(), app.mother.SpaceStrategy()),
 		})
 		return &worker
 	})
@@ -167,6 +165,7 @@ func (app Application) StartServer(logger lager.Logger) {
 		UAAHost:         app.env.UAAHost,
 		UAAClientID:     app.env.UAAClientID,
 		UAAClientSecret: app.env.UAAClientSecret,
+		CCHost:          app.env.CCHost,
 	})
 }
 

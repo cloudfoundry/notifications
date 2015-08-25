@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Campaigns lifecycle", func() {
+var _ = Describe("User Campaigns", func() {
 	var (
 		client   *support.Client
 		token    uaa.Token

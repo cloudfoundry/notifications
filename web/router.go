@@ -46,6 +46,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		UAAHost:          config.UAAHost,
 		UAAClientID:      config.UAAClientID,
 		UAAClientSecret:  config.UAAClientSecret,
+		CCHost:           config.CCHost,
 	})
 
 	return VersionRouter{

@@ -17,6 +17,7 @@ var (
 		Notifications servers.Notifications
 		SMTP          *servers.SMTP
 		UAA           *servers.UAA
+		CC            servers.CC
 	}
 	Trace, _ = strconv.ParseBool(os.Getenv("TRACE"))
 )
@@ -32,6 +33,9 @@ var _ = BeforeSuite(func() {
 
 	Servers.UAA = servers.NewUAA()
 	Servers.UAA.Boot()
+
+	Servers.CC = servers.NewCC()
+	Servers.CC.Boot()
 
 	Servers.Notifications = servers.NewNotifications()
 	Servers.Notifications.Compile()

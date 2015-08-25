@@ -1,6 +1,8 @@
 package strategy
 
 import (
+	"fmt"
+
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
@@ -8,12 +10,28 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 )
 
+type NoStrategyError struct {
+	Err error
+}
+
+func (e NoStrategyError) Error() string {
+	return e.Err.Error()
+}
+
 type Determiner struct {
-	UserStrategy dispatcher
+	userStrategy  dispatcher
+	spaceStrategy dispatcher
 }
 
 type dispatcher interface {
 	Dispatch(dispatch services.Dispatch) ([]services.Response, error)
+}
+
+func NewStrategyDeterminer(userStrategy, spaceStrategy dispatcher) Determiner {
+	return Determiner{
+		userStrategy:  userStrategy,
+		spaceStrategy: spaceStrategy,
+	}
 }
 
 func (d Determiner) Determine(conn db.ConnectionInterface, uaaHost string, job gobble.Job) error {
@@ -33,9 +51,19 @@ func (d Determiner) Determine(conn db.ConnectionInterface, uaaHost string, job g
 
 	params.FormatEmailAndExtractHTML()
 
-	_, err = d.UserStrategy.Dispatch(services.Dispatch{
+	var audience string
+	for key, _ := range campaignJob.Campaign.SendTo {
+		audience = key
+	}
+
+	strategy, err := d.findStrategy(audience)
+	if err != nil {
+		return err
+	}
+
+	_, err = strategy.Dispatch(services.Dispatch{
 		UAAHost:    uaaHost,
-		GUID:       campaignJob.Campaign.SendTo["user"],
+		GUID:       campaignJob.Campaign.SendTo[audience],
 		Connection: conn,
 		TemplateID: campaignJob.Campaign.TemplateID,
 		Client: services.DispatchClient{
@@ -59,4 +87,15 @@ func (d Determiner) Determine(conn db.ConnectionInterface, uaaHost string, job g
 	}
 
 	return nil
+}
+
+func (d Determiner) findStrategy(audience string) (dispatcher, error) {
+	switch audience {
+	case "user":
+		return d.userStrategy, nil
+	case "space":
+		return d.spaceStrategy, nil
+	default:
+		return nil, NoStrategyError{fmt.Errorf("No strategy for the %q audience could be found", audience)}
+	}
 }

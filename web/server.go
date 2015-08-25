@@ -20,6 +20,7 @@ type Config struct {
 	UAAHost         string
 	UAAClientID     string
 	UAAClientSecret string
+	CCHost          string
 }
 
 type Server struct{}

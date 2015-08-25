@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
@@ -18,6 +19,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/web/templates"
 	"github.com/gorilla/mux"
 	"github.com/nu7hatch/gouuid"
+	"github.com/pivotal-cf-experimental/rainmaker"
 	"github.com/pivotal-cf-experimental/warrant"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
@@ -44,6 +46,7 @@ type Config struct {
 	UAAHost         string
 	UAAClientID     string
 	UAAClientSecret string
+	CCHost          string
 }
 
 func NewRouter(mx muxer, config Config) http.Handler {
@@ -59,6 +62,13 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	warrantUsersService := warrant.NewUsersService(warrantConfig)
 	warrantClientsService := warrant.NewClientsService(warrantConfig)
 	userFinder := uaa.NewUserFinder(config.UAAClientID, config.UAAClientSecret, warrantUsersService, warrantClientsService)
+
+	rainmakerConfig := rainmaker.Config{
+		Host:          config.CCHost,
+		SkipVerifySSL: config.SkipVerifySSL,
+	}
+	rainmakerSpacesService := rainmaker.NewSpacesService(rainmakerConfig)
+	spaceFinder := cf.NewSpaceFinder(config.UAAClientID, config.UAAClientSecret, warrantClientsService, rainmakerSpacesService)
 	campaignEnqueuer := queue.NewCampaignEnqueuer(config.Queue)
 
 	sendersRepository := models.NewSendersRepository(uuid.NewV4)
@@ -68,7 +78,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	sendersCollection := collections.NewSendersCollection(sendersRepository)
 	templatesCollection := collections.NewTemplatesCollection(templatesRepository)
 	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository, templatesRepository)
-	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignTypesRepository, templatesRepository, userFinder)
+	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignTypesRepository, templatesRepository, userFinder, spaceFinder)
 
 	info.Routes{
 		RequestCounter: requestCounter,

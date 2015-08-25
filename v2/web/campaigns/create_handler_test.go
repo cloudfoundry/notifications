@@ -58,6 +58,10 @@ var _ = Describe("CreateHandler", func() {
 
 		writer = httptest.NewRecorder()
 
+		handler = campaigns.NewCreateHandler(campaignsCollection)
+	})
+
+	It("sends a campaign to a user", func() {
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"send_to": map[string]string{
 				"user": "user-123",
@@ -74,11 +78,12 @@ var _ = Describe("CreateHandler", func() {
 		request, err = http.NewRequest("POST", "/senders/some-sender-id/campaigns", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
-		handler = campaigns.NewCreateHandler(campaignsCollection)
-	})
-
-	It("sends a campaign to a user", func() {
 		handler.ServeHTTP(writer, request, context)
+
+		Expect(writer.Code).To(Equal(http.StatusAccepted))
+		Expect(writer.Body.String()).To(MatchJSON(`{
+			"campaign_id": "my-campaign-id"
+		}`))
 
 		Expect(campaignsCollection.CreateCall.Receives.Conn).To(Equal(database.Connection()))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
@@ -91,10 +96,43 @@ var _ = Describe("CreateHandler", func() {
 			ReplyTo:        "reply-to-address",
 			ClientID:       "my-client",
 		}))
+	})
+
+	It("sends a campaign to a space", func() {
+		requestBody, err := json.Marshal(map[string]interface{}{
+			"send_to": map[string]string{
+				"space": "space-123",
+			},
+			"campaign_type_id": "some-campaign-type-id",
+			"text":             "come see our new stuff",
+			"html":             "<h1>New stuff</h1>",
+			"subject":          "Cool New Stuff",
+			"template_id":      "random-template-id",
+			"reply_to":         "reply-to-address",
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		request, err = http.NewRequest("POST", "/senders/some-sender-id/campaigns", bytes.NewBuffer(requestBody))
+		Expect(err).NotTo(HaveOccurred())
+
+		handler.ServeHTTP(writer, request, context)
+
 		Expect(writer.Code).To(Equal(http.StatusAccepted))
 		Expect(writer.Body.String()).To(MatchJSON(`{
 			"campaign_id": "my-campaign-id"
 		}`))
+
+		Expect(campaignsCollection.CreateCall.Receives.Conn).To(Equal(database.Connection()))
+		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
+			SendTo:         map[string]string{"space": "space-123"},
+			CampaignTypeID: "some-campaign-type-id",
+			Text:           "come see our new stuff",
+			HTML:           "<h1>New stuff</h1>",
+			Subject:        "Cool New Stuff",
+			TemplateID:     "random-template-id",
+			ReplyTo:        "reply-to-address",
+			ClientID:       "my-client",
+		}))
 	})
 
 	Context("when validating user-input", func() {
@@ -227,6 +265,21 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	Context("when the token does have the critical scope", func() {
+		BeforeEach(func() {
+			requestBody, err := json.Marshal(map[string]interface{}{
+				"send_to": map[string]string{
+					"user": "some-user-guid",
+				},
+				"campaign_type_id": "some-campaign-type-id",
+				"text":             "come see our new stuff",
+				"subject":          "Cool New Stuff",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			request, err = http.NewRequest("POST", "/senders/some-sender-id/campaigns", bytes.NewBuffer(requestBody))
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("indicates that the requestor has the critical scope", func() {
 			tokenHeader := map[string]interface{}{
 				"alg": "FAST",
@@ -249,6 +302,24 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	Context("when an error occurs", func() {
+		BeforeEach(func() {
+			requestBody, err := json.Marshal(map[string]interface{}{
+				"send_to": map[string]string{
+					"user": "user-123",
+				},
+				"campaign_type_id": "some-campaign-type-id",
+				"text":             "come see our new stuff",
+				"html":             "<h1>New stuff</h1>",
+				"subject":          "Cool New Stuff",
+				"template_id":      "random-template-id",
+				"reply_to":         "reply-to-address",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			request, err = http.NewRequest("POST", "/senders/some-sender-id/campaigns", bytes.NewBuffer(requestBody))
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		Context("when the collection returns an unknown error", func() {
 			It("returns a 500 and the corresponding error", func() {
 				campaignsCollection.CreateCall.Returns.Error = errors.New("some fantastic error")

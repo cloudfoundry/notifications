@@ -19,7 +19,7 @@ type templatesGetter interface {
 	Get(conn models.ConnectionInterface, templateID string) (models.Template, error)
 }
 
-type userExistenceChecker interface {
+type existenceChecker interface {
 	Exists(guid string) (bool, error)
 }
 
@@ -39,29 +39,34 @@ type CampaignsCollection struct {
 	enqueuer          campaignEnqueuer
 	campaignTypesRepo campaignTypesGetter
 	templatesRepo     templatesGetter
-	userFinder        userExistenceChecker
+	userFinder        existenceChecker
+	spaceFinder       existenceChecker
 }
 
-func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, userFinder userExistenceChecker) CampaignsCollection {
+func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, userFinder existenceChecker, spaceFinder existenceChecker) CampaignsCollection {
 	return CampaignsCollection{
 		enqueuer:          enqueuer,
 		campaignTypesRepo: campaignTypesRepo,
 		templatesRepo:     templatesRepo,
 		userFinder:        userFinder,
+		spaceFinder:       spaceFinder,
 	}
 }
 
 func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign, canSendCritical bool) (Campaign, error) {
 	campaign.ID = "some-random-id"
-	userGUID := campaign.SendTo["user"]
+	var audience string
+	for key, _ := range campaign.SendTo {
+		audience = key
+	}
 
-	exists, err := c.userFinder.Exists(userGUID)
+	exists, err := c.checkForExistence(audience, campaign.SendTo[audience])
 	if err != nil {
 		return Campaign{}, UnknownError{err}
 	}
 
 	if !exists {
-		return Campaign{}, NotFoundError{fmt.Errorf("The user %q cannot be found", userGUID)}
+		return Campaign{}, NotFoundError{fmt.Errorf("The %s %q cannot be found", audience, campaign.SendTo[audience])}
 	}
 
 	campaignType, err := c.campaignTypesRepo.Get(conn, campaign.CampaignTypeID)
@@ -98,4 +103,15 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 	}
 
 	return campaign, nil
+}
+
+func (c CampaignsCollection) checkForExistence(audience, guid string) (bool, error) {
+	switch audience {
+	case "user":
+		return c.userFinder.Exists(guid)
+	case "space":
+		return c.spaceFinder.Exists(guid)
+	default:
+		return false, fmt.Errorf("The %q audience is not valid", audience)
+	}
 }

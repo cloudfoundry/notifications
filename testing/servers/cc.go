@@ -325,7 +325,7 @@ var CCGetOrgBillingManagers = http.HandlerFunc(func(w http.ResponseWriter, req *
 
 var CCGetSpaceUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 	uaaJSON := `{
-       "total_results": 2,
+       "total_results": 3,
        "total_pages": 1,
        "prev_url": null,
        "next_url": null,
@@ -392,45 +392,7 @@ var CCGetSpaceUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Req
           }
        ]
     }`
-	zonedJSON := `{
-	   "total_results": 1,
-	   "total_pages": 1,
-	   "prev_url": null,
-	   "next_url": null,
-	   "resources": [
-		  {
-			 "metadata": {
-				"guid": "another-user-in-zone",
-				"url": "/v2/users/another-user-in-zone",
-				"created_at": "2014-07-16T21:58:29+00:00",
-				"updated_at": null
-			 },
-			 "entity": {
-				"admin": false,
-				"active": true,
-				"default_space_guid": null,
-				"spaces_url": "/v2/users/another-user-in-zone/spaces",
-				"organizations_url": "/v2/users/another-user-in-zone/organizations",
-				"managed_organizations_url": "/v2/users/another-user-in-zone/managed_organizations",
-				"billing_managed_organizations_url": "/v2/users/another-user-in-zone/billing_managed_organizations",
-				"audited_organizations_url": "/v2/users/another-user-in-zone/audited_organizations",
-				"managed_spaces_url": "/v2/users/another-user-in-zone/managed_spaces",
-				"audited_spaces_url": "/v2/users/another-user-in-zone/audited_spaces"
-			 }
-		  }
-		]
-	}`
-	token := strings.Split(req.Header.Get("Authorization"), " ")[1]
-	jwtToken, _ := jwt.Parse(token, func(*jwt.Token) (interface{}, error) {
-		return []byte(helpers.UAAPublicKey), nil
-	})
 
-	var json string
-	if regexp.MustCompile(string(os.Getenv("UAA_HOST"))).MatchString(jwtToken.Claims["iss"].(string)) {
-		json = uaaJSON
-	} else {
-		json = zonedJSON
-	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(json))
+	w.Write([]byte(uaaJSON))
 })
