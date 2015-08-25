@@ -108,6 +108,67 @@ var _ = Describe("Campaigns lifecycle", func() {
 		})
 	})
 
+	Context("when lacking the critical scope", func() {
+		It("returns a 403 forbidden", func() {
+			var campaignTypeID, templateID, campaignTypeTemplateID string
+
+			By("creating a template", func() {
+				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
+					"name":    "Acceptance Template",
+					"text":    "campaign template {{.Text}}",
+					"html":    "{{.HTML}}",
+					"subject": "{{.Subject}}",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				templateID = response["id"].(string)
+			})
+
+			By("creating a campaign type template", func() {
+				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
+					"name":    "CampaignType Template",
+					"text":    "campaign type template {{.Text}}",
+					"html":    "{{.HTML}}",
+					"subject": "{{.Subject}}",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				campaignTypeTemplateID = response["id"].(string)
+			})
+
+			By("creating a campaign type", func() {
+				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
+					"name":        "some-campaign-type-name",
+					"description": "acceptance campaign type",
+					"template_id": campaignTypeTemplateID,
+					"critical":    true,
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				campaignTypeID = response["id"].(string)
+			})
+
+			By("sending the campaign", func() {
+				token = GetClientTokenFor("non-critical-client")
+				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
+					"send_to": map[string]interface{}{
+						"user": "user-111",
+					},
+					"campaign_type_id": campaignTypeID,
+					"text":             "campaign body",
+					"subject":          "campaign subject",
+					"template_id":      templateID,
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusForbidden))
+				Expect(response["errors"]).To(Equal([]interface{}{"Scope critical_notifications.write is required"}))
+			})
+		})
+	})
+
 	Context("when the audience key is invalid", func() {
 		It("returns a 422 and an error message", func() {
 			var campaignTypeID, templateID string

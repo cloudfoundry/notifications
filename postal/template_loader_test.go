@@ -187,5 +187,13 @@ var _ = Describe("TemplateLoader", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
+
+		Context("when the templates collection has an error", func() {
+			It("returns the error", func() {
+				templatesCollection.GetCall.Returns.Error = errors.New("some error on the collection")
+				_, err := loader.LoadTemplates("my-client-id", "", "some-v2-template-id")
+				Expect(err).To(MatchError("some error on the collection"))
+			})
+		})
 	})
 })

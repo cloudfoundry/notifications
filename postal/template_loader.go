@@ -39,7 +39,7 @@ func (loader TemplatesLoader) LoadTemplates(clientID, kindID, templateID string)
 	if templateID != "" {
 		template, err := loader.templatesCollection.Get(conn, templateID, clientID)
 		if err != nil {
-			panic(err)
+			return Templates{}, err
 		}
 		return Templates{
 			Subject: template.Subject,

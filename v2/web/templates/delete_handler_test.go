@@ -59,7 +59,7 @@ var _ = Describe("DeleteHandler", func() {
 
 	Context("failure cases", func() {
 		It("returns a 404 if the template does not exist when getting", func() {
-			collection.GetCall.Returns.Err = collections.NotFoundError{errors.New(`Template with id "some-template-id" could not be found`)}
+			collection.GetCall.Returns.Error = collections.NotFoundError{errors.New(`Template with id "some-template-id" could not be found`)}
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
@@ -69,7 +69,7 @@ var _ = Describe("DeleteHandler", func() {
 		})
 
 		It("returns a 404 if the template does not exist when deleting", func() {
-			collection.DeleteCall.Returns.Err = collections.NotFoundError{errors.New(`Template with id "some-template-id" could not be found`)}
+			collection.DeleteCall.Returns.Error = collections.NotFoundError{errors.New(`Template with id "some-template-id" could not be found`)}
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusNotFound))
@@ -79,7 +79,7 @@ var _ = Describe("DeleteHandler", func() {
 		})
 
 		It("returns a 500 when the get collection call results in an unknown error", func() {
-			collection.GetCall.Returns.Err = errors.New("something bad happened")
+			collection.GetCall.Returns.Error = errors.New("something bad happened")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
@@ -89,7 +89,7 @@ var _ = Describe("DeleteHandler", func() {
 		})
 
 		It("returns a 500 when the delete collection call results in an unknown error", func() {
-			collection.DeleteCall.Returns.Err = errors.New("something bad happened")
+			collection.DeleteCall.Returns.Error = errors.New("something bad happened")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))

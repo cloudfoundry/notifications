@@ -31,3 +31,11 @@ type UnknownError struct {
 func (e UnknownError) Error() string {
 	return e.Err.Error()
 }
+
+type PermissionsError struct {
+	Err error
+}
+
+func (e PermissionsError) Error() string {
+	return e.Err.Error()
+}

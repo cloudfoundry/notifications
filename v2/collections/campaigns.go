@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
@@ -50,7 +51,7 @@ func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaig
 	}
 }
 
-func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign) (Campaign, error) {
+func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign, canSendCritical bool) (Campaign, error) {
 	campaign.ID = "some-random-id"
 	userGUID := campaign.SendTo["user"]
 
@@ -71,6 +72,10 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign)
 		default:
 			return Campaign{}, PersistenceError{err}
 		}
+	}
+
+	if campaignType.Critical && !canSendCritical {
+		return Campaign{}, PermissionsError{errors.New("Scope critical_notifications.write is required")}
 	}
 
 	if campaign.TemplateID == "" {

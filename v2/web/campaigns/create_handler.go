@@ -6,11 +6,12 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 )
 
 type collectionCreator interface {
-	Create(conn collections.ConnectionInterface, campaign collections.Campaign) (collections.Campaign, error)
+	Create(conn collections.ConnectionInterface, campaign collections.Campaign, hasCriticalScope bool) (collections.Campaign, error)
 }
 
 type CreateHandler struct {
@@ -47,6 +48,14 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
+	hasCriticalScope := false
+	token := context.Get("token").(*jwt.Token)
+	for _, scope := range token.Claims["scope"].([]interface{}) {
+		if scope.(string) == "critical_notifications.write" {
+			hasCriticalScope = true
+		}
+	}
+
 	database := context.Get("database").(DatabaseInterface)
 
 	campaign, err := h.collection.Create(database.Connection(), collections.Campaign{
@@ -58,11 +67,13 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		TemplateID:     request.TemplateID,
 		ReplyTo:        request.ReplyTo,
 		ClientID:       context.Get("client_id").(string),
-	})
+	}, hasCriticalScope)
 	if err != nil {
 		switch err.(type) {
 		case collections.NotFoundError:
 			w.WriteHeader(http.StatusNotFound)
+		case collections.PermissionsError:
+			w.WriteHeader(http.StatusForbidden)
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 		}

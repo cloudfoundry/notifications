@@ -13,7 +13,7 @@ type TemplatesCollection struct {
 		}
 		Returns struct {
 			Template collections.Template
-			Err      error
+			Error    error
 		}
 	}
 
@@ -25,7 +25,7 @@ type TemplatesCollection struct {
 		}
 		Returns struct {
 			Template collections.Template
-			Err      error
+			Error    error
 		}
 	}
 
@@ -35,7 +35,7 @@ type TemplatesCollection struct {
 			TemplateID string
 		}
 		Returns struct {
-			Err error
+			Error error
 		}
 	}
 }
@@ -48,7 +48,7 @@ func (c *TemplatesCollection) Set(conn collections.ConnectionInterface, template
 	c.SetCall.Receives.Connection = conn
 	c.SetCall.Receives.Template = template
 
-	return c.SetCall.Returns.Template, c.SetCall.Returns.Err
+	return c.SetCall.Returns.Template, c.SetCall.Returns.Error
 }
 
 func (c *TemplatesCollection) Get(conn collections.ConnectionInterface, templateID, clientID string) (collections.Template, error) {
@@ -56,12 +56,12 @@ func (c *TemplatesCollection) Get(conn collections.ConnectionInterface, template
 	c.GetCall.Receives.TemplateID = templateID
 	c.GetCall.Receives.ClientID = clientID
 
-	return c.GetCall.Returns.Template, c.GetCall.Returns.Err
+	return c.GetCall.Returns.Template, c.GetCall.Returns.Error
 }
 
 func (c *TemplatesCollection) Delete(conn collections.ConnectionInterface, templateID string) error {
 	c.DeleteCall.Receives.Connection = conn
 	c.DeleteCall.Receives.TemplateID = templateID
 
-	return c.DeleteCall.Returns.Err
+	return c.DeleteCall.Returns.Error
 }
