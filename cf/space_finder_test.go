@@ -40,6 +40,15 @@ var _ = Describe("Space Finder", func() {
 		Expect(tokenGetter.GetTokenCall.Receives.Secret).To(Equal("some-secret"))
 	})
 
+	Context("when a space cannot be retrieved", func() {
+		It("returns false", func() {
+			spaceGetter.GetCall.Returns.Error = rainmaker.NotFoundError{}
+			exists, err := finder.Exists("some-guid")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(exists).To(BeFalse())
+		})
+	})
+
 	Context("when an error occurs", func() {
 		Context("when a token cannot be retrieved", func() {
 			It("returns an error", func() {
@@ -49,11 +58,11 @@ var _ = Describe("Space Finder", func() {
 			})
 		})
 
-		Context("when a space cannot be retrieved", func() {
+		Context("when rainmaker errors", func() {
 			It("returns an error", func() {
-				spaceGetter.GetCall.Returns.Error = errors.New("some error getting that space")
+				spaceGetter.GetCall.Returns.Error = errors.New("some error getting a space")
 				_, err := finder.Exists("some-guid")
-				Expect(err).To(MatchError(errors.New("some error getting that space")))
+				Expect(err).To(MatchError(errors.New("some error getting a space")))
 			})
 		})
 	})

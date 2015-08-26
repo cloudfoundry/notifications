@@ -34,6 +34,10 @@ func (f SpaceFinder) Exists(guid string) (bool, error) {
 
 	_, err = f.spaces.Get(guid, token)
 	if err != nil {
+		switch err.(type) {
+		case rainmaker.NotFoundError:
+			return false, nil
+		}
 		return false, err
 	}
 
