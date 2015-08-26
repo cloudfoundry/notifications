@@ -83,8 +83,8 @@ var _ = Describe("TemplatesRepo", func() {
 			Expect(foundTemplate.Subject).To(Equal(newTemplate.Subject))
 			Expect(foundTemplate.Text).To(Equal(newTemplate.Text))
 			Expect(foundTemplate.HTML).To(Equal(newTemplate.HTML))
-			Expect(foundTemplate.CreatedAt).To(BeTemporally("~", time.Now().UTC(), 1*time.Second))
-			Expect(foundTemplate.UpdatedAt).To(BeTemporally("~", time.Now().UTC(), 1*time.Second))
+			Expect(foundTemplate.CreatedAt).To(BeTemporally("~", time.Now().UTC(), 2*time.Second))
+			Expect(foundTemplate.UpdatedAt).To(BeTemporally("~", time.Now().UTC(), 2*time.Second))
 		})
 	})
 
