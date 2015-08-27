@@ -22,17 +22,19 @@ type Determiner struct {
 	userStrategy  dispatcher
 	spaceStrategy dispatcher
 	orgStrategy   dispatcher
+	emailStrategy dispatcher
 }
 
 type dispatcher interface {
 	Dispatch(dispatch services.Dispatch) ([]services.Response, error)
 }
 
-func NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy dispatcher) Determiner {
+func NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy, emailStrategy dispatcher) Determiner {
 	return Determiner{
 		userStrategy:  userStrategy,
 		spaceStrategy: spaceStrategy,
 		orgStrategy:   orgStrategy,
+		emailStrategy: emailStrategy,
 	}
 }
 
@@ -44,28 +46,36 @@ func (d Determiner) Determine(conn db.ConnectionInterface, uaaHost string, job g
 		return err
 	}
 
+	var audience string
+	for key, _ := range campaignJob.Campaign.SendTo {
+		audience = key
+	}
+
 	params := notify.NotifyParams{
 		ReplyTo: campaignJob.Campaign.ReplyTo,
 		Subject: campaignJob.Campaign.Subject,
 		Text:    campaignJob.Campaign.Text,
 		RawHTML: campaignJob.Campaign.HTML,
 	}
+	if audience == "email" {
+		params.To = campaignJob.Campaign.SendTo[audience]
+	}
 
 	params.FormatEmailAndExtractHTML()
-
-	var audience string
-	for key, _ := range campaignJob.Campaign.SendTo {
-		audience = key
-	}
 
 	strategy, err := d.findStrategy(audience)
 	if err != nil {
 		return err
 	}
 
+	var guid string
+	if audience != "email" {
+		guid = campaignJob.Campaign.SendTo[audience]
+	}
+
 	_, err = strategy.Dispatch(services.Dispatch{
 		UAAHost:    uaaHost,
-		GUID:       campaignJob.Campaign.SendTo[audience],
+		GUID:       guid,
 		Connection: conn,
 		TemplateID: campaignJob.Campaign.TemplateID,
 		Client: services.DispatchClient{
@@ -99,6 +109,8 @@ func (d Determiner) findStrategy(audience string) (dispatcher, error) {
 		return d.spaceStrategy, nil
 	case "org":
 		return d.orgStrategy, nil
+	case "email":
+		return d.emailStrategy, nil
 	default:
 		return nil, NoStrategyError{fmt.Errorf("Strategy for the %q audience could not be found", audience)}
 	}

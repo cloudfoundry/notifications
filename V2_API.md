@@ -672,7 +672,10 @@ POST /sender/{sender-id}/campaigns
 \*\* either text or html have to be set, not both
 
 ###### Supported Audience Types
-- user
+- user (provide a user GUID)
+- space (provide a space GUID)
+- org (provide an org GUID)
+- email (provide an email address)
 
 ###### CURL example
 ```

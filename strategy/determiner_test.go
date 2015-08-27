@@ -19,14 +19,16 @@ var _ = Describe("Determiner", func() {
 		userStrategy  *mocks.Strategy
 		spaceStrategy *mocks.Strategy
 		orgStrategy   *mocks.Strategy
+		emailStrategy *mocks.Strategy
 		database      *mocks.Database
 	)
 	BeforeEach(func() {
 		userStrategy = mocks.NewStrategy()
 		spaceStrategy = mocks.NewStrategy()
 		orgStrategy = mocks.NewStrategy()
+		emailStrategy = mocks.NewStrategy()
 		database = mocks.NewDatabase()
-		determiner = strategy.NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy)
+		determiner = strategy.NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy, emailStrategy)
 	})
 
 	Context("when dispatching to a user", func() {
@@ -56,6 +58,44 @@ var _ = Describe("Determiner", func() {
 				},
 				Message: services.DispatchMessage{
 					To:      "",
+					ReplyTo: "noreply@example.com",
+					Subject: "The Best subject",
+					Text:    "some-text",
+					HTML: services.HTML{
+						BodyContent: "<h1>my-html</h1>",
+					},
+				},
+			}))
+		})
+	})
+
+	Context("when dispatching to an email", func() {
+		It("determines the strategy and calls it", func() {
+			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+				Campaign: collections.Campaign{
+					ID:             "some-id",
+					SendTo:         map[string]string{"email": "test@example.com"},
+					CampaignTypeID: "some-campaign-type-id",
+					Text:           "some-text",
+					HTML:           "<h1>my-html</h1>",
+					Subject:        "The Best subject",
+					TemplateID:     "some-template-id",
+					ReplyTo:        "noreply@example.com",
+					ClientID:       "some-client-id",
+				},
+			}))
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(emailStrategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
+				GUID:       "",
+				UAAHost:    "some-uaa-host",
+				Connection: database.Connection(),
+				TemplateID: "some-template-id",
+				Client: services.DispatchClient{
+					ID: "some-client-id",
+				},
+				Message: services.DispatchMessage{
+					To:      "test@example.com",
 					ReplyTo: "noreply@example.com",
 					Subject: "The Best subject",
 					Text:    "some-text",

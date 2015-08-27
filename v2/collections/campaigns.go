@@ -115,6 +115,8 @@ func (c CampaignsCollection) checkForExistence(audience, guid string) (bool, err
 		return c.spaceFinder.Exists(guid)
 	case "org":
 		return c.orgFinder.Exists(guid)
+	case "email":
+		return true, nil
 	default:
 		return false, fmt.Errorf("The %q audience is not valid", audience)
 	}

@@ -54,6 +54,42 @@ var _ = Describe("CampaignsCollection", func() {
 			})
 		})
 
+		Context("when the audience is an email", func() {
+			Context("enqueuing a campaignJob", func() {
+				It("returns a campaignID after enqueuing the campaign with its type", func() {
+					campaign := collections.Campaign{
+						SendTo:         map[string]string{"email": "test@example.com"},
+						CampaignTypeID: "some-id",
+						Text:           "some-test",
+						HTML:           "no-html",
+						Subject:        "some-subject",
+						TemplateID:     "whoa-a-template-id",
+						ReplyTo:        "nothing@example.com",
+						ClientID:       "some-client-id",
+					}
+
+					enqueuedCampaign, err := collection.Create(database.Connection(), campaign, false)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
+						ID:             "some-random-id",
+						SendTo:         map[string]string{"email": "test@example.com"},
+						CampaignTypeID: "some-id",
+						Text:           "some-test",
+						HTML:           "no-html",
+						Subject:        "some-subject",
+						TemplateID:     "whoa-a-template-id",
+						ReplyTo:        "nothing@example.com",
+						ClientID:       "some-client-id",
+					}))
+					Expect(enqueuer.EnqueueCall.Receives.JobType).To(Equal("campaign"))
+
+					Expect(enqueuedCampaign.ID).To(Equal("some-random-id"))
+					Expect(err).NotTo(HaveOccurred())
+				})
+			})
+		})
+
 		Context("when the audience is a space", func() {
 			BeforeEach(func() {
 				spaceFinder.ExistsCall.Returns.Exists = true

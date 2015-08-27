@@ -172,6 +172,43 @@ var _ = Describe("CreateHandler", func() {
 		}))
 	})
 
+	It("sends a campaign to an email", func() {
+		requestBody, err := json.Marshal(map[string]interface{}{
+			"send_to": map[string]string{
+				"email": "test@example.com",
+			},
+			"campaign_type_id": "some-campaign-type-id",
+			"text":             "come see our new stuff",
+			"html":             "<h1>New stuff</h1>",
+			"subject":          "Cool New Stuff",
+			"template_id":      "random-template-id",
+			"reply_to":         "reply-to-address",
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		request, err = http.NewRequest("POST", "/senders/some-sender-id/campaigns", bytes.NewBuffer(requestBody))
+		Expect(err).NotTo(HaveOccurred())
+
+		handler.ServeHTTP(writer, request, context)
+
+		Expect(writer.Code).To(Equal(http.StatusAccepted))
+		Expect(writer.Body.String()).To(MatchJSON(`{
+			"campaign_id": "my-campaign-id"
+		}`))
+
+		Expect(campaignsCollection.CreateCall.Receives.Conn).To(Equal(database.Connection()))
+		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
+			SendTo:         map[string]string{"email": "test@example.com"},
+			CampaignTypeID: "some-campaign-type-id",
+			Text:           "come see our new stuff",
+			HTML:           "<h1>New stuff</h1>",
+			Subject:        "Cool New Stuff",
+			TemplateID:     "random-template-id",
+			ReplyTo:        "reply-to-address",
+			ClientID:       "my-client",
+		}))
+	})
+
 	Context("when validating user-input", func() {
 		Context("when the campaign_type_id is missing", func() {
 			BeforeEach(func() {
@@ -269,6 +306,29 @@ var _ = Describe("CreateHandler", func() {
 				handler.ServeHTTP(writer, request, context)
 				Expect(writer.Code).To(Equal(422))
 				Expect(writer.Body.String()).To(MatchJSON(`{"errors": ["\"userZ\" is not a valid audience"]}`))
+			})
+		})
+
+		Context("when the email address is invalid", func() {
+			BeforeEach(func() {
+				requestBody, err := json.Marshal(map[string]interface{}{
+					"send_to": map[string]string{
+						"email": "malformed-email",
+					},
+					"campaign_type_id": "some-campaign-type-id",
+					"text":             "come see our new stuff",
+					"subject":          "Cool New Stuff",
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				request, err = http.NewRequest("POST", "/senders/some-sender-id/campaigns", bytes.NewBuffer(requestBody))
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns a 422 and states the audience is invalid", func() {
+				handler.ServeHTTP(writer, request, context)
+				Expect(writer.Code).To(Equal(422))
+				Expect(writer.Body.String()).To(MatchJSON(`{"errors": ["\"malformed-email\" is not a valid email address"]}`))
 			})
 		})
 	})

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/dgrijalva/jwt-go"
@@ -88,8 +89,14 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 func isValid(request createRequest, w http.ResponseWriter, req *http.Request) bool {
 	for audienceKey, _ := range request.SendTo {
-		if !contains([]string{"user", "space", "org"}, audienceKey) {
+		if !contains([]string{"user", "space", "org", "email"}, audienceKey) {
 			return invalidResponse(w, fmt.Sprintf(`%q is not a valid audience`, audienceKey))
+		}
+
+		if audienceKey == "email" {
+			if matches := regexp.MustCompile(`[^@]*@{1}[^@]*`).MatchString(request.SendTo[audienceKey]); !matches {
+				return invalidResponse(w, fmt.Sprintf(`%q is not a valid email address`, request.SendTo[audienceKey]))
+			}
 		}
 	}
 
