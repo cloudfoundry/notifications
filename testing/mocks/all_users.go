@@ -5,7 +5,6 @@ type AllUsers struct {
 		Receives struct {
 			Token string
 		}
-
 		Returns struct {
 			GUIDs []string
 			Error error

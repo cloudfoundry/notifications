@@ -9,8 +9,8 @@ import (
 	"reflect"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
@@ -29,6 +29,7 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 			writer      *httptest.ResponseRecorder
 			request     *http.Request
 			connection  *mocks.Connection
+			transaction *mocks.Transaction
 			context     stack.Context
 			updater     *mocks.PreferenceUpdater
 			userGUID    string
@@ -36,7 +37,11 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 		)
 
 		BeforeEach(func() {
+			transaction = mocks.NewTransaction()
+
 			connection = mocks.NewConnection()
+			connection.TransactionCall.Returns.Transaction = transaction
+
 			database := mocks.NewDatabase()
 			database.Conn = connection
 
@@ -94,7 +99,7 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 		It("Passes the correct arguments to PreferenceUpdater Execute", func() {
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(reflect.ValueOf(updater.ExecuteCall.Receives.Connection).Pointer()).To(Equal(reflect.ValueOf(connection).Pointer()))
+			Expect(reflect.ValueOf(updater.ExecuteCall.Receives.Connection).Pointer()).To(Equal(reflect.ValueOf(transaction).Pointer()))
 			preferencesArguments := updater.ExecuteCall.Receives.Preferences
 
 			Expect(preferencesArguments).To(ContainElement(models.Preference{
@@ -146,9 +151,9 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 
 					Expect(errorWriter.WriteCall.Receives.Error).ToNot(BeNil())
 					Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
-					Expect(connection.BeginWasCalled).To(BeFalse())
-					Expect(connection.CommitWasCalled).To(BeFalse())
-					Expect(connection.RollbackWasCalled).To(BeFalse())
+					Expect(transaction.BeginCall.WasCalled).To(BeFalse())
+					Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+					Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 				})
 			})
 
@@ -159,9 +164,9 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 
 				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(webutil.ValidationError([]string{"BOOM!"})))
 
-				Expect(connection.BeginWasCalled).To(BeTrue())
-				Expect(connection.CommitWasCalled).To(BeFalse())
-				Expect(connection.RollbackWasCalled).To(BeTrue())
+				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				Expect(transaction.RollbackCall.WasCalled).To(BeTrue())
 			})
 
 			It("delegates CriticalKindErrors as webutil.ValidationError to the ErrorWriter", func() {
@@ -171,9 +176,9 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 
 				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(webutil.ValidationError([]string{"BOOM!"})))
 
-				Expect(connection.BeginWasCalled).To(BeTrue())
-				Expect(connection.CommitWasCalled).To(BeFalse())
-				Expect(connection.RollbackWasCalled).To(BeTrue())
+				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				Expect(transaction.RollbackCall.WasCalled).To(BeTrue())
 			})
 
 			It("delegates other errors to the ErrorWriter", func() {
@@ -183,21 +188,21 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 
 				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("BOOM!")))
 
-				Expect(connection.BeginWasCalled).To(BeTrue())
-				Expect(connection.CommitWasCalled).To(BeFalse())
-				Expect(connection.RollbackWasCalled).To(BeTrue())
+				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				Expect(transaction.RollbackCall.WasCalled).To(BeTrue())
 			})
 
 			It("delegates transaction errors to the error writer", func() {
-				connection.CommitError = "transaction error!!!"
+				transaction.CommitCall.Returns.Error = errors.New("transaction error!!!")
 
 				handler.ServeHTTP(writer, request, context)
 
 				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(models.NewTransactionCommitError("transaction error!!!")))
 
-				Expect(connection.BeginWasCalled).To(BeTrue())
-				Expect(connection.CommitWasCalled).To(BeTrue())
-				Expect(connection.RollbackWasCalled).To(BeFalse())
+				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+				Expect(transaction.CommitCall.WasCalled).To(BeTrue())
+				Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 			})
 		})
 	})

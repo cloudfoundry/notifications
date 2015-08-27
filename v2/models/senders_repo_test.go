@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 
 	. "github.com/onsi/ginkgo"
@@ -78,7 +78,7 @@ var _ = Describe("SendersRepo", func() {
 		It("returns any error that was encountered", func() {
 			connection := mocks.NewConnection()
 
-			connection.SelectCall.Err = errors.New("potatoes")
+			connection.SelectCall.Returns.Error = errors.New("potatoes")
 
 			_, err := repo.List(connection, "doesnt-matter")
 			Expect(err).To(MatchError(errors.New("potatoes")))

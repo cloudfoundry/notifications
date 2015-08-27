@@ -21,6 +21,7 @@ var _ = Describe("Enqueuer", func() {
 		buffer       *bytes.Buffer
 		queue        *mocks.Queue
 		conn         *mocks.Connection
+		transaction  *mocks.Transaction
 		space        cf.CloudControllerSpace
 		org          cf.CloudControllerOrganization
 		messagesRepo *mocks.MessagesRepo
@@ -31,7 +32,11 @@ var _ = Describe("Enqueuer", func() {
 		buffer = bytes.NewBuffer([]byte{})
 		logger = log.New(buffer, "", 0)
 		queue = mocks.NewQueue()
+
+		transaction = mocks.NewTransaction()
 		conn = mocks.NewConnection()
+		conn.TransactionCall.Returns.Transaction = transaction
+
 		messagesRepo = mocks.NewMessagesRepo()
 		enqueuer = services.NewEnqueuer(queue, mocks.NewIncrementingGUIDGenerator().Generate, messagesRepo)
 		space = cf.CloudControllerSpace{Name: "the-space"}
@@ -171,9 +176,10 @@ var _ = Describe("Enqueuer", func() {
 				users := []services.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
 				responses := enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
-				Expect(conn.BeginWasCalled).To(BeTrue())
-				Expect(conn.CommitWasCalled).To(BeTrue())
-				Expect(conn.RollbackWasCalled).To(BeFalse())
+				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+				Expect(transaction.CommitCall.WasCalled).To(BeTrue())
+				Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
+
 				Expect(responses).ToNot(BeEmpty())
 			})
 
@@ -182,19 +188,21 @@ var _ = Describe("Enqueuer", func() {
 				users := []services.User{{GUID: "user-1"}}
 				enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
-				Expect(conn.BeginWasCalled).To(BeTrue())
-				Expect(conn.CommitWasCalled).To(BeFalse())
-				Expect(conn.RollbackWasCalled).To(BeTrue())
+				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				Expect(transaction.RollbackCall.WasCalled).To(BeTrue())
 			})
 
 			It("returns an empty slice of Response if transaction fails", func() {
-				conn.CommitError = "the commit blew up"
+				transaction.CommitCall.Returns.Error = errors.New("the commit blew up")
+
 				users := []services.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
 				responses := enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
-				Expect(conn.BeginWasCalled).To(BeTrue())
-				Expect(conn.CommitWasCalled).To(BeTrue())
-				Expect(conn.RollbackWasCalled).To(BeFalse())
+				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+				Expect(transaction.CommitCall.WasCalled).To(BeTrue())
+				Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
+
 				Expect(responses).To(Equal([]services.Response{}))
 			})
 		})

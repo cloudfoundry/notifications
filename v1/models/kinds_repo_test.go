@@ -1,13 +1,12 @@
 package models_test
 
 import (
-	"database/sql"
 	"errors"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 
 	. "github.com/onsi/ginkgo"
@@ -258,7 +257,7 @@ var _ = Describe("KindsRepo", func() {
 			})
 		})
 
-		Context("when the record comes into existence after the Find, but before we create it", func() {
+		Context("when the record comes into existence before we create it", func() {
 			It("updates the record in the database", func() {
 				kind := models.Kind{
 					ID:          "my-kind",
@@ -268,13 +267,12 @@ var _ = Describe("KindsRepo", func() {
 				}
 
 				conn := mocks.NewConnection()
-				conn.SelectOneCall.Returns = kind
-				conn.SelectOneCall.Errs = []error{sql.ErrNoRows, nil, nil}
-				conn.InsertCall.Err = errors.New("Duplicate entry")
+				conn.InsertCall.Returns.Error = errors.New("Duplicate entry")
 
-				kind, err := repo.Upsert(conn, kind)
+				_, err := repo.Upsert(conn, kind)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(conn.UpdateCall.List[0].(*models.Kind).ID).To(Equal(kind.ID))
+				Expect(conn.UpdateCall.Receives.List).To(HaveLen(1))
+				Expect(conn.UpdateCall.Receives.List[0].(*models.Kind).ID).To(Equal("my-kind"))
 			})
 		})
 	})

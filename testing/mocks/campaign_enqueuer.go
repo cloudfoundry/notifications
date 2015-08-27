@@ -8,7 +8,6 @@ type CampaignEnqueuer struct {
 			Campaign collections.Campaign
 			JobType  string
 		}
-
 		Returns struct {
 			Err error
 		}

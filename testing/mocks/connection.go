@@ -2,54 +2,89 @@ package mocks
 
 import (
 	"database/sql"
-	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
 )
 
-type DBResult struct{}
-
-func (fake DBResult) LastInsertId() (int64, error) {
-	return 0, nil
-}
-
-func (fake DBResult) RowsAffected() (int64, error) {
-	return 0, nil
-}
-
 type Connection struct {
-	BeginWasCalled    bool
-	CommitWasCalled   bool
-	RollbackWasCalled bool
-	CommitError       string
-
-	SelectOneCall struct {
-		Returns   interface{}
-		Errs      []error
-		CallCount int
+	DeleteCall struct {
+		Receives struct {
+			List []interface{}
+		}
+		Returns struct {
+			Count int64
+			Error error
+		}
 	}
 
-	SelectCall struct {
-		Err error
-	}
-
-	InsertCall struct {
-		Err error
-	}
-
-	UpdateCall struct {
-		List []interface{}
-		Err  error
+	ExecCall struct {
+		Receives struct {
+			Query  string
+			Params []interface{}
+		}
+		Returns struct {
+			Result sql.Result
+			Error  error
+		}
 	}
 
 	GetCall struct {
-		Returns interface{}
-		Err     error
+		Receives struct {
+			Object interface{}
+			Keys   []interface{}
+		}
+		Returns struct {
+			Object interface{}
+			Error  error
+		}
 	}
 
-	DeleteCall struct {
-		Err error
+	InsertCall struct {
+		Receives struct {
+			List []interface{}
+		}
+		Returns struct {
+			Error error
+		}
+	}
+
+	SelectCall struct {
+		Receives struct {
+			ResultType interface{}
+			Query      string
+			Params     []interface{}
+		}
+		Returns struct {
+			Results []interface{}
+			Error   error
+		}
+	}
+
+	SelectOneCall struct {
+		Receives struct {
+			Result interface{}
+			Query  string
+			Params []interface{}
+		}
+		Returns struct {
+			Error error
+		}
+	}
+
+	TransactionCall struct {
+		Returns struct {
+			Transaction db.TransactionInterface
+		}
+	}
+
+	UpdateCall struct {
+		Receives struct {
+			List []interface{}
+		}
+		Returns struct {
+			Count int64
+			Error error
+		}
 	}
 }
 
@@ -57,61 +92,54 @@ func NewConnection() *Connection {
 	return &Connection{}
 }
 
-func (conn *Connection) Begin() error {
-	conn.BeginWasCalled = true
-	return nil
+func (c *Connection) Delete(list ...interface{}) (int64, error) {
+	c.DeleteCall.Receives.List = list
+
+	return c.DeleteCall.Returns.Count, c.DeleteCall.Returns.Error
 }
 
-func (conn *Connection) Commit() error {
-	conn.CommitWasCalled = true
-	if conn.CommitError != "" {
-		return errors.New(conn.CommitError)
-	}
-	return nil
+func (c *Connection) Exec(query string, params ...interface{}) (sql.Result, error) {
+	c.ExecCall.Receives.Query = query
+	c.ExecCall.Receives.Params = params
+
+	return c.ExecCall.Returns.Result, c.ExecCall.Returns.Error
 }
 
-func (conn *Connection) Rollback() error {
-	conn.RollbackWasCalled = true
-	return nil
+func (c *Connection) Get(object interface{}, keys ...interface{}) (interface{}, error) {
+	c.GetCall.Receives.Object = object
+	c.GetCall.Receives.Keys = keys
+
+	return c.GetCall.Returns.Object, c.GetCall.Returns.Error
 }
 
-func (conn *Connection) Exec(query string, args ...interface{}) (sql.Result, error) {
-	return DBResult{}, nil
+func (c *Connection) Insert(list ...interface{}) error {
+	c.InsertCall.Receives.List = list
+
+	return c.InsertCall.Returns.Error
 }
 
-func (conn Connection) Delete(list ...interface{}) (int64, error) {
-	return 0, conn.DeleteCall.Err
+func (c *Connection) Select(resultType interface{}, query string, params ...interface{}) ([]interface{}, error) {
+	c.SelectCall.Receives.ResultType = resultType
+	c.SelectCall.Receives.Query = query
+	c.SelectCall.Receives.Params = params
+
+	return c.SelectCall.Returns.Results, c.SelectCall.Returns.Error
 }
 
-func (conn Connection) Insert(list ...interface{}) error {
-	return conn.InsertCall.Err
+func (c *Connection) SelectOne(result interface{}, query string, params ...interface{}) error {
+	c.SelectOneCall.Receives.Result = result
+	c.SelectOneCall.Receives.Query = query
+	c.SelectOneCall.Receives.Params = params
+
+	return c.SelectOneCall.Returns.Error
 }
 
-func (conn Connection) Select(i interface{}, query string, args ...interface{}) ([]interface{}, error) {
-	return []interface{}{}, conn.SelectCall.Err
+func (c *Connection) Transaction() db.TransactionInterface {
+	return c.TransactionCall.Returns.Transaction
 }
 
-func (conn *Connection) SelectOne(i interface{}, query string, args ...interface{}) error {
-	switch returns := conn.SelectOneCall.Returns.(type) {
-	case models.Client:
-		*i.(*models.Client) = returns
-	case models.Kind:
-		*i.(*models.Kind) = returns
-	}
-	call := conn.SelectOneCall.CallCount
-	conn.SelectOneCall.CallCount++
-	return conn.SelectOneCall.Errs[call]
-}
+func (c *Connection) Update(list ...interface{}) (int64, error) {
+	c.UpdateCall.Receives.List = list
 
-func (conn *Connection) Update(list ...interface{}) (int64, error) {
-	conn.UpdateCall.List = list
-	return 0, conn.UpdateCall.Err
-}
-
-func (conn *Connection) Transaction() db.TransactionInterface {
-	return conn
-}
-
-func (conn *Connection) Get(i interface{}, keys ...interface{}) (interface{}, error) {
-	return i, nil
+	return c.UpdateCall.Returns.Count, c.UpdateCall.Returns.Error
 }

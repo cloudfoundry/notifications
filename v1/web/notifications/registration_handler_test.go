@@ -11,8 +11,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notifications"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
@@ -30,6 +30,7 @@ var _ = Describe("RegistrationHandler", func() {
 		request     *http.Request
 		errorWriter *mocks.ErrorWriter
 		conn        *mocks.Connection
+		transaction *mocks.Transaction
 		registrar   *mocks.Registrar
 		client      models.Client
 		kinds       []models.Kind
@@ -37,7 +38,10 @@ var _ = Describe("RegistrationHandler", func() {
 	)
 
 	BeforeEach(func() {
+		transaction = mocks.NewTransaction()
 		conn = mocks.NewConnection()
+		conn.TransactionCall.Returns.Transaction = transaction
+
 		errorWriter = mocks.NewErrorWriter()
 		registrar = mocks.NewRegistrar()
 		database := mocks.NewDatabase()
@@ -106,25 +110,25 @@ var _ = Describe("RegistrationHandler", func() {
 		It("passes the correct arguments to Register", func() {
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(registrar.RegisterCall.Receives.Connection).To(Equal(conn))
+			Expect(registrar.RegisterCall.Receives.Connection).To(Equal(transaction))
 			Expect(registrar.RegisterCall.Receives.Client).To(Equal(client))
 			Expect(registrar.RegisterCall.Receives.Kinds).To(ConsistOf(kinds))
 
-			Expect(conn.BeginWasCalled).To(BeTrue())
-			Expect(conn.CommitWasCalled).To(BeTrue())
-			Expect(conn.RollbackWasCalled).To(BeFalse())
+			Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+			Expect(transaction.CommitCall.WasCalled).To(BeTrue())
+			Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 		})
 
 		It("passes the correct arguments to Prune", func() {
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(registrar.PruneCall.Receives.Connection).To(Equal(conn))
+			Expect(registrar.PruneCall.Receives.Connection).To(Equal(transaction))
 			Expect(registrar.PruneCall.Receives.Client).To(Equal(client))
 			Expect(registrar.PruneCall.Receives.Kinds).To(ConsistOf(kinds))
 
-			Expect(conn.BeginWasCalled).To(BeTrue())
-			Expect(conn.CommitWasCalled).To(BeTrue())
-			Expect(conn.RollbackWasCalled).To(BeFalse())
+			Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+			Expect(transaction.CommitCall.WasCalled).To(BeTrue())
+			Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 		})
 
 		It("does not trim kinds if they are not in the request", func() {
@@ -138,9 +142,10 @@ var _ = Describe("RegistrationHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 
 			Expect(registrar.PruneCall.Called).To(BeFalse())
-			Expect(conn.BeginWasCalled).To(BeTrue())
-			Expect(conn.CommitWasCalled).To(BeTrue())
-			Expect(conn.RollbackWasCalled).To(BeFalse())
+
+			Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+			Expect(transaction.CommitCall.WasCalled).To(BeTrue())
+			Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 		})
 
 		Context("failure cases", func() {
@@ -187,9 +192,9 @@ var _ = Describe("RegistrationHandler", func() {
 
 				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(postal.UAAScopesError("waaaaat")))
 
-				Expect(conn.BeginWasCalled).To(BeFalse())
-				Expect(conn.CommitWasCalled).To(BeFalse())
-				Expect(conn.RollbackWasCalled).To(BeFalse())
+				Expect(transaction.BeginCall.WasCalled).To(BeFalse())
+				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 			})
 
 			It("delegates parsing errors to the ErrorWriter", func() {
@@ -200,9 +205,9 @@ var _ = Describe("RegistrationHandler", func() {
 
 				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ParseError{}))
 
-				Expect(conn.BeginWasCalled).To(BeFalse())
-				Expect(conn.CommitWasCalled).To(BeFalse())
-				Expect(conn.RollbackWasCalled).To(BeFalse())
+				Expect(transaction.BeginCall.WasCalled).To(BeFalse())
+				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 			})
 
 			It("delegates validation errors to the ErrorWriter", func() {
@@ -216,9 +221,9 @@ var _ = Describe("RegistrationHandler", func() {
 
 				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError{}))
 
-				Expect(conn.BeginWasCalled).To(BeFalse())
-				Expect(conn.CommitWasCalled).To(BeFalse())
-				Expect(conn.RollbackWasCalled).To(BeFalse())
+				Expect(transaction.BeginCall.WasCalled).To(BeFalse())
+				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 			})
 
 			It("delegates registrar register errors to the ErrorWriter", func() {
@@ -228,9 +233,9 @@ var _ = Describe("RegistrationHandler", func() {
 
 				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("BOOM!")))
 
-				Expect(conn.BeginWasCalled).To(BeTrue())
-				Expect(conn.CommitWasCalled).To(BeFalse())
-				Expect(conn.RollbackWasCalled).To(BeTrue())
+				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				Expect(transaction.RollbackCall.WasCalled).To(BeTrue())
 			})
 
 			It("delegates registrar prune errors to the ErrorWriter", func() {
@@ -240,18 +245,18 @@ var _ = Describe("RegistrationHandler", func() {
 
 				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("BOOM!")))
 
-				Expect(conn.BeginWasCalled).To(BeTrue())
-				Expect(conn.CommitWasCalled).To(BeFalse())
-				Expect(conn.RollbackWasCalled).To(BeTrue())
+				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				Expect(transaction.RollbackCall.WasCalled).To(BeTrue())
 			})
 
 			It("delegates transaction errors to the ErrorWriter", func() {
-				conn.CommitError = "transaction commit error"
+				transaction.CommitCall.Returns.Error = errors.New("transaction commit error")
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(conn.BeginWasCalled).To(BeTrue())
-				Expect(conn.CommitWasCalled).To(BeTrue())
-				Expect(conn.RollbackWasCalled).To(BeFalse())
+				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+				Expect(transaction.CommitCall.WasCalled).To(BeTrue())
+				Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 
 				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("transaction commit error")))
 			})

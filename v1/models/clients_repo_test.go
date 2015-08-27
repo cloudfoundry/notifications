@@ -1,13 +1,12 @@
 package models_test
 
 import (
-	"database/sql"
 	"errors"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 
 	. "github.com/onsi/ginkgo"
@@ -191,13 +190,12 @@ var _ = Describe("ClientsRepo", func() {
 				}
 
 				conn := mocks.NewConnection()
-				conn.SelectOneCall.Returns = client
-				conn.SelectOneCall.Errs = []error{sql.ErrNoRows, nil, nil}
-				conn.InsertCall.Err = errors.New("Duplicate entry")
+				conn.InsertCall.Returns.Error = errors.New("Duplicate entry")
 
-				client, err := repo.Upsert(conn, client)
+				_, err := repo.Upsert(conn, client)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(conn.UpdateCall.List[0]).To(Equal(&client))
+				Expect(conn.UpdateCall.Receives.List).To(HaveLen(1))
+				Expect(conn.UpdateCall.Receives.List[0].(*models.Client).ID).To(Equal("my-client"))
 			})
 		})
 	})
