@@ -20,6 +20,7 @@ var _ = Describe("CampaignsCollection", func() {
 		templatesRepo     *mocks.TemplatesRepository
 		userFinder        *mocks.UserFinder
 		spaceFinder       *mocks.SpaceFinder
+		orgFinder         *mocks.OrgFinder
 	)
 
 	BeforeEach(func() {
@@ -29,8 +30,9 @@ var _ = Describe("CampaignsCollection", func() {
 		templatesRepo = mocks.NewTemplatesRepository()
 		userFinder = mocks.NewUserFinder()
 		spaceFinder = mocks.NewSpaceFinder()
+		orgFinder = mocks.NewOrgFinder()
 
-		collection = collections.NewCampaignsCollection(enqueuer, campaignTypesRepo, templatesRepo, userFinder, spaceFinder)
+		collection = collections.NewCampaignsCollection(enqueuer, campaignTypesRepo, templatesRepo, userFinder, spaceFinder, orgFinder)
 	})
 
 	Describe("Create", func() {
@@ -90,6 +92,88 @@ var _ = Describe("CampaignsCollection", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(spaceFinder.ExistsCall.Receives.GUID).To(Equal("some-space-guid"))
+				})
+			})
+
+			Context("when finding a space causes an error", func() {
+				It("returns an error", func() {
+					spaceFinder.ExistsCall.Returns.Error = errors.New("something bad happened")
+
+					campaign := collections.Campaign{
+						SendTo:         map[string]string{"space": "some-space-guid"},
+						CampaignTypeID: "some-id",
+						Text:           "some-test",
+						HTML:           "no-html",
+						Subject:        "some-subject",
+						TemplateID:     "whoa-a-template-id",
+						ReplyTo:        "nothing@example.com",
+						ClientID:       "some-client-id",
+					}
+
+					_, err := collection.Create(database.Connection(), campaign, false)
+					Expect(err).To(MatchError(collections.UnknownError{errors.New("something bad happened")}))
+				})
+			})
+		})
+
+		Context("when the audience is an org", func() {
+			BeforeEach(func() {
+				orgFinder.ExistsCall.Returns.Exists = true
+			})
+
+			Context("enqueuing a campaignJob", func() {
+				It("returns a campaignID after enqueuing the campaign with its type", func() {
+					campaign := collections.Campaign{
+						SendTo:         map[string]string{"org": "some-org-guid"},
+						CampaignTypeID: "some-id",
+						Text:           "some-test",
+						HTML:           "no-html",
+						Subject:        "some-subject",
+						TemplateID:     "whoa-a-template-id",
+						ReplyTo:        "nothing@example.com",
+						ClientID:       "some-client-id",
+					}
+
+					enqueuedCampaign, err := collection.Create(database.Connection(), campaign, false)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
+						ID:             "some-random-id",
+						SendTo:         map[string]string{"org": "some-org-guid"},
+						CampaignTypeID: "some-id",
+						Text:           "some-test",
+						HTML:           "no-html",
+						Subject:        "some-subject",
+						TemplateID:     "whoa-a-template-id",
+						ReplyTo:        "nothing@example.com",
+						ClientID:       "some-client-id",
+					}))
+					Expect(enqueuer.EnqueueCall.Receives.JobType).To(Equal("campaign"))
+
+					Expect(enqueuedCampaign.ID).To(Equal("some-random-id"))
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(orgFinder.ExistsCall.Receives.GUID).To(Equal("some-org-guid"))
+				})
+			})
+
+			Context("when finding an org causes an error", func() {
+				It("returns an error", func() {
+					orgFinder.ExistsCall.Returns.Error = errors.New("something bad happened")
+
+					campaign := collections.Campaign{
+						SendTo:         map[string]string{"org": "some-org-guid"},
+						CampaignTypeID: "some-id",
+						Text:           "some-test",
+						HTML:           "no-html",
+						Subject:        "some-subject",
+						TemplateID:     "whoa-a-template-id",
+						ReplyTo:        "nothing@example.com",
+						ClientID:       "some-client-id",
+					}
+
+					_, err := collection.Create(database.Connection(), campaign, false)
+					Expect(err).To(MatchError(collections.UnknownError{errors.New("something bad happened")}))
 				})
 			})
 		})

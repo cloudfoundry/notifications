@@ -61,14 +61,18 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	}
 	warrantUsersService := warrant.NewUsersService(warrantConfig)
 	warrantClientsService := warrant.NewClientsService(warrantConfig)
-	userFinder := uaa.NewUserFinder(config.UAAClientID, config.UAAClientSecret, warrantUsersService, warrantClientsService)
 
 	rainmakerConfig := rainmaker.Config{
 		Host:          config.CCHost,
 		SkipVerifySSL: config.SkipVerifySSL,
 	}
 	rainmakerSpacesService := rainmaker.NewSpacesService(rainmakerConfig)
+	rainmakerOrganizationsService := rainmaker.NewOrganizationsService(rainmakerConfig)
+
+	userFinder := uaa.NewUserFinder(config.UAAClientID, config.UAAClientSecret, warrantUsersService, warrantClientsService)
 	spaceFinder := cf.NewSpaceFinder(config.UAAClientID, config.UAAClientSecret, warrantClientsService, rainmakerSpacesService)
+	orgFinder := cf.NewOrgFinder(config.UAAClientID, config.UAAClientSecret, warrantClientsService, rainmakerOrganizationsService)
+
 	campaignEnqueuer := queue.NewCampaignEnqueuer(config.Queue)
 
 	sendersRepository := models.NewSendersRepository(uuid.NewV4)
@@ -78,7 +82,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	sendersCollection := collections.NewSendersCollection(sendersRepository)
 	templatesCollection := collections.NewTemplatesCollection(templatesRepository)
 	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository, templatesRepository)
-	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignTypesRepository, templatesRepository, userFinder, spaceFinder)
+	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignTypesRepository, templatesRepository, userFinder, spaceFinder, orgFinder)
 
 	info.Routes{
 		RequestCounter: requestCounter,

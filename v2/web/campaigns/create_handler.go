@@ -88,7 +88,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 func isValid(request createRequest, w http.ResponseWriter, req *http.Request) bool {
 	for audienceKey, _ := range request.SendTo {
-		if !contains([]string{"user", "space"}, audienceKey) {
+		if !contains([]string{"user", "space", "org"}, audienceKey) {
 			return invalidResponse(w, fmt.Sprintf(`%q is not a valid audience`, audienceKey))
 		}
 	}

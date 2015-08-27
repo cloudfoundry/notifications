@@ -41,15 +41,17 @@ type CampaignsCollection struct {
 	templatesRepo     templatesGetter
 	userFinder        existenceChecker
 	spaceFinder       existenceChecker
+	orgFinder         existenceChecker
 }
 
-func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, userFinder existenceChecker, spaceFinder existenceChecker) CampaignsCollection {
+func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, userFinder existenceChecker, spaceFinder existenceChecker, orgFinder existenceChecker) CampaignsCollection {
 	return CampaignsCollection{
 		enqueuer:          enqueuer,
 		campaignTypesRepo: campaignTypesRepo,
 		templatesRepo:     templatesRepo,
 		userFinder:        userFinder,
 		spaceFinder:       spaceFinder,
+		orgFinder:         orgFinder,
 	}
 }
 
@@ -111,6 +113,8 @@ func (c CampaignsCollection) checkForExistence(audience, guid string) (bool, err
 		return c.userFinder.Exists(guid)
 	case "space":
 		return c.spaceFinder.Exists(guid)
+	case "org":
+		return c.orgFinder.Exists(guid)
 	default:
 		return false, fmt.Errorf("The %q audience is not valid", audience)
 	}

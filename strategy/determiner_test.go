@@ -18,13 +18,15 @@ var _ = Describe("Determiner", func() {
 		determiner    strategy.Determiner
 		userStrategy  *mocks.Strategy
 		spaceStrategy *mocks.Strategy
+		orgStrategy   *mocks.Strategy
 		database      *mocks.Database
 	)
 	BeforeEach(func() {
 		userStrategy = mocks.NewStrategy()
 		spaceStrategy = mocks.NewStrategy()
+		orgStrategy = mocks.NewStrategy()
 		database = mocks.NewDatabase()
-		determiner = strategy.NewStrategyDeterminer(userStrategy, spaceStrategy)
+		determiner = strategy.NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy)
 	})
 
 	Context("when dispatching to a user", func() {
@@ -103,6 +105,44 @@ var _ = Describe("Determiner", func() {
 		})
 	})
 
+	Context("when dispatching to an org", func() {
+		It("determines the strategy and calls it", func() {
+			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+				Campaign: collections.Campaign{
+					ID:             "some-id",
+					SendTo:         map[string]string{"org": "some-org-guid"},
+					CampaignTypeID: "some-campaign-type-id",
+					Text:           "some-text",
+					HTML:           "<h1>my-html</h1>",
+					Subject:        "The Best subject",
+					TemplateID:     "some-template-id",
+					ReplyTo:        "noreply@example.com",
+					ClientID:       "some-client-id",
+				},
+			}))
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(orgStrategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
+				GUID:       "some-org-guid",
+				UAAHost:    "some-uaa-host",
+				Connection: database.Connection(),
+				TemplateID: "some-template-id",
+				Client: services.DispatchClient{
+					ID: "some-client-id",
+				},
+				Message: services.DispatchMessage{
+					To:      "",
+					ReplyTo: "noreply@example.com",
+					Subject: "The Best subject",
+					Text:    "some-text",
+					HTML: services.HTML{
+						BodyContent: "<h1>my-html</h1>",
+					},
+				},
+			}))
+		})
+	})
+
 	Context("when an error occurs", func() {
 		Context("when the campaign cannot be unmarshalled", func() {
 			It("returns the error", func() {
@@ -130,7 +170,7 @@ var _ = Describe("Determiner", func() {
 						SendTo: map[string]string{"some-audience": "wut"},
 					},
 				}))
-				Expect(err).To(MatchError(strategy.NoStrategyError{errors.New("No strategy for the \"some-audience\" audience could be found")}))
+				Expect(err).To(MatchError(strategy.NoStrategyError{errors.New("Strategy for the \"some-audience\" audience could not be found")}))
 			})
 		})
 	})

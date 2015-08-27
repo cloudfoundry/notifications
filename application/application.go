@@ -135,7 +135,7 @@ func (app Application) StartWorkers() {
 			MessageStatusUpdater:   postal.NewMessageStatusUpdater(app.mother.MessagesRepo()),
 			DeliveryFailureHandler: postal.NewDeliveryFailureHandler(),
 
-			StrategyDeterminer: strategy.NewStrategyDeterminer(app.mother.UserStrategy(), app.mother.SpaceStrategy()),
+			StrategyDeterminer: strategy.NewStrategyDeterminer(app.mother.UserStrategy(), app.mother.SpaceStrategy(), app.mother.OrganizationStrategy()),
 		})
 		return &worker
 	})

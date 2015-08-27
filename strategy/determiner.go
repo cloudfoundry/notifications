@@ -21,16 +21,18 @@ func (e NoStrategyError) Error() string {
 type Determiner struct {
 	userStrategy  dispatcher
 	spaceStrategy dispatcher
+	orgStrategy   dispatcher
 }
 
 type dispatcher interface {
 	Dispatch(dispatch services.Dispatch) ([]services.Response, error)
 }
 
-func NewStrategyDeterminer(userStrategy, spaceStrategy dispatcher) Determiner {
+func NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy dispatcher) Determiner {
 	return Determiner{
 		userStrategy:  userStrategy,
 		spaceStrategy: spaceStrategy,
+		orgStrategy:   orgStrategy,
 	}
 }
 
@@ -95,7 +97,9 @@ func (d Determiner) findStrategy(audience string) (dispatcher, error) {
 		return d.userStrategy, nil
 	case "space":
 		return d.spaceStrategy, nil
+	case "org":
+		return d.orgStrategy, nil
 	default:
-		return nil, NoStrategyError{fmt.Errorf("No strategy for the %q audience could be found", audience)}
+		return nil, NoStrategyError{fmt.Errorf("Strategy for the %q audience could not be found", audience)}
 	}
 }

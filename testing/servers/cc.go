@@ -82,7 +82,10 @@ var CCGetSpace = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request)
 })
 
 var CCGetOrg = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	json := `{
+	vars := mux.Vars(req)
+	guid := vars["guid"]
+	if guid == "org-123" {
+		json := `{
        "metadata": {
           "guid": "org-123",
           "url": "/v2/organizations/org-123",
@@ -105,9 +108,12 @@ var CCGetOrg = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
           "app_events_url": "/v2/organizations/org-123/app_events"
        }
     }`
-
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(json))
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(json))
+	} else {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"code":40004,"description":"The org could not be found","error_code":"CF-OrgNotFound"}`))
+	}
 })
 
 var CCGetOrgUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
