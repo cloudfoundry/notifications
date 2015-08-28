@@ -38,6 +38,18 @@ func (r SendersRepository) Insert(conn ConnectionInterface, sender Sender) (Send
 	return sender, nil
 }
 
+func (r SendersRepository) Update(conn ConnectionInterface, sender Sender) (Sender, error) {
+	_, err := conn.Update(&sender)
+	if err != nil {
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			err = DuplicateRecordError{}
+		}
+		return sender, err
+	}
+
+	return sender, nil
+}
+
 func (r SendersRepository) List(conn ConnectionInterface, clientID string) ([]Sender, error) {
 	senders := []Sender{}
 	_, err := conn.Select(&senders, "SELECT * FROM `senders` WHERE `client_id` = ?", clientID)

@@ -14,6 +14,7 @@ type Sender struct {
 
 type sendersRepository interface {
 	Insert(conn models.ConnectionInterface, sender models.Sender) (insertedSender models.Sender, err error)
+	Update(conn models.ConnectionInterface, sender models.Sender) (models.Sender, error)
 	List(conn models.ConnectionInterface, clientID string) (retrievedSenderList []models.Sender, er error)
 	Get(conn models.ConnectionInterface, senderID string) (retrievedSender models.Sender, err error)
 	GetByClientIDAndName(conn models.ConnectionInterface, clientID, name string) (retrievedSender models.Sender, err error)
@@ -30,20 +31,37 @@ func NewSendersCollection(repo sendersRepository) SendersCollection {
 }
 
 func (sc SendersCollection) Set(conn ConnectionInterface, sender Sender) (Sender, error) {
-	model, err := sc.repo.Insert(conn, models.Sender{
-		Name:     sender.Name,
-		ClientID: sender.ClientID,
-	})
-	if err != nil {
-		switch err.(type) {
-		case models.DuplicateRecordError:
-			model, err = sc.repo.GetByClientIDAndName(conn, sender.ClientID, sender.Name)
-			if err != nil {
+	var (
+		model models.Sender
+		err   error
+	)
+
+	if sender.ID == "" {
+		model, err = sc.repo.Insert(conn, models.Sender{
+			Name:     sender.Name,
+			ClientID: sender.ClientID,
+		})
+		if err != nil {
+			switch err.(type) {
+			case models.DuplicateRecordError:
+				model, err = sc.repo.GetByClientIDAndName(conn, sender.ClientID, sender.Name)
+				if err != nil {
+					return Sender{}, PersistenceError{err}
+				}
+			default:
 				return Sender{}, PersistenceError{err}
 			}
-		default:
+		}
+	} else {
+		model, err = sc.repo.Update(conn, models.Sender{
+			ID:       sender.ID,
+			Name:     sender.Name,
+			ClientID: sender.ClientID,
+		})
+		if err != nil {
 			return Sender{}, PersistenceError{err}
 		}
+
 	}
 
 	return Sender{

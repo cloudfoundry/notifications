@@ -14,6 +14,17 @@ type SendersRepository struct {
 		}
 	}
 
+	UpdateCall struct {
+		Receives struct {
+			Conn   models.ConnectionInterface
+			Sender models.Sender
+		}
+		Returns struct {
+			Sender models.Sender
+			Err    error
+		}
+	}
+
 	ListCall struct {
 		Receives struct {
 			Conn     models.ConnectionInterface
@@ -58,6 +69,13 @@ func (s *SendersRepository) Insert(conn models.ConnectionInterface, sender model
 	s.InsertCall.Receives.Sender = sender
 
 	return s.InsertCall.Returns.Sender, s.InsertCall.Returns.Err
+}
+
+func (s *SendersRepository) Update(conn models.ConnectionInterface, sender models.Sender) (models.Sender, error) {
+	s.UpdateCall.Receives.Conn = conn
+	s.UpdateCall.Receives.Sender = sender
+
+	return s.UpdateCall.Returns.Sender, s.UpdateCall.Returns.Err
 }
 
 func (s *SendersRepository) List(conn models.ConnectionInterface, clientID string) ([]models.Sender, error) {

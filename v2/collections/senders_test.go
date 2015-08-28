@@ -26,15 +26,13 @@ var _ = Describe("SendersCollection", func() {
 	})
 
 	Describe("Set", func() {
-		BeforeEach(func() {
+		It("adds a sender to the collection", func() {
 			sendersRepository.InsertCall.Returns.Sender = models.Sender{
 				ID:       "some-sender-id",
 				Name:     "some-sender",
 				ClientID: "some-client-id",
 			}
-		})
 
-		It("adds a sender to the collection", func() {
 			sender, err := sendersCollection.Set(conn, collections.Sender{
 				Name:     "some-sender",
 				ClientID: "some-client-id",
@@ -78,34 +76,79 @@ var _ = Describe("SendersCollection", func() {
 			Expect(sendersRepository.GetByClientIDAndNameCall.Receives.Name).To(Equal("some-sender"))
 		})
 
-		Context("failure cases", func() {
-			It("handles unexpected database errors", func() {
-				sendersRepository.InsertCall.Returns.Sender = models.Sender{}
-				sendersRepository.InsertCall.Returns.Err = errors.New("BOOM!")
+		It("updates a sender if an ID is supplied", func() {
+			sendersRepository.UpdateCall.Returns.Sender = models.Sender{
+				ID:       "some-sender-id",
+				Name:     "changed-sender",
+				ClientID: "some-client-id",
+			}
+			sender, err := sendersCollection.Set(conn, collections.Sender{
+				ID:       "some-sender-id",
+				Name:     "changed-sender",
+				ClientID: "some-client-id",
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(sender).To(Equal(collections.Sender{
+				ID:       "some-sender-id",
+				Name:     "changed-sender",
+				ClientID: "some-client-id",
+			}))
 
-				_, err := sendersCollection.Set(conn, collections.Sender{
-					Name:     "some-sender",
-					ClientID: "some-client-id",
+			Expect(sendersRepository.UpdateCall.Receives.Conn).To(Equal(conn))
+			Expect(sendersRepository.UpdateCall.Receives.Sender).To(Equal(models.Sender{
+				ID:       "some-sender-id",
+				Name:     "changed-sender",
+				ClientID: "some-client-id",
+			}))
+		})
+
+		Context("failure cases", func() {
+			Context("when inserting", func() {
+				It("handles unexpected database errors", func() {
+					sendersRepository.InsertCall.Returns.Sender = models.Sender{}
+					sendersRepository.InsertCall.Returns.Err = errors.New("BOOM!")
+
+					_, err := sendersCollection.Set(conn, collections.Sender{
+						Name:     "some-sender",
+						ClientID: "some-client-id",
+					})
+					Expect(err).To(MatchError(collections.PersistenceError{
+						Err: errors.New("BOOM!"),
+					}))
 				})
-				Expect(err).To(MatchError(collections.PersistenceError{
-					Err: errors.New("BOOM!"),
-				}))
+
+				It("returns a persistence error when the sender cannot be found by client id and name", func() {
+					sendersRepository.InsertCall.Returns.Sender = models.Sender{}
+					sendersRepository.InsertCall.Returns.Err = models.DuplicateRecordError{}
+
+					sendersRepository.GetByClientIDAndNameCall.Returns.Sender = models.Sender{}
+					sendersRepository.GetByClientIDAndNameCall.Returns.Err = errors.New("BOOM!")
+
+					_, err := sendersCollection.Set(conn, collections.Sender{
+						Name:     "some-sender",
+						ClientID: "some-client-id",
+					})
+					Expect(err).To(MatchError(collections.PersistenceError{
+						Err: errors.New("BOOM!"),
+					}))
+				})
 			})
 
-			It("returns a persistence error when the sender cannot be found by client id and name", func() {
-				sendersRepository.InsertCall.Returns.Sender = models.Sender{}
-				sendersRepository.InsertCall.Returns.Err = models.DuplicateRecordError{}
+			Context("when updating", func() {
+				It("handles unexpected database errors", func() {
+					sendersRepository.UpdateCall.Returns.Sender = models.Sender{}
+					sendersRepository.UpdateCall.Returns.Err = errors.New("BOOM!")
 
-				sendersRepository.GetByClientIDAndNameCall.Returns.Sender = models.Sender{}
-				sendersRepository.GetByClientIDAndNameCall.Returns.Err = errors.New("BOOM!")
+					_, err := sendersCollection.Set(conn, collections.Sender{
+						ID:       "some-sender-id",
+						Name:     "some-sender",
+						ClientID: "some-client-id",
+					})
 
-				_, err := sendersCollection.Set(conn, collections.Sender{
-					Name:     "some-sender",
-					ClientID: "some-client-id",
+					Expect(err).To(MatchError(collections.PersistenceError{
+						Err: errors.New("BOOM!"),
+					}))
 				})
-				Expect(err).To(MatchError(collections.PersistenceError{
-					Err: errors.New("BOOM!"),
-				}))
 			})
 		})
 	})

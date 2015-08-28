@@ -55,6 +55,70 @@ var _ = Describe("SendersRepo", func() {
 		})
 	})
 
+	Describe("Update", func() {
+		BeforeEach(func() {
+			sender := models.Sender{
+				Name:     "some-sender",
+				ClientID: "some-client-id",
+			}
+
+			sender, err := repo.Insert(conn, sender)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(sender).To(Equal(models.Sender{
+				ID:       "deadbeef-aabb-ccdd-eeff-001122334455",
+				Name:     "some-sender",
+				ClientID: "some-client-id",
+			}))
+		})
+		It("updates the name", func() {
+			sender := models.Sender{
+				ID:       "deadbeef-aabb-ccdd-eeff-001122334455",
+				Name:     "new-sender-name",
+				ClientID: "some-client-id",
+			}
+
+			sender, err := repo.Update(conn, sender)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(sender).To(Equal(models.Sender{
+				ID:       "deadbeef-aabb-ccdd-eeff-001122334455",
+				Name:     "new-sender-name",
+				ClientID: "some-client-id",
+			}))
+		})
+
+		It("returns a duplicate record error when the name and client_id are taken", func() {
+			sender := models.Sender{
+				Name:     "new-sender-name",
+				ClientID: "some-client-id",
+			}
+			sender, err := repo.Insert(conn, sender)
+			Expect(err).NotTo(HaveOccurred())
+
+			sender = models.Sender{
+				ID:       "deadbeef-aabb-ccdd-eeff-001122334455",
+				Name:     "new-sender-name",
+				ClientID: "some-client-id",
+			}
+
+			_, err = repo.Update(conn, sender)
+			Expect(err).To(MatchError(models.DuplicateRecordError{}))
+		})
+
+		It("returns other errors if they occur", func() {
+			connection := mocks.NewConnection()
+
+			connection.UpdateCall.Returns.Error = errors.New("potatoes")
+
+			sender := models.Sender{
+				ID:       "deadbeef-aabb-ccdd-eeff-001122334455",
+				Name:     "new-sender-name",
+				ClientID: "some-client-id",
+			}
+			_, err := repo.Update(connection, sender)
+			Expect(err).To(MatchError(errors.New("potatoes")))
+		})
+	})
+
 	Describe("List", func() {
 		It("lists the senders given a client id", func() {
 			createdSender, err := repo.Insert(conn, models.Sender{
