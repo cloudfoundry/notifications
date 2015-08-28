@@ -14,6 +14,17 @@ type TemplatesRepository struct {
 		}
 	}
 
+	UpdateCall struct {
+		Receives struct {
+			Connection models.ConnectionInterface
+			Template   models.Template
+		}
+		Returns struct {
+			Template models.Template
+			Error    error
+		}
+	}
+
 	GetCall struct {
 		Receives struct {
 			Connection models.ConnectionInterface
@@ -59,4 +70,11 @@ func (r *TemplatesRepository) Delete(conn models.ConnectionInterface, templateID
 	r.DeleteCall.Receives.TemplateID = templateID
 
 	return r.DeleteCall.Returns.Error
+}
+
+func (r *TemplatesRepository) Update(conn models.ConnectionInterface, template models.Template) (models.Template, error) {
+	r.UpdateCall.Receives.Connection = conn
+	r.UpdateCall.Receives.Template = template
+
+	return r.UpdateCall.Returns.Template, r.UpdateCall.Returns.Error
 }

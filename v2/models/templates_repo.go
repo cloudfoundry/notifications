@@ -65,6 +65,15 @@ func (r TemplatesRepository) Delete(conn ConnectionInterface, templateID string)
 	return nil
 }
 
+func (r TemplatesRepository) Update(conn ConnectionInterface, template Template) (Template, error) {
+	_, err := conn.Update(&template)
+	if err != nil {
+		return Template{}, err
+	}
+
+	return template, nil
+}
+
 func (r TemplatesRepository) templateWithNameAndClientIDIsPresent(conn ConnectionInterface, name, clientID string) (bool, error) {
 	err := conn.SelectOne(&Template{}, "SELECT * FROM `v2_templates` WHERE `name` = ? AND `client_id` = ?", name, clientID)
 	if err != nil {

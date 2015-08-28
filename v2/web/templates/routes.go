@@ -20,4 +20,5 @@ func (r Routes) Register(m muxer) {
 	m.Handle("POST", "/templates", NewCreateHandler(r.TemplatesCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
 	m.Handle("GET", "/templates/{template_id}", NewGetHandler(r.TemplatesCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
 	m.Handle("DELETE", "/templates/{template_id}", NewDeleteHandler(r.TemplatesCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
+	m.Handle("PUT", "/templates/{template_id}", NewUpdateHandler(r.TemplatesCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
 }

@@ -1,9 +1,11 @@
 package models_test
 
 import (
+	"errors"
+
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 
 	. "github.com/onsi/ginkgo"
@@ -90,6 +92,38 @@ var _ = Describe("TemplatesRepo", func() {
 			It("returns not found error if it happens", func() {
 				err := repo.Delete(conn, "missing-template-id")
 				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError{}))
+			})
+		})
+	})
+
+	Describe("Update", func() {
+		It("updates the template", func() {
+			createdTemplate, err := repo.Insert(conn, models.Template{
+				Name:     "some-template",
+				ClientID: "some-client-id",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			createdTemplate.Name = "new-template"
+
+			updatedTemplate, err := repo.Update(conn, createdTemplate)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(updatedTemplate.ID).To(Equal(createdTemplate.ID))
+			Expect(updatedTemplate.Name).To(Equal("new-template"))
+
+			template, err := repo.Get(conn, updatedTemplate.ID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(template).To(Equal(updatedTemplate))
+		})
+
+		Context("failure cases", func() {
+			It("returns an error when the update call fails", func() {
+				fakeConn := mocks.NewConnection()
+				fakeConn.UpdateCall.Returns.Error = errors.New("some db error")
+				conn = fakeConn
+
+				_, err := repo.Update(conn, models.Template{})
+				Expect(err).To(MatchError(errors.New("some db error")))
 			})
 		})
 	})

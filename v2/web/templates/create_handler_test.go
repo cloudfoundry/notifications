@@ -197,7 +197,7 @@ var _ = Describe("CreateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"errors": ["missing template name"]
+				"errors": ["Template \"name\" field cannot be empty"]
 			}`))
 		})
 
@@ -209,7 +209,7 @@ var _ = Describe("CreateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"errors": ["missing template name"]
+				"errors": ["Template \"name\" field cannot be empty"]
 			}`))
 		})
 

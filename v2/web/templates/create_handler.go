@@ -42,7 +42,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	if createRequest.Name == "" {
 		w.WriteHeader(422)
-		w.Write([]byte(`{ "errors": ["missing template name"] }`))
+		w.Write([]byte(`{ "errors": ["Template \"name\" field cannot be empty"] }`))
 		return
 	}
 

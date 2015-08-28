@@ -18,6 +18,7 @@ type Template struct {
 
 type templatesRepository interface {
 	Insert(conn models.ConnectionInterface, template models.Template) (createdTemplate models.Template, err error)
+	Update(conn models.ConnectionInterface, template models.Template) (updatedTemplate models.Template, err error)
 	Get(conn models.ConnectionInterface, templateID string) (retrievedTemplate models.Template, err error)
 	Delete(conn models.ConnectionInterface, templateID string) error
 }
@@ -33,20 +34,48 @@ func NewTemplatesCollection(repo templatesRepository) TemplatesCollection {
 }
 
 func (c TemplatesCollection) Set(conn ConnectionInterface, template Template) (createdTemplate Template, err error) {
-	model, err := c.repo.Insert(conn, models.Template{
-		Name:     template.Name,
-		HTML:     template.HTML,
-		Text:     template.Text,
-		Subject:  template.Subject,
-		Metadata: template.Metadata,
-		ClientID: template.ClientID,
-	})
-	if err != nil {
-		switch err.(type) {
-		case models.DuplicateRecordError:
-			return Template{}, DuplicateRecordError{err}
-		default:
+	var model models.Template
+
+	if template.ID != "" {
+		_, err := c.repo.Get(conn, template.ID)
+		if err != nil {
+			switch err.(type) {
+			case models.RecordNotFoundError:
+				return Template{}, NotFoundError{err}
+			default:
+				return Template{}, PersistenceError{err}
+			}
+		}
+
+		model, err = c.repo.Update(conn, models.Template{
+			ID:       template.ID,
+			Name:     template.Name,
+			HTML:     template.HTML,
+			Text:     template.Text,
+			Subject:  template.Subject,
+			Metadata: template.Metadata,
+			ClientID: template.ClientID,
+		})
+		if err != nil {
 			return Template{}, PersistenceError{err}
+		}
+	} else {
+		var err error
+		model, err = c.repo.Insert(conn, models.Template{
+			Name:     template.Name,
+			HTML:     template.HTML,
+			Text:     template.Text,
+			Subject:  template.Subject,
+			Metadata: template.Metadata,
+			ClientID: template.ClientID,
+		})
+		if err != nil {
+			switch err.(type) {
+			case models.DuplicateRecordError:
+				return Template{}, DuplicateRecordError{err}
+			default:
+				return Template{}, PersistenceError{err}
+			}
 		}
 	}
 
