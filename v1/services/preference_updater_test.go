@@ -13,13 +13,15 @@ import (
 
 var _ = Describe("PreferenceUpdater", func() {
 	Describe("Execute", func() {
-		var doorOpen models.Unsubscribe
-		var barking models.Unsubscribe
-		var unsubscribesRepo *mocks.UnsubscribesRepo
-		var kindsRepo *mocks.KindsRepo
-		var fakeGlobalUnsubscribesRepo *mocks.GlobalUnsubscribesRepo
-		var conn *mocks.Connection
-		var updater services.PreferenceUpdater
+		var (
+			doorOpen                   models.Unsubscribe
+			barking                    models.Unsubscribe
+			unsubscribesRepo           *mocks.UnsubscribesRepo
+			kindsRepo                  *mocks.KindsRepo
+			fakeGlobalUnsubscribesRepo *mocks.GlobalUnsubscribesRepo
+			conn                       *mocks.Connection
+			updater                    services.PreferenceUpdater
+		)
 
 		BeforeEach(func() {
 			conn = mocks.NewConnection()
@@ -31,29 +33,16 @@ var _ = Describe("PreferenceUpdater", func() {
 
 		Context("when globally unsubscribing", func() {
 			It("inserts a record into the global unsubscribes repo", func() {
-				userGUID := "user-guid"
-				updater.Execute(conn, []models.Preference{}, true, userGUID)
+				updater.Execute(conn, []models.Preference{}, true, "user-guid")
+				Expect(fakeGlobalUnsubscribesRepo.SetCall.Receives.Unsubscribed).To(BeTrue())
 
-				globallyUnsubscribed, err := fakeGlobalUnsubscribesRepo.Get(conn, userGUID)
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(globallyUnsubscribed).To(BeTrue())
-
-				updater.Execute(conn, []models.Preference{}, false, userGUID)
-
-				globallyUnsubscribed, err = fakeGlobalUnsubscribesRepo.Get(conn, userGUID)
-				if err != nil {
-					panic(err)
-				}
-
-				Expect(globallyUnsubscribed).To(BeFalse())
+				updater.Execute(conn, []models.Preference{}, false, "user-guid")
+				Expect(fakeGlobalUnsubscribesRepo.SetCall.Receives.Unsubscribed).To(BeFalse())
 			})
 
 			Context("when the global unsubscribe repo errors", func() {
 				It("returns the error", func() {
-					fakeGlobalUnsubscribesRepo.SetError = errors.New("global unsubscribe db error")
+					fakeGlobalUnsubscribesRepo.SetCall.Returns.Error = errors.New("global unsubscribe db error")
 
 					err := updater.Execute(conn, []models.Preference{}, true, "user-guid")
 					Expect(err).To(MatchError(errors.New("global unsubscribe db error")))

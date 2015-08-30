@@ -522,10 +522,8 @@ var _ = Describe("DeliveryWorker", func() {
 
 		Context("when recipient has globally unsubscribed", func() {
 			BeforeEach(func() {
-				err := globalUnsubscribesRepo.Set(conn, userGUID, true)
-				if err != nil {
-					panic(err)
-				}
+				globalUnsubscribesRepo.GetCall.Returns.Unsubscribed = true
+
 				worker.Deliver(job)
 			})
 

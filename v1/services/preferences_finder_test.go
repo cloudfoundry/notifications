@@ -41,7 +41,8 @@ var _ = Describe("PreferencesFinder", func() {
 		}
 
 		fakeGlobalUnsubscribesRepo := mocks.NewGlobalUnsubscribesRepo()
-		fakeGlobalUnsubscribesRepo.Set(mocks.NewConnection(), "correct-user", true)
+		fakeGlobalUnsubscribesRepo.GetCall.Returns.Unsubscribed = true
+
 		preferencesRepo = mocks.NewPreferencesRepo()
 		preferencesRepo.FindNonCriticalPreferencesCall.Returns.Preferences = preferences
 

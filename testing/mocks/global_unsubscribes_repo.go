@@ -3,41 +3,44 @@ package mocks
 import "github.com/cloudfoundry-incubator/notifications/v1/models"
 
 type GlobalUnsubscribesRepo struct {
-	unsubscribes []string
-	SetError     error
+	GetCall struct {
+		Receives struct {
+			Connection models.ConnectionInterface
+			UserID     string
+		}
+		Returns struct {
+			Unsubscribed bool
+			Error        error
+		}
+	}
+
+	SetCall struct {
+		Receives struct {
+			Connection   models.ConnectionInterface
+			UserID       string
+			Unsubscribed bool
+		}
+		Returns struct {
+			Error error
+		}
+	}
 }
 
 func NewGlobalUnsubscribesRepo() *GlobalUnsubscribesRepo {
-	return &GlobalUnsubscribesRepo{
-		unsubscribes: make([]string, 0),
-	}
+	return &GlobalUnsubscribesRepo{}
 }
 
-func (fake *GlobalUnsubscribesRepo) Set(conn models.ConnectionInterface, userID string, globalUnsubscribe bool) error {
-	if fake.SetError != nil {
-		return fake.SetError
-	}
+func (r *GlobalUnsubscribesRepo) Get(conn models.ConnectionInterface, userID string) (bool, error) {
+	r.GetCall.Receives.Connection = conn
+	r.GetCall.Receives.UserID = userID
 
-	if globalUnsubscribe {
-		fake.unsubscribes = append(fake.unsubscribes, userID)
-	} else {
-		for index, id := range fake.unsubscribes {
-			if id == userID {
-				fake.unsubscribes = append(fake.unsubscribes[:index], fake.unsubscribes[index+1:]...)
-			}
-			return nil
-		}
-	}
-
-	return nil
+	return r.GetCall.Returns.Unsubscribed, r.GetCall.Returns.Error
 }
 
-func (fake *GlobalUnsubscribesRepo) Get(conn models.ConnectionInterface, userID string) (bool, error) {
-	for _, id := range fake.unsubscribes {
-		if id == userID {
-			return true, nil
-		}
-	}
+func (r *GlobalUnsubscribesRepo) Set(conn models.ConnectionInterface, userID string, unsubscribed bool) error {
+	r.SetCall.Receives.Connection = conn
+	r.SetCall.Receives.UserID = userID
+	r.SetCall.Receives.Unsubscribed = unsubscribed
 
-	return false, nil
+	return r.SetCall.Returns.Error
 }
