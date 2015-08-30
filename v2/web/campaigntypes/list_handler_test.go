@@ -21,6 +21,7 @@ var _ = Describe("ListHandler", func() {
 		writer                  *httptest.ResponseRecorder
 		request                 *http.Request
 		database                *mocks.Database
+		conn                    *mocks.Connection
 	)
 
 	BeforeEach(func() {
@@ -28,7 +29,9 @@ var _ = Describe("ListHandler", func() {
 
 		context.Set("client_id", "some-client-id")
 
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
 		context.Set("database", database)
 
 		writer = httptest.NewRecorder()
@@ -64,7 +67,7 @@ var _ = Describe("ListHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(campaignTypesCollection.ListCall.Receives.Conn).To(Equal(database.Conn))
+		Expect(campaignTypesCollection.ListCall.Receives.Conn).To(Equal(conn))
 		Expect(campaignTypesCollection.ListCall.Receives.SenderID).To(Equal("some-sender-id"))
 		Expect(campaignTypesCollection.ListCall.Receives.ClientID).To(Equal("some-client-id"))
 

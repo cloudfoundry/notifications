@@ -21,14 +21,17 @@ var _ = Describe("ListHandler", func() {
 		context           stack.Context
 		writer            *httptest.ResponseRecorder
 		request           *http.Request
+		conn              *mocks.Connection
 		database          *mocks.Database
 	)
 
 	BeforeEach(func() {
+		conn = mocks.NewConnection()
+		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
+
 		context = stack.NewContext()
 		context.Set("client_id", "whatever")
-
-		database = mocks.NewDatabase()
 		context.Set("database", database)
 
 		sendersCollection = mocks.NewSendersCollection()
@@ -59,7 +62,7 @@ var _ = Describe("ListHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(sendersCollection.ListCall.Receives.ClientID).To(Equal("whatever"))
-		Expect(sendersCollection.ListCall.Receives.Conn).To(Equal(database.Connection()))
+		Expect(sendersCollection.ListCall.Receives.Conn).To(Equal(conn))
 		Expect(writer.Body.String()).To(MatchJSON(`{
 			"senders": [
 				{

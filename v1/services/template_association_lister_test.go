@@ -20,6 +20,7 @@ var _ = Describe("TemplateAssociationLister", func() {
 		kindsRepo            *mocks.KindsRepo
 		templatesRepo        *mocks.TemplatesRepo
 		database             *mocks.Database
+		conn                 *mocks.Connection
 	)
 
 	Describe("List", func() {
@@ -27,10 +28,12 @@ var _ = Describe("TemplateAssociationLister", func() {
 			clientsRepo = mocks.NewClientsRepository()
 			kindsRepo = mocks.NewKindsRepo()
 			templatesRepo = mocks.NewTemplatesRepo()
+			conn = mocks.NewConnection()
 			database = mocks.NewDatabase()
+			database.ConnectionCall.Returns.Connection = conn
 
 			templateID = "a-template-id"
-			_, err := templatesRepo.Create(database.Connection(), models.Template{
+			_, err := templatesRepo.Create(conn, models.Template{
 				ID: templateID,
 			})
 			Expect(err).NotTo(HaveOccurred())
@@ -78,9 +81,10 @@ var _ = Describe("TemplateAssociationLister", func() {
 			It("returns the full list of associations", func() {
 				associations, err := lister.List(database, templateID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(associations).To(ConsistOf(expectedAssociations))
 
-				Expect(database.ConnectionWasCalled).To(BeTrue())
+				Expect(associations).To(ConsistOf(expectedAssociations))
+				Expect(templatesRepo.FindByIDCall.Receives.Connection).To(Equal(conn))
+				Expect(templatesRepo.FindByIDCall.Receives.TemplateID).To(Equal("a-template-id"))
 			})
 		})
 

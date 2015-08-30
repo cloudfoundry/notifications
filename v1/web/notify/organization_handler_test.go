@@ -32,10 +32,11 @@ var _ = Describe("OrganizationHandler", func() {
 			writer = httptest.NewRecorder()
 			request = &http.Request{URL: &url.URL{Path: "/organizations/org-001"}}
 			strategy = mocks.NewStrategy()
+			errorWriter = mocks.NewErrorWriter()
+
 			connection = mocks.NewConnection()
 			database := mocks.NewDatabase()
-			database.Conn = connection
-			errorWriter = mocks.NewErrorWriter()
+			database.ConnectionCall.Returns.Connection = connection
 
 			context = stack.NewContext()
 			context.Set(notify.VCAPRequestIDKey, "some-request-id")

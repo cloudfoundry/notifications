@@ -44,7 +44,7 @@ var _ = Describe("PutHandler", func() {
 		conn.TransactionCall.Returns.Transaction = transaction
 
 		database := mocks.NewDatabase()
-		database.Conn = conn
+		database.ConnectionCall.Returns.Connection = conn
 
 		errorWriter = mocks.NewErrorWriter()
 		registrar = mocks.NewRegistrar()

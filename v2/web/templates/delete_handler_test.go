@@ -19,6 +19,7 @@ var _ = Describe("DeleteHandler", func() {
 		handler    templates.DeleteHandler
 		writer     *httptest.ResponseRecorder
 		request    *http.Request
+		conn       *mocks.Connection
 		database   *mocks.Database
 		collection *mocks.TemplatesCollection
 		context    stack.Context
@@ -26,9 +27,12 @@ var _ = Describe("DeleteHandler", func() {
 
 	BeforeEach(func() {
 		writer = httptest.NewRecorder()
-		database = mocks.NewDatabase()
 
 		context = stack.NewContext()
+
+		conn = mocks.NewConnection()
+		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
 		context.Set("database", database)
 		context.Set("client_id", "some-client-id")
 
@@ -49,7 +53,7 @@ var _ = Describe("DeleteHandler", func() {
 		Expect(writer.Code).To(Equal(http.StatusNoContent))
 		Expect(writer.Body.String()).To(BeEmpty())
 
-		Expect(collection.GetCall.Receives.Connection).To(Equal(database.Connection()))
+		Expect(collection.GetCall.Receives.Connection).To(Equal(conn))
 		Expect(collection.GetCall.Receives.TemplateID).To(Equal("some-template-id"))
 		Expect(collection.GetCall.Receives.ClientID).To(Equal("some-client-id"))
 

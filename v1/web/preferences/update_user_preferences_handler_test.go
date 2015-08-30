@@ -43,7 +43,7 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 			connection.TransactionCall.Returns.Transaction = transaction
 
 			database := mocks.NewDatabase()
-			database.Conn = connection
+			database.ConnectionCall.Returns.Connection = connection
 
 			builder := services.NewPreferencesBuilder()
 			builder.Add(models.Preference{

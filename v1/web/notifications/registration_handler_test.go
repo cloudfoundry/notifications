@@ -41,11 +41,11 @@ var _ = Describe("RegistrationHandler", func() {
 		transaction = mocks.NewTransaction()
 		conn = mocks.NewConnection()
 		conn.TransactionCall.Returns.Transaction = transaction
+		database := mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
 
 		errorWriter = mocks.NewErrorWriter()
 		registrar = mocks.NewRegistrar()
-		database := mocks.NewDatabase()
-		database.Conn = conn
 		writer = httptest.NewRecorder()
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"source_description": "Raptor Containment Unit",

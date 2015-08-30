@@ -16,55 +16,53 @@ var _ = Describe("NotificationUpdater", func() {
 		notificationsUpdater services.NotificationsUpdater
 		kindsRepo            *mocks.KindsRepo
 		database             *mocks.Database
-		clientID             string
-		notificationID       string
+		conn                 *mocks.Connection
 	)
 
 	BeforeEach(func() {
 		kindsRepo = mocks.NewKindsRepo()
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
-		clientID = "my-current-client-id"
-		notificationID = "my-current-kind-id"
+		database.ConnectionCall.Returns.Connection = conn
 
 		notificationsUpdater = services.NewNotificationsUpdater(kindsRepo)
 	})
 
 	Describe("Update", func() {
 		It("updates the correct model with the new fields provided", func() {
-			kindsRepo.Kinds[notificationID+clientID] = models.Kind{
-				ID:          notificationID,
-				ClientID:    clientID,
+			kindsRepo.Kinds["my-current-kind-idmy-current-client-id"] = models.Kind{
+				ID:          "my-current-kind-id",
+				ClientID:    "my-current-client-id",
 				Description: "What a beautiful description",
 				TemplateID:  "my-current-template-id",
 				Critical:    false,
 			}
 
 			err := notificationsUpdater.Update(database, models.Kind{
+				ID:          "my-current-kind-id",
 				Description: "some-description",
 				Critical:    true,
 				TemplateID:  "a-brand-new-template",
-				ID:          notificationID,
-				ClientID:    clientID,
+				ClientID:    "my-current-client-id",
 			})
-
 			Expect(err).ToNot(HaveOccurred())
-			updatedKind := kindsRepo.Kinds[notificationID+clientID]
 
-			Expect(updatedKind.Description).To(Equal("some-description"))
-			Expect(updatedKind.TemplateID).To(Equal("a-brand-new-template"))
-			Expect(updatedKind.Critical).To(BeTrue())
-			Expect(updatedKind.ID).To(Equal(notificationID))
-			Expect(updatedKind.ClientID).To(Equal(clientID))
-
-			Expect(database.ConnectionWasCalled).To(BeTrue())
+			Expect(kindsRepo.UpdateCall.Receives.Connection).To(Equal(conn))
+			Expect(kindsRepo.UpdateCall.Receives.Kind).To(Equal(models.Kind{
+				ID:          "my-current-kind-id",
+				Description: "some-description",
+				Critical:    true,
+				TemplateID:  "a-brand-new-template",
+				ClientID:    "my-current-client-id",
+			}))
 		})
 
 		It("propagates errors returned by the repo", func() {
 			boomError := errors.New("Boom")
 			kindsRepo.UpdateError = boomError
-			err := notificationsUpdater.Update(database, models.Kind{})
 
-			Expect(err).To(Equal(boomError))
+			err := notificationsUpdater.Update(database, models.Kind{})
+			Expect(err).To(MatchError(boomError))
 		})
 	})
 })

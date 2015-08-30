@@ -32,10 +32,11 @@ var _ = Describe("UAAScopeHandler", func() {
 			writer = httptest.NewRecorder()
 			request = &http.Request{URL: &url.URL{Path: "/uaa_scopes/great.scope"}}
 			strategy = mocks.NewStrategy()
+			errorWriter = mocks.NewErrorWriter()
+
 			connection = mocks.NewConnection()
 			database := mocks.NewDatabase()
-			database.Conn = connection
-			errorWriter = mocks.NewErrorWriter()
+			database.ConnectionCall.Returns.Connection = connection
 
 			context = stack.NewContext()
 			context.Set("database", database)

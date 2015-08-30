@@ -29,7 +29,7 @@ var _ = Describe("UpdateHandler", func() {
 	BeforeEach(func() {
 		conn = mocks.NewConnection()
 		database := mocks.NewDatabase()
-		database.Conn = conn
+		database.ConnectionCall.Returns.Connection = conn
 
 		context = stack.NewContext()
 		context.Set("database", database)

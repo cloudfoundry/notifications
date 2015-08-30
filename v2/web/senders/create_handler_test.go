@@ -25,12 +25,16 @@ var _ = Describe("CreateHandler", func() {
 		writer            *httptest.ResponseRecorder
 		request           *http.Request
 		database          *mocks.Database
+		conn              *mocks.Connection
 	)
 
 	BeforeEach(func() {
-		database = mocks.NewDatabase()
 		context = stack.NewContext()
 		context.Set("client_id", "some-client-id")
+
+		conn = mocks.NewConnection()
+		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
 		context.Set("database", database)
 
 		sendersCollection = mocks.NewSendersCollection()
@@ -55,8 +59,7 @@ var _ = Describe("CreateHandler", func() {
 	It("creates a sender", func() {
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(sendersCollection.SetCall.Receives.Conn).To(Equal(database.Conn))
-		Expect(database.ConnectionWasCalled).To(BeTrue())
+		Expect(sendersCollection.SetCall.Receives.Conn).To(Equal(conn))
 		Expect(sendersCollection.SetCall.Receives.Sender).To(Equal(collections.Sender{
 			Name:     "some-sender",
 			ClientID: "some-client-id",

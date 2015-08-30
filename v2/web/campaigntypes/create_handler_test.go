@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
 	"github.com/dgrijalva/jwt-go"
@@ -26,6 +26,7 @@ var _ = Describe("CreateHandler", func() {
 		context                 stack.Context
 		writer                  *httptest.ResponseRecorder
 		request                 *http.Request
+		conn                    *mocks.Connection
 		database                *mocks.Database
 		tokenHeader             map[string]interface{}
 		tokenClaims             map[string]interface{}
@@ -36,7 +37,9 @@ var _ = Describe("CreateHandler", func() {
 
 		context.Set("client_id", "some-client-id")
 
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
 		context.Set("database", database)
 
 		tokenHeader = map[string]interface{}{
@@ -89,8 +92,7 @@ var _ = Describe("CreateHandler", func() {
 			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
 		}))
-		Expect(campaignTypesCollection.SetCall.Receives.Conn).To(Equal(database.Conn))
-		Expect(database.ConnectionWasCalled).To(BeTrue())
+		Expect(campaignTypesCollection.SetCall.Receives.Conn).To(Equal(conn))
 
 		Expect(writer.Code).To(Equal(http.StatusCreated))
 		Expect(writer.Body.String()).To(MatchJSON(`{

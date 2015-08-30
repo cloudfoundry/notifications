@@ -10,6 +10,13 @@ type KindsRepo struct {
 	UpdateError              error
 	FindAllByTemplateIDError error
 	TrimArguments            []interface{}
+
+	UpdateCall struct {
+		Receives struct {
+			Connection models.ConnectionInterface
+			Kind       models.Kind
+		}
+	}
 }
 
 func NewKindsRepo() *KindsRepo {
@@ -34,6 +41,9 @@ func (fake *KindsRepo) Create(conn models.ConnectionInterface, kind models.Kind)
 }
 
 func (fake *KindsRepo) Update(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
+	fake.UpdateCall.Receives.Connection = conn
+	fake.UpdateCall.Receives.Kind = kind
+
 	if fake.UpdateError != nil {
 		return kind, fake.UpdateError
 	}

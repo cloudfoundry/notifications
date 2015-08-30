@@ -18,6 +18,7 @@ var _ = Describe("GetHandler", func() {
 	var (
 		handler    templates.GetHandler
 		context    stack.Context
+		conn       *mocks.Connection
 		database   *mocks.Database
 		writer     *httptest.ResponseRecorder
 		request    *http.Request
@@ -27,7 +28,9 @@ var _ = Describe("GetHandler", func() {
 	BeforeEach(func() {
 		context = stack.NewContext()
 
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
 		context.Set("database", database)
 
 		context.Set("client_id", "some-client-id")
@@ -69,8 +72,7 @@ var _ = Describe("GetHandler", func() {
 
 		Expect(collection.GetCall.Receives.TemplateID).To(Equal("some-template-id"))
 		Expect(collection.GetCall.Receives.ClientID).To(Equal("some-client-id"))
-		Expect(collection.GetCall.Receives.Connection).To(Equal(database.Conn))
-		Expect(database.ConnectionWasCalled).To(BeTrue())
+		Expect(collection.GetCall.Receives.Connection).To(Equal(conn))
 	})
 
 	Describe("error cases", func() {

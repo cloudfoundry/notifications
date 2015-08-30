@@ -28,8 +28,11 @@ var _ = Describe("TemplateLoader", func() {
 		clientsRepo = mocks.NewClientsRepository()
 		kindsRepo = mocks.NewKindsRepo()
 		templatesRepo = mocks.NewTemplatesRepo()
+
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
-		conn = database.Connection()
+		database.ConnectionCall.Returns.Connection = conn
+
 		templatesCollection = mocks.NewTemplatesCollection()
 		loader = postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo, templatesCollection)
 	})

@@ -23,10 +23,14 @@ var _ = Describe("UpdateHandler", func() {
 		context           stack.Context
 		writer            *httptest.ResponseRecorder
 		database          *mocks.Database
+		conn              *mocks.Connection
 	)
 
 	BeforeEach(func() {
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
+
 		context = stack.NewContext()
 		context.Set("client_id", "some-client-id")
 		context.Set("database", database)
@@ -53,8 +57,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(sendersCollection.SetCall.Receives.Conn).To(Equal(database.Conn))
-		Expect(database.ConnectionWasCalled).To(BeTrue())
+		Expect(sendersCollection.SetCall.Receives.Conn).To(Equal(conn))
 		Expect(sendersCollection.SetCall.Receives.Sender).To(Equal(collections.Sender{
 			ID:       "some-sender-id",
 			Name:     "changed-sender",
@@ -86,7 +89,7 @@ var _ = Describe("UpdateHandler", func() {
 				Expect(writer.Code).To(Equal(http.StatusNotFound))
 				Expect(writer.Body.String()).To(MatchJSON(`{"errors": ["Sender \"some-missing-sender-id\" does not exist."]}`))
 
-				Expect(sendersCollection.GetCall.Receives.Conn).To(Equal(database.Conn))
+				Expect(sendersCollection.GetCall.Receives.Conn).To(Equal(conn))
 				Expect(sendersCollection.GetCall.Receives.SenderID).To(Equal("some-missing-sender-id"))
 				Expect(sendersCollection.GetCall.Receives.ClientID).To(Equal("some-client-id"))
 			})

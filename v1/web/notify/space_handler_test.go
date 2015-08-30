@@ -32,10 +32,11 @@ var _ = Describe("SpaceHandler", func() {
 			writer = httptest.NewRecorder()
 			request = &http.Request{URL: &url.URL{Path: "/spaces/space-001"}}
 			strategy = mocks.NewStrategy()
+			errorWriter = mocks.NewErrorWriter()
+
 			database := mocks.NewDatabase()
 			connection = mocks.NewConnection()
-			database.Conn = connection
-			errorWriter = mocks.NewErrorWriter()
+			database.ConnectionCall.Returns.Connection = connection
 
 			context = stack.NewContext()
 			context.Set("database", database)

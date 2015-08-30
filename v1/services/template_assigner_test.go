@@ -24,9 +24,12 @@ var _ = Describe("TemplateAssigner", func() {
 	BeforeEach(func() {
 		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
+
 		clientsRepo = mocks.NewClientsRepository()
 		kindsRepo = mocks.NewKindsRepo()
 		templatesRepo = mocks.NewTemplatesRepo()
+
 		assigner = services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo)
 	})
 

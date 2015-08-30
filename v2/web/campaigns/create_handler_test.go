@@ -27,11 +27,10 @@ var _ = Describe("CreateHandler", func() {
 		writer              *httptest.ResponseRecorder
 		request             *http.Request
 		database            *mocks.Database
+		conn                *mocks.Connection
 	)
 
 	BeforeEach(func() {
-		context = stack.NewContext()
-
 		tokenHeader := map[string]interface{}{
 			"alg": "FAST",
 		}
@@ -44,11 +43,14 @@ var _ = Describe("CreateHandler", func() {
 			return []byte(application.UAAPublicKey), nil
 		})
 		Expect(err).NotTo(HaveOccurred())
-		context.Set("token", token)
 
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
-		context.Set("database", database)
+		database.ConnectionCall.Returns.Connection = conn
 
+		context = stack.NewContext()
+		context.Set("token", token)
+		context.Set("database", database)
 		context.Set("client_id", "my-client")
 
 		campaignsCollection = mocks.NewCampaignsCollection()
@@ -85,7 +87,7 @@ var _ = Describe("CreateHandler", func() {
 			"campaign_id": "my-campaign-id"
 		}`))
 
-		Expect(campaignsCollection.CreateCall.Receives.Conn).To(Equal(database.Connection()))
+		Expect(campaignsCollection.CreateCall.Receives.Conn).To(Equal(conn))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
 			SendTo:         map[string]string{"user": "user-123"},
 			CampaignTypeID: "some-campaign-type-id",

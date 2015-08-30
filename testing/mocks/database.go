@@ -8,38 +8,39 @@ import (
 )
 
 type Database struct {
-	Conn                *Connection
-	ConnectionWasCalled bool
-	TracePrefix         string
-	TraceLogger         gorp.GorpLogger
-	rawDB               *sql.DB
-}
+	ConnectionCall struct {
+		Returns struct {
+			Connection db.ConnectionInterface
+		}
+	}
 
-func NewDatabase() *Database {
-	return &Database{
-		Conn:  NewConnection(),
-		rawDB: &sql.DB{},
+	RawConnectionCall struct {
+		Returns struct {
+			DB *sql.DB
+		}
+	}
+
+	TraceOnCall struct {
+		Receives struct {
+			Prefix string
+			Logger gorp.GorpLogger
+		}
 	}
 }
 
-func (fake *Database) Connection() db.ConnectionInterface {
-	fake.ConnectionWasCalled = true
-	return fake.Conn
+func NewDatabase() *Database {
+	return &Database{}
 }
 
-func (fake *Database) TraceOn(prefix string, logger gorp.GorpLogger) {
-	fake.TracePrefix = prefix
-	fake.TraceLogger = logger
+func (d *Database) Connection() db.ConnectionInterface {
+	return d.ConnectionCall.Returns.Connection
 }
 
-func (fake *Database) RawConnection() *sql.DB {
-	return fake.rawDB
+func (d *Database) RawConnection() *sql.DB {
+	return d.RawConnectionCall.Returns.DB
 }
 
-type SQLDatabase struct {
-	MaxOpenConnections int
-}
-
-func (fake *SQLDatabase) SetMaxOpenConns(n int) {
-	fake.MaxOpenConnections = n
+func (d *Database) TraceOn(prefix string, logger gorp.GorpLogger) {
+	d.TraceOnCall.Receives.Prefix = prefix
+	d.TraceOnCall.Receives.Logger = logger
 }

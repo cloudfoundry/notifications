@@ -42,7 +42,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 			conn.TransactionCall.Returns.Transaction = transaction
 
 			database := mocks.NewDatabase()
-			database.Conn = conn
+			database.ConnectionCall.Returns.Connection = conn
 
 			builder := services.NewPreferencesBuilder()
 

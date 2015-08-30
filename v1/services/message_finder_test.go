@@ -16,28 +16,30 @@ var _ = Describe("MessageFinder.Find", func() {
 	var (
 		finder       services.MessageFinder
 		messagesRepo *mocks.MessagesRepo
-		messageID    string
 		database     *mocks.Database
+		conn         *mocks.Connection
 	)
 
 	BeforeEach(func() {
 		messagesRepo = mocks.NewMessagesRepo()
-		messageID = "a-message-id"
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
 
 		finder = services.NewMessageFinder(messagesRepo)
 	})
 
 	Context("when a message exists with the given id", func() {
 		It("returns the right Message struct", func() {
-			messagesRepo.Messages[messageID] = models.Message{Status: postal.StatusDelivered}
+			messagesRepo.Messages["a-message-id"] = models.Message{Status: postal.StatusDelivered}
 
-			message, err := finder.Find(database, messageID)
+			message, err := finder.Find(database, "a-message-id")
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(message.Status).To(Equal(postal.StatusDelivered))
 
-			Expect(database.ConnectionWasCalled).To(BeTrue())
+			Expect(messagesRepo.FindByIDCall.Receives.Connection).To(Equal(conn))
+			Expect(messagesRepo.FindByIDCall.Receives.MessageID).To(Equal("a-message-id"))
 		})
 	})
 
@@ -45,9 +47,8 @@ var _ = Describe("MessageFinder.Find", func() {
 		It("bubbles up the error", func() {
 			messagesRepo.FindByIDError = errors.New("generic repo error (it could be anything!)")
 
-			_, err := finder.Find(database, messageID)
+			_, err := finder.Find(database, "a-message-id")
 			Expect(err).To(MatchError(messagesRepo.FindByIDError))
 		})
 	})
-
 })

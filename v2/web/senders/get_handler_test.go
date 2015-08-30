@@ -22,10 +22,14 @@ var _ = Describe("GetHandler", func() {
 		writer            *httptest.ResponseRecorder
 		request           *http.Request
 		database          *mocks.Database
+		conn              *mocks.Connection
 	)
 
 	BeforeEach(func() {
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
+
 		context = stack.NewContext()
 		context.Set("client_id", "some-client-id")
 		context.Set("database", database)
@@ -48,8 +52,8 @@ var _ = Describe("GetHandler", func() {
 	It("gets a sender", func() {
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(sendersCollection.GetCall.Receives.Conn).To(Equal(database.Conn))
-		Expect(database.ConnectionWasCalled).To(BeTrue())
+		Expect(sendersCollection.GetCall.Receives.Conn).To(Equal(conn))
+		Expect(sendersCollection.GetCall.Receives.SenderID).To(Equal("some-sender-id"))
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{

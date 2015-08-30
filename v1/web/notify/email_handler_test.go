@@ -31,9 +31,11 @@ var _ = Describe("EmailHandler", func() {
 		BeforeEach(func() {
 			errorWriter = mocks.NewErrorWriter()
 			writer = httptest.NewRecorder()
-			database = mocks.NewDatabase()
+
 			connection = mocks.NewConnection()
-			database.Conn = connection
+			database = mocks.NewDatabase()
+			database.ConnectionCall.Returns.Connection = connection
+
 			request = &http.Request{}
 			strategy = mocks.NewStrategy()
 

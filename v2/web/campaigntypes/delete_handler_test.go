@@ -21,12 +21,15 @@ var _ = Describe("DeleteHandler", func() {
 		handler                 campaigntypes.DeleteHandler
 		campaignTypesCollection *mocks.CampaignTypesCollection
 		database                *mocks.Database
+		conn                    *mocks.Connection
 	)
 
 	BeforeEach(func() {
 		context = stack.NewContext()
 
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
 		context.Set("database", database)
 
 		context.Set("client_id", "some-client-id")
@@ -49,7 +52,7 @@ var _ = Describe("DeleteHandler", func() {
 		Expect(campaignTypesCollection.DeleteCall.Receives.CampaignTypeID).To(Equal("some-campaign-type-id"))
 		Expect(campaignTypesCollection.DeleteCall.Receives.SenderID).To(Equal("some-sender-id"))
 		Expect(campaignTypesCollection.DeleteCall.Receives.ClientID).To(Equal("some-client-id"))
-		Expect(campaignTypesCollection.DeleteCall.Receives.Conn).To(Equal(database.Conn))
+		Expect(campaignTypesCollection.DeleteCall.Receives.Conn).To(Equal(conn))
 		Expect(writer.Body.String()).To(BeEmpty())
 	})
 

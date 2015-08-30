@@ -17,11 +17,14 @@ var _ = Describe("TemplateLister", func() {
 		templatesRepo     *mocks.TemplatesRepo
 		expectedTemplates map[string]services.TemplateSummary
 		database          *mocks.Database
+		conn              *mocks.Connection
 	)
 
 	BeforeEach(func() {
 		templatesRepo = mocks.NewTemplatesRepo()
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
 
 		lister = services.NewTemplateLister(templatesRepo)
 	})
@@ -78,9 +81,9 @@ var _ = Describe("TemplateLister", func() {
 			It("returns a list of guids and template names", func() {
 				templates, err := lister.List(database)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(templates).To(Equal(expectedTemplates))
 
-				Expect(database.ConnectionWasCalled).To(BeTrue())
+				Expect(templates).To(Equal(expectedTemplates))
+				Expect(templatesRepo.ListIDsAndNamesCall.Receives.Connection).To(Equal(conn))
 			})
 		})
 

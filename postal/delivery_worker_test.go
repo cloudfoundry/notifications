@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -64,7 +63,7 @@ var _ = Describe("DeliveryWorker", func() {
 		kindsRepo              *mocks.KindsRepo
 		database               *mocks.Database
 		strategyDeterminer     *mocks.StrategyDeterminer
-		conn                   db.ConnectionInterface
+		conn                   *mocks.Connection
 		userLoader             *mocks.UserLoader
 		userGUID               string
 		fakeUserEmail          string
@@ -86,8 +85,11 @@ var _ = Describe("DeliveryWorker", func() {
 		unsubscribesRepo = mocks.NewUnsubscribesRepo()
 		globalUnsubscribesRepo = mocks.NewGlobalUnsubscribesRepo()
 		kindsRepo = mocks.NewKindsRepo()
+
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
-		conn = database.Connection()
+		database.ConnectionCall.Returns.Connection = conn
+
 		strategyDeterminer = mocks.NewStrategyDeterminer()
 		userGUID = "user-123"
 		sum := md5.Sum([]byte("banana's are so very tasty"))
@@ -341,30 +343,15 @@ var _ = Describe("DeliveryWorker", func() {
 				MessageStatusUpdater:   messageStatusUpdater,
 			})
 			worker.Deliver(job)
-			database.TraceLogger.Printf("some statement")
 
-			Expect(database.TracePrefix).To(BeEmpty())
-			lines, err := parseLogLines(buffer.Bytes())
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(lines).To(ContainElement(logLine{
-				Source:   "notifications",
-				Message:  "notifications.worker.db",
-				LogLevel: int(lager.INFO),
-				Data: map[string]interface{}{
-					"session":         "2",
-					"statement":       "some statement",
-					"worker_id":       float64(1234),
-					"message_id":      "randomly-generated-guid",
-					"vcap_request_id": "some-request-id",
-				},
-			}))
+			Expect(database.TraceOnCall.Receives.Prefix).To(BeEmpty())
+			Expect(database.TraceOnCall.Receives.Logger).NotTo(BeNil())
 		})
 
 		It("does not log database operations when database traces are disabled", func() {
 			worker.Deliver(job)
-			Expect(database.TraceLogger).To(BeNil())
-			Expect(database.TracePrefix).To(BeEmpty())
+			Expect(database.TraceOnCall.Receives.Prefix).To(BeEmpty())
+			Expect(database.TraceOnCall.Receives.Logger).To(BeNil())
 		})
 
 		It("updates the message status as delivered", func() {

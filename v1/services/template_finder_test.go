@@ -16,12 +16,15 @@ var _ = Describe("Finder", func() {
 		finder        services.TemplateFinder
 		templatesRepo *mocks.TemplatesRepo
 		database      *mocks.Database
+		conn          *mocks.Connection
 	)
 
 	Describe("#FindByID", func() {
 		BeforeEach(func() {
 			templatesRepo = mocks.NewTemplatesRepo()
+			conn = mocks.NewConnection()
 			database = mocks.NewDatabase()
+			database.ConnectionCall.Returns.Connection = conn
 
 			finder = services.NewTemplateFinder(templatesRepo)
 		})
@@ -44,9 +47,10 @@ var _ = Describe("Finder", func() {
 				It("returns the requested template", func() {
 					template, err := finder.FindByID(database, "awesome-template-id")
 					Expect(err).ToNot(HaveOccurred())
-					Expect(template).To(Equal(expectedTemplate))
 
-					Expect(database.ConnectionWasCalled).To(BeTrue())
+					Expect(template).To(Equal(expectedTemplate))
+					Expect(templatesRepo.FindByIDCall.Receives.Connection).To(Equal(conn))
+					Expect(templatesRepo.FindByIDCall.Receives.TemplateID).To(Equal("awesome-template-id"))
 				})
 			})
 

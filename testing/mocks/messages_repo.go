@@ -13,6 +13,13 @@ type MessagesRepo struct {
 	FindByIDError           error
 	UpsertError             error
 	DeleteBeforeInvocations []time.Time
+
+	FindByIDCall struct {
+		Receives struct {
+			Connection models.ConnectionInterface
+			MessageID  string
+		}
+	}
 }
 
 func NewMessagesRepo() *MessagesRepo {
@@ -22,7 +29,10 @@ func NewMessagesRepo() *MessagesRepo {
 	}
 }
 
-func (fake MessagesRepo) FindByID(conn models.ConnectionInterface, messageID string) (models.Message, error) {
+func (fake *MessagesRepo) FindByID(conn models.ConnectionInterface, messageID string) (models.Message, error) {
+	fake.FindByIDCall.Receives.Connection = conn
+	fake.FindByIDCall.Receives.MessageID = messageID
+
 	if fake.FindByIDError != nil {
 		return models.Message{}, fake.FindByIDError
 	}

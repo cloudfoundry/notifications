@@ -13,7 +13,7 @@ import (
 
 var _ = Describe("CampaignsCollection", func() {
 	var (
-		database          *mocks.Database
+		conn              *mocks.Connection
 		enqueuer          *mocks.CampaignEnqueuer
 		collection        collections.CampaignsCollection
 		campaignTypesRepo *mocks.CampaignTypesRepository
@@ -24,7 +24,7 @@ var _ = Describe("CampaignsCollection", func() {
 	)
 
 	BeforeEach(func() {
-		database = mocks.NewDatabase()
+		conn = mocks.NewConnection()
 		enqueuer = mocks.NewCampaignEnqueuer()
 		campaignTypesRepo = mocks.NewCampaignTypesRepository()
 		templatesRepo = mocks.NewTemplatesRepository()
@@ -49,7 +49,7 @@ var _ = Describe("CampaignsCollection", func() {
 					ClientID:       "some-client-id",
 				}
 
-				_, err := collection.Create(database.Connection(), campaign, false)
+				_, err := collection.Create(conn, campaign, false)
 				Expect(err).To(MatchError(collections.UnknownError{errors.New("The \"not a thing\" audience is not valid")}))
 			})
 		})
@@ -68,7 +68,7 @@ var _ = Describe("CampaignsCollection", func() {
 						ClientID:       "some-client-id",
 					}
 
-					enqueuedCampaign, err := collection.Create(database.Connection(), campaign, false)
+					enqueuedCampaign, err := collection.Create(conn, campaign, false)
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
@@ -108,7 +108,7 @@ var _ = Describe("CampaignsCollection", func() {
 						ClientID:       "some-client-id",
 					}
 
-					enqueuedCampaign, err := collection.Create(database.Connection(), campaign, false)
+					enqueuedCampaign, err := collection.Create(conn, campaign, false)
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
@@ -146,7 +146,7 @@ var _ = Describe("CampaignsCollection", func() {
 						ClientID:       "some-client-id",
 					}
 
-					_, err := collection.Create(database.Connection(), campaign, false)
+					_, err := collection.Create(conn, campaign, false)
 					Expect(err).To(MatchError(collections.UnknownError{errors.New("something bad happened")}))
 				})
 			})
@@ -170,7 +170,7 @@ var _ = Describe("CampaignsCollection", func() {
 						ClientID:       "some-client-id",
 					}
 
-					enqueuedCampaign, err := collection.Create(database.Connection(), campaign, false)
+					enqueuedCampaign, err := collection.Create(conn, campaign, false)
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
@@ -208,7 +208,7 @@ var _ = Describe("CampaignsCollection", func() {
 						ClientID:       "some-client-id",
 					}
 
-					_, err := collection.Create(database.Connection(), campaign, false)
+					_, err := collection.Create(conn, campaign, false)
 					Expect(err).To(MatchError(collections.UnknownError{errors.New("something bad happened")}))
 				})
 			})
@@ -232,7 +232,7 @@ var _ = Describe("CampaignsCollection", func() {
 						ClientID:       "some-client-id",
 					}
 
-					enqueuedCampaign, err := collection.Create(database.Connection(), campaign, false)
+					enqueuedCampaign, err := collection.Create(conn, campaign, false)
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
@@ -271,10 +271,10 @@ var _ = Describe("CampaignsCollection", func() {
 					ClientID:       "some-client-id",
 				}
 
-				_, err := collection.Create(database.Connection(), campaign, false)
+				_, err := collection.Create(conn, campaign, false)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(campaignTypesRepo.GetCall.Receives.Connection).To(Equal(database.Connection()))
+				Expect(campaignTypesRepo.GetCall.Receives.Connection).To(Equal(conn))
 				Expect(campaignTypesRepo.GetCall.Receives.CampaignTypeID).To(Equal("some-id"))
 
 				Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
@@ -306,10 +306,10 @@ var _ = Describe("CampaignsCollection", func() {
 					ClientID:       "some-client-id",
 				}
 
-				_, err := collection.Create(database.Connection(), campaign, true)
+				_, err := collection.Create(conn, campaign, true)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(campaignTypesRepo.GetCall.Receives.Connection).To(Equal(database.Connection()))
+				Expect(campaignTypesRepo.GetCall.Receives.Connection).To(Equal(conn))
 				Expect(campaignTypesRepo.GetCall.Receives.CampaignTypeID).To(Equal("some-id"))
 
 				Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
@@ -340,7 +340,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 					userFinder.ExistsCall.Returns.Exists = false
 
-					_, err := collection.Create(database.Connection(), campaign, false)
+					_, err := collection.Create(conn, campaign, false)
 					Expect(err).To(MatchError(collections.NotFoundError{errors.New("The user \"missing-user\" cannot be found")}))
 				})
 			})
@@ -360,7 +360,7 @@ var _ = Describe("CampaignsCollection", func() {
 						}
 						enqueuer.EnqueueCall.Returns.Err = errors.New("enqueue failed")
 
-						_, err := collection.Create(database.Connection(), campaign, false)
+						_, err := collection.Create(conn, campaign, false)
 
 						Expect(err).To(Equal(collections.PersistenceError{Err: errors.New("enqueue failed")}))
 					})
@@ -384,7 +384,7 @@ var _ = Describe("CampaignsCollection", func() {
 					It("returns an error if the templateID is not found", func() {
 						templatesRepo.GetCall.Returns.Error = models.RecordNotFoundError{}
 
-						_, err := collection.Create(database.Connection(), campaign, false)
+						_, err := collection.Create(conn, campaign, false)
 						Expect(err).To(MatchError(collections.NotFoundError{models.RecordNotFoundError{}}))
 					})
 
@@ -392,7 +392,7 @@ var _ = Describe("CampaignsCollection", func() {
 						dbError := errors.New("the database is shutting off")
 						templatesRepo.GetCall.Returns.Error = dbError
 
-						_, err := collection.Create(database.Connection(), campaign, false)
+						_, err := collection.Create(conn, campaign, false)
 						Expect(err).To(MatchError(collections.PersistenceError{dbError}))
 					})
 				})
@@ -416,7 +416,7 @@ var _ = Describe("CampaignsCollection", func() {
 					It("returns an error if the campaignTypeID is not found", func() {
 						campaignTypesRepo.GetCall.Returns.Err = models.RecordNotFoundError{}
 
-						_, err := collection.Create(database.Connection(), campaign, false)
+						_, err := collection.Create(conn, campaign, false)
 						Expect(err).To(MatchError(collections.NotFoundError{models.RecordNotFoundError{}}))
 					})
 
@@ -424,7 +424,7 @@ var _ = Describe("CampaignsCollection", func() {
 						dbError := errors.New("the database is shutting off")
 						campaignTypesRepo.GetCall.Returns.Err = dbError
 
-						_, err := collection.Create(database.Connection(), campaign, false)
+						_, err := collection.Create(conn, campaign, false)
 						Expect(err).To(MatchError(collections.PersistenceError{dbError}))
 					})
 				})
@@ -448,7 +448,7 @@ var _ = Describe("CampaignsCollection", func() {
 					It("returns an error", func() {
 						userFinder.ExistsCall.Returns.Error = errors.New("some error")
 
-						_, err := collection.Create(database.Connection(), campaign, false)
+						_, err := collection.Create(conn, campaign, false)
 						Expect(err).To(MatchError(collections.UnknownError{errors.New("some error")}))
 					})
 				})
@@ -474,7 +474,7 @@ var _ = Describe("CampaignsCollection", func() {
 					})
 
 					It("returns a permissions error", func() {
-						_, err := collection.Create(database.Connection(), campaign, false)
+						_, err := collection.Create(conn, campaign, false)
 						Expect(err).To(MatchError(collections.PermissionsError{errors.New("Scope critical_notifications.write is required")}))
 					})
 				})

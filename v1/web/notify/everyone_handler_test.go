@@ -32,9 +32,10 @@ var _ = Describe("EveryoneHandler", func() {
 			writer = httptest.NewRecorder()
 			request = &http.Request{}
 			strategy = mocks.NewStrategy()
+
 			connection = mocks.NewConnection()
 			database := mocks.NewDatabase()
-			database.Conn = connection
+			database.ConnectionCall.Returns.Connection = connection
 
 			context = stack.NewContext()
 			context.Set("database", database)

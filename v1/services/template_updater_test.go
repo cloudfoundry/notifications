@@ -18,6 +18,7 @@ var _ = Describe("Updater", func() {
 			template      models.Template
 			updater       services.TemplateUpdater
 			database      *mocks.Database
+			conn          *mocks.Connection
 		)
 
 		BeforeEach(func() {
@@ -27,7 +28,9 @@ var _ = Describe("Updater", func() {
 				Text: "gobble",
 				HTML: "<p>gobble</p>",
 			}
+			conn = mocks.NewConnection()
 			database = mocks.NewDatabase()
+			database.ConnectionCall.Returns.Connection = conn
 
 			updater = services.NewTemplateUpdater(templatesRepo)
 		})
@@ -37,8 +40,15 @@ var _ = Describe("Updater", func() {
 
 			err := updater.Update(database, "my-awesome-id", template)
 			Expect(err).ToNot(HaveOccurred())
+
 			Expect(templatesRepo.Templates).To(ContainElement(template))
-			Expect(database.ConnectionWasCalled).To(BeTrue())
+			Expect(templatesRepo.UpdateCall.Receives.Connection).To(Equal(conn))
+			Expect(templatesRepo.UpdateCall.Receives.TemplateID).To(Equal("my-awesome-id"))
+			Expect(templatesRepo.UpdateCall.Receives.Template).To(Equal(models.Template{
+				Name: "gobble template",
+				Text: "gobble",
+				HTML: "<p>gobble</p>",
+			}))
 		})
 
 		It("propagates errors from repo", func() {

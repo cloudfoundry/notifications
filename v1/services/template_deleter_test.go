@@ -16,13 +16,16 @@ var _ = Describe("Deleter", func() {
 		deleter       services.TemplateDeleter
 		templatesRepo *mocks.TemplatesRepo
 		database      *mocks.Database
+		conn          *mocks.Connection
 	)
 
 	BeforeEach(func() {
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
 
 		templatesRepo = mocks.NewTemplatesRepo()
-		_, err := templatesRepo.Create(database.Connection(), models.Template{
+		_, err := templatesRepo.Create(conn, models.Template{
 			ID: "templateID",
 		})
 		Expect(err).NotTo(HaveOccurred())
@@ -34,7 +37,9 @@ var _ = Describe("Deleter", func() {
 		It("calls destroy on its repo", func() {
 			err := deleter.Delete(database, "templateID")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(database.ConnectionWasCalled).To(BeTrue())
+
+			Expect(templatesRepo.DestroyCall.Receives.Connection).To(Equal(conn))
+			Expect(templatesRepo.DestroyCall.Receives.TemplateID).To(Equal("templateID"))
 
 			_, err = templatesRepo.FindByID(database.Connection(), "templateID")
 			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))

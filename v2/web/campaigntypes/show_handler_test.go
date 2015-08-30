@@ -22,6 +22,7 @@ var _ = Describe("ShowHandler", func() {
 		writer                  *httptest.ResponseRecorder
 		request                 *http.Request
 		database                *mocks.Database
+		conn                    *mocks.Connection
 	)
 
 	BeforeEach(func() {
@@ -29,7 +30,9 @@ var _ = Describe("ShowHandler", func() {
 
 		context.Set("client_id", "some-client-id")
 
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
 		context.Set("database", database)
 
 		writer = httptest.NewRecorder()
@@ -54,7 +57,7 @@ var _ = Describe("ShowHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(campaignTypesCollection.GetCall.Receives.Conn).To(Equal(database.Conn))
+		Expect(campaignTypesCollection.GetCall.Receives.Conn).To(Equal(conn))
 		Expect(campaignTypesCollection.GetCall.Receives.CampaignTypeID).To(Equal("campaign-type-id-one"))
 		Expect(campaignTypesCollection.GetCall.Receives.SenderID).To(Equal("some-sender-id"))
 		Expect(campaignTypesCollection.GetCall.Receives.ClientID).To(Equal("some-client-id"))

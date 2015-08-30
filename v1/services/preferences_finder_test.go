@@ -17,6 +17,7 @@ var _ = Describe("PreferencesFinder", func() {
 		preferencesRepo *mocks.PreferencesRepo
 		preferences     []models.Preference
 		database        *mocks.Database
+		conn            *mocks.Connection
 	)
 
 	BeforeEach(func() {
@@ -44,7 +45,9 @@ var _ = Describe("PreferencesFinder", func() {
 		preferencesRepo = mocks.NewPreferencesRepo()
 		preferencesRepo.FindNonCriticalPreferencesCall.Returns.Preferences = preferences
 
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = conn
 
 		finder = services.NewPreferencesFinder(preferencesRepo, fakeGlobalUnsubscribesRepo)
 	})
@@ -60,10 +63,8 @@ var _ = Describe("PreferencesFinder", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultPreferences).To(Equal(expectedResult))
 
-			Expect(preferencesRepo.FindNonCriticalPreferencesCall.Receives.Connection).To(Equal(database.Connection()))
+			Expect(preferencesRepo.FindNonCriticalPreferencesCall.Receives.Connection).To(Equal(conn))
 			Expect(preferencesRepo.FindNonCriticalPreferencesCall.Receives.UserGUID).To(Equal("correct-user"))
-
-			Expect(database.ConnectionWasCalled).To(BeTrue())
 		})
 
 		Context("when the preferences repo returns an error", func() {
