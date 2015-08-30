@@ -1,30 +1,63 @@
 package mocks
 
 type FindsUserGUIDs struct {
-	SpaceGuids                            map[string][]string
-	UserGUIDsBelongingToSpaceError        error
-	OrganizationGuids                     map[string][]string
-	UserGUIDsBelongingToOrganizationError error
-	GUIDsWithScopes                       map[string][]string
-	UserGUIDsBelongingToScopeError        error
-}
+	UserGUIDsBelongingToOrganizationCall struct {
+		Receives struct {
+			OrgGUID string
+			Role    string
+			Token   string
+		}
+		Returns struct {
+			UserGUIDs []string
+			Error     error
+		}
+	}
 
-func NewFindsUserGUIDs() *FindsUserGUIDs {
-	return &FindsUserGUIDs{
-		SpaceGuids:        make(map[string][]string),
-		OrganizationGuids: make(map[string][]string),
-		GUIDsWithScopes:   make(map[string][]string),
+	UserGUIDsBelongingToScopeCall struct {
+		Receives struct {
+			Token string
+			Scope string
+		}
+		Returns struct {
+			UserGUIDs []string
+			Error     error
+		}
+	}
+
+	UserGUIDsBelongingToSpaceCall struct {
+		Receives struct {
+			SpaceGUID string
+			Token     string
+		}
+		Returns struct {
+			UserGUIDs []string
+			Error     error
+		}
 	}
 }
 
-func (finder FindsUserGUIDs) UserGUIDsBelongingToSpace(spaceGUID, token string) ([]string, error) {
-	return finder.SpaceGuids[spaceGUID], finder.UserGUIDsBelongingToSpaceError
+func NewFindsUserGUIDs() *FindsUserGUIDs {
+	return &FindsUserGUIDs{}
 }
 
-func (finder FindsUserGUIDs) UserGUIDsBelongingToOrganization(orgGUID, role, token string) ([]string, error) {
-	return finder.OrganizationGuids[orgGUID], finder.UserGUIDsBelongingToOrganizationError
+func (f *FindsUserGUIDs) UserGUIDsBelongingToOrganization(orgGUID, role, token string) ([]string, error) {
+	f.UserGUIDsBelongingToOrganizationCall.Receives.OrgGUID = orgGUID
+	f.UserGUIDsBelongingToOrganizationCall.Receives.Role = role
+	f.UserGUIDsBelongingToOrganizationCall.Receives.Token = token
+
+	return f.UserGUIDsBelongingToOrganizationCall.Returns.UserGUIDs, f.UserGUIDsBelongingToOrganizationCall.Returns.Error
 }
 
-func (finder FindsUserGUIDs) UserGUIDsBelongingToScope(token, scope string) ([]string, error) {
-	return finder.GUIDsWithScopes[scope], finder.UserGUIDsBelongingToScopeError
+func (f *FindsUserGUIDs) UserGUIDsBelongingToScope(token, scope string) ([]string, error) {
+	f.UserGUIDsBelongingToScopeCall.Receives.Token = token
+	f.UserGUIDsBelongingToScopeCall.Receives.Scope = scope
+
+	return f.UserGUIDsBelongingToScopeCall.Returns.UserGUIDs, f.UserGUIDsBelongingToScopeCall.Returns.Error
+}
+
+func (f *FindsUserGUIDs) UserGUIDsBelongingToSpace(spaceGUID, token string) ([]string, error) {
+	f.UserGUIDsBelongingToSpaceCall.Receives.SpaceGUID = spaceGUID
+	f.UserGUIDsBelongingToSpaceCall.Receives.Token = token
+
+	return f.UserGUIDsBelongingToSpaceCall.Returns.UserGUIDs, f.UserGUIDsBelongingToSpaceCall.Returns.Error
 }

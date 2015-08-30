@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
@@ -22,6 +22,7 @@ var _ = Describe("Organization Strategy", func() {
 		conn               *mocks.Connection
 		findsUserGUIDs     *mocks.FindsUserGUIDs
 		requestReceived    time.Time
+		token              string
 	)
 
 	BeforeEach(func() {
@@ -37,10 +38,13 @@ var _ = Describe("Organization Strategy", func() {
 			"scope":     []string{"notifications.write"},
 		}
 		tokenLoader = mocks.NewTokenLoader()
-		tokenLoader.LoadCall.Returns.Token = helpers.BuildToken(tokenHeader, tokenClaims)
+		token = helpers.BuildToken(tokenHeader, tokenClaims)
+		tokenLoader.LoadCall.Returns.Token = token
 		enqueuer = mocks.NewEnqueuer()
+
 		findsUserGUIDs = mocks.NewFindsUserGUIDs()
-		findsUserGUIDs.OrganizationGuids["org-001"] = []string{"user-123", "user-456"}
+		findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Returns.UserGUIDs = []string{"user-123", "user-456"}
+
 		organizationLoader = mocks.NewOrganizationLoader()
 		organizationLoader.LoadCall.Returns.Organization = cf.CloudControllerOrganization{
 			Name: "my-org",
@@ -121,7 +125,12 @@ var _ = Describe("Organization Strategy", func() {
 				Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal("some-vcap-request-id"))
 				Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceived))
 				Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("testzone1"))
+
 				Expect(tokenLoader.LoadCall.Receives.UAAHost).To(Equal("testzone1"))
+
+				Expect(findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Receives.OrgGUID).To(Equal("org-001"))
+				Expect(findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Receives.Role).To(Equal(""))
+				Expect(findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Receives.Token).To(Equal(token))
 			})
 
 			Context("when the org role field is set", func() {
@@ -174,6 +183,10 @@ var _ = Describe("Organization Strategy", func() {
 						},
 						Endorsement: services.OrganizationRoleEndorsement,
 					}))
+
+					Expect(findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Receives.OrgGUID).To(Equal("org-001"))
+					Expect(findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Receives.Role).To(Equal("OrgManager"))
+					Expect(findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Receives.Token).To(Equal(token))
 				})
 			})
 		})
@@ -199,7 +212,7 @@ var _ = Describe("Organization Strategy", func() {
 
 			Context("when finds user GUIDs returns an error", func() {
 				It("returns an error", func() {
-					findsUserGUIDs.UserGUIDsBelongingToOrganizationError = errors.New("BOOM!")
+					findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Returns.Error = errors.New("BOOM!")
 
 					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))

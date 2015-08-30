@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
@@ -22,6 +22,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 		findsUserGUIDs  *mocks.FindsUserGUIDs
 		requestReceived time.Time
 		defaultScopes   []string
+		token           string
 	)
 
 	BeforeEach(func() {
@@ -40,6 +41,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 
 		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
 		conn = mocks.NewConnection()
+
 		tokenHeader := map[string]interface{}{
 			"alg": "FAST",
 		}
@@ -48,11 +50,15 @@ var _ = Describe("UAA Scope Strategy", func() {
 			"exp":       int64(3404281214),
 			"scope":     []string{"notifications.write"},
 		}
+		token = helpers.BuildToken(tokenHeader, tokenClaims)
+
 		tokenLoader = mocks.NewTokenLoader()
-		tokenLoader.LoadCall.Returns.Token = helpers.BuildToken(tokenHeader, tokenClaims)
+		tokenLoader.LoadCall.Returns.Token = token
 		enqueuer = mocks.NewEnqueuer()
+
 		findsUserGUIDs = mocks.NewFindsUserGUIDs()
-		findsUserGUIDs.GUIDsWithScopes["great.scope"] = []string{"user-311"}
+		findsUserGUIDs.UserGUIDsBelongingToScopeCall.Returns.UserGUIDs = []string{"user-311"}
+
 		strategy = services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer, defaultScopes)
 	})
 
@@ -119,6 +125,9 @@ var _ = Describe("UAA Scope Strategy", func() {
 				Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal("some-vcap-request-id"))
 				Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceived))
 				Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("uaa"))
+
+				Expect(findsUserGUIDs.UserGUIDsBelongingToScopeCall.Receives.Scope).To(Equal("great.scope"))
+				Expect(findsUserGUIDs.UserGUIDsBelongingToScopeCall.Receives.Token).To(Equal(token))
 			})
 		})
 
@@ -134,7 +143,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 
 			Context("when finds user GUIDs returns an error", func() {
 				It("returns an error", func() {
-					findsUserGUIDs.UserGUIDsBelongingToScopeError = errors.New("BOOM!")
+					findsUserGUIDs.UserGUIDsBelongingToScopeCall.Returns.Error = errors.New("BOOM!")
 
 					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(HaveOccurred())
