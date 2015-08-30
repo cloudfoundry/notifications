@@ -5,7 +5,8 @@ import "net/http"
 type ErrorWriter struct {
 	WriteCall struct {
 		Receives struct {
-			Error error
+			Writer http.ResponseWriter
+			Error  error
 		}
 	}
 }
@@ -14,7 +15,7 @@ func NewErrorWriter() *ErrorWriter {
 	return &ErrorWriter{}
 }
 
-func (writer *ErrorWriter) Write(w http.ResponseWriter, err error) {
-	writer.WriteCall.Receives.Error = err
-	w.WriteHeader(http.StatusTeapot)
+func (ew *ErrorWriter) Write(writer http.ResponseWriter, err error) {
+	ew.WriteCall.Receives.Writer = writer
+	ew.WriteCall.Receives.Error = err
 }
