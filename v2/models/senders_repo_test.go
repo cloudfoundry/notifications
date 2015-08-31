@@ -111,7 +111,7 @@ var _ = Describe("SendersRepo", func() {
 			}
 
 			_, err = repo.Update(conn, sender)
-			Expect(err).To(MatchError(models.DuplicateRecordError{}))
+			Expect(err).To(MatchError(models.DuplicateRecordError{errors.New("Sender with name \"new-sender-name\" already exists")}))
 		})
 
 		It("returns other errors if they occur", func() {

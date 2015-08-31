@@ -42,7 +42,7 @@ func (r SendersRepository) Update(conn ConnectionInterface, sender Sender) (Send
 	_, err := conn.Update(&sender)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
-			err = DuplicateRecordError{}
+			err = DuplicateRecordError{fmt.Errorf("Sender with name %q already exists", sender.Name)}
 		}
 		return sender, err
 	}

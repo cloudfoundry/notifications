@@ -61,7 +61,12 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		ClientID: clientID,
 	})
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		switch err.(type) {
+		case collections.DuplicateRecordError:
+			w.WriteHeader(422)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		w.Write([]byte(fmt.Sprintf(`{ "errors": [ %q ]}`, err)))
 		return
 	}

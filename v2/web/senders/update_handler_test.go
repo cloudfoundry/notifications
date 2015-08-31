@@ -129,7 +129,7 @@ var _ = Describe("UpdateHandler", func() {
 		})
 
 		Context("when the sender cannot be set", func() {
-			It("", func() {
+			It("returns a 500 with an error message", func() {
 				sendersCollection.SetCall.Returns.Error = errors.New("something blew up on set")
 
 				requestBody, err := json.Marshal(map[string]string{
@@ -144,6 +144,25 @@ var _ = Describe("UpdateHandler", func() {
 
 				Expect(writer.Code).To(Equal(http.StatusInternalServerError))
 				Expect(writer.Body.String()).To(MatchJSON(`{"errors": ["something blew up on set"]}`))
+			})
+		})
+
+		Context("when the sender name conflicts", func() {
+			It("returns a 422 with an error message", func() {
+				sendersCollection.SetCall.Returns.Error = collections.DuplicateRecordError{errors.New("duplicate record")}
+
+				requestBody, err := json.Marshal(map[string]string{
+					"name": "changed-sender",
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				request, err := http.NewRequest("PUT", "/senders/some-sender-id", bytes.NewBuffer(requestBody))
+				Expect(err).NotTo(HaveOccurred())
+
+				handler.ServeHTTP(writer, request, context)
+
+				Expect(writer.Code).To(Equal(422))
+				Expect(writer.Body.String()).To(MatchJSON(`{"errors": ["duplicate record"]}`))
 			})
 		})
 	})

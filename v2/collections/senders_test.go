@@ -78,6 +78,16 @@ var _ = Describe("SendersCollection", func() {
 			Expect(sendersRepository.GetByClientIDAndNameCall.Receives.Name).To(Equal("some-sender"))
 		})
 
+		It("errors if the updated sender conflicts with an existing one", func() {
+			sendersRepository.UpdateCall.Returns.Error = models.DuplicateRecordError{}
+			_, err := sendersCollection.Set(conn, collections.Sender{
+				ID:       "some-sender-id",
+				Name:     "existing-sender",
+				ClientID: "some-client-id",
+			})
+			Expect(err).To(MatchError(collections.DuplicateRecordError{models.DuplicateRecordError{}}))
+		})
+
 		It("updates a sender if an ID is supplied", func() {
 			sendersRepository.UpdateCall.Returns.Sender = models.Sender{
 				ID:       "some-sender-id",

@@ -62,7 +62,12 @@ func (sc SendersCollection) Set(conn ConnectionInterface, sender Sender) (Sender
 			ClientID: sender.ClientID,
 		})
 		if err != nil {
-			return Sender{}, PersistenceError{err}
+			switch err.(type) {
+			case models.DuplicateRecordError:
+				return Sender{}, DuplicateRecordError{err}
+			default:
+				return Sender{}, PersistenceError{err}
+			}
 		}
 
 	}
