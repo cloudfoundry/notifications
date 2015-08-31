@@ -414,7 +414,7 @@ var _ = Describe("CampaignsCollection", func() {
 					})
 
 					It("returns an error if the campaignTypeID is not found", func() {
-						campaignTypesRepo.GetCall.Returns.Err = models.RecordNotFoundError{}
+						campaignTypesRepo.GetCall.Returns.Error = models.RecordNotFoundError{}
 
 						_, err := collection.Create(conn, campaign, false)
 						Expect(err).To(MatchError(collections.NotFoundError{models.RecordNotFoundError{}}))
@@ -422,7 +422,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 					It("returns a persistence error if there is some other error", func() {
 						dbError := errors.New("the database is shutting off")
-						campaignTypesRepo.GetCall.Returns.Err = dbError
+						campaignTypesRepo.GetCall.Returns.Error = dbError
 
 						_, err := collection.Create(conn, campaign, false)
 						Expect(err).To(MatchError(collections.PersistenceError{dbError}))

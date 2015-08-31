@@ -81,3 +81,12 @@ func (r SendersRepository) GetByClientIDAndName(conn ConnectionInterface, client
 
 	return sender, nil
 }
+
+func (r SendersRepository) Delete(conn ConnectionInterface, sender Sender) error {
+	_, err := conn.Delete(&sender)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

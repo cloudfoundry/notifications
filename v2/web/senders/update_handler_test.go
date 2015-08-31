@@ -57,7 +57,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(sendersCollection.SetCall.Receives.Conn).To(Equal(conn))
+		Expect(sendersCollection.SetCall.Receives.Connection).To(Equal(conn))
 		Expect(sendersCollection.SetCall.Receives.Sender).To(Equal(collections.Sender{
 			ID:       "some-sender-id",
 			Name:     "changed-sender",
@@ -74,7 +74,7 @@ var _ = Describe("UpdateHandler", func() {
 	Context("failure cases", func() {
 		Context("when the sender cannot be got", func() {
 			It("returns a 404 and a not found error", func() {
-				sendersCollection.GetCall.Returns.Err = collections.NotFoundError{errors.New("Sender \"some-missing-sender-id\" does not exist.")}
+				sendersCollection.GetCall.Returns.Error = collections.NotFoundError{errors.New("Sender \"some-missing-sender-id\" does not exist.")}
 
 				requestBody, err := json.Marshal(map[string]string{
 					"name": "changed-sender",
@@ -89,7 +89,7 @@ var _ = Describe("UpdateHandler", func() {
 				Expect(writer.Code).To(Equal(http.StatusNotFound))
 				Expect(writer.Body.String()).To(MatchJSON(`{"errors": ["Sender \"some-missing-sender-id\" does not exist."]}`))
 
-				Expect(sendersCollection.GetCall.Receives.Conn).To(Equal(conn))
+				Expect(sendersCollection.GetCall.Receives.Connection).To(Equal(conn))
 				Expect(sendersCollection.GetCall.Receives.SenderID).To(Equal("some-missing-sender-id"))
 				Expect(sendersCollection.GetCall.Receives.ClientID).To(Equal("some-client-id"))
 			})
@@ -110,7 +110,7 @@ var _ = Describe("UpdateHandler", func() {
 
 			Context("when an unknown error occurs", func() {
 				It("returns a 500 and an error", func() {
-					sendersCollection.GetCall.Returns.Err = errors.New("some error we don't expect")
+					sendersCollection.GetCall.Returns.Error = errors.New("some error we don't expect")
 
 					requestBody, err := json.Marshal(map[string]string{
 						"name": "changed-sender",
@@ -130,7 +130,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		Context("when the sender cannot be set", func() {
 			It("", func() {
-				sendersCollection.SetCall.Returns.Err = errors.New("something blew up on set")
+				sendersCollection.SetCall.Returns.Error = errors.New("something blew up on set")
 
 				requestBody, err := json.Marshal(map[string]string{
 					"name": "changed-sender",

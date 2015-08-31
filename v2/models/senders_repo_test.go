@@ -2,6 +2,7 @@ package models_test
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
@@ -209,6 +210,30 @@ var _ = Describe("SendersRepo", func() {
 			_, err = repo.GetByClientIDAndName(conn, "some-other-client-id", "some-sender")
 			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError{}))
 			Expect(err.Error()).To(Equal(`Sender with client_id "some-other-client-id" and name "some-sender" could not be found`))
+		})
+	})
+
+	Describe("Delete", func() {
+		It("deletes the sender record", func() {
+			createdSender, err := repo.Insert(conn, models.Sender{
+				Name:     "some-sender",
+				ClientID: "some-client-id",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			err = repo.Delete(conn, createdSender)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = repo.Get(conn, createdSender.ID)
+			Expect(err).To(MatchError(models.RecordNotFoundError{fmt.Errorf("Sender with id %q could not be found", createdSender.ID)}))
+		})
+
+		It("returns an error if the db fails", func() {
+			fakeConnection := mocks.NewConnection()
+			fakeConnection.DeleteCall.Returns.Error = errors.New("there was an error")
+
+			err := repo.Delete(fakeConnection, models.Sender{})
+			Expect(err).To(MatchError(errors.New("there was an error")))
 		})
 	})
 })

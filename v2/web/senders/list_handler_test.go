@@ -62,7 +62,7 @@ var _ = Describe("ListHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(sendersCollection.ListCall.Receives.ClientID).To(Equal("whatever"))
-		Expect(sendersCollection.ListCall.Receives.Conn).To(Equal(conn))
+		Expect(sendersCollection.ListCall.Receives.Connection).To(Equal(conn))
 		Expect(writer.Body.String()).To(MatchJSON(`{
 			"senders": [
 				{
@@ -79,7 +79,7 @@ var _ = Describe("ListHandler", func() {
 
 	Context("failure cases", func() {
 		It("returns a 500 err when an unexpected error happens", func() {
-			sendersCollection.ListCall.Returns.Err = errors.New("persistence error")
+			sendersCollection.ListCall.Returns.Error = errors.New("persistence error")
 
 			handler.ServeHTTP(writer, request, context)
 

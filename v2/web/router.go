@@ -79,7 +79,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	campaignTypesRepository := models.NewCampaignTypesRepository(uuid.NewV4)
 	templatesRepository := models.NewTemplatesRepository(uuid.NewV4)
 
-	sendersCollection := collections.NewSendersCollection(sendersRepository)
+	sendersCollection := collections.NewSendersCollection(sendersRepository, campaignTypesRepository)
 	templatesCollection := collections.NewTemplatesCollection(templatesRepository)
 	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository, templatesRepository)
 	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignTypesRepository, templatesRepository, userFinder, spaceFinder, orgFinder)

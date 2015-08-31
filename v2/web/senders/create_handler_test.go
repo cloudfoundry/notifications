@@ -59,7 +59,7 @@ var _ = Describe("CreateHandler", func() {
 	It("creates a sender", func() {
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(sendersCollection.SetCall.Receives.Conn).To(Equal(conn))
+		Expect(sendersCollection.SetCall.Receives.Connection).To(Equal(conn))
 		Expect(sendersCollection.SetCall.Receives.Sender).To(Equal(collections.Sender{
 			Name:     "some-sender",
 			ClientID: "some-client-id",
@@ -114,7 +114,7 @@ var _ = Describe("CreateHandler", func() {
 		})
 
 		It("returns a 500 when the collection indicates a system error", func() {
-			sendersCollection.SetCall.Returns.Err = errors.New("BOOM!")
+			sendersCollection.SetCall.Returns.Error = errors.New("BOOM!")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))

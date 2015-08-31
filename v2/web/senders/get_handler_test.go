@@ -52,7 +52,7 @@ var _ = Describe("GetHandler", func() {
 	It("gets a sender", func() {
 		handler.ServeHTTP(writer, request, context)
 
-		Expect(sendersCollection.GetCall.Receives.Conn).To(Equal(conn))
+		Expect(sendersCollection.GetCall.Receives.Connection).To(Equal(conn))
 		Expect(sendersCollection.GetCall.Receives.SenderID).To(Equal("some-sender-id"))
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
@@ -91,7 +91,7 @@ var _ = Describe("GetHandler", func() {
 		})
 
 		It("returns a 404 when the sender does not exist", func() {
-			sendersCollection.GetCall.Returns.Err = collections.NotFoundError{
+			sendersCollection.GetCall.Returns.Error = collections.NotFoundError{
 				Err: errors.New("sender with id \"non-existent-sender-id\" not found"),
 			}
 
@@ -109,7 +109,7 @@ var _ = Describe("GetHandler", func() {
 		})
 
 		It("returns a 500 when the collection indicates a system error", func() {
-			sendersCollection.GetCall.Returns.Err = errors.New("BOOM!")
+			sendersCollection.GetCall.Returns.Error = errors.New("BOOM!")
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusInternalServerError))

@@ -10,17 +10,18 @@ type CampaignTypesRepository struct {
 		}
 		Returns struct {
 			CampaignType models.CampaignType
-			Err          error
+			Error        error
 		}
 	}
 
 	ListCall struct {
 		Receives struct {
 			Connection models.ConnectionInterface
+			SenderID   string
 		}
 		Returns struct {
 			CampaignTypeList []models.CampaignType
-			Err              error
+			Error            error
 		}
 	}
 
@@ -31,7 +32,7 @@ type CampaignTypesRepository struct {
 		}
 		Returns struct {
 			CampaignType models.CampaignType
-			Err          error
+			Error        error
 		}
 	}
 
@@ -42,7 +43,7 @@ type CampaignTypesRepository struct {
 		}
 		Returns struct {
 			CampaignType models.CampaignType
-			Err          error
+			Error        error
 		}
 	}
 
@@ -52,7 +53,7 @@ type CampaignTypesRepository struct {
 			CampaignType models.CampaignType
 		}
 		Returns struct {
-			Err error
+			Error error
 		}
 	}
 }
@@ -65,7 +66,7 @@ func (r *CampaignTypesRepository) Insert(conn models.ConnectionInterface, campai
 	r.InsertCall.Receives.CampaignType = campaignType
 	r.InsertCall.Receives.Connection = conn
 
-	return r.InsertCall.Returns.CampaignType, r.InsertCall.Returns.Err
+	return r.InsertCall.Returns.CampaignType, r.InsertCall.Returns.Error
 }
 
 func (r *CampaignTypesRepository) GetBySenderIDAndName(conn models.ConnectionInterface, senderID, name string) (models.CampaignType, error) {
@@ -74,27 +75,28 @@ func (r *CampaignTypesRepository) GetBySenderIDAndName(conn models.ConnectionInt
 
 func (r *CampaignTypesRepository) List(conn models.ConnectionInterface, senderID string) ([]models.CampaignType, error) {
 	r.ListCall.Receives.Connection = conn
+	r.ListCall.Receives.SenderID = senderID
 
-	return r.ListCall.Returns.CampaignTypeList, r.ListCall.Returns.Err
+	return r.ListCall.Returns.CampaignTypeList, r.ListCall.Returns.Error
 }
 
 func (r *CampaignTypesRepository) Get(conn models.ConnectionInterface, campaignTypeID string) (models.CampaignType, error) {
 	r.GetCall.Receives.Connection = conn
 	r.GetCall.Receives.CampaignTypeID = campaignTypeID
 
-	return r.GetCall.Returns.CampaignType, r.GetCall.Returns.Err
+	return r.GetCall.Returns.CampaignType, r.GetCall.Returns.Error
 }
 
 func (r *CampaignTypesRepository) Update(conn models.ConnectionInterface, campaignType models.CampaignType) (models.CampaignType, error) {
 	r.UpdateCall.Receives.Connection = conn
 	r.UpdateCall.Receives.CampaignType = campaignType
 
-	return r.UpdateCall.Returns.CampaignType, r.UpdateCall.Returns.Err
+	return r.UpdateCall.Returns.CampaignType, r.UpdateCall.Returns.Error
 }
 
 func (r *CampaignTypesRepository) Delete(conn models.ConnectionInterface, campaignType models.CampaignType) error {
 	r.DeleteCall.Receives.Connection = conn
 	r.DeleteCall.Receives.CampaignType = campaignType
 
-	return r.DeleteCall.Returns.Err
+	return r.DeleteCall.Returns.Error
 }

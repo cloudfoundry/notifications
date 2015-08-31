@@ -18,15 +18,18 @@ type sendersRepository interface {
 	List(conn models.ConnectionInterface, clientID string) (retrievedSenderList []models.Sender, er error)
 	Get(conn models.ConnectionInterface, senderID string) (retrievedSender models.Sender, err error)
 	GetByClientIDAndName(conn models.ConnectionInterface, clientID, name string) (retrievedSender models.Sender, err error)
+	Delete(conn models.ConnectionInterface, sender models.Sender) error
 }
 
 type SendersCollection struct {
-	repo sendersRepository
+	senders       sendersRepository
+	campaignTypes campaignTypesRepository
 }
 
-func NewSendersCollection(repo sendersRepository) SendersCollection {
+func NewSendersCollection(senders sendersRepository, campaignTypes campaignTypesRepository) SendersCollection {
 	return SendersCollection{
-		repo: repo,
+		senders:       senders,
+		campaignTypes: campaignTypes,
 	}
 }
 
@@ -37,14 +40,14 @@ func (sc SendersCollection) Set(conn ConnectionInterface, sender Sender) (Sender
 	)
 
 	if sender.ID == "" {
-		model, err = sc.repo.Insert(conn, models.Sender{
+		model, err = sc.senders.Insert(conn, models.Sender{
 			Name:     sender.Name,
 			ClientID: sender.ClientID,
 		})
 		if err != nil {
 			switch err.(type) {
 			case models.DuplicateRecordError:
-				model, err = sc.repo.GetByClientIDAndName(conn, sender.ClientID, sender.Name)
+				model, err = sc.senders.GetByClientIDAndName(conn, sender.ClientID, sender.Name)
 				if err != nil {
 					return Sender{}, PersistenceError{err}
 				}
@@ -53,7 +56,7 @@ func (sc SendersCollection) Set(conn ConnectionInterface, sender Sender) (Sender
 			}
 		}
 	} else {
-		model, err = sc.repo.Update(conn, models.Sender{
+		model, err = sc.senders.Update(conn, models.Sender{
 			ID:       sender.ID,
 			Name:     sender.Name,
 			ClientID: sender.ClientID,
@@ -74,7 +77,7 @@ func (sc SendersCollection) Set(conn ConnectionInterface, sender Sender) (Sender
 func (sc SendersCollection) List(conn ConnectionInterface, clientID string) ([]Sender, error) {
 	senderList := []Sender{}
 
-	models, err := sc.repo.List(conn, clientID)
+	models, err := sc.senders.List(conn, clientID)
 	if err != nil {
 		return senderList, PersistenceError{err}
 	}
@@ -93,7 +96,7 @@ func (sc SendersCollection) List(conn ConnectionInterface, clientID string) ([]S
 }
 
 func (sc SendersCollection) Get(conn ConnectionInterface, senderID, clientID string) (Sender, error) {
-	model, err := sc.repo.Get(conn, senderID)
+	model, err := sc.senders.Get(conn, senderID)
 	if err != nil {
 		switch e := err.(type) {
 		case models.RecordNotFoundError:
@@ -112,4 +115,39 @@ func (sc SendersCollection) Get(conn ConnectionInterface, senderID, clientID str
 		Name:     model.Name,
 		ClientID: model.ClientID,
 	}, nil
+}
+
+func (sc SendersCollection) Delete(conn ConnectionInterface, senderID, clientID string) error {
+	sender, err := sc.senders.Get(conn, senderID)
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return NotFoundError{err}
+		default:
+			return UnknownError{err}
+		}
+	}
+
+	if sender.ClientID != clientID {
+		return NotFoundError{fmt.Errorf("Sender with id %q could not be found", senderID)}
+	}
+
+	err = sc.senders.Delete(conn, sender)
+	if err != nil {
+		return UnknownError{err}
+	}
+
+	campaignTypes, err := sc.campaignTypes.List(conn, senderID)
+	if err != nil {
+		return UnknownError{err}
+	}
+
+	for _, campaignType := range campaignTypes {
+		err = sc.campaignTypes.Delete(conn, campaignType)
+		if err != nil {
+			return UnknownError{err}
+		}
+	}
+
+	return nil
 }
