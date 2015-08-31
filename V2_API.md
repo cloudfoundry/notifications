@@ -7,6 +7,7 @@
   - [Listing the senders](#list-senders)
   - [Retrieving a sender](#retrieve-sender)
   - [Updating a sender](#update-sender)
+  - [Deleting a sender](#delete-sender)
 - Campaign types
   - [Creating a campaign type](#create-campaign-type)
   - [Retrieving a campaign type](#retrieve-campaign-type)
@@ -278,6 +279,51 @@ X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
 | ------ | ----------- |
 | id     | Sender ID   |
 | name   | Sender name |
+
+<a name="delete-sender"></a>
+#### Deleting a sender
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The token requires `notifications.write` scope.
+
+###### Route
+```
+DELETE /senders/{senderID}
+```
+
+###### Params
+| Key          | Description                              |
+| -------------| ---------------------------------------- |
+| senderID\*   | The "id" returned when creating a sender |
+
+\* required
+
+###### CURL Example
+```
+$ curl -i -X DELETE \
+  -H "Authorization: bearer <CLIENT-TOKEN>" \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  http://notifications.example.com/senders/64816c21-9eb3-49f0-6489-699cb2defe6b
+
+HTTP/1.1 204 No Content
+Content-Length: 0
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 17 Jul 2015 21:00:06 GMT
+X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
+```
+
+##### Response
+
+###### Status
+```
+204 No Content
+```
 
 ## Campaign types
 
