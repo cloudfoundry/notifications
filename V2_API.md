@@ -6,6 +6,7 @@
   - [Creating a sender](#create-sender)
   - [Listing the senders](#list-senders)
   - [Retrieving a sender](#retrieve-sender)
+  - [Updating a sender](#update-sender)
 - Campaign types
   - [Creating a campaign type](#create-campaign-type)
   - [Retrieving a campaign type](#retrieve-campaign-type)
@@ -218,6 +219,65 @@ X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
 | id     | Sender ID   |
 | name   | Sender name |
 
+
+<a name="update-sender"></a>
+#### Updating a sender
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The token requires `notifications.write` scope.
+
+###### Route
+```
+PUT /senders/{senderID}
+```
+
+###### Params
+| Key          | Description                              |
+| -------------| ---------------------------------------- |
+| senderID\*   | The "id" returned when creating a sender |
+
+###### Body
+| Fields | Description |
+| ------ | ----------- |
+| name   | Sender name |
+
+\* required
+
+###### CURL Example
+```
+$ curl -i -X GET \
+  -H "Authorization: bearer <CLIENT-TOKEN>" \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -d '{"name": "my-updated-sender"}'
+  http://notifications.example.com/senders/64816c21-9eb3-49f0-6489-699cb2defe6b
+
+HTTP/1.1 200 OK
+Content-Length: 72
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 17 Jul 2015 21:00:06 GMT
+X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
+
+{"id":"64816c21-9eb3-49f0-6489-699cb2defe6b","name":"my-updated-sender"}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields | Description |
+| ------ | ----------- |
+| id     | Sender ID   |
+| name   | Sender name |
 
 ## Campaign types
 
