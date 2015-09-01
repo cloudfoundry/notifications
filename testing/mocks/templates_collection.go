@@ -38,6 +38,17 @@ type TemplatesCollection struct {
 			Error error
 		}
 	}
+
+	ListCall struct {
+		Receives struct {
+			Connection collections.ConnectionInterface
+			ClientID   string
+		}
+		Returns struct {
+			Templates []collections.Template
+			Error     error
+		}
+	}
 }
 
 func NewTemplatesCollection() *TemplatesCollection {
@@ -64,4 +75,10 @@ func (c *TemplatesCollection) Delete(conn collections.ConnectionInterface, templ
 	c.DeleteCall.Receives.TemplateID = templateID
 
 	return c.DeleteCall.Returns.Error
+}
+
+func (c *TemplatesCollection) List(conn collections.ConnectionInterface, clientID string) ([]collections.Template, error) {
+	c.ListCall.Receives.Connection = conn
+	c.ListCall.Receives.ClientID = clientID
+	return c.ListCall.Returns.Templates, c.ListCall.Returns.Error
 }

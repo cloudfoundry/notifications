@@ -86,3 +86,11 @@ func (r TemplatesRepository) templateWithNameAndClientIDIsPresent(conn Connectio
 
 	return true, nil
 }
+
+func (r TemplatesRepository) List(conn ConnectionInterface, clientID string) ([]Template, error) {
+	templates := []Template{}
+
+	_, err := conn.Select(&templates, "SELECT * FROM `v2_templates` WHERE `client_id` = ?", clientID)
+
+	return templates, err
+}

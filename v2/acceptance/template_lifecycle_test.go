@@ -26,7 +26,7 @@ var _ = Describe("Template lifecycle", func() {
 		token = GetClientTokenFor("my-client")
 	})
 
-	It("can create a new template, retrieve it and delete it again", func() {
+	It("can create a new template, retrieve, list and delete", func() {
 		By("creating a template", func() {
 			status, response, err := client.Do("POST", "/templates", map[string]interface{}{
 				"name":    "An interesting template",
@@ -105,6 +105,32 @@ var _ = Describe("Template lifecycle", func() {
 			}))
 		})
 
+		By("creating a template for another client", func() {
+			otherClientToken := GetClientTokenFor("other-client")
+			status, _, err := client.Do("POST", "/templates", map[string]interface{}{
+				"name":    "An invisible template",
+				"text":    "template text",
+				"html":    "template html",
+				"subject": "template subject",
+				"metadata": map[string]interface{}{
+					"template": "metadata",
+				},
+			}, otherClientToken.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+		})
+
+		By("listing all templates", func() {
+			status, response, err := client.Do("GET", "/templates", nil, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+
+			templates := response["templates"].([]interface{})
+			Expect(templates).To(HaveLen(1))
+			template := templates[0].(map[string]interface{})
+			Expect(template["id"]).To(Equal(templateID))
+		})
+
 		By("deleting the template", func() {
 			status, _, err := client.Do("DELETE", fmt.Sprintf("/templates/%s", templateID), nil, token.Access)
 			Expect(err).NotTo(HaveOccurred())
@@ -163,7 +189,6 @@ var _ = Describe("Template lifecycle", func() {
 	})
 	Context("when clearing field values", func() {
 		It("sets them back to their default values", func() {
-
 			By("creating a template", func() {
 				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
 					"name":    "An interesting template",

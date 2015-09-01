@@ -47,7 +47,7 @@ var _ = Describe("Sender lifecycle", func() {
 			Expect(status).To(Equal(http.StatusOK))
 
 			senders := response["senders"].([]interface{})
-			Expect(len(senders)).To(Equal(1))
+			Expect(senders).To(HaveLen(1))
 			sender := senders[0].(map[string]interface{})
 			Expect(sender["id"]).To(Equal(senderID))
 		})

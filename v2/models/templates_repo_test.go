@@ -60,6 +60,36 @@ var _ = Describe("TemplatesRepo", func() {
 		})
 	})
 
+	Describe("List", func() {
+		It("returns the templates", func() {
+			_, err := repo.Insert(conn, models.Template{
+				Name:     "some-template",
+				ClientID: "some-other-client-id",
+			})
+
+			_, err = repo.Insert(conn, models.Template{
+				Name:     "some-template",
+				ClientID: "some-client-id",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			templates, err := repo.List(conn, "some-client-id")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(templates).To(HaveLen(1))
+			Expect(templates[0].ClientID).To(Equal("some-client-id"))
+			Expect(templates[0].Name).To(Equal("some-template"))
+		})
+
+		Context("failure cases", func() {
+			It("returns not found error if it happens", func() {
+				connection := mocks.NewConnection()
+				connection.SelectCall.Returns.Error = errors.New("an error")
+				_, err := repo.List(connection, "client-id")
+				Expect(err).To(MatchError(errors.New("an error")))
+			})
+		})
+	})
+
 	Describe("Get", func() {
 		It("fetches the template given a template_id", func() {
 			createdTemplate, err := repo.Insert(conn, models.Template{

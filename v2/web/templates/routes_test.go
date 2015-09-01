@@ -72,7 +72,7 @@ var _ = Describe("Routes", func() {
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 
-	It("routes DELETE /template/ID", func() {
+	It("routes DELETE /templates/ID", func() {
 		request, err := http.NewRequest("DELETE", "/templates/some-template-id", nil)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -90,12 +90,30 @@ var _ = Describe("Routes", func() {
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 
-	It("routes PUT /template/ID", func() {
+	It("routes PUT /templates/ID", func() {
 		request, err := http.NewRequest("PUT", "/templates/some-template-id", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		s := muxer.Match(request).(stack.Stack)
 		Expect(s.Handler).To(BeAssignableToTypeOf(templates.UpdateHandler{}))
+		Expect(s.Middleware).To(HaveLen(3))
+
+		requestLogging := s.Middleware[0].(middleware.RequestLogging)
+		Expect(requestLogging).To(Equal(logging))
+
+		authenticator := s.Middleware[1].(middleware.Authenticator)
+		Expect(authenticator).To(Equal(auth))
+
+		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
+		Expect(databaseAllocator).To(Equal(dbAllocator))
+	})
+
+	It("routes GET /templates", func() {
+		request, err := http.NewRequest("GET", "/templates", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(templates.ListHandler{}))
 		Expect(s.Middleware).To(HaveLen(3))
 
 		requestLogging := s.Middleware[0].(middleware.RequestLogging)

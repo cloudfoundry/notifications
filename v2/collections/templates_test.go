@@ -265,4 +265,33 @@ var _ = Describe("TemplatesCollection", func() {
 			})
 		})
 	})
+
+	Describe("List", func() {
+		BeforeEach(func() {
+			templatesRepository.ListCall.Returns.Templates = []models.Template{
+				{
+					ID:       "my-template-id",
+					ClientID: "some-client-id",
+				},
+			}
+		})
+		It("returns templates for a client id", func() {
+			templates, err := templatesCollection.List(conn, "some-client-id")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(templates).To(HaveLen(1))
+			Expect(templates[0].ID).To(Equal("my-template-id"))
+
+			Expect(templatesRepository.ListCall.Receives.Connection).To(Equal(conn))
+			Expect(templatesRepository.ListCall.Receives.ClientID).To(Equal("some-client-id"))
+		})
+
+		Context("failure cases", func() {
+			It("returns an unknown error if the repo returns an error", func() {
+				templatesRepository.ListCall.Returns.Error = errors.New("failed to list")
+
+				_, err := templatesCollection.List(conn, "some-client-id")
+				Expect(err).To(MatchError(collections.UnknownError{errors.New("failed to list")}))
+			})
+		})
+	})
 })

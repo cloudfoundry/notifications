@@ -45,6 +45,18 @@ type TemplatesRepository struct {
 			Error error
 		}
 	}
+
+	ListCall struct {
+		Receives struct {
+			Connection models.ConnectionInterface
+			ClientID   string
+		}
+
+		Returns struct {
+			Templates []models.Template
+			Error     error
+		}
+	}
 }
 
 func NewTemplatesRepository() *TemplatesRepository {
@@ -77,4 +89,11 @@ func (r *TemplatesRepository) Update(conn models.ConnectionInterface, template m
 	r.UpdateCall.Receives.Template = template
 
 	return r.UpdateCall.Returns.Template, r.UpdateCall.Returns.Error
+}
+
+func (r *TemplatesRepository) List(conn models.ConnectionInterface, clientID string) ([]models.Template, error) {
+	r.ListCall.Receives.Connection = conn
+	r.ListCall.Receives.ClientID = clientID
+
+	return r.ListCall.Returns.Templates, r.ListCall.Returns.Error
 }

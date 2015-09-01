@@ -21,6 +21,7 @@ type templatesRepository interface {
 	Update(conn models.ConnectionInterface, template models.Template) (updatedTemplate models.Template, err error)
 	Get(conn models.ConnectionInterface, templateID string) (retrievedTemplate models.Template, err error)
 	Delete(conn models.ConnectionInterface, templateID string) error
+	List(conn models.ConnectionInterface, clientID string) (templateList []models.Template, err error)
 }
 
 type TemplatesCollection struct {
@@ -127,4 +128,27 @@ func (c TemplatesCollection) Delete(conn ConnectionInterface, templateID string)
 	}
 
 	return nil
+}
+
+func (c TemplatesCollection) List(conn ConnectionInterface, clientID string) ([]Template, error) {
+	templateList := []Template{}
+
+	models, err := c.repo.List(conn, clientID)
+	if err != nil {
+		return templateList, UnknownError{err}
+	}
+
+	for _, model := range models {
+		templateList = append(templateList, Template{
+			ID:       model.ID,
+			Name:     model.Name,
+			HTML:     model.HTML,
+			Text:     model.Text,
+			Subject:  model.Subject,
+			Metadata: model.Metadata,
+			ClientID: model.ClientID,
+		})
+	}
+
+	return templateList, nil
 }
