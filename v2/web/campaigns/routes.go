@@ -18,4 +18,5 @@ type Routes struct {
 
 func (r Routes) Register(m muxer) {
 	m.Handle("POST", "/senders/{sender_id}/campaigns", NewCreateHandler(r.CampaignsCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
+	m.Handle("GET", "/senders/{sender_id}/campaigns/{campaign_id}", NewGetHandler(r.CampaignsCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
 }

@@ -18,4 +18,5 @@ func Setup(database *db.DB) {
 	database.TableMap().AddTableWithName(v2models.Sender{}, "senders").SetKeys(false, "ID").SetUniqueTogether("name", "client_id")
 	database.TableMap().AddTableWithName(v2models.CampaignType{}, "campaign_types").SetKeys(false, "ID").SetUniqueTogether("name", "sender_id")
 	database.TableMap().AddTableWithName(v2models.Template{}, "v2_templates").SetKeys(false, "ID").SetUniqueTogether("name", "client_id")
+	database.TableMap().AddTableWithName(v2models.Campaign{}, "campaigns").SetKeys(false, "ID")
 }

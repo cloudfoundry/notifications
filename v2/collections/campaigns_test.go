@@ -16,6 +16,7 @@ var _ = Describe("CampaignsCollection", func() {
 		conn              *mocks.Connection
 		enqueuer          *mocks.CampaignEnqueuer
 		collection        collections.CampaignsCollection
+		campaignsRepo     *mocks.CampaignsRepository
 		campaignTypesRepo *mocks.CampaignTypesRepository
 		templatesRepo     *mocks.TemplatesRepository
 		userFinder        *mocks.UserFinder
@@ -26,13 +27,14 @@ var _ = Describe("CampaignsCollection", func() {
 	BeforeEach(func() {
 		conn = mocks.NewConnection()
 		enqueuer = mocks.NewCampaignEnqueuer()
+		campaignsRepo = mocks.NewCampaignsRepository()
 		campaignTypesRepo = mocks.NewCampaignTypesRepository()
 		templatesRepo = mocks.NewTemplatesRepository()
 		userFinder = mocks.NewUserFinder()
 		spaceFinder = mocks.NewSpaceFinder()
 		orgFinder = mocks.NewOrgFinder()
 
-		collection = collections.NewCampaignsCollection(enqueuer, campaignTypesRepo, templatesRepo, userFinder, spaceFinder, orgFinder)
+		collection = collections.NewCampaignsCollection(enqueuer, campaignsRepo, campaignTypesRepo, templatesRepo, userFinder, spaceFinder, orgFinder)
 	})
 
 	Describe("Create", func() {
@@ -56,6 +58,19 @@ var _ = Describe("CampaignsCollection", func() {
 
 		Context("when the audience is an email", func() {
 			Context("enqueuing a campaignJob", func() {
+				BeforeEach(func() {
+					campaignsRepo.SetCall.Returns.Campaign = models.Campaign{
+						ID:             "a-new-id",
+						SendTo:         `{"email":"test@example.com"}`,
+						CampaignTypeID: "some-id",
+						Text:           "some-test",
+						HTML:           "no-html",
+						Subject:        "some-subject",
+						TemplateID:     "whoa-a-template-id",
+						ReplyTo:        "nothing@example.com",
+					}
+				})
+
 				It("returns a campaignID after enqueuing the campaign with its type", func() {
 					campaign := collections.Campaign{
 						SendTo:         map[string]string{"email": "test@example.com"},
@@ -71,8 +86,19 @@ var _ = Describe("CampaignsCollection", func() {
 					enqueuedCampaign, err := collection.Create(conn, campaign, false)
 					Expect(err).NotTo(HaveOccurred())
 
+					Expect(campaignsRepo.SetCall.Receives.Connection).To(Equal(conn))
+					Expect(campaignsRepo.SetCall.Receives.Campaign).To(Equal(models.Campaign{
+						SendTo:         `{"email":"test@example.com"}`,
+						CampaignTypeID: "some-id",
+						Text:           "some-test",
+						HTML:           "no-html",
+						Subject:        "some-subject",
+						TemplateID:     "whoa-a-template-id",
+						ReplyTo:        "nothing@example.com",
+					}))
+
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
-						ID:             "some-random-id",
+						ID:             "a-new-id",
 						SendTo:         map[string]string{"email": "test@example.com"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
@@ -84,7 +110,7 @@ var _ = Describe("CampaignsCollection", func() {
 					}))
 					Expect(enqueuer.EnqueueCall.Receives.JobType).To(Equal("campaign"))
 
-					Expect(enqueuedCampaign.ID).To(Equal("some-random-id"))
+					Expect(enqueuedCampaign.ID).To(Equal("a-new-id"))
 					Expect(err).NotTo(HaveOccurred())
 				})
 			})
@@ -93,6 +119,16 @@ var _ = Describe("CampaignsCollection", func() {
 		Context("when the audience is a space", func() {
 			BeforeEach(func() {
 				spaceFinder.ExistsCall.Returns.Exists = true
+				campaignsRepo.SetCall.Returns.Campaign = models.Campaign{
+					ID:             "a-new-id",
+					SendTo:         `{"space":"some-space-guid"}`,
+					CampaignTypeID: "some-id",
+					Text:           "some-test",
+					HTML:           "no-html",
+					Subject:        "some-subject",
+					TemplateID:     "whoa-a-template-id",
+					ReplyTo:        "nothing@example.com",
+				}
 			})
 
 			Context("enqueuing a campaignJob", func() {
@@ -112,7 +148,7 @@ var _ = Describe("CampaignsCollection", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
-						ID:             "some-random-id",
+						ID:             "a-new-id",
 						SendTo:         map[string]string{"space": "some-space-guid"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
@@ -124,7 +160,7 @@ var _ = Describe("CampaignsCollection", func() {
 					}))
 					Expect(enqueuer.EnqueueCall.Receives.JobType).To(Equal("campaign"))
 
-					Expect(enqueuedCampaign.ID).To(Equal("some-random-id"))
+					Expect(enqueuedCampaign.ID).To(Equal("a-new-id"))
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(spaceFinder.ExistsCall.Receives.GUID).To(Equal("some-space-guid"))
@@ -155,6 +191,16 @@ var _ = Describe("CampaignsCollection", func() {
 		Context("when the audience is an org", func() {
 			BeforeEach(func() {
 				orgFinder.ExistsCall.Returns.Exists = true
+				campaignsRepo.SetCall.Returns.Campaign = models.Campaign{
+					ID:             "a-new-id",
+					SendTo:         `{"org":"some-org-guid"}`,
+					CampaignTypeID: "some-id",
+					Text:           "some-test",
+					HTML:           "no-html",
+					Subject:        "some-subject",
+					TemplateID:     "whoa-a-template-id",
+					ReplyTo:        "nothing@example.com",
+				}
 			})
 
 			Context("enqueuing a campaignJob", func() {
@@ -174,7 +220,7 @@ var _ = Describe("CampaignsCollection", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
-						ID:             "some-random-id",
+						ID:             "a-new-id",
 						SendTo:         map[string]string{"org": "some-org-guid"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
@@ -186,7 +232,7 @@ var _ = Describe("CampaignsCollection", func() {
 					}))
 					Expect(enqueuer.EnqueueCall.Receives.JobType).To(Equal("campaign"))
 
-					Expect(enqueuedCampaign.ID).To(Equal("some-random-id"))
+					Expect(enqueuedCampaign.ID).To(Equal("a-new-id"))
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(orgFinder.ExistsCall.Receives.GUID).To(Equal("some-org-guid"))
@@ -217,6 +263,16 @@ var _ = Describe("CampaignsCollection", func() {
 		Context("when the audience is a user", func() {
 			BeforeEach(func() {
 				userFinder.ExistsCall.Returns.Exists = true
+				campaignsRepo.SetCall.Returns.Campaign = models.Campaign{
+					ID:             "a-new-id",
+					SendTo:         `{"user":"some-user-guid"}`,
+					CampaignTypeID: "some-id",
+					Text:           "some-test",
+					HTML:           "no-html",
+					Subject:        "some-subject",
+					TemplateID:     "whoa-a-template-id",
+					ReplyTo:        "nothing@example.com",
+				}
 			})
 
 			Context("enqueuing a campaignJob", func() {
@@ -236,7 +292,7 @@ var _ = Describe("CampaignsCollection", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
-						ID:             "some-random-id",
+						ID:             "a-new-id",
 						SendTo:         map[string]string{"user": "some-user-guid"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
@@ -248,7 +304,7 @@ var _ = Describe("CampaignsCollection", func() {
 					}))
 					Expect(enqueuer.EnqueueCall.Receives.JobType).To(Equal("campaign"))
 
-					Expect(enqueuedCampaign.ID).To(Equal("some-random-id"))
+					Expect(enqueuedCampaign.ID).To(Equal("a-new-id"))
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(userFinder.ExistsCall.Receives.GUID).To(Equal("some-user-guid"))
@@ -278,7 +334,7 @@ var _ = Describe("CampaignsCollection", func() {
 				Expect(campaignTypesRepo.GetCall.Receives.CampaignTypeID).To(Equal("some-id"))
 
 				Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
-					ID:             "some-random-id",
+					ID:             "a-new-id",
 					SendTo:         map[string]string{"user": "some-guid"},
 					CampaignTypeID: "some-id",
 					Text:           "some-test",
@@ -313,7 +369,7 @@ var _ = Describe("CampaignsCollection", func() {
 				Expect(campaignTypesRepo.GetCall.Receives.CampaignTypeID).To(Equal("some-id"))
 
 				Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
-					ID:             "some-random-id",
+					ID:             "a-new-id",
 					SendTo:         map[string]string{"user": "some-guid"},
 					CampaignTypeID: "some-id",
 					Text:           "some-test",
@@ -479,6 +535,26 @@ var _ = Describe("CampaignsCollection", func() {
 					})
 				})
 			})
+		})
+	})
+
+	Describe("Get", func() {
+		It("returns the details about the campaign", func() {
+			campaignsRepo.GetCall.Returns.Campaign = models.Campaign{
+				SendTo:         `{"user": "some-guid"}`,
+				CampaignTypeID: "some-id",
+				Text:           "some-text",
+				HTML:           "no-html",
+				Subject:        "some-subject",
+				TemplateID:     "error",
+				ReplyTo:        "nothing@example.com",
+				SenderID:       "my-sender-id",
+			}
+
+			campaign, err := collection.Get(conn, "my-campaign-id", "my-sender-id", "my-client")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(campaign.ID).To(Equal("my-campaign-id"))
+			Expect(campaign.Text).To(Equal("some-text"))
 		})
 	})
 })

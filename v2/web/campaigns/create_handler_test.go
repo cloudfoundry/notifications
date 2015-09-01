@@ -87,7 +87,7 @@ var _ = Describe("CreateHandler", func() {
 			"campaign_id": "my-campaign-id"
 		}`))
 
-		Expect(campaignsCollection.CreateCall.Receives.Conn).To(Equal(conn))
+		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(conn))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
 			SendTo:         map[string]string{"user": "user-123"},
 			CampaignTypeID: "some-campaign-type-id",
@@ -124,7 +124,7 @@ var _ = Describe("CreateHandler", func() {
 			"campaign_id": "my-campaign-id"
 		}`))
 
-		Expect(campaignsCollection.CreateCall.Receives.Conn).To(Equal(database.Connection()))
+		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(database.Connection()))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
 			SendTo:         map[string]string{"space": "space-123"},
 			CampaignTypeID: "some-campaign-type-id",
@@ -161,7 +161,7 @@ var _ = Describe("CreateHandler", func() {
 			"campaign_id": "my-campaign-id"
 		}`))
 
-		Expect(campaignsCollection.CreateCall.Receives.Conn).To(Equal(database.Connection()))
+		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(database.Connection()))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
 			SendTo:         map[string]string{"org": "org-123"},
 			CampaignTypeID: "some-campaign-type-id",
@@ -198,7 +198,7 @@ var _ = Describe("CreateHandler", func() {
 			"campaign_id": "my-campaign-id"
 		}`))
 
-		Expect(campaignsCollection.CreateCall.Receives.Conn).To(Equal(database.Connection()))
+		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(database.Connection()))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
 			SendTo:         map[string]string{"email": "test@example.com"},
 			CampaignTypeID: "some-campaign-type-id",

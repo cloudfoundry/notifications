@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -9,6 +10,11 @@ import (
 
 type campaignEnqueuer interface {
 	Enqueue(campaign Campaign, jobType string) error
+}
+
+type campaignsSetGetter interface {
+	Get(conn models.ConnectionInterface, campaignID string) (models.Campaign, error)
+	Set(conn models.ConnectionInterface, campaign models.Campaign) (models.Campaign, error)
 }
 
 type campaignTypesGetter interface {
@@ -32,11 +38,13 @@ type Campaign struct {
 	Subject        string
 	TemplateID     string
 	ReplyTo        string
+	SenderID       string
 	ClientID       string
 }
 
 type CampaignsCollection struct {
 	enqueuer          campaignEnqueuer
+	campaignsRepo     campaignsSetGetter
 	campaignTypesRepo campaignTypesGetter
 	templatesRepo     templatesGetter
 	userFinder        existenceChecker
@@ -44,9 +52,10 @@ type CampaignsCollection struct {
 	orgFinder         existenceChecker
 }
 
-func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, userFinder existenceChecker, spaceFinder existenceChecker, orgFinder existenceChecker) CampaignsCollection {
+func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignsRepo campaignsSetGetter, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, userFinder existenceChecker, spaceFinder existenceChecker, orgFinder existenceChecker) CampaignsCollection {
 	return CampaignsCollection{
 		enqueuer:          enqueuer,
+		campaignsRepo:     campaignsRepo,
 		campaignTypesRepo: campaignTypesRepo,
 		templatesRepo:     templatesRepo,
 		userFinder:        userFinder,
@@ -56,7 +65,6 @@ func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignTypesRepo campaig
 }
 
 func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign, canSendCritical bool) (Campaign, error) {
-	campaign.ID = "some-random-id"
 	var audience string
 	for key, _ := range campaign.SendTo {
 		audience = key
@@ -99,6 +107,26 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 		}
 	}
 
+	sendTo, err := json.Marshal(campaign.SendTo)
+	if err != nil {
+		panic(err)
+	}
+
+	campaignModel, err := c.campaignsRepo.Set(conn, models.Campaign{
+		SendTo:         string(sendTo),
+		CampaignTypeID: campaign.CampaignTypeID,
+		Text:           campaign.Text,
+		HTML:           campaign.HTML,
+		Subject:        campaign.Subject,
+		TemplateID:     campaign.TemplateID,
+		ReplyTo:        campaign.ReplyTo,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	campaign.ID = campaignModel.ID
+
 	err = c.enqueuer.Enqueue(campaign, "campaign")
 	if err != nil {
 		return Campaign{}, PersistenceError{Err: err}
@@ -120,4 +148,29 @@ func (c CampaignsCollection) checkForExistence(audience, guid string) (bool, err
 	default:
 		return false, fmt.Errorf("The %q audience is not valid", audience)
 	}
+}
+
+func (c CampaignsCollection) Get(connection ConnectionInterface, campaignID, senderID, clientID string) (Campaign, error) {
+	model, err := c.campaignsRepo.Get(connection, campaignID)
+	if err != nil {
+		panic(err)
+	}
+
+	var sendTo map[string]string
+	err = json.Unmarshal([]byte(model.SendTo), &sendTo)
+	if err != nil {
+		panic(err)
+	}
+
+	return Campaign{
+		ID:             campaignID,
+		SendTo:         sendTo,
+		CampaignTypeID: model.CampaignTypeID,
+		Text:           model.Text,
+		HTML:           model.HTML,
+		Subject:        model.Subject,
+		TemplateID:     model.TemplateID,
+		ReplyTo:        model.ReplyTo,
+		SenderID:       model.SenderID,
+	}, nil
 }

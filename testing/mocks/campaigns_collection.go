@@ -5,7 +5,7 @@ import "github.com/cloudfoundry-incubator/notifications/v2/collections"
 type CampaignsCollection struct {
 	CreateCall struct {
 		Receives struct {
-			Conn             collections.ConnectionInterface
+			Connection       collections.ConnectionInterface
 			Campaign         collections.Campaign
 			HasCriticalScope bool
 		}
@@ -15,6 +15,19 @@ type CampaignsCollection struct {
 		}
 		WasCalled bool
 	}
+
+	GetCall struct {
+		Receives struct {
+			Connection collections.ConnectionInterface
+			CampaignID string
+			SenderID   string
+			ClientID   string
+		}
+		Returns struct {
+			Campaign collections.Campaign
+			Error    error
+		}
+	}
 }
 
 func NewCampaignsCollection() *CampaignsCollection {
@@ -22,10 +35,19 @@ func NewCampaignsCollection() *CampaignsCollection {
 }
 
 func (c *CampaignsCollection) Create(conn collections.ConnectionInterface, campaign collections.Campaign, hasCriticalScope bool) (collections.Campaign, error) {
-	c.CreateCall.Receives.Conn = conn
+	c.CreateCall.Receives.Connection = conn
 	c.CreateCall.Receives.Campaign = campaign
 	c.CreateCall.Receives.HasCriticalScope = hasCriticalScope
 	c.CreateCall.WasCalled = true
 
 	return c.CreateCall.Returns.Campaign, c.CreateCall.Returns.Error
+}
+
+func (c *CampaignsCollection) Get(connection collections.ConnectionInterface, campaignID, senderID, clientID string) (collections.Campaign, error) {
+	c.GetCall.Receives.Connection = connection
+	c.GetCall.Receives.CampaignID = campaignID
+	c.GetCall.Receives.SenderID = senderID
+	c.GetCall.Receives.ClientID = clientID
+
+	return c.GetCall.Returns.Campaign, c.GetCall.Returns.Error
 }
