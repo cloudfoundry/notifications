@@ -37,7 +37,7 @@ var _ = Describe("Email Campaigns", func() {
 		senderID = response["id"].(string)
 	})
 
-	It("sends a campaign to an email and retrieves the campaign details", func() {
+	It("sends a campaign to an email", func() {
 		var campaignTypeID, templateID, campaignTypeTemplateID, campaignID string
 
 		By("creating a template", func() {
@@ -109,13 +109,6 @@ var _ = Describe("Email Campaigns", func() {
 
 			data := strings.Split(string(delivery.Data), "\n")
 			Expect(data).To(ContainElement("campaign template campaign body"))
-		})
-
-		By("retrieving the campaign details", func() {
-			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s", senderID, campaignID), nil, token.Access)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(status).To(Equal(http.StatusOK))
-			Expect(response["text"]).To(Equal("campaign body"))
 		})
 	})
 

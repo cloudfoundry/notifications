@@ -37,15 +37,17 @@ var _ = Describe("CampaignsCollection", func() {
 		orgFinder = mocks.NewOrgFinder()
 
 		collection = collections.NewCampaignsCollection(enqueuer, campaignsRepo, campaignTypesRepo, templatesRepo, sendersRepo, userFinder, spaceFinder, orgFinder)
-
-		sendersRepo.GetCall.Returns.Sender = models.Sender{
-			ID:       "some-sender-id",
-			Name:     "some-sender",
-			ClientID: "some-client-id",
-		}
 	})
 
 	Describe("Create", func() {
+		BeforeEach(func() {
+			sendersRepo.GetCall.Returns.Sender = models.Sender{
+				ID:       "some-sender-id",
+				Name:     "some-sender",
+				ClientID: "some-client-id",
+			}
+		})
+
 		Context("when the audience isn't a thing", func() {
 			It("returns an error", func() {
 				campaign := collections.Campaign{
@@ -67,7 +69,7 @@ var _ = Describe("CampaignsCollection", func() {
 		Context("when the audience is an email", func() {
 			Context("enqueuing a campaignJob", func() {
 				BeforeEach(func() {
-					campaignsRepo.SetCall.Returns.Campaign = models.Campaign{
+					campaignsRepo.InsertCall.Returns.Campaign = models.Campaign{
 						ID:             "a-new-id",
 						SendTo:         `{"email":"test@example.com"}`,
 						CampaignTypeID: "some-id",
@@ -94,8 +96,8 @@ var _ = Describe("CampaignsCollection", func() {
 					enqueuedCampaign, err := collection.Create(conn, campaign, "some-client-id", false)
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(campaignsRepo.SetCall.Receives.Connection).To(Equal(conn))
-					Expect(campaignsRepo.SetCall.Receives.Campaign).To(Equal(models.Campaign{
+					Expect(campaignsRepo.InsertCall.Receives.Connection).To(Equal(conn))
+					Expect(campaignsRepo.InsertCall.Receives.Campaign).To(Equal(models.Campaign{
 						SendTo:         `{"email":"test@example.com"}`,
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
@@ -103,6 +105,7 @@ var _ = Describe("CampaignsCollection", func() {
 						Subject:        "some-subject",
 						TemplateID:     "whoa-a-template-id",
 						ReplyTo:        "nothing@example.com",
+						SenderID:       "some-sender-id",
 					}))
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
@@ -128,7 +131,7 @@ var _ = Describe("CampaignsCollection", func() {
 		Context("when the audience is a space", func() {
 			BeforeEach(func() {
 				spaceFinder.ExistsCall.Returns.Exists = true
-				campaignsRepo.SetCall.Returns.Campaign = models.Campaign{
+				campaignsRepo.InsertCall.Returns.Campaign = models.Campaign{
 					ID:             "a-new-id",
 					SendTo:         `{"space":"some-space-guid"}`,
 					CampaignTypeID: "some-id",
@@ -201,7 +204,7 @@ var _ = Describe("CampaignsCollection", func() {
 		Context("when the audience is an org", func() {
 			BeforeEach(func() {
 				orgFinder.ExistsCall.Returns.Exists = true
-				campaignsRepo.SetCall.Returns.Campaign = models.Campaign{
+				campaignsRepo.InsertCall.Returns.Campaign = models.Campaign{
 					ID:             "a-new-id",
 					SendTo:         `{"org":"some-org-guid"}`,
 					CampaignTypeID: "some-id",
@@ -274,7 +277,7 @@ var _ = Describe("CampaignsCollection", func() {
 		Context("when the audience is a user", func() {
 			BeforeEach(func() {
 				userFinder.ExistsCall.Returns.Exists = true
-				campaignsRepo.SetCall.Returns.Campaign = models.Campaign{
+				campaignsRepo.InsertCall.Returns.Campaign = models.Campaign{
 					ID:             "a-new-id",
 					SendTo:         `{"user":"some-user-guid"}`,
 					CampaignTypeID: "some-id",
@@ -439,6 +442,26 @@ var _ = Describe("CampaignsCollection", func() {
 					})
 				})
 
+				Context("when inserting the campaign record fails", func() {
+					It("returns the error", func() {
+						campaign := collections.Campaign{
+							SendTo:         map[string]string{"user": "some-guid"},
+							CampaignTypeID: "some-id",
+							Text:           "some-test",
+							HTML:           "no-html",
+							Subject:        "some-subject",
+							TemplateID:     "whoa-a-template-id",
+							ReplyTo:        "nothing@example.com",
+							SenderID:       "some-sender-id",
+						}
+						campaignsRepo.InsertCall.Returns.Error = errors.New("insert failed")
+
+						_, err := collection.Create(conn, campaign, "some-client-id", false)
+
+						Expect(err).To(Equal(collections.PersistenceError{Err: errors.New("insert failed")}))
+					})
+				})
+
 				Context("when checking if the template exists", func() {
 					var campaign collections.Campaign
 					BeforeEach(func() {
@@ -593,7 +616,7 @@ var _ = Describe("CampaignsCollection", func() {
 	})
 
 	Describe("Get", func() {
-		It("returns the details about the campaign", func() {
+		BeforeEach(func() {
 			campaignsRepo.GetCall.Returns.Campaign = models.Campaign{
 				SendTo:         `{"user": "some-guid"}`,
 				CampaignTypeID: "some-id",
@@ -602,13 +625,78 @@ var _ = Describe("CampaignsCollection", func() {
 				Subject:        "some-subject",
 				TemplateID:     "error",
 				ReplyTo:        "nothing@example.com",
-				SenderID:       "my-sender-id",
+				SenderID:       "some-sender-id",
 			}
 
-			campaign, err := collection.Get(conn, "my-campaign-id", "my-sender-id", "my-client")
+			sendersRepo.GetCall.Returns.Sender = models.Sender{
+				ID:       "some-sender-id",
+				Name:     "some-sender",
+				ClientID: "some-client-id",
+			}
+		})
+
+		It("returns the details about the campaign", func() {
+			campaign, err := collection.Get(conn, "my-campaign-id", "some-sender-id", "some-client-id")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(campaign.ID).To(Equal("my-campaign-id"))
 			Expect(campaign.Text).To(Equal("some-text"))
+		})
+
+		Context("failure cases", func() {
+			It("returns a not found error when the sender does not exist", func() {
+				sendersRepo.GetCall.Returns.Error = models.RecordNotFoundError{errors.New("sender not found")}
+
+				_, err := collection.Get(conn, "my-campaign-id", "missing-sender-id", "some-client-id")
+				Expect(err).To(MatchError(collections.NotFoundError{models.RecordNotFoundError{errors.New("sender not found")}}))
+			})
+
+			It("returns an unknown error if the senders repo returns an error", func() {
+				sendersRepo.GetCall.Returns.Error = errors.New("i made a bad")
+
+				_, err := collection.Get(conn, "my-campaign-id", "some-sender-id", "some-client-id")
+				Expect(err).To(MatchError(collections.UnknownError{errors.New("i made a bad")}))
+			})
+
+			It("returns a not found error when the sender belongs to a different client", func() {
+				sendersRepo.GetCall.Returns.Sender = models.Sender{
+					ID:       "some-sender-id",
+					Name:     "some-sender",
+					ClientID: "other-client-id",
+				}
+
+				_, err := collection.Get(conn, "my-campaign-id", "some-sender-id", "some-client-id")
+				Expect(err).To(MatchError(collections.NotFoundError{errors.New("Sender with id \"some-sender-id\" could not be found")}))
+			})
+
+			It("returns a not found error when the campaign does not exist", func() {
+				campaignsRepo.GetCall.Returns.Error = models.RecordNotFoundError{errors.New("campaign not found")}
+
+				_, err := collection.Get(conn, "missing-campaign-id", "some-sender-id", "some-client-id")
+				Expect(err).To(MatchError(collections.NotFoundError{models.RecordNotFoundError{errors.New("campaign not found")}}))
+			})
+
+			It("returns an unknown error if the campaigns repo returns an error", func() {
+				campaignsRepo.GetCall.Returns.Error = errors.New("my bad")
+
+				_, err := collection.Get(conn, "my-campaign-id", "some-sender-id", "some-client-id")
+				Expect(err).To(MatchError(collections.UnknownError{errors.New("my bad")}))
+			})
+
+			It("returns a not found error when the campaign belongs to a different sender", func() {
+				campaignsRepo.GetCall.Returns.Campaign = models.Campaign{
+					SendTo:         `{"user": "some-guid"}`,
+					CampaignTypeID: "some-id",
+					Text:           "some-text",
+					HTML:           "no-html",
+					Subject:        "some-subject",
+					TemplateID:     "error",
+					ReplyTo:        "nothing@example.com",
+					SenderID:       "other-sender-id",
+				}
+
+				_, err := collection.Get(conn, "my-campaign-id", "some-sender-id", "some-client-id")
+				Expect(err).To(MatchError(collections.NotFoundError{errors.New("Campaign with id \"my-campaign-id\" could not be found")}))
+			})
 		})
 	})
 })

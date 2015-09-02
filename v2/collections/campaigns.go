@@ -12,9 +12,9 @@ type campaignEnqueuer interface {
 	Enqueue(campaign Campaign, jobType string) error
 }
 
-type campaignsSetGetter interface {
+type campaignsPersister interface {
+	Insert(conn models.ConnectionInterface, campaign models.Campaign) (models.Campaign, error)
 	Get(conn models.ConnectionInterface, campaignID string) (models.Campaign, error)
-	Set(conn models.ConnectionInterface, campaign models.Campaign) (models.Campaign, error)
 }
 
 type campaignTypesGetter interface {
@@ -48,7 +48,7 @@ type Campaign struct {
 
 type CampaignsCollection struct {
 	enqueuer          campaignEnqueuer
-	campaignsRepo     campaignsSetGetter
+	campaignsRepo     campaignsPersister
 	campaignTypesRepo campaignTypesGetter
 	templatesRepo     templatesGetter
 	sendersRepo       sendersGetter
@@ -57,7 +57,7 @@ type CampaignsCollection struct {
 	orgFinder         existenceChecker
 }
 
-func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignsRepo campaignsSetGetter, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, sendersRepo sendersGetter, userFinder existenceChecker, spaceFinder existenceChecker, orgFinder existenceChecker) CampaignsCollection {
+func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignsRepo campaignsPersister, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, sendersRepo sendersGetter, userFinder existenceChecker, spaceFinder existenceChecker, orgFinder existenceChecker) CampaignsCollection {
 	return CampaignsCollection{
 		enqueuer:          enqueuer,
 		campaignsRepo:     campaignsRepo,
@@ -132,7 +132,7 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 		panic(err)
 	}
 
-	campaignModel, err := c.campaignsRepo.Set(conn, models.Campaign{
+	campaignModel, err := c.campaignsRepo.Insert(conn, models.Campaign{
 		SendTo:         string(sendTo),
 		CampaignTypeID: campaign.CampaignTypeID,
 		Text:           campaign.Text,
@@ -140,9 +140,10 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 		Subject:        campaign.Subject,
 		TemplateID:     campaign.TemplateID,
 		ReplyTo:        campaign.ReplyTo,
+		SenderID:       campaign.SenderID,
 	})
 	if err != nil {
-		panic(err)
+		return Campaign{}, PersistenceError{err}
 	}
 
 	campaign.ID = campaignModel.ID
@@ -172,9 +173,32 @@ func (c CampaignsCollection) checkForExistence(audience, guid string) (bool, err
 }
 
 func (c CampaignsCollection) Get(connection ConnectionInterface, campaignID, senderID, clientID string) (Campaign, error) {
+	sender, err := c.sendersRepo.Get(connection, senderID)
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return Campaign{}, NotFoundError{err}
+		default:
+			return Campaign{}, UnknownError{err}
+		}
+	}
+
+	if sender.ClientID != clientID {
+		return Campaign{}, NotFoundError{fmt.Errorf("Sender with id %q could not be found", senderID)}
+	}
+
 	model, err := c.campaignsRepo.Get(connection, campaignID)
 	if err != nil {
-		panic(err)
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return Campaign{}, NotFoundError{err}
+		default:
+			return Campaign{}, UnknownError{err}
+		}
+	}
+
+	if model.SenderID != senderID {
+		return Campaign{}, NotFoundError{fmt.Errorf("Campaign with id %q could not be found", campaignID)}
 	}
 
 	var sendTo map[string]string

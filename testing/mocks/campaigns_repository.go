@@ -3,7 +3,7 @@ package mocks
 import "github.com/cloudfoundry-incubator/notifications/v2/models"
 
 type CampaignsRepository struct {
-	SetCall struct {
+	InsertCall struct {
 		Receives struct {
 			Connection models.ConnectionInterface
 			Campaign   models.Campaign
@@ -37,9 +37,9 @@ func (r *CampaignsRepository) Get(conn models.ConnectionInterface, campaignID st
 	return r.GetCall.Returns.Campaign, r.GetCall.Returns.Error
 }
 
-func (r *CampaignsRepository) Set(conn models.ConnectionInterface, campaign models.Campaign) (models.Campaign, error) {
-	r.SetCall.Receives.Connection = conn
-	r.SetCall.Receives.Campaign = campaign
+func (r *CampaignsRepository) Insert(conn models.ConnectionInterface, campaign models.Campaign) (models.Campaign, error) {
+	r.InsertCall.Receives.Connection = conn
+	r.InsertCall.Receives.Campaign = campaign
 
-	return r.SetCall.Returns.Campaign, r.SetCall.Returns.Error
+	return r.InsertCall.Returns.Campaign, r.InsertCall.Returns.Error
 }

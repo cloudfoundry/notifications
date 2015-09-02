@@ -2,6 +2,7 @@ package campaigns
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -34,8 +35,16 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 
 	campaign, err := h.campaigns.Get(database.Connection(), campaignID, senderID, clientID)
 	if err != nil {
-		panic(err)
+		switch err.(type) {
+		case collections.NotFoundError:
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		fmt.Fprintf(w, `{ "errors": [%q] }`, err)
+		return
 	}
+
 	getResponse, _ := json.Marshal(map[string]interface{}{
 		"send_to":          campaign.SendTo,
 		"campaign_type_id": campaign.CampaignTypeID,

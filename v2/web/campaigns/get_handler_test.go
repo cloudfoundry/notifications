@@ -1,6 +1,7 @@
 package campaigns_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 
@@ -75,7 +76,7 @@ var _ = Describe("GetHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
-		Expect(writer.Body.String()).To(MatchJSON(`{
+		Expect(writer.Body).To(MatchJSON(`{
 			"send_to": {
 				"user": "user-123"
 			},
@@ -91,5 +92,41 @@ var _ = Describe("GetHandler", func() {
 		Expect(campaignsCollection.GetCall.Receives.ClientID).To(Equal("my-client"))
 		Expect(campaignsCollection.GetCall.Receives.SenderID).To(Equal("some-sender-id"))
 		Expect(campaignsCollection.GetCall.Receives.CampaignID).To(Equal("some-campaign-id"))
+	})
+
+	Context("failure cases", func() {
+		It("returns a 404 if the campaign could not be found", func() {
+			campaignsCollection.GetCall.Returns.Error = collections.NotFoundError{errors.New("campaign not found")}
+
+			var err error
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaigns/missing-campaign-id", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(writer, request, context)
+
+			Expect(writer.Code).To(Equal(http.StatusNotFound))
+			Expect(writer.Body).To(MatchJSON(`{
+				"errors": [
+					"campaign not found"
+				]
+			}`))
+		})
+
+		It("returns a 500 if an unknown error occurs", func() {
+			campaignsCollection.GetCall.Returns.Error = errors.New("something went wrong")
+
+			var err error
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaigns/missing-campaign-id", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(writer, request, context)
+
+			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
+			Expect(writer.Body).To(MatchJSON(`{
+				"errors": [
+					"something went wrong"
+				]
+			}`))
+		})
 	})
 })

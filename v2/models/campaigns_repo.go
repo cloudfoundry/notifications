@@ -1,5 +1,10 @@
 package models
 
+import (
+	"database/sql"
+	"fmt"
+)
+
 type CampaignsRepository struct {
 	guidGenerator guidGeneratorFunc
 }
@@ -10,7 +15,7 @@ func NewCampaignsRepository(guidGenerator guidGeneratorFunc) CampaignsRepository
 	}
 }
 
-func (r CampaignsRepository) Set(conn ConnectionInterface, campaign Campaign) (Campaign, error) {
+func (r CampaignsRepository) Insert(conn ConnectionInterface, campaign Campaign) (Campaign, error) {
 	id, err := r.guidGenerator()
 	if err != nil {
 		panic(err)
@@ -20,7 +25,7 @@ func (r CampaignsRepository) Set(conn ConnectionInterface, campaign Campaign) (C
 
 	err = conn.Insert(&campaign)
 	if err != nil {
-		panic(err)
+		return campaign, err
 	}
 
 	return campaign, nil
@@ -31,7 +36,11 @@ func (r CampaignsRepository) Get(conn ConnectionInterface, campaignID string) (C
 
 	err := conn.SelectOne(&campaign, "SELECT * FROM `campaigns` WHERE `id` = ?", campaignID)
 	if err != nil {
-		panic(err)
+		if err == sql.ErrNoRows {
+			return campaign, RecordNotFoundError{fmt.Errorf("Campaign with id %q could not be found", campaignID)}
+		}
+
+		return campaign, err
 	}
 
 	return campaign, nil

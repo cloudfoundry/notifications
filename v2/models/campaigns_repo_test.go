@@ -1,6 +1,8 @@
 package models_test
 
 import (
+	"errors"
+
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
@@ -29,9 +31,45 @@ var _ = Describe("CampaignsRepository", func() {
 		connection = database.Connection()
 	})
 
+	Describe("Insert", func() {
+		It("inserts a campaign into the database", func() {
+			campaign, err := repo.Insert(connection, models.Campaign{
+				SendTo:         `{"user": "user-123"}`,
+				CampaignTypeID: "some-campaign-type-id",
+				Text:           "come see our new stuff",
+				HTML:           "<h1>New stuff</h1>",
+				Subject:        "Cool New Stuff",
+				TemplateID:     "random-template-id",
+				ReplyTo:        "reply-to-address",
+				SenderID:       "my-sender",
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(campaign.ID).To(Equal("deadbeef-aabb-ccdd-eeff-001122334455"))
+		})
+
+		Context("failure cases", func() {
+			It("returns an unknown error when the database blows up", func() {
+				fakeConnection := mocks.NewConnection()
+				fakeConnection.InsertCall.Returns.Error = errors.New("something bad happened")
+
+				_, err := repo.Insert(fakeConnection, models.Campaign{
+					SendTo:         `{"user": "user-123"}`,
+					CampaignTypeID: "some-campaign-type-id",
+					Text:           "come see our new stuff",
+					HTML:           "<h1>New stuff</h1>",
+					Subject:        "Cool New Stuff",
+					TemplateID:     "random-template-id",
+					ReplyTo:        "reply-to-address",
+					SenderID:       "my-sender",
+				})
+				Expect(err).To(MatchError(errors.New("something bad happened")))
+			})
+		})
+	})
+
 	Describe("Get", func() {
 		It("gets a campaign from the database", func() {
-			campaign, err := repo.Set(connection, models.Campaign{
+			campaign, err := repo.Insert(connection, models.Campaign{
 				SendTo:         `{"user": "user-123"}`,
 				CampaignTypeID: "some-campaign-type-id",
 				Text:           "come see our new stuff",
@@ -47,6 +85,21 @@ var _ = Describe("CampaignsRepository", func() {
 			retrievedCampaign, err := repo.Get(connection, campaign.ID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(retrievedCampaign).To(Equal(campaign))
+		})
+
+		Context("failure cases", func() {
+			It("returns a not found error when the campaign could not be found", func() {
+				_, err := repo.Get(connection, "missing-campaign-id")
+				Expect(err).To(MatchError(models.RecordNotFoundError{errors.New("Campaign with id \"missing-campaign-id\" could not be found")}))
+			})
+
+			It("returns an unknown error when the database blows up", func() {
+				fakeConnection := mocks.NewConnection()
+				fakeConnection.SelectOneCall.Returns.Error = errors.New("something bad happened")
+
+				_, err := repo.Get(fakeConnection, "missing-campaign-id")
+				Expect(err).To(MatchError(errors.New("something bad happened")))
+			})
 		})
 	})
 })
