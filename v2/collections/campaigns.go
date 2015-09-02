@@ -25,6 +25,10 @@ type templatesGetter interface {
 	Get(conn models.ConnectionInterface, templateID string) (models.Template, error)
 }
 
+type sendersGetter interface {
+	Get(conn models.ConnectionInterface, senderID string) (models.Sender, error)
+}
+
 type existenceChecker interface {
 	Exists(guid string) (bool, error)
 }
@@ -47,24 +51,26 @@ type CampaignsCollection struct {
 	campaignsRepo     campaignsSetGetter
 	campaignTypesRepo campaignTypesGetter
 	templatesRepo     templatesGetter
+	sendersRepo       sendersGetter
 	userFinder        existenceChecker
 	spaceFinder       existenceChecker
 	orgFinder         existenceChecker
 }
 
-func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignsRepo campaignsSetGetter, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, userFinder existenceChecker, spaceFinder existenceChecker, orgFinder existenceChecker) CampaignsCollection {
+func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignsRepo campaignsSetGetter, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, sendersRepo sendersGetter, userFinder existenceChecker, spaceFinder existenceChecker, orgFinder existenceChecker) CampaignsCollection {
 	return CampaignsCollection{
 		enqueuer:          enqueuer,
 		campaignsRepo:     campaignsRepo,
 		campaignTypesRepo: campaignTypesRepo,
 		templatesRepo:     templatesRepo,
+		sendersRepo:       sendersRepo,
 		userFinder:        userFinder,
 		spaceFinder:       spaceFinder,
 		orgFinder:         orgFinder,
 	}
 }
 
-func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign, canSendCritical bool) (Campaign, error) {
+func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign, clientID string, canSendCritical bool) (Campaign, error) {
 	var audience string
 	for key, _ := range campaign.SendTo {
 		audience = key
@@ -77,6 +83,20 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 
 	if !exists {
 		return Campaign{}, NotFoundError{fmt.Errorf("The %s %q cannot be found", audience, campaign.SendTo[audience])}
+	}
+
+	sender, err := c.sendersRepo.Get(conn, campaign.SenderID)
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return Campaign{}, NotFoundError{err}
+		default:
+			return Campaign{}, UnknownError{err}
+		}
+	}
+
+	if sender.ClientID != clientID {
+		return Campaign{}, NotFoundError{fmt.Errorf("Sender with id %q could not be found", campaign.SenderID)}
 	}
 
 	campaignType, err := c.campaignTypesRepo.Get(conn, campaign.CampaignTypeID)
@@ -126,6 +146,7 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 	}
 
 	campaign.ID = campaignModel.ID
+	campaign.ClientID = clientID
 
 	err = c.enqueuer.Enqueue(campaign, "campaign")
 	if err != nil {

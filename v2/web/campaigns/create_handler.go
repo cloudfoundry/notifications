@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/dgrijalva/jwt-go"
@@ -12,7 +13,7 @@ import (
 )
 
 type collectionCreator interface {
-	Create(conn collections.ConnectionInterface, campaign collections.Campaign, hasCriticalScope bool) (collections.Campaign, error)
+	Create(conn collections.ConnectionInterface, campaign collections.Campaign, clientID string, hasCriticalScope bool) (collections.Campaign, error)
 }
 
 type CreateHandler struct {
@@ -36,6 +37,9 @@ type createRequest struct {
 }
 
 func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
+	splitURL := strings.Split(req.URL.Path, "/")
+	senderID := splitURL[len(splitURL)-2]
+
 	var request createRequest
 
 	err := json.NewDecoder(req.Body).Decode(&request)
@@ -67,8 +71,8 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		Subject:        request.Subject,
 		TemplateID:     request.TemplateID,
 		ReplyTo:        request.ReplyTo,
-		ClientID:       context.Get("client_id").(string),
-	}, hasCriticalScope)
+		SenderID:       senderID,
+	}, context.Get("client_id").(string), hasCriticalScope)
 	if err != nil {
 		switch err.(type) {
 		case collections.NotFoundError:

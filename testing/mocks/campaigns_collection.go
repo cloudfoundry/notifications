@@ -7,6 +7,7 @@ type CampaignsCollection struct {
 		Receives struct {
 			Connection       collections.ConnectionInterface
 			Campaign         collections.Campaign
+			ClientID         string
 			HasCriticalScope bool
 		}
 		Returns struct {
@@ -34,9 +35,10 @@ func NewCampaignsCollection() *CampaignsCollection {
 	return &CampaignsCollection{}
 }
 
-func (c *CampaignsCollection) Create(conn collections.ConnectionInterface, campaign collections.Campaign, hasCriticalScope bool) (collections.Campaign, error) {
+func (c *CampaignsCollection) Create(conn collections.ConnectionInterface, campaign collections.Campaign, clientID string, hasCriticalScope bool) (collections.Campaign, error) {
 	c.CreateCall.Receives.Connection = conn
 	c.CreateCall.Receives.Campaign = campaign
+	c.CreateCall.Receives.ClientID = clientID
 	c.CreateCall.Receives.HasCriticalScope = hasCriticalScope
 	c.CreateCall.WasCalled = true
 

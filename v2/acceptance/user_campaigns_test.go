@@ -153,7 +153,16 @@ var _ = Describe("User Campaigns", func() {
 
 			By("sending the campaign", func() {
 				token = GetClientTokenFor("non-critical-client")
-				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
+
+				status, response, err := client.Do("POST", "/senders", map[string]interface{}{
+					"name": "my-sender",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				senderID = response["id"].(string)
+
+				status, response, err = client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
 						"user": "user-111",
 					},
@@ -255,6 +264,82 @@ var _ = Describe("User Campaigns", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(404))
 				Expect(response["errors"]).To(Equal([]interface{}{"The user \"missing-user\" cannot be found"}))
+			})
+		})
+	})
+
+	Context("when the sender ID doesn't exist", func() {
+		It("returns a 404 with an error message", func() {
+			var campaignTypeID string
+
+			By("creating a campaign type", func() {
+				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
+					"name":        "some-campaign-type-name",
+					"description": "acceptance campaign type",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				campaignTypeID = response["id"].(string)
+			})
+
+			By("sending the campaign", func() {
+				status, response, err := client.Do("POST", "/senders/missing-sender-id/campaigns", map[string]interface{}{
+					"send_to": map[string]interface{}{
+						"user": "user-111",
+					},
+					"campaign_type_id": campaignTypeID,
+					"text":             "campaign body",
+					"subject":          "campaign subject",
+					"template_id":      "missing-template-id",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusNotFound))
+				Expect(response["errors"]).To(ContainElement("Sender with id \"missing-sender-id\" could not be found"))
+			})
+		})
+	})
+
+	Context("when the sender ID belongs to a different client", func() {
+		It("returns a 404 with an error message", func() {
+			var campaignTypeID, differentSenderID string
+
+			By("creating a sender belonging to a different client", func() {
+				token := GetClientTokenFor("non-critical-client")
+
+				status, response, err := client.Do("POST", "/senders", map[string]interface{}{
+					"name": "my-sender",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				differentSenderID = response["id"].(string)
+			})
+
+			By("creating a campaign type", func() {
+				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
+					"name":        "some-campaign-type-name",
+					"description": "acceptance campaign type",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				campaignTypeID = response["id"].(string)
+			})
+
+			By("sending the campaign", func() {
+				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", differentSenderID), map[string]interface{}{
+					"send_to": map[string]interface{}{
+						"user": "user-111",
+					},
+					"campaign_type_id": campaignTypeID,
+					"text":             "campaign body",
+					"subject":          "campaign subject",
+					"template_id":      "missing-template-id",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusNotFound))
+				Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Sender with id %q could not be found", differentSenderID)))
 			})
 		})
 	})

@@ -83,7 +83,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	sendersCollection := collections.NewSendersCollection(sendersRepository, campaignTypesRepository)
 	templatesCollection := collections.NewTemplatesCollection(templatesRepository)
 	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository, templatesRepository)
-	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignsRepository, campaignTypesRepository, templatesRepository, userFinder, spaceFinder, orgFinder)
+	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignsRepository, campaignTypesRepository, templatesRepository, sendersRepository, userFinder, spaceFinder, orgFinder)
 
 	info.Routes{
 		RequestCounter: requestCounter,

@@ -88,6 +88,7 @@ var _ = Describe("CreateHandler", func() {
 		}`))
 
 		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(conn))
+		Expect(campaignsCollection.CreateCall.Receives.ClientID).To(Equal("my-client"))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
 			SendTo:         map[string]string{"user": "user-123"},
 			CampaignTypeID: "some-campaign-type-id",
@@ -96,7 +97,7 @@ var _ = Describe("CreateHandler", func() {
 			Subject:        "Cool New Stuff",
 			TemplateID:     "random-template-id",
 			ReplyTo:        "reply-to-address",
-			ClientID:       "my-client",
+			SenderID:       "some-sender-id",
 		}))
 	})
 
@@ -133,7 +134,7 @@ var _ = Describe("CreateHandler", func() {
 			Subject:        "Cool New Stuff",
 			TemplateID:     "random-template-id",
 			ReplyTo:        "reply-to-address",
-			ClientID:       "my-client",
+			SenderID:       "some-sender-id",
 		}))
 	})
 
@@ -170,7 +171,7 @@ var _ = Describe("CreateHandler", func() {
 			Subject:        "Cool New Stuff",
 			TemplateID:     "random-template-id",
 			ReplyTo:        "reply-to-address",
-			ClientID:       "my-client",
+			SenderID:       "some-sender-id",
 		}))
 	})
 
@@ -207,7 +208,7 @@ var _ = Describe("CreateHandler", func() {
 			Subject:        "Cool New Stuff",
 			TemplateID:     "random-template-id",
 			ReplyTo:        "reply-to-address",
-			ClientID:       "my-client",
+			SenderID:       "some-sender-id",
 		}))
 	})
 

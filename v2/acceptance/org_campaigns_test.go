@@ -155,7 +155,16 @@ var _ = Describe("Organization Campaigns", func() {
 
 			By("sending the campaign", func() {
 				token = GetClientTokenFor("non-critical-client")
-				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
+
+				status, response, err := client.Do("POST", "/senders", map[string]interface{}{
+					"name": "my-sender",
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusCreated))
+
+				senderID = response["id"].(string)
+
+				status, response, err = client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
 						"org": "org-123",
 					},
