@@ -12,6 +12,7 @@
   - [Creating a Template](#create-template)
   - [Listing your Templates](#list-templates)
   - [Retrieving a Template](#retrieve-template)
+  - [Updating a Template](#update-template)
   - [Deleting a Template](#delete-template)
 - Campaign types
   - [Creating a Campaign Type](#create-campaign-type)
@@ -21,6 +22,7 @@
   - [Deleting a Campaign Type](#delete-campaign-type)
 - Campaigns
   - [Sending a Campaign](#send-campaign)
+  - [Retrieving a Campaign](#retrieve-campaign)
 
 ## System Status
 
@@ -107,7 +109,10 @@ Content-Type: text/plain; charset=utf-8
 Date: Fri, 17 Jul 2015 19:30:32 GMT
 X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 
-{"id":"4bbd0431-9f5b-49bb-701d-8c2caa755ed0","name":"my-sender"}
+{
+  "id":"4bbd0431-9f5b-49bb-701d-8c2caa755ed0",
+  "name":"my-sender"
+}
 ```
 
 ##### Response
@@ -152,7 +157,18 @@ Date: Mon, 17 Aug 2015 21:39:31 GMT
 Content-Length: 145
 Content-Type: text/plain; charset=utf-8
 
-{"senders":[{"id":"abb9b009-d3c3-4de2-43f0-341e671e2f3d","name":"sender one"},{"id":"379c5b3d-d3ec-4148-6608-68638ca977c5","name":"sender two"}]}
+{
+  "senders":[
+    {
+      "id":"abb9b009-d3c3-4de2-43f0-341e671e2f3d",
+      "name":"sender one"
+    },
+    {
+      "id":"379c5b3d-d3ec-4148-6608-68638ca977c5",
+      "name":"sender two"
+    }
+  ]
+}
 ```
 
 ##### Response
@@ -205,7 +221,10 @@ Content-Type: text/plain; charset=utf-8
 Date: Fri, 17 Jul 2015 21:00:06 GMT
 X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
 
-{"id":"4bbd0431-9f5b-49bb-701d-8c2caa755ed0","name":"my-sender"}
+{
+  "id":"4bbd0431-9f5b-49bb-701d-8c2caa755ed0",
+  "name":"my-sender"
+}
 ```
 
 ##### Response
@@ -264,7 +283,10 @@ Content-Type: text/plain; charset=utf-8
 Date: Fri, 17 Jul 2015 21:00:06 GMT
 X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
 
-{"id":"64816c21-9eb3-49f0-6489-699cb2defe6b","name":"my-updated-sender"}
+{
+  "id":"64816c21-9eb3-49f0-6489-699cb2defe6b",
+  "name":"my-updated-sender"
+}
 ```
 
 ##### Response
@@ -370,7 +392,14 @@ Content-Type: text/plain; charset=utf-8
 Date: Fri, 17 Jul 2015 19:30:32 GMT
 X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 
-{"html":"","id":"54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5","metadata":{},"name":"my-template","subject":"{{.Subject}}","text":"template text"}
+{
+  "html":"",
+  "id":"54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5",
+  "metadata":{},
+  "name":"my-template",
+  "subject":"{{.Subject}}",
+  "text":"template text"
+}
 ```
 
 ##### Response
@@ -419,7 +448,26 @@ Date: Mon, 17 Aug 2015 21:39:31 GMT
 Content-Length: 300
 Content-Type: text/plain; charset=utf-8
 
-{"templates":[{"html":"","id":"4cc9ba2e-97ad-4541-70a4-1bf3e9c0d76d","metadata":{},"name":"text-template","subject":"Text Subject","text":"Template Body"},{"html":"Template HTML","id":"a75e8837-daeb-419b-500a-442f64657de4","metadata":{},"name":"another-template","subject":"HTML Subject","text":""}]}
+{
+  "templates":[
+    {
+      "html":"",
+      "id":"4cc9ba2e-97ad-4541-70a4-1bf3e9c0d76d",
+      "metadata":{},
+      "name":"text-template",
+      "subject":"Text Subject",
+      "text":"Template Body"
+    },
+    {
+      "html":"Template HTML",
+      "id":"a75e8837-daeb-419b-500a-442f64657de4",
+      "metadata":{},
+      "name":"another-template",
+      "subject":"HTML Subject",
+      "text":""
+    }
+  ]
+}
 ```
 
 ##### Response
@@ -453,7 +501,7 @@ Authorization: Bearer <CLIENT-TOKEN>
 
 ###### Route
 ```
-GET /template/{templateID}
+GET /templates/{templateID}
 ```
 ###### Params
 
@@ -476,7 +524,87 @@ Content-Type: text/plain; charset=utf-8
 Date: Fri, 17 Jul 2015 19:30:32 GMT
 X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 
-{"html":"","id":"54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5","metadata":{},"name":"my-template","subject":"{{.Subject}}","text":"template text"}
+{
+  "html":"",
+  "id":"54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5",
+  "metadata":{},
+  "name":"my-template",
+  "subject":"{{.Subject}}",
+  "text":"template text"
+}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields   | Description                      |
+| -------- | -------------------------------- |
+| id       | System-generated template ID     |
+| name     | Template name                    |
+| html     | Template html body               |
+| text     | Template text body               |
+| subject  | Template subject                 |
+| metadata | Template metadata in JSON format |
+
+<a name="update-template"></a>
+#### Updating a Template
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The token requires `notifications.write` scope.
+
+###### Route
+```
+PUT /templates/{template_id}
+```
+
+###### Params
+| Key          | Description                                |
+| -------------| ------------------------------------------ |
+| templateID\* | The "id" returned when creating a template |
+
+###### Fields
+
+| Key      | Description                                 |
+| -------- | ------------------------------------------- |
+| name     | the human-readable name given to a template |
+| html     | Template html body                          |
+| text     | Template text body                          |
+| subject  | Template subject                            |
+| metadata | Template metadata in JSON format            |
+
+###### CURL example
+```
+$ curl -i -X PUT \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  -d '{"text": "updated text"}'
+  http://notifications.example.com/templates/54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5
+
+HTTP/1.1 200 OK
+Content-Length: 163
+Content-Type: text/plain; charset=utf-8
+Date: Fri, 17 Jul 2015 19:30:32 GMT
+X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
+
+{
+  "html":"",
+  "id":"54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5",
+  "metadata":{},
+  "name":"my-template",
+  "subject":"{{.Subject}}",
+  "text":"updated text"
+}
 ```
 
 ##### Response
@@ -510,7 +638,7 @@ Authorization: Bearer <CLIENT-TOKEN>
 
 ###### Route
 ```
-DELETE /template/{templateID}
+DELETE /templates/{templateID}
 ```
 ###### Params
 
@@ -585,7 +713,13 @@ Content-Type: text/plain; charset=utf-8
 Date: Wed, 22 Jul 2015 16:00:37 GMT
 X-Cf-Requestid: 6106873b-14ea-4fd9-6418-946c1651e4ac
 
-{"critical":false,"description":"campaign type description","id":"3d9aa963-97bb-4b48-4c3c-ecccad6314f8","name":"my-campaign-type","template_id":""}
+{
+  "critical":false,
+  "description":"campaign type description",
+  "id":"3d9aa963-97bb-4b48-4c3c-ecccad6314f8",
+  "name":"my-campaign-type",
+  "template_id":""
+}
 ```
 
 ##### Response
@@ -633,7 +767,17 @@ Date: Thu, 23 Jul 2015 19:22:46 GMT
 Content-Length: 180
 Content-Type: text/plain; charset=utf-8
 
-{"campaign_types":[{"critical":false,"description":"campaign type description","id":"702ce4c7-93a0-42b5-4fd5-4d0ed68e2cd7","name":"my-campaign-type","template_id":""}]}
+{
+  "campaign_types":[
+    {
+      "critical":false,
+      "description":"campaign type description",
+      "id":"702ce4c7-93a0-42b5-4fd5-4d0ed68e2cd7",
+      "name":"my-campaign-type",
+      "template_id":""
+    }
+  ]
+}
 ```
 
 ##### Response
@@ -676,14 +820,18 @@ $ curl -i -X GET \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types/3369a6ae-22c5-4da9-7081-b35350c79c4c
 
-200 OK
-RESPONSE HEADERS:
-  Date: Tue, 28 Jul 2015 00:54:54 GMT
-  Content-Length: 155
-  Content-Type: text/plain; charset=utf-8
-  Connection: close
-RESPONSE BODY:
-{"critical":false,"description":"campaign type description","id":"3369a6ae-22c5-4da9-7081-b35350c79c4c","name":"my-campaign-type","template_id":""}
+HTTP/1.1 200 OK
+Date: Tue, 28 Jul 2015 00:54:54 GMT
+Content-Length: 155
+Content-Type: text/plain; charset=utf-8
+
+{
+  "critical":false,
+  "description":"campaign type description",
+  "id":"3369a6ae-22c5-4da9-7081-b35350c79c4c",
+  "name":"my-campaign-type",
+  "template_id":""
+}
 ```
 
 ##### Response
@@ -734,7 +882,13 @@ Content-Length: 146
 Content-Type: text/plain; charset=utf-8
 Date: Tue, 04 Aug 2015 20:47:35 GMT
 
-{"critical":true,"description":"new campaign description","id":"5cbc4458-3dba-481b-74c3-4548114b830b","name":"new campaign type","template_id":""}
+{
+  "critical":true,
+  "description":"new campaign description",
+  "id":"5cbc4458-3dba-481b-74c3-4548114b830b",
+  "name":"new campaign type",
+  "template_id":""
+}
 ```
 
 ##### Response
@@ -839,12 +993,12 @@ $ curl -i -X POST \
   -H "Authorization: Bearer <CLIENT-TOKEN>" \
   -d '{
   	"send_to": {
-		"user": "c033fc5a-5878-45ca-8f7b-66f1857cfabc"
-	},
-	"campaign_type_id":"49b3bad1-a897-44eb-ab38-05c5725dfcb8",
-  	"text":"this is an email",
-	"subject":"this is a subject",
-	"template_id":"8a947854-68d0-4914-9740-12e60743b0b9"
+      "user": "c033fc5a-5878-45ca-8f7b-66f1857cfabc"
+    },
+    "campaign_type_id":"49b3bad1-a897-44eb-ab38-05c5725dfcb8",
+    "text":"this is an email",
+    "subject":"this is a subject",
+    "template_id":"8a947854-68d0-4914-9740-12e60743b0b9"
   }'
   http://notifications.example.com/senders/555a8e36-89da-48a2-8091-01881acd5051/campaigns
 
@@ -854,7 +1008,9 @@ Content-Type: text/plain; charset=utf-8
 Date: Fri, 17 Jul 2015 19:30:32 GMT
 X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 
-{ "campaign_id": "7e45da15-acac-441d-912f-e18d306eae83"}
+{
+  "campaign_id": "7e45da15-acac-441d-912f-e18d306eae83"
+}
 ```
 
 ##### Response
@@ -868,3 +1024,73 @@ X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 | Fields      | Description                  |
 | ----------- | ---------------------------- |
 | campaign_id | System-generated campaign ID |
+
+<a name="retrieve-campaign"></a>
+#### Retrieving a Campaign
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The token requires `notifications.write` scope.
+
+###### Route
+```
+GET /sender/{sender-id}/campaigns/{campaign-id}
+```
+
+###### Params
+| Key          | Description                                |
+| ------------ | ------------------------------------------ |
+| senderID\*   | The "id" of the sender of the campaign     |
+| campaignID\* | The "id" returned when creating a campaign |
+
+\* required
+
+###### CURL example
+```
+$ curl -i -X GET \
+  -H "Authorization: bearer <CLIENT-TOKEN>" \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  http://notifications.example.com/senders/6b0f094b-1b46-43d2-6dc7-a2529f7f608c/campaigns/f3ffab6a-3ec0-4934-4776-e068d6292bbd
+
+HTTP/1.1 200 OK
+Date: Wed, 02 Sep 2015 22:09:33 GMT
+Content-Length: 348
+Content-Type: text/plain; charset=utf-8
+
+{
+  "campaign_type_id":"c8c79a1c-d805-4ab5-733e-d20368cf8b7c",
+  "html":"<h1>{{.HTML}}</h1>",
+  "reply_to":"reply@example.com",
+  "send_to":{
+    "email":"me@example.com"
+  },
+  "subject":"Campaign Subject",
+  "template_id":"302540ac-31f1-477f-4d7b-11213ebc35e0",
+  "text":"campaign text",
+  "id":"f3ffab6a-3ec0-4934-4776-e068d6292bbd"
+}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields           | Description                                  |
+| ---------------- | -------------------------------------------- |
+| id               | the id of the campaign                       |
+| send_to          | audience to deliver to                       |
+| campaign_type_id | id of the previously created campaign        |
+| text		         | the text of your email                       |
+| html		         | the html of your email                       |
+| subject		       | subject of the email                         |
+| template_id	     | the id of the template you would like to use |
+| reply_to		     | email address used for replies               |
