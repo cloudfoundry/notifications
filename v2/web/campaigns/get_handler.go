@@ -46,6 +46,7 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 	}
 
 	getResponse, _ := json.Marshal(map[string]interface{}{
+		"id":               campaign.ID,
 		"send_to":          campaign.SendTo,
 		"campaign_type_id": campaign.CampaignTypeID,
 		"text":             campaign.Text,

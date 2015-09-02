@@ -53,6 +53,7 @@ var _ = Describe("GetHandler", func() {
 
 		campaignsCollection = mocks.NewCampaignsCollection()
 		campaignsCollection.GetCall.Returns.Campaign = collections.Campaign{
+			ID:             "some-campaign-id",
 			SendTo:         map[string]string{"user": "user-123"},
 			CampaignTypeID: "some-campaign-type-id",
 			Text:           "come see our new stuff",
@@ -77,6 +78,7 @@ var _ = Describe("GetHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body).To(MatchJSON(`{
+			"id":               "some-campaign-id",
 			"send_to": {
 				"user": "user-123"
 			},

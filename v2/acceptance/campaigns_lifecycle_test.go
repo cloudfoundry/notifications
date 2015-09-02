@@ -96,7 +96,12 @@ var _ = Describe("Getting Campaigns", func() {
 			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s", senderID, campaignID), nil, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
+			Expect(response["id"]).To(Equal(campaignID))
+			Expect(response["send_to"]).To(HaveKeyWithValue("email", "test@example.com"))
+			Expect(response["campaign_type_id"]).To(Equal(campaignTypeID))
 			Expect(response["text"]).To(Equal("campaign body"))
+			Expect(response["subject"]).To(Equal("campaign subject"))
+			Expect(response["template_id"]).To(Equal(templateID))
 		})
 	})
 
