@@ -1,30 +1,31 @@
 # Notifications V2 Documentation
 
 - System Status
-  - [Check service status](#get-info)
+  - [Check Service Status](#get-info)
 - Senders
-  - [Creating a sender](#create-sender)
-  - [Listing the senders](#list-senders)
-  - [Retrieving a sender](#retrieve-sender)
-  - [Updating a sender](#update-sender)
-  - [Deleting a sender](#delete-sender)
-- Campaign types
-  - [Creating a campaign type](#create-campaign-type)
-  - [Retrieving a campaign type](#retrieve-campaign-type)
-  - [Listing the campaign types](#list-campaign-types)
-  - [Updating a campaign type](#update-campaign-type)
-  - [Deleting a campaign type](#delete-campaign-type)
+  - [Creating a Sender](#create-sender)
+  - [Listing your Senders](#list-senders)
+  - [Retrieving a Sender](#retrieve-sender)
+  - [Updating a Sender](#update-sender)
+  - [Deleting a Sender](#delete-sender)
 - Templates
-  - [Creating a template](#create-template)
-  - [Retrieving a template](#retrieve-template)
-  - [Deleting a template](#delete-template)
+  - [Creating a Template](#create-template)
+  - [Listing your Templates](#list-templates)
+  - [Retrieving a Template](#retrieve-template)
+  - [Deleting a Template](#delete-template)
+- Campaign types
+  - [Creating a Campaign Type](#create-campaign-type)
+  - [Listing your Campaign Types](#list-campaign-types)
+  - [Retrieving a Campaign Type](#retrieve-campaign-type)
+  - [Updating a Campaign Type](#update-campaign-type)
+  - [Deleting a Campaign Type](#delete-campaign-type)
 - Campaigns
-  - [Sending a campaign](#send-campaign)
+  - [Sending a Campaign](#send-campaign)
 
 ## System Status
 
 <a name="get-info"></a>
-#### Check service status
+#### Check Service Status
 
 ##### Request
 
@@ -69,7 +70,7 @@ X-Cf-Requestid: 2cf01258-ccff-41e9-6d82-41a4441af4af
 ## Senders
 
 <a name="create-sender"></a>
-#### Creating a sender
+#### Creating a Sender
 
 ##### Request
 
@@ -123,7 +124,7 @@ X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 | name   | Sender name                  |
 
 <a name="list-senders"></a>
-#### Listing Senders
+#### Listing your Senders
 
 ##### Request
 
@@ -168,7 +169,7 @@ Content-Type: text/plain; charset=utf-8
 | name   | Sender name |
 
 <a name="retrieve-sender"></a>
-#### Retrieving a sender
+#### Retrieving a Sender
 
 ##### Request
 
@@ -220,9 +221,8 @@ X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
 | id     | Sender ID   |
 | name   | Sender name |
 
-
 <a name="update-sender"></a>
-#### Updating a sender
+#### Updating a Sender
 
 ##### Request
 
@@ -281,7 +281,7 @@ X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
 | name   | Sender name |
 
 <a name="delete-sender"></a>
-#### Deleting a sender
+#### Deleting a Sender
 
 ##### Request
 
@@ -325,261 +325,10 @@ X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
 204 No Content
 ```
 
-## Campaign types
-
-<a name="create-campaign-type"></a>
-#### Creating a campaign type
-
-##### Request
-
-###### Headers
-```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
-```
-\* The token requires `notifications.write` scope.
-\*\* Creation of a critical campaign type requires `critical_notifications.write` scope.
-
-###### Route
-```
-POST /senders/<sender-id>/campaign-types
-```
-###### Params
-
-| Key                       | Description                                                         |
-| ------------------------- | ------------------------------------------------------------------- |
-| name\*                    | the human-readable name given to a campaign type                |
-| description\*             | the human-readable description given to a campaign type         |
-| critical (default: false) | a flag to indicate whether the campaign type is critical or not |
-| template_id               | the ID of a template to use for this campaign type              |
-
-\* required
-
-###### CURL example
-```
-$ curl -i -X POST \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"name":"my-campaign-type","description":"campaign type description","critical":false,"template_id":""}'
-  http://notifications.mrorange.cfla.cf-app.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types
-
-HTTP/1.1 201 Created
-Content-Length: 155
-Content-Type: text/plain; charset=utf-8
-Date: Wed, 22 Jul 2015 16:00:37 GMT
-X-Cf-Requestid: 6106873b-14ea-4fd9-6418-946c1651e4ac
-
-{"critical":false,"description":"campaign type description","id":"3d9aa963-97bb-4b48-4c3c-ecccad6314f8","name":"my-campaign-type","template_id":""}
-```
-
-##### Response
-
-###### Status
-```
-201 Created
-```
-
-###### Body
-| Fields        | Description                           |
-| ------------- | ------------------------------------- |
-| id            | System-generated campaign type ID |
-| name          | Campaign type name                |
-| description   | Campaign type description         |
-| critical      | Critical campaign type flag       |
-| template_id   | Template ID                           |
-
-<a name="retrieve-campaign-type"></a>
-#### Retrieving A Campaign type
-
-##### Request
-
-###### Headers
-```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
-```
-\* The token requires `notifications.write` scope.
-
-###### Route
-```
-GET /senders/<sender-id>/campaign-types/<campaign-type-id>
-```
-###### CURL example
-```
-$ curl -i -X GET \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types/3369a6ae-22c5-4da9-7081-b35350c79c4c
-
-200 OK
-RESPONSE HEADERS:
-  Date: Tue, 28 Jul 2015 00:54:54 GMT
-  Content-Length: 155
-  Content-Type: text/plain; charset=utf-8
-  Connection: close
-RESPONSE BODY:
-{"critical":false,"description":"campaign type description","id":"3369a6ae-22c5-4da9-7081-b35350c79c4c","name":"my-campaign-type","template_id":""}
-```
-
-##### Response
-
-###### Status
-```
-200 OK
-```
-
-###### Body
-| Fields             | Description                           |
-| ------------------ | ------------------------------------- |
-| id                 | System-generated campaign type ID |
-| name               | Campaign type name                |
-| description        | Campaign type description         |
-| critical           | Critical campaign type flag       |
-| template_id        | Template ID                           |
-
-<a name="list-campaign-types"></a>
-#### Listing Campaign types
-
-##### Request
-
-###### Headers
-```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
-```
-\* The token requires `notifications.write` scope.
-\*\* Creation of a critical campaign type requires `critical_notifications.write` scope.
-
-###### Route
-```
-GET /senders/<sender-id>/campaign-types
-```
-###### CURL example
-```
-$ curl -i -X GET \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types
-
-HTTP/1.1 200 OK
-Date: Thu, 23 Jul 2015 19:22:46 GMT
-Content-Length: 180
-Content-Type: text/plain; charset=utf-8
-
-{"campaign_types":[{"critical":false,"description":"campaign type description","id":"702ce4c7-93a0-42b5-4fd5-4d0ed68e2cd7","name":"my-campaign-type","template_id":""}]}
-```
-
-##### Response
-
-###### Status
-```
-200 OK
-```
-
-###### Body
-| Fields             | Description                           |
-| ------------------ | ------------------------------------- |
-| campaign_types | The array of campaign types       |
-| id                 | System-generated campaign type ID |
-| name               | Campaign type name                |
-| description        | Campaign type description         |
-| critical           | Critical campaign type flag       |
-| template_id        | Template ID                          |
-
-<a name="update-campaign-type"></a>
-##### Update a Campaign Type
-
-##### Request
-
-###### Headers
-```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
-```
-
-\* The token requires `notifications.write` scope.
-\*\* Updating a critical campaign type requires `critical_notifications.write` scope.
-
-###### Route
-```
-PUT /senders/<sender-id>/campaign_types/<campaign-type-id>
-```
-
-###### CURL example
-```
-$ curl -i -X PUT \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  --data '{"name": "new campaign type", "description": "new campaign description", "critical": true}' \
-  http://notifications.example.com/senders/a6c38f92-8fa9-488b-4f4c-7f4d4e0c0fd2/campaign_types/5cbc4458-3dba-481b-74c3-4548114b830b
-
-HTTP/1.1 200 OK
-Content-Length: 146
-Content-Type: text/plain; charset=utf-8
-Date: Tue, 04 Aug 2015 20:47:35 GMT
-
-{"critical":true,"description":"new campaign description","id":"5cbc4458-3dba-481b-74c3-4548114b830b","name":"new campaign type","template_id":""}
-```
-
-##### Response
-
-###### Status
-```
-200 OK
-```
-
-###### Body
-| Fields             | Description                           |
-| ------------------ | ------------------------------------- |
-| id                 | System-generated campaign type ID |
-| name               | Campaign type name                |
-| description        | Campaign type description         |
-| critical           | Critical campaign type flag       |
-| template_id        | Template ID                           |
-
-<a name="delete-campaign-type"></a>
-##### Deleting a Campaign Type
-
-##### Request
-
-###### Headers
-```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
-```
-
-\* The token requires `notifications.write` scope.
-
-###### Route
-```
-DELETE /senders/<sender-id>/campaign_types/<campaign-type-id>
-```
-
-###### CURL example
-```
-$ curl -i -X DELETE \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  http://notifications.example.com/senders/a6c38f92-8fa9-488b-4f4c-7f4d4e0c0fd2/campaign_types/5cbc4458-3dba-481b-74c3-4548114b830b
-
-204 No Content
-RESPONSE HEADERS:
-  Date: Wed, 05 Aug 2015 22:24:15 GMT
-  Connection: close
-RESPONSE BODY:
-```
-
-##### Response
-
-###### Status
-```
-204 No Content
-```
-
 ## Templates
 
 <a name="create-template"></a>
-#### Creating a template
+#### Creating a Template
 
 ##### Request
 
@@ -641,8 +390,57 @@ X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 | subject  | Template subject                 |
 | metadata | Template metadata in JSON format |
 
+<a name="list-templates"></a>
+#### Listing your Templates
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The token requires `notifications.write` scope.
+
+###### Route
+```
+GET /templates
+```
+
+###### CURL Example
+```
+$ curl -i -X GET \
+  -H "Authorization: bearer <CLIENT-TOKEN>" \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  http://notifications.example.com/templates
+
+HTTP/1.1 200 OK
+Date: Mon, 17 Aug 2015 21:39:31 GMT
+Content-Length: 300
+Content-Type: text/plain; charset=utf-8
+
+{"templates":[{"html":"","id":"4cc9ba2e-97ad-4541-70a4-1bf3e9c0d76d","metadata":{},"name":"text-template","subject":"Text Subject","text":"Template Body"},{"html":"Template HTML","id":"a75e8837-daeb-419b-500a-442f64657de4","metadata":{},"name":"another-template","subject":"HTML Subject","text":""}]}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields   | Description |
+| -------- | ----------- |
+| id       | Template ID   |
+| name     | Template name |
+| html     | Template html body               |
+| text     | Template text body               |
+| subject  | Template subject                 |
+| metadata | Template metadata in JSON format |
+
 <a name="retrieve-template"></a>
-#### Retrieving a template
+#### Retrieving a Template
 
 ##### Request
 
@@ -699,7 +497,7 @@ X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 | metadata | Template metadata in JSON format |
 
 <a name="delete-template"></a>
-#### Deleting a template
+#### Deleting a Template
 
 ##### Request
 
@@ -743,10 +541,261 @@ X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 200 OK
 ```
 
+## Campaign types
+
+<a name="create-campaign-type"></a>
+#### Creating a Campaign Type
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The token requires `notifications.write` scope.
+\*\* Creation of a critical campaign type requires `critical_notifications.write` scope.
+
+###### Route
+```
+POST /senders/<sender-id>/campaign-types
+```
+###### Params
+
+| Key                       | Description                                                         |
+| ------------------------- | ------------------------------------------------------------------- |
+| name\*                    | the human-readable name given to a campaign type                |
+| description\*             | the human-readable description given to a campaign type         |
+| critical (default: false) | a flag to indicate whether the campaign type is critical or not |
+| template_id               | the ID of a template to use for this campaign type              |
+
+\* required
+
+###### CURL example
+```
+$ curl -i -X POST \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  -d '{"name":"my-campaign-type","description":"campaign type description","critical":false,"template_id":""}'
+  http://notifications.mrorange.cfla.cf-app.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types
+
+HTTP/1.1 201 Created
+Content-Length: 155
+Content-Type: text/plain; charset=utf-8
+Date: Wed, 22 Jul 2015 16:00:37 GMT
+X-Cf-Requestid: 6106873b-14ea-4fd9-6418-946c1651e4ac
+
+{"critical":false,"description":"campaign type description","id":"3d9aa963-97bb-4b48-4c3c-ecccad6314f8","name":"my-campaign-type","template_id":""}
+```
+
+##### Response
+
+###### Status
+```
+201 Created
+```
+
+###### Body
+| Fields        | Description                           |
+| ------------- | ------------------------------------- |
+| id            | System-generated campaign type ID |
+| name          | Campaign type name                |
+| description   | Campaign type description         |
+| critical      | Critical campaign type flag       |
+| template_id   | Template ID                           |
+
+<a name="list-campaign-types"></a>
+#### Listing your Campaign Types
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The token requires `notifications.write` scope.
+\*\* Creation of a critical campaign type requires `critical_notifications.write` scope.
+
+###### Route
+```
+GET /senders/<sender-id>/campaign-types
+```
+###### CURL example
+```
+$ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types
+
+HTTP/1.1 200 OK
+Date: Thu, 23 Jul 2015 19:22:46 GMT
+Content-Length: 180
+Content-Type: text/plain; charset=utf-8
+
+{"campaign_types":[{"critical":false,"description":"campaign type description","id":"702ce4c7-93a0-42b5-4fd5-4d0ed68e2cd7","name":"my-campaign-type","template_id":""}]}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields             | Description                           |
+| ------------------ | ------------------------------------- |
+| campaign_types | The array of campaign types       |
+| id                 | System-generated campaign type ID |
+| name               | Campaign type name                |
+| description        | Campaign type description         |
+| critical           | Critical campaign type flag       |
+| template_id        | Template ID                          |
+
+<a name="retrieve-campaign-type"></a>
+#### Retrieving a Campaign Type
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+\* The token requires `notifications.write` scope.
+
+###### Route
+```
+GET /senders/<sender-id>/campaign-types/<campaign-type-id>
+```
+###### CURL example
+```
+$ curl -i -X GET \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types/3369a6ae-22c5-4da9-7081-b35350c79c4c
+
+200 OK
+RESPONSE HEADERS:
+  Date: Tue, 28 Jul 2015 00:54:54 GMT
+  Content-Length: 155
+  Content-Type: text/plain; charset=utf-8
+  Connection: close
+RESPONSE BODY:
+{"critical":false,"description":"campaign type description","id":"3369a6ae-22c5-4da9-7081-b35350c79c4c","name":"my-campaign-type","template_id":""}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields             | Description                           |
+| ------------------ | ------------------------------------- |
+| id                 | System-generated campaign type ID |
+| name               | Campaign type name                |
+| description        | Campaign type description         |
+| critical           | Critical campaign type flag       |
+| template_id        | Template ID                           |
+
+<a name="update-campaign-type"></a>
+#### Update a Campaign Type
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+
+\* The token requires `notifications.write` scope.
+\*\* Updating a critical campaign type requires `critical_notifications.write` scope.
+
+###### Route
+```
+PUT /senders/<sender-id>/campaign_types/<campaign-type-id>
+```
+
+###### CURL example
+```
+$ curl -i -X PUT \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  --data '{"name": "new campaign type", "description": "new campaign description", "critical": true}' \
+  http://notifications.example.com/senders/a6c38f92-8fa9-488b-4f4c-7f4d4e0c0fd2/campaign_types/5cbc4458-3dba-481b-74c3-4548114b830b
+
+HTTP/1.1 200 OK
+Content-Length: 146
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 04 Aug 2015 20:47:35 GMT
+
+{"critical":true,"description":"new campaign description","id":"5cbc4458-3dba-481b-74c3-4548114b830b","name":"new campaign type","template_id":""}
+```
+
+##### Response
+
+###### Status
+```
+200 OK
+```
+
+###### Body
+| Fields             | Description                           |
+| ------------------ | ------------------------------------- |
+| id                 | System-generated campaign type ID |
+| name               | Campaign type name                |
+| description        | Campaign type description         |
+| critical           | Critical campaign type flag       |
+| template_id        | Template ID                           |
+
+<a name="delete-campaign-type"></a>
+#### Deleting a Campaign Type
+
+##### Request
+
+###### Headers
+```
+X-NOTIFICATIONS-VERSION: 2
+Authorization: Bearer <CLIENT-TOKEN>
+```
+
+\* The token requires `notifications.write` scope.
+
+###### Route
+```
+DELETE /senders/<sender-id>/campaign_types/<campaign-type-id>
+```
+
+###### CURL example
+```
+$ curl -i -X DELETE \
+  -H "X-NOTIFICATIONS-VERSION: 2" \
+  -H "Authorization: Bearer <CLIENT-TOKEN>" \
+  http://notifications.example.com/senders/a6c38f92-8fa9-488b-4f4c-7f4d4e0c0fd2/campaign_types/5cbc4458-3dba-481b-74c3-4548114b830b
+
+204 No Content
+RESPONSE HEADERS:
+  Date: Wed, 05 Aug 2015 22:24:15 GMT
+  Connection: close
+RESPONSE BODY:
+```
+
+##### Response
+
+###### Status
+```
+204 No Content
+```
+
 ## Campaigns
 
 <a name="send-campaign"></a>
-#### Sending a campaign
+#### Sending a Campaign
 
 ##### Request
 
@@ -819,4 +868,3 @@ X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
 | Fields      | Description                  |
 | ----------- | ---------------------------- |
 | campaign_id | System-generated campaign ID |
-
