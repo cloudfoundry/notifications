@@ -2,37 +2,46 @@ package mocks
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/mail"
+
 	"github.com/pivotal-golang/lager"
 )
 
 type MailClient struct {
-	Messages      []mail.Message
-	SendLogger    lager.Logger
-	SendError     error
-	ConnectLogger lager.Logger
-	ConnectError  error
+	ConnectCall struct {
+		Receives struct {
+			Logger lager.Logger
+		}
+		Returns struct {
+			Error error
+		}
+	}
+
+	SendCall struct {
+		CallCount int
+		Receives  struct {
+			Message mail.Message
+			Logger  lager.Logger
+		}
+		Returns struct {
+			Error error
+		}
+	}
 }
 
 func NewMailClient() *MailClient {
 	return &MailClient{}
 }
 
-func (fake *MailClient) Connect(logger lager.Logger) error {
-	fake.ConnectLogger = logger
-	return fake.ConnectError
+func (mc *MailClient) Connect(logger lager.Logger) error {
+	mc.ConnectCall.Receives.Logger = logger
+
+	return mc.ConnectCall.Returns.Error
 }
 
-func (fake *MailClient) Send(msg mail.Message, logger lager.Logger) error {
-	fake.SendLogger = logger
+func (mc *MailClient) Send(message mail.Message, logger lager.Logger) error {
+	mc.SendCall.Receives.Message = message
+	mc.SendCall.Receives.Logger = logger
+	mc.SendCall.CallCount++
 
-	if fake.ConnectError != nil {
-		return fake.ConnectError
-	}
-
-	if fake.SendError != nil {
-		return fake.SendError
-	}
-
-	fake.Messages = append(fake.Messages, msg)
-	return nil
+	return mc.SendCall.Returns.Error
 }

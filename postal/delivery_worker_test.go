@@ -165,7 +165,7 @@ var _ = Describe("DeliveryWorker", func() {
 			<-time.After(10 * time.Millisecond)
 			worker.Halt()
 
-			Expect(mailClient.Messages).To(HaveLen(2))
+			Expect(mailClient.SendCall.CallCount).To(Equal(2))
 		})
 
 		It("can be halted", func() {
@@ -397,8 +397,8 @@ var _ = Describe("DeliveryWorker", func() {
 		It("ensures message delivery", func() {
 			worker.Deliver(job)
 
-			Expect(mailClient.Messages).To(HaveLen(1))
-			msg := mailClient.Messages[0]
+			Expect(mailClient.SendCall.CallCount).To(Equal(1))
+			msg := mailClient.SendCall.Receives.Message
 			Expect(msg.From).To(Equal("from@example.com"))
 			Expect(msg.ReplyTo).To(Equal("thesender@example.com"))
 			Expect(msg.To).To(Equal(fakeUserEmail))
@@ -429,20 +429,19 @@ var _ = Describe("DeliveryWorker", func() {
 
 		It("should connect and send the message with the worker's logger session", func() {
 			worker.Deliver(job)
-			Expect(mailClient.ConnectLogger.SessionName()).To(Equal("notifications.worker"))
-			Expect(mailClient.SendLogger.SessionName()).To(Equal("notifications.worker"))
+			Expect(mailClient.ConnectCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
+			Expect(mailClient.SendCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 		})
 
 		Context("when the delivery fails to be sent", func() {
 			Context("because of a send error", func() {
 				BeforeEach(func() {
-					mailClient.SendError = errors.New("Error sending message!!!")
+					mailClient.SendCall.Returns.Error = errors.New("Error sending message!!!")
 				})
 
 				It("marks the job for retry", func() {
 					worker.Deliver(job)
 
-					Expect(mailClient.Messages).To(HaveLen(0))
 					Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
 					Expect(deliveryFailureHandler.HandleCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 				})
@@ -459,7 +458,7 @@ var _ = Describe("DeliveryWorker", func() {
 						LogLevel: int(lager.ERROR),
 						Data: map[string]interface{}{
 							"session":         "1",
-							"error":           mailClient.SendError.Error(),
+							"error":           "Error sending message!!!",
 							"recipient":       "user-123@example.com",
 							"worker_id":       float64(1234),
 							"message_id":      "randomly-generated-guid",
@@ -480,7 +479,7 @@ var _ = Describe("DeliveryWorker", func() {
 
 			Context("and the error is a connect error", func() {
 				It("logs an SMTP connection error", func() {
-					mailClient.ConnectError = errors.New("server timeout")
+					mailClient.ConnectCall.Returns.Error = errors.New("server timeout")
 					worker.Deliver(job)
 
 					lines, err := parseLogLines(buffer.Bytes())
@@ -492,7 +491,7 @@ var _ = Describe("DeliveryWorker", func() {
 						LogLevel: int(lager.ERROR),
 						Data: map[string]interface{}{
 							"session":         "1",
-							"error":           mailClient.ConnectError.Error(),
+							"error":           "server timeout",
 							"recipient":       "user-123@example.com",
 							"worker_id":       float64(1234),
 							"message_id":      "randomly-generated-guid",
@@ -508,7 +507,7 @@ var _ = Describe("DeliveryWorker", func() {
 						panic(err)
 					}
 
-					mailClient.ConnectError = errors.New("BOOM!")
+					mailClient.ConnectCall.Returns.Error = errors.New("BOOM!")
 					messageID := jobDelivery.MessageID
 					worker.Deliver(job)
 
@@ -546,7 +545,7 @@ var _ = Describe("DeliveryWorker", func() {
 			})
 
 			It("does not send any non-critical notifications", func() {
-				Expect(mailClient.Messages).To(HaveLen(0))
+				Expect(mailClient.SendCall.CallCount).To(Equal(0))
 			})
 
 			It("updates the message status as undeliverable", func() {
@@ -671,7 +670,7 @@ var _ = Describe("DeliveryWorker", func() {
 				It("does not send the email", func() {
 					worker.Deliver(job)
 
-					Expect(len(mailClient.Messages)).To(Equal(0))
+					Expect(mailClient.SendCall.CallCount).To(Equal(0))
 				})
 			})
 
@@ -690,7 +689,7 @@ var _ = Describe("DeliveryWorker", func() {
 				It("does not send the email", func() {
 					worker.Deliver(job)
 
-					Expect(len(mailClient.Messages)).To(Equal(0))
+					Expect(mailClient.SendCall.CallCount).To(Equal(0))
 				})
 			})
 
@@ -710,7 +709,7 @@ var _ = Describe("DeliveryWorker", func() {
 				It("does send the email", func() {
 					worker.Deliver(job)
 
-					Expect(len(mailClient.Messages)).To(Equal(1))
+					Expect(mailClient.SendCall.CallCount).To(Equal(1))
 				})
 			})
 		})
