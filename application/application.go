@@ -12,6 +12,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/strategy"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
+	"github.com/cloudfoundry-incubator/notifications/v2/util"
 	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/pivotal-golang/conceal"
 	"github.com/pivotal-golang/lager"
@@ -135,13 +137,18 @@ func (app Application) StartWorkers() {
 			MessageStatusUpdater:   postal.NewMessageStatusUpdater(app.mother.MessagesRepo()),
 			DeliveryFailureHandler: postal.NewDeliveryFailureHandler(),
 		})
-		worker := postal.NewDeliveryWorker(v1Workflow, nil, postal.DeliveryWorkerConfig{
+
+		database := v2models.NewDatabase(app.mother.SQLDatabase(), v2models.Config{})
+		messageStatusUpdater := postal.NewV2MessageStatusUpdater(v2models.NewMessagesRepository(util.NewClock()))
+		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), postal.NewPackager(app.mother.TemplatesLoader(), cloak), postal.NewUserLoader(zonedUAAClient), uaa.NewTokenLoader(zonedUAAClient), messageStatusUpdater, database, app.env.Sender, app.env.Domain, app.env.UAAHost)
+
+		worker := postal.NewDeliveryWorker(v1Workflow, v2Workflow, postal.DeliveryWorkerConfig{
 			ID:                     i,
 			UAAHost:                app.env.UAAHost,
 			Logger:                 app.mother.Logger(),
 			Queue:                  app.mother.Queue(),
 			DBTrace:                app.env.DBLoggingEnabled,
-			Database:               app.mother.Database(),
+			Database:               database,
 			StrategyDeterminer:     strategy.NewStrategyDeterminer(app.mother.UserStrategy(), app.mother.SpaceStrategy(), app.mother.OrganizationStrategy(), app.mother.EmailStrategy()),
 			DeliveryFailureHandler: postal.NewDeliveryFailureHandler(),
 		})

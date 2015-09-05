@@ -9,7 +9,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/pivotal-golang/lager"
 )
@@ -26,6 +25,7 @@ type Delivery struct {
 	Scope           string
 	VCAPRequestID   string
 	RequestReceived time.Time
+	CampaignID      string
 }
 
 type DeliveryWorker struct {
@@ -69,7 +69,7 @@ type TokenLoaderInterface interface {
 }
 
 type workflow interface {
-	Deliver(job *gobble.Job, logger lager.Logger)
+	Deliver(job *gobble.Job, logger lager.Logger) error
 }
 
 type StrategyDeterminerInterface interface {
@@ -77,7 +77,7 @@ type StrategyDeterminerInterface interface {
 }
 
 type messageStatusUpdaterInterface interface {
-	Update(conn models.ConnectionInterface, messageID, messageStatus string, logger lager.Logger)
+	Update(conn db.ConnectionInterface, messageID, messageStatus, campaignID string, logger lager.Logger)
 }
 
 type deliveryFailureHandlerInterface interface {
@@ -102,11 +102,11 @@ func NewDeliveryWorker(v1workflow, v2workflow workflow, config DeliveryWorkerCon
 }
 
 func (worker DeliveryWorker) Deliver(job *gobble.Job) {
-	var campaignJob struct {
+	var typedJob struct {
 		JobType string
 	}
 
-	err := job.Unmarshal(&campaignJob)
+	err := job.Unmarshal(&typedJob)
 	if err != nil {
 		metrics.NewMetric("counter", map[string]interface{}{
 			"name": "notifications.worker.panic.json",
@@ -116,7 +116,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 		return
 	}
 
-	switch campaignJob.JobType {
+	switch typedJob.JobType {
 	case "campaign":
 		err := worker.strategyDeterminer.Determine(worker.database.Connection(), worker.uaaHost, *job)
 		if err != nil {

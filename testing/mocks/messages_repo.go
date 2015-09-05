@@ -1,63 +1,89 @@
 package mocks
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 )
 
 type MessagesRepo struct {
-	Messages                map[string]models.Message
-	DeleteBeforeError       error
-	FindByIDError           error
-	UpsertError             error
-	DeleteBeforeInvocations []time.Time
+	UpsertCall struct {
+		Receives struct {
+			Connection models.ConnectionInterface
+			Messages   []models.Message
+		}
+		Returns struct {
+			Message models.Message
+			Error   error
+		}
+	}
+
+	UpdateCall struct {
+		Receives struct {
+			Connection models.ConnectionInterface
+			Messages   []models.Message
+		}
+		Returns struct {
+			Message models.Message
+			Error   error
+		}
+	}
 
 	FindByIDCall struct {
 		Receives struct {
 			Connection models.ConnectionInterface
 			MessageID  string
 		}
+		Returns struct {
+			Message models.Message
+			Error   error
+		}
+	}
+
+	DeleteBeforeCall struct {
+		InvocationTimes []time.Time
+		CallCount       int
+		Receives        struct {
+			Connection    models.ConnectionInterface
+			ThresholdTime time.Time
+		}
+		Returns struct {
+			RowsAffected int
+			Error        error
+		}
 	}
 }
 
 func NewMessagesRepo() *MessagesRepo {
-	return &MessagesRepo{
-		Messages:                make(map[string]models.Message),
-		DeleteBeforeInvocations: []time.Time{},
-	}
+	return &MessagesRepo{}
 }
 
-func (fake *MessagesRepo) FindByID(conn models.ConnectionInterface, messageID string) (models.Message, error) {
-	fake.FindByIDCall.Receives.Connection = conn
-	fake.FindByIDCall.Receives.MessageID = messageID
+func (mr *MessagesRepo) Upsert(conn models.ConnectionInterface, message models.Message) (models.Message, error) {
+	mr.UpsertCall.Receives.Connection = conn
+	mr.UpsertCall.Receives.Messages = append(mr.UpsertCall.Receives.Messages, message)
 
-	if fake.FindByIDError != nil {
-		return models.Message{}, fake.FindByIDError
-	}
-
-	message, ok := fake.Messages[messageID]
-	if !ok {
-		return message, models.RecordNotFoundError(fmt.Sprintf("We did not find the message with ID %s", messageID))
-	}
-	return message, fake.FindByIDError
+	return mr.UpsertCall.Returns.Message, mr.UpsertCall.Returns.Error
 }
 
-func (fake MessagesRepo) Upsert(conn models.ConnectionInterface, message models.Message) (models.Message, error) {
-	fake.Messages[message.ID] = message
+func (mr *MessagesRepo) Update(conn models.ConnectionInterface, message models.Message) (models.Message, error) {
+	mr.UpdateCall.Receives.Connection = conn
+	mr.UpdateCall.Receives.Messages = append(mr.UpdateCall.Receives.Messages, message)
 
-	return message, fake.UpsertError
+	return mr.UpdateCall.Returns.Message, mr.UpdateCall.Returns.Error
 }
 
-func (fake *MessagesRepo) DeleteBefore(conn models.ConnectionInterface, thresholdTime time.Time) (int, error) {
-	count := 0
-	for key, message := range fake.Messages {
-		if message.UpdatedAt.Before(thresholdTime) {
-			delete(fake.Messages, key)
-			count += 1
-		}
-	}
-	fake.DeleteBeforeInvocations = append(fake.DeleteBeforeInvocations, time.Now())
-	return count, fake.DeleteBeforeError
+func (mr *MessagesRepo) FindByID(conn models.ConnectionInterface, messageID string) (models.Message, error) {
+	mr.FindByIDCall.Receives.Connection = conn
+	mr.FindByIDCall.Receives.MessageID = messageID
+
+	return mr.FindByIDCall.Returns.Message, mr.FindByIDCall.Returns.Error
+}
+
+func (mr *MessagesRepo) DeleteBefore(conn models.ConnectionInterface, thresholdTime time.Time) (int, error) {
+	mr.DeleteBeforeCall.Receives.Connection = conn
+	mr.DeleteBeforeCall.Receives.ThresholdTime = thresholdTime
+	mr.DeleteBeforeCall.InvocationTimes = append(mr.DeleteBeforeCall.InvocationTimes, time.Now())
+	mr.DeleteBeforeCall.CallCount++
+
+	return mr.DeleteBeforeCall.Returns.RowsAffected, mr.DeleteBeforeCall.Returns.Error
 }

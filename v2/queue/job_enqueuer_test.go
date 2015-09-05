@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
+	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 	"github.com/nu7hatch/gouuid"
 
@@ -23,7 +24,7 @@ var _ = Describe("JobEnqueuer", func() {
 		gobbleQueue   *mocks.Queue
 		conn          *mocks.Connection
 		transaction   *mocks.Transaction
-		messagesRepo  *mocks.MessagesRepo
+		messagesRepo  *mocks.MessagesRepository
 		guidGenerator *mocks.GUIDGenerator
 		space         cf.CloudControllerSpace
 		org           cf.CloudControllerOrganization
@@ -46,7 +47,7 @@ var _ = Describe("JobEnqueuer", func() {
 		guid4 := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x58})
 		guidGenerator.GenerateCall.Returns.GUIDs = []*uuid.UUID{&guid1, &guid2, &guid3, &guid4}
 
-		messagesRepo = mocks.NewMessagesRepo()
+		messagesRepo = mocks.NewMessagesRepository()
 		enqueuer = queue.NewJobEnqueuer(gobbleQueue, guidGenerator.Generate, messagesRepo)
 		space = cf.CloudControllerSpace{Name: "the-space"}
 		org = cf.CloudControllerOrganization{Name: "the-org"}
@@ -56,7 +57,7 @@ var _ = Describe("JobEnqueuer", func() {
 	Describe("Enqueue", func() {
 		It("returns the correct types of responses for users", func() {
 			users := []queue.User{{GUID: "user-1"}, {Email: "user-2@example.com"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			responses := enqueuer.Enqueue(conn, users, queue.Options{KindID: "the-kind"}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+			responses := enqueuer.Enqueue(conn, users, queue.Options{KindID: "the-kind"}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
 			Expect(responses).To(HaveLen(4))
 			Expect(responses).To(ConsistOf([]queue.Response{
@@ -89,7 +90,7 @@ var _ = Describe("JobEnqueuer", func() {
 
 		It("enqueues jobs with the deliveries", func() {
 			users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+			enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
 			var deliveries []queue.Delivery
 			for _, job := range gobbleQueue.EnqueueCall.Receives.Jobs {
@@ -104,6 +105,7 @@ var _ = Describe("JobEnqueuer", func() {
 			Expect(deliveries).To(HaveLen(4))
 			Expect(deliveries).To(ConsistOf([]queue.Delivery{
 				{
+					JobType:         "v2",
 					Options:         queue.Options{},
 					UserGUID:        "user-1",
 					Space:           space,
@@ -114,8 +116,10 @@ var _ = Describe("JobEnqueuer", func() {
 					Scope:           "my.scope",
 					VCAPRequestID:   "some-request-id",
 					RequestReceived: reqReceived,
+					CampaignID:      "some-campaign",
 				},
 				{
+					JobType:         "v2",
 					Options:         queue.Options{},
 					UserGUID:        "user-2",
 					Space:           space,
@@ -126,8 +130,10 @@ var _ = Describe("JobEnqueuer", func() {
 					Scope:           "my.scope",
 					VCAPRequestID:   "some-request-id",
 					RequestReceived: reqReceived,
+					CampaignID:      "some-campaign",
 				},
 				{
+					JobType:         "v2",
 					Options:         queue.Options{},
 					UserGUID:        "user-3",
 					Space:           space,
@@ -138,8 +144,10 @@ var _ = Describe("JobEnqueuer", func() {
 					Scope:           "my.scope",
 					VCAPRequestID:   "some-request-id",
 					RequestReceived: reqReceived,
+					CampaignID:      "some-campaign",
 				},
 				{
+					JobType:         "v2",
 					Options:         queue.Options{},
 					UserGUID:        "user-4",
 					Space:           space,
@@ -150,38 +158,49 @@ var _ = Describe("JobEnqueuer", func() {
 					Scope:           "my.scope",
 					VCAPRequestID:   "some-request-id",
 					RequestReceived: reqReceived,
+					CampaignID:      "some-campaign",
 				},
 			}))
 		})
 
-		It("Upserts a StatusQueued for each of the jobs", func() {
+		It("Inserts a StatusQueued for each of the jobs", func() {
 			users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+			enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
-			var statuses []string
-			for _, job := range gobbleQueue.EnqueueCall.Receives.Jobs {
-				var delivery queue.Delivery
-				err := job.Unmarshal(&delivery)
-				if err != nil {
-					panic(err)
-				}
-
-				message, err := messagesRepo.FindByID(conn, delivery.MessageID)
-				if err != nil {
-					panic(err)
-				}
-
-				statuses = append(statuses, message.Status)
+			var messages []models.Message
+			for _, call := range messagesRepo.InsertCalls {
+				messages = append(messages, call.Receives.Message)
 			}
 
-			Expect(statuses).To(HaveLen(4))
-			Expect(statuses).To(ConsistOf([]string{queue.StatusQueued, queue.StatusQueued, queue.StatusQueued, queue.StatusQueued}))
+			Expect(messages).To(HaveLen(4))
+			Expect(messages).To(ConsistOf([]models.Message{
+				{
+					ID:         "deadbeef-aabb-ccdd-eeff-001122334455",
+					Status:     queue.StatusQueued,
+					CampaignID: "some-campaign",
+				},
+				{
+					ID:         "deadbeef-aabb-ccdd-eeff-001122334456",
+					Status:     queue.StatusQueued,
+					CampaignID: "some-campaign",
+				},
+				{
+					ID:         "deadbeef-aabb-ccdd-eeff-001122334457",
+					Status:     queue.StatusQueued,
+					CampaignID: "some-campaign",
+				},
+				{
+					ID:         "deadbeef-aabb-ccdd-eeff-001122334458",
+					Status:     queue.StatusQueued,
+					CampaignID: "some-campaign",
+				},
+			}))
 		})
 
 		Context("using a transaction", func() {
 			It("commits the transaction when everything goes well", func() {
 				users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-				responses := enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+				responses := enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeTrue())
@@ -191,9 +210,9 @@ var _ = Describe("JobEnqueuer", func() {
 			})
 
 			It("rolls back the transaction when there is an error in message repo upserting", func() {
-				messagesRepo.UpsertError = errors.New("BOOM!")
+				messagesRepo.InsertCall.Returns.Error = errors.New("BOOM!")
 				users := []queue.User{{GUID: "user-1"}}
-				enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+				enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
@@ -204,7 +223,7 @@ var _ = Describe("JobEnqueuer", func() {
 				transaction.CommitCall.Returns.Error = errors.New("the commit blew up")
 
 				users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-				responses := enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+				responses := enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeTrue())

@@ -1,6 +1,7 @@
 package postal
 
 import (
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/pivotal-golang/lager"
 )
@@ -19,10 +20,11 @@ func NewMessageStatusUpdater(messagesRepo MessageUpserter) MessageStatusUpdater 
 	}
 }
 
-func (mu MessageStatusUpdater) Update(conn models.ConnectionInterface, messageID, messageStatus string, logger lager.Logger) {
+func (mu MessageStatusUpdater) Update(conn db.ConnectionInterface, messageID, messageStatus, campaignID string, logger lager.Logger) {
 	_, err := mu.messagesRepo.Upsert(conn, models.Message{
-		ID:     messageID,
-		Status: messageStatus,
+		ID:         messageID,
+		Status:     messageStatus,
+		CampaignID: campaignID,
 	})
 	if err != nil {
 		logger.Session("message-updater").Error("failed-message-status-upsert", err, lager.Data{

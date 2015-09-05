@@ -78,6 +78,7 @@ func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string,
 		GUID:       guid,
 		Connection: conn,
 		TemplateID: campaignJob.Campaign.TemplateID,
+		CampaignID: campaignJob.Campaign.ID,
 		Client: services.DispatchClient{
 			ID: campaignJob.Campaign.ClientID,
 		},

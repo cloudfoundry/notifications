@@ -54,6 +54,7 @@ var _ = Describe("Determiner", func() {
 				UAAHost:    "some-uaa-host",
 				Connection: database.Connection(),
 				TemplateID: "some-template-id",
+				CampaignID: "some-id",
 				Client: services.DispatchClient{
 					ID: "some-client-id",
 				},
@@ -93,6 +94,7 @@ var _ = Describe("Determiner", func() {
 				UAAHost:    "some-uaa-host",
 				Connection: database.Connection(),
 				TemplateID: "some-template-id",
+				CampaignID: "some-id",
 				Client: services.DispatchClient{
 					ID: "some-client-id",
 				},
@@ -132,6 +134,7 @@ var _ = Describe("Determiner", func() {
 				UAAHost:    "some-uaa-host",
 				Connection: database.Connection(),
 				TemplateID: "some-template-id",
+				CampaignID: "some-id",
 				Client: services.DispatchClient{
 					ID: "some-client-id",
 				},
@@ -171,6 +174,7 @@ var _ = Describe("Determiner", func() {
 				UAAHost:    "some-uaa-host",
 				Connection: database.Connection(),
 				TemplateID: "some-template-id",
+				CampaignID: "some-id",
 				Client: services.DispatchClient{
 					ID: "some-client-id",
 				},

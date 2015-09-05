@@ -31,7 +31,7 @@ var _ = Describe("MessageFinder.Find", func() {
 
 	Context("when a message exists with the given id", func() {
 		It("returns the right Message struct", func() {
-			messagesRepo.Messages["a-message-id"] = models.Message{Status: postal.StatusDelivered}
+			messagesRepo.FindByIDCall.Returns.Message = models.Message{Status: postal.StatusDelivered}
 
 			message, err := finder.Find(database, "a-message-id")
 
@@ -45,10 +45,10 @@ var _ = Describe("MessageFinder.Find", func() {
 
 	Context("when the underlying repo returns an error", func() {
 		It("bubbles up the error", func() {
-			messagesRepo.FindByIDError = errors.New("generic repo error (it could be anything!)")
+			messagesRepo.FindByIDCall.Returns.Error = errors.New("some error")
 
 			_, err := finder.Find(database, "a-message-id")
-			Expect(err).To(MatchError(messagesRepo.FindByIDError))
+			Expect(err).To(MatchError(errors.New("some error")))
 		})
 	})
 })

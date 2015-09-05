@@ -167,6 +167,7 @@ var _ = Describe("Space Strategy", func() {
 							},
 						},
 						TemplateID: "some-template-id",
+						CampaignID: "some-campaign-id",
 						Kind: services.DispatchKind{
 							ID:          "forgot_password",
 							Description: "Password reminder",
@@ -204,6 +205,7 @@ var _ = Describe("Space Strategy", func() {
 						Endorsement: services.SpaceEndorsement,
 					}))
 					Expect(v2Enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("uaa"))
+					Expect(v2Enqueuer.EnqueueCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 				})
 			})
 		})

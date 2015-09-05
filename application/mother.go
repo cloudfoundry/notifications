@@ -21,6 +21,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
+	"github.com/cloudfoundry-incubator/notifications/v2/util"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
@@ -47,7 +48,7 @@ func (m *Mother) Queue() gobble.QueueInterface {
 }
 
 func (m *Mother) V2Enqueuer() queue.JobEnqueuer {
-	return queue.NewJobEnqueuer(m.Queue(), uuid.NewV4, m.MessagesRepo())
+	return queue.NewJobEnqueuer(m.Queue(), uuid.NewV4, v2models.NewMessagesRepository(util.NewClock()))
 }
 
 func (m *Mother) UserStrategy() services.UserStrategy {

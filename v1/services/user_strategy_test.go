@@ -114,6 +114,7 @@ var _ = Describe("UserStrategy", func() {
 						},
 					},
 					TemplateID: "some-template-id",
+					CampaignID: "some-campaign-id",
 					UAAHost:    "uaa",
 					Kind: services.DispatchKind{
 						ID:          "forgot_waterbottle",
@@ -151,6 +152,7 @@ var _ = Describe("UserStrategy", func() {
 					Endorsement: services.UserEndorsement,
 				}))
 				Expect(v2Enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("uaa"))
+				Expect(v2Enqueuer.EnqueueCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 			})
 		})
 	})

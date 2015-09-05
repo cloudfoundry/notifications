@@ -106,6 +106,7 @@ var _ = Describe("EmailStrategy", func() {
 						Description: "description of a client",
 					},
 					TemplateID: "some-template-id",
+					CampaignID: "some-campaign-id",
 					Message: services.DispatchMessage{
 						ReplyTo: "reply-to@example.com",
 						Subject: "this is the subject",
@@ -128,6 +129,7 @@ var _ = Describe("EmailStrategy", func() {
 				Expect(v2Enqueuer.EnqueueCall.Receives.Connection).To(Equal(conn))
 				Expect(v2Enqueuer.EnqueueCall.Receives.Users[0].Email).To(Equal("dr@strangelove.com"))
 				Expect(v2Enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("uaahost"))
+				Expect(v2Enqueuer.EnqueueCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 
 				Expect(v1Enqueuer.EnqueueCall.WasCalled).To(BeFalse())
 			})

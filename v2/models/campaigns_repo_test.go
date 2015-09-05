@@ -102,4 +102,38 @@ var _ = Describe("CampaignsRepository", func() {
 			})
 		})
 	})
+
+	Describe("ListSendingCampaigns", func() {
+		var campaign models.Campaign
+
+		BeforeEach(func() {
+			var err error
+			campaign, err = repo.Insert(connection, models.Campaign{
+				Status: "sending",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = repo.Insert(connection, models.Campaign{
+				Status: "completed",
+			})
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("only returns campaigns in a sending state", func() {
+			sendingCampaigns, err := repo.ListSendingCampaigns(connection)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(sendingCampaigns).To(HaveLen(1))
+			Expect(sendingCampaigns[0].ID).To(Equal(campaign.ID))
+		})
+
+		Context("failure cases", func() {
+			It("returns an unknown error the database takes a dump", func() {
+				fakeConnection := mocks.NewConnection()
+				fakeConnection.SelectCall.Returns.Error = errors.New("something bad happened")
+
+				_, err := repo.ListSendingCampaigns(fakeConnection)
+				Expect(err).To(MatchError(errors.New("something bad happened")))
+			})
+		})
+	})
 })

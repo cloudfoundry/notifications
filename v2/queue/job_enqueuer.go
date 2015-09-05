@@ -5,7 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -47,6 +47,7 @@ type HTML struct {
 }
 
 type Delivery struct {
+	JobType         string
 	MessageID       string
 	Options         Options
 	UserGUID        string
@@ -58,19 +59,20 @@ type Delivery struct {
 	Scope           string
 	VCAPRequestID   string
 	RequestReceived time.Time
+	CampaignID      string
 }
 
-type messagesRepoUpserter interface {
-	Upsert(models.ConnectionInterface, models.Message) (models.Message, error)
+type messagesRepoInserter interface {
+	Insert(models.ConnectionInterface, models.Message) (models.Message, error)
 }
 
 type JobEnqueuer struct {
 	queue         gobble.QueueInterface
 	guidGenerator GUIDGenerationFunc
-	messagesRepo  messagesRepoUpserter
+	messagesRepo  messagesRepoInserter
 }
 
-func NewJobEnqueuer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc, messagesRepo messagesRepoUpserter) JobEnqueuer {
+func NewJobEnqueuer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc, messagesRepo messagesRepoInserter) JobEnqueuer {
 	return JobEnqueuer{
 		queue:         queue,
 		guidGenerator: guidGenerator,
@@ -78,8 +80,7 @@ func NewJobEnqueuer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFun
 	}
 }
 
-func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []Response {
-
+func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time, campaignID string) []Response {
 	responses := []Response{}
 	jobsByMessageID := map[string]gobble.Job{}
 	for _, user := range users {
@@ -90,6 +91,7 @@ func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, opti
 		messageID := guid.String()
 
 		jobsByMessageID[messageID] = gobble.NewJob(Delivery{
+			JobType:         "v2",
 			Options:         options,
 			UserGUID:        user.GUID,
 			Email:           user.Email,
@@ -101,6 +103,7 @@ func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, opti
 			Scope:           scope,
 			VCAPRequestID:   vcapRequestID,
 			RequestReceived: reqReceived,
+			CampaignID:      campaignID,
 		})
 
 		recipient := user.Email
@@ -119,9 +122,10 @@ func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, opti
 	transaction := conn.Transaction()
 	transaction.Begin()
 	for messageID := range jobsByMessageID {
-		_, err := enqueuer.messagesRepo.Upsert(transaction, models.Message{
-			ID:     messageID,
-			Status: StatusQueued,
+		_, err := enqueuer.messagesRepo.Insert(transaction, models.Message{
+			ID:         messageID,
+			Status:     StatusQueued,
+			CampaignID: campaignID,
 		})
 		if err != nil {
 			transaction.Rollback()

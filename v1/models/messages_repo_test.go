@@ -23,8 +23,9 @@ var _ = Describe("MessagesRepo", func() {
 		helpers.TruncateTables(database)
 		conn = database.Connection()
 		message = models.Message{
-			ID:     "message-id-123",
-			Status: postal.StatusDelivered,
+			ID:         "message-id-123",
+			CampaignID: "some-campaign-id",
+			Status:     postal.StatusDelivered,
 		}
 
 	})
@@ -32,9 +33,7 @@ var _ = Describe("MessagesRepo", func() {
 	Describe("FindByID", func() {
 		It("finds messages created in the database", func() {
 			message, err := repo.Create(conn, message)
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			messageFound, err := repo.FindByID(conn, message.ID)
 			Expect(err).ToNot(HaveOccurred())
@@ -55,9 +54,7 @@ var _ = Describe("MessagesRepo", func() {
 			It("inserts a new record", func() {
 				message.UpdatedAt = time.Now().Add(100 * time.Hour)
 				_, err := repo.Upsert(conn, message)
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				messageFound, err := repo.FindByID(conn, message.ID)
 				Expect(err).ToNot(HaveOccurred())
@@ -70,18 +67,14 @@ var _ = Describe("MessagesRepo", func() {
 		Context("when a record already exists with the message id", func() {
 			It("updates the existing record", func() {
 				_, err := repo.Create(conn, message)
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				updatedMessage := message
 				updatedMessage.Status = postal.StatusFailed
 
 				updatedMessage.UpdatedAt = time.Now().Add(100 * time.Hour)
 				updatedMessage, err = repo.Upsert(conn, updatedMessage)
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				messageFound, err := repo.FindByID(conn, message.ID)
 				Expect(err).ToNot(HaveOccurred())
@@ -96,9 +89,7 @@ var _ = Describe("MessagesRepo", func() {
 	Describe("DeleteBefore", func() {
 		It("Deletes messages older than the input time", func() {
 			_, err := repo.Create(conn, message)
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			itemsDeleted, err := repo.DeleteBefore(conn, time.Now().Add(1*time.Hour))
 			Expect(err).ToNot(HaveOccurred())
@@ -112,9 +103,7 @@ var _ = Describe("MessagesRepo", func() {
 
 		It("Does not delete messages younger than the input time", func() {
 			_, err := repo.Create(conn, message)
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			itemsDeleted, err := repo.DeleteBefore(conn, time.Now().Add(-1*time.Hour))
 			Expect(err).ToNot(HaveOccurred())

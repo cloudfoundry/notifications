@@ -21,6 +21,7 @@ type V2Enqueuer struct {
 			VCAPRequestID   string
 			RequestReceived time.Time
 			UAAHost         string
+			CampaignID      string
 		}
 		Returns struct {
 			Responses []queue.Response
@@ -33,7 +34,7 @@ func NewV2Enqueuer() *V2Enqueuer {
 }
 
 func (m *V2Enqueuer) Enqueue(conn queue.ConnectionInterface, users []queue.User, options queue.Options,
-	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []queue.Response {
+	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, uaaHost, scope, vcapRequestID string, reqReceived time.Time, campaignID string) []queue.Response {
 
 	m.EnqueueCall.Receives.Connection = conn
 	m.EnqueueCall.Receives.Users = users
@@ -45,6 +46,7 @@ func (m *V2Enqueuer) Enqueue(conn queue.ConnectionInterface, users []queue.User,
 	m.EnqueueCall.Receives.Scope = scope
 	m.EnqueueCall.Receives.VCAPRequestID = vcapRequestID
 	m.EnqueueCall.Receives.RequestReceived = reqReceived
+	m.EnqueueCall.Receives.CampaignID = campaignID
 
 	m.EnqueueCall.WasCalled = true
 	return m.EnqueueCall.Returns.Responses

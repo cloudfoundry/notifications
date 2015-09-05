@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
@@ -28,6 +29,8 @@ var _ = Describe("CreateHandler", func() {
 		request             *http.Request
 		database            *mocks.Database
 		conn                *mocks.Connection
+		clock               *mocks.Clock
+		startTime           time.Time
 	)
 
 	BeforeEach(func() {
@@ -48,6 +51,10 @@ var _ = Describe("CreateHandler", func() {
 		database = mocks.NewDatabase()
 		database.ConnectionCall.Returns.Connection = conn
 
+		startTime = time.Now()
+		clock = mocks.NewClock()
+		clock.NowCall.Returns.Time = startTime
+
 		context = stack.NewContext()
 		context.Set("token", token)
 		context.Set("database", database)
@@ -60,7 +67,7 @@ var _ = Describe("CreateHandler", func() {
 
 		writer = httptest.NewRecorder()
 
-		handler = campaigns.NewCreateHandler(campaignsCollection)
+		handler = campaigns.NewCreateHandler(campaignsCollection, clock)
 	})
 
 	It("sends a campaign to a user", func() {
@@ -98,6 +105,7 @@ var _ = Describe("CreateHandler", func() {
 			TemplateID:     "random-template-id",
 			ReplyTo:        "reply-to-address",
 			SenderID:       "some-sender-id",
+			StartTime:      startTime,
 		}))
 	})
 
@@ -135,6 +143,7 @@ var _ = Describe("CreateHandler", func() {
 			TemplateID:     "random-template-id",
 			ReplyTo:        "reply-to-address",
 			SenderID:       "some-sender-id",
+			StartTime:      startTime,
 		}))
 	})
 
@@ -172,6 +181,7 @@ var _ = Describe("CreateHandler", func() {
 			TemplateID:     "random-template-id",
 			ReplyTo:        "reply-to-address",
 			SenderID:       "some-sender-id",
+			StartTime:      startTime,
 		}))
 	})
 
@@ -209,6 +219,7 @@ var _ = Describe("CreateHandler", func() {
 			TemplateID:     "random-template-id",
 			ReplyTo:        "reply-to-address",
 			SenderID:       "some-sender-id",
+			StartTime:      startTime,
 		}))
 	})
 

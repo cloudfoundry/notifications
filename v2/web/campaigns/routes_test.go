@@ -72,4 +72,22 @@ var _ = Describe("Routes", func() {
 		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
+
+	It("routes GET /senders/{sender_id}/campaigns/{campaign_id}/status", func() {
+		request, err := http.NewRequest("GET", "/senders/some-sender-id/campaigns/campaign-id/status", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(campaigns.StatusHandler{}))
+		Expect(s.Middleware).To(HaveLen(3))
+
+		requestLogging := s.Middleware[0].(middleware.RequestLogging)
+		Expect(requestLogging).To(Equal(logging))
+
+		authenticator := s.Middleware[1].(middleware.Authenticator)
+		Expect(authenticator).To(Equal(auth))
+
+		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
+		Expect(databaseAllocator).To(Equal(dbAllocator))
+	})
 })

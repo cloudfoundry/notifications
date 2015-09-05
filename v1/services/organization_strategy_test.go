@@ -218,6 +218,7 @@ var _ = Describe("Organization Strategy", func() {
 							Description: "Password reminder",
 						},
 						TemplateID: "some-template-id",
+						CampaignID: "some-campaign-id",
 						Client: services.DispatchClient{
 							ID:          "mister-client",
 							Description: "Login system",
@@ -255,6 +256,7 @@ var _ = Describe("Organization Strategy", func() {
 						Endorsement: services.OrganizationEndorsement,
 					}))
 					Expect(v2Enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("testzone1"))
+					Expect(v2Enqueuer.EnqueueCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 				})
 			})
 		})

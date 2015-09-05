@@ -73,7 +73,7 @@ func NewV1Process(config V1ProcessConfig) V1Process {
 	}
 }
 
-func (p V1Process) Deliver(job *gobble.Job, logger lager.Logger) {
+func (p V1Process) Deliver(job *gobble.Job, logger lager.Logger) error {
 	var delivery Delivery
 	err := job.Unmarshal(&delivery)
 	if err != nil {
@@ -82,7 +82,7 @@ func (p V1Process) Deliver(job *gobble.Job, logger lager.Logger) {
 		}).Log()
 
 		p.deliveryFailureHandler.Handle(job, logger)
-		return
+		return nil
 	}
 
 	logger = logger.WithData(lager.Data{
@@ -97,7 +97,7 @@ func (p V1Process) Deliver(job *gobble.Job, logger lager.Logger) {
 	err = p.receiptsRepo.CreateReceipts(p.database.Connection(), []string{delivery.UserGUID}, delivery.ClientID, delivery.Options.KindID)
 	if err != nil {
 		p.deliveryFailureHandler.Handle(job, logger)
-		return
+		return nil
 	}
 
 	if delivery.Email == "" {
@@ -106,13 +106,13 @@ func (p V1Process) Deliver(job *gobble.Job, logger lager.Logger) {
 		token, err = p.tokenLoader.Load(p.uaaHost)
 		if err != nil {
 			p.deliveryFailureHandler.Handle(job, logger)
-			return
+			return nil
 		}
 
 		users, err := p.userLoader.Load([]string{delivery.UserGUID}, token)
 		if err != nil || len(users) < 1 {
 			p.deliveryFailureHandler.Handle(job, logger)
-			return
+			return nil
 		}
 
 		emails := users[delivery.UserGUID].Emails
@@ -130,7 +130,7 @@ func (p V1Process) Deliver(job *gobble.Job, logger lager.Logger) {
 
 		if status != StatusDelivered {
 			p.deliveryFailureHandler.Handle(job, logger)
-			return
+			return nil
 		} else {
 			metrics.NewMetric("counter", map[string]interface{}{
 				"name": "notifications.worker.delivered",
@@ -141,6 +141,8 @@ func (p V1Process) Deliver(job *gobble.Job, logger lager.Logger) {
 			"name": "notifications.worker.unsubscribed",
 		}).Log()
 	}
+
+	return nil
 }
 
 func (p V1Process) deliver(delivery Delivery, logger lager.Logger) string {
@@ -152,12 +154,12 @@ func (p V1Process) deliver(delivery Delivery, logger lager.Logger) string {
 	message, err := p.packager.Pack(context)
 	if err != nil {
 		logger.Info("template-pack-failed")
-		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusFailed, logger)
+		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusFailed, "", logger)
 		return StatusFailed
 	}
 
 	status := p.sendMail(delivery.MessageID, message, logger)
-	p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, status, logger)
+	p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, status, "", logger)
 
 	return status
 }
@@ -171,26 +173,26 @@ func (p V1Process) shouldDeliver(delivery Delivery, logger lager.Logger) bool {
 	globallyUnsubscribed, err := p.globalUnsubscribesRepo.Get(conn, delivery.UserGUID)
 	if err != nil || globallyUnsubscribed {
 		logger.Info("user-unsubscribed")
-		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusUndeliverable, logger)
+		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusUndeliverable, "", logger)
 		return false
 	}
 
 	isUnsubscribed, err := p.unsubscribesRepo.Get(conn, delivery.UserGUID, delivery.ClientID, delivery.Options.KindID)
 	if err != nil || isUnsubscribed {
 		logger.Info("user-unsubscribed")
-		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusUndeliverable, logger)
+		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusUndeliverable, "", logger)
 		return false
 	}
 
 	if delivery.Email == "" {
 		logger.Info("no-email-address-for-user")
-		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusUndeliverable, logger)
+		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusUndeliverable, "", logger)
 		return false
 	}
 
 	if !strings.Contains(delivery.Email, "@") {
 		logger.Info("malformatted-email-address")
-		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusUndeliverable, logger)
+		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusUndeliverable, "", logger)
 		return false
 	}
 

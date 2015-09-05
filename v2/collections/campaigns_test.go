@@ -2,6 +2,7 @@ package collections_test
 
 import (
 	"errors"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
@@ -13,6 +14,7 @@ import (
 
 var _ = Describe("CampaignsCollection", func() {
 	var (
+		startTime         time.Time
 		conn              *mocks.Connection
 		enqueuer          *mocks.CampaignEnqueuer
 		collection        collections.CampaignsCollection
@@ -35,6 +37,10 @@ var _ = Describe("CampaignsCollection", func() {
 		userFinder = mocks.NewUserFinder()
 		spaceFinder = mocks.NewSpaceFinder()
 		orgFinder = mocks.NewOrgFinder()
+
+		var err error
+		startTime, err = time.Parse(time.RFC3339, "2015-09-01T12:34:56-07:00")
+		Expect(err).NotTo(HaveOccurred())
 
 		collection = collections.NewCampaignsCollection(enqueuer, campaignsRepo, campaignTypesRepo, templatesRepo, sendersRepo, userFinder, spaceFinder, orgFinder)
 	})
@@ -91,6 +97,7 @@ var _ = Describe("CampaignsCollection", func() {
 						TemplateID:     "whoa-a-template-id",
 						ReplyTo:        "nothing@example.com",
 						SenderID:       "some-sender-id",
+						StartTime:      startTime,
 					}
 
 					enqueuedCampaign, err := collection.Create(conn, campaign, "some-client-id", false)
@@ -106,6 +113,7 @@ var _ = Describe("CampaignsCollection", func() {
 						TemplateID:     "whoa-a-template-id",
 						ReplyTo:        "nothing@example.com",
 						SenderID:       "some-sender-id",
+						StartTime:      startTime,
 					}))
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
@@ -119,6 +127,7 @@ var _ = Describe("CampaignsCollection", func() {
 						ReplyTo:        "nothing@example.com",
 						SenderID:       "some-sender-id",
 						ClientID:       "some-client-id",
+						StartTime:      startTime,
 					}))
 					Expect(enqueuer.EnqueueCall.Receives.JobType).To(Equal("campaign"))
 
@@ -154,6 +163,7 @@ var _ = Describe("CampaignsCollection", func() {
 						TemplateID:     "whoa-a-template-id",
 						ReplyTo:        "nothing@example.com",
 						SenderID:       "some-sender-id",
+						StartTime:      startTime,
 					}
 
 					enqueuedCampaign, err := collection.Create(conn, campaign, "some-client-id", false)
@@ -170,6 +180,7 @@ var _ = Describe("CampaignsCollection", func() {
 						ReplyTo:        "nothing@example.com",
 						SenderID:       "some-sender-id",
 						ClientID:       "some-client-id",
+						StartTime:      startTime,
 					}))
 					Expect(enqueuer.EnqueueCall.Receives.JobType).To(Equal("campaign"))
 
@@ -227,6 +238,7 @@ var _ = Describe("CampaignsCollection", func() {
 						TemplateID:     "whoa-a-template-id",
 						ReplyTo:        "nothing@example.com",
 						SenderID:       "some-sender-id",
+						StartTime:      startTime,
 					}
 
 					enqueuedCampaign, err := collection.Create(conn, campaign, "some-client-id", false)
@@ -243,6 +255,7 @@ var _ = Describe("CampaignsCollection", func() {
 						ReplyTo:        "nothing@example.com",
 						SenderID:       "some-sender-id",
 						ClientID:       "some-client-id",
+						StartTime:      startTime,
 					}))
 					Expect(enqueuer.EnqueueCall.Receives.JobType).To(Equal("campaign"))
 
@@ -300,6 +313,7 @@ var _ = Describe("CampaignsCollection", func() {
 						TemplateID:     "whoa-a-template-id",
 						ReplyTo:        "nothing@example.com",
 						SenderID:       "some-sender-id",
+						StartTime:      startTime,
 					}
 
 					enqueuedCampaign, err := collection.Create(conn, campaign, "some-client-id", false)
@@ -316,6 +330,7 @@ var _ = Describe("CampaignsCollection", func() {
 						ReplyTo:        "nothing@example.com",
 						SenderID:       "some-sender-id",
 						ClientID:       "some-client-id",
+						StartTime:      startTime,
 					}))
 					Expect(enqueuer.EnqueueCall.Receives.JobType).To(Equal("campaign"))
 
@@ -343,6 +358,7 @@ var _ = Describe("CampaignsCollection", func() {
 					TemplateID:     "",
 					ReplyTo:        "nothing@example.com",
 					SenderID:       "some-sender-id",
+					StartTime:      startTime,
 				}
 
 				_, err := collection.Create(conn, campaign, "some-client-id", false)
@@ -362,6 +378,7 @@ var _ = Describe("CampaignsCollection", func() {
 					ReplyTo:        "nothing@example.com",
 					SenderID:       "some-sender-id",
 					ClientID:       "some-client-id",
+					StartTime:      startTime,
 				}))
 			})
 
@@ -379,6 +396,7 @@ var _ = Describe("CampaignsCollection", func() {
 					TemplateID:     "some-template-id",
 					ReplyTo:        "nothing@example.com",
 					SenderID:       "some-sender-id",
+					StartTime:      startTime,
 				}
 
 				_, err := collection.Create(conn, campaign, "some-client-id", true)
@@ -398,6 +416,7 @@ var _ = Describe("CampaignsCollection", func() {
 					ReplyTo:        "nothing@example.com",
 					SenderID:       "some-sender-id",
 					ClientID:       "some-client-id",
+					StartTime:      startTime,
 				}))
 			})
 

@@ -29,14 +29,18 @@ var _ = Describe("MessageGC", func() {
 	BeforeEach(func() {
 		loggerBuffer = bytes.NewBuffer([]byte{})
 		logger := log.New(loggerBuffer, "", 0)
+
+		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
-		conn = database.Connection()
+		database.ConnectionCall.Returns.Connection = conn
+
 		repo = mocks.NewMessagesRepo()
 		lifetime = 2 * time.Minute
 		pollingInterval = 500 * time.Millisecond
-		messageGC = postal.NewMessageGC(lifetime, database, repo, pollingInterval, logger)
 		oldMessageID = "that-message"
 		newMessageID = "this-message"
+
+		messageGC = postal.NewMessageGC(lifetime, database, repo, pollingInterval, logger)
 	})
 
 	Describe("Run", func() {
@@ -44,11 +48,11 @@ var _ = Describe("MessageGC", func() {
 			messageGC.Run()
 
 			Eventually(func() int {
-				return len(repo.DeleteBeforeInvocations)
+				return repo.DeleteBeforeCall.CallCount
 			}).Should(BeNumerically(">=", 2))
 
-			call1 := repo.DeleteBeforeInvocations[0]
-			call2 := repo.DeleteBeforeInvocations[1]
+			call1 := repo.DeleteBeforeCall.InvocationTimes[0]
+			call2 := repo.DeleteBeforeCall.InvocationTimes[1]
 			Expect(call2).To(BeTemporally(">", call1.Add(pollingInterval-50*time.Millisecond)))
 			Expect(call2).To(BeTemporally("<", call1.Add(pollingInterval+50*time.Millisecond)))
 		})
@@ -60,51 +64,29 @@ var _ = Describe("MessageGC", func() {
 				ID:        oldMessageID,
 				UpdatedAt: time.Now().Add(-2 * lifetime),
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			_, err = repo.Upsert(conn, models.Message{
 				ID:        newMessageID,
 				UpdatedAt: time.Now(),
 			})
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("Deletes message statuses older than the specified time", func() {
-			_, err := repo.FindByID(conn, oldMessageID)
-			if err != nil {
-				panic(err)
-			}
-
 			messageGC.Collect()
 
-			_, err = repo.FindByID(conn, oldMessageID)
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
-		})
-
-		It("Does not delete messages newer than the specified time", func() {
-			_, err := repo.FindByID(conn, newMessageID)
-			if err != nil {
-				panic(err)
-			}
-
-			messageGC.Collect()
-
-			_, err = repo.FindByID(conn, newMessageID)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(repo.DeleteBeforeCall.Receives.Connection).To(Equal(conn))
+			Expect(repo.DeleteBeforeCall.Receives.ThresholdTime).To(BeTemporally("~", time.Now().Add(-2*time.Minute), 10*time.Second))
 		})
 
 		Context("When the repo errors unexpectantly", func() {
 			It("logs the error", func() {
-				repo.DeleteBeforeError = errors.New("messages table is totally corrupt or something")
+				repo.DeleteBeforeCall.Returns.Error = errors.New("messages table is totally corrupt")
 
 				messageGC.Collect()
 
-				Expect(loggerBuffer.String()).To(ContainSubstring(repo.DeleteBeforeError.Error()))
+				Expect(loggerBuffer.String()).To(ContainSubstring("messages table is totally corrupt"))
 			})
 		})
 

@@ -31,7 +31,7 @@ func NewPackager(templatesLoader TemplatesLoaderInterface, cloak conceal.CloakIn
 	}
 }
 
-func (packager *Packager) PrepareContext(delivery Delivery, sender, domain string) (MessageContext, error) {
+func (packager Packager) PrepareContext(delivery Delivery, sender, domain string) (MessageContext, error) {
 	templates, err := packager.templatesLoader.LoadTemplates(delivery.ClientID, delivery.Options.KindID, delivery.Options.TemplateID)
 	if err != nil {
 		return MessageContext{}, err
@@ -40,7 +40,7 @@ func (packager *Packager) PrepareContext(delivery Delivery, sender, domain strin
 	return NewMessageContext(delivery, sender, domain, packager.cloak, templates), nil
 }
 
-func (packager *Packager) Pack(context MessageContext) (mail.Message, error) {
+func (packager Packager) Pack(context MessageContext) (mail.Message, error) {
 	parts, err := packager.CompileParts(context)
 	if err != nil {
 		return mail.Message{}, err
@@ -66,7 +66,7 @@ func (packager *Packager) Pack(context MessageContext) (mail.Message, error) {
 	}, nil
 }
 
-func (packager *Packager) CompileParts(context MessageContext) ([]mail.Part, error) {
+func (packager Packager) CompileParts(context MessageContext) ([]mail.Part, error) {
 	var parts []mail.Part
 	var err error
 
@@ -110,7 +110,7 @@ func (packager *Packager) CompileParts(context MessageContext) ([]mail.Part, err
 	return parts, nil
 }
 
-func (packager *Packager) compileTemplate(context MessageContext, theTemplate string, escapeContext bool) (string, error) {
+func (packager Packager) compileTemplate(context MessageContext, theTemplate string, escapeContext bool) (string, error) {
 	buffer := bytes.NewBuffer([]byte{})
 
 	source, err := template.New("compileTemplate").Parse(theTemplate)

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/dgrijalva/jwt-go"
@@ -16,13 +17,19 @@ type collectionCreator interface {
 	Create(conn collections.ConnectionInterface, campaign collections.Campaign, clientID string, hasCriticalScope bool) (collections.Campaign, error)
 }
 
-type CreateHandler struct {
-	collection collectionCreator
+type clock interface {
+	Now() time.Time
 }
 
-func NewCreateHandler(collection collectionCreator) CreateHandler {
+type CreateHandler struct {
+	collection collectionCreator
+	clock      clock
+}
+
+func NewCreateHandler(collection collectionCreator, clock clock) CreateHandler {
 	return CreateHandler{
 		collection: collection,
+		clock:      clock,
 	}
 }
 
@@ -72,6 +79,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		TemplateID:     request.TemplateID,
 		ReplyTo:        request.ReplyTo,
 		SenderID:       senderID,
+		StartTime:      h.clock.Now(),
 	}, context.Get("client_id").(string), hasCriticalScope)
 	if err != nil {
 		switch err.(type) {

@@ -9,6 +9,7 @@ type Dispatch struct {
 	Connection ConnectionInterface
 	UAAHost    string
 	TemplateID string
+	CampaignID string
 
 	VCAPRequest DispatchVCAPRequest
 	Message     DispatchMessage

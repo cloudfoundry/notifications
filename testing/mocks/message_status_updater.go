@@ -1,16 +1,17 @@
 package mocks
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/pivotal-golang/lager"
 )
 
 type MessageStatusUpdater struct {
 	UpdateCall struct {
 		Receives struct {
-			Connection    models.ConnectionInterface
+			Connection    db.ConnectionInterface
 			MessageID     string
 			MessageStatus string
+			CampaignID    string
 			Logger        lager.Logger
 		}
 	}
@@ -20,9 +21,10 @@ func NewMessageStatusUpdater() *MessageStatusUpdater {
 	return &MessageStatusUpdater{}
 }
 
-func (msu *MessageStatusUpdater) Update(conn models.ConnectionInterface, messageID, messageStatus string, logger lager.Logger) {
+func (msu *MessageStatusUpdater) Update(conn db.ConnectionInterface, messageID, messageStatus, campaignID string, logger lager.Logger) {
 	msu.UpdateCall.Receives.Connection = conn
 	msu.UpdateCall.Receives.MessageID = messageID
 	msu.UpdateCall.Receives.MessageStatus = messageStatus
+	msu.UpdateCall.Receives.CampaignID = campaignID
 	msu.UpdateCall.Receives.Logger = logger
 }

@@ -130,6 +130,7 @@ var _ = Describe("Everyone Strategy", func() {
 						Description: "Your Official Welcome",
 					},
 					TemplateID: "some-template-id",
+					CampaignID: "some-campaign-id",
 					Client: services.DispatchClient{
 						ID:          "my-client",
 						Description: "Welcome system",
@@ -179,6 +180,7 @@ var _ = Describe("Everyone Strategy", func() {
 					Endorsement: services.EveryoneEndorsement,
 				}))
 				Expect(v2Enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("my-uaa-host"))
+				Expect(v2Enqueuer.EnqueueCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 			})
 		})
 	})

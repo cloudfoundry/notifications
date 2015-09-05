@@ -7,9 +7,10 @@ import (
 )
 
 type Message struct {
-	ID        string    `db:"id"`
-	Status    string    `db:"status"`
-	UpdatedAt time.Time `db:"updated_at"`
+	ID         string    `db:"id"`
+	CampaignID string    `db:"campaign_id"`
+	Status     string    `db:"status"`
+	UpdatedAt  time.Time `db:"updated_at"`
 }
 
 func (m *Message) PreInsert(s gorp.SqlExecutor) error {

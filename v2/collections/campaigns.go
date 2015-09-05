@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 )
@@ -44,6 +45,7 @@ type Campaign struct {
 	ReplyTo        string
 	SenderID       string
 	ClientID       string
+	StartTime      time.Time
 }
 
 type CampaignsCollection struct {
@@ -141,6 +143,7 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 		TemplateID:     campaign.TemplateID,
 		ReplyTo:        campaign.ReplyTo,
 		SenderID:       campaign.SenderID,
+		StartTime:      campaign.StartTime,
 	})
 	if err != nil {
 		return Campaign{}, PersistenceError{err}

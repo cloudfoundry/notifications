@@ -10,13 +10,16 @@ type muxer interface {
 }
 
 type Routes struct {
-	RequestLogging      stack.Middleware
-	Authenticator       stack.Middleware
-	DatabaseAllocator   stack.Middleware
-	CampaignsCollection collections.CampaignsCollection
+	RequestLogging             stack.Middleware
+	Authenticator              stack.Middleware
+	DatabaseAllocator          stack.Middleware
+	CampaignsCollection        collections.CampaignsCollection
+	CampaignStatusesCollection collections.CampaignStatusesCollection
+	Clock                      clock
 }
 
 func (r Routes) Register(m muxer) {
-	m.Handle("POST", "/senders/{sender_id}/campaigns", NewCreateHandler(r.CampaignsCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
+	m.Handle("POST", "/senders/{sender_id}/campaigns", NewCreateHandler(r.CampaignsCollection, r.Clock), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
 	m.Handle("GET", "/senders/{sender_id}/campaigns/{campaign_id}", NewGetHandler(r.CampaignsCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
+	m.Handle("GET", "/senders/{sender_id}/campaigns/{campaign_id}/status", NewStatusHandler(r.CampaignStatusesCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
 }

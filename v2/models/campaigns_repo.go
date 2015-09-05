@@ -45,3 +45,11 @@ func (r CampaignsRepository) Get(conn ConnectionInterface, campaignID string) (C
 
 	return campaign, nil
 }
+
+func (r CampaignsRepository) ListSendingCampaigns(conn ConnectionInterface) ([]Campaign, error) {
+	campaignList := []Campaign{}
+
+	_, err := conn.Select(&campaignList, "SELECT * FROM `campaigns` WHERE `status` != \"completed\"")
+
+	return campaignList, err
+}

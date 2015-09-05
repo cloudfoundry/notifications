@@ -11,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
+	"github.com/cloudfoundry-incubator/notifications/v2/util"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigns"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/info"
@@ -79,11 +80,13 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	campaignTypesRepository := models.NewCampaignTypesRepository(uuid.NewV4)
 	templatesRepository := models.NewTemplatesRepository(uuid.NewV4)
 	campaignsRepository := models.NewCampaignsRepository(uuid.NewV4)
+	messagesRepository := models.NewMessagesRepository(util.NewClock())
 
 	sendersCollection := collections.NewSendersCollection(sendersRepository, campaignTypesRepository)
 	templatesCollection := collections.NewTemplatesCollection(templatesRepository)
 	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository, templatesRepository)
 	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignsRepository, campaignTypesRepository, templatesRepository, sendersRepository, userFinder, spaceFinder, orgFinder)
+	campaignStatusesCollection := collections.NewCampaignStatusesCollection(campaignsRepository, messagesRepository)
 
 	info.Routes{
 		RequestCounter: requestCounter,
@@ -112,10 +115,12 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	}.Register(mx)
 
 	campaigns.Routes{
-		RequestLogging:      logging,
-		Authenticator:       notificationsWriteAuthenticator,
-		DatabaseAllocator:   databaseAllocator,
-		CampaignsCollection: campaignsCollection,
+		Clock:                      util.NewClock(),
+		RequestLogging:             logging,
+		Authenticator:              notificationsWriteAuthenticator,
+		DatabaseAllocator:          databaseAllocator,
+		CampaignsCollection:        campaignsCollection,
+		CampaignStatusesCollection: campaignStatusesCollection,
 	}.Register(mx)
 
 	return mx

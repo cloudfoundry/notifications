@@ -158,24 +158,12 @@ var _ = Describe("Enqueuer", func() {
 			users := []services.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
 			enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
-			var statuses []string
-			for _, job := range queue.EnqueueCall.Receives.Jobs {
-				var delivery services.Delivery
-				err := job.Unmarshal(&delivery)
-				if err != nil {
-					panic(err)
-				}
+			messages := messagesRepo.UpsertCall.Receives.Messages
+			Expect(messages).To(HaveLen(4))
 
-				message, err := messagesRepo.FindByID(conn, delivery.MessageID)
-				if err != nil {
-					panic(err)
-				}
-
-				statuses = append(statuses, message.Status)
+			for _, message := range messages {
+				Expect(message.Status).To(Equal(services.StatusQueued))
 			}
-
-			Expect(statuses).To(HaveLen(4))
-			Expect(statuses).To(ConsistOf([]string{services.StatusQueued, services.StatusQueued, services.StatusQueued, services.StatusQueued}))
 		})
 
 		Context("using a transaction", func() {
@@ -191,7 +179,7 @@ var _ = Describe("Enqueuer", func() {
 			})
 
 			It("rolls back the transaction when there is an error in message repo upserting", func() {
-				messagesRepo.UpsertError = errors.New("BOOM!")
+				messagesRepo.UpsertCall.Returns.Error = errors.New("BOOM!")
 				users := []services.User{{GUID: "user-1"}}
 				enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
