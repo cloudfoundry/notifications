@@ -21,7 +21,10 @@ var _ = Describe("Migrator", func() {
 		BeforeEach(func() {
 			database = mocks.NewDatabase()
 			gobbleDatabase = &mocks.GobbleDatabase{}
-			provider = mocks.NewPersistenceProvider(database, gobbleDatabase)
+			provider = mocks.NewPersistenceProvider()
+			provider.DatabaseCall.Returns.Database = database
+			provider.GobbleDatabaseCall.Returns.Database = gobbleDatabase
+
 			dbMigrator = mocks.NewDatabaseMigrator()
 		})
 
@@ -32,8 +35,7 @@ var _ = Describe("Migrator", func() {
 			})
 
 			It("migrates the gobble database", func() {
-				Expect(gobbleDatabase.MigrateWasCalled).To(BeTrue())
-				Expect(gobbleDatabase.MigrationsDir).To(Equal("/my-gobble/dir"))
+				Expect(gobbleDatabase.MigrateCall.Receives.MigrationsDir).To(Equal("/my-gobble/dir"))
 			})
 
 			It("migrates the notifications database", func() {
@@ -56,7 +58,7 @@ var _ = Describe("Migrator", func() {
 			})
 
 			It("does not migrate the gobble database", func() {
-				Expect(gobbleDatabase.MigrateWasCalled).To(BeFalse())
+				Expect(gobbleDatabase.MigrateCall.WasCalled).To(BeFalse())
 			})
 
 			It("does not migrate the notifications database", func() {
@@ -66,7 +68,6 @@ var _ = Describe("Migrator", func() {
 			It("does not seed the database", func() {
 				Expect(dbMigrator.SeedCall.Called).To(BeFalse())
 			})
-
 		})
 	})
 })

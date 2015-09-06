@@ -6,31 +6,41 @@ import (
 )
 
 type PersistenceProvider struct {
-	database       *Database
-	gobbleDatabase *GobbleDatabase
-}
+	DatabaseCall struct {
+		Returns struct {
+			Database db.DatabaseInterface
+		}
+	}
 
-func NewPersistenceProvider(database *Database, gobbleDatabase *GobbleDatabase) *PersistenceProvider {
-	return &PersistenceProvider{
-		database:       database,
-		gobbleDatabase: gobbleDatabase,
+	GobbleDatabaseCall struct {
+		Returns struct {
+			Database gobble.DatabaseInterface
+		}
 	}
 }
 
+func NewPersistenceProvider() *PersistenceProvider {
+	return &PersistenceProvider{}
+}
+
 func (pp *PersistenceProvider) Database() db.DatabaseInterface {
-	return pp.database
+	return pp.DatabaseCall.Returns.Database
 }
 
 func (pp *PersistenceProvider) GobbleDatabase() gobble.DatabaseInterface {
-	return pp.gobbleDatabase
+	return pp.GobbleDatabaseCall.Returns.Database
 }
 
 type GobbleDatabase struct {
-	MigrateWasCalled bool
-	MigrationsDir    string
+	MigrateCall struct {
+		WasCalled bool
+		Receives  struct {
+			MigrationsDir string
+		}
+	}
 }
 
 func (gd *GobbleDatabase) Migrate(migrationsDir string) {
-	gd.MigrateWasCalled = true
-	gd.MigrationsDir = migrationsDir
+	gd.MigrateCall.Receives.MigrationsDir = migrationsDir
+	gd.MigrateCall.WasCalled = true
 }
