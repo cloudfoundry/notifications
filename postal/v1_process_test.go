@@ -261,14 +261,15 @@ var _ = Describe("V1Process", func() {
 		It("creates a reciept for the delivery", func() {
 			v1Process.Deliver(job, logger)
 
-			Expect(receiptsRepo.ClientID).To(Equal("some-client"))
-			Expect(receiptsRepo.KindID).To(Equal("some-kind"))
-			Expect(receiptsRepo.CreateUserGUIDs).To(Equal([]string{"user-123"}))
+			Expect(receiptsRepo.CreateReceiptsCall.Receives.Connection).To(Equal(conn))
+			Expect(receiptsRepo.CreateReceiptsCall.Receives.ClientID).To(Equal("some-client"))
+			Expect(receiptsRepo.CreateReceiptsCall.Receives.KindID).To(Equal("some-kind"))
+			Expect(receiptsRepo.CreateReceiptsCall.Receives.UserGUIDs).To(Equal([]string{"user-123"}))
 		})
 
 		Context("when the receipt fails to be created", func() {
 			It("retries the job", func() {
-				receiptsRepo.CreateReceiptsError = true
+				receiptsRepo.CreateReceiptsCall.Returns.Error = errors.New("something happened")
 				v1Process.Deliver(job, logger)
 
 				Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
