@@ -83,21 +83,13 @@ var _ = Describe("PreferenceUpdater", func() {
 						KindID:   "door-open",
 						Email:    false,
 					},
-
-					{
-						ClientID: "dogs",
-						KindID:   "barking",
-						Email:    false,
-					},
 				}, false, "the-user")
 
-				unsubscribed, err := unsubscribesRepo.Get(conn, "the-user", "raptors", "door-open")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(unsubscribed).To(BeTrue())
-
-				unsubscribed, err = unsubscribesRepo.Get(conn, "the-user", "dogs", "barking")
-				Expect(err).NotTo(HaveOccurred())
-				Expect(unsubscribed).To(BeTrue())
+				Expect(unsubscribesRepo.SetCall.Receives.Connection).To(Equal(conn))
+				Expect(unsubscribesRepo.SetCall.Receives.UserID).To(Equal("the-user"))
+				Expect(unsubscribesRepo.SetCall.Receives.ClientID).To(Equal("raptors"))
+				Expect(unsubscribesRepo.SetCall.Receives.KindID).To(Equal("door-open"))
+				Expect(unsubscribesRepo.SetCall.Receives.Unsubscribe).To(BeTrue())
 			})
 
 			It("does not add resubscriptions to the unsubscribes Repo", func() {

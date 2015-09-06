@@ -529,8 +529,7 @@ var _ = Describe("V1Process", func() {
 
 		Context("when recipient has unsubscribed", func() {
 			BeforeEach(func() {
-				err := unsubscribesRepo.Set(conn, userGUID, "some-client", "some-kind", true)
-				Expect(err).NotTo(HaveOccurred())
+				unsubscribesRepo.GetCall.Returns.Unsubscribed = true
 			})
 
 			It("logs that the user has unsubscribed from this notification", func() {
