@@ -2,8 +2,8 @@ package postal_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 
 	. "github.com/onsi/ginkgo"
@@ -30,18 +30,10 @@ var _ = Describe("UserLoader", func() {
 			token = helpers.BuildToken(tokenHeader, tokenClaims)
 
 			uaaClient = mocks.NewZonedUAAClient()
-			uaaClient.UsersByID = map[string]uaa.User{
-				"user-123": {
+			uaaClient.UsersEmailsByIDsCall.Returns.Users = []uaa.User{
+				{
 					Emails: []string{"user-123@example.com"},
 					ID:     "user-123",
-				},
-				"user-456": {
-					Emails: []string{"user-456@example.com"},
-					ID:     "user-456",
-				},
-				"user-999": {
-					Emails: []string{"user-999@example.com"},
-					ID:     "user-999",
 				},
 			}
 
@@ -53,7 +45,7 @@ var _ = Describe("UserLoader", func() {
 				users, err := loader.Load([]string{"user-123", "user-789"}, token)
 
 				Expect(err).NotTo(HaveOccurred())
-				Expect(len(users)).To(Equal(2))
+				Expect(users).To(HaveLen(2))
 
 				user123 := users["user-123"]
 				Expect(user123.Emails[0]).To(Equal("user-123@example.com"))
@@ -62,13 +54,16 @@ var _ = Describe("UserLoader", func() {
 				user789, ok := users["user-789"]
 				Expect(ok).To(BeTrue())
 				Expect(user789).To(Equal(uaa.User{}))
+
+				Expect(uaaClient.UsersEmailsByIDsCall.Receives.Token).To(Equal(token))
+				Expect(uaaClient.UsersEmailsByIDsCall.Receives.IDs).To(Equal([]string{"user-123", "user-789"}))
 			})
 		})
 
 		Describe("UAA Error Responses", func() {
 			Context("when UAA cannot be reached", func() {
 				It("returns a UAADownError", func() {
-					uaaClient.ErrorForUserByID = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
+					uaaClient.UsersEmailsByIDsCall.Returns.Error = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
 
 					_, err := loader.Load([]string{"user-123"}, token)
 
@@ -78,7 +73,7 @@ var _ = Describe("UserLoader", func() {
 
 			Context("when UAA returns an unknown UAA 404 error", func() {
 				It("returns a UAAGenericError", func() {
-					uaaClient.ErrorForUserByID = uaa.NewFailure(404, []byte("Weird message we haven't seen"))
+					uaaClient.UsersEmailsByIDsCall.Returns.Error = uaa.NewFailure(404, []byte("Weird message we haven't seen"))
 
 					_, err := loader.Load([]string{"user-123"}, token)
 
@@ -88,7 +83,7 @@ var _ = Describe("UserLoader", func() {
 
 			Context("when UAA returns an failure code that is not 404", func() {
 				It("returns a UAADownError", func() {
-					uaaClient.ErrorForUserByID = uaa.NewFailure(500, []byte("Doesn't matter"))
+					uaaClient.UsersEmailsByIDsCall.Returns.Error = uaa.NewFailure(500, []byte("Doesn't matter"))
 
 					_, err := loader.Load([]string{"user-123"}, token)
 

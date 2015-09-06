@@ -26,7 +26,7 @@ var _ = Describe("FindsUserGUIDs", func() {
 
 	Context("UserGUIDsBelongingToScope", func() {
 		BeforeEach(func() {
-			uaa.UsersGUIDsByScopeResponse["this.scope"] = []string{"user-402", "user-525"}
+			uaa.UsersGUIDsByScopeCall.Returns.UserGUIDs = []string{"user-402", "user-525"}
 		})
 
 		It("returns the userGUIDs that have that scope", func() {
@@ -34,11 +34,14 @@ var _ = Describe("FindsUserGUIDs", func() {
 
 			Expect(guids).To(Equal([]string{"user-402", "user-525"}))
 			Expect(err).NotTo(HaveOccurred())
+
+			Expect(uaa.UsersGUIDsByScopeCall.Receives.Token).To(Equal("token"))
+			Expect(uaa.UsersGUIDsByScopeCall.Receives.Scope).To(Equal("this.scope"))
 		})
 
 		Context("when uaa has an error", func() {
 			It("returns the error", func() {
-				uaa.UsersGUIDsByScopeError = errors.New("foobar")
+				uaa.UsersGUIDsByScopeCall.Returns.Error = errors.New("foobar")
 
 				_, err := finder.UserGUIDsBelongingToScope("token", "this.scope")
 				Expect(err).To(MatchError(errors.New("foobar")))

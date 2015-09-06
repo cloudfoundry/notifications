@@ -10,15 +10,16 @@ import (
 var _ = Describe("TokenLoader", func() {
 	Describe("#Load", func() {
 		It("Gets a zoned client token based on hostname", func() {
-			hostname := "my-uaa-zone"
-			uaaFake := mocks.NewZonedUAAClient()
-			uaaFake.Token = "my-fake-token"
-			tokenLoader := uaa.NewTokenLoader(uaaFake)
-			token, err := tokenLoader.Load(hostname)
+			uaaClient := mocks.NewZonedUAAClient()
+			uaaClient.GetClientTokenCall.Returns.Token = "my-fake-token"
+
+			tokenLoader := uaa.NewTokenLoader(uaaClient)
+
+			token, err := tokenLoader.Load("my-uaa-zone")
 			Expect(token).To(Equal("my-fake-token"))
 			Expect(err).To(BeNil())
 
-			Expect(uaaFake.GetClientTokenHost).To(Equal(hostname))
+			Expect(uaaClient.GetClientTokenCall.Receives.Host).To(Equal("my-uaa-zone"))
 		})
 	})
 })

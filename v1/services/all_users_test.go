@@ -38,20 +38,22 @@ var _ = Describe("AllUserGUIDs", func() {
 				},
 			}
 
-			uaaClient.AllUsersData = users
+			uaaClient.AllUsersCall.Returns.Users = users
 		})
 
 		It("returns the UAAUsers, UserGUIDs, and an error", func() {
 			guids, err := allUsers.AllUserGUIDs("token")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(guids).To(ConsistOf("user-456", "user-999", "user-123"))
-			Expect(uaaClient.AllUsersToken).To(Equal("token"))
+
+			Expect(uaaClient.AllUsersCall.Receives.Token).To(Equal("token"))
 		})
 	})
 
 	Context("when the request to UAA fails", func() {
 		It("bubbles up the error", func() {
-			uaaClient.AllUsersError = errors.New("BOOM!")
+			uaaClient.AllUsersCall.Returns.Error = errors.New("BOOM!")
+
 			_, err := allUsers.AllUserGUIDs("token")
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(errors.New("BOOM!")))

@@ -2,65 +2,76 @@ package mocks
 
 import "github.com/cloudfoundry-incubator/notifications/uaa"
 
-type UAAClient struct {
-	ClientAccessToken string
-	ClientTokenError  error
-	AccessToken       string
-	AllUsersError     error
-	AllUsersData      []uaa.User
-}
-
 type ZonedUAAClient struct {
-	ErrorForUserByID          error
-	UsersByID                 map[string]uaa.User
-	GetClientTokenHost        string
-	Token                     string
-	AllUsersData              []uaa.User
-	AllUsersError             error
-	AllUsersToken             string
-	UsersGUIDsByScopeResponse map[string][]string
-	UsersGUIDsByScopeError    error
-}
-
-func NewUAAClient() *UAAClient {
-	return &UAAClient{}
-}
-
-func (fake *UAAClient) SetToken(token string) {
-	fake.AccessToken = token
-}
-
-func (fake UAAClient) GetClientToken() (string, error) {
-	return fake.ClientAccessToken, fake.ClientTokenError
-}
-
-func NewZonedUAAClient() *ZonedUAAClient {
-	return &ZonedUAAClient{
-		UsersGUIDsByScopeResponse: make(map[string][]string),
-	}
-}
-
-func (z *ZonedUAAClient) GetClientToken(host string) (string, error) {
-	z.GetClientTokenHost = host
-	return z.Token, nil
-}
-
-func (z ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]uaa.User, error) {
-	users := []uaa.User{}
-	for _, id := range ids {
-		if user, ok := z.UsersByID[id]; ok {
-			users = append(users, user)
+	AllUsersCall struct {
+		Receives struct {
+			Token string
+		}
+		Returns struct {
+			Users []uaa.User
+			Error error
 		}
 	}
 
-	return users, z.ErrorForUserByID
+	UsersGUIDsByScopeCall struct {
+		Receives struct {
+			Token string
+			Scope string
+		}
+		Returns struct {
+			UserGUIDs []string
+			Error     error
+		}
+	}
+
+	GetClientTokenCall struct {
+		Receives struct {
+			Host string
+		}
+		Returns struct {
+			Token string
+			Error error
+		}
+	}
+
+	UsersEmailsByIDsCall struct {
+		Receives struct {
+			Token string
+			IDs   []string
+		}
+		Returns struct {
+			Users []uaa.User
+			Error error
+		}
+	}
 }
 
-func (z *ZonedUAAClient) UsersGUIDsByScope(token, scope string) ([]string, error) {
-	return z.UsersGUIDsByScopeResponse[scope], z.UsersGUIDsByScopeError
+func NewZonedUAAClient() *ZonedUAAClient {
+	return &ZonedUAAClient{}
 }
 
-func (z *ZonedUAAClient) AllUsers(token string) ([]uaa.User, error) {
-	z.AllUsersToken = token
-	return z.AllUsersData, z.AllUsersError
+func (c *ZonedUAAClient) AllUsers(token string) ([]uaa.User, error) {
+	c.AllUsersCall.Receives.Token = token
+
+	return c.AllUsersCall.Returns.Users, c.AllUsersCall.Returns.Error
+}
+
+func (c *ZonedUAAClient) UsersGUIDsByScope(token, scope string) ([]string, error) {
+	c.UsersGUIDsByScopeCall.Receives.Token = token
+	c.UsersGUIDsByScopeCall.Receives.Scope = scope
+
+	return c.UsersGUIDsByScopeCall.Returns.UserGUIDs, c.UsersGUIDsByScopeCall.Returns.Error
+}
+
+func (c *ZonedUAAClient) GetClientToken(host string) (string, error) {
+	c.GetClientTokenCall.Receives.Host = host
+
+	return c.GetClientTokenCall.Returns.Token, c.GetClientTokenCall.Returns.Error
+}
+
+func (c *ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]uaa.User, error) {
+	c.UsersEmailsByIDsCall.Receives.Token = token
+	c.UsersEmailsByIDsCall.Receives.IDs = ids
+
+	return c.UsersEmailsByIDsCall.Returns.Users, c.UsersEmailsByIDsCall.Returns.Error
 }
