@@ -107,7 +107,8 @@ var _ = Describe("Notify", func() {
 
 				conn = mocks.NewConnection()
 				strategy = mocks.NewStrategy()
-				validator = &mocks.Validator{}
+				validator = mocks.NewValidator()
+				validator.ValidateCall.Returns.Valid = true
 
 				handler = notify.NewNotify(finder, registrar)
 			})
@@ -162,7 +163,8 @@ var _ = Describe("Notify", func() {
 			Context("failure cases", func() {
 				Context("when validating params", func() {
 					It("returns a error response when params are missing", func() {
-						validator.ValidateErrors = []string{"boom"}
+						validator.ValidateCall.ErrorsToApply = []string{"boom"}
+						validator.ValidateCall.Returns.Valid = false
 
 						body, err := json.Marshal(map[string]string{
 							"kind_id":  "test_email",

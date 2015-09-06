@@ -3,10 +3,24 @@ package mocks
 import "github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 
 type Validator struct {
-	ValidateErrors []string
+	ValidateCall struct {
+		Receives struct {
+			Params *notify.NotifyParams
+		}
+		Returns struct {
+			Valid bool
+		}
+		ErrorsToApply []string
+	}
 }
 
-func (fake *Validator) Validate(n *notify.NotifyParams) bool {
-	n.Errors = append(n.Errors, fake.ValidateErrors...)
-	return len(fake.ValidateErrors) == 0
+func NewValidator() *Validator {
+	return &Validator{}
+}
+
+func (v *Validator) Validate(params *notify.NotifyParams) bool {
+	v.ValidateCall.Receives.Params = params
+	params.Errors = append(params.Errors, v.ValidateCall.ErrorsToApply...)
+
+	return v.ValidateCall.Returns.Valid
 }
