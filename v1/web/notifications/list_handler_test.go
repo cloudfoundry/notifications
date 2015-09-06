@@ -42,37 +42,37 @@ var _ = Describe("ListHandler", func() {
 
 	Describe("ServeHTTP", func() {
 		It("receives the clients/notifications from the finder", func() {
-			notificationsFinder.Clients = map[string]models.Client{
-				"client-123": {
+			notificationsFinder.AllClientsAndNotificationsCall.Returns.Clients = []models.Client{
+				{
 					ID:          "client-123",
 					Description: "Jurassic Park",
 				},
-				"client-456": {
+				{
 					ID:          "client-456",
 					Description: "Jurassic Park Ride",
 				},
 			}
 
-			notificationsFinder.Kinds = map[string]models.Kind{
-				"perimeter-breach": {
+			notificationsFinder.AllClientsAndNotificationsCall.Returns.Kinds = []models.Kind{
+				{
 					ID:          "perimeter-breach",
 					Description: "very bad",
 					Critical:    true,
 					ClientID:    "client-123",
 				},
-				"fence-broken": {
+				{
 					ID:          "fence-broken",
 					Description: "even worse",
 					Critical:    true,
 					ClientID:    "client-123",
 				},
-				"perimeter-is-good": {
+				{
 					ID:          "perimeter-is-good",
 					Description: "very good",
 					Critical:    false,
 					ClientID:    "client-456",
 				},
-				"fence-works": {
+				{
 					ID:          "fence-works",
 					Description: "even better",
 					Critical:    true,
@@ -119,12 +119,12 @@ var _ = Describe("ListHandler", func() {
 				}
 			}`))
 
-			Expect(notificationsFinder.AllClientsAndNotificationsCall.Arguments).To(ConsistOf([]interface{}{database}))
+			Expect(notificationsFinder.AllClientsAndNotificationsCall.Receives.Database).To(Equal(database))
 		})
 
 		Context("when the notifications finder errors", func() {
 			It("delegates to the error writer", func() {
-				notificationsFinder.AllClientsAndNotificationsCall.Error = errors.New("BANANA!!!")
+				notificationsFinder.AllClientsAndNotificationsCall.Returns.Error = errors.New("BANANA!!!")
 
 				handler.ServeHTTP(writer, request, context)
 

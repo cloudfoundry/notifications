@@ -10,8 +10,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
@@ -57,8 +57,8 @@ var _ = Describe("Notify", func() {
 					Critical:    true,
 				}
 				finder = mocks.NewNotificationsFinder()
-				finder.Clients["mister-client"] = client
-				finder.Kinds["test_email|mister-client"] = kind
+				finder.ClientAndKindCall.Returns.Client = client
+				finder.ClientAndKindCall.Returns.Kind = kind
 
 				registrar = mocks.NewRegistrar()
 
@@ -150,7 +150,9 @@ var _ = Describe("Notify", func() {
 				_, err := handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(finder.ClientAndKindCall.Arguments).To(ConsistOf([]interface{}{database, "mister-client", "test_email"}))
+				Expect(finder.ClientAndKindCall.Receives.Database).To(Equal(database))
+				Expect(finder.ClientAndKindCall.Receives.ClientID).To(Equal("mister-client"))
+				Expect(finder.ClientAndKindCall.Receives.KindID).To(Equal("test_email"))
 
 				Expect(registrar.RegisterCall.Receives.Connection).To(Equal(conn))
 				Expect(registrar.RegisterCall.Receives.Client).To(Equal(client))
@@ -203,7 +205,7 @@ var _ = Describe("Notify", func() {
 
 				Context("when the finder return errors", func() {
 					It("returns the error", func() {
-						finder.ClientAndKindCall.Error = errors.New("BOOM!")
+						finder.ClientAndKindCall.Returns.Error = errors.New("BOOM!")
 
 						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
 						Expect(err).To(Equal(errors.New("BOOM!")))

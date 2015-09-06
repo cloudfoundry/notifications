@@ -6,47 +6,45 @@ import (
 )
 
 type NotificationsFinder struct {
-	Clients map[string]models.Client
-	Kinds   map[string]models.Kind
-
 	AllClientsAndNotificationsCall struct {
-		Arguments []interface{}
-		Error     error
+		Receives struct {
+			Database db.DatabaseInterface
+		}
+		Returns struct {
+			Clients []models.Client
+			Kinds   []models.Kind
+			Error   error
+		}
 	}
 
 	ClientAndKindCall struct {
-		Arguments []interface{}
-		Error     error
+		Receives struct {
+			Database db.DatabaseInterface
+			ClientID string
+			KindID   string
+		}
+		Returns struct {
+			Client models.Client
+			Kind   models.Kind
+			Error  error
+		}
 	}
 }
 
 func NewNotificationsFinder() *NotificationsFinder {
-	return &NotificationsFinder{
-		Clients: make(map[string]models.Client),
-		Kinds:   make(map[string]models.Kind),
-	}
+	return &NotificationsFinder{}
 }
 
-func (finder *NotificationsFinder) AllClientsAndNotifications(database db.DatabaseInterface) ([]models.Client, []models.Kind, error) {
-	var (
-		clients []models.Client
-		kinds   []models.Kind
-	)
+func (f *NotificationsFinder) AllClientsAndNotifications(database db.DatabaseInterface) ([]models.Client, []models.Kind, error) {
+	f.AllClientsAndNotificationsCall.Receives.Database = database
 
-	finder.AllClientsAndNotificationsCall.Arguments = []interface{}{database}
-
-	for _, client := range finder.Clients {
-		clients = append(clients, client)
-	}
-
-	for _, kind := range finder.Kinds {
-		kinds = append(kinds, kind)
-	}
-
-	return clients, kinds, finder.AllClientsAndNotificationsCall.Error
+	return f.AllClientsAndNotificationsCall.Returns.Clients, f.AllClientsAndNotificationsCall.Returns.Kinds, f.AllClientsAndNotificationsCall.Returns.Error
 }
 
-func (finder *NotificationsFinder) ClientAndKind(database db.DatabaseInterface, clientID, kindID string) (models.Client, models.Kind, error) {
-	finder.ClientAndKindCall.Arguments = []interface{}{database, clientID, kindID}
-	return finder.Clients[clientID], finder.Kinds[kindID+"|"+clientID], finder.ClientAndKindCall.Error
+func (f *NotificationsFinder) ClientAndKind(database db.DatabaseInterface, clientID, kindID string) (models.Client, models.Kind, error) {
+	f.ClientAndKindCall.Receives.Database = database
+	f.ClientAndKindCall.Receives.ClientID = clientID
+	f.ClientAndKindCall.Receives.KindID = kindID
+
+	return f.ClientAndKindCall.Returns.Client, f.ClientAndKindCall.Returns.Kind, f.ClientAndKindCall.Returns.Error
 }
