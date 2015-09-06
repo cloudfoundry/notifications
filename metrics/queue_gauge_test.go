@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 
@@ -29,8 +28,6 @@ var _ = Describe("QueueGauge", func() {
 	})
 
 	It("reports the number of items on the queue as a metric", func() {
-		job := gobble.Job{}
-
 		go gauge.Run()
 
 		Expect(buffer.String()).To(BeEmpty())
@@ -55,8 +52,10 @@ var _ = Describe("QueueGauge", func() {
 			"",
 		}))
 
-		job, err := queue.Enqueue(job)
-		Expect(err).NotTo(HaveOccurred())
+		queue.RetryQueueLengthsCall.Returns.Lengths = map[int]int{
+			0: 1,
+		}
+		queue.LenCall.Returns.Length = 1
 		timer <- time.Now()
 
 		Eventually(func() []string {
@@ -89,7 +88,8 @@ var _ = Describe("QueueGauge", func() {
 			"",
 		}))
 
-		queue.Dequeue(job)
+		queue.RetryQueueLengthsCall.Returns.Lengths = map[int]int{}
+		queue.LenCall.Returns.Length = 0
 		timer <- time.Now()
 
 		Eventually(func() []string {
@@ -140,14 +140,11 @@ var _ = Describe("QueueGauge", func() {
 
 		Expect(buffer.String()).To(BeEmpty())
 
-		_, err := queue.Enqueue(gobble.Job{RetryCount: 4})
-		Expect(err).NotTo(HaveOccurred())
-
-		for i := 0; i < 3; i++ {
-			_, err = queue.Enqueue(gobble.Job{RetryCount: 1})
-			Expect(err).NotTo(HaveOccurred())
+		queue.RetryQueueLengthsCall.Returns.Lengths = map[int]int{
+			1: 3,
+			4: 1,
 		}
-
+		queue.LenCall.Returns.Length = 4
 		timer <- time.Now()
 
 		Eventually(func() []string {

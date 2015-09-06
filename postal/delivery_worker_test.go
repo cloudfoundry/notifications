@@ -132,19 +132,18 @@ var _ = Describe("DeliveryWorker", func() {
 
 	Describe("Work", func() {
 		It("pops Deliveries off the queue, sending emails for each", func() {
-			queue.Enqueue(gobble.NewJob(delivery))
+			reserveChan := make(chan gobble.Job)
+			go func() {
+				reserveChan <- gobble.NewJob(delivery)
+			}()
+			queue.ReserveCall.Returns.Chan = reserveChan
 
 			worker.Work()
-
-			delivery2 := postal.Delivery{
-				UserGUID: "user-456",
-			}
-			queue.Enqueue(gobble.NewJob(delivery2))
 
 			<-time.After(10 * time.Millisecond)
 			worker.Halt()
 
-			Expect(mailClient.SendCall.CallCount).To(Equal(2))
+			Expect(mailClient.SendCall.CallCount).To(Equal(1))
 		})
 
 		It("can be halted", func() {

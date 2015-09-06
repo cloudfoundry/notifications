@@ -92,8 +92,7 @@ var _ = Describe("Enqueuer", func() {
 			enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
 			var deliveries []services.Delivery
-			for _ = range users {
-				job := <-queue.Reserve("me")
+			for _, job := range queue.EnqueueCall.Receives.Jobs {
 				var delivery services.Delivery
 				err := job.Unmarshal(&delivery)
 				if err != nil {
@@ -160,8 +159,7 @@ var _ = Describe("Enqueuer", func() {
 			enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
 			var statuses []string
-			for _ = range users {
-				job := <-queue.Reserve("me")
+			for _, job := range queue.EnqueueCall.Receives.Jobs {
 				var delivery services.Delivery
 				err := job.Unmarshal(&delivery)
 				if err != nil {

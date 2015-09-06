@@ -3,6 +3,7 @@ package queue_test
 import (
 	"errors"
 
+	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
@@ -13,14 +14,14 @@ import (
 
 var _ = Describe("Enqueuer", func() {
 	var (
-		gobble   *mocks.Queue
-		enqueuer queue.CampaignEnqueuer
-		campaign collections.Campaign
+		gobbleQueue *mocks.Queue
+		enqueuer    queue.CampaignEnqueuer
+		campaign    collections.Campaign
 	)
 
 	BeforeEach(func() {
-		gobble = mocks.NewQueue()
-		enqueuer = queue.NewCampaignEnqueuer(gobble)
+		gobbleQueue = mocks.NewQueue()
+		enqueuer = queue.NewCampaignEnqueuer(gobbleQueue)
 		campaign = collections.Campaign{
 			ID: "27",
 		}
@@ -30,24 +31,23 @@ var _ = Describe("Enqueuer", func() {
 		It("puts a campaign on the queue", func() {
 			err := enqueuer.Enqueue(campaign, "campaign")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(gobble.Len()).To(Equal(1))
 
-			var job queue.CampaignJob
-			gobble.Jobs[1].Unmarshal(&job)
-			Expect(job.Campaign.ID).To(Equal("27"))
-			Expect(job.JobType).To(Equal("campaign"))
+			Expect(gobbleQueue.EnqueueCall.Receives.Jobs).To(HaveLen(1))
+			Expect(gobbleQueue.EnqueueCall.Receives.Jobs[0]).To(Equal(gobble.NewJob(queue.CampaignJob{
+				JobType:  "campaign",
+				Campaign: campaign,
+			})))
 		})
 
 		Context("when an enqueuing occurs", func() {
 			BeforeEach(func() {
-				gobble.EnqueueError = errors.New("some-error")
+				gobbleQueue.EnqueueCall.Returns.Error = errors.New("some-error")
 			})
 
 			It("returns an error", func() {
 				err := enqueuer.Enqueue(campaign, "campaign")
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError("there was an error enqueuing the job: some-error"))
-				Expect(gobble.Len()).To(Equal(0))
 			})
 		})
 	})
