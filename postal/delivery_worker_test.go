@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
@@ -51,6 +52,18 @@ var _ = Describe("DeliveryWorker", func() {
 		unsubscribesRepo = mocks.NewUnsubscribesRepo()
 		globalUnsubscribesRepo = mocks.NewGlobalUnsubscribesRepo()
 		kindsRepo = mocks.NewKindsRepo()
+		kindsRepo.FindCall.Returns.Kinds = []models.Kind{
+			{
+				ID:       "some-kind",
+				ClientID: "some-client",
+				Critical: false,
+			},
+			{
+				ID:       "another-kind",
+				ClientID: "some-client",
+				Critical: false,
+			},
+		}
 
 		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()

@@ -56,21 +56,14 @@ var _ = Describe("Registrar", func() {
 			Expect(clientsRepo.UpsertCall.Receives.Connection).To(Equal(conn))
 			Expect(clientsRepo.UpsertCall.Receives.Client).To(Equal(client))
 
-			Expect(kindsRepo.Kinds).To(HaveLen(2))
-			kind, err := kindsRepo.Find(conn, "hungry", "raptors")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(kind).To(Equal(hungry))
-
-			kind, err = kindsRepo.Find(conn, "sleepy", "raptors")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(kind).To(Equal(sleepy))
+			Expect(kindsRepo.UpsertCall.Receives.Kinds).To(Equal([]models.Kind{hungry, sleepy}))
 		})
 
 		Context("when kinds is an empty set", func() {
 			It("does nothing", func() {
 				err := registrar.Register(conn, models.Client{}, []models.Kind{{}})
 				Expect(err).ToNot(HaveOccurred())
-				Expect(kindsRepo.Kinds).To(HaveLen(0))
+				Expect(kindsRepo.UpsertCall.Receives.Kinds).To(HaveLen(0))
 			})
 		})
 
@@ -83,7 +76,7 @@ var _ = Describe("Registrar", func() {
 			})
 
 			It("returns the errors from the kinds repo", func() {
-				kindsRepo.UpsertError = errors.New("BOOM!")
+				kindsRepo.UpsertCall.Returns.Error = errors.New("BOOM!")
 
 				err := registrar.Register(conn, models.Client{}, []models.Kind{
 					{ID: "something"},
@@ -100,26 +93,19 @@ var _ = Describe("Registrar", func() {
 				Description: "perimeter breech",
 			}
 
-			kind, err := kindsRepo.Create(conn, models.Kind{
+			kind := models.Kind{
 				ID:          "hungry",
 				Description: "these raptors are hungry",
 				Critical:    true,
 				ClientID:    "raptors",
-			})
+			}
+
+			err := registrar.Prune(conn, client, []models.Kind{kind})
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = kindsRepo.Create(conn, models.Kind{
-				ID:          "sleepy",
-				Description: "these raptors are zzzzzzzz",
-				Critical:    false,
-				ClientID:    "raptors",
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			err = registrar.Prune(conn, client, []models.Kind{kind})
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(kindsRepo.TrimArguments).To(Equal([]interface{}{client.ID, []string{"hungry"}}))
+			Expect(kindsRepo.TrimCall.Receives.Connection).To(Equal(conn))
+			Expect(kindsRepo.TrimCall.Receives.ClientID).To(Equal(client.ID))
+			Expect(kindsRepo.TrimCall.Receives.KindIDs).To(Equal([]string{"hungry"}))
 		})
 	})
 })

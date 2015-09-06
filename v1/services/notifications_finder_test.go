@@ -28,21 +28,17 @@ var _ = Describe("NotificationsFinder", func() {
 	})
 
 	Describe("ClientAndKind", func() {
-		var (
-			breach models.Kind
-		)
-
 		BeforeEach(func() {
 			clientsRepo.FindCall.Returns.Client = models.Client{
 				ID: "some-client-id",
 			}
 
-			breach = models.Kind{
-				ID:        "perimeter_breach",
-				ClientID:  "some-client-id",
-				CreatedAt: time.Now(),
+			kindsRepo.FindCall.Returns.Kinds = []models.Kind{
+				{
+					ID:       "perimeter_breach",
+					ClientID: "some-client-id",
+				},
 			}
-			kindsRepo.Kinds[breach.ID+breach.ClientID] = breach
 		})
 
 		It("retrieves clients and kinds from the database", func() {
@@ -51,7 +47,10 @@ var _ = Describe("NotificationsFinder", func() {
 			Expect(client).To(Equal(models.Client{
 				ID: "some-client-id",
 			}))
-			Expect(kind).To(Equal(breach))
+			Expect(kind).To(Equal(models.Kind{
+				ID:       "perimeter_breach",
+				ClientID: "some-client-id",
+			}))
 		})
 
 		Context("when the client cannot be found", func() {
@@ -68,6 +67,8 @@ var _ = Describe("NotificationsFinder", func() {
 
 		Context("when the kind cannot be found", func() {
 			It("returns an empty models.Kind", func() {
+				kindsRepo.FindCall.Returns.Error = models.RecordNotFoundError("")
+
 				client, kind, err := finder.ClientAndKind(database, "some-client-id", "bad-kind-id")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(client).To(Equal(models.Client{
@@ -91,7 +92,8 @@ var _ = Describe("NotificationsFinder", func() {
 
 		Context("when the kinds repo returns an error other than RecordNotFoundError", func() {
 			It("returns the error", func() {
-				kindsRepo.FindError = errors.New("BOOM!")
+				kindsRepo.FindCall.Returns.Error = errors.New("BOOM!")
+
 				_, _, err := finder.ClientAndKind(database, "some-client-id", "perimeter_breach")
 				Expect(err).To(Equal(errors.New("BOOM!")))
 			})
@@ -150,11 +152,7 @@ var _ = Describe("NotificationsFinder", func() {
 				CreatedAt:   time.Now(),
 			}
 
-			kindsRepo.Kinds = map[string]models.Kind{
-				"star-wars|multi-light-saber": multiSaber,
-				"star-wars|millenium-falcon":  milleniumFalcon,
-				"big-hero-6|robots":           robots,
-			}
+			kindsRepo.FindAllCall.Returns.Kinds = []models.Kind{multiSaber, milleniumFalcon, robots}
 		})
 
 		It("returns all clients with their associated notifications", func() {

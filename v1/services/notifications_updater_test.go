@@ -30,7 +30,7 @@ var _ = Describe("NotificationUpdater", func() {
 
 	Describe("Update", func() {
 		It("updates the correct model with the new fields provided", func() {
-			kindsRepo.Kinds["my-current-kind-idmy-current-client-id"] = models.Kind{
+			kindsRepo.UpdateCall.Returns.Kind = models.Kind{
 				ID:          "my-current-kind-id",
 				ClientID:    "my-current-client-id",
 				Description: "What a beautiful description",
@@ -58,11 +58,10 @@ var _ = Describe("NotificationUpdater", func() {
 		})
 
 		It("propagates errors returned by the repo", func() {
-			boomError := errors.New("Boom")
-			kindsRepo.UpdateError = boomError
+			kindsRepo.UpdateCall.Returns.Error = errors.New("Boom")
 
 			err := notificationsUpdater.Update(database, models.Kind{})
-			Expect(err).To(MatchError(boomError))
+			Expect(err).To(MatchError(errors.New("Boom")))
 		})
 	})
 })

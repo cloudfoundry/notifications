@@ -64,16 +64,16 @@ var _ = Describe("PreferenceUpdater", func() {
 					KindID:   "barking",
 				}
 
-				kindsRepo.Create(conn, models.Kind{
-					ID:       "door-open",
-					ClientID: "raptors",
-				})
-
-				kindsRepo.Create(conn, models.Kind{
-					ID:       "barking",
-					ClientID: "dogs",
-				})
-
+				kindsRepo.FindCall.Returns.Kinds = []models.Kind{
+					{
+						ID:       "door-open",
+						ClientID: "raptors",
+					},
+					{
+						ID:       "barking",
+						ClientID: "dogs",
+					},
+				}
 			})
 
 			It("Adds New Unsubscribes to the unsubscribes Repo", func() {
@@ -134,100 +134,94 @@ var _ = Describe("PreferenceUpdater", func() {
 		})
 
 		Context("when unsubscribing from missing client", func() {
-			var hungry models.Preference
-			var boo models.Preference
-
 			BeforeEach(func() {
-				hungry = models.Preference{
-					ClientID: "raptors",
-					KindID:   "hungry",
+				kindsRepo.FindCall.Returns.Kinds = []models.Kind{
+					{
+						ID:       "hungry",
+						ClientID: "raptors",
+					},
+					{
+						ID:       "boo",
+						ClientID: "missing-client",
+					},
 				}
-
-				boo = models.Preference{
-					ClientID: "ghosts",
-					KindID:   "boo",
-				}
-
-				kindsRepo.Create(conn, models.Kind{
-					ID:       "hungry",
-					ClientID: "raptors",
-				})
-
-				kindsRepo.Create(conn, models.Kind{
-					ID:       "boo",
-					ClientID: "missing-client",
-				})
 
 			})
 
 			It("should return a MissingKindOrClientError", func() {
-				err := updater.Execute(conn, []models.Preference{hungry, boo}, false, "the-user")
+				preferences := []models.Preference{
+					{
+						ClientID: "ghosts",
+						KindID:   "boo",
+					},
+					{
+						ClientID: "raptors",
+						KindID:   "hungry",
+					},
+				}
+				kindsRepo.FindCall.Returns.Error = errors.New("something bad happened")
 
+				err := updater.Execute(conn, preferences, false, "the-user")
 				Expect(err).To(Equal(services.MissingKindOrClientError("The kind 'boo' cannot be found for client 'ghosts'")))
 			})
 		})
 
 		Context("when unsubscribing from a missing kind", func() {
-			var hungry models.Preference
-			var dead models.Preference
-
 			BeforeEach(func() {
-				hungry = models.Preference{
-					ClientID: "raptors",
-					KindID:   "hungry",
+				kindsRepo.FindCall.Returns.Kinds = []models.Kind{
+					{
+						ID:       "hungry",
+						ClientID: "raptors",
+					},
 				}
-
-				dead = models.Preference{
-					ClientID: "raptors",
-					KindID:   "dead",
-				}
-
-				kindsRepo.Create(conn, models.Kind{
-					ID:       "hungry",
-					ClientID: "raptors",
-				})
-
 			})
 
 			It("should return a MissingKindOrClientError", func() {
+				preferences := []models.Preference{
+					{
+						ClientID: "raptors",
+						KindID:   "dead",
+					},
+					{
+						ClientID: "raptors",
+						KindID:   "hungry",
+					},
+				}
+				kindsRepo.FindCall.Returns.Error = errors.New("something bad happened")
 
-				err := updater.Execute(conn, []models.Preference{hungry, dead}, false, "the-user")
-
+				err := updater.Execute(conn, preferences, false, "the-user")
 				Expect(err).To(Equal(services.MissingKindOrClientError("The kind 'dead' cannot be found for client 'raptors'")))
 			})
 		})
 
 		Context("when unsubscribing from a critical kind", func() {
-			var hungry models.Preference
-			var barking models.Preference
-
 			BeforeEach(func() {
-				hungry = models.Preference{
-					ClientID: "raptors",
-					KindID:   "hungry",
+				kindsRepo.FindCall.Returns.Kinds = []models.Kind{
+					{
+						ClientID: "raptors",
+						ID:       "hungry",
+						Critical: true,
+					},
+					{
+						ClientID: "dogs",
+						ID:       "barking",
+					},
 				}
-
-				barking = models.Preference{
-					ClientID: "dogs",
-					KindID:   "barking",
-				}
-
-				kindsRepo.Create(conn, models.Kind{
-					ClientID: "raptors",
-					ID:       "hungry",
-					Critical: true,
-				})
-
-				kindsRepo.Create(conn, models.Kind{
-					ClientID: "dogs",
-					ID:       "barking",
-				})
-
 			})
 
 			It("should return a CriticalKindError", func() {
-				err := updater.Execute(conn, []models.Preference{barking, hungry}, false, "the-user")
+				preferences := []models.Preference{
+					{
+						ClientID: "raptors",
+						KindID:   "hungry",
+					},
+					{
+						ClientID: "dogs",
+						KindID:   "barking",
+					},
+				}
 
+				err := updater.Execute(conn, preferences, false, "the-user")
 				Expect(err).To(Equal(services.CriticalKindError("The kind 'hungry' for the 'raptors' client is critical and cannot be unsubscribed from")))
 			})
 		})

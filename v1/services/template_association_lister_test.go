@@ -63,19 +63,18 @@ var _ = Describe("TemplateAssociationLister", func() {
 					},
 				}
 
-				_, err := kindsRepo.Create(database.Connection(), models.Kind{
-					ID:         "some-notification",
-					ClientID:   "some-client",
-					TemplateID: templateID,
-				})
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = kindsRepo.Create(database.Connection(), models.Kind{
-					ID:         "another-notification",
-					ClientID:   "another-client",
-					TemplateID: templateID,
-				})
-				Expect(err).NotTo(HaveOccurred())
+				kindsRepo.FindAllByTemplateIDCall.Returns.Kinds = []models.Kind{
+					{
+						ID:         "some-notification",
+						ClientID:   "some-client",
+						TemplateID: templateID,
+					},
+					{
+						ID:         "another-notification",
+						ClientID:   "another-client",
+						TemplateID: templateID,
+					},
+				}
 			})
 
 			It("returns the full list of associations", func() {
@@ -100,7 +99,7 @@ var _ = Describe("TemplateAssociationLister", func() {
 
 			Context("when the kinds repo returns an error", func() {
 				It("returns the underlying error", func() {
-					kindsRepo.FindAllByTemplateIDError = errors.New("more bad happened")
+					kindsRepo.FindAllByTemplateIDCall.Returns.Error = errors.New("more bad happened")
 
 					_, err := lister.List(database, templateID)
 					Expect(err).To(MatchError(errors.New("more bad happened")))

@@ -38,8 +38,6 @@ var _ = Describe("TemplateLoader", func() {
 	})
 
 	Describe("LoadTemplates", func() {
-		var kind models.Kind
-
 		BeforeEach(func() {
 			var err error
 
@@ -48,11 +46,13 @@ var _ = Describe("TemplateLoader", func() {
 				TemplateID: models.DefaultTemplateID,
 			}
 
-			kind, err = kindsRepo.Create(conn, models.Kind{
-				ID:       "my-kind-id",
-				ClientID: "my-client-id",
-			})
-			Expect(err).NotTo(HaveOccurred())
+			kindsRepo.FindCall.Returns.Kinds = []models.Kind{
+				{
+					ID:         "my-kind-id",
+					ClientID:   "my-client-id",
+					TemplateID: models.DefaultTemplateID,
+				},
+			}
 
 			_, err = templatesRepo.Create(conn, models.Template{
 				ID:      models.DefaultTemplateID,
@@ -75,9 +75,13 @@ var _ = Describe("TemplateLoader", func() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 
-				kind.TemplateID = template.ID
-				_, err = kindsRepo.Update(conn, kind)
-				Expect(err).NotTo(HaveOccurred())
+				kindsRepo.FindCall.Returns.Kinds = []models.Kind{
+					{
+						ID:         "my-kind-id",
+						ClientID:   "my-client-id",
+						TemplateID: template.ID,
+					},
+				}
 			})
 
 			It("returns the template belonging to the kind", func() {
@@ -169,11 +173,9 @@ var _ = Describe("TemplateLoader", func() {
 		})
 
 		Context("when the kinds repo has an error", func() {
-			BeforeEach(func() {
-				kindsRepo.FindError = errors.New("BOOM!")
-			})
-
 			It("bubbles up the error", func() {
+				kindsRepo.FindCall.Returns.Error = errors.New("BOOM!")
+
 				_, err := loader.LoadTemplates("my-client-id", "my-kind-id", "")
 				Expect(err).To(HaveOccurred())
 			})
@@ -181,11 +183,9 @@ var _ = Describe("TemplateLoader", func() {
 		})
 
 		Context("when the clients repo has an error", func() {
-			BeforeEach(func() {
-				clientsRepo.FindCall.Returns.Error = errors.New("BOOM!")
-			})
-
 			It("bubbles up the error", func() {
+				clientsRepo.FindCall.Returns.Error = errors.New("BOOM!")
+
 				_, err := loader.LoadTemplates("my-client-id", "my-kind-id", "")
 				Expect(err).To(HaveOccurred())
 			})
@@ -194,6 +194,7 @@ var _ = Describe("TemplateLoader", func() {
 		Context("when the templates collection has an error", func() {
 			It("returns the error", func() {
 				templatesCollection.GetCall.Returns.Error = errors.New("some error on the collection")
+
 				_, err := loader.LoadTemplates("my-client-id", "", "some-v2-template-id")
 				Expect(err).To(MatchError("some error on the collection"))
 			})

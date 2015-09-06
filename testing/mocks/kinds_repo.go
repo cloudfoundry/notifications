@@ -3,114 +3,121 @@ package mocks
 import "github.com/cloudfoundry-incubator/notifications/v1/models"
 
 type KindsRepo struct {
-	Kinds                    map[string]models.Kind
-	UpsertError              error
-	TrimError                error
-	FindError                error
-	UpdateError              error
-	FindAllByTemplateIDError error
-	TrimArguments            []interface{}
+	FindCall struct {
+		CallCount int
+		Receives  struct {
+			Connection models.ConnectionInterface
+			KindID     string
+			ClientID   string
+		}
+		Returns struct {
+			Kinds []models.Kind
+			Error error
+		}
+	}
+
+	FindAllCall struct {
+		Receives struct {
+			Connection models.ConnectionInterface
+		}
+		Returns struct {
+			Kinds []models.Kind
+			Error error
+		}
+	}
+
+	FindAllByTemplateIDCall struct {
+		Receives struct {
+			Connection models.ConnectionInterface
+			TemplateID string
+		}
+		Returns struct {
+			Kinds []models.Kind
+			Error error
+		}
+	}
+
+	TrimCall struct {
+		Receives struct {
+			Connection models.ConnectionInterface
+			ClientID   string
+			KindIDs    []string
+		}
+		Returns struct {
+			AffectedRowCount int
+			Error            error
+		}
+	}
 
 	UpdateCall struct {
 		Receives struct {
 			Connection models.ConnectionInterface
 			Kind       models.Kind
 		}
+		Returns struct {
+			Kind  models.Kind
+			Error error
+		}
+	}
+
+	UpsertCall struct {
+		Receives struct {
+			Connection models.ConnectionInterface
+			Kinds      []models.Kind
+		}
+		Returns struct {
+			Kind  models.Kind
+			Error error
+		}
 	}
 }
 
 func NewKindsRepo() *KindsRepo {
-	return &KindsRepo{
-		Kinds:         make(map[string]models.Kind),
-		TrimArguments: make([]interface{}, 0),
-	}
+	return &KindsRepo{}
 }
 
-func (fake *KindsRepo) Create(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
-	if kind.TemplateID == "" {
-		kind.TemplateID = models.DefaultTemplateID
-	}
+func (kr *KindsRepo) Find(conn models.ConnectionInterface, kindID, clientID string) (models.Kind, error) {
+	kr.FindCall.Receives.Connection = conn
+	kr.FindCall.Receives.KindID = kindID
+	kr.FindCall.Receives.ClientID = clientID
 
-	key := kind.ID + kind.ClientID
-	if _, ok := fake.Kinds[key]; ok {
-		return kind, models.DuplicateRecordError{}
-	}
+	kind := kr.FindCall.Returns.Kinds[kr.FindCall.CallCount]
+	kr.FindCall.CallCount++
 
-	fake.Kinds[key] = kind
-	return kind, nil
+	return kind, kr.FindCall.Returns.Error
 }
 
-func (fake *KindsRepo) Update(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
-	fake.UpdateCall.Receives.Connection = conn
-	fake.UpdateCall.Receives.Kind = kind
+func (kr *KindsRepo) FindAll(conn models.ConnectionInterface) ([]models.Kind, error) {
+	kr.FindAllCall.Receives.Connection = conn
 
-	if fake.UpdateError != nil {
-		return kind, fake.UpdateError
-	}
-
-	if kind.TemplateID == "" {
-		existingKind, err := fake.Find(conn, kind.ID, kind.ClientID)
-		if err != nil {
-			return kind, err
-		}
-		kind.TemplateID = existingKind.TemplateID
-	}
-
-	key := kind.ID + kind.ClientID
-	fake.Kinds[key] = kind
-	return kind, nil
+	return kr.FindAllCall.Returns.Kinds, kr.FindAllCall.Returns.Error
 }
 
-func (fake *KindsRepo) Upsert(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
-	key := kind.ID + kind.ClientID
-	fake.Kinds[key] = kind
-	return kind, fake.UpsertError
+func (kr *KindsRepo) FindAllByTemplateID(conn models.ConnectionInterface, templateID string) ([]models.Kind, error) {
+	kr.FindAllByTemplateIDCall.Receives.Connection = conn
+	kr.FindAllByTemplateIDCall.Receives.TemplateID = templateID
+
+	return kr.FindAllByTemplateIDCall.Returns.Kinds, kr.FindAllByTemplateIDCall.Returns.Error
 }
 
-func (fake *KindsRepo) Find(conn models.ConnectionInterface, id, clientID string) (models.Kind, error) {
-	if fake.FindError != nil {
-		return models.Kind{}, fake.FindError
-	}
-	key := id + clientID
-	if kind, ok := fake.Kinds[key]; ok {
-		return kind, nil
-	}
-	return models.Kind{}, models.NewRecordNotFoundError("Kind %q %q could not be found", id, clientID)
+func (kr *KindsRepo) Trim(conn models.ConnectionInterface, clientID string, kindIDs []string) (int, error) {
+	kr.TrimCall.Receives.Connection = conn
+	kr.TrimCall.Receives.ClientID = clientID
+	kr.TrimCall.Receives.KindIDs = kindIDs
+
+	return kr.TrimCall.Returns.AffectedRowCount, kr.TrimCall.Returns.Error
 }
 
-func (fake *KindsRepo) FindByClient(conn models.ConnectionInterface, clientID string) ([]models.Kind, error) {
-	kinds := []models.Kind{}
+func (kr *KindsRepo) Update(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
+	kr.UpdateCall.Receives.Connection = conn
+	kr.UpdateCall.Receives.Kind = kind
 
-	for _, kind := range fake.Kinds {
-		if kind.ClientID == clientID {
-			kinds = append(kinds, kind)
-		}
-	}
-
-	return kinds, nil
+	return kr.UpdateCall.Returns.Kind, kr.UpdateCall.Returns.Error
 }
 
-func (fake *KindsRepo) FindAll(conn models.ConnectionInterface) ([]models.Kind, error) {
-	var kinds []models.Kind
+func (kr *KindsRepo) Upsert(conn models.ConnectionInterface, kind models.Kind) (models.Kind, error) {
+	kr.UpsertCall.Receives.Connection = conn
+	kr.UpsertCall.Receives.Kinds = append(kr.UpsertCall.Receives.Kinds, kind)
 
-	for _, kind := range fake.Kinds {
-		kinds = append(kinds, kind)
-	}
-
-	return kinds, nil
-}
-
-func (fake *KindsRepo) Trim(conn models.ConnectionInterface, clientID string, kindIDs []string) (int, error) {
-	fake.TrimArguments = []interface{}{clientID, kindIDs}
-	return 0, fake.TrimError
-}
-
-func (fake *KindsRepo) FindAllByTemplateID(conn models.ConnectionInterface, templateID string) ([]models.Kind, error) {
-	var kinds []models.Kind
-	for _, kind := range fake.Kinds {
-		if kind.TemplateID == templateID {
-			kinds = append(kinds, kind)
-		}
-	}
-	return kinds, fake.FindAllByTemplateIDError
+	return kr.UpsertCall.Returns.Kind, kr.UpsertCall.Returns.Error
 }

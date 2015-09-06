@@ -83,7 +83,15 @@ var _ = Describe("V1Process", func() {
 		queue = mocks.NewQueue()
 		unsubscribesRepo = mocks.NewUnsubscribesRepo()
 		globalUnsubscribesRepo = mocks.NewGlobalUnsubscribesRepo()
+
 		kindsRepo = mocks.NewKindsRepo()
+		kindsRepo.FindCall.Returns.Kinds = []models.Kind{
+			{
+				ID:       "some-kind",
+				ClientID: "some-client",
+				Critical: false,
+			},
+		}
 
 		conn = mocks.NewConnection()
 		database = mocks.NewDatabase()
@@ -183,7 +191,6 @@ var _ = Describe("V1Process", func() {
 			Expect(templateLoader.LoadTemplatesCall.Receives.ClientID).To(Equal("some-client"))
 			Expect(templateLoader.LoadTemplatesCall.Receives.KindID).To(Equal("some-kind"))
 			Expect(templateLoader.LoadTemplatesCall.Receives.TemplateID).To(Equal("some-template-id"))
-
 		})
 
 		It("logs successful delivery", func() {
@@ -564,16 +571,15 @@ var _ = Describe("V1Process", func() {
 
 			Context("and the notification is registered as not critical", func() {
 				BeforeEach(func() {
-					_, err := kindsRepo.Create(conn, models.Kind{
-						ID:       "some-kind",
-						ClientID: "some-client",
-						Critical: false,
-					})
-
-					if err != nil {
-						panic(err)
+					kindsRepo.FindCall.Returns.Kinds = []models.Kind{
+						{
+							ID:       "some-kind",
+							ClientID: "some-client",
+							Critical: false,
+						},
 					}
 				})
+
 				It("does not send the email", func() {
 					v1Process.Deliver(job, logger)
 
@@ -583,14 +589,12 @@ var _ = Describe("V1Process", func() {
 
 			Context("and the notification is registered as critical", func() {
 				BeforeEach(func() {
-					_, err := kindsRepo.Create(conn, models.Kind{
-						ID:       "some-kind",
-						ClientID: "some-client",
-						Critical: true,
-					})
-
-					if err != nil {
-						panic(err)
+					kindsRepo.FindCall.Returns.Kinds = []models.Kind{
+						{
+							ID:       "some-kind",
+							ClientID: "some-client",
+							Critical: true,
+						},
 					}
 				})
 
