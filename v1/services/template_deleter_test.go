@@ -40,16 +40,13 @@ var _ = Describe("Deleter", func() {
 
 			Expect(templatesRepo.DestroyCall.Receives.Connection).To(Equal(conn))
 			Expect(templatesRepo.DestroyCall.Receives.TemplateID).To(Equal("templateID"))
-
-			_, err = templatesRepo.FindByID(database.Connection(), "templateID")
-			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
 		})
 
 		It("returns an error if repo destroy returns an error", func() {
-			templatesRepo.DestroyError = errors.New("Boom!!")
+			templatesRepo.DestroyCall.Returns.Error = errors.New("Boom!!")
 
 			err := deleter.Delete(database, "templateID")
-			Expect(err).To(Equal(templatesRepo.DestroyError))
+			Expect(err).To(MatchError(errors.New("Boom!!")))
 		})
 	})
 })

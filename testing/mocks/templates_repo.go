@@ -3,18 +3,14 @@ package mocks
 import "github.com/cloudfoundry-incubator/notifications/v1/models"
 
 type TemplatesRepo struct {
-	Templates     map[string]models.Template
-	TemplatesList []models.Template
-	FindError     error
-	CreateError   error
-	UpdateError   error
-	ListError     error
-	DestroyError  error
-
-	FindByIDCall struct {
+	CreateCall struct {
 		Receives struct {
 			Connection models.ConnectionInterface
-			TemplateID string
+			Template   models.Template
+		}
+		Returns struct {
+			Template models.Template
+			Error    error
 		}
 	}
 
@@ -23,11 +19,29 @@ type TemplatesRepo struct {
 			Connection models.ConnectionInterface
 			TemplateID string
 		}
+		Returns struct {
+			Error error
+		}
+	}
+
+	FindByIDCall struct {
+		Receives struct {
+			Connection models.ConnectionInterface
+			TemplateID string
+		}
+		Returns struct {
+			Template models.Template
+			Error    error
+		}
 	}
 
 	ListIDsAndNamesCall struct {
 		Receives struct {
 			Connection models.ConnectionInterface
+		}
+		Returns struct {
+			Templates []models.Template
+			Error     error
 		}
 	}
 
@@ -37,50 +51,48 @@ type TemplatesRepo struct {
 			TemplateID string
 			Template   models.Template
 		}
+		Returns struct {
+			Template models.Template
+			Error    error
+		}
 	}
 }
 
 func NewTemplatesRepo() *TemplatesRepo {
-	return &TemplatesRepo{
-		Templates: make(map[string]models.Template),
-	}
+	return &TemplatesRepo{}
 }
 
-func (fake *TemplatesRepo) FindByID(conn models.ConnectionInterface, templateID string) (models.Template, error) {
-	fake.FindByIDCall.Receives.Connection = conn
-	fake.FindByIDCall.Receives.TemplateID = templateID
+func (tr *TemplatesRepo) Create(conn models.ConnectionInterface, template models.Template) (models.Template, error) {
+	tr.CreateCall.Receives.Connection = conn
+	tr.CreateCall.Receives.Template = template
 
-	template, ok := fake.Templates[templateID]
-	if ok {
-		return template, fake.FindError
-	}
-	return models.Template{}, models.NewRecordNotFoundError("Template %q could not be found", templateID)
+	return tr.CreateCall.Returns.Template, tr.CreateCall.Returns.Error
 }
 
-func (fake *TemplatesRepo) Update(conn models.ConnectionInterface, templateID string, template models.Template) (models.Template, error) {
-	fake.UpdateCall.Receives.Connection = conn
-	fake.UpdateCall.Receives.TemplateID = templateID
-	fake.UpdateCall.Receives.Template = template
+func (tr *TemplatesRepo) Destroy(conn models.ConnectionInterface, templateID string) error {
+	tr.DestroyCall.Receives.Connection = conn
+	tr.DestroyCall.Receives.TemplateID = templateID
 
-	fake.Templates[template.ID] = template
-	return template, fake.UpdateError
+	return tr.DestroyCall.Returns.Error
 }
 
-func (fake *TemplatesRepo) ListIDsAndNames(conn models.ConnectionInterface) ([]models.Template, error) {
-	fake.ListIDsAndNamesCall.Receives.Connection = conn
+func (tr *TemplatesRepo) FindByID(conn models.ConnectionInterface, templateID string) (models.Template, error) {
+	tr.FindByIDCall.Receives.Connection = conn
+	tr.FindByIDCall.Receives.TemplateID = templateID
 
-	return fake.TemplatesList, fake.ListError
+	return tr.FindByIDCall.Returns.Template, tr.FindByIDCall.Returns.Error
 }
 
-func (fake *TemplatesRepo) Destroy(conn models.ConnectionInterface, templateID string) error {
-	fake.DestroyCall.Receives.Connection = conn
-	fake.DestroyCall.Receives.TemplateID = templateID
+func (tr *TemplatesRepo) ListIDsAndNames(conn models.ConnectionInterface) ([]models.Template, error) {
+	tr.ListIDsAndNamesCall.Receives.Connection = conn
 
-	delete(fake.Templates, templateID)
-	return fake.DestroyError
+	return tr.ListIDsAndNamesCall.Returns.Templates, tr.ListIDsAndNamesCall.Returns.Error
 }
 
-func (fake *TemplatesRepo) Create(conn models.ConnectionInterface, template models.Template) (models.Template, error) {
-	fake.Templates[template.ID] = template
-	return template, fake.CreateError
+func (tr *TemplatesRepo) Update(conn models.ConnectionInterface, templateID string, template models.Template) (models.Template, error) {
+	tr.UpdateCall.Receives.Connection = conn
+	tr.UpdateCall.Receives.TemplateID = templateID
+	tr.UpdateCall.Receives.Template = template
+
+	return tr.UpdateCall.Returns.Template, tr.UpdateCall.Returns.Error
 }

@@ -76,6 +76,8 @@ var _ = Describe("TemplateAssigner", func() {
 			})
 
 			It("reports that the template cannot be found", func() {
+				templatesRepo.FindByIDCall.Returns.Error = models.RecordNotFoundError("not found")
+
 				err := assigner.AssignToClient(database, "my-client", "non-existant-template")
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(BeAssignableToTypeOf(services.TemplateAssignmentError("")))
@@ -131,7 +133,8 @@ var _ = Describe("TemplateAssigner", func() {
 			})
 			Context("on finding the template", func() {
 				It("returns any errors it doesn't understand (part 2)", func() {
-					templatesRepo.FindError = errors.New("database failure")
+					templatesRepo.FindByIDCall.Returns.Error = errors.New("database failure")
+
 					err := assigner.AssignToClient(database, "my-client", "my-template")
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal("database failure"))
@@ -206,6 +209,8 @@ var _ = Describe("TemplateAssigner", func() {
 			})
 
 			It("reports that the template cannot be found", func() {
+				templatesRepo.FindByIDCall.Returns.Error = models.RecordNotFoundError("not found")
+
 				err := assigner.AssignToNotification(database, "my-client", "my-kind", "non-existant-template")
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(BeAssignableToTypeOf(services.TemplateAssignmentError("")))
@@ -255,7 +260,7 @@ var _ = Describe("TemplateAssigner", func() {
 			})
 			Context("on finding the template", func() {
 				It("returns any errors it doesn't understand (part 2)", func() {
-					templatesRepo.FindError = errors.New("database failure")
+					templatesRepo.FindByIDCall.Returns.Error = errors.New("database failure")
 
 					err := assigner.AssignToNotification(database, "my-client", "my-kind", "my-template")
 					Expect(err).To(HaveOccurred())

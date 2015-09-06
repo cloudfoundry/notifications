@@ -108,7 +108,7 @@ var _ = Describe("TemplateAssociationLister", func() {
 
 			Context("when the template repo returns an error", func() {
 				It("returns the underlying error", func() {
-					templatesRepo.FindError = errors.New("something terrible happened")
+					templatesRepo.FindByIDCall.Returns.Error = errors.New("something terrible happened")
 
 					_, err := lister.List(database, templateID)
 					Expect(err).To(MatchError(errors.New("something terrible happened")))

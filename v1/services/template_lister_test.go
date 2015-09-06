@@ -13,11 +13,10 @@ import (
 
 var _ = Describe("TemplateLister", func() {
 	var (
-		lister            services.TemplateLister
-		templatesRepo     *mocks.TemplatesRepo
-		expectedTemplates map[string]services.TemplateSummary
-		database          *mocks.Database
-		conn              *mocks.Connection
+		lister        services.TemplateLister
+		templatesRepo *mocks.TemplatesRepo
+		database      *mocks.Database
+		conn          *mocks.Connection
 	)
 
 	BeforeEach(func() {
@@ -32,7 +31,7 @@ var _ = Describe("TemplateLister", func() {
 	Describe("List", func() {
 		Context("when the templates exists in the database", func() {
 			BeforeEach(func() {
-				testTemplates := []models.Template{
+				templatesRepo.ListIDsAndNamesCall.Returns.Templates = []models.Template{
 					{
 						ID:      "starwarr-guid",
 						Name:    "Star Wars",
@@ -69,29 +68,28 @@ var _ = Describe("TemplateLister", func() {
 						Text:    "Run!!",
 					},
 				}
-				expectedTemplates = map[string]services.TemplateSummary{
-					"starwarr-guid":   {Name: "Star Wars"},
-					"robot-guid":      {Name: "Big Hero 6"},
-					"boring-guid":     {Name: "Blah"},
-					"starvation-guid": {Name: "Hungry Play"},
-				}
-				templatesRepo.TemplatesList = testTemplates
 			})
 
 			It("returns a list of guids and template names", func() {
 				templates, err := lister.List(database)
 				Expect(err).ToNot(HaveOccurred())
+				Expect(templates).To(Equal(map[string]services.TemplateSummary{
+					"starwarr-guid":   {Name: "Star Wars"},
+					"robot-guid":      {Name: "Big Hero 6"},
+					"boring-guid":     {Name: "Blah"},
+					"starvation-guid": {Name: "Hungry Play"},
+				}))
 
-				Expect(templates).To(Equal(expectedTemplates))
 				Expect(templatesRepo.ListIDsAndNamesCall.Receives.Connection).To(Equal(conn))
 			})
 		})
 
 		Context("the lister has an error", func() {
 			It("propagates the error", func() {
-				templatesRepo.ListError = errors.New("some-error")
+				templatesRepo.ListIDsAndNamesCall.Returns.Error = errors.New("some-error")
+
 				_, err := lister.List(database)
-				Expect(err.Error()).To(Equal("some-error"))
+				Expect(err).To(MatchError(errors.New("some-error")))
 			})
 		})
 	})

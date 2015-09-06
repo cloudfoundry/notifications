@@ -18,6 +18,7 @@ var _ = Describe("Creator", func() {
 			template      models.Template
 			creator       services.TemplateCreator
 			database      *mocks.Database
+			conn          *mocks.Connection
 		)
 
 		BeforeEach(func() {
@@ -28,25 +29,27 @@ var _ = Describe("Creator", func() {
 				HTML:    "<p>Many heroes.</p>",
 				Subject: "Robots and Heroes",
 			}
+
+			conn = mocks.NewConnection()
 			database = mocks.NewDatabase()
+			database.ConnectionCall.Returns.Connection = conn
+
 			creator = services.NewTemplateCreator(templatesRepo)
 		})
 
 		It("Creates a new template via the templates repo", func() {
-			Expect(templatesRepo.Templates).ToNot(ContainElement(template))
-
 			_, err := creator.Create(database, template)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(templatesRepo.Templates).To(ContainElement(template))
+
+			Expect(templatesRepo.CreateCall.Receives.Connection).To(Equal(conn))
+			Expect(templatesRepo.CreateCall.Receives.Template).To(Equal(template))
 		})
 
 		It("propagates errors from repo", func() {
-			expectedErr := errors.New("Boom!")
-			templatesRepo.CreateError = expectedErr
+			templatesRepo.CreateCall.Returns.Error = errors.New("Boom!")
 
 			_, err := creator.Create(database, template)
-
-			Expect(err).To(Equal(expectedErr))
+			Expect(err).To(Equal(errors.New("Boom!")))
 		})
 	})
 })

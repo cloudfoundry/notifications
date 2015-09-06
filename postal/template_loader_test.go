@@ -39,8 +39,6 @@ var _ = Describe("TemplateLoader", func() {
 
 	Describe("LoadTemplates", func() {
 		BeforeEach(func() {
-			var err error
-
 			clientsRepo.FindCall.Returns.Client = models.Client{
 				ID:         "my-client-id",
 				TemplateID: models.DefaultTemplateID,
@@ -54,32 +52,30 @@ var _ = Describe("TemplateLoader", func() {
 				},
 			}
 
-			_, err = templatesRepo.Create(conn, models.Template{
+			templatesRepo.FindByIDCall.Returns.Template = models.Template{
 				ID:      models.DefaultTemplateID,
 				Name:    "Default Template",
 				HTML:    "<p>The default template</p>",
 				Text:    "The default template",
 				Subject: "default subject",
-			})
-			Expect(err).NotTo(HaveOccurred())
+			}
 		})
 
 		Context("when the kind has a template", func() {
 			BeforeEach(func() {
-				template, err := templatesRepo.Create(conn, models.Template{
+				templatesRepo.FindByIDCall.Returns.Template = models.Template{
 					ID:      "my-kind-template",
 					Name:    "my-kind-template",
 					HTML:    "<p>kind template</p>",
 					Text:    "some kind template text",
 					Subject: "kind subject",
-				})
-				Expect(err).NotTo(HaveOccurred())
+				}
 
 				kindsRepo.FindCall.Returns.Kinds = []models.Kind{
 					{
 						ID:         "my-kind-id",
 						ClientID:   "my-client-id",
-						TemplateID: template.ID,
+						TemplateID: "my-kind-template",
 					},
 				}
 			})
@@ -92,23 +88,25 @@ var _ = Describe("TemplateLoader", func() {
 					Text:    "some kind template text",
 					Subject: "kind subject",
 				}))
+
+				Expect(templatesRepo.FindByIDCall.Receives.Connection).To(Equal(conn))
+				Expect(templatesRepo.FindByIDCall.Receives.TemplateID).To(Equal("my-kind-template"))
 			})
 		})
 
 		Context("when the client has a template", func() {
 			BeforeEach(func() {
-				template, err := templatesRepo.Create(conn, models.Template{
+				templatesRepo.FindByIDCall.Returns.Template = models.Template{
 					ID:      "my-client-template",
 					Name:    "my-client-template",
 					HTML:    "<p>client template</p>",
 					Text:    "some client template text",
 					Subject: "client subject",
-				})
-				Expect(err).NotTo(HaveOccurred())
+				}
 
 				clientsRepo.FindCall.Returns.Client = models.Client{
 					ID:         "my-client-id",
-					TemplateID: template.ID,
+					TemplateID: "my-client-template",
 				}
 			})
 
@@ -120,6 +118,9 @@ var _ = Describe("TemplateLoader", func() {
 					Text:    "some client template text",
 					Subject: "client subject",
 				}))
+
+				Expect(templatesRepo.FindByIDCall.Receives.Connection).To(Equal(conn))
+				Expect(templatesRepo.FindByIDCall.Receives.TemplateID).To(Equal("my-client-template"))
 			})
 		})
 
