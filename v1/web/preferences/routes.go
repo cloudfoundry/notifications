@@ -1,12 +1,17 @@
 package preferences
 
 import (
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
 
 type muxer interface {
 	Handle(method, path string, handler stack.Handler, middleware ...stack.Middleware)
+}
+
+type preferenceUpdater interface {
+	Update(connection services.ConnectionInterface, preferences []models.Preference, globallyUnsubscribe bool, userID string) error
 }
 
 type Routes struct {
@@ -20,7 +25,7 @@ type Routes struct {
 
 	ErrorWriter       errorWriter
 	PreferencesFinder services.PreferencesFinderInterface
-	PreferenceUpdater services.PreferenceUpdaterInterface
+	PreferenceUpdater preferenceUpdater
 }
 
 func (r Routes) Register(m muxer) {

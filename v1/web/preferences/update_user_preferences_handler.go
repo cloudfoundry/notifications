@@ -13,14 +13,14 @@ import (
 )
 
 type UpdateUserPreferencesHandler struct {
-	preferenceUpdater services.PreferenceUpdaterInterface
-	errorWriter       errorWriter
+	preferences preferenceUpdater
+	errorWriter errorWriter
 }
 
-func NewUpdateUserPreferencesHandler(preferenceUpdater services.PreferenceUpdaterInterface, errWriter errorWriter) UpdateUserPreferencesHandler {
+func NewUpdateUserPreferencesHandler(preferences preferenceUpdater, errWriter errorWriter) UpdateUserPreferencesHandler {
 	return UpdateUserPreferencesHandler{
-		preferenceUpdater: preferenceUpdater,
-		errorWriter:       errWriter,
+		preferences: preferences,
+		errorWriter: errWriter,
 	}
 }
 
@@ -46,7 +46,7 @@ func (h UpdateUserPreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http
 
 	transaction := connection.Transaction()
 	transaction.Begin()
-	err = h.preferenceUpdater.Execute(transaction, preferences, builder.GlobalUnsubscribe, userGUID)
+	err = h.preferences.Update(transaction, preferences, builder.GlobalUnsubscribe, userGUID)
 	if err != nil {
 		transaction.Rollback()
 

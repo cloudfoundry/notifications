@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("PreferenceUpdater", func() {
-	Describe("Execute", func() {
+	Describe("Update", func() {
 		var (
 			doorOpen                   models.Unsubscribe
 			barking                    models.Unsubscribe
@@ -33,10 +33,10 @@ var _ = Describe("PreferenceUpdater", func() {
 
 		Context("when globally unsubscribing", func() {
 			It("inserts a record into the global unsubscribes repo", func() {
-				updater.Execute(conn, []models.Preference{}, true, "user-guid")
+				updater.Update(conn, []models.Preference{}, true, "user-guid")
 				Expect(fakeGlobalUnsubscribesRepo.SetCall.Receives.Unsubscribed).To(BeTrue())
 
-				updater.Execute(conn, []models.Preference{}, false, "user-guid")
+				updater.Update(conn, []models.Preference{}, false, "user-guid")
 				Expect(fakeGlobalUnsubscribesRepo.SetCall.Receives.Unsubscribed).To(BeFalse())
 			})
 
@@ -44,7 +44,7 @@ var _ = Describe("PreferenceUpdater", func() {
 				It("returns the error", func() {
 					fakeGlobalUnsubscribesRepo.SetCall.Returns.Error = errors.New("global unsubscribe db error")
 
-					err := updater.Execute(conn, []models.Preference{}, true, "user-guid")
+					err := updater.Update(conn, []models.Preference{}, true, "user-guid")
 					Expect(err).To(MatchError(errors.New("global unsubscribe db error")))
 				})
 			})
@@ -77,7 +77,7 @@ var _ = Describe("PreferenceUpdater", func() {
 			})
 
 			It("Adds New Unsubscribes to the unsubscribes Repo", func() {
-				updater.Execute(conn, []models.Preference{
+				updater.Update(conn, []models.Preference{
 					{
 						ClientID: "raptors",
 						KindID:   "door-open",
@@ -93,7 +93,7 @@ var _ = Describe("PreferenceUpdater", func() {
 			})
 
 			It("does not add resubscriptions to the unsubscribes Repo", func() {
-				updater.Execute(conn, []models.Preference{
+				updater.Update(conn, []models.Preference{
 					{
 						ClientID: "dogs",
 						KindID:   "barking",
@@ -110,7 +110,7 @@ var _ = Describe("PreferenceUpdater", func() {
 				err := unsubscribesRepo.Set(conn, "my-user", "raptors", "door-open", true)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = updater.Execute(conn, []models.Preference{
+				err = updater.Update(conn, []models.Preference{
 					{
 						ClientID: "raptors",
 						KindID:   "door-open",
@@ -153,7 +153,7 @@ var _ = Describe("PreferenceUpdater", func() {
 				}
 				kindsRepo.FindCall.Returns.Error = errors.New("something bad happened")
 
-				err := updater.Execute(conn, preferences, false, "the-user")
+				err := updater.Update(conn, preferences, false, "the-user")
 				Expect(err).To(Equal(services.MissingKindOrClientError("The kind 'boo' cannot be found for client 'ghosts'")))
 			})
 		})
@@ -181,7 +181,7 @@ var _ = Describe("PreferenceUpdater", func() {
 				}
 				kindsRepo.FindCall.Returns.Error = errors.New("something bad happened")
 
-				err := updater.Execute(conn, preferences, false, "the-user")
+				err := updater.Update(conn, preferences, false, "the-user")
 				Expect(err).To(Equal(services.MissingKindOrClientError("The kind 'dead' cannot be found for client 'raptors'")))
 			})
 		})
@@ -213,7 +213,7 @@ var _ = Describe("PreferenceUpdater", func() {
 					},
 				}
 
-				err := updater.Execute(conn, preferences, false, "the-user")
+				err := updater.Update(conn, preferences, false, "the-user")
 				Expect(err).To(Equal(services.CriticalKindError("The kind 'hungry' for the 'raptors' client is critical and cannot be unsubscribed from")))
 			})
 		})
