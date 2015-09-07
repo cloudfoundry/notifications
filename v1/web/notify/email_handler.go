@@ -16,13 +16,17 @@ type errorWriter interface {
 	Write(writer http.ResponseWriter, err error)
 }
 
+type Dispatcher interface {
+	Dispatch(dispatch services.Dispatch) ([]services.Response, error)
+}
+
 type EmailHandler struct {
 	errorWriter errorWriter
 	notify      NotifyInterface
-	strategy    services.StrategyInterface
+	strategy    Dispatcher
 }
 
-func NewEmailHandler(notify NotifyInterface, errWriter errorWriter, strategy services.StrategyInterface) EmailHandler {
+func NewEmailHandler(notify NotifyInterface, errWriter errorWriter, strategy Dispatcher) EmailHandler {
 	return EmailHandler{
 		errorWriter: errWriter,
 		notify:      notify,

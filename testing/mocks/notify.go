@@ -3,7 +3,6 @@ package mocks
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/ryanmoran/stack"
 )
@@ -15,7 +14,7 @@ type Notify struct {
 			Request       *http.Request
 			Context       stack.Context
 			GUID          string
-			Strategy      services.StrategyInterface
+			Strategy      notify.Dispatcher
 			Validator     notify.ValidatorInterface
 			VCAPRequestID string
 		}
@@ -31,7 +30,7 @@ func NewNotify() *Notify {
 }
 
 func (n *Notify) Execute(connection notify.ConnectionInterface, req *http.Request, context stack.Context,
-	guid string, strategy services.StrategyInterface, validator notify.ValidatorInterface, vcapRequestID string) ([]byte, error) {
+	guid string, strategy notify.Dispatcher, validator notify.ValidatorInterface, vcapRequestID string) ([]byte, error) {
 
 	n.ExecuteCall.Receives.Connection = connection
 	n.ExecuteCall.Receives.Request = req

@@ -1,9 +1,6 @@
 package notify
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
-	"github.com/ryanmoran/stack"
-)
+import "github.com/ryanmoran/stack"
 
 type muxer interface {
 	Handle(method, path string, handler stack.Handler, middleware ...stack.Middleware)
@@ -18,12 +15,12 @@ type Routes struct {
 
 	Notify               NotifyInterface
 	ErrorWriter          errorWriter
-	UserStrategy         services.StrategyInterface
-	SpaceStrategy        services.StrategyInterface
-	OrganizationStrategy services.StrategyInterface
-	EveryoneStrategy     services.StrategyInterface
-	UAAScopeStrategy     services.StrategyInterface
-	EmailStrategy        services.StrategyInterface
+	UserStrategy         Dispatcher
+	SpaceStrategy        Dispatcher
+	OrganizationStrategy Dispatcher
+	EveryoneStrategy     Dispatcher
+	UAAScopeStrategy     Dispatcher
+	EmailStrategy        Dispatcher
 }
 
 func (r Routes) Register(m muxer) {

@@ -4,17 +4,16 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
 
 type UAAScopeHandler struct {
 	errorWriter errorWriter
 	notify      NotifyInterface
-	strategy    services.StrategyInterface
+	strategy    Dispatcher
 }
 
-func NewUAAScopeHandler(notify NotifyInterface, errWriter errorWriter, strategy services.StrategyInterface) UAAScopeHandler {
+func NewUAAScopeHandler(notify NotifyInterface, errWriter errorWriter, strategy Dispatcher) UAAScopeHandler {
 	return UAAScopeHandler{
 		errorWriter: errWriter,
 		notify:      notify,

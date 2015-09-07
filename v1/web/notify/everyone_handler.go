@@ -3,17 +3,16 @@ package notify
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
 
 type EveryoneHandler struct {
 	errorWriter errorWriter
 	notify      NotifyInterface
-	strategy    services.StrategyInterface
+	strategy    Dispatcher
 }
 
-func NewEveryoneHandler(notify NotifyInterface, errWriter errorWriter, strategy services.StrategyInterface) EveryoneHandler {
+func NewEveryoneHandler(notify NotifyInterface, errWriter errorWriter, strategy Dispatcher) EveryoneHandler {
 	return EveryoneHandler{
 		errorWriter: errWriter,
 		notify:      notify,

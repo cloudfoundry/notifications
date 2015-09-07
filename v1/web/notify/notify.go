@@ -16,7 +16,7 @@ import (
 )
 
 type NotifyInterface interface {
-	Execute(ConnectionInterface, *http.Request, stack.Context, string, services.StrategyInterface, ValidatorInterface, string) ([]byte, error)
+	Execute(conn ConnectionInterface, req *http.Request, context stack.Context, guid string, strategy Dispatcher, validator ValidatorInterface, vcapRequestID string) (response []byte, err error)
 }
 
 type clientAndKindFinder interface {
@@ -45,7 +45,8 @@ type ValidatorInterface interface {
 }
 
 func (h Notify) Execute(connection ConnectionInterface, req *http.Request, context stack.Context,
-	guid string, strategy services.StrategyInterface, validator ValidatorInterface, vcapRequestID string) ([]byte, error) {
+	guid string, strategy Dispatcher, validator ValidatorInterface, vcapRequestID string) ([]byte, error) {
+
 	parameters, err := NewNotifyParams(req.Body)
 	if err != nil {
 		return []byte{}, err

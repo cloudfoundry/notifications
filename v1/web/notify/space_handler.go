@@ -4,17 +4,16 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
 
 type SpaceHandler struct {
 	errorWriter errorWriter
 	notify      NotifyInterface
-	strategy    services.StrategyInterface
+	strategy    Dispatcher
 }
 
-func NewSpaceHandler(notify NotifyInterface, errWriter errorWriter, strategy services.StrategyInterface) SpaceHandler {
+func NewSpaceHandler(notify NotifyInterface, errWriter errorWriter, strategy Dispatcher) SpaceHandler {
 	return SpaceHandler{
 		errorWriter: errWriter,
 		notify:      notify,
