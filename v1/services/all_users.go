@@ -2,10 +2,6 @@ package services
 
 import "github.com/cloudfoundry-incubator/notifications/uaa"
 
-type AllUsersInterface interface {
-	AllUserGUIDs(string) ([]string, error)
-}
-
 type AllUsers struct {
 	uaa uaaAllUsersInterface
 }

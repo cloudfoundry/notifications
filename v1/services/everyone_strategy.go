@@ -4,13 +4,17 @@ import "github.com/cloudfoundry-incubator/notifications/cf"
 
 const EveryoneEndorsement = "This message was sent to everyone."
 
+type allUserGUIDsGetter interface {
+	AllUserGUIDs(token string) (userGUIDs []string, err error)
+}
+
 type EveryoneStrategy struct {
 	tokenLoader TokenLoaderInterface
-	allUsers    AllUsersInterface
+	allUsers    allUserGUIDsGetter
 	enqueuer    EnqueuerInterface
 }
 
-func NewEveryoneStrategy(tokenLoader TokenLoaderInterface, allUsers AllUsersInterface, enqueuer EnqueuerInterface) EveryoneStrategy {
+func NewEveryoneStrategy(tokenLoader TokenLoaderInterface, allUsers allUserGUIDsGetter, enqueuer EnqueuerInterface) EveryoneStrategy {
 	return EveryoneStrategy{
 		tokenLoader: tokenLoader,
 		allUsers:    allUsers,
