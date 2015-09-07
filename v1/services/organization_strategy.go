@@ -11,14 +11,18 @@ type orgUserGUIDFinder interface {
 	UserGUIDsBelongingToOrganization(orgGUID, role, token string) (userGUIDs []string, err error)
 }
 
+type loadsOrganizations interface {
+	Load(orgGUID, token string) (cf.CloudControllerOrganization, error)
+}
+
 type OrganizationStrategy struct {
 	tokenLoader        TokenLoaderInterface
-	organizationLoader OrganizationLoaderInterface
+	organizationLoader loadsOrganizations
 	findsUserGUIDs     orgUserGUIDFinder
 	queue              enqueuer
 }
 
-func NewOrganizationStrategy(tokenLoader TokenLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs orgUserGUIDFinder, queue enqueuer) OrganizationStrategy {
+func NewOrganizationStrategy(tokenLoader TokenLoaderInterface, organizationLoader loadsOrganizations, findsUserGUIDs orgUserGUIDFinder, queue enqueuer) OrganizationStrategy {
 	return OrganizationStrategy{
 		tokenLoader:        tokenLoader,
 		organizationLoader: organizationLoader,

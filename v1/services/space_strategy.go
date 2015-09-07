@@ -9,12 +9,12 @@ type spaceUserGUIDFinder interface {
 type SpaceStrategy struct {
 	tokenLoader        TokenLoaderInterface
 	spaceLoader        SpaceLoaderInterface
-	organizationLoader OrganizationLoaderInterface
+	organizationLoader loadsOrganizations
 	findsUserGUIDs     spaceUserGUIDFinder
 	queue              enqueuer
 }
 
-func NewSpaceStrategy(tokenLoader TokenLoaderInterface, spaceLoader SpaceLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs spaceUserGUIDFinder, queue enqueuer) SpaceStrategy {
+func NewSpaceStrategy(tokenLoader TokenLoaderInterface, spaceLoader SpaceLoaderInterface, organizationLoader loadsOrganizations, findsUserGUIDs spaceUserGUIDFinder, queue enqueuer) SpaceStrategy {
 
 	return SpaceStrategy{
 		tokenLoader:        tokenLoader,

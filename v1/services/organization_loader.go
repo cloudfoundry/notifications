@@ -6,10 +6,6 @@ type OrganizationLoader struct {
 	cloudController cf.CloudControllerInterface
 }
 
-type OrganizationLoaderInterface interface {
-	Load(string, string) (cf.CloudControllerOrganization, error)
-}
-
 func NewOrganizationLoader(cloudController cf.CloudControllerInterface) OrganizationLoader {
 	return OrganizationLoader{
 		cloudController: cloudController,
