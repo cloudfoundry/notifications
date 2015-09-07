@@ -19,7 +19,7 @@ type Routes struct {
 	ErrorWriter          errorWriter
 	Registrar            services.RegistrarInterface
 	TemplateAssigner     services.TemplateAssignerInterface
-	NotificationsFinder  services.NotificationsFinderInterface
+	NotificationsFinder  listsAllClientsAndNotifications
 	NotificationsUpdater notificationsUpdater
 }
 

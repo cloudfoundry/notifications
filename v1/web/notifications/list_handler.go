@@ -17,6 +17,10 @@ type Client struct {
 	Notifications map[string]Notification `json:"notifications"`
 }
 
+type listsAllClientsAndNotifications interface {
+	AllClientsAndNotifications(services.DatabaseInterface) ([]models.Client, []models.Kind, error)
+}
+
 type Notification struct {
 	Description string `json:"description"`
 	Template    string `json:"template"`
@@ -24,11 +28,11 @@ type Notification struct {
 }
 
 type ListHandler struct {
-	finder      services.NotificationsFinderInterface
+	finder      listsAllClientsAndNotifications
 	errorWriter errorWriter
 }
 
-func NewListHandler(notificationsFinder services.NotificationsFinderInterface, errWriter errorWriter) ListHandler {
+func NewListHandler(notificationsFinder listsAllClientsAndNotifications, errWriter errorWriter) ListHandler {
 	return ListHandler{
 		finder:      notificationsFinder,
 		errorWriter: errWriter,

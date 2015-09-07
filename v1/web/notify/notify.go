@@ -19,12 +19,16 @@ type NotifyInterface interface {
 	Execute(ConnectionInterface, *http.Request, stack.Context, string, services.StrategyInterface, ValidatorInterface, string) ([]byte, error)
 }
 
+type clientAndKindFinder interface {
+	ClientAndKind(database services.DatabaseInterface, clientID, kindID string) (models.Client, models.Kind, error)
+}
+
 type Notify struct {
-	finder    services.NotificationsFinderInterface
+	finder    clientAndKindFinder
 	registrar services.RegistrarInterface
 }
 
-func NewNotify(finder services.NotificationsFinderInterface, registrar services.RegistrarInterface) Notify {
+func NewNotify(finder clientAndKindFinder, registrar services.RegistrarInterface) Notify {
 	return Notify{
 		finder:    finder,
 		registrar: registrar,

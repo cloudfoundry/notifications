@@ -1,19 +1,11 @@
 package services
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
-)
+import "github.com/cloudfoundry-incubator/notifications/v1/models"
 
 type NotificationsFinder struct {
 	clientsRepo ClientsRepo
 	kindsRepo   KindsRepo
-	database    db.DatabaseInterface
-}
-
-type NotificationsFinderInterface interface {
-	AllClientsAndNotifications(db.DatabaseInterface) ([]models.Client, []models.Kind, error)
-	ClientAndKind(db.DatabaseInterface, string, string) (models.Client, models.Kind, error)
+	database    DatabaseInterface
 }
 
 func NewNotificationsFinder(clientsRepo ClientsRepo, kindsRepo KindsRepo) NotificationsFinder {
@@ -23,7 +15,7 @@ func NewNotificationsFinder(clientsRepo ClientsRepo, kindsRepo KindsRepo) Notifi
 	}
 }
 
-func (finder NotificationsFinder) AllClientsAndNotifications(database db.DatabaseInterface) ([]models.Client, []models.Kind, error) {
+func (finder NotificationsFinder) AllClientsAndNotifications(database DatabaseInterface) ([]models.Client, []models.Kind, error) {
 	var (
 		clients       []models.Client
 		notifications []models.Kind
@@ -43,7 +35,7 @@ func (finder NotificationsFinder) AllClientsAndNotifications(database db.Databas
 	return clients, notifications, nil
 }
 
-func (finder NotificationsFinder) ClientAndKind(database db.DatabaseInterface, clientID, kindID string) (models.Client, models.Kind, error) {
+func (finder NotificationsFinder) ClientAndKind(database DatabaseInterface, clientID, kindID string) (models.Client, models.Kind, error) {
 	client, err := finder.client(database, clientID)
 	if err != nil {
 		return models.Client{}, models.Kind{}, err
@@ -57,7 +49,7 @@ func (finder NotificationsFinder) ClientAndKind(database db.DatabaseInterface, c
 	return client, kind, nil
 }
 
-func (finder NotificationsFinder) client(database db.DatabaseInterface, clientID string) (models.Client, error) {
+func (finder NotificationsFinder) client(database DatabaseInterface, clientID string) (models.Client, error) {
 	client, err := finder.clientsRepo.Find(database.Connection(), clientID)
 	if err != nil {
 		if _, ok := err.(models.RecordNotFoundError); ok {
@@ -69,7 +61,7 @@ func (finder NotificationsFinder) client(database db.DatabaseInterface, clientID
 	return client, nil
 }
 
-func (finder NotificationsFinder) kind(database db.DatabaseInterface, clientID, kindID string) (models.Kind, error) {
+func (finder NotificationsFinder) kind(database DatabaseInterface, clientID, kindID string) (models.Kind, error) {
 	kind, err := finder.kindsRepo.Find(database.Connection(), kindID, clientID)
 	if err != nil {
 		if _, ok := err.(models.RecordNotFoundError); ok {
