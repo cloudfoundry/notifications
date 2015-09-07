@@ -4,11 +4,8 @@ import "github.com/cloudfoundry-incubator/notifications/cf"
 
 const ScopeEndorsement = "You received this message because you have the {{.Scope}} scope."
 
-type UAAScopeStrategy struct {
-	findsUserGUIDs FindsUserGUIDsInterface
-	tokenLoader    TokenLoaderInterface
-	queue          enqueuer
-	defaultScopes  []string
+type scopeUserGUIDFinder interface {
+	UserGUIDsBelongingToScope(token, scope string) (userGUIDs []string, err error)
 }
 
 type DefaultScopeError struct{}
@@ -17,7 +14,14 @@ func (d DefaultScopeError) Error() string {
 	return "You cannot send a notification to a default scope"
 }
 
-func NewUAAScopeStrategy(tokenLoader TokenLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, queue enqueuer, defaultScopes []string) UAAScopeStrategy {
+type UAAScopeStrategy struct {
+	findsUserGUIDs scopeUserGUIDFinder
+	tokenLoader    TokenLoaderInterface
+	queue          enqueuer
+	defaultScopes  []string
+}
+
+func NewUAAScopeStrategy(tokenLoader TokenLoaderInterface, findsUserGUIDs scopeUserGUIDFinder, queue enqueuer, defaultScopes []string) UAAScopeStrategy {
 	return UAAScopeStrategy{
 		findsUserGUIDs: findsUserGUIDs,
 		tokenLoader:    tokenLoader,

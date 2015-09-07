@@ -11,12 +11,6 @@ type uaaUsersGUIDsByScope interface {
 	UsersGUIDsByScope(token, scope string) ([]string, error)
 }
 
-type FindsUserGUIDsInterface interface {
-	UserGUIDsBelongingToSpace(string, string) ([]string, error)
-	UserGUIDsBelongingToOrganization(string, string, string) ([]string, error)
-	UserGUIDsBelongingToScope(string, string) ([]string, error)
-}
-
 func NewFindsUserGUIDs(cloudController cf.CloudControllerInterface, uaa uaaUsersGUIDsByScope) FindsUserGUIDs {
 	return FindsUserGUIDs{
 		cloudController: cloudController,

@@ -7,14 +7,18 @@ const (
 	OrganizationRoleEndorsement = `You received this message because you are an {{.OrganizationRole}} in the "{{.Organization}}" organization.`
 )
 
+type orgUserGUIDFinder interface {
+	UserGUIDsBelongingToOrganization(orgGUID, role, token string) (userGUIDs []string, err error)
+}
+
 type OrganizationStrategy struct {
 	tokenLoader        TokenLoaderInterface
 	organizationLoader OrganizationLoaderInterface
-	findsUserGUIDs     FindsUserGUIDsInterface
+	findsUserGUIDs     orgUserGUIDFinder
 	queue              enqueuer
 }
 
-func NewOrganizationStrategy(tokenLoader TokenLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, queue enqueuer) OrganizationStrategy {
+func NewOrganizationStrategy(tokenLoader TokenLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs orgUserGUIDFinder, queue enqueuer) OrganizationStrategy {
 	return OrganizationStrategy{
 		tokenLoader:        tokenLoader,
 		organizationLoader: organizationLoader,

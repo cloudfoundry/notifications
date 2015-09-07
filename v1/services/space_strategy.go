@@ -2,15 +2,19 @@ package services
 
 const SpaceEndorsement = `You received this message because you belong to the "{{.Space}}" space in the "{{.Organization}}" organization.`
 
+type spaceUserGUIDFinder interface {
+	UserGUIDsBelongingToSpace(spaceGUID, token string) (userGUIDs []string, err error)
+}
+
 type SpaceStrategy struct {
 	tokenLoader        TokenLoaderInterface
 	spaceLoader        SpaceLoaderInterface
 	organizationLoader OrganizationLoaderInterface
-	findsUserGUIDs     FindsUserGUIDsInterface
+	findsUserGUIDs     spaceUserGUIDFinder
 	queue              enqueuer
 }
 
-func NewSpaceStrategy(tokenLoader TokenLoaderInterface, spaceLoader SpaceLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, queue enqueuer) SpaceStrategy {
+func NewSpaceStrategy(tokenLoader TokenLoaderInterface, spaceLoader SpaceLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs spaceUserGUIDFinder, queue enqueuer) SpaceStrategy {
 
 	return SpaceStrategy{
 		tokenLoader:        tokenLoader,
