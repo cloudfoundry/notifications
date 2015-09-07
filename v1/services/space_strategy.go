@@ -1,21 +1,26 @@
 package services
 
+import "github.com/cloudfoundry-incubator/notifications/cf"
+
 const SpaceEndorsement = `You received this message because you belong to the "{{.Space}}" space in the "{{.Organization}}" organization.`
 
 type spaceUserGUIDFinder interface {
 	UserGUIDsBelongingToSpace(spaceGUID, token string) (userGUIDs []string, err error)
 }
 
+type loadsSpaces interface {
+	Load(spaceGUID, token string) (cf.CloudControllerSpace, error)
+}
+
 type SpaceStrategy struct {
 	tokenLoader        TokenLoaderInterface
-	spaceLoader        SpaceLoaderInterface
+	spaceLoader        loadsSpaces
 	organizationLoader loadsOrganizations
 	findsUserGUIDs     spaceUserGUIDFinder
 	queue              enqueuer
 }
 
-func NewSpaceStrategy(tokenLoader TokenLoaderInterface, spaceLoader SpaceLoaderInterface, organizationLoader loadsOrganizations, findsUserGUIDs spaceUserGUIDFinder, queue enqueuer) SpaceStrategy {
-
+func NewSpaceStrategy(tokenLoader TokenLoaderInterface, spaceLoader loadsSpaces, organizationLoader loadsOrganizations, findsUserGUIDs spaceUserGUIDFinder, queue enqueuer) SpaceStrategy {
 	return SpaceStrategy{
 		tokenLoader:        tokenLoader,
 		spaceLoader:        spaceLoader,

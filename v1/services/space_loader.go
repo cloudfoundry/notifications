@@ -6,10 +6,6 @@ type SpaceLoader struct {
 	cloudController cf.CloudControllerInterface
 }
 
-type SpaceLoaderInterface interface {
-	Load(string, string) (cf.CloudControllerSpace, error)
-}
-
 func NewSpaceLoader(cloudController cf.CloudControllerInterface) SpaceLoader {
 	return SpaceLoader{
 		cloudController: cloudController,
