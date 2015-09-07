@@ -3,14 +3,14 @@ package services
 import "github.com/cloudfoundry-incubator/notifications/uaa"
 
 type AllUsers struct {
-	uaa uaaAllUsersInterface
+	uaa uaaAllUsers
 }
 
-type uaaAllUsersInterface interface {
-	AllUsers(string) ([]uaa.User, error)
+type uaaAllUsers interface {
+	AllUsers(token string) ([]uaa.User, error)
 }
 
-func NewAllUsers(uaa uaaAllUsersInterface) AllUsers {
+func NewAllUsers(uaa uaaAllUsers) AllUsers {
 	return AllUsers{
 		uaa: uaa,
 	}
