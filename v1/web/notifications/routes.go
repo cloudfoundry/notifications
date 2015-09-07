@@ -1,9 +1,6 @@
 package notifications
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
-	"github.com/ryanmoran/stack"
-)
+import "github.com/ryanmoran/stack"
 
 type muxer interface {
 	Handle(method, path string, handler stack.Handler, middleware ...stack.Middleware)
@@ -18,7 +15,7 @@ type Routes struct {
 
 	ErrorWriter          errorWriter
 	Registrar            registrar
-	TemplateAssigner     services.TemplateAssignerInterface
+	TemplateAssigner     assignsTemplates
 	NotificationsFinder  listsAllClientsAndNotifications
 	NotificationsUpdater notificationsUpdater
 }

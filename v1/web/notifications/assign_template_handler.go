@@ -14,12 +14,16 @@ type TemplateAssignment struct {
 	Template string `json:"template"`
 }
 
+type assignsTemplates interface {
+	AssignToNotification(database services.DatabaseInterface, clientID, notificationID, templateID string) error
+}
+
 type AssignTemplateHandler struct {
-	templateAssigner services.TemplateAssignerInterface
+	templateAssigner assignsTemplates
 	errorWriter      errorWriter
 }
 
-func NewAssignTemplateHandler(assigner services.TemplateAssignerInterface, errWriter errorWriter) AssignTemplateHandler {
+func NewAssignTemplateHandler(assigner assignsTemplates, errWriter errorWriter) AssignTemplateHandler {
 	return AssignTemplateHandler{
 		templateAssigner: assigner,
 		errorWriter:      errWriter,

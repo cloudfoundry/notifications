@@ -14,12 +14,16 @@ type errorWriter interface {
 	Write(writer http.ResponseWriter, err error)
 }
 
+type assignsTemplates interface {
+	AssignToClient(database services.DatabaseInterface, clientID, templateID string) error
+}
+
 type AssignTemplateHandler struct {
-	templateAssigner services.TemplateAssignerInterface
+	templateAssigner assignsTemplates
 	errorWriter      errorWriter
 }
 
-func NewAssignTemplateHandler(assigner services.TemplateAssignerInterface, errWriter errorWriter) AssignTemplateHandler {
+func NewAssignTemplateHandler(assigner assignsTemplates, errWriter errorWriter) AssignTemplateHandler {
 	return AssignTemplateHandler{
 		templateAssigner: assigner,
 		errorWriter:      errWriter,

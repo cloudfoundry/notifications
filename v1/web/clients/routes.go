@@ -1,9 +1,6 @@
 package clients
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
-	"github.com/ryanmoran/stack"
-)
+import "github.com/ryanmoran/stack"
 
 type muxer interface {
 	Handle(method, path string, handler stack.Handler, middleware ...stack.Middleware)
@@ -16,7 +13,7 @@ type Routes struct {
 	DatabaseAllocator                stack.Middleware
 
 	ErrorWriter      errorWriter
-	TemplateAssigner services.TemplateAssignerInterface
+	TemplateAssigner assignsTemplates
 }
 
 func (r Routes) Register(m muxer) {
