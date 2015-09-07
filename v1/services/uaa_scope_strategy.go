@@ -7,7 +7,7 @@ const ScopeEndorsement = "You received this message because you have the {{.Scop
 type UAAScopeStrategy struct {
 	findsUserGUIDs FindsUserGUIDsInterface
 	tokenLoader    TokenLoaderInterface
-	enqueuer       EnqueuerInterface
+	queue          enqueuer
 	defaultScopes  []string
 }
 
@@ -17,11 +17,11 @@ func (d DefaultScopeError) Error() string {
 	return "You cannot send a notification to a default scope"
 }
 
-func NewUAAScopeStrategy(tokenLoader TokenLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface, defaultScopes []string) UAAScopeStrategy {
+func NewUAAScopeStrategy(tokenLoader TokenLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, queue enqueuer, defaultScopes []string) UAAScopeStrategy {
 	return UAAScopeStrategy{
 		findsUserGUIDs: findsUserGUIDs,
 		tokenLoader:    tokenLoader,
-		enqueuer:       enqueuer,
+		queue:          queue,
 		defaultScopes:  defaultScopes,
 	}
 }
@@ -65,7 +65,7 @@ func (strategy UAAScopeStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		users = append(users, User{GUID: guid})
 	}
 
-	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, dispatch.GUID, dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	responses = strategy.queue.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, dispatch.GUID, dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

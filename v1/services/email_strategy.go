@@ -1,16 +1,24 @@
 package services
 
-import "github.com/cloudfoundry-incubator/notifications/cf"
+import (
+	"time"
+
+	"github.com/cloudfoundry-incubator/notifications/cf"
+)
 
 const EmailEndorsement = "This message was sent directly to your email address."
 
 type EmailStrategy struct {
-	enqueuer EnqueuerInterface
+	queue enqueuer
 }
 
-func NewEmailStrategy(enqueuer EnqueuerInterface) EmailStrategy {
+type enqueuer interface {
+	Enqueue(conn ConnectionInterface, users []User, opts Options, space cf.CloudControllerSpace, org cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []Response
+}
+
+func NewEmailStrategy(queue enqueuer) EmailStrategy {
 	return EmailStrategy{
-		enqueuer: enqueuer,
+		queue: queue,
 	}
 }
 
@@ -33,7 +41,7 @@ func (strategy EmailStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		},
 	}
 	users := []User{{Email: dispatch.Message.To}}
-	responses := strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	responses := strategy.queue.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

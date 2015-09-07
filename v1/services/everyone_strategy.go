@@ -11,14 +11,14 @@ type allUserGUIDsGetter interface {
 type EveryoneStrategy struct {
 	tokenLoader TokenLoaderInterface
 	allUsers    allUserGUIDsGetter
-	enqueuer    EnqueuerInterface
+	queue       enqueuer
 }
 
-func NewEveryoneStrategy(tokenLoader TokenLoaderInterface, allUsers allUserGUIDsGetter, enqueuer EnqueuerInterface) EveryoneStrategy {
+func NewEveryoneStrategy(tokenLoader TokenLoaderInterface, allUsers allUserGUIDsGetter, queue enqueuer) EveryoneStrategy {
 	return EveryoneStrategy{
 		tokenLoader: tokenLoader,
 		allUsers:    allUsers,
-		enqueuer:    enqueuer,
+		queue:       queue,
 	}
 }
 
@@ -58,7 +58,7 @@ func (strategy EveryoneStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		users = append(users, User{GUID: guid})
 	}
 
-	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	responses = strategy.queue.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

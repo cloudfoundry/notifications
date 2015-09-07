@@ -5,12 +5,12 @@ import "github.com/cloudfoundry-incubator/notifications/cf"
 const UserEndorsement = "This message was sent directly to you."
 
 type UserStrategy struct {
-	enqueuer EnqueuerInterface
+	queue enqueuer
 }
 
-func NewUserStrategy(enqueuer EnqueuerInterface) UserStrategy {
+func NewUserStrategy(queue enqueuer) UserStrategy {
 	return UserStrategy{
-		enqueuer: enqueuer,
+		queue: queue,
 	}
 }
 
@@ -34,7 +34,7 @@ func (strategy UserStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 	}
 	users := []User{{GUID: dispatch.GUID}}
 
-	responses := strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	responses := strategy.queue.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

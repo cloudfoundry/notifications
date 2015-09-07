@@ -7,17 +7,17 @@ type SpaceStrategy struct {
 	spaceLoader        SpaceLoaderInterface
 	organizationLoader OrganizationLoaderInterface
 	findsUserGUIDs     FindsUserGUIDsInterface
-	enqueuer           EnqueuerInterface
+	queue              enqueuer
 }
 
-func NewSpaceStrategy(tokenLoader TokenLoaderInterface, spaceLoader SpaceLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, enqueuer EnqueuerInterface) SpaceStrategy {
+func NewSpaceStrategy(tokenLoader TokenLoaderInterface, spaceLoader SpaceLoaderInterface, organizationLoader OrganizationLoaderInterface, findsUserGUIDs FindsUserGUIDsInterface, queue enqueuer) SpaceStrategy {
 
 	return SpaceStrategy{
 		tokenLoader:        tokenLoader,
 		spaceLoader:        spaceLoader,
 		organizationLoader: organizationLoader,
 		findsUserGUIDs:     findsUserGUIDs,
-		enqueuer:           enqueuer,
+		queue:              queue,
 	}
 }
 
@@ -67,7 +67,7 @@ func (strategy SpaceStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		return responses, err
 	}
 
-	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, space, org, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	responses = strategy.queue.Enqueue(dispatch.Connection, users, options, space, org, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }
