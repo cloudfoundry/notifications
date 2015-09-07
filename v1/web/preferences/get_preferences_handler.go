@@ -13,15 +13,19 @@ type errorWriter interface {
 	Write(writer http.ResponseWriter, err error)
 }
 
-type GetPreferencesHandler struct {
-	preferencesFinder services.PreferencesFinderInterface
-	errorWriter       errorWriter
+type preferencesFinder interface {
+	Find(database services.DatabaseInterface, userGUID string) (services.PreferencesBuilder, error)
 }
 
-func NewGetPreferencesHandler(preferencesFinder services.PreferencesFinderInterface, errWriter errorWriter) GetPreferencesHandler {
+type GetPreferencesHandler struct {
+	preferences preferencesFinder
+	errorWriter errorWriter
+}
+
+func NewGetPreferencesHandler(preferences preferencesFinder, errWriter errorWriter) GetPreferencesHandler {
 	return GetPreferencesHandler{
-		preferencesFinder: preferencesFinder,
-		errorWriter:       errWriter,
+		preferences: preferences,
+		errorWriter: errWriter,
 	}
 }
 
@@ -35,7 +39,7 @@ func (h GetPreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http.Reques
 
 	userID := token.Claims["user_id"].(string)
 
-	parsed, err := h.preferencesFinder.Find(context.Get("database").(DatabaseInterface), userID)
+	parsed, err := h.preferences.Find(context.Get("database").(DatabaseInterface), userID)
 	if err != nil {
 		h.errorWriter.Write(w, err)
 		return

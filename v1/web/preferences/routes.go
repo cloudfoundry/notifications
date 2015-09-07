@@ -24,7 +24,7 @@ type Routes struct {
 	NotificationPreferencesWriteAuthenticator stack.Middleware
 
 	ErrorWriter       errorWriter
-	PreferencesFinder services.PreferencesFinderInterface
+	PreferencesFinder preferencesFinder
 	PreferenceUpdater preferenceUpdater
 }
 
