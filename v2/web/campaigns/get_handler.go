@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/ryanmoran/stack"
 )
@@ -31,7 +30,7 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 	campaignID := splitURL[len(splitURL)-1]
 
 	clientID := context.Get("client_id").(string)
-	database := context.Get("database").(db.DatabaseInterface)
+	database := context.Get("database").(collections.DatabaseInterface)
 
 	campaign, err := h.campaigns.Get(database.Connection(), campaignID, senderID, clientID)
 	if err != nil {
