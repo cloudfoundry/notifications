@@ -23,12 +23,17 @@ type clientAndKindFinder interface {
 	ClientAndKind(database services.DatabaseInterface, clientID, kindID string) (models.Client, models.Kind, error)
 }
 
-type Notify struct {
-	finder    clientAndKindFinder
-	registrar services.RegistrarInterface
+type registrar interface {
+	Register(services.ConnectionInterface, models.Client, []models.Kind) error
+	Prune(services.ConnectionInterface, models.Client, []models.Kind) error
 }
 
-func NewNotify(finder clientAndKindFinder, registrar services.RegistrarInterface) Notify {
+type Notify struct {
+	finder    clientAndKindFinder
+	registrar registrar
+}
+
+func NewNotify(finder clientAndKindFinder, registrar registrar) Notify {
 	return Notify{
 		finder:    finder,
 		registrar: registrar,

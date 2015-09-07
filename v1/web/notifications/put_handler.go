@@ -10,12 +10,17 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
+type registrar interface {
+	Register(services.ConnectionInterface, models.Client, []models.Kind) error
+	Prune(services.ConnectionInterface, models.Client, []models.Kind) error
+}
+
 type PutHandler struct {
-	registrar   services.RegistrarInterface
+	registrar   registrar
 	errorWriter errorWriter
 }
 
-func NewPutHandler(registrar services.RegistrarInterface, errWriter errorWriter) PutHandler {
+func NewPutHandler(registrar registrar, errWriter errorWriter) PutHandler {
 	return PutHandler{
 		registrar:   registrar,
 		errorWriter: errWriter,

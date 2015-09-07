@@ -5,17 +5,16 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 )
 
 type RegistrationHandler struct {
-	registrar   services.RegistrarInterface
+	registrar   registrar
 	errorWriter errorWriter
 }
 
-func NewRegistrationHandler(registrar services.RegistrarInterface, errWriter errorWriter) RegistrationHandler {
+func NewRegistrationHandler(registrar registrar, errWriter errorWriter) RegistrationHandler {
 	return RegistrationHandler{
 		registrar:   registrar,
 		errorWriter: errWriter,

@@ -17,7 +17,7 @@ type Routes struct {
 	NotificationsManageAuthenticator stack.Middleware
 
 	ErrorWriter          errorWriter
-	Registrar            services.RegistrarInterface
+	Registrar            registrar
 	TemplateAssigner     services.TemplateAssignerInterface
 	NotificationsFinder  listsAllClientsAndNotifications
 	NotificationsUpdater notificationsUpdater
