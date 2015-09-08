@@ -10,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/pivotal-golang/conceal"
 	"github.com/pivotal-golang/lager"
 )
@@ -68,7 +69,7 @@ type TokenLoaderInterface interface {
 }
 
 type StrategyDeterminerInterface interface {
-	Determine(conn db.ConnectionInterface, uaaHost string, job gobble.Job) error
+	Determine(conn services.ConnectionInterface, uaaHost string, job gobble.Job) error
 }
 
 type messageStatusUpdaterInterface interface {

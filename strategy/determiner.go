@@ -3,7 +3,6 @@ package strategy
 import (
 	"fmt"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
@@ -38,7 +37,7 @@ func NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy, emailStrate
 	}
 }
 
-func (d Determiner) Determine(conn db.ConnectionInterface, uaaHost string, job gobble.Job) error {
+func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string, job gobble.Job) error {
 	var campaignJob queue.CampaignJob
 
 	err := job.Unmarshal(&campaignJob)
