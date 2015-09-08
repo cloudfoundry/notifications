@@ -22,7 +22,7 @@ type Routes struct {
 	TemplateLister            services.TemplateListerInterface
 	TemplateUpdater           services.TemplateUpdaterInterface
 	TemplateCreator           templateCreator
-	TemplateDeleter           services.TemplateDeleterInterface
+	TemplateDeleter           templateDeleter
 	TemplateAssociationLister templateAssociationLister
 }
 

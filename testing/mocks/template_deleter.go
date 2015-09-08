@@ -1,11 +1,11 @@
 package mocks
 
-import "github.com/cloudfoundry-incubator/notifications/db"
+import "github.com/cloudfoundry-incubator/notifications/v1/services"
 
 type TemplateDeleter struct {
 	DeleteCall struct {
 		Receives struct {
-			Database   db.DatabaseInterface
+			Database   services.DatabaseInterface
 			TemplateID string
 		}
 		Returns struct {
@@ -18,7 +18,7 @@ func NewTemplateDeleter() *TemplateDeleter {
 	return &TemplateDeleter{}
 }
 
-func (td *TemplateDeleter) Delete(database db.DatabaseInterface, templateID string) error {
+func (td *TemplateDeleter) Delete(database services.DatabaseInterface, templateID string) error {
 	td.DeleteCall.Receives.Database = database
 	td.DeleteCall.Receives.TemplateID = templateID
 

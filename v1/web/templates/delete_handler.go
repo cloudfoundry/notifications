@@ -8,12 +8,16 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
+type templateDeleter interface {
+	Delete(database services.DatabaseInterface, templateID string) error
+}
+
 type DeleteHandler struct {
-	deleter     services.TemplateDeleterInterface
+	deleter     templateDeleter
 	errorWriter errorWriter
 }
 
-func NewDeleteHandler(deleter services.TemplateDeleterInterface, errWriter errorWriter) DeleteHandler {
+func NewDeleteHandler(deleter templateDeleter, errWriter errorWriter) DeleteHandler {
 	return DeleteHandler{
 		deleter:     deleter,
 		errorWriter: errWriter,
