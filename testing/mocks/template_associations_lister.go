@@ -1,14 +1,11 @@
 package mocks
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
-)
+import "github.com/cloudfoundry-incubator/notifications/v1/services"
 
 type TemplateAssociationLister struct {
 	ListCall struct {
 		Receives struct {
-			Database   db.DatabaseInterface
+			Database   services.DatabaseInterface
 			TemplateID string
 		}
 		Returns struct {
@@ -22,7 +19,7 @@ func NewTemplateAssociationLister() *TemplateAssociationLister {
 	return &TemplateAssociationLister{}
 }
 
-func (l *TemplateAssociationLister) List(database db.DatabaseInterface, templateID string) ([]services.TemplateAssociation, error) {
+func (l *TemplateAssociationLister) List(database services.DatabaseInterface, templateID string) ([]services.TemplateAssociation, error) {
 	l.ListCall.Receives.Database = database
 	l.ListCall.Receives.TemplateID = templateID
 

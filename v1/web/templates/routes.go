@@ -23,7 +23,7 @@ type Routes struct {
 	TemplateUpdater           services.TemplateUpdaterInterface
 	TemplateCreator           services.TemplateCreatorInterface
 	TemplateDeleter           services.TemplateDeleterInterface
-	TemplateAssociationLister services.TemplateAssociationListerInterface
+	TemplateAssociationLister templateAssociationLister
 }
 
 func (r Routes) Register(m muxer) {

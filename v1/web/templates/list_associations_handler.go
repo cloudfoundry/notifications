@@ -8,17 +8,21 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type ListAssociationsHandler struct {
-	lister      services.TemplateAssociationListerInterface
-	errorWriter errorWriter
-}
-
 type TemplateAssociation struct {
 	Client       string `json:"client"`
 	Notification string `json:"notification,omitempty"`
 }
 
-func NewListAssociationsHandler(lister services.TemplateAssociationListerInterface, errWriter errorWriter) ListAssociationsHandler {
+type templateAssociationLister interface {
+	List(database services.DatabaseInterface, templateID string) ([]services.TemplateAssociation, error)
+}
+
+type ListAssociationsHandler struct {
+	lister      templateAssociationLister
+	errorWriter errorWriter
+}
+
+func NewListAssociationsHandler(lister templateAssociationLister, errWriter errorWriter) ListAssociationsHandler {
 	return ListAssociationsHandler{
 		lister:      lister,
 		errorWriter: errWriter,
