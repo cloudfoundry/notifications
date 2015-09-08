@@ -8,12 +8,16 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
+type templateUpdater interface {
+	Update(database services.DatabaseInterface, templateID string, template models.Template) error
+}
+
 type UpdateDefaultHandler struct {
-	updater     services.TemplateUpdaterInterface
+	updater     templateUpdater
 	errorWriter errorWriter
 }
 
-func NewUpdateDefaultHandler(updater services.TemplateUpdaterInterface, errWriter errorWriter) UpdateDefaultHandler {
+func NewUpdateDefaultHandler(updater templateUpdater, errWriter errorWriter) UpdateDefaultHandler {
 	return UpdateDefaultHandler{
 		updater:     updater,
 		errorWriter: errWriter,

@@ -1,14 +1,14 @@
 package mocks
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/v1/services"
 )
 
 type TemplateUpdater struct {
 	UpdateCall struct {
 		Receives struct {
-			Database   db.DatabaseInterface
+			Database   services.DatabaseInterface
 			TemplateID string
 			Template   models.Template
 		}
@@ -22,7 +22,7 @@ func NewTemplateUpdater() *TemplateUpdater {
 	return &TemplateUpdater{}
 }
 
-func (tu *TemplateUpdater) Update(database db.DatabaseInterface, templateID string, template models.Template) error {
+func (tu *TemplateUpdater) Update(database services.DatabaseInterface, templateID string, template models.Template) error {
 	tu.UpdateCall.Receives.Database = database
 	tu.UpdateCall.Receives.TemplateID = templateID
 	tu.UpdateCall.Receives.Template = template

@@ -4,16 +4,15 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
 
 type UpdateHandler struct {
-	updater     services.TemplateUpdaterInterface
+	updater     templateUpdater
 	errorWriter errorWriter
 }
 
-func NewUpdateHandler(updater services.TemplateUpdaterInterface, errWriter errorWriter) UpdateHandler {
+func NewUpdateHandler(updater templateUpdater, errWriter errorWriter) UpdateHandler {
 	return UpdateHandler{
 		updater:     updater,
 		errorWriter: errWriter,
