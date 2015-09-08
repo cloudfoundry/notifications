@@ -18,7 +18,7 @@ type Routes struct {
 	NotificationsManageAuthenticator        stack.Middleware
 
 	ErrorWriter               errorWriter
-	TemplateFinder            services.TemplateFinderInterface
+	TemplateFinder            templateFinder
 	TemplateLister            services.TemplateListerInterface
 	TemplateUpdater           services.TemplateUpdaterInterface
 	TemplateCreator           templateCreator

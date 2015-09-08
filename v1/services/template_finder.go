@@ -1,16 +1,9 @@
 package services
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
-)
+import "github.com/cloudfoundry-incubator/notifications/v1/models"
 
 type TemplateFinder struct {
 	templatesRepo TemplatesRepo
-}
-
-type TemplateFinderInterface interface {
-	FindByID(db.DatabaseInterface, string) (models.Template, error)
 }
 
 func NewTemplateFinder(templatesRepo TemplatesRepo) TemplateFinder {
@@ -19,7 +12,7 @@ func NewTemplateFinder(templatesRepo TemplatesRepo) TemplateFinder {
 	}
 }
 
-func (finder TemplateFinder) FindByID(database db.DatabaseInterface, templateID string) (models.Template, error) {
+func (finder TemplateFinder) FindByID(database DatabaseInterface, templateID string) (models.Template, error) {
 	template, err := finder.templatesRepo.FindByID(database.Connection(), templateID)
 	if err != nil {
 		return models.Template{}, err

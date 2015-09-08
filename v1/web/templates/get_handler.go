@@ -5,14 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/ryanmoran/stack"
 )
-
-type GetHandler struct {
-	finder      services.TemplateFinderInterface
-	errorWriter errorWriter
-}
 
 type TemplateOutput struct {
 	Name     string                 `json:"name"`
@@ -22,7 +16,12 @@ type TemplateOutput struct {
 	Metadata map[string]interface{} `json:"metadata"`
 }
 
-func NewGetHandler(templateFinder services.TemplateFinderInterface, errWriter errorWriter) GetHandler {
+type GetHandler struct {
+	finder      templateFinder
+	errorWriter errorWriter
+}
+
+func NewGetHandler(templateFinder templateFinder, errWriter errorWriter) GetHandler {
 	return GetHandler{
 		finder:      templateFinder,
 		errorWriter: errWriter,

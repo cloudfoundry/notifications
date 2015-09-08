@@ -9,12 +9,16 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
+type templateFinder interface {
+	FindByID(database services.DatabaseInterface, templateID string) (models.Template, error)
+}
+
 type GetDefaultHandler struct {
-	finder      services.TemplateFinderInterface
+	finder      templateFinder
 	errorWriter errorWriter
 }
 
-func NewGetDefaultHandler(finder services.TemplateFinderInterface, errWriter errorWriter) GetDefaultHandler {
+func NewGetDefaultHandler(finder templateFinder, errWriter errorWriter) GetDefaultHandler {
 	return GetDefaultHandler{
 		finder:      finder,
 		errorWriter: errWriter,

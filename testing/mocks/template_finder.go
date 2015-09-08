@@ -1,14 +1,14 @@
 package mocks
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/v1/services"
 )
 
 type TemplateFinder struct {
 	FindByIDCall struct {
 		Receives struct {
-			Database   db.DatabaseInterface
+			Database   services.DatabaseInterface
 			TemplateID string
 		}
 		Returns struct {
@@ -22,7 +22,7 @@ func NewTemplateFinder() *TemplateFinder {
 	return &TemplateFinder{}
 }
 
-func (tf *TemplateFinder) FindByID(database db.DatabaseInterface, templateID string) (models.Template, error) {
+func (tf *TemplateFinder) FindByID(database services.DatabaseInterface, templateID string) (models.Template, error) {
 	tf.FindByIDCall.Receives.Database = database
 	tf.FindByIDCall.Receives.TemplateID = templateID
 
