@@ -19,7 +19,7 @@ type Routes struct {
 
 	ErrorWriter               errorWriter
 	TemplateFinder            templateFinder
-	TemplateLister            services.TemplateListerInterface
+	TemplateLister            templateLister
 	TemplateUpdater           services.TemplateUpdaterInterface
 	TemplateCreator           templateCreator
 	TemplateDeleter           templateDeleter

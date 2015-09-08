@@ -7,14 +7,18 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
+type templateLister interface {
+	List(database services.DatabaseInterface) (templateSummaries map[string]services.TemplateSummary, err error)
+}
+
 type ListHandler struct {
-	lister      services.TemplateListerInterface
+	lister      templateLister
 	errorWriter errorWriter
 }
 
-func NewListHandler(templateLister services.TemplateListerInterface, errWriter errorWriter) ListHandler {
+func NewListHandler(lister templateLister, errWriter errorWriter) ListHandler {
 	return ListHandler{
-		lister:      templateLister,
+		lister:      lister,
 		errorWriter: errWriter,
 	}
 }
