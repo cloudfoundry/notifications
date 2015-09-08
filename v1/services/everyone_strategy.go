@@ -8,13 +8,17 @@ type allUserGUIDsGetter interface {
 	AllUserGUIDs(token string) (userGUIDs []string, err error)
 }
 
+type loadsTokens interface {
+	Load(host string) (token string, err error)
+}
+
 type EveryoneStrategy struct {
-	tokenLoader TokenLoaderInterface
+	tokenLoader loadsTokens
 	allUsers    allUserGUIDsGetter
 	queue       enqueuer
 }
 
-func NewEveryoneStrategy(tokenLoader TokenLoaderInterface, allUsers allUserGUIDsGetter, queue enqueuer) EveryoneStrategy {
+func NewEveryoneStrategy(tokenLoader loadsTokens, allUsers allUserGUIDsGetter, queue enqueuer) EveryoneStrategy {
 	return EveryoneStrategy{
 		tokenLoader: tokenLoader,
 		allUsers:    allUsers,

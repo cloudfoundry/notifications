@@ -16,13 +16,13 @@ type loadsOrganizations interface {
 }
 
 type OrganizationStrategy struct {
-	tokenLoader        TokenLoaderInterface
+	tokenLoader        loadsTokens
 	organizationLoader loadsOrganizations
 	findsUserGUIDs     orgUserGUIDFinder
 	queue              enqueuer
 }
 
-func NewOrganizationStrategy(tokenLoader TokenLoaderInterface, organizationLoader loadsOrganizations, findsUserGUIDs orgUserGUIDFinder, queue enqueuer) OrganizationStrategy {
+func NewOrganizationStrategy(tokenLoader loadsTokens, organizationLoader loadsOrganizations, findsUserGUIDs orgUserGUIDFinder, queue enqueuer) OrganizationStrategy {
 	return OrganizationStrategy{
 		tokenLoader:        tokenLoader,
 		organizationLoader: organizationLoader,

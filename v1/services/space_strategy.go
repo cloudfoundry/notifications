@@ -13,14 +13,14 @@ type loadsSpaces interface {
 }
 
 type SpaceStrategy struct {
-	tokenLoader        TokenLoaderInterface
+	tokenLoader        loadsTokens
 	spaceLoader        loadsSpaces
 	organizationLoader loadsOrganizations
 	findsUserGUIDs     spaceUserGUIDFinder
 	queue              enqueuer
 }
 
-func NewSpaceStrategy(tokenLoader TokenLoaderInterface, spaceLoader loadsSpaces, organizationLoader loadsOrganizations, findsUserGUIDs spaceUserGUIDFinder, queue enqueuer) SpaceStrategy {
+func NewSpaceStrategy(tokenLoader loadsTokens, spaceLoader loadsSpaces, organizationLoader loadsOrganizations, findsUserGUIDs spaceUserGUIDFinder, queue enqueuer) SpaceStrategy {
 	return SpaceStrategy{
 		tokenLoader:        tokenLoader,
 		spaceLoader:        spaceLoader,

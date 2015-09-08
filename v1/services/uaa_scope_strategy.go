@@ -16,12 +16,12 @@ func (d DefaultScopeError) Error() string {
 
 type UAAScopeStrategy struct {
 	findsUserGUIDs scopeUserGUIDFinder
-	tokenLoader    TokenLoaderInterface
+	tokenLoader    loadsTokens
 	queue          enqueuer
 	defaultScopes  []string
 }
 
-func NewUAAScopeStrategy(tokenLoader TokenLoaderInterface, findsUserGUIDs scopeUserGUIDFinder, queue enqueuer, defaultScopes []string) UAAScopeStrategy {
+func NewUAAScopeStrategy(tokenLoader loadsTokens, findsUserGUIDs scopeUserGUIDFinder, queue enqueuer, defaultScopes []string) UAAScopeStrategy {
 	return UAAScopeStrategy{
 		findsUserGUIDs: findsUserGUIDs,
 		tokenLoader:    tokenLoader,
