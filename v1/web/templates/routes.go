@@ -21,7 +21,7 @@ type Routes struct {
 	TemplateFinder            services.TemplateFinderInterface
 	TemplateLister            services.TemplateListerInterface
 	TemplateUpdater           services.TemplateUpdaterInterface
-	TemplateCreator           services.TemplateCreatorInterface
+	TemplateCreator           templateCreator
 	TemplateDeleter           services.TemplateDeleterInterface
 	TemplateAssociationLister templateAssociationLister
 }

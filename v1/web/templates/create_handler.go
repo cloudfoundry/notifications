@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/ryanmoran/stack"
@@ -13,12 +14,16 @@ type errorWriter interface {
 	Write(writer http.ResponseWriter, err error)
 }
 
+type templateCreator interface {
+	Create(database services.DatabaseInterface, template models.Template) (templateID string, err error)
+}
+
 type CreateHandler struct {
-	creator     services.TemplateCreatorInterface
+	creator     templateCreator
 	errorWriter errorWriter
 }
 
-func NewCreateHandler(creator services.TemplateCreatorInterface, errWriter errorWriter) CreateHandler {
+func NewCreateHandler(creator templateCreator, errWriter errorWriter) CreateHandler {
 	return CreateHandler{
 		creator:     creator,
 		errorWriter: errWriter,

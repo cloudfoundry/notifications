@@ -1,13 +1,6 @@
 package services
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
-)
-
-type TemplateCreatorInterface interface {
-	Create(db.DatabaseInterface, models.Template) (string, error)
-}
+import "github.com/cloudfoundry-incubator/notifications/v1/models"
 
 type TemplateCreator struct {
 	templatesRepo TemplatesRepo
@@ -19,7 +12,7 @@ func NewTemplateCreator(templatesRepo TemplatesRepo) TemplateCreator {
 	}
 }
 
-func (creator TemplateCreator) Create(database db.DatabaseInterface, template models.Template) (string, error) {
+func (creator TemplateCreator) Create(database DatabaseInterface, template models.Template) (string, error) {
 	newTemplate, err := creator.templatesRepo.Create(database.Connection(), template)
 	if err != nil {
 		return "", err
