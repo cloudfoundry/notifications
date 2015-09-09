@@ -49,6 +49,7 @@ var _ = Describe("Determiner", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(userStrategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
+				JobType:    "v2",
 				GUID:       "some-user-guid",
 				UAAHost:    "some-uaa-host",
 				Connection: database.Connection(),
@@ -87,6 +88,7 @@ var _ = Describe("Determiner", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(emailStrategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
+				JobType:    "v2",
 				GUID:       "",
 				UAAHost:    "some-uaa-host",
 				Connection: database.Connection(),
@@ -125,6 +127,7 @@ var _ = Describe("Determiner", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(spaceStrategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
+				JobType:    "v2",
 				GUID:       "some-space-guid",
 				UAAHost:    "some-uaa-host",
 				Connection: database.Connection(),
@@ -163,6 +166,7 @@ var _ = Describe("Determiner", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(orgStrategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
+				JobType:    "v2",
 				GUID:       "some-org-guid",
 				UAAHost:    "some-uaa-host",
 				Connection: database.Connection(),

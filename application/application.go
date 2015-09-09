@@ -13,6 +13,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/web"
+	"github.com/pivotal-golang/conceal"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/viron"
 )
@@ -111,31 +112,38 @@ func (app Application) StartWorkers() {
 		InstanceIndex: app.env.VCAPApplication.InstanceIndex,
 		Count:         WorkerCount,
 	}.Work(func(i int) Worker {
-		worker := postal.NewDeliveryWorker(postal.DeliveryWorkerConfig{
-			ID:            i,
-			Sender:        app.env.Sender,
-			EncryptionKey: app.env.EncryptionKey,
-			Domain:        app.env.Domain,
-			UAAHost:       app.env.UAAHost,
+		cloak, err := conceal.NewCloak(app.env.EncryptionKey)
+		if err != nil {
+			panic(err)
+		}
+		v1Workflow := postal.NewV1Process(postal.V1ProcessConfig{
+			DBTrace: app.env.DBLoggingEnabled,
+			UAAHost: app.env.UAAHost,
+			Sender:  app.env.Sender,
+			Domain:  app.env.Domain,
 
-			Logger:     app.mother.Logger(),
-			MailClient: app.mother.MailClient(),
-			Queue:      app.mother.Queue(),
-			Database:   app.mother.Database(),
-			DBTrace:    app.env.DBLoggingEnabled,
+			Packager:    postal.NewPackager(app.mother.TemplatesLoader(), cloak),
+			MailClient:  app.mother.MailClient(),
+			Database:    app.mother.Database(),
+			TokenLoader: uaa.NewTokenLoader(zonedUAAClient),
+			UserLoader:  postal.NewUserLoader(zonedUAAClient),
 
-			GlobalUnsubscribesRepo: app.mother.GlobalUnsubscribesRepo(),
-			UnsubscribesRepo:       app.mother.UnsubscribesRepo(),
 			KindsRepo:              app.mother.KindsRepo(),
 			ReceiptsRepo:           app.mother.ReceiptsRepo(),
-
-			UserLoader:             postal.NewUserLoader(zonedUAAClient),
-			TemplatesLoader:        app.mother.TemplatesLoader(),
-			TokenLoader:            uaa.NewTokenLoader(zonedUAAClient),
+			UnsubscribesRepo:       app.mother.UnsubscribesRepo(),
+			GlobalUnsubscribesRepo: app.mother.GlobalUnsubscribesRepo(),
 			MessageStatusUpdater:   postal.NewMessageStatusUpdater(app.mother.MessagesRepo()),
 			DeliveryFailureHandler: postal.NewDeliveryFailureHandler(),
-
-			StrategyDeterminer: strategy.NewStrategyDeterminer(app.mother.UserStrategy(), app.mother.SpaceStrategy(), app.mother.OrganizationStrategy(), app.mother.EmailStrategy()),
+		})
+		worker := postal.NewDeliveryWorker(v1Workflow, nil, postal.DeliveryWorkerConfig{
+			ID:                     i,
+			UAAHost:                app.env.UAAHost,
+			Logger:                 app.mother.Logger(),
+			Queue:                  app.mother.Queue(),
+			DBTrace:                app.env.DBLoggingEnabled,
+			Database:               app.mother.Database(),
+			StrategyDeterminer:     strategy.NewStrategyDeterminer(app.mother.UserStrategy(), app.mother.SpaceStrategy(), app.mother.OrganizationStrategy(), app.mother.EmailStrategy()),
+			DeliveryFailureHandler: postal.NewDeliveryFailureHandler(),
 		})
 		return &worker
 	})

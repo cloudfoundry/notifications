@@ -34,7 +34,7 @@ func NewPackager(templatesLoader TemplatesLoaderInterface, cloak conceal.CloakIn
 func (packager *Packager) PrepareContext(delivery Delivery, sender, domain string) (MessageContext, error) {
 	templates, err := packager.templatesLoader.LoadTemplates(delivery.ClientID, delivery.Options.KindID, delivery.Options.TemplateID)
 	if err != nil {
-		panic(err)
+		return MessageContext{}, err
 	}
 
 	return NewMessageContext(delivery, sender, domain, packager.cloak, templates), nil

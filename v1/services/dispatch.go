@@ -3,6 +3,7 @@ package services
 import "time"
 
 type Dispatch struct {
+	JobType    string
 	GUID       string
 	Role       string
 	Connection ConnectionInterface

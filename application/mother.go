@@ -20,6 +20,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
+	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
@@ -45,8 +46,12 @@ func (m *Mother) Queue() gobble.QueueInterface {
 	})
 }
 
+func (m *Mother) V2Enqueuer() queue.JobEnqueuer {
+	return queue.NewJobEnqueuer(m.Queue(), uuid.NewV4, m.MessagesRepo())
+}
+
 func (m *Mother) UserStrategy() services.UserStrategy {
-	return services.NewUserStrategy(m.Enqueuer())
+	return services.NewUserStrategy(m.Enqueuer(), m.V2Enqueuer())
 }
 
 func (m *Mother) SpaceStrategy() services.SpaceStrategy {
@@ -60,7 +65,7 @@ func (m *Mother) SpaceStrategy() services.SpaceStrategy {
 	enqueuer := m.Enqueuer()
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 
-	return services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, enqueuer)
+	return services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, enqueuer, m.V2Enqueuer())
 }
 
 func (m *Mother) OrganizationStrategy() services.OrganizationStrategy {
@@ -73,7 +78,7 @@ func (m *Mother) OrganizationStrategy() services.OrganizationStrategy {
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 	enqueuer := m.Enqueuer()
 
-	return services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, enqueuer)
+	return services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, enqueuer, m.V2Enqueuer())
 }
 
 func (m *Mother) EveryoneStrategy() services.EveryoneStrategy {
@@ -83,7 +88,7 @@ func (m *Mother) EveryoneStrategy() services.EveryoneStrategy {
 	allUsers := services.NewAllUsers(uaaClient)
 	enqueuer := m.Enqueuer()
 
-	return services.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer)
+	return services.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer, m.V2Enqueuer())
 }
 
 func (m *Mother) UAAScopeStrategy() services.UAAScopeStrategy {
@@ -95,11 +100,11 @@ func (m *Mother) UAAScopeStrategy() services.UAAScopeStrategy {
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 	enqueuer := m.Enqueuer()
 
-	return services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer, env.DefaultUAAScopes)
+	return services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer, m.V2Enqueuer(), env.DefaultUAAScopes)
 }
 
 func (m *Mother) EmailStrategy() services.EmailStrategy {
-	return services.NewEmailStrategy(m.Enqueuer())
+	return services.NewEmailStrategy(m.Enqueuer(), m.V2Enqueuer())
 }
 
 func (m *Mother) NotificationsFinder() services.NotificationsFinder {

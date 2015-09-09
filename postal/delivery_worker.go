@@ -11,7 +11,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
-	"github.com/pivotal-golang/conceal"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -33,7 +32,8 @@ type DeliveryWorker struct {
 	gobble.Worker
 
 	uaaHost                string
-	V1Process              V1Process
+	V1Process              workflow
+	V2Workflow             workflow
 	logger                 lager.Logger
 	database               db.DatabaseInterface
 	strategyDeterminer     StrategyDeterminerInterface
@@ -68,6 +68,10 @@ type TokenLoaderInterface interface {
 	Load(string) (string, error)
 }
 
+type workflow interface {
+	Deliver(job *gobble.Job, logger lager.Logger)
+}
+
 type StrategyDeterminerInterface interface {
 	Determine(conn services.ConnectionInterface, uaaHost string, job gobble.Job) error
 }
@@ -80,33 +84,12 @@ type deliveryFailureHandlerInterface interface {
 	Handle(job Retryable, logger lager.Logger)
 }
 
-func NewDeliveryWorker(config DeliveryWorkerConfig) DeliveryWorker {
+func NewDeliveryWorker(v1workflow, v2workflow workflow, config DeliveryWorkerConfig) DeliveryWorker {
 	logger := config.Logger.Session("worker", lager.Data{"worker_id": config.ID})
 
-	cloak, err := conceal.NewCloak(config.EncryptionKey)
-	if err != nil {
-		panic(err)
-	}
-
 	worker := DeliveryWorker{
-		V1Process: V1Process{
-			dbTrace:                config.DBTrace,
-			uaaHost:                config.UAAHost,
-			sender:                 config.Sender,
-			domain:                 config.Domain,
-			packager:               NewPackager(config.TemplatesLoader, cloak),
-			mailClient:             config.MailClient,
-			database:               config.Database,
-			tokenLoader:            config.TokenLoader,
-			userLoader:             config.UserLoader,
-			kindsRepo:              config.KindsRepo,
-			receiptsRepo:           config.ReceiptsRepo,
-			unsubscribesRepo:       config.UnsubscribesRepo,
-			globalUnsubscribesRepo: config.GlobalUnsubscribesRepo,
-			messageStatusUpdater:   config.MessageStatusUpdater,
-			deliveryFailureHandler: config.DeliveryFailureHandler,
-		},
-
+		V1Process:              v1workflow,
+		V2Workflow:             v2workflow,
 		uaaHost:                config.UAAHost,
 		logger:                 logger,
 		database:               config.Database,
@@ -133,17 +116,17 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 		return
 	}
 
-	if campaignJob.JobType == "campaign" {
-		worker.logger.Info("determining-strategy")
-		if err := worker.strategyDeterminer.Determine(worker.database.Connection(), worker.uaaHost, *job); err != nil {
-			worker.logger.Error("determining-strategy-failed", err)
+	switch campaignJob.JobType {
+	case "campaign":
+		err := worker.strategyDeterminer.Determine(worker.database.Connection(), worker.uaaHost, *job)
+		if err != nil {
 			worker.deliveryFailureHandler.Handle(job, worker.logger)
 		}
-
-		return
+	case "v2":
+		worker.V2Workflow.Deliver(job, worker.logger)
+	default:
+		worker.V1Process.Deliver(job, worker.logger)
 	}
-
-	worker.V1Process.Deliver(job, worker.logger)
 }
 
 type gorpCompatibleLogger struct {

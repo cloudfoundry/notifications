@@ -17,15 +17,17 @@ func (d DefaultScopeError) Error() string {
 type UAAScopeStrategy struct {
 	findsUserGUIDs scopeUserGUIDFinder
 	tokenLoader    loadsTokens
-	queue          enqueuer
+	v1Enqueuer     v1Enqueuer
+	v2Enqueuer     v2Enqueuer
 	defaultScopes  []string
 }
 
-func NewUAAScopeStrategy(tokenLoader loadsTokens, findsUserGUIDs scopeUserGUIDFinder, queue enqueuer, defaultScopes []string) UAAScopeStrategy {
+func NewUAAScopeStrategy(tokenLoader loadsTokens, findsUserGUIDs scopeUserGUIDFinder, v1Enqueuer v1Enqueuer, v2Enqueuer v2Enqueuer, defaultScopes []string) UAAScopeStrategy {
 	return UAAScopeStrategy{
 		findsUserGUIDs: findsUserGUIDs,
 		tokenLoader:    tokenLoader,
-		queue:          queue,
+		v1Enqueuer:     v1Enqueuer,
+		v2Enqueuer:     v2Enqueuer,
 		defaultScopes:  defaultScopes,
 	}
 }
@@ -69,7 +71,15 @@ func (strategy UAAScopeStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		users = append(users, User{GUID: guid})
 	}
 
-	responses = strategy.queue.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, dispatch.GUID, dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	switch dispatch.JobType {
+	case "v2":
+		v2Users := convertToV2Users(users)
+		v2Options := convertToV2Options(options)
+
+		strategy.v2Enqueuer.Enqueue(dispatch.Connection, v2Users, v2Options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	default:
+		responses = strategy.v1Enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, dispatch.GUID, dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	}
 
 	return responses, nil
 }

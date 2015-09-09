@@ -15,19 +15,22 @@ type loadsTokens interface {
 type EveryoneStrategy struct {
 	tokenLoader loadsTokens
 	allUsers    allUserGUIDsGetter
-	queue       enqueuer
+	v1Enqueuer  v1Enqueuer
+	v2Enqueuer  v2Enqueuer
 }
 
-func NewEveryoneStrategy(tokenLoader loadsTokens, allUsers allUserGUIDsGetter, queue enqueuer) EveryoneStrategy {
+func NewEveryoneStrategy(tokenLoader loadsTokens, allUsers allUserGUIDsGetter, v1Enqueuer v1Enqueuer, v2Enqueuer v2Enqueuer) EveryoneStrategy {
 	return EveryoneStrategy{
 		tokenLoader: tokenLoader,
 		allUsers:    allUsers,
-		queue:       queue,
+		v1Enqueuer:  v1Enqueuer,
+		v2Enqueuer:  v2Enqueuer,
 	}
 }
 
 func (strategy EveryoneStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
-	responses := []Response{}
+	var responses []Response
+
 	options := Options{
 		ReplyTo:           dispatch.Message.ReplyTo,
 		Subject:           dispatch.Message.Subject,
@@ -62,7 +65,15 @@ func (strategy EveryoneStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		users = append(users, User{GUID: guid})
 	}
 
-	responses = strategy.queue.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	switch dispatch.JobType {
+	case "v2":
+		v2Users := convertToV2Users(users)
+		v2Options := convertToV2Options(options)
+
+		strategy.v2Enqueuer.Enqueue(dispatch.Connection, v2Users, v2Options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	default:
+		responses = strategy.v1Enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	}
 
 	return responses, nil
 }

@@ -17,21 +17,24 @@ type SpaceStrategy struct {
 	spaceLoader        loadsSpaces
 	organizationLoader loadsOrganizations
 	findsUserGUIDs     spaceUserGUIDFinder
-	queue              enqueuer
+	v1Enqueuer         v1Enqueuer
+	v2Enqueuer         v2Enqueuer
 }
 
-func NewSpaceStrategy(tokenLoader loadsTokens, spaceLoader loadsSpaces, organizationLoader loadsOrganizations, findsUserGUIDs spaceUserGUIDFinder, queue enqueuer) SpaceStrategy {
+func NewSpaceStrategy(tokenLoader loadsTokens, spaceLoader loadsSpaces, organizationLoader loadsOrganizations, findsUserGUIDs spaceUserGUIDFinder, v1Enqueuer v1Enqueuer, v2Enqueuer v2Enqueuer) SpaceStrategy {
 	return SpaceStrategy{
 		tokenLoader:        tokenLoader,
 		spaceLoader:        spaceLoader,
 		organizationLoader: organizationLoader,
 		findsUserGUIDs:     findsUserGUIDs,
-		queue:              queue,
+		v1Enqueuer:         v1Enqueuer,
+		v2Enqueuer:         v2Enqueuer,
 	}
 }
 
 func (strategy SpaceStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
-	responses := []Response{}
+	var responses []Response
+
 	options := Options{
 		To:                dispatch.Message.To,
 		ReplyTo:           dispatch.Message.ReplyTo,
@@ -76,7 +79,15 @@ func (strategy SpaceStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		return responses, err
 	}
 
-	responses = strategy.queue.Enqueue(dispatch.Connection, users, options, space, org, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	switch dispatch.JobType {
+	case "v2":
+		v2Users := convertToV2Users(users)
+		v2Options := convertToV2Options(options)
+
+		strategy.v2Enqueuer.Enqueue(dispatch.Connection, v2Users, v2Options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	default:
+		responses = strategy.v1Enqueuer.Enqueue(dispatch.Connection, users, options, space, org, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
+	}
 
 	return responses, nil
 }

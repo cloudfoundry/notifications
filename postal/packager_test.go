@@ -1,6 +1,7 @@
 package postal_test
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -118,6 +119,15 @@ var _ = Describe("Packager", func() {
 				KindDescription:   "some-kind-id",
 				SourceDescription: "some-client-id",
 			}))
+		})
+
+		Context("when the template cannot be loaded", func() {
+			It("returns an error", func() {
+				templatesLoader.LoadTemplatesCall.Returns.Error = errors.New("some error")
+
+				_, err := packager.PrepareContext(delivery, "some-sender", "some-domain")
+				Expect(err).To(MatchError(errors.New("some error")))
+			})
 		})
 	})
 

@@ -73,6 +73,7 @@ func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string,
 	}
 
 	_, err = strategy.Dispatch(services.Dispatch{
+		JobType:    "v2",
 		UAAHost:    uaaHost,
 		GUID:       guid,
 		Connection: conn,

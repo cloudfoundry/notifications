@@ -2,14 +2,12 @@ package postal_test
 
 import (
 	"bytes"
-	"crypto/md5"
+	"errors"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
-	"github.com/cloudfoundry-incubator/notifications/uaa"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
@@ -18,116 +16,40 @@ import (
 
 var _ = Describe("DeliveryWorker", func() {
 	var (
-		mailClient             *mocks.MailClient
 		worker                 postal.DeliveryWorker
-		id                     int
 		logger                 lager.Logger
 		buffer                 *bytes.Buffer
 		delivery               postal.Delivery
 		queue                  *mocks.Queue
-		unsubscribesRepo       *mocks.UnsubscribesRepo
-		globalUnsubscribesRepo *mocks.GlobalUnsubscribesRepo
-		kindsRepo              *mocks.KindsRepo
-		database               *mocks.Database
-		strategyDeterminer     *mocks.StrategyDeterminer
-		conn                   *mocks.Connection
-		userLoader             *mocks.UserLoader
-		userGUID               string
-		fakeUserEmail          string
-		templateLoader         *mocks.TemplatesLoader
-		receiptsRepo           *mocks.ReceiptsRepo
-		tokenLoader            *mocks.TokenLoader
-		messageID              string
-		messageStatusUpdater   *mocks.MessageStatusUpdater
 		deliveryFailureHandler *mocks.DeliveryFailureHandler
+		v1Workflow, v2Workflow *mocks.Workflow
+		strategyDeterminer     *mocks.StrategyDeterminer
+		connection             *mocks.Connection
 	)
 
 	BeforeEach(func() {
 		buffer = bytes.NewBuffer([]byte{})
-		id = 1234
 		logger = lager.NewLogger("notifications")
 		logger.RegisterSink(lager.NewWriterSink(buffer, lager.DEBUG))
-		mailClient = mocks.NewMailClient()
 		queue = mocks.NewQueue()
-		unsubscribesRepo = mocks.NewUnsubscribesRepo()
-		globalUnsubscribesRepo = mocks.NewGlobalUnsubscribesRepo()
-		kindsRepo = mocks.NewKindsRepo()
-		kindsRepo.FindCall.Returns.Kinds = []models.Kind{
-			{
-				ID:       "some-kind",
-				ClientID: "some-client",
-				Critical: false,
-			},
-			{
-				ID:       "another-kind",
-				ClientID: "some-client",
-				Critical: false,
-			},
-		}
-
-		conn = mocks.NewConnection()
-		database = mocks.NewDatabase()
-		database.ConnectionCall.Returns.Connection = conn
-
-		strategyDeterminer = mocks.NewStrategyDeterminer()
-		userGUID = "user-123"
-		sum := md5.Sum([]byte("banana's are so very tasty"))
-		encryptionKey := sum[:]
-		fakeUserEmail = "user-123@example.com"
-		userLoader = mocks.NewUserLoader()
-		userLoader.LoadCall.Returns.Users = map[string]uaa.User{
-			"user-123": {Emails: []string{fakeUserEmail}},
-			"user-456": {Emails: []string{"user-456@example.com"}},
-		}
-		tokenLoader = mocks.NewTokenLoader()
-		templateLoader = mocks.NewTemplatesLoader()
-		templateLoader.LoadTemplatesCall.Returns.Templates = postal.Templates{
-			Text:    "{{.Text}} {{.Domain}}",
-			HTML:    "<p>{{.HTML}}</p>",
-			Subject: "{{.Subject}}",
-		}
-		receiptsRepo = mocks.NewReceiptsRepo()
-		messageStatusUpdater = mocks.NewMessageStatusUpdater()
 		deliveryFailureHandler = mocks.NewDeliveryFailureHandler()
+		strategyDeterminer = mocks.NewStrategyDeterminer()
+		connection = mocks.NewConnection()
+		database := mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = connection
 
-		worker = postal.NewDeliveryWorker(postal.DeliveryWorkerConfig{
-			ID:            id,
-			Sender:        "from@example.com",
-			Domain:        "example.com",
-			UAAHost:       "https://uaa.example.com",
-			EncryptionKey: encryptionKey,
-			Logger:        logger,
-			Queue:         queue,
-
-			Database:               database,
-			DBTrace:                false,
-			GlobalUnsubscribesRepo: globalUnsubscribesRepo,
-			UnsubscribesRepo:       unsubscribesRepo,
-			KindsRepo:              kindsRepo,
-			UserLoader:             userLoader,
-			TemplatesLoader:        templateLoader,
-			ReceiptsRepo:           receiptsRepo,
-			TokenLoader:            tokenLoader,
-			MailClient:             mailClient,
-			StrategyDeterminer:     strategyDeterminer,
-			MessageStatusUpdater:   messageStatusUpdater,
+		config := postal.DeliveryWorkerConfig{
+			Logger: logger,
+			Queue:  queue,
 			DeliveryFailureHandler: deliveryFailureHandler,
-		})
-
-		messageID = "randomly-generated-guid"
-		delivery = postal.Delivery{
-			ClientID: "some-client",
-			UserGUID: userGUID,
-			Options: postal.Options{
-				Subject:    "the subject",
-				Text:       "body content",
-				ReplyTo:    "thesender@example.com",
-				KindID:     "some-kind",
-				TemplateID: "some-template-id",
-			},
-			MessageID:     messageID,
-			VCAPRequestID: "some-request-id",
+			StrategyDeterminer:     strategyDeterminer,
+			Database:               database,
+			UAAHost:                "my-uaa-host",
 		}
+
+		v1Workflow = mocks.NewWorkflow()
+		v2Workflow = mocks.NewWorkflow()
+		worker = postal.NewDeliveryWorker(v1Workflow, v2Workflow, config)
 	})
 
 	Describe("Work", func() {
@@ -143,7 +65,7 @@ var _ = Describe("DeliveryWorker", func() {
 			<-time.After(10 * time.Millisecond)
 			worker.Halt()
 
-			Expect(mailClient.SendCall.CallCount).To(Equal(1))
+			Expect(v1Workflow.DeliverCall.CallCount).To(Equal(1))
 		})
 
 		It("can be halted", func() {
@@ -155,6 +77,91 @@ var _ = Describe("DeliveryWorker", func() {
 				worker.Work()
 				return true
 			}).Should(BeTrue())
+		})
+	})
+
+	Describe("Deliver", func() {
+		var job *gobble.Job
+
+		Context("when the job is not a campaign, and not a v2 delivery", func() {
+			BeforeEach(func() {
+				j := gobble.NewJob(delivery)
+				job = &j
+			})
+
+			It("should hand the job to the v1 workflow", func() {
+				worker.Deliver(job)
+
+				Expect(v1Workflow.DeliverCall.Receives.Job).To(Equal(job))
+				Expect(v1Workflow.DeliverCall.Receives.Logger).ToNot(BeNil())
+			})
+		})
+
+		Context("when the job is a campaign", func() {
+			BeforeEach(func() {
+				j := gobble.NewJob(struct {
+					JobType string
+				}{
+					JobType: "campaign",
+				})
+				job = &j
+			})
+
+			It("uses the strategy determiner", func() {
+				worker.Deliver(job)
+
+				Expect(strategyDeterminer.DetermineCall.Receives.Job).To(Equal(*job))
+				Expect(strategyDeterminer.DetermineCall.Receives.UAAHost).To(Equal("my-uaa-host"))
+				Expect(strategyDeterminer.DetermineCall.Receives.Connection).To(Equal(connection))
+			})
+
+			Context("when the strategy fails to determine", func() {
+				It("uses the deliveryFailureHandler", func() {
+					strategyDeterminer.DetermineCall.Returns.Error = errors.New("some error")
+
+					worker.Deliver(job)
+
+					Expect(deliveryFailureHandler.HandleCall.WasCalled).To(BeTrue())
+					Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
+					Expect(deliveryFailureHandler.HandleCall.Receives.Logger).ToNot(BeNil())
+				})
+			})
+		})
+
+		Context("when the job is a v2 workflow", func() {
+			BeforeEach(func() {
+				j := gobble.NewJob(struct {
+					JobType string
+				}{
+					JobType: "v2",
+				})
+				job = &j
+			})
+
+			It("should hand the job to the v2 workflow", func() {
+				worker.Deliver(job)
+
+				Expect(v2Workflow.DeliverCall.Receives.Job).To(Equal(job))
+				Expect(v2Workflow.DeliverCall.Receives.Logger).ToNot(BeNil())
+				Expect(v1Workflow.DeliverCall.CallCount).To(Equal(0))
+			})
+		})
+
+		Context("when the job cannot be unmarshalled", func() {
+			BeforeEach(func() {
+				j := gobble.Job{
+					Payload: "%%",
+				}
+				job = &j
+
+				worker.Deliver(job)
+			})
+
+			It("should use the deliveryFailureHandler", func() {
+				Expect(deliveryFailureHandler.HandleCall.WasCalled).To(BeTrue())
+				Expect(deliveryFailureHandler.HandleCall.Receives.Job).ToNot(BeNil())
+				Expect(deliveryFailureHandler.HandleCall.Receives.Logger).ToNot(BeNil())
+			})
 		})
 	})
 })
