@@ -90,10 +90,5 @@ var _ = Describe("Campaign Status Updater", func() {
 				}))
 			})
 		})
-
-		Context("when some of the messages are not final", func() {
-			PIt("does not update the status as completed", func() {
-			})
-		})
 	})
 })

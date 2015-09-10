@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
@@ -110,9 +110,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 
 		Expect(parsed.GlobalUnsubscribe).To(BeTrue())
 		Expect(parsed.Clients["raptorClient"]["hungry-kind"].Email).To(Equal(&FALSE))
-		Expect(parsed.Clients["raptorClient"]["hungry-kind"].Count).To(Equal(0))
 		Expect(parsed.Clients["starWarsClient"]["vader-kind"].Email).To(Equal(&TRUE))
-		Expect(parsed.Clients["starWarsClient"]["vader-kind"].Count).To(Equal(0))
 	})
 
 	Context("when there is an error returned from the finder", func() {

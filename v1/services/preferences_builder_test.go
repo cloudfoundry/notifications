@@ -25,12 +25,10 @@ var _ = Describe("NotificationsPreferences", func() {
 				Email:             true,
 				KindDescription:   "kind description",
 				SourceDescription: "client description",
-				Count:             3,
 			})
 
 			node := builder.Clients["clientID"]["kindID"]
 			Expect(node).To(Equal(services.Kind{
-				Count:             3,
 				Email:             &TRUE,
 				KindDescription:   "kind description",
 				SourceDescription: "client description",
@@ -55,7 +53,6 @@ var _ = Describe("NotificationsPreferences", func() {
 
 			node := builder.Clients["clientID"]["kindID"]
 			Expect(node).To(Equal(services.Kind{
-				Count:             0,
 				Email:             &TRUE,
 				KindDescription:   "kind description",
 				SourceDescription: "clientID description",
@@ -63,7 +60,6 @@ var _ = Describe("NotificationsPreferences", func() {
 
 			node = builder.Clients["clientID"]["new_kind"]
 			Expect(node).To(Equal(services.Kind{
-				Count:             0,
 				Email:             &TRUE,
 				KindDescription:   "new kind description",
 				SourceDescription: "clientID description",
@@ -130,7 +126,6 @@ var _ = Describe("NotificationsPreferences", func() {
 				Email:             &TRUE,
 				KindDescription:   "hungry",
 				SourceDescription: "raptors",
-				Count:             0,
 			}))
 		})
 	})
@@ -145,19 +140,16 @@ var _ = Describe("NotificationsPreferences", func() {
 				ClientID: "raptors",
 				KindID:   "door-open",
 				Email:    true,
-				Count:    3,
 			})
 			builder.Add(models.Preference{
 				ClientID: "raptors",
 				KindID:   "feeding-time",
 				Email:    false,
-				Count:    6,
 			})
 			builder.Add(models.Preference{
 				ClientID: "dogs",
 				KindID:   "barking",
 				Email:    true,
-				Count:    9,
 			})
 
 			preferences, err := builder.ToPreferences()

@@ -10,16 +10,18 @@ func NewPreferencesRepo() PreferencesRepo {
 
 func (repo PreferencesRepo) FindNonCriticalPreferences(conn ConnectionInterface, userGUID string) ([]Preference, error) {
 	preferences := []Preference{}
-	sql := `SELECT kinds.id as kind_id, kinds.client_id as client_id, kinds.description as kind_description, clients.description as source_description, IFNULL(receipts.count, 0) as count
-            FROM kinds
-            LEFT OUTER JOIN receipts ON kinds.id = receipts.kind_id
-            LEFT OUTER JOIN clients ON clients.id = kinds.client_id
-            WHERE kinds.critical = "false"
-            AND kinds.client_id IN
-                (SELECT DISTINCT kinds.client_id
-                 FROM kinds
-                 JOIN receipts ON kinds.client_id = receipts.client_id
-                 WHERE receipts.user_guid = ?)`
+	sql := `SELECT DISTINCT kinds.id AS kind_id,
+				clients.id AS client_id,
+				kinds.description AS kind_description,
+				clients.description AS source_description
+			FROM kinds
+			JOIN clients on kinds.client_id = clients.id
+			WHERE kinds.client_id IN (
+				SELECT client_id
+				FROM receipts
+				WHERE user_guid = ?
+			)
+			AND kinds.critical = false`
 
 	_, err := conn.Select(&preferences, sql, userGUID)
 	if err != nil {

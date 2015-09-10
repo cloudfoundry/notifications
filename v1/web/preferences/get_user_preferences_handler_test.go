@@ -75,7 +75,25 @@ var _ = Describe("GetUserPreferencesHandler", func() {
 
 			Expect(writer.Code).To(Equal(http.StatusOK))
 
-			Expect(string(writer.Body.Bytes())).To(Equal(`{"global_unsubscribe":false,"clients":{"raptorClient":{"hungry-kind":{"count":0,"email":false,"kind_description":"hungry-kind","source_description":"raptorClient"}},"starWarsClient":{"vader-kind":{"count":0,"email":true,"kind_description":"vader-kind","source_description":"starWarsClient"}}}}`))
+			Expect(writer.Body).To(MatchJSON(`{
+				"global_unsubscribe":false,
+				"clients":{
+					"raptorClient":{
+						"hungry-kind":{
+							"email":false,
+							"kind_description":"hungry-kind",
+							"source_description":"raptorClient"
+						}
+					},
+					"starWarsClient":{
+						"vader-kind":{
+							"email":true,
+							"kind_description":"vader-kind",
+							"source_description":"starWarsClient"
+						}
+					}
+				}
+			}`))
 		})
 
 		Context("when the finder returns an error", func() {

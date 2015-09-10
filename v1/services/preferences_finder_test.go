@@ -28,7 +28,6 @@ var _ = Describe("PreferencesFinder", func() {
 				KindID:            "non-critical-kind",
 				KindDescription:   "non critical kind description",
 				Email:             true,
-				Count:             3,
 			},
 			{
 				ClientID:          "raptors",
@@ -36,7 +35,6 @@ var _ = Describe("PreferencesFinder", func() {
 				KindID:            "other-kind",
 				KindDescription:   "other kind description",
 				Email:             false,
-				Count:             10,
 			},
 		}
 

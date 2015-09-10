@@ -7,7 +7,6 @@ import (
 )
 
 type Kind struct {
-	Count             int    `json:"count"`
 	Email             *bool  `json:"email"`
 	KindDescription   string `json:"kind_description"`
 	SourceDescription string `json:"source_description"`
@@ -37,7 +36,6 @@ func (pref PreferencesBuilder) Add(preference models.Preference) {
 	}
 
 	data := Kind{
-		Count:             preference.Count,
 		Email:             &preference.Email,
 		KindDescription:   preference.KindDescription,
 		SourceDescription: preference.SourceDescription,

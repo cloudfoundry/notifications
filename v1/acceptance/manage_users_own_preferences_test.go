@@ -90,7 +90,6 @@ var _ = Describe("Preferences Endpoint", func() {
 				ClientID:       "notifications-sender",
 				NotificationID: "acceptance-test",
 				Email:          true,
-				Count:          0,
 				NotificationDescription: "Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
@@ -98,7 +97,6 @@ var _ = Describe("Preferences Endpoint", func() {
 				ClientID:       "notifications-sender",
 				NotificationID: "unsubscribe-acceptance-test",
 				Email:          true,
-				Count:          1,
 				NotificationDescription: "Unsubscribe Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
@@ -120,7 +118,6 @@ var _ = Describe("Preferences Endpoint", func() {
 				ClientID:       "notifications-sender",
 				NotificationID: "acceptance-test",
 				Email:          true,
-				Count:          0,
 				NotificationDescription: "Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
@@ -128,7 +125,6 @@ var _ = Describe("Preferences Endpoint", func() {
 				ClientID:       "notifications-sender",
 				NotificationID: "unsubscribe-acceptance-test",
 				Email:          false,
-				Count:          1,
 				NotificationDescription: "Unsubscribe Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
@@ -175,7 +171,6 @@ var _ = Describe("Preferences Endpoint", func() {
 				ClientID:       "notifications-sender",
 				NotificationID: "acceptance-test",
 				Email:          true,
-				Count:          0,
 				NotificationDescription: "Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
@@ -183,7 +178,6 @@ var _ = Describe("Preferences Endpoint", func() {
 				ClientID:       "notifications-sender",
 				NotificationID: "unsubscribe-acceptance-test",
 				Email:          true,
-				Count:          2,
 				NotificationDescription: "Unsubscribe Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
@@ -238,7 +232,6 @@ var _ = Describe("Preferences Endpoint", func() {
 				ClientID:       "notifications-sender",
 				NotificationID: "acceptance-test",
 				Email:          true,
-				Count:          0,
 				NotificationDescription: "Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
@@ -246,7 +239,6 @@ var _ = Describe("Preferences Endpoint", func() {
 				ClientID:       "notifications-sender",
 				NotificationID: "unsubscribe-acceptance-test",
 				Email:          true,
-				Count:          1,
 				NotificationDescription: "Unsubscribe Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))

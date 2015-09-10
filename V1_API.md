@@ -850,7 +850,7 @@ Access-Control-Allow-Headers: Accept, Authorization, Content-Type
 Access-Control-Allow-Methods: GET, PATCH
 Access-Control-Allow-Origin: *
 Connection: close
-Content-Length: 450
+Content-Length: 631
 Content-Type: text/plain; charset=utf-8
 Date: Tue, 30 Sep 2014 23:19:11 GMT
 X-Cf-Requestid: 92cffe86-16fe-41a8-4b80-b10987b11060
@@ -860,7 +860,6 @@ X-Cf-Requestid: 92cffe86-16fe-41a8-4b80-b10987b11060
 	"clients" : {
 		"login-service": {
 			"effa96de-2349-423a-b5e4-b1e84712a714": {
-				"count": 8,
 				"email": true,
 				"kind_description": "Forgot Password",
 				"source_description": "Login Service"
@@ -868,13 +867,11 @@ X-Cf-Requestid: 92cffe86-16fe-41a8-4b80-b10987b11060
 		},
 		"MySQL Service": {
 			"6236f606-627d-4079-b0bd-f0b7e8d3d2a9": {
-				"count": 1,
 				"email": false,
 				"kind_description": "Downtime Notification",
 				"source_description": "Galactic Empire Datastore"
 			},
 			"fb89e98a-a1f5-47e5-9e2d-d95940b32d3d": {
-				"count": 18,
 				"email": true,
 				"kind_description": "Provision Notification",
 				"source_description": "Galactic Empire Datastore"
@@ -1057,7 +1054,7 @@ Access-Control-Allow-Headers: Accept, Authorization, Content-Type
 Access-Control-Allow-Methods: GET, PATCH
 Access-Control-Allow-Origin: *
 Connection: close
-Content-Length: 450
+Content-Length: 625
 Content-Type: text/plain; charset=utf-8
 Date: Tue, 30 Sep 2014 23:19:11 GMT
 X-Cf-Requestid: 92cffe86-16fe-41a8-4b80-b10987b11060
@@ -1067,7 +1064,6 @@ X-Cf-Requestid: 92cffe86-16fe-41a8-4b80-b10987b11060
 	"clients": {
 		"login-service": {
 			"effa96de-2349-423a-b5e4-b1e84712a714": {
-				"count": 8,
 				"email": true,
 				"kind_description": "Forgot Password",
 				"source_description": "Login Service"
@@ -1075,13 +1071,11 @@ X-Cf-Requestid: 92cffe86-16fe-41a8-4b80-b10987b11060
 		},
 		"mysql-service": {
 			"6236f606-627d-4079-b0bd-f0b7e8d3d2a9": {
-				"count": 1,
 				"email": false,
 				"kind_description": "Downtime Notification",
 				"source_description": "Galactic Empire Datastore"
 			},
 			"fb89e98a-a1f5-47e5-9e2d-d95940b32d3d": {
-				"count": 18,
 				"email": true,
 				"kind_description": "Provision Notification",
 				"source_description": "Galactic Empire Datastore"

@@ -35,10 +35,8 @@ var _ = Describe("PreferencesRepo", func() {
 	Context("when there are no matching results in the database", func() {
 		It("returns an an empty slice", func() {
 			results, err := repo.FindNonCriticalPreferences(conn, "irrelevant-user")
-			if err != nil {
-				panic(err)
-			}
-			Expect(len(results)).To(Equal(0))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(results).To(HaveLen(0))
 		})
 	})
 
@@ -128,14 +126,12 @@ var _ = Describe("PreferencesRepo", func() {
 				createReceipt(conn, otherUserReceipt)
 			})
 
-			It("Returns a slice of non-critical notifications for this user", func() {
+			It("returns a slice of non-critical notifications for this user", func() {
 				err := unsubscribeRepo.Set(conn, "correct-user", "raptors", "sleepy", true)
 				Expect(err).NotTo(HaveOccurred())
 
 				results, err := repo.FindNonCriticalPreferences(conn, "correct-user")
-				if err != nil {
-					panic(err)
-				}
+				Expect(err).NotTo(HaveOccurred())
 
 				Expect(results).To(HaveLen(3))
 
@@ -145,7 +141,6 @@ var _ = Describe("PreferencesRepo", func() {
 					Email:             false,
 					KindDescription:   "sleepy description",
 					SourceDescription: "raptors description",
-					Count:             402,
 				}))
 
 				Expect(results).To(ContainElement(models.Preference{
@@ -154,7 +149,6 @@ var _ = Describe("PreferencesRepo", func() {
 					Email:             true,
 					KindDescription:   "dead description",
 					SourceDescription: "raptors description",
-					Count:             525,
 				}))
 
 				Expect(results).To(ContainElement(models.Preference{
@@ -163,9 +157,7 @@ var _ = Describe("PreferencesRepo", func() {
 					Email:             true,
 					KindDescription:   "orange description",
 					SourceDescription: "raptors description",
-					Count:             0,
 				}))
-
 			})
 		})
 	})
