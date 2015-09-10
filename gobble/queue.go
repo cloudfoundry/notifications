@@ -3,6 +3,7 @@ package gobble
 import (
 	"database/sql"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/go-gorp/gorp"
@@ -121,6 +122,9 @@ func (queue *Queue) reserve(channel chan Job, workerID string) {
 func (queue *Queue) Dequeue(job Job) {
 	_, err := queue.database.Connection.Delete(&job)
 	if err != nil {
+		if _, ok := err.(gorp.OptimisticLockError); ok && strings.Contains(err.Error(), "no row found") {
+			return
+		}
 		panic(err)
 	}
 }

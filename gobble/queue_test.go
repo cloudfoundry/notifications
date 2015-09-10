@@ -229,6 +229,23 @@ var _ = Describe("Queue", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(results).To(HaveLen(0))
 		})
+
+		It("ignores errors when the row is gone", func() {
+			job, err := queue.Enqueue(gobble.Job{})
+			Expect(err).NotTo(HaveOccurred())
+
+			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(results).To(HaveLen(1))
+
+			Expect(func() {
+				queue.Dequeue(job)
+			}).NotTo(Panic())
+
+			Expect(func() {
+				queue.Dequeue(job)
+			}).NotTo(Panic())
+		})
 	})
 
 	Describe("Len", func() {
