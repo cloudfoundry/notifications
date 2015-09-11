@@ -2,6 +2,7 @@ package servers
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -135,6 +136,25 @@ func (s Notifications) ResetDatabase() {
 	migrator.Seed(database, path.Join(env.RootPath, "templates", "default.json"))
 
 	gobbleDB.Connection.TruncateTables()
+}
+
+func (s Notifications) WaitForJobsQueueToEmpty() error {
+	_, gobbleDB := fetchDatabases()
+	timer := time.After(10 * time.Second)
+	for {
+		select {
+		case <-timer:
+			return errors.New("timed out waiting for jobs queue to empty")
+		default:
+			count, err := gobbleDB.Connection.SelectInt("SELECT COUNT(*) FROM `jobs`")
+			if err != nil {
+				return err
+			}
+			if count == 0 {
+				return nil
+			}
+		}
+	}
 }
 
 func freePort() string {

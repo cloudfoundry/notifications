@@ -32,12 +32,13 @@ type DeliveryWorker struct {
 	gobble.Worker
 
 	uaaHost                string
-	V1Process              workflow
+	V1Process              process
 	V2Workflow             workflow
 	logger                 lager.Logger
 	database               db.DatabaseInterface
 	strategyDeterminer     StrategyDeterminerInterface
 	deliveryFailureHandler deliveryFailureHandlerInterface
+	messageStatusUpdater   messageStatusUpdaterInterface
 }
 
 type DeliveryWorkerConfig struct {
@@ -68,8 +69,12 @@ type TokenLoaderInterface interface {
 	Load(string) (string, error)
 }
 
-type workflow interface {
+type process interface {
 	Deliver(job *gobble.Job, logger lager.Logger) error
+}
+
+type workflow interface {
+	Deliver(delivery Delivery, logger lager.Logger) error
 }
 
 type StrategyDeterminerInterface interface {
@@ -84,7 +89,7 @@ type deliveryFailureHandlerInterface interface {
 	Handle(job Retryable, logger lager.Logger)
 }
 
-func NewDeliveryWorker(v1workflow, v2workflow workflow, config DeliveryWorkerConfig) DeliveryWorker {
+func NewDeliveryWorker(v1workflow process, v2workflow workflow, config DeliveryWorkerConfig) DeliveryWorker {
 	logger := config.Logger.Session("worker", lager.Data{"worker_id": config.ID})
 
 	worker := DeliveryWorker{
@@ -95,6 +100,7 @@ func NewDeliveryWorker(v1workflow, v2workflow workflow, config DeliveryWorkerCon
 		database:               config.Database,
 		strategyDeterminer:     config.StrategyDeterminer,
 		deliveryFailureHandler: config.DeliveryFailureHandler,
+		messageStatusUpdater:   config.MessageStatusUpdater,
 	}
 	worker.Worker = gobble.NewWorker(config.ID, config.Queue, worker.Deliver)
 
@@ -123,7 +129,19 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 			worker.deliveryFailureHandler.Handle(job, worker.logger)
 		}
 	case "v2":
-		worker.V2Workflow.Deliver(job, worker.logger)
+		var delivery Delivery
+		job.Unmarshal(&delivery)
+
+		err = worker.V2Workflow.Deliver(delivery, worker.logger)
+		if err != nil {
+			worker.deliveryFailureHandler.Handle(job, worker.logger)
+			status := StatusFailed
+			if job.ShouldRetry {
+				status = StatusRetry
+			}
+
+			worker.messageStatusUpdater.Update(worker.database.Connection(), delivery.MessageID, status, delivery.CampaignID, worker.logger)
+		}
 	default:
 		worker.V1Process.Deliver(job, worker.logger)
 	}

@@ -3,7 +3,6 @@ package postal
 import (
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/pivotal-golang/lager"
@@ -44,13 +43,7 @@ func NewV2Workflow(mailClient mailClientInterface, packager messagePackager, use
 	}
 }
 
-func (w V2Workflow) Deliver(job *gobble.Job, logger lager.Logger) error {
-	var delivery Delivery
-	err := job.Unmarshal(&delivery)
-	if err != nil {
-		return err
-	}
-
+func (w V2Workflow) Deliver(delivery Delivery, logger lager.Logger) error {
 	token, err := w.tokenLoader.Load(w.uaaHost)
 	if err != nil {
 		return err

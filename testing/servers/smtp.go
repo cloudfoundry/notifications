@@ -11,6 +11,12 @@ type SMTP struct {
 	listener   net.Listener
 	server     *smtpd.Server
 	Deliveries []smtpd.Envelope
+
+	HandlerCall struct {
+		Returns struct {
+			Error error
+		}
+	}
 }
 
 func NewSMTP() *SMTP {
@@ -44,7 +50,7 @@ func (s *SMTP) Boot() {
 
 func (s *SMTP) Handler(peer smtpd.Peer, env smtpd.Envelope) error {
 	s.Deliveries = append(s.Deliveries, env)
-	return nil
+	return s.HandlerCall.Returns.Error
 }
 
 func (s *SMTP) Reset() {

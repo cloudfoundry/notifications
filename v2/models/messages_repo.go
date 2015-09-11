@@ -9,6 +9,7 @@ type statusCount struct {
 
 type MessageCounts struct {
 	Total     int
+	Retry     int
 	Failed    int
 	Delivered int
 }
@@ -47,6 +48,8 @@ func (mr MessagesRepository) CountByStatus(conn ConnectionInterface, campaignID 
 		switch count.Status {
 		case "delivered":
 			messageCounts.Delivered = count.Count
+		case "retry":
+			messageCounts.Retry = count.Count
 		case "failed":
 			messageCounts.Failed = count.Count
 		}

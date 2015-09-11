@@ -56,13 +56,18 @@ func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID s
 	}
 
 	status := CampaignStatusSending
+	var completedTime mysql.NullTime
+
 	if (counts.Failed + counts.Delivered) == counts.Total {
 		status = CampaignStatusCompleted
-	}
 
-	mostRecentlyUpdatedMessage, err := csc.messages.MostRecentlyUpdatedByCampaignID(conn, campaign.ID)
-	if err != nil {
-		panic(err)
+		mostRecentlyUpdatedMessage, err := csc.messages.MostRecentlyUpdatedByCampaignID(conn, campaign.ID)
+		if err != nil {
+			panic(err)
+		}
+
+		completedTime.Time = mostRecentlyUpdatedMessage.UpdatedAt
+		completedTime.Valid = true
 	}
 
 	return CampaignStatus{
@@ -71,10 +76,8 @@ func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID s
 		TotalMessages:  counts.Total,
 		SentMessages:   counts.Delivered,
 		FailedMessages: counts.Failed,
+		RetryMessages:  counts.Retry,
 		StartTime:      campaign.StartTime,
-		CompletedTime: mysql.NullTime{
-			Time:  mostRecentlyUpdatedMessage.UpdatedAt,
-			Valid: true,
-		},
+		CompletedTime:  completedTime,
 	}, nil
 }

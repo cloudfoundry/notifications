@@ -39,6 +39,7 @@ var _ = BeforeSuite(func() {
 
 	Servers.Notifications = servers.NewNotifications()
 	Servers.Notifications.Compile()
+	Servers.Notifications.ResetDatabase()
 	Servers.Notifications.Boot()
 })
 
@@ -50,6 +51,11 @@ var _ = AfterSuite(func() {
 var _ = BeforeEach(func() {
 	Servers.Notifications.ResetDatabase()
 	Servers.SMTP.Reset()
+})
+
+var _ = AfterEach(func() {
+	err := Servers.Notifications.WaitForJobsQueueToEmpty()
+	Expect(err).NotTo(HaveOccurred())
 })
 
 func GetClientTokenFor(clientID string) uaa.Token {

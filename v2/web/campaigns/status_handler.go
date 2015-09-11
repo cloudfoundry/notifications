@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
+	"github.com/go-sql-driver/mysql"
 	"github.com/ryanmoran/stack"
 )
 
@@ -33,12 +34,7 @@ func (h StatusHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		panic(err)
 	}
 
-	completedTimeValue, err := status.CompletedTime.Time.MarshalText()
-	if err != nil {
-		panic(err)
-	}
-
-	response, err := json.Marshal(map[string]interface{}{
+	output := map[string]interface{}{
 		"id":              status.CampaignID,
 		"status":          status.Status,
 		"total_messages":  status.TotalMessages,
@@ -46,8 +42,19 @@ func (h StatusHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		"retry_messages":  status.RetryMessages,
 		"failed_messages": status.FailedMessages,
 		"start_time":      status.StartTime,
-		"completed_time":  string(completedTimeValue),
-	})
+		"completed_time":  nil,
+	}
+
+	if (status.CompletedTime != mysql.NullTime{}) {
+		completedTimeValue, err := status.CompletedTime.Time.MarshalText()
+		if err != nil {
+			panic(err)
+		}
+
+		output["completed_time"] = string(completedTimeValue)
+	}
+
+	response, err := json.Marshal(output)
 	if err != nil {
 		panic(err)
 	}

@@ -22,9 +22,11 @@ var _ = Describe("DeliveryWorker", func() {
 		delivery               postal.Delivery
 		queue                  *mocks.Queue
 		deliveryFailureHandler *mocks.DeliveryFailureHandler
-		v1Workflow, v2Workflow *mocks.Workflow
+		v1Workflow             *mocks.Process
+		v2Workflow             *mocks.Workflow
 		strategyDeterminer     *mocks.StrategyDeterminer
 		connection             *mocks.Connection
+		messageStatusUpdater   *mocks.MessageStatusUpdater
 	)
 
 	BeforeEach(func() {
@@ -37,6 +39,7 @@ var _ = Describe("DeliveryWorker", func() {
 		connection = mocks.NewConnection()
 		database := mocks.NewDatabase()
 		database.ConnectionCall.Returns.Connection = connection
+		messageStatusUpdater = mocks.NewMessageStatusUpdater()
 
 		config := postal.DeliveryWorkerConfig{
 			Logger: logger,
@@ -45,9 +48,10 @@ var _ = Describe("DeliveryWorker", func() {
 			StrategyDeterminer:     strategyDeterminer,
 			Database:               database,
 			UAAHost:                "my-uaa-host",
+			MessageStatusUpdater:   messageStatusUpdater,
 		}
 
-		v1Workflow = mocks.NewWorkflow()
+		v1Workflow = mocks.NewProcess()
 		v2Workflow = mocks.NewWorkflow()
 		worker = postal.NewDeliveryWorker(v1Workflow, v2Workflow, config)
 	})
@@ -82,13 +86,12 @@ var _ = Describe("DeliveryWorker", func() {
 
 	Describe("Deliver", func() {
 		var job *gobble.Job
+		BeforeEach(func() {
+			j := gobble.NewJob(delivery)
+			job = &j
+		})
 
 		Context("when the job is not a campaign, and not a v2 delivery", func() {
-			BeforeEach(func() {
-				j := gobble.NewJob(delivery)
-				job = &j
-			})
-
 			It("should hand the job to the v1 workflow", func() {
 				worker.Deliver(job)
 
@@ -131,9 +134,13 @@ var _ = Describe("DeliveryWorker", func() {
 		Context("when the job is a v2 workflow", func() {
 			BeforeEach(func() {
 				j := gobble.NewJob(struct {
-					JobType string
+					JobType    string
+					MessageID  string
+					CampaignID string
 				}{
-					JobType: "v2",
+					JobType:    "v2",
+					MessageID:  "some-message-id",
+					CampaignID: "some-campaign-id",
 				})
 				job = &j
 			})
@@ -141,9 +148,42 @@ var _ = Describe("DeliveryWorker", func() {
 			It("should hand the job to the v2 workflow", func() {
 				worker.Deliver(job)
 
-				Expect(v2Workflow.DeliverCall.Receives.Job).To(Equal(job))
-				Expect(v2Workflow.DeliverCall.Receives.Logger).ToNot(BeNil())
+				Expect(v2Workflow.DeliverCall.Receives.Delivery).To(Equal(postal.Delivery{
+					MessageID:  "some-message-id",
+					CampaignID: "some-campaign-id",
+				}))
+				Expect(v2Workflow.DeliverCall.Receives.Logger).NotTo(BeNil())
 				Expect(v1Workflow.DeliverCall.CallCount).To(Equal(0))
+			})
+
+			Context("when the workflow encounters an error", func() {
+				It("updates the message status to retry if the job should be retried", func() {
+					v2Workflow.DeliverCall.Returns.Error = errors.New("delivery failure")
+					job.ShouldRetry = true
+
+					worker.Deliver(job)
+
+					Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
+					Expect(deliveryFailureHandler.HandleCall.Receives.Logger).NotTo(BeNil())
+					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(connection))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal("some-message-id"))
+					Expect(messageStatusUpdater.UpdateCall.Receives.CampaignID).To(Equal("some-campaign-id"))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal("retry"))
+				})
+
+				It("updates the message status to failed if the job should not be retried", func() {
+					v2Workflow.DeliverCall.Returns.Error = errors.New("delivery failure")
+					job.ShouldRetry = false
+
+					worker.Deliver(job)
+
+					Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
+					Expect(deliveryFailureHandler.HandleCall.Receives.Logger).NotTo(BeNil())
+					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(connection))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal("some-message-id"))
+					Expect(messageStatusUpdater.UpdateCall.Receives.CampaignID).To(Equal("some-campaign-id"))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal("failed"))
+				})
 			})
 		})
 

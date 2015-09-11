@@ -151,6 +151,7 @@ func (app Application) StartWorkers() {
 			Database:               database,
 			StrategyDeterminer:     strategy.NewStrategyDeterminer(app.mother.UserStrategy(), app.mother.SpaceStrategy(), app.mother.OrganizationStrategy(), app.mother.EmailStrategy()),
 			DeliveryFailureHandler: postal.NewDeliveryFailureHandler(),
+			MessageStatusUpdater:   messageStatusUpdater,
 		})
 		return &worker
 	})

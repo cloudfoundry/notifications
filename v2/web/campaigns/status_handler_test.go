@@ -100,4 +100,39 @@ var _ = Describe("Campaign status handler", func() {
 		Expect(campaignStatusesCollection.GetCall.Receives.Connection).To(Equal(conn))
 		Expect(campaignStatusesCollection.GetCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 	})
+
+	Context("when the campaign is not yet completed", func() {
+		It("returns a null completed_time value", func() {
+			startTime, err := time.Parse(time.RFC3339, "2015-09-01T12:34:56-07:00")
+			Expect(err).NotTo(HaveOccurred())
+
+			campaignStatusesCollection.GetCall.Returns.CampaignStatus = collections.CampaignStatus{
+				CampaignID:     "some-campaign-id",
+				Status:         "sending",
+				TotalMessages:  8,
+				SentMessages:   5,
+				RetryMessages:  1,
+				FailedMessages: 2,
+				StartTime:      startTime,
+				CompletedTime:  mysql.NullTime{},
+			}
+
+			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaigns/some-campaign-id/status", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(writer, request, context)
+
+			Expect(writer.Code).To(Equal(http.StatusOK))
+			Expect(writer.Body).To(MatchJSON(`{
+				"id": "some-campaign-id",
+				"status": "sending",
+				"total_messages": 8,
+				"sent_messages": 5,
+				"retry_messages": 1,
+				"failed_messages": 2,
+				"start_time": "2015-09-01T12:34:56-07:00",
+				"completed_time": null
+			}`))
+		})
+	})
 })

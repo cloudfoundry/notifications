@@ -341,15 +341,6 @@ var _ = Describe("Template lifecycle", func() {
 					Expect(status).To(Equal(http.StatusCreated))
 
 					templateID = response["id"].(string)
-
-					Expect(templateID).NotTo(BeEmpty())
-					Expect(response["name"]).To(Equal("An interesting template"))
-					Expect(response["text"]).To(Equal(""))
-					Expect(response["html"]).To(Equal("template html"))
-					Expect(response["subject"]).To(Equal("template subject"))
-					Expect(response["metadata"]).To(Equal(map[string]interface{}{
-						"template": "metadata",
-					}))
 				})
 
 				By("updating the template", func() {
