@@ -12,7 +12,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
-	"github.com/cloudfoundry-incubator/notifications/models"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -205,14 +204,14 @@ func (m *Mother) SQLDatabase() *sql.DB {
 
 func (m *Mother) Database() db.DatabaseInterface {
 	env := NewEnvironment()
-
-	database := db.NewDatabase(m.SQLDatabase(), db.Config{
+	database := v1models.NewDatabase(m.SQLDatabase(), v1models.Config{
 		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
 	})
+
 	if env.DBLoggingEnabled {
 		database.TraceOn("[DB]", log.New(os.Stdout, "", 0))
 	}
-	models.Setup(database)
+
 	return database
 }
 
