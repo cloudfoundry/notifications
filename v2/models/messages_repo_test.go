@@ -60,6 +60,13 @@ var _ = Describe("Messages Repository", func() {
 				Status:     postal.StatusRetry,
 			})
 			Expect(err).NotTo(HaveOccurred())
+
+			err = conn.Insert(&models.Message{
+				ID:         "message-id-567",
+				CampaignID: "some-campaign-id",
+				Status:     postal.StatusQueued,
+			})
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should return the counts of each message status", func() {
@@ -68,6 +75,7 @@ var _ = Describe("Messages Repository", func() {
 			Expect(messageCounts.Retry).To(Equal(1))
 			Expect(messageCounts.Failed).To(Equal(1))
 			Expect(messageCounts.Delivered).To(Equal(2))
+			Expect(messageCounts.Queued).To(Equal(1))
 		})
 
 		Context("when an error occurs", func() {

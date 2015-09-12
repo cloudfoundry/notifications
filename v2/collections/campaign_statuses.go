@@ -26,6 +26,7 @@ type CampaignStatus struct {
 	Status         string
 	TotalMessages  int
 	SentMessages   int
+	QueuedMessages int
 	RetryMessages  int
 	FailedMessages int
 	StartTime      time.Time
@@ -58,7 +59,7 @@ func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID s
 	status := CampaignStatusSending
 	var completedTime mysql.NullTime
 
-	if (counts.Failed + counts.Delivered) == counts.Total {
+	if counts.Total > 0 && (counts.Failed+counts.Delivered) == counts.Total {
 		status = CampaignStatusCompleted
 
 		mostRecentlyUpdatedMessage, err := csc.messages.MostRecentlyUpdatedByCampaignID(conn, campaign.ID)
@@ -77,6 +78,7 @@ func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID s
 		SentMessages:   counts.Delivered,
 		FailedMessages: counts.Failed,
 		RetryMessages:  counts.Retry,
+		QueuedMessages: counts.Queued,
 		StartTime:      campaign.StartTime,
 		CompletedTime:  completedTime,
 	}, nil

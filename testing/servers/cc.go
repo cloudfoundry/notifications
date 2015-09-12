@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -48,33 +49,37 @@ func (s CC) Close() {
 var CCGetSpace = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	guid := vars["guid"]
-	if guid == "space-123" {
-		json := `{
-		   "metadata": {
-			  "guid": "space-123",
-			  "url": "/v2/spaces/space-123",
-			  "created_at": "2014-08-01T17:36:18+00:00",
-			  "updated_at": null
-		   },
-		   "entity": {
-			  "name": "notifications-service",
-			  "organization_guid": "org-123",
-			  "organization_url": "/v2/organizations/org-123",
-			  "developers_url": "/v2/spaces/space-123/developers",
-			  "managers_url": "/v2/spaces/space-123/managers",
-			  "auditors_url": "/v2/spaces/space-123/auditors",
-			  "apps_url": "/v2/spaces/space-123/apps",
-			  "routes_url": "/v2/spaces/space-123/routes",
-			  "domains_url": "/v2/spaces/space-123/domains",
-			  "service_instances_url": "/v2/spaces/space-123/service_instances",
-			  "app_events_url": "/v2/spaces/space-123/app_events",
-			  "events_url": "/v2/spaces/space-123/events",
-			  "security_groups_url": "/v2/spaces/space-123/security_groups"
-		   }
-		}`
+	if guid == "space-123" || guid == "large-space" {
+		output := map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"guid":       guid,
+				"url":        fmt.Sprintf("/v2/spaces/%s", guid),
+				"created_at": "2014-08-01T17:36:18+00:00",
+				"updated_at": nil,
+			},
+			"entity": map[string]interface{}{
+				"name":                  "notifications-service",
+				"organization_guid":     "org-123",
+				"organization_url":      "/v2/organizations/org-123",
+				"developers_url":        fmt.Sprintf("/v2/spaces/%s/developers", guid),
+				"managers_url":          fmt.Sprintf("/v2/spaces/%s/managers", guid),
+				"auditors_url":          fmt.Sprintf("/v2/spaces/%s/auditors", guid),
+				"apps_url":              fmt.Sprintf("/v2/spaces/%s/apps", guid),
+				"routes_url":            fmt.Sprintf("/v2/spaces/%s/routes", guid),
+				"domains_url":           fmt.Sprintf("/v2/spaces/%s/domains", guid),
+				"service_instances_url": fmt.Sprintf("/v2/spaces/%s/service_instances", guid),
+				"app_events_url":        fmt.Sprintf("/v2/spaces/%s/app_events", guid),
+				"events_url":            fmt.Sprintf("/v2/spaces/%s/events", guid),
+				"security_groups_url":   fmt.Sprintf("/v2/spaces/%s/security_groups", guid),
+			},
+		}
+		response, err := json.Marshal(output)
+		if err != nil {
+			panic(err)
+		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(json))
+		w.Write(response)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"code":40004,"description":"The app space could not be found","error_code":"CF-SpaceNotFound"}`))
@@ -330,74 +335,65 @@ var CCGetOrgBillingManagers = http.HandlerFunc(func(w http.ResponseWriter, req *
 })
 
 var CCGetSpaceUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	uaaJSON := `{
-       "total_results": 3,
-       "total_pages": 1,
-       "prev_url": null,
-       "next_url": null,
-       "resources": [
-          {
-             "metadata": {
-                "guid": "user-456",
-                "url": "/v2/users/user-456",
-                "created_at": "2014-07-16T21:58:29+00:00",
-                "updated_at": null
-             },
-             "entity": {
-                "admin": false,
-                "active": true,
-                "default_space_guid": null,
-                "spaces_url": "/v2/users/user-456/spaces",
-                "organizations_url": "/v2/users/user-456/organizations",
-                "managed_organizations_url": "/v2/users/user-456/managed_organizations",
-                "billing_managed_organizations_url": "/v2/users/user-456/billing_managed_organizations",
-                "audited_organizations_url": "/v2/users/user-456/audited_organizations",
-                "managed_spaces_url": "/v2/users/user-456/managed_spaces",
-                "audited_spaces_url": "/v2/users/user-456/audited_spaces"
-             }
-          },
-          {
-             "metadata": {
-                "guid": "user-789",
-                "url": "/v2/users/user-789",
-                "created_at": "2014-07-18T22:08:18+00:00",
-                "updated_at": null
-             },
-             "entity": {
-                "admin": false,
-                "active": false,
-                "default_space_guid": null,
-                "spaces_url": "/v2/users/user-789/spaces",
-                "organizations_url": "/v2/users/user-789/organizations",
-                "managed_organizations_url": "/v2/users/user-789/managed_organizations",
-                "billing_managed_organizations_url": "/v2/users/user-789/billing_managed_organizations",
-                "audited_organizations_url": "/v2/users/user-789/audited_organizations",
-                "managed_spaces_url": "/v2/users/user-789/managed_spaces",
-                "audited_spaces_url": "/v2/users/user-789/audited_spaces"
-             }
-          },
-          {
-             "metadata": {
-                "guid": "user-000",
-                "url": "/v2/users/user-000",
-                "created_at": "2014-07-16T21:58:29+00:00",
-                "updated_at": null
-             },
-             "entity": {
-                "admin": false,
-                "active": true,
-                "default_space_guid": null,
-                "spaces_url": "/v2/users/user-000/spaces",
-                "organizations_url": "/v2/users/user-000/organizations",
-                "managed_organizations_url": "/v2/users/user-000/managed_organizations",
-                "billing_managed_organizations_url": "/v2/users/user-000/billing_managed_organizations",
-                "audited_organizations_url": "/v2/users/user-000/audited_organizations",
-                "managed_spaces_url": "/v2/users/user-000/managed_spaces",
-                "audited_spaces_url": "/v2/users/user-000/audited_spaces"
-             }
-          }
-       ]
-    }`
+	var userGUIDs []string
+	fields := strings.Split(":", req.URL.Query().Get("q"))
+	if len(fields) == 2 && fields[1] == "large-space" {
+		userGUIDs = []string{
+			"user-001",
+			"user-002",
+			"user-003",
+			"user-004",
+			"user-005",
+			"user-006",
+			"user-007",
+			"user-008",
+			"user-009",
+			"user-010",
+		}
+	} else {
+		userGUIDs = []string{
+			"user-456",
+			"user-789",
+			"user-000",
+		}
+	}
+
+	users := []map[string]interface{}{}
+	for _, guid := range userGUIDs {
+		users = append(users, map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"guid":       guid,
+				"url":        fmt.Sprintf("/v2/users/%s", guid),
+				"created_at": "2014-07-16T21:58:29+00:00",
+				"updated_at": nil,
+			},
+			"entity": map[string]interface{}{
+				"admin":                             false,
+				"active":                            true,
+				"default_space_guid":                nil,
+				"spaces_url":                        fmt.Sprintf("/v2/users/%s/spaces", guid),
+				"organizations_url":                 fmt.Sprintf("/v2/users/%s/organizations", guid),
+				"managed_organizations_url":         fmt.Sprintf("/v2/users/%s/managed_organizations", guid),
+				"billing_managed_organizations_url": fmt.Sprintf("/v2/users/%s/billing_managed_organizations", guid),
+				"audited_organizations_url":         fmt.Sprintf("/v2/users/%s/audited_organizations", guid),
+				"managed_spaces_url":                fmt.Sprintf("/v2/users/%s/managed_spaces", guid),
+				"audited_spaces_url":                fmt.Sprintf("/v2/users/%s/audited_spaces", guid),
+			},
+		})
+	}
+
+	output := map[string]interface{}{
+		"total_results": len(users),
+		"total_pages":   1,
+		"prev_url":      nil,
+		"next_url":      nil,
+		"resources":     users,
+	}
+
+	uaaJSON, err := json.Marshal(output)
+	if err != nil {
+		panic(err)
+	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(uaaJSON))

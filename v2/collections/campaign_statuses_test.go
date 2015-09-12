@@ -95,6 +95,7 @@ var _ = Describe("CampaignStatusesCollection", func() {
 					Retry:     1,
 					Failed:    1,
 					Delivered: 1,
+					Queued:    2,
 				}
 
 				messagesRepository.MostRecentlyUpdatedByCampaignIDCall.Returns.Error = errors.New("sql: no rows")
@@ -109,6 +110,34 @@ var _ = Describe("CampaignStatusesCollection", func() {
 					SentMessages:   1,
 					FailedMessages: 1,
 					RetryMessages:  1,
+					QueuedMessages: 2,
+					StartTime:      startTime,
+					CompletedTime:  mysql.NullTime{},
+				}))
+			})
+		})
+
+		Context("when the campaign has not yet been processed", func() {
+			It("returns a transient status", func() {
+				messagesRepository.CountByStatusCall.Returns.MessageCounts = models.MessageCounts{
+					Total:     0,
+					Retry:     0,
+					Failed:    0,
+					Delivered: 0,
+				}
+
+				messagesRepository.MostRecentlyUpdatedByCampaignIDCall.Returns.Error = errors.New("sql: no rows")
+
+				campaignStatus, err := campaignStatusesCollection.Get(conn, "campaign-id")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(campaignStatus).To(Equal(collections.CampaignStatus{
+					CampaignID:     "campaign-id",
+					Status:         "sending",
+					TotalMessages:  0,
+					SentMessages:   0,
+					FailedMessages: 0,
+					RetryMessages:  0,
 					StartTime:      startTime,
 					CompletedTime:  mysql.NullTime{},
 				}))

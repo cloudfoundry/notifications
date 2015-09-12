@@ -41,6 +41,7 @@ func (h StatusHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		"sent_messages":   status.SentMessages,
 		"retry_messages":  status.RetryMessages,
 		"failed_messages": status.FailedMessages,
+		"queued_messages": status.QueuedMessages,
 		"start_time":      status.StartTime,
 		"completed_time":  nil,
 	}

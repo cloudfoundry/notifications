@@ -294,7 +294,6 @@ var _ = Describe("Campaign Lifecycle", func() {
 			})
 
 			AfterEach(func() {
-				Servers.SMTP.HandlerCall.Returns.Error = nil
 				Servers.Notifications.ResetDatabase()
 			})
 
@@ -340,6 +339,44 @@ var _ = Describe("Campaign Lifecycle", func() {
 					Expect(startTime).To(BeTemporally("~", time.Now(), 10*time.Second))
 
 					Expect(response["completed_time"]).To(BeNil())
+				})
+			})
+		})
+
+		Context("when there are jobs queueing up", func() {
+			BeforeEach(func() {
+				Servers.SMTP.HandlerCall.Callback = func() {
+					time.Sleep(500 * time.Millisecond)
+				}
+			})
+
+			AfterEach(func() {
+				Servers.Notifications.ResetDatabase()
+			})
+
+			It("sends a campaign to an email and retrieves the campaign status before the campaign completes", func() {
+				By("sending the campaign", func() {
+					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
+						"send_to": map[string]interface{}{
+							"space": "large-space",
+						},
+						"campaign_type_id": campaignTypeID,
+						"text":             "campaign body",
+						"subject":          "campaign subject",
+						"template_id":      templateID,
+					}, token.Access)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(status).To(Equal(http.StatusAccepted))
+					Expect(response["campaign_id"]).NotTo(BeEmpty())
+
+					campaignID = response["campaign_id"].(string)
+				})
+
+				By("waiting for the status to indicate queueing", func() {
+					Eventually(func() (interface{}, error) {
+						_, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s/status", senderID, campaignID), nil, token.Access)
+						return response["queued_messages"], err
+					}, "10s").Should(BeNumerically(">", 0))
 				})
 			})
 		})

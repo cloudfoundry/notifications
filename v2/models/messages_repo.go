@@ -12,6 +12,7 @@ type MessageCounts struct {
 	Retry     int
 	Failed    int
 	Delivered int
+	Queued    int
 }
 
 type Message struct {
@@ -52,6 +53,8 @@ func (mr MessagesRepository) CountByStatus(conn ConnectionInterface, campaignID 
 			messageCounts.Retry = count.Count
 		case "failed":
 			messageCounts.Failed = count.Count
+		case "queued":
+			messageCounts.Queued = count.Count
 		}
 		messageCounts.Total += count.Count
 	}
