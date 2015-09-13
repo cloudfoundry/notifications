@@ -2,6 +2,7 @@ package templates_test
 
 import (
 	"bytes"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 
@@ -101,13 +102,13 @@ var _ = Describe("UpdateHandler", func() {
 
 			Describe("when the update returns an error", func() {
 				It("returns the error", func() {
-					updater.UpdateCall.Returns.Error = models.TemplateUpdateError{Message: "My New Error"}
+					updater.UpdateCall.Returns.Error = models.TemplateUpdateError{errors.New("some error")}
 					body := []byte(`{"name": "a temlate name", "html": "<p>my html</p>"}`)
 					request, err = http.NewRequest("PUT", "/templates/a-template-id", bytes.NewBuffer(body))
 					Expect(err).NotTo(HaveOccurred())
 
 					handler.ServeHTTP(writer, request, context)
-					Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(models.TemplateUpdateError{Message: "My New Error"}))
+					Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(models.TemplateUpdateError{errors.New("some error")}))
 				})
 			})
 		})

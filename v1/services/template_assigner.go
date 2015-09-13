@@ -86,7 +86,7 @@ func (assigner TemplateAssigner) findTemplate(conn ConnectionInterface, template
 
 	_, err := assigner.templatesRepo.FindByID(conn, templateID)
 	if err != nil {
-		if _, ok := err.(models.RecordNotFoundError); ok {
+		if _, ok := err.(models.NotFoundError); ok {
 			return TemplateAssignmentError{fmt.Errorf("No template with id %q", templateID)}
 		}
 		return err

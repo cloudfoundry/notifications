@@ -1,6 +1,8 @@
 package models_test
 
 import (
+	"errors"
+
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
@@ -71,7 +73,7 @@ var _ = Describe("DatabaseMigrator", func() {
 
 		It("has the default template pre-seeded", func() {
 			_, err := repo.FindByID(connection, models.DefaultTemplateID)
-			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+			Expect(err).To(MatchError(models.NotFoundError{errors.New("Template with ID \"default\" could not be found")}))
 
 			dbMigrator.Seed(database, defaultTemplatePath)
 			template, err := repo.FindByID(connection, models.DefaultTemplateID)

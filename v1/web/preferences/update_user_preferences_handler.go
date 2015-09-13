@@ -61,7 +61,7 @@ func (h UpdateUserPreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http
 
 	err = transaction.Commit()
 	if err != nil {
-		h.errorWriter.Write(w, models.NewTransactionCommitError(err.Error()))
+		h.errorWriter.Write(w, models.TransactionCommitError{err})
 		return
 	}
 

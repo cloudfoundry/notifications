@@ -27,13 +27,13 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 		writer.write(w, 422, err.(ValidationError).Errors())
 	case services.CCDownError, postal.UAADownError, postal.UAAGenericError:
 		writer.write(w, http.StatusBadGateway, []string{err.Error()})
-	case services.CCNotFoundError, models.TemplateFindError, models.RecordNotFoundError:
+	case services.CCNotFoundError, models.TemplateFindError, models.NotFoundError:
 		writer.write(w, http.StatusNotFound, []string{err.Error()})
 	case postal.TemplateLoadError, TemplateCreateError, models.TemplateUpdateError, models.TransactionCommitError:
 		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
 	case ParseError, SchemaError:
 		writer.write(w, http.StatusBadRequest, []string{err.Error()})
-	case models.DuplicateRecordError:
+	case models.DuplicateError:
 		writer.write(w, http.StatusConflict, []string{err.Error()})
 	case services.DefaultScopeError:
 		writer.write(w, http.StatusNotAcceptable, []string{err.Error()})

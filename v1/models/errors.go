@@ -1,54 +1,41 @@
 package models
 
-import "fmt"
-
-func NewRecordNotFoundError(format string, arguments ...interface{}) RecordNotFoundError {
-	return RecordNotFoundError(fmt.Sprintf(format, arguments...))
+type NotFoundError struct {
+	Err error
 }
 
-type RecordNotFoundError string
-
-func (err RecordNotFoundError) Error() string {
-	message := "Record Not Found"
-	if err != "" {
-		message = fmt.Sprintf("%s: %s", message, string(err))
-	}
-
-	return message
+func (e NotFoundError) Error() string {
+	return e.Err.Error()
 }
 
-type DuplicateRecordError struct{}
+type DuplicateError struct {
+	Err error
+}
 
-func (err DuplicateRecordError) Error() string {
-	return "Duplicate Record"
+func (e DuplicateError) Error() string {
+	return e.Err.Error()
 }
 
 type TransactionCommitError struct {
-	message string
+	Err error
 }
 
-func NewTransactionCommitError(msg string) TransactionCommitError {
-	return TransactionCommitError{
-		message: msg,
-	}
-}
-
-func (err TransactionCommitError) Error() string {
-	return err.message
+func (e TransactionCommitError) Error() string {
+	return e.Err.Error()
 }
 
 type TemplateFindError struct {
-	Message string
+	Err error
 }
 
-func (err TemplateFindError) Error() string {
-	return err.Message
+func (e TemplateFindError) Error() string {
+	return e.Err.Error()
 }
 
 type TemplateUpdateError struct {
-	Message string
+	Err error
 }
 
-func (err TemplateUpdateError) Error() string {
-	return err.Message
+func (e TemplateUpdateError) Error() string {
+	return e.Err.Error()
 }

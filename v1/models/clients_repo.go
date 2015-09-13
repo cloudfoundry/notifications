@@ -2,6 +2,8 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -16,7 +18,7 @@ func (repo ClientsRepo) Find(conn ConnectionInterface, id string) (Client, error
 	err := conn.SelectOne(&client, "SELECT * FROM `clients` WHERE `id` = ?", id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = NewRecordNotFoundError("Client with ID %q could not be found", id)
+			err = NotFoundError{fmt.Errorf("Client with ID %q could not be found", id)}
 		}
 		return client, err
 	}
@@ -57,9 +59,9 @@ func (repo ClientsRepo) Upsert(conn ConnectionInterface, client Client) (Client,
 	client.CreatedAt = existingClient.CreatedAt
 
 	switch err.(type) {
-	case RecordNotFoundError:
+	case NotFoundError:
 		client, err := repo.create(conn, client)
-		if _, ok := err.(DuplicateRecordError); ok {
+		if _, ok := err.(DuplicateError); ok {
 			return repo.Update(conn, client)
 		}
 
@@ -85,7 +87,7 @@ func (repo ClientsRepo) create(conn ConnectionInterface, client Client) (Client,
 	err := conn.Insert(&client)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
-			err = DuplicateRecordError{}
+			err = DuplicateError{errors.New("duplicate record")}
 		}
 		return client, err
 	}

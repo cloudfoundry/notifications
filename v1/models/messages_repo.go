@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -25,7 +26,7 @@ func (repo MessagesRepo) FindByID(conn ConnectionInterface, messageID string) (M
 	err := conn.SelectOne(&message, "SELECT * FROM `messages` WHERE `id`=?", messageID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return Message{}, NewRecordNotFoundError("Message with ID %q could not be found", messageID)
+			return Message{}, NotFoundError{fmt.Errorf("Message with ID %q could not be found", messageID)}
 		}
 		return Message{}, err
 	}
@@ -45,7 +46,7 @@ func (repo MessagesRepo) Upsert(conn ConnectionInterface, message Message) (Mess
 	_, err := repo.FindByID(conn, message.ID)
 
 	switch err.(type) {
-	case RecordNotFoundError:
+	case NotFoundError:
 		return repo.Create(conn, message)
 	case nil:
 		return repo.Update(conn, message)

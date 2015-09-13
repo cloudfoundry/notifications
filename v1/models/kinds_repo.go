@@ -2,6 +2,8 @@ package models
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -27,7 +29,7 @@ func (repo KindsRepo) create(conn ConnectionInterface, kind Kind) (Kind, error) 
 	err := conn.Insert(&kind)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
-			err = DuplicateRecordError{}
+			err = DuplicateError{errors.New("duplicate record")}
 		}
 		return kind, err
 	}
@@ -39,7 +41,7 @@ func (repo KindsRepo) Find(conn ConnectionInterface, id, clientID string) (Kind,
 	err := conn.SelectOne(&kind, "SELECT * FROM `kinds` WHERE `id` = ? AND `client_id` = ?", id, clientID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = NewRecordNotFoundError("Notification with ID %q belonging to client %q could not be found", id, clientID)
+			err = NotFoundError{fmt.Errorf("Notification with ID %q belonging to client %q could not be found", id, clientID)}
 		}
 		return kind, err
 	}
@@ -83,9 +85,9 @@ func (repo KindsRepo) Upsert(conn ConnectionInterface, kind Kind) (Kind, error) 
 	kind.Primary = existingKind.Primary
 
 	switch err.(type) {
-	case RecordNotFoundError:
+	case NotFoundError:
 		kind, err := repo.create(conn, kind)
-		if _, ok := err.(DuplicateRecordError); ok {
+		if _, ok := err.(DuplicateError); ok {
 			return repo.Update(conn, kind)
 		}
 

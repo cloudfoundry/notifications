@@ -110,7 +110,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 404 when there is a template find error", func() {
-		writer.Write(recorder, models.TemplateFindError{Message: "Template my-id could not be found"})
+		writer.Write(recorder, models.TemplateFindError{errors.New("Template my-id could not be found")})
 
 		Expect(recorder.Code).To(Equal(http.StatusNotFound))
 
@@ -124,7 +124,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 500 when there is a template update error", func() {
-		writer.Write(recorder, models.TemplateUpdateError{Message: "Failed to update Template in the database"})
+		writer.Write(recorder, models.TemplateUpdateError{errors.New("Failed to update Template in the database")})
 
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
 
@@ -195,7 +195,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 409 when there is a duplicate record", func() {
-		writer.Write(recorder, models.DuplicateRecordError{})
+		writer.Write(recorder, models.DuplicateError{errors.New("duplicate record")})
 
 		Expect(recorder.Code).To(Equal(409))
 
@@ -205,11 +205,11 @@ var _ = Describe("ErrorWriter", func() {
 			panic(err)
 		}
 
-		Expect(body["errors"]).To(ContainElement("Duplicate Record"))
+		Expect(body["errors"]).To(ContainElement("duplicate record"))
 	})
 
 	It("returns a 404 when a record cannot be found", func() {
-		writer.Write(recorder, models.NewRecordNotFoundError("hello"))
+		writer.Write(recorder, models.NotFoundError{errors.New("not found")})
 
 		Expect(recorder.Code).To(Equal(404))
 
@@ -219,7 +219,7 @@ var _ = Describe("ErrorWriter", func() {
 			panic(err)
 		}
 
-		Expect(body["errors"]).To(ContainElement("Record Not Found: hello"))
+		Expect(body["errors"]).To(ContainElement("not found"))
 	})
 
 	It("returns a 406 when a record cannot be found", func() {

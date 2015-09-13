@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"strings"
 )
 
@@ -60,7 +61,7 @@ func (repo UnsubscribesRepo) create(conn ConnectionInterface, unsubscribe Unsubs
 	err := conn.Insert(&unsubscribe)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
-			err = DuplicateRecordError{}
+			err = DuplicateError{errors.New("duplicate record")}
 		}
 		return unsubscribe, err
 	}

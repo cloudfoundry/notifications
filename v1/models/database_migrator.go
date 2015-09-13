@@ -48,7 +48,7 @@ func (d DatabaseMigrator) Seed(database DatabaseInterface, defaultTemplatePath s
 	conn := database.Connection()
 	existingTemplate, err := repo.FindByID(conn, DefaultTemplateID)
 	if err != nil {
-		if _, ok := err.(RecordNotFoundError); !ok {
+		if _, ok := err.(NotFoundError); !ok {
 			panic(err)
 		}
 

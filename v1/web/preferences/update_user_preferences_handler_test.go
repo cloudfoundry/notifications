@@ -198,7 +198,7 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(models.NewTransactionCommitError("transaction error!!!")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(models.TransactionCommitError{errors.New("transaction error!!!")}))
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeTrue())

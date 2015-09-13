@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -16,7 +17,7 @@ func (repo TemplatesRepo) FindByID(conn ConnectionInterface, templateID string) 
 	err := conn.SelectOne(&template, "SELECT * FROM `templates` WHERE `id`=?", templateID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return template, NewRecordNotFoundError("Template with ID %q could not be found", templateID)
+			return template, NotFoundError{fmt.Errorf("Template with ID %q could not be found", templateID)}
 		}
 		return template, err
 	}
@@ -26,8 +27,8 @@ func (repo TemplatesRepo) FindByID(conn ConnectionInterface, templateID string) 
 func (repo TemplatesRepo) Update(conn ConnectionInterface, templateID string, template Template) (Template, error) {
 	existingTemplate, err := repo.FindByID(conn, templateID)
 	if err != nil {
-		if _, ok := err.(RecordNotFoundError); ok {
-			return existingTemplate, TemplateFindError{Message: "Template " + templateID + " not found"}
+		if _, ok := err.(NotFoundError); ok {
+			return existingTemplate, TemplateFindError{fmt.Errorf("Template %s not found", templateID)}
 		}
 		return existingTemplate, err
 	}
@@ -40,7 +41,7 @@ func (repo TemplatesRepo) Update(conn ConnectionInterface, templateID string, te
 
 	_, err = conn.Update(&template)
 	if err != nil {
-		return Template{}, TemplateUpdateError{Message: err.Error()}
+		return Template{}, TemplateUpdateError{err}
 	}
 
 	return template, nil

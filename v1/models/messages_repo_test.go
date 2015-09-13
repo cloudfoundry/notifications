@@ -1,6 +1,8 @@
 package models_test
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
@@ -44,7 +46,7 @@ var _ = Describe("MessagesRepo", func() {
 		Context("When the message does not exists", func() {
 			It("FindByID returns a models.RecordNotFoundError", func() {
 				_, err := repo.FindByID(conn, "missing-id")
-				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+				Expect(err).To(MatchError(models.NotFoundError{errors.New("Message with ID \"missing-id\" could not be found")}))
 			})
 		})
 	})
@@ -96,8 +98,7 @@ var _ = Describe("MessagesRepo", func() {
 			Expect(itemsDeleted).To(Equal(1))
 
 			_, err = repo.FindByID(conn, message.ID)
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("")))
+			Expect(err).To(MatchError(models.NotFoundError{fmt.Errorf("Message with ID %q could not be found", message.ID)}))
 
 		})
 

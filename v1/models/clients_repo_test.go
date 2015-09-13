@@ -95,7 +95,7 @@ var _ = Describe("ClientsRepo", func() {
 				}
 
 				_, err := repo.Update(conn, client)
-				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("something")))
+				Expect(err).To(MatchError(models.NotFoundError{errors.New("Client with ID \"my-client\" could not be found")}))
 			})
 		})
 
@@ -134,7 +134,7 @@ var _ = Describe("ClientsRepo", func() {
 				}
 
 				_, err := repo.Update(conn, client)
-				Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError("something")))
+				Expect(err).To(MatchError(models.NotFoundError{errors.New("Client with ID \"my-client\" could not be found")}))
 			})
 		})
 	})
