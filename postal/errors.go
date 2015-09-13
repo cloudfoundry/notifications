@@ -17,14 +17,6 @@ func (e UAAUserNotFoundError) Error() string {
 	return e.Err.Error()
 }
 
-type TemplateLoadError struct {
-	Err error
-}
-
-func (e TemplateLoadError) Error() string {
-	return e.Err.Error()
-}
-
 func UAAErrorFor(err error) error {
 	switch err.(type) {
 	case *url.Error:

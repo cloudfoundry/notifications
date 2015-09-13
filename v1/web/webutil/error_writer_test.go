@@ -57,14 +57,6 @@ var _ = Describe("ErrorWriter", func() {
 		}`))
 	})
 
-	It("returns a 500 and writes the error message when there is a template loading error", func() {
-		writer.Write(recorder, postal.TemplateLoadError{errors.New("Your template doesn't exist!!!")})
-		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
-		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["Your template doesn't exist!!!"]
-		}`))
-	})
-
 	It("returns a 500 when there is a template create error", func() {
 		writer.Write(recorder, webutil.TemplateCreateError{})
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
