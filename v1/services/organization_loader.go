@@ -3,17 +3,17 @@ package services
 import "github.com/cloudfoundry-incubator/notifications/cf"
 
 type OrganizationLoader struct {
-	cloudController cf.CloudControllerInterface
+	cc cloudController
 }
 
-func NewOrganizationLoader(cloudController cf.CloudControllerInterface) OrganizationLoader {
+func NewOrganizationLoader(cc cloudController) OrganizationLoader {
 	return OrganizationLoader{
-		cloudController: cloudController,
+		cc: cc,
 	}
 }
 
 func (loader OrganizationLoader) Load(orgGUID string, token string) (cf.CloudControllerOrganization, error) {
-	organization, err := loader.cloudController.LoadOrganization(orgGUID, token)
+	organization, err := loader.cc.LoadOrganization(orgGUID, token)
 	if err != nil {
 		return cf.CloudControllerOrganization{}, CCErrorFor(err)
 	}
