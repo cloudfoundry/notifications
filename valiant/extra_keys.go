@@ -5,14 +5,6 @@ import (
 	"strings"
 )
 
-type ExtraFieldError struct {
-	ErrorMessage string
-}
-
-func (err ExtraFieldError) Error() string {
-	return err.ErrorMessage
-}
-
 func reportExtraKeys(typed interface{}, untyped interface{}) error {
 	var expectedTags, actualTags []string
 	_, parentType := reflectedParent(typed)

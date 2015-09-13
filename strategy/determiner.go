@@ -9,14 +9,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 )
 
-type NoStrategyError struct {
-	Err error
-}
-
-func (e NoStrategyError) Error() string {
-	return e.Err.Error()
-}
-
 type Determiner struct {
 	userStrategy  dispatcher
 	spaceStrategy dispatcher

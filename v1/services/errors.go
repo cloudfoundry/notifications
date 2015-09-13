@@ -71,3 +71,9 @@ type CCDownError struct {
 func (e CCDownError) Error() string {
 	return e.Err.Error()
 }
+
+type DefaultScopeError struct{}
+
+func (d DefaultScopeError) Error() string {
+	return "You cannot send a notification to a default scope"
+}

@@ -8,12 +8,6 @@ type scopeUserGUIDFinder interface {
 	UserGUIDsBelongingToScope(token, scope string) (userGUIDs []string, err error)
 }
 
-type DefaultScopeError struct{}
-
-func (d DefaultScopeError) Error() string {
-	return "You cannot send a notification to a default scope"
-}
-
 type UAAScopeStrategy struct {
 	findsUserGUIDs scopeUserGUIDFinder
 	tokenLoader    loadsTokens

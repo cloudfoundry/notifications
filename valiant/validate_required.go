@@ -5,14 +5,6 @@ import (
 	"strconv"
 )
 
-type RequiredFieldError struct {
-	ErrorMessage string
-}
-
-func (err RequiredFieldError) Error() string {
-	return err.ErrorMessage
-}
-
 func validateRequired(typed interface{}, untyped interface{}) error {
 	parentValue, parentType := reflectedParent(typed)
 
