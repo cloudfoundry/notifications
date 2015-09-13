@@ -27,9 +27,6 @@ func (repo TemplatesRepo) FindByID(conn ConnectionInterface, templateID string) 
 func (repo TemplatesRepo) Update(conn ConnectionInterface, templateID string, template Template) (Template, error) {
 	existingTemplate, err := repo.FindByID(conn, templateID)
 	if err != nil {
-		if _, ok := err.(NotFoundError); ok {
-			return existingTemplate, TemplateFindError{fmt.Errorf("Template %s not found", templateID)}
-		}
 		return existingTemplate, err
 	}
 

@@ -24,7 +24,7 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 		writer.write(w, 422, []string{err.Error()})
 	case services.CCDownError:
 		writer.write(w, http.StatusBadGateway, []string{err.Error()})
-	case services.CCNotFoundError, models.TemplateFindError, models.NotFoundError:
+	case services.CCNotFoundError, models.NotFoundError:
 		writer.write(w, http.StatusNotFound, []string{err.Error()})
 	case TemplateCreateError, models.TemplateUpdateError, models.TransactionCommitError:
 		writer.write(w, http.StatusInternalServerError, []string{err.Error()})

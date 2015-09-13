@@ -48,14 +48,6 @@ var _ = Describe("ErrorWriter", func() {
 		}`))
 	})
 
-	It("returns a 404 when there is a template find error", func() {
-		writer.Write(recorder, models.TemplateFindError{errors.New("Template my-id could not be found")})
-		Expect(recorder.Code).To(Equal(http.StatusNotFound))
-		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["Template my-id could not be found"]	
-		}`))
-	})
-
 	It("returns a 500 when there is a template update error", func() {
 		writer.Write(recorder, models.TemplateUpdateError{errors.New("Failed to update Template in the database")})
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))

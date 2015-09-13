@@ -127,7 +127,7 @@ var _ = Describe("TemplatesRepo", func() {
 		Context("the template does not exist in the database", func() {
 			It("bubbles up the error", func() {
 				_, err := repo.Update(conn, "a-bad-id", aNewTemplate)
-				Expect(err).To(MatchError(models.TemplateFindError{errors.New("Template a-bad-id not found")}))
+				Expect(err).To(MatchError(models.NotFoundError{errors.New("Template with ID \"a-bad-id\" could not be found")}))
 			})
 		})
 	})

@@ -24,14 +24,6 @@ func (e TransactionCommitError) Error() string {
 	return e.Err.Error()
 }
 
-type TemplateFindError struct {
-	Err error
-}
-
-func (e TemplateFindError) Error() string {
-	return e.Err.Error()
-}
-
 type TemplateUpdateError struct {
 	Err error
 }
