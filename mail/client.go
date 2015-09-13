@@ -40,11 +40,6 @@ type Config struct {
 	LoggingEnabled bool
 }
 
-type ClientInterface interface {
-	Connect(lager.Logger) error
-	Send(Message, lager.Logger) error
-}
-
 type connection struct {
 	client *smtp.Client
 	err    error

@@ -11,6 +11,11 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
+type mailSender interface {
+	Connect(lager.Logger) error
+	Send(mail.Message, lager.Logger) error
+}
+
 type V1ProcessConfig struct {
 	DBTrace bool
 	UAAHost string
@@ -18,7 +23,7 @@ type V1ProcessConfig struct {
 	Domain  string
 
 	Packager    Packager
-	MailClient  mail.ClientInterface
+	MailClient  mailSender
 	Database    db.DatabaseInterface
 	TokenLoader TokenLoaderInterface
 	UserLoader  UserLoaderInterface
@@ -38,7 +43,7 @@ type V1Process struct {
 	domain  string
 
 	packager    Packager
-	mailClient  mail.ClientInterface
+	mailClient  mailSender
 	database    db.DatabaseInterface
 	tokenLoader TokenLoaderInterface
 	userLoader  UserLoaderInterface

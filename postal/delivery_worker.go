@@ -7,63 +7,10 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
-	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/pivotal-golang/lager"
 )
-
-type Delivery struct {
-	MessageID       string
-	Options         Options
-	UserGUID        string
-	Email           string
-	Space           cf.CloudControllerSpace
-	Organization    cf.CloudControllerOrganization
-	ClientID        string
-	UAAHost         string
-	Scope           string
-	VCAPRequestID   string
-	RequestReceived time.Time
-	CampaignID      string
-}
-
-type DeliveryWorker struct {
-	gobble.Worker
-
-	uaaHost                string
-	V1Process              process
-	V2Workflow             workflow
-	logger                 lager.Logger
-	database               db.DatabaseInterface
-	strategyDeterminer     StrategyDeterminerInterface
-	deliveryFailureHandler deliveryFailureHandlerInterface
-	messageStatusUpdater   messageStatusUpdaterInterface
-}
-
-type DeliveryWorkerConfig struct {
-	ID            int
-	Sender        string
-	Domain        string
-	EncryptionKey []byte
-	UAAHost       string
-
-	Logger                 lager.Logger
-	MailClient             mail.ClientInterface
-	Queue                  gobble.QueueInterface
-	Database               db.DatabaseInterface
-	DBTrace                bool
-	GlobalUnsubscribesRepo GlobalUnsubscribesRepo
-	UnsubscribesRepo       UnsubscribesRepo
-	KindsRepo              KindsRepo
-	UserLoader             UserLoaderInterface
-	TemplatesLoader        TemplatesLoaderInterface
-	ReceiptsRepo           ReceiptsRepo
-	TokenLoader            TokenLoaderInterface
-	StrategyDeterminer     StrategyDeterminerInterface
-	MessageStatusUpdater   messageStatusUpdaterInterface
-	DeliveryFailureHandler deliveryFailureHandlerInterface
-}
 
 type TokenLoaderInterface interface {
 	Load(string) (string, error)
@@ -87,6 +34,46 @@ type messageStatusUpdaterInterface interface {
 
 type deliveryFailureHandlerInterface interface {
 	Handle(job Retryable, logger lager.Logger)
+}
+
+type Delivery struct {
+	MessageID       string
+	Options         Options
+	UserGUID        string
+	Email           string
+	Space           cf.CloudControllerSpace
+	Organization    cf.CloudControllerOrganization
+	ClientID        string
+	UAAHost         string
+	Scope           string
+	VCAPRequestID   string
+	RequestReceived time.Time
+	CampaignID      string
+}
+
+type DeliveryWorkerConfig struct {
+	ID                     int
+	UAAHost                string
+	Logger                 lager.Logger
+	Queue                  gobble.QueueInterface
+	DBTrace                bool
+	Database               db.DatabaseInterface
+	StrategyDeterminer     StrategyDeterminerInterface
+	DeliveryFailureHandler deliveryFailureHandlerInterface
+	MessageStatusUpdater   messageStatusUpdaterInterface
+}
+
+type DeliveryWorker struct {
+	gobble.Worker
+
+	uaaHost                string
+	V1Process              process
+	V2Workflow             workflow
+	logger                 lager.Logger
+	database               db.DatabaseInterface
+	strategyDeterminer     StrategyDeterminerInterface
+	deliveryFailureHandler deliveryFailureHandlerInterface
+	messageStatusUpdater   messageStatusUpdaterInterface
 }
 
 func NewDeliveryWorker(v1workflow process, v2workflow workflow, config DeliveryWorkerConfig) DeliveryWorker {
