@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
@@ -38,22 +37,6 @@ var _ = Describe("ErrorWriter", func() {
 		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 		Expect(recorder.Body).To(MatchJSON(`{
 			"errors": ["Bad things happened!"]
-		}`))
-	})
-
-	It("returns a 502 when UAA fails to respond", func() {
-		writer.Write(recorder, postal.UAADownError{errors.New("Whoops!")})
-		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
-		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["Whoops!"]
-		}`))
-	})
-
-	It("returns a 502 when UAA fails for unknown reasons", func() {
-		writer.Write(recorder, postal.UAAGenericError{errors.New("UAA Unknown Error: BOOM!")})
-		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
-		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["UAA Unknown Error: BOOM!"]	
 		}`))
 	})
 

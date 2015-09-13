@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 )
@@ -23,7 +22,7 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 	switch err.(type) {
 	case UAAScopesError, CriticalNotificationError, services.TemplateAssignmentError, MissingUserTokenError, ValidationError:
 		writer.write(w, 422, []string{err.Error()})
-	case services.CCDownError, postal.UAADownError, postal.UAAGenericError:
+	case services.CCDownError:
 		writer.write(w, http.StatusBadGateway, []string{err.Error()})
 	case services.CCNotFoundError, models.TemplateFindError, models.NotFoundError:
 		writer.write(w, http.StatusNotFound, []string{err.Error()})
