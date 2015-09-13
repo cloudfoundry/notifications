@@ -12,7 +12,7 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-type TokenLoaderInterface interface {
+type tokenLoader interface {
 	Load(string) (string, error)
 }
 
@@ -24,15 +24,15 @@ type workflow interface {
 	Deliver(delivery Delivery, logger lager.Logger) error
 }
 
-type StrategyDeterminerInterface interface {
+type strategyDeterminer interface {
 	Determine(conn services.ConnectionInterface, uaaHost string, job gobble.Job) error
 }
 
-type messageStatusUpdaterInterface interface {
+type messageStatusUpdater interface {
 	Update(conn db.ConnectionInterface, messageID, messageStatus, campaignID string, logger lager.Logger)
 }
 
-type deliveryFailureHandlerInterface interface {
+type deliveryFailureHandler interface {
 	Handle(job Retryable, logger lager.Logger)
 }
 
@@ -58,9 +58,9 @@ type DeliveryWorkerConfig struct {
 	Queue                  gobble.QueueInterface
 	DBTrace                bool
 	Database               db.DatabaseInterface
-	StrategyDeterminer     StrategyDeterminerInterface
-	DeliveryFailureHandler deliveryFailureHandlerInterface
-	MessageStatusUpdater   messageStatusUpdaterInterface
+	StrategyDeterminer     strategyDeterminer
+	DeliveryFailureHandler deliveryFailureHandler
+	MessageStatusUpdater   messageStatusUpdater
 }
 
 type DeliveryWorker struct {
@@ -71,9 +71,9 @@ type DeliveryWorker struct {
 	V2Workflow             workflow
 	logger                 lager.Logger
 	database               db.DatabaseInterface
-	strategyDeterminer     StrategyDeterminerInterface
-	deliveryFailureHandler deliveryFailureHandlerInterface
-	messageStatusUpdater   messageStatusUpdaterInterface
+	strategyDeterminer     strategyDeterminer
+	deliveryFailureHandler deliveryFailureHandler
+	messageStatusUpdater   messageStatusUpdater
 }
 
 func NewDeliveryWorker(v1workflow process, v2workflow workflow, config DeliveryWorkerConfig) DeliveryWorker {

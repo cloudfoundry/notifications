@@ -25,15 +25,15 @@ type V1ProcessConfig struct {
 	Packager    Packager
 	MailClient  mailSender
 	Database    db.DatabaseInterface
-	TokenLoader TokenLoaderInterface
+	TokenLoader tokenLoader
 	UserLoader  UserLoaderInterface
 
 	KindsRepo              KindsRepo
 	ReceiptsRepo           ReceiptsRepo
 	UnsubscribesRepo       UnsubscribesRepo
 	GlobalUnsubscribesRepo GlobalUnsubscribesRepo
-	MessageStatusUpdater   messageStatusUpdaterInterface
-	DeliveryFailureHandler deliveryFailureHandlerInterface
+	MessageStatusUpdater   messageStatusUpdater
+	DeliveryFailureHandler deliveryFailureHandler
 }
 
 type V1Process struct {
@@ -45,15 +45,15 @@ type V1Process struct {
 	packager    Packager
 	mailClient  mailSender
 	database    db.DatabaseInterface
-	tokenLoader TokenLoaderInterface
+	tokenLoader tokenLoader
 	userLoader  UserLoaderInterface
 
 	kindsRepo              KindsRepo
 	receiptsRepo           ReceiptsRepo
 	unsubscribesRepo       UnsubscribesRepo
 	globalUnsubscribesRepo GlobalUnsubscribesRepo
-	messageStatusUpdater   messageStatusUpdaterInterface
-	deliveryFailureHandler deliveryFailureHandlerInterface
+	messageStatusUpdater   messageStatusUpdater
+	deliveryFailureHandler deliveryFailureHandler
 }
 
 func NewV1Process(config V1ProcessConfig) V1Process {

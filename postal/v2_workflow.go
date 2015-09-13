@@ -9,19 +9,15 @@ import (
 )
 
 type V2Workflow struct {
-	mailClient           mailClientInterface
+	mailClient           mailSender
 	packager             messagePackager
 	userLoader           UserLoaderInterface
-	tokenLoader          TokenLoaderInterface
-	messageStatusUpdater messageStatusUpdaterInterface
+	tokenLoader          tokenLoader
+	messageStatusUpdater messageStatusUpdater
 	database             services.DatabaseInterface
 	sender               string
 	domain               string
 	uaaHost              string
-}
-
-type mailClientInterface interface {
-	Send(message mail.Message, logger lager.Logger) error
 }
 
 type messagePackager interface {
@@ -29,7 +25,7 @@ type messagePackager interface {
 	Pack(context MessageContext) (mail.Message, error)
 }
 
-func NewV2Workflow(mailClient mailClientInterface, packager messagePackager, userLoader UserLoaderInterface, tokenLoader TokenLoaderInterface, messageStatusUpdater messageStatusUpdaterInterface, database services.DatabaseInterface, sender, domain, uaaHost string) V2Workflow {
+func NewV2Workflow(mailClient mailSender, packager messagePackager, userLoader UserLoaderInterface, tokenLoader tokenLoader, messageStatusUpdater messageStatusUpdater, database services.DatabaseInterface, sender, domain, uaaHost string) V2Workflow {
 	return V2Workflow{
 		mailClient:           mailClient,
 		packager:             packager,
