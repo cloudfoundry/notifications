@@ -8,12 +8,12 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 )
 
-type jobEnqueuer interface {
+type Enqueuer interface {
 	Enqueue(job gobble.Job) (gobble.Job, error)
 }
 
 type CampaignEnqueuer struct {
-	gobbleQueue jobEnqueuer
+	gobbleQueue Enqueuer
 }
 
 type CampaignJob struct {
@@ -21,7 +21,7 @@ type CampaignJob struct {
 	Campaign collections.Campaign
 }
 
-func NewCampaignEnqueuer(queue jobEnqueuer) CampaignEnqueuer {
+func NewCampaignEnqueuer(queue Enqueuer) CampaignEnqueuer {
 	return CampaignEnqueuer{
 		gobbleQueue: queue,
 	}

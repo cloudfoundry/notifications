@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
@@ -41,7 +40,7 @@ type Config struct {
 	SkipVerifySSL    bool
 	SQLDB            *sql.DB
 	Logger           lager.Logger
-	Queue            gobble.QueueInterface
+	Queue            queue.Enqueuer
 
 	UAAPublicKey    string
 	UAAHost         string

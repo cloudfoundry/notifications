@@ -67,12 +67,12 @@ type messagesRepoInserter interface {
 }
 
 type JobEnqueuer struct {
-	queue         gobble.QueueInterface
+	queue         Enqueuer
 	guidGenerator GUIDGenerationFunc
 	messagesRepo  messagesRepoInserter
 }
 
-func NewJobEnqueuer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc, messagesRepo messagesRepoInserter) JobEnqueuer {
+func NewJobEnqueuer(queue Enqueuer, guidGenerator GUIDGenerationFunc, messagesRepo messagesRepoInserter) JobEnqueuer {
 	return JobEnqueuer{
 		queue:         queue,
 		guidGenerator: guidGenerator,
