@@ -114,7 +114,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 422 when trying to send a critical notification without correct scope", func() {
-		writer.Write(recorder, postal.NewCriticalNotificationError("raptors"))
+		writer.Write(recorder, webutil.NewCriticalNotificationError("raptors"))
 		Expect(recorder.Code).To(Equal(422))
 		Expect(recorder.Body).To(MatchJSON(`{
 			"errors": ["Insufficient privileges to send notification raptors"]	

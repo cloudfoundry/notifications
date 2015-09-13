@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
@@ -76,7 +75,7 @@ func (h Notify) Execute(connection ConnectionInterface, req *http.Request, conte
 	}
 
 	if kind.Critical && !h.hasCriticalNotificationsWriteScope(token.Claims["scope"]) {
-		return []byte{}, postal.NewCriticalNotificationError(kind.ID)
+		return []byte{}, webutil.NewCriticalNotificationError(kind.ID)
 	}
 
 	err = h.registrar.Register(connection, client, []models.Kind{kind})

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -231,7 +230,7 @@ var _ = Describe("Notify", func() {
 						context.Set("token", token)
 
 						_, err = handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
-						Expect(err).To(BeAssignableToTypeOf(postal.NewCriticalNotificationError("test_email")))
+						Expect(err).To(BeAssignableToTypeOf(webutil.NewCriticalNotificationError("test_email")))
 					})
 				})
 

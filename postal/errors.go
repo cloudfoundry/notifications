@@ -2,7 +2,6 @@ package postal
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -23,18 +22,6 @@ type TemplateLoadError struct {
 }
 
 func (e TemplateLoadError) Error() string {
-	return e.Err.Error()
-}
-
-type CriticalNotificationError struct {
-	Err error
-}
-
-func NewCriticalNotificationError(kindID string) CriticalNotificationError {
-	return CriticalNotificationError{fmt.Errorf("Insufficient privileges to send notification %s", kindID)}
-}
-
-func (e CriticalNotificationError) Error() string {
 	return e.Err.Error()
 }
 

@@ -1,5 +1,7 @@
 package webutil
 
+import "fmt"
+
 type ParseError struct{}
 
 func (err ParseError) Error() string {
@@ -41,5 +43,17 @@ type UAAScopesError struct {
 }
 
 func (e UAAScopesError) Error() string {
+	return e.Err.Error()
+}
+
+type CriticalNotificationError struct {
+	Err error
+}
+
+func NewCriticalNotificationError(kindID string) CriticalNotificationError {
+	return CriticalNotificationError{fmt.Errorf("Insufficient privileges to send notification %s", kindID)}
+}
+
+func (e CriticalNotificationError) Error() string {
 	return e.Err.Error()
 }
