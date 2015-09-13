@@ -128,9 +128,11 @@ var _ = Describe("ErrorWriter", func() {
 		}`))
 	})
 
-	It("panics for unknown errors", func() {
-		Expect(func() {
-			writer.Write(recorder, errors.New("BOOM!"))
-		}).To(Panic())
+	It("returns a 500 for unknown errors", func() {
+		writer.Write(recorder, errors.New("unknown error"))
+		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["unknown error"]	
+		}`))
 	})
 })

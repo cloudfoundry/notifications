@@ -8,10 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 )
 
-type ErrorWriterInterface interface {
-	Write(http.ResponseWriter, error)
-}
-
 type ErrorWriter struct{}
 
 func NewErrorWriter() ErrorWriter {
@@ -21,32 +17,22 @@ func NewErrorWriter() ErrorWriter {
 func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 	switch err.(type) {
 	case UAAScopesError, CriticalNotificationError, services.TemplateAssignmentError, MissingUserTokenError, ValidationError:
-		writer.write(w, 422, []string{err.Error()})
+		w.WriteHeader(422)
 	case services.CCDownError:
-		writer.write(w, http.StatusBadGateway, []string{err.Error()})
+		w.WriteHeader(http.StatusBadGateway)
 	case services.CCNotFoundError, models.NotFoundError:
-		writer.write(w, http.StatusNotFound, []string{err.Error()})
-	case TemplateCreateError, models.TemplateUpdateError, models.TransactionCommitError:
-		writer.write(w, http.StatusInternalServerError, []string{err.Error()})
+		w.WriteHeader(http.StatusNotFound)
 	case ParseError, SchemaError:
-		writer.write(w, http.StatusBadRequest, []string{err.Error()})
+		w.WriteHeader(http.StatusBadRequest)
 	case models.DuplicateError:
-		writer.write(w, http.StatusConflict, []string{err.Error()})
+		w.WriteHeader(http.StatusConflict)
 	case services.DefaultScopeError:
-		writer.write(w, http.StatusNotAcceptable, []string{err.Error()})
+		w.WriteHeader(http.StatusNotAcceptable)
 	default:
-		panic(err) // This panic will trigger the Stack recovery handler
+		w.WriteHeader(http.StatusInternalServerError)
 	}
-}
 
-func (writer ErrorWriter) write(w http.ResponseWriter, code int, errors []string) {
-	response, err := json.Marshal(map[string][]string{
-		"errors": errors,
+	json.NewEncoder(w).Encode(map[string][]string{
+		"errors": []string{err.Error()},
 	})
-	if err != nil {
-		panic(err)
-	}
-
-	w.WriteHeader(code)
-	w.Write(response)
 }
