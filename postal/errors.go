@@ -10,14 +10,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 )
 
-type UAAScopesError struct {
-	Err error
-}
-
-func (e UAAScopesError) Error() string {
-	return e.Err.Error()
-}
-
 type UAAUserNotFoundError struct {
 	Err error
 }

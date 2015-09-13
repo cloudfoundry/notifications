@@ -35,3 +35,11 @@ type TemplateCreateError struct{}
 func (err TemplateCreateError) Error() string {
 	return "Failed to create Template in the database"
 }
+
+type UAAScopesError struct {
+	Err error
+}
+
+func (e UAAScopesError) Error() string {
+	return e.Err.Error()
+}

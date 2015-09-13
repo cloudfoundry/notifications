@@ -21,7 +21,7 @@ func NewErrorWriter() ErrorWriter {
 
 func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 	switch err.(type) {
-	case postal.UAAScopesError, postal.CriticalNotificationError, services.TemplateAssignmentError, MissingUserTokenError, ValidationError:
+	case UAAScopesError, postal.CriticalNotificationError, services.TemplateAssignmentError, MissingUserTokenError, ValidationError:
 		writer.write(w, 422, []string{err.Error()})
 	case services.CCDownError, postal.UAADownError, postal.UAAGenericError:
 		writer.write(w, http.StatusBadGateway, []string{err.Error()})

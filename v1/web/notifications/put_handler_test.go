@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -189,7 +188,7 @@ var _ = Describe("PutHandler", func() {
 				context.Set("token", token)
 
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(postal.UAAScopesError{errors.New("waaaaat")}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.UAAScopesError{errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")}))
 
 				Expect(transaction.BeginCall.WasCalled).To(BeFalse())
 				Expect(transaction.CommitCall.WasCalled).To(BeFalse())

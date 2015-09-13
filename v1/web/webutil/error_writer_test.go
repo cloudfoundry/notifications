@@ -26,7 +26,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 422 when a client tries to register a critical notification without critical_notifications.write scope", func() {
-		writer.Write(recorder, postal.UAAScopesError{errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")})
+		writer.Write(recorder, webutil.UAAScopesError{errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")})
 		Expect(recorder.Code).To(Equal(422))
 		Expect(recorder.Body).To(MatchJSON(`{
 			"errors": ["UAA Scopes Error: Client does not have authority to register critical notifications."]	
