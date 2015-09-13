@@ -69,15 +69,11 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 
 	requestCounter := middleware.NewRequestCounter(mx.GetRouter(), metrics.DefaultLogger)
 	logging := middleware.NewRequestLogging(config.Logger)
-	notificationsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.write")
-	notificationsManageAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.manage")
-	notificationPreferencesReadAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notification_preferences.read")
-	notificationPreferencesWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notification_preferences.write")
-	notificationPreferencesAdminAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notification_preferences.admin")
-	emailsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "emails.write")
-	notificationsTemplateWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notification_templates.write")
-	notificationsTemplateReadAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notification_templates.read")
-	notificationsWriteOrEmailsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.write", "emails.write")
+
+	auth := func(scope ...string) middleware.Authenticator {
+		return middleware.NewAuthenticator(config.UAAPublicKey, scope...)
+	}
+
 	databaseAllocator := middleware.NewDatabaseAllocator(mom.SQLDatabase(), config.DBLoggingEnabled)
 	cors := middleware.NewCORS(config.CORSOrigin)
 
@@ -91,9 +87,9 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 		RequestCounter:                            requestCounter,
 		RequestLogging:                            logging,
 		DatabaseAllocator:                         databaseAllocator,
-		NotificationPreferencesReadAuthenticator:  notificationPreferencesReadAuthenticator,
-		NotificationPreferencesWriteAuthenticator: notificationPreferencesWriteAuthenticator,
-		NotificationPreferencesAdminAuthenticator: notificationPreferencesAdminAuthenticator,
+		NotificationPreferencesReadAuthenticator:  auth("notification_preferences.read"),
+		NotificationPreferencesWriteAuthenticator: auth("notification_preferences.write"),
+		NotificationPreferencesAdminAuthenticator: auth("notification_preferences.admin"),
 
 		ErrorWriter:       errorWriter,
 		PreferencesFinder: preferencesFinder,
@@ -104,7 +100,7 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 		RequestCounter:                   requestCounter,
 		RequestLogging:                   logging,
 		DatabaseAllocator:                databaseAllocator,
-		NotificationsManageAuthenticator: notificationsManageAuthenticator,
+		NotificationsManageAuthenticator: auth("notifications.manage"),
 
 		ErrorWriter:      errorWriter,
 		TemplateAssigner: templateAssigner,
@@ -114,7 +110,7 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 		RequestCounter:                               requestCounter,
 		RequestLogging:                               logging,
 		DatabaseAllocator:                            databaseAllocator,
-		NotificationsWriteOrEmailsWriteAuthenticator: notificationsWriteOrEmailsWriteAuthenticator,
+		NotificationsWriteOrEmailsWriteAuthenticator: auth("notifications.write", "emails.write"),
 
 		ErrorWriter:   errorWriter,
 		MessageFinder: messageFinder,
@@ -124,9 +120,9 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 		RequestCounter:                          requestCounter,
 		RequestLogging:                          logging,
 		DatabaseAllocator:                       databaseAllocator,
-		NotificationTemplatesReadAuthenticator:  notificationsTemplateReadAuthenticator,
-		NotificationTemplatesWriteAuthenticator: notificationsTemplateWriteAuthenticator,
-		NotificationsManageAuthenticator:        notificationsManageAuthenticator,
+		NotificationTemplatesReadAuthenticator:  auth("notification_templates.read"),
+		NotificationTemplatesWriteAuthenticator: auth("notification_templates.write"),
+		NotificationsManageAuthenticator:        auth("notifications.manage"),
 
 		ErrorWriter:               errorWriter,
 		TemplateFinder:            templateFinder,
@@ -141,8 +137,8 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 		RequestCounter:                   requestCounter,
 		RequestLogging:                   logging,
 		DatabaseAllocator:                databaseAllocator,
-		NotificationsWriteAuthenticator:  notificationsWriteAuthenticator,
-		NotificationsManageAuthenticator: notificationsManageAuthenticator,
+		NotificationsWriteAuthenticator:  auth("notifications.write"),
+		NotificationsManageAuthenticator: auth("notifications.manage"),
 
 		ErrorWriter:          errorWriter,
 		Registrar:            registrar,
@@ -154,9 +150,9 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 	notify.Routes{
 		RequestCounter:                  requestCounter,
 		RequestLogging:                  logging,
-		NotificationsWriteAuthenticator: notificationsWriteAuthenticator,
 		DatabaseAllocator:               databaseAllocator,
-		EmailsWriteAuthenticator:        emailsWriteAuthenticator,
+		NotificationsWriteAuthenticator: auth("notifications.write"),
+		EmailsWriteAuthenticator:        auth("emails.write"),
 
 		ErrorWriter:          errorWriter,
 		Notify:               notifyObj,

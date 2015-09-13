@@ -21,11 +21,11 @@ function run() {
 }
 
 if [[ $EXIT_CODE = 0 ]]; then
-	run -slowSpecThreshold=20 ./v2/acceptance
+	run -slowSpecThreshold=10 ./v2/acceptance
 fi
 
 if [[ $EXIT_CODE = 0 ]]; then
-	run -slowSpecThreshold=20 ./v1/acceptance
+	run -slowSpecThreshold=10 ./v1/acceptance
 fi
 
 if [[ $EXIT_CODE = 0 ]]; then

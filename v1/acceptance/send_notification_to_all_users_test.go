@@ -86,7 +86,7 @@ var _ = Describe("Send a notification to all users of UAA", func() {
 		By("confirming the messages were sent", func() {
 			Eventually(func() int {
 				return len(Servers.SMTP.Deliveries)
-			}, 1*time.Second).Should(Equal(2))
+			}, 10*time.Second).Should(Equal(2))
 
 			recipients := []string{Servers.SMTP.Deliveries[0].Recipients[0], Servers.SMTP.Deliveries[1].Recipients[0]}
 			Expect(recipients).To(ConsistOf([]string{"why-email@example.com", "slayer@example.com"}))

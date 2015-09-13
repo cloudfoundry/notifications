@@ -76,7 +76,7 @@ var _ = Describe("notifications can be registered, using the deprecated /registr
 		By("verifying that the message was sent", func() {
 			Eventually(func() int {
 				return len(Servers.SMTP.Deliveries)
-			}, 1*time.Second).Should(Equal(1))
+			}, 10*time.Second).Should(Equal(1))
 			delivery := Servers.SMTP.Deliveries[0]
 
 			env := application.NewEnvironment()

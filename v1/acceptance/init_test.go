@@ -60,6 +60,11 @@ var _ = BeforeEach(func() {
 	Servers.SMTP.Reset()
 })
 
+var _ = AfterEach(func() {
+	err := Servers.Notifications.WaitForJobsQueueToEmpty()
+	Expect(err).NotTo(HaveOccurred())
+})
+
 func GetClientTokenFor(clientID string) uaa.Token {
 	token, err := GetUAAClientFor(clientID).GetClientToken()
 	if err != nil {

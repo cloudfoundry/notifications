@@ -57,7 +57,7 @@ var _ = Describe("Getting a Message's status", func() {
 					Message: message,
 					Error:   err,
 				}
-			}, 1*time.Second).Should(Equal(MessageReponse{
+			}, 10*time.Second).Should(Equal(MessageReponse{
 				Status:  http.StatusOK,
 				Message: support.Message{Status: "delivered"},
 				Error:   nil,

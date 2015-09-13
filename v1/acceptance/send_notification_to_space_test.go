@@ -93,7 +93,7 @@ var _ = Describe("Sending notifications to all users in a space", func() {
 		By("confirming the messages were sent", func() {
 			Eventually(func() int {
 				return len(Servers.SMTP.Deliveries)
-			}, 1*time.Second).Should(Equal(1))
+			}, 10*time.Second).Should(Equal(1))
 			delivery := Servers.SMTP.Deliveries[0]
 
 			env := application.NewEnvironment()

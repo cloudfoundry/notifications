@@ -63,7 +63,7 @@ var _ = Describe("Preferences Endpoint", func() {
 		By("confirming that the messages were sent", func() {
 			Eventually(func() int {
 				return len(Servers.SMTP.Deliveries)
-			}, 1*time.Second).Should(Equal(1))
+			}, 10*time.Second).Should(Equal(1))
 			delivery := Servers.SMTP.Deliveries[0]
 
 			env := application.NewEnvironment()
@@ -212,6 +212,9 @@ var _ = Describe("Preferences Endpoint", func() {
 			Consistently(func() int {
 				return len(Servers.SMTP.Deliveries)
 			}, 1*time.Second).Should(Equal(0))
+
+			err = Servers.Notifications.WaitForJobsQueueToEmpty()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		By("re-subscribing globally to notifications", func() {
@@ -246,7 +249,7 @@ var _ = Describe("Preferences Endpoint", func() {
 
 			Eventually(func() int {
 				return len(Servers.SMTP.Deliveries)
-			}, 1*time.Second).Should(Equal(1))
+			}, 10*time.Second).Should(Equal(1))
 		})
 	})
 })
