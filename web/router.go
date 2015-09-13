@@ -19,7 +19,6 @@ type MotherInterface interface {
 	OrganizationStrategy() services.OrganizationStrategy
 	EveryoneStrategy() services.EveryoneStrategy
 	UAAScopeStrategy() services.UAAScopeStrategy
-	NotificationsFinder() services.NotificationsFinder
 	NotificationsUpdater() services.NotificationsUpdater
 	PreferencesFinder() *services.PreferencesFinder
 	PreferenceUpdater() services.PreferenceUpdater

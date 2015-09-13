@@ -107,10 +107,6 @@ func (m *Mother) EmailStrategy() services.EmailStrategy {
 	return services.NewEmailStrategy(m.Enqueuer(), m.V2Enqueuer())
 }
 
-func (m *Mother) NotificationsFinder() services.NotificationsFinder {
-	clientsRepo, kindsRepo := m.Repos()
-	return services.NewNotificationsFinder(clientsRepo, kindsRepo)
-}
 func (m *Mother) NotificationsUpdater() services.NotificationsUpdater {
 	_, kindsRepo := m.Repos()
 	return services.NewNotificationsUpdater(kindsRepo)

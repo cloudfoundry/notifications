@@ -36,7 +36,7 @@ type Config struct {
 
 type mother interface {
 	Repos() (models.ClientsRepo, models.KindsRepo)
-	NotificationsFinder() services.NotificationsFinder
+
 	EmailStrategy() services.EmailStrategy
 	UserStrategy() services.UserStrategy
 	SpaceStrategy() services.SpaceStrategy
@@ -55,15 +55,15 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 	clientsRepo, kindsRepo := mom.Repos()
 
 	registrar := services.NewRegistrar(clientsRepo, kindsRepo)
+	notificationsFinder := services.NewNotificationsFinder(clientsRepo, kindsRepo)
 
-	notificationsFinder := mom.NotificationsFinder()
 	emailStrategy := mom.EmailStrategy()
 	userStrategy := mom.UserStrategy()
 	spaceStrategy := mom.SpaceStrategy()
 	organizationStrategy := mom.OrganizationStrategy()
 	everyoneStrategy := mom.EveryoneStrategy()
 	uaaScopeStrategy := mom.UAAScopeStrategy()
-	notifyObj := notify.NewNotify(mom.NotificationsFinder(), registrar)
+	notifyObj := notify.NewNotify(notificationsFinder, registrar)
 	preferencesFinder := mom.PreferencesFinder()
 	preferenceUpdater := mom.PreferenceUpdater()
 	templateCreator, templateFinder, templateUpdater, templateDeleter, templateLister, templateAssigner, templateAssociationLister := mom.TemplateServiceObjects()
