@@ -16,7 +16,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
-	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
@@ -107,19 +106,15 @@ func (m *Mother) EmailStrategy() services.EmailStrategy {
 	return services.NewEmailStrategy(m.Enqueuer(), m.V2Enqueuer())
 }
 
-func (m *Mother) NotificationsUpdater() services.NotificationsUpdater {
-	_, kindsRepo := m.Repos()
-	return services.NewNotificationsUpdater(kindsRepo)
-}
-
 func (m *Mother) Enqueuer() services.Enqueuer {
 	return services.NewEnqueuer(m.Queue(), uuid.NewV4, m.MessagesRepo())
 }
 
 func (m *Mother) TemplatesLoader() postal.TemplatesLoader {
 	database := m.Database()
-	clientsRepo, kindsRepo := m.Repos()
-	templatesRepo := m.TemplatesRepo()
+	clientsRepo := v1models.NewClientsRepo()
+	kindsRepo := v1models.NewKindsRepo()
+	templatesRepo := v1models.NewTemplatesRepo()
 
 	v2templatesRepo := v2models.NewTemplatesRepository(uuid.NewV4)
 	templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
@@ -153,19 +148,11 @@ func (m *Mother) MailClient() *mail.Client {
 	return mail.NewClient(mailConfig)
 }
 
-func (m *Mother) Repos() (v1models.ClientsRepo, v1models.KindsRepo) {
-	return v1models.NewClientsRepo(), m.KindsRepo()
-}
-
 func (m *Mother) Logger() lager.Logger {
 	logger := lager.NewLogger("notifications")
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
 
 	return logger
-}
-
-func (m *Mother) ErrorWriter() webutil.ErrorWriter {
-	return webutil.NewErrorWriter()
 }
 
 func (m *Mother) SQLDatabase() *sql.DB {
@@ -206,37 +193,6 @@ func (m *Mother) Database() db.DatabaseInterface {
 	return database
 }
 
-func (m *Mother) PreferencesFinder() *services.PreferencesFinder {
-	return services.NewPreferencesFinder(v1models.NewPreferencesRepo(), m.GlobalUnsubscribesRepo())
-}
-
-func (m *Mother) PreferenceUpdater() services.PreferenceUpdater {
-	return services.NewPreferenceUpdater(m.GlobalUnsubscribesRepo(), m.UnsubscribesRepo(), m.KindsRepo())
-}
-
-func (m *Mother) TemplateFinder() services.TemplateFinder {
-	return services.NewTemplateFinder(m.TemplatesRepo())
-}
-
-func (m *Mother) MessageFinder() services.MessageFinder {
-	return services.NewMessageFinder(m.MessagesRepo())
-}
-
-func (m *Mother) TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater,
-	services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister) {
-
-	clientsRepo, kindsRepo := m.Repos()
-	templatesRepo := m.TemplatesRepo()
-
-	return services.NewTemplateCreator(templatesRepo),
-		m.TemplateFinder(),
-		services.NewTemplateUpdater(templatesRepo),
-		services.NewTemplateDeleter(templatesRepo),
-		services.NewTemplateLister(templatesRepo),
-		services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo),
-		services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo)
-}
-
 func (m *Mother) KindsRepo() v1models.KindsRepo {
 	return v1models.NewKindsRepo()
 }
@@ -247,10 +203,6 @@ func (m *Mother) UnsubscribesRepo() v1models.UnsubscribesRepo {
 
 func (m *Mother) GlobalUnsubscribesRepo() v1models.GlobalUnsubscribesRepo {
 	return v1models.NewGlobalUnsubscribesRepo()
-}
-
-func (m *Mother) TemplatesRepo() v1models.TemplatesRepo {
-	return v1models.NewTemplatesRepo()
 }
 
 func (m *Mother) MessagesRepo() v1models.MessagesRepo {

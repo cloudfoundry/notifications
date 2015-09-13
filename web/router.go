@@ -1,31 +1,23 @@
 package web
 
 import (
-	"database/sql"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/gobble"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	v1web "github.com/cloudfoundry-incubator/notifications/v1/web"
 	v2web "github.com/cloudfoundry-incubator/notifications/v2/web"
 )
 
 type MotherInterface interface {
-	Repos() (models.ClientsRepo, models.KindsRepo)
+	Queue() gobble.QueueInterface
+
 	EmailStrategy() services.EmailStrategy
 	UserStrategy() services.UserStrategy
 	SpaceStrategy() services.SpaceStrategy
 	OrganizationStrategy() services.OrganizationStrategy
 	EveryoneStrategy() services.EveryoneStrategy
 	UAAScopeStrategy() services.UAAScopeStrategy
-	NotificationsUpdater() services.NotificationsUpdater
-	PreferencesFinder() *services.PreferencesFinder
-	PreferenceUpdater() services.PreferenceUpdater
-	MessageFinder() services.MessageFinder
-	TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister)
-	SQLDatabase() *sql.DB
-	Queue() gobble.QueueInterface
 }
 
 func NewRouter(mother MotherInterface, config Config) http.Handler {
@@ -34,6 +26,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		Logger:           config.Logger,
 		UAAPublicKey:     config.UAAPublicKey,
 		CORSOrigin:       config.CORSOrigin,
+		SQLDB:            config.SQLDB,
 	})
 
 	v2 := v2web.NewRouter(NewMuxer(), v2web.Config{

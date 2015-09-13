@@ -32,30 +32,43 @@ type Config struct {
 	Logger           lager.Logger
 	UAAPublicKey     string
 	CORSOrigin       string
+	SQLDB            *sql.DB
 }
 
 type mother interface {
-	Repos() (models.ClientsRepo, models.KindsRepo)
-
 	EmailStrategy() services.EmailStrategy
 	UserStrategy() services.UserStrategy
 	SpaceStrategy() services.SpaceStrategy
 	OrganizationStrategy() services.OrganizationStrategy
 	EveryoneStrategy() services.EveryoneStrategy
 	UAAScopeStrategy() services.UAAScopeStrategy
-	PreferencesFinder() *services.PreferencesFinder
-	PreferenceUpdater() services.PreferenceUpdater
-	TemplateServiceObjects() (services.TemplateCreator, services.TemplateFinder, services.TemplateUpdater, services.TemplateDeleter, services.TemplateLister, services.TemplateAssigner, services.TemplateAssociationLister)
-	NotificationsUpdater() services.NotificationsUpdater
-	MessageFinder() services.MessageFinder
-	SQLDatabase() *sql.DB
 }
 
 func NewRouter(mx muxer, mom mother, config Config) http.Handler {
-	clientsRepo, kindsRepo := mom.Repos()
+	clientsRepo := models.NewClientsRepo()
+	kindsRepo := models.NewKindsRepo()
+	globalUnsubscribesRepo := models.NewGlobalUnsubscribesRepo()
+	preferencesRepo := models.NewPreferencesRepo()
+	unsubscribesRepo := models.NewUnsubscribesRepo()
+	messagesRepo := models.NewMessagesRepo()
+	templatesRepo := models.NewTemplatesRepo()
 
 	registrar := services.NewRegistrar(clientsRepo, kindsRepo)
 	notificationsFinder := services.NewNotificationsFinder(clientsRepo, kindsRepo)
+	preferencesFinder := services.NewPreferencesFinder(preferencesRepo, globalUnsubscribesRepo)
+	preferenceUpdater := services.NewPreferenceUpdater(globalUnsubscribesRepo, unsubscribesRepo, kindsRepo)
+	notificationsUpdater := services.NewNotificationsUpdater(kindsRepo)
+	messageFinder := services.NewMessageFinder(messagesRepo)
+
+	templateCreator := services.NewTemplateCreator(templatesRepo)
+	templateFinder := services.NewTemplateFinder(templatesRepo)
+	templateUpdater := services.NewTemplateUpdater(templatesRepo)
+	templateDeleter := services.NewTemplateDeleter(templatesRepo)
+	templateLister := services.NewTemplateLister(templatesRepo)
+	templateAssigner := services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo)
+	templateAssociationLister := services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo)
+
+	notifyObj := notify.NewNotify(notificationsFinder, registrar)
 
 	emailStrategy := mom.EmailStrategy()
 	userStrategy := mom.UserStrategy()
@@ -63,23 +76,16 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 	organizationStrategy := mom.OrganizationStrategy()
 	everyoneStrategy := mom.EveryoneStrategy()
 	uaaScopeStrategy := mom.UAAScopeStrategy()
-	notifyObj := notify.NewNotify(notificationsFinder, registrar)
-	preferencesFinder := mom.PreferencesFinder()
-	preferenceUpdater := mom.PreferenceUpdater()
-	templateCreator, templateFinder, templateUpdater, templateDeleter, templateLister, templateAssigner, templateAssociationLister := mom.TemplateServiceObjects()
-	notificationsUpdater := mom.NotificationsUpdater()
-	messageFinder := mom.MessageFinder()
+
 	errorWriter := webutil.NewErrorWriter()
 
 	requestCounter := middleware.NewRequestCounter(mx.GetRouter(), metrics.DefaultLogger)
 	logging := middleware.NewRequestLogging(config.Logger)
-
+	databaseAllocator := middleware.NewDatabaseAllocator(config.SQLDB, config.DBLoggingEnabled)
+	cors := middleware.NewCORS(config.CORSOrigin)
 	auth := func(scope ...string) middleware.Authenticator {
 		return middleware.NewAuthenticator(config.UAAPublicKey, scope...)
 	}
-
-	databaseAllocator := middleware.NewDatabaseAllocator(mom.SQLDatabase(), config.DBLoggingEnabled)
-	cors := middleware.NewCORS(config.CORSOrigin)
 
 	info.Routes{
 		RequestCounter: requestCounter,
