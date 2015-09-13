@@ -6,10 +6,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 )
 
-type TemplatesLoaderInterface interface {
-	LoadTemplates(string, string, string) (Templates, error)
-}
-
 type TemplatesLoader struct {
 	database db.DatabaseInterface
 

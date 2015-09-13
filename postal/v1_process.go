@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/pivotal-golang/lager"
 )
@@ -14,6 +15,10 @@ import (
 type mailSender interface {
 	Connect(lager.Logger) error
 	Send(mail.Message, lager.Logger) error
+}
+
+type userLoader interface {
+	Load(userGUIDs []string, token string) (map[string]uaa.User, error)
 }
 
 type V1ProcessConfig struct {
@@ -26,7 +31,7 @@ type V1ProcessConfig struct {
 	MailClient  mailSender
 	Database    db.DatabaseInterface
 	TokenLoader tokenLoader
-	UserLoader  UserLoaderInterface
+	UserLoader  userLoader
 
 	KindsRepo              KindsRepo
 	ReceiptsRepo           ReceiptsRepo
@@ -46,7 +51,7 @@ type V1Process struct {
 	mailClient  mailSender
 	database    db.DatabaseInterface
 	tokenLoader tokenLoader
-	userLoader  UserLoaderInterface
+	userLoader  userLoader
 
 	kindsRepo              KindsRepo
 	receiptsRepo           ReceiptsRepo

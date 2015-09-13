@@ -15,10 +15,6 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type NotifyInterface interface {
-	Execute(conn ConnectionInterface, req *http.Request, context stack.Context, guid string, strategy Dispatcher, validator ValidatorInterface, vcapRequestID string) (response []byte, err error)
-}
-
 type clientAndKindFinder interface {
 	ClientAndKind(database services.DatabaseInterface, clientID, kindID string) (models.Client, models.Kind, error)
 }

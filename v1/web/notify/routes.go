@@ -13,7 +13,7 @@ type Routes struct {
 	NotificationsWriteAuthenticator stack.Middleware
 	EmailsWriteAuthenticator        stack.Middleware
 
-	Notify               NotifyInterface
+	Notify               notifyExecutor
 	ErrorWriter          errorWriter
 	UserStrategy         Dispatcher
 	SpaceStrategy        Dispatcher

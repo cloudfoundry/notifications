@@ -12,6 +12,10 @@ const (
 	RequestReceivedTime = "request_received_time"
 )
 
+type notifyExecutor interface {
+	Execute(conn ConnectionInterface, req *http.Request, context stack.Context, guid string, strategy Dispatcher, validator ValidatorInterface, vcapRequestID string) (response []byte, err error)
+}
+
 type errorWriter interface {
 	Write(writer http.ResponseWriter, err error)
 }
@@ -22,11 +26,11 @@ type Dispatcher interface {
 
 type EmailHandler struct {
 	errorWriter errorWriter
-	notify      NotifyInterface
+	notify      notifyExecutor
 	strategy    Dispatcher
 }
 
-func NewEmailHandler(notify NotifyInterface, errWriter errorWriter, strategy Dispatcher) EmailHandler {
+func NewEmailHandler(notify notifyExecutor, errWriter errorWriter, strategy Dispatcher) EmailHandler {
 	return EmailHandler{
 		errorWriter: errWriter,
 		notify:      notify,

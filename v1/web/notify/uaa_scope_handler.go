@@ -9,11 +9,11 @@ import (
 
 type UAAScopeHandler struct {
 	errorWriter errorWriter
-	notify      NotifyInterface
+	notify      notifyExecutor
 	strategy    Dispatcher
 }
 
-func NewUAAScopeHandler(notify NotifyInterface, errWriter errorWriter, strategy Dispatcher) UAAScopeHandler {
+func NewUAAScopeHandler(notify notifyExecutor, errWriter errorWriter, strategy Dispatcher) UAAScopeHandler {
 	return UAAScopeHandler{
 		errorWriter: errWriter,
 		notify:      notify,

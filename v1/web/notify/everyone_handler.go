@@ -8,11 +8,11 @@ import (
 
 type EveryoneHandler struct {
 	errorWriter errorWriter
-	notify      NotifyInterface
+	notify      notifyExecutor
 	strategy    Dispatcher
 }
 
-func NewEveryoneHandler(notify NotifyInterface, errWriter errorWriter, strategy Dispatcher) EveryoneHandler {
+func NewEveryoneHandler(notify notifyExecutor, errWriter errorWriter, strategy Dispatcher) EveryoneHandler {
 	return EveryoneHandler{
 		errorWriter: errWriter,
 		notify:      notify,

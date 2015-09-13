@@ -9,11 +9,11 @@ import (
 
 type OrganizationHandler struct {
 	errorWriter errorWriter
-	notify      NotifyInterface
+	notify      notifyExecutor
 	strategy    Dispatcher
 }
 
-func NewOrganizationHandler(notify NotifyInterface, errWriter errorWriter, strategy Dispatcher) OrganizationHandler {
+func NewOrganizationHandler(notify notifyExecutor, errWriter errorWriter, strategy Dispatcher) OrganizationHandler {
 	return OrganizationHandler{
 		errorWriter: errWriter,
 		notify:      notify,

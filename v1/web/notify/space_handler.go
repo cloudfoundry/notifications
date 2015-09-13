@@ -9,11 +9,11 @@ import (
 
 type SpaceHandler struct {
 	errorWriter errorWriter
-	notify      NotifyInterface
+	notify      notifyExecutor
 	strategy    Dispatcher
 }
 
-func NewSpaceHandler(notify NotifyInterface, errWriter errorWriter, strategy Dispatcher) SpaceHandler {
+func NewSpaceHandler(notify notifyExecutor, errWriter errorWriter, strategy Dispatcher) SpaceHandler {
 	return SpaceHandler{
 		errorWriter: errWriter,
 		notify:      notify,

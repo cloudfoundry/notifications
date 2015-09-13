@@ -8,8 +8,12 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 )
 
+type messagesDeleter interface {
+	DeleteBefore(models.ConnectionInterface, time.Time) (int, error)
+}
+
 type MessageGC struct {
-	messagesRepo    messagesRepoInterface
+	messages        messagesDeleter
 	db              db.DatabaseInterface
 	lifetime        time.Duration
 	logger          *log.Logger
@@ -17,14 +21,9 @@ type MessageGC struct {
 	pollingInterval time.Duration
 }
 
-type messagesRepoInterface interface {
-	DeleteBefore(models.ConnectionInterface, time.Time) (int, error)
-}
-
-func NewMessageGC(lifetime time.Duration, db db.DatabaseInterface,
-	messagesRepo messagesRepoInterface, pollingInterval time.Duration, logger *log.Logger) MessageGC {
+func NewMessageGC(lifetime time.Duration, db db.DatabaseInterface, messages messagesDeleter, pollingInterval time.Duration, logger *log.Logger) MessageGC {
 	return MessageGC{
-		messagesRepo:    messagesRepo,
+		messages:        messages,
 		db:              db,
 		lifetime:        lifetime,
 		logger:          logger,
@@ -35,7 +34,7 @@ func NewMessageGC(lifetime time.Duration, db db.DatabaseInterface,
 
 func (gc MessageGC) Collect() {
 	threshold := time.Now().Add(-1 * gc.lifetime)
-	_, err := gc.messagesRepo.DeleteBefore(gc.db.Connection(), threshold)
+	_, err := gc.messages.DeleteBefore(gc.db.Connection(), threshold)
 	if err != nil {
 		gc.logger.Printf("MessageGC.Collect() failed: " + err.Error())
 	}

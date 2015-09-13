@@ -7,19 +7,15 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 )
 
-type uaaUsersInterface interface {
+type uaaEmailGetter interface {
 	UsersEmailsByIDs(string, ...string) ([]uaa.User, error)
 }
 
 type UserLoader struct {
-	uaaClient uaaUsersInterface
+	uaaClient uaaEmailGetter
 }
 
-type UserLoaderInterface interface {
-	Load([]string, string) (map[string]uaa.User, error)
-}
-
-func NewUserLoader(uaaClient uaaUsersInterface) UserLoader {
+func NewUserLoader(uaaClient uaaEmailGetter) UserLoader {
 	return UserLoader{
 		uaaClient: uaaClient,
 	}

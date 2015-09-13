@@ -6,24 +6,24 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 )
 
-type TokenLoader struct {
-	uaaClient UAAClientInterface
-}
-
-type UAAClientInterface interface {
+type uaaClient interface {
 	GetClientToken(string) (string, error)
 }
 
-func NewTokenLoader(uaaClient UAAClientInterface) *TokenLoader {
+type TokenLoader struct {
+	uaa uaaClient
+}
+
+func NewTokenLoader(uaa uaaClient) *TokenLoader {
 	return &TokenLoader{
-		uaaClient: uaaClient,
+		uaa: uaa,
 	}
 }
 
 func (t *TokenLoader) Load(uaaHost string) (string, error) {
 	then := time.Now()
 
-	token, err := t.uaaClient.GetClientToken(uaaHost)
+	token, err := t.uaa.GetClientToken(uaaHost)
 
 	duration := time.Now().Sub(then)
 

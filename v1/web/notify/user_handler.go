@@ -9,11 +9,11 @@ import (
 
 type UserHandler struct {
 	errorWriter errorWriter
-	notify      NotifyInterface
+	notify      notifyExecutor
 	strategy    Dispatcher
 }
 
-func NewUserHandler(notify NotifyInterface, errWriter errorWriter, strategy Dispatcher) UserHandler {
+func NewUserHandler(notify notifyExecutor, errWriter errorWriter, strategy Dispatcher) UserHandler {
 	return UserHandler{
 		errorWriter: errWriter,
 		notify:      notify,

@@ -19,20 +19,24 @@ const HTMLWrapperTemplate = `{{.HTMLComponents.Doctype}}
 	</body>
 </html>`
 
-type Packager struct {
-	templatesLoader TemplatesLoaderInterface
-	cloak           conceal.CloakInterface
+type templatesLoader interface {
+	LoadTemplates(clientID, kindID, templateID string) (Templates, error)
 }
 
-func NewPackager(templatesLoader TemplatesLoaderInterface, cloak conceal.CloakInterface) Packager {
+type Packager struct {
+	templates templatesLoader
+	cloak     conceal.CloakInterface
+}
+
+func NewPackager(templates templatesLoader, cloak conceal.CloakInterface) Packager {
 	return Packager{
-		templatesLoader: templatesLoader,
-		cloak:           cloak,
+		templates: templates,
+		cloak:     cloak,
 	}
 }
 
 func (packager Packager) PrepareContext(delivery Delivery, sender, domain string) (MessageContext, error) {
-	templates, err := packager.templatesLoader.LoadTemplates(delivery.ClientID, delivery.Options.KindID, delivery.Options.TemplateID)
+	templates, err := packager.templates.LoadTemplates(delivery.ClientID, delivery.Options.KindID, delivery.Options.TemplateID)
 	if err != nil {
 		return MessageContext{}, err
 	}
