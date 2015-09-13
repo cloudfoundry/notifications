@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -107,7 +108,7 @@ func (h PutHandler) ValidateCriticalScopes(scopes interface{}, kinds []models.Ki
 	validatedKinds := []models.Kind{}
 	for _, kind := range kinds {
 		if kind.Critical && !hasCriticalWrite {
-			return []models.Kind{}, postal.UAAScopesError("UAA Scopes Error: Client does not have authority to register critical notifications.")
+			return []models.Kind{}, postal.UAAScopesError{errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")}
 		}
 		kind.ClientID = client.ID
 		validatedKinds = append(validatedKinds, kind)

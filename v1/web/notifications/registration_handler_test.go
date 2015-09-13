@@ -190,7 +190,7 @@ var _ = Describe("RegistrationHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(postal.UAAScopesError("waaaaat")))
+				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(postal.UAAScopesError{errors.New("waaaaat")}))
 
 				Expect(transaction.BeginCall.WasCalled).To(BeFalse())
 				Expect(transaction.CommitCall.WasCalled).To(BeFalse())

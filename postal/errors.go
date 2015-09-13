@@ -1,6 +1,8 @@
 package postal
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -8,67 +10,75 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 )
 
-type UAA string
-
-type UAAScopesError string
-
-func (err UAAScopesError) Error() string {
-	return string(err)
+type UAAScopesError struct {
+	Err error
 }
 
-type UAAUserNotFoundError string
-
-func (err UAAUserNotFoundError) Error() string {
-	return string(err)
+func (e UAAScopesError) Error() string {
+	return e.Err.Error()
 }
 
-type TemplateLoadError string
+type UAAUserNotFoundError struct {
+	Err error
+}
 
-func (err TemplateLoadError) Error() string {
-	return string(err)
+func (e UAAUserNotFoundError) Error() string {
+	return e.Err.Error()
+}
+
+type TemplateLoadError struct {
+	Err error
+}
+
+func (e TemplateLoadError) Error() string {
+	return e.Err.Error()
 }
 
 type CriticalNotificationError struct {
-	kindID string
+	Err error
 }
 
 func NewCriticalNotificationError(kindID string) CriticalNotificationError {
-	return CriticalNotificationError{kindID: kindID}
+	return CriticalNotificationError{fmt.Errorf("Insufficient privileges to send notification %s", kindID)}
 }
 
-func (err CriticalNotificationError) Error() string {
-	return "Insufficient privileges to send notification " + err.kindID
+func (e CriticalNotificationError) Error() string {
+	return e.Err.Error()
 }
 
 func UAAErrorFor(err error) error {
 	switch err.(type) {
 	case *url.Error:
-		return UAADownError("UAA is unavailable")
+		return UAADownError{errors.New("UAA is unavailable")}
 	case uaa.Failure:
 		failure := err.(uaa.Failure)
 
 		if failure.Code() == http.StatusNotFound {
 			if strings.Contains(failure.Message(), "Requested route") {
-				return UAADownError("UAA is unavailable")
+				return UAADownError{errors.New("UAA is unavailable")}
 			} else {
-				return UAAGenericError("UAA Unknown 404 error message: " + failure.Message())
+				return UAAGenericError{errors.New("UAA Unknown 404 error message: " + failure.Message())}
 			}
 		}
 
-		return UAADownError(failure.Message())
+		return UAADownError{errors.New(failure.Message())}
 	default:
-		return UAAGenericError("UAA Unknown Error: " + err.Error())
+		return UAAGenericError{errors.New("UAA Unknown Error: " + err.Error())}
 	}
 }
 
-type UAADownError string
-
-func (err UAADownError) Error() string {
-	return string(err)
+type UAADownError struct {
+	Err error
 }
 
-type UAAGenericError string
+func (e UAADownError) Error() string {
+	return e.Err.Error()
+}
 
-func (err UAAGenericError) Error() string {
-	return string(err)
+type UAAGenericError struct {
+	Err error
+}
+
+func (e UAAGenericError) Error() string {
+	return e.Err.Error()
 }

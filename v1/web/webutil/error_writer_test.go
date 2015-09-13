@@ -25,7 +25,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 422 when a client tries to register a critical notification without critical_notifications.write scope", func() {
-		writer.Write(recorder, postal.UAAScopesError("UAA Scopes Error: Client does not have authority to register critical notifications."))
+		writer.Write(recorder, postal.UAAScopesError{errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")})
 
 		unprocessableEntity := 422
 		Expect(recorder.Code).To(Equal(unprocessableEntity))
@@ -54,7 +54,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 502 when UAA fails to respond", func() {
-		writer.Write(recorder, postal.UAADownError("Whoops!"))
+		writer.Write(recorder, postal.UAADownError{errors.New("Whoops!")})
 
 		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 
@@ -68,7 +68,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 502 when UAA fails for unknown reasons", func() {
-		writer.Write(recorder, postal.UAAGenericError("UAA Unknown Error: BOOM!"))
+		writer.Write(recorder, postal.UAAGenericError{errors.New("UAA Unknown Error: BOOM!")})
 
 		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 
@@ -82,7 +82,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 500 and writes the error message when there is a template loading error", func() {
-		writer.Write(recorder, postal.TemplateLoadError("Your template doesn't exist!!!"))
+		writer.Write(recorder, postal.TemplateLoadError{errors.New("Your template doesn't exist!!!")})
 
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
 
