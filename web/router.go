@@ -5,13 +5,14 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/gobble"
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	v1web "github.com/cloudfoundry-incubator/notifications/v1/web"
 	v2web "github.com/cloudfoundry-incubator/notifications/v2/web"
 )
 
 type MotherInterface interface {
-	Registrar() services.Registrar
+	Repos() (models.ClientsRepo, models.KindsRepo)
 	EmailStrategy() services.EmailStrategy
 	UserStrategy() services.UserStrategy
 	SpaceStrategy() services.SpaceStrategy

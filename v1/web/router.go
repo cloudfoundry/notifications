@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/clients"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/info"
@@ -34,7 +35,7 @@ type Config struct {
 }
 
 type mother interface {
-	Registrar() services.Registrar
+	Repos() (models.ClientsRepo, models.KindsRepo)
 	NotificationsFinder() services.NotificationsFinder
 	EmailStrategy() services.EmailStrategy
 	UserStrategy() services.UserStrategy
@@ -51,7 +52,10 @@ type mother interface {
 }
 
 func NewRouter(mx muxer, mom mother, config Config) http.Handler {
-	registrar := mom.Registrar()
+	clientsRepo, kindsRepo := mom.Repos()
+
+	registrar := services.NewRegistrar(clientsRepo, kindsRepo)
+
 	notificationsFinder := mom.NotificationsFinder()
 	emailStrategy := mom.EmailStrategy()
 	userStrategy := mom.UserStrategy()

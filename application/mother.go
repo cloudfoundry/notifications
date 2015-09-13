@@ -172,11 +172,6 @@ func (m *Mother) ErrorWriter() webutil.ErrorWriter {
 	return webutil.NewErrorWriter()
 }
 
-func (m *Mother) Registrar() services.Registrar {
-	clientsRepo, kindsRepo := m.Repos()
-	return services.NewRegistrar(clientsRepo, kindsRepo)
-}
-
 func (m *Mother) SQLDatabase() *sql.DB {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
