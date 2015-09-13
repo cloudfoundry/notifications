@@ -142,7 +142,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 			context.Set("token", token)
 
 			handler.ServeHTTP(writer, request, context)
-			Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.MissingUserTokenError("")))
+			Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.MissingUserTokenError{errors.New("Missing user_id from token claims.")}))
 		})
 	})
 })

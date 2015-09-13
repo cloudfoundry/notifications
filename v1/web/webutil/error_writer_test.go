@@ -1,7 +1,6 @@
 package webutil_test
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -16,8 +15,10 @@ import (
 )
 
 var _ = Describe("ErrorWriter", func() {
-	var writer webutil.ErrorWriter
-	var recorder *httptest.ResponseRecorder
+	var (
+		writer   webutil.ErrorWriter
+		recorder *httptest.ResponseRecorder
+	)
 
 	BeforeEach(func() {
 		writer = webutil.NewErrorWriter()
@@ -26,239 +27,138 @@ var _ = Describe("ErrorWriter", func() {
 
 	It("returns a 422 when a client tries to register a critical notification without critical_notifications.write scope", func() {
 		writer.Write(recorder, postal.UAAScopesError{errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")})
-
-		unprocessableEntity := 422
-		Expect(recorder.Code).To(Equal(unprocessableEntity))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("UAA Scopes Error: Client does not have authority to register critical notifications."))
+		Expect(recorder.Code).To(Equal(422))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["UAA Scopes Error: Client does not have authority to register critical notifications."]	
+		}`))
 	})
 
 	It("returns a 502 when CloudController fails to respond", func() {
 		writer.Write(recorder, services.CCDownError{errors.New("Bad things happened!")})
-
 		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("Bad things happened!"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["Bad things happened!"]
+		}`))
 	})
 
 	It("returns a 502 when UAA fails to respond", func() {
 		writer.Write(recorder, postal.UAADownError{errors.New("Whoops!")})
-
 		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("Whoops!"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["Whoops!"]
+		}`))
 	})
 
 	It("returns a 502 when UAA fails for unknown reasons", func() {
 		writer.Write(recorder, postal.UAAGenericError{errors.New("UAA Unknown Error: BOOM!")})
-
 		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("UAA Unknown Error: BOOM!"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["UAA Unknown Error: BOOM!"]	
+		}`))
 	})
 
 	It("returns a 500 and writes the error message when there is a template loading error", func() {
 		writer.Write(recorder, postal.TemplateLoadError{errors.New("Your template doesn't exist!!!")})
-
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("Your template doesn't exist!!!"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["Your template doesn't exist!!!"]
+		}`))
 	})
 
 	It("returns a 500 when there is a template create error", func() {
 		writer.Write(recorder, webutil.TemplateCreateError{})
-
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("Failed to create Template in the database"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["Failed to create Template in the database"]	
+		}`))
 	})
 
 	It("returns a 404 when there is a template find error", func() {
 		writer.Write(recorder, models.TemplateFindError{errors.New("Template my-id could not be found")})
-
 		Expect(recorder.Code).To(Equal(http.StatusNotFound))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("Template my-id could not be found"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["Template my-id could not be found"]	
+		}`))
 	})
 
 	It("returns a 500 when there is a template update error", func() {
 		writer.Write(recorder, models.TemplateUpdateError{errors.New("Failed to update Template in the database")})
-
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("Failed to update Template in the database"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["Failed to update Template in the database"]	
+		}`))
 	})
 
 	It("returns a 404 when the space cannot be found", func() {
 		writer.Write(recorder, services.CCNotFoundError{errors.New("Space could not be found")})
-
 		Expect(recorder.Code).To(Equal(http.StatusNotFound))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("Space could not be found"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["Space could not be found"]	
+		}`))
 	})
 
 	It("returns a 400 when the request cannot be parsed due to syntatically invalid JSON", func() {
 		writer.Write(recorder, webutil.ParseError{})
-
 		Expect(recorder.Code).To(Equal(400))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("Request body could not be parsed"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["Request body could not be parsed"]	
+		}`))
 	})
 
 	It("returns a 422 when the requests are not valid due to semantically invalid JSON", func() {
-		writer.Write(recorder, webutil.ValidationError([]string{"something", "another"}))
-
+		writer.Write(recorder, webutil.ValidationError{errors.New("invalid json")})
 		Expect(recorder.Code).To(Equal(422))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("something"))
-		Expect(body["errors"]).To(ContainElement("another"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["invalid json"]	
+		}`))
 	})
 
 	It("returns a 422 when trying to send a critical notification without correct scope", func() {
 		writer.Write(recorder, postal.NewCriticalNotificationError("raptors"))
-
 		Expect(recorder.Code).To(Equal(422))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("Insufficient privileges to send notification raptors"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["Insufficient privileges to send notification raptors"]	
+		}`))
 	})
 
 	It("returns a 409 when there is a duplicate record", func() {
 		writer.Write(recorder, models.DuplicateError{errors.New("duplicate record")})
-
 		Expect(recorder.Code).To(Equal(409))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("duplicate record"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["duplicate record"]	
+		}`))
 	})
 
 	It("returns a 404 when a record cannot be found", func() {
 		writer.Write(recorder, models.NotFoundError{errors.New("not found")})
-
 		Expect(recorder.Code).To(Equal(404))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("not found"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["not found"]	
+		}`))
 	})
 
 	It("returns a 406 when a record cannot be found", func() {
 		writer.Write(recorder, services.DefaultScopeError{})
 		Expect(recorder.Code).To(Equal(406))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("You cannot send a notification to a default scope"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["You cannot send a notification to a default scope"]	
+		}`))
 	})
 
 	It("returns a 422 when a template cannot be assigned", func() {
 		writer.Write(recorder, services.TemplateAssignmentError{errors.New("The template could not be assigned")})
 		Expect(recorder.Code).To(Equal(422))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("The template could not be assigned"))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["The template could not be assigned"]	
+		}`))
 	})
 
 	It("returns a 422 when a user token was expected but is not present", func() {
-		writer.Write(recorder, webutil.MissingUserTokenError("Missing user_id from token claims."))
+		writer.Write(recorder, webutil.MissingUserTokenError{errors.New("Missing user_id from token claims.")})
 		Expect(recorder.Code).To(Equal(422))
-
-		body := make(map[string]interface{})
-		err := json.Unmarshal(recorder.Body.Bytes(), &body)
-		if err != nil {
-			panic(err)
-		}
-
-		Expect(body["errors"]).To(ContainElement("Missing user_id from token claims."))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["Missing user_id from token claims."]	
+		}`))
 	})
 
 	It("panics for unknown errors", func() {

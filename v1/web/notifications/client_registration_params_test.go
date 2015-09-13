@@ -3,6 +3,7 @@ package notifications_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notifications"
@@ -60,28 +61,31 @@ var _ = Describe("ClientRegistrationParams", func() {
 			Context("when the JSON contains unexpected properties", func() {
 				It("returns an error for invalid top level keys ", func() {
 					someJson := `{ "source_name" : "Raptor Containment Unit", "invalid_property" : 5 }`
+
 					_, err := notifications.NewClientRegistrationParams(strings.NewReader(someJson))
-					Expect(err).To(BeAssignableToTypeOf(webutil.NewSchemaError("")))
+					Expect(err).To(MatchError(webutil.SchemaError{errors.New("\"invalid_property\" is not a valid property")}))
 				})
 
 				It("returns an error for invalid nested keys", func() {
 					someJson := `{ "source_name" : "Raptor", "notifications": { "some_id": {"description" : "ok", "invalid_property" : 5 } } }`
+
 					_, err := notifications.NewClientRegistrationParams(strings.NewReader(someJson))
-					Expect(err).To(BeAssignableToTypeOf(webutil.NewSchemaError("")))
+					Expect(err).To(MatchError(webutil.SchemaError{errors.New("\"invalid_property\" is not a valid property")}))
 				})
 			})
 
 			Context("when the JSON contains null values", func() {
 				It("returns an error if 'notifications' collection is null", func() {
 					someJson := `{ "source_name" : "Something something raptor", "notifications": null }`
+
 					_, err := notifications.NewClientRegistrationParams(strings.NewReader(someJson))
-					Expect(err).To(BeAssignableToTypeOf(webutil.NewSchemaError("")))
+					Expect(err).To(MatchError(webutil.SchemaError{errors.New("only include \"notifications\" key when adding a notification")}))
 				})
 				It("returns an error if an individual notification is null ", func() {
 					someJson := `{ "source_name" : "Raptor", "notifications": { "some_id":  null } }`
+
 					_, err := notifications.NewClientRegistrationParams(strings.NewReader(someJson))
-					Expect(err).To(HaveOccurred())
-					Expect(err).To(BeAssignableToTypeOf(webutil.NewSchemaError("")))
+					Expect(err).To(MatchError(webutil.SchemaError{errors.New("notification must not be null")}))
 				})
 			})
 		})
@@ -98,10 +102,7 @@ var _ = Describe("ClientRegistrationParams", func() {
 			cr := notifications.ClientRegistrationParams{}
 			err := cr.Validate()
 
-			Expect(err).To(BeAssignableToTypeOf(webutil.ValidationError{}))
-			errs := err.(webutil.ValidationError).Errors()
-			Expect(len(errs)).To(Equal(1))
-			Expect(err).To(ContainElement(ContainSubstring("source_name")))
+			Expect(err).To(MatchError(webutil.ValidationError{errors.New("\"source_name\" is a required field")}))
 		})
 
 		It("returns an error if notification is missing a required field", func() {
@@ -111,13 +112,11 @@ var _ = Describe("ClientRegistrationParams", func() {
 					"perimeter_breach": {},
 				},
 			}
+
 			err := cr.Validate()
-
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(BeAssignableToTypeOf(webutil.ValidationError{}))
-			Expect(err).To(ContainElement(`notification "perimeter_breach" is missing required field "ID"`))
-			Expect(err).To(ContainElement(`notification "perimeter_breach" is missing required field "Description"`))
+			Expect(err).To(MatchError(webutil.ValidationError{
+				Err: errors.New("notification \"perimeter_breach\" is missing required field \"ID\", notification \"perimeter_breach\" is missing required field \"Description\""),
+			}))
 		})
-
 	})
 })

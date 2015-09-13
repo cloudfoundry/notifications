@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/postal"
@@ -53,7 +54,7 @@ func (h Notify) Execute(connection ConnectionInterface, req *http.Request, conte
 	}
 
 	if !validator.Validate(&parameters) {
-		return []byte{}, webutil.ValidationError(parameters.Errors)
+		return []byte{}, webutil.ValidationError{errors.New(strings.Join(parameters.Errors, ","))}
 	}
 
 	requestReceivedTime, ok := context.Get(RequestReceivedTime).(time.Time)

@@ -2,6 +2,7 @@ package templates
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"text/template"
 
@@ -28,7 +29,7 @@ func NewTemplateParams(body io.ReadCloser) (TemplateParams, error) {
 	if err != nil {
 		switch err.(type) {
 		case valiant.RequiredFieldError:
-			return template, webutil.ValidationError([]string{err.Error()})
+			return template, webutil.ValidationError{err}
 		default:
 			return template, webutil.ParseError{}
 		}
@@ -58,7 +59,7 @@ func (t TemplateParams) validateSyntax() error {
 	for field, contents := range toValidate {
 		_, err := template.New("test").Parse(contents)
 		if err != nil {
-			return webutil.ValidationError([]string{field + " syntax is malformed please check your braces"})
+			return webutil.ValidationError{fmt.Errorf("%s syntax is malformed please check your braces", field)}
 		}
 	}
 

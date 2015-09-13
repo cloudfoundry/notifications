@@ -3,8 +3,10 @@ package notifications
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"regexp"
+	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
@@ -46,12 +48,12 @@ func NewRegistrationParams(body io.ReadCloser) (RegistrationParams, error) {
 }
 
 func (registration RegistrationParams) Validate() error {
-	errors := webutil.ValidationError{}
+	var errs []string
 	if registration.SourceDescription == "" {
-		errors = append(errors, `"source_description" is a required field`)
+		errs = append(errs, `"source_description" is a required field`)
 	}
 
-	kindErrors := webutil.ValidationError{}
+	var kindErrors []string
 	for _, kind := range registration.Kinds {
 		if kind.ID == "" {
 			kindErrors = append(kindErrors, `"kind.id" is a required field`)
@@ -68,10 +70,10 @@ func (registration RegistrationParams) Validate() error {
 		}
 	}
 
-	errors = append(errors, kindErrors...)
+	errs = append(errs, kindErrors...)
 
-	if len(errors) > 0 {
-		return errors
+	if len(errs) > 0 {
+		return webutil.ValidationError{errors.New(strings.Join(errs, ", "))}
 	}
 	return nil
 }

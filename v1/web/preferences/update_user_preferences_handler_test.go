@@ -99,8 +99,8 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 		It("Passes the correct arguments to PreferenceUpdater Execute", func() {
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(reflect.ValueOf(updater.ExecuteCall.Receives.Connection).Pointer()).To(Equal(reflect.ValueOf(transaction).Pointer()))
-			preferencesArguments := updater.ExecuteCall.Receives.Preferences
+			Expect(reflect.ValueOf(updater.UpdateCall.Receives.Connection).Pointer()).To(Equal(reflect.ValueOf(transaction).Pointer()))
+			preferencesArguments := updater.UpdateCall.Receives.Preferences
 
 			Expect(preferencesArguments).To(ContainElement(models.Preference{
 				ClientID: "raptors",
@@ -118,8 +118,8 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 				Email:    false,
 			}))
 
-			Expect(updater.ExecuteCall.Receives.GlobalUnsubscribe).To(BeTrue())
-			Expect(updater.ExecuteCall.Receives.UserID).To(Equal(userGUID))
+			Expect(updater.UpdateCall.Receives.GlobalUnsubscribe).To(BeTrue())
+			Expect(updater.UpdateCall.Receives.UserID).To(Equal(userGUID))
 		})
 
 		It("Returns a 204 status code when the Preference object does not error", func() {
@@ -158,11 +158,12 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 			})
 
 			It("delegates MissingKindOrClientErrors as webutil.ValidationError to the ErrorWriter", func() {
-				updater.ExecuteCall.Returns.Error = services.MissingKindOrClientError{errors.New("BOOM!")}
+				updateError := services.MissingKindOrClientError{errors.New("BOOM!")}
+				updater.UpdateCall.Returns.Error = updateError
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(webutil.ValidationError([]string{"BOOM!"})))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{updateError}))
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
@@ -170,11 +171,12 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 			})
 
 			It("delegates CriticalKindErrors as webutil.ValidationError to the ErrorWriter", func() {
-				updater.ExecuteCall.Returns.Error = services.CriticalKindError{errors.New("BOOM!")}
+				updateError := services.CriticalKindError{errors.New("BOOM!")}
+				updater.UpdateCall.Returns.Error = updateError
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.WriteCall.Receives.Error).To(Equal(webutil.ValidationError([]string{"BOOM!"})))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{updateError}))
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
@@ -182,7 +184,7 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 			})
 
 			It("delegates other errors to the ErrorWriter", func() {
-				updater.ExecuteCall.Returns.Error = errors.New("BOOM!")
+				updater.UpdateCall.Returns.Error = errors.New("BOOM!")
 
 				handler.ServeHTTP(writer, request, context)
 

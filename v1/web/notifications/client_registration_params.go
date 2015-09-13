@@ -3,8 +3,10 @@ package notifications
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 )
@@ -56,49 +58,50 @@ func strictValidateJSON(bytes []byte) error {
 			continue
 		} else if key == "notifications" {
 			if untypedClientRegistration[key] == nil {
-				return webutil.SchemaError(fmt.Sprintf(`only include "notifications" key when adding a notification"`))
+				return webutil.SchemaError{errors.New("only include \"notifications\" key when adding a notification")}
 			}
 			notifications := untypedClientRegistration[key].(map[string]interface{})
 			for _, notificationData := range notifications {
 				if notificationData == nil {
-					return webutil.SchemaError(fmt.Sprintf(`notification must not be null`))
+					return webutil.SchemaError{errors.New("notification must not be null")}
 				}
 				notificationMap := notificationData.(map[string]interface{})
 				for propertyName := range notificationMap {
 					if propertyName == "description" || propertyName == "critical" {
 						continue
 					} else {
-						return webutil.SchemaError(fmt.Sprintf(`"%+v" is not a valid property`, propertyName))
+						return webutil.SchemaError{fmt.Errorf("%q is not a valid property", propertyName)}
 					}
 				}
 			}
 		} else {
-			return webutil.SchemaError(fmt.Sprintf(`"%+v" is not a valid property`, key))
+			return webutil.SchemaError{fmt.Errorf("%q is not a valid property", key)}
 		}
 	}
 	return nil
 }
 
 func (clientRegistration ClientRegistrationParams) Validate() error {
-	errors := webutil.ValidationError{}
+	var errs []string
 	if clientRegistration.SourceName == "" {
-		errors = append(errors, `"source_name" is a required field`)
+		errs = append(errs, `"source_name" is a required field`)
 	}
 
 	for id, value := range clientRegistration.Notifications {
 		if value == nil {
-			errors = append(errors, fmt.Sprintf(`notification "%+v" is empty`, id))
+			errs = append(errs, fmt.Sprintf(`notification "%+v" is empty`, id))
 		}
 		if value.ID == "" {
-			errors = append(errors, fmt.Sprintf(`notification "%+v" is missing required field "ID"`, id))
+			errs = append(errs, fmt.Sprintf(`notification "%+v" is missing required field "ID"`, id))
 		}
 		if value.Description == "" {
-			errors = append(errors, fmt.Sprintf(`notification "%+v" is missing required field "Description"`, id))
+			errs = append(errs, fmt.Sprintf(`notification "%+v" is missing required field "Description"`, id))
 		}
 	}
 
-	if len(errors) > 0 {
-		return errors
+	if len(errs) > 0 {
+		return webutil.ValidationError{errors.New(strings.Join(errs, ", "))}
 	}
+
 	return nil
 }

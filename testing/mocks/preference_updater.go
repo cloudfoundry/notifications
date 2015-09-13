@@ -6,7 +6,7 @@ import (
 )
 
 type PreferenceUpdater struct {
-	ExecuteCall struct {
+	UpdateCall struct {
 		Receives struct {
 			Connection        services.ConnectionInterface
 			Preferences       []models.Preference
@@ -24,10 +24,10 @@ func NewPreferenceUpdater() *PreferenceUpdater {
 }
 
 func (pu *PreferenceUpdater) Update(conn services.ConnectionInterface, preferences []models.Preference, globalUnsubscribe bool, userID string) error {
-	pu.ExecuteCall.Receives.Connection = conn
-	pu.ExecuteCall.Receives.Preferences = preferences
-	pu.ExecuteCall.Receives.GlobalUnsubscribe = globalUnsubscribe
-	pu.ExecuteCall.Receives.UserID = userID
+	pu.UpdateCall.Receives.Connection = conn
+	pu.UpdateCall.Receives.Preferences = preferences
+	pu.UpdateCall.Receives.GlobalUnsubscribe = globalUnsubscribe
+	pu.UpdateCall.Receives.UserID = userID
 
-	return pu.ExecuteCall.Returns.Error
+	return pu.UpdateCall.Returns.Error
 }

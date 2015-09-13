@@ -1,37 +1,33 @@
 package webutil
 
-import "strings"
-
 type ParseError struct{}
 
 func (err ParseError) Error() string {
 	return "Request body could not be parsed"
 }
 
-type SchemaError string
-
-func NewSchemaError(msg string) SchemaError {
-	return SchemaError(msg)
+type SchemaError struct {
+	Err error
 }
 
-func (err SchemaError) Error() string {
-	return string(err)
+func (e SchemaError) Error() string {
+	return e.Err.Error()
 }
 
-type ValidationError []string
-
-func (err ValidationError) Error() string {
-	return strings.Join(err, ", ")
+type ValidationError struct {
+	Err error
 }
 
-func (err ValidationError) Errors() []string {
-	return []string(err)
+func (e ValidationError) Error() string {
+	return e.Err.Error()
 }
 
-type MissingUserTokenError string
+type MissingUserTokenError struct {
+	Err error
+}
 
 func (e MissingUserTokenError) Error() string {
-	return string(e)
+	return e.Err.Error()
 }
 
 type TemplateCreateError struct{}

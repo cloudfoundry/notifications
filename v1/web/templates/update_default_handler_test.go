@@ -10,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
+	"github.com/cloudfoundry-incubator/notifications/valiant"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
@@ -75,7 +76,7 @@ var _ = Describe("UpdateDefaultHandler", func() {
 
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
+			Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{valiant.RequiredFieldError{"Missing required field 'html'"}}))
 		})
 	})
 

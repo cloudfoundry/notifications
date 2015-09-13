@@ -11,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
+	"github.com/cloudfoundry-incubator/notifications/valiant"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
@@ -72,38 +73,32 @@ var _ = Describe("CreateHandler", func() {
 
 		Context("when an errors occurs", func() {
 			It("Writes a validation error to the errorwriter when the request is missing the name field", func() {
-				body := []byte(`{"html": "<p>gobble</p>"}`)
-				request, err = http.NewRequest("POST", "/templates", bytes.NewBuffer(body))
-				if err != nil {
-					panic(err)
-				}
+				request, err = http.NewRequest("POST", "/templates", bytes.NewBuffer([]byte(`{"html": "<p>gobble</p>"}`)))
+				Expect(err).NotTo(HaveOccurred())
 
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{valiant.RequiredFieldError{"Missing required field 'name'"}}))
 			})
 
 			It("Writes a validation error to the errorwriter when the request is missing the html field", func() {
-				body := []byte(`{"name": "gobble"}`)
-				request, err = http.NewRequest("POST", "/templates", bytes.NewBuffer(body))
-				if err != nil {
-					panic(err)
-				}
+				request, err = http.NewRequest("POST", "/templates", bytes.NewBuffer([]byte(`{"name": "gobble"}`)))
+				Expect(err).NotTo(HaveOccurred())
+
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ValidationError([]string{})))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{valiant.RequiredFieldError{"Missing required field 'html'"}}))
 			})
 
 			It("writes a parse error for an invalid request", func() {
-				body := []byte(`{"name":"foobar", "html": forgot to close the curly brace`)
-				request, err = http.NewRequest("POST", "/templates", bytes.NewBuffer(body))
-				if err != nil {
-					panic(err)
-				}
+				request, err = http.NewRequest("POST", "/templates", bytes.NewBuffer([]byte(`{"name":"foobar", "html": forgot to close the curly brace`)))
+				Expect(err).NotTo(HaveOccurred())
+
 				handler.ServeHTTP(writer, request, context)
 				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ParseError{}))
 			})
 
 			It("returns a 500 for all other error cases", func() {
 				creator.CreateCall.Returns.Error = errors.New("my new error")
+
 				handler.ServeHTTP(writer, request, context)
 				Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.TemplateCreateError{}))
 			})
