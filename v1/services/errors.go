@@ -6,54 +6,68 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
 )
 
-type MissingKindOrClientError string
-
-func (err MissingKindOrClientError) Error() string {
-	return string(err)
+type MissingKindOrClientError struct {
+	Err error
 }
 
-type CriticalKindError string
-
-func (err CriticalKindError) Error() string {
-	return string(err)
+func (e MissingKindOrClientError) Error() string {
+	return e.Err.Error()
 }
 
-type ClientMissingError string
-
-func (err ClientMissingError) Error() string {
-	return string(err)
+type CriticalKindError struct {
+	Err error
 }
 
-type KindMissingError string
-
-func (err KindMissingError) Error() string {
-	return string(err)
+func (e CriticalKindError) Error() string {
+	return e.Err.Error()
 }
 
-type TemplateAssignmentError string
+type ClientMissingError struct {
+	Err error
+}
 
-func (err TemplateAssignmentError) Error() string {
-	return string(err)
+func (e ClientMissingError) Error() string {
+	return e.Err.Error()
+}
+
+type KindMissingError struct {
+	Err error
+}
+
+func (e KindMissingError) Error() string {
+	return e.Err.Error()
+}
+
+type TemplateAssignmentError struct {
+	Err error
+}
+
+func (e TemplateAssignmentError) Error() string {
+	return e.Err.Error()
 }
 
 func CCErrorFor(err error) error {
 	if failure, ok := err.(cf.Failure); ok {
 		if failure.Code == http.StatusNotFound {
-			return CCNotFoundError(err.Error())
+			return CCNotFoundError{err}
 		}
-		return CCDownError(err.Error())
+		return CCDownError{err}
 	}
 	return err
 }
 
-type CCNotFoundError string
-
-func (err CCNotFoundError) Error() string {
-	return "CloudController Error: " + string(err)
+type CCNotFoundError struct {
+	Err error
 }
 
-type CCDownError string
+func (e CCNotFoundError) Error() string {
+	return e.Err.Error()
+}
 
-func (err CCDownError) Error() string {
-	return string(err)
+type CCDownError struct {
+	Err error
+}
+
+func (e CCDownError) Error() string {
+	return e.Err.Error()
 }

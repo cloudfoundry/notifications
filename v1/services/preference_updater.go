@@ -29,11 +29,11 @@ func (updater PreferenceUpdater) Update(conn ConnectionInterface, preferences []
 	for _, preference := range preferences {
 		kind, err := updater.kindsRepo.Find(conn, preference.KindID, preference.ClientID)
 		if err != nil {
-			return MissingKindOrClientError(fmt.Sprintf("The kind '%s' cannot be found for client '%s'", preference.KindID, preference.ClientID))
+			return MissingKindOrClientError{fmt.Errorf("The kind '%s' cannot be found for client '%s'", preference.KindID, preference.ClientID)}
 		}
 
 		if kind.Critical {
-			return CriticalKindError(fmt.Sprintf("The kind '%s' for the '%s' client is critical and cannot be unsubscribed from", preference.KindID, preference.ClientID))
+			return CriticalKindError{fmt.Errorf("The kind '%s' for the '%s' client is critical and cannot be unsubscribed from", preference.KindID, preference.ClientID)}
 		}
 
 		err = updater.unsubscribesRepo.Set(conn, userID, preference.ClientID, preference.KindID, !preference.Email)

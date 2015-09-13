@@ -40,7 +40,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 502 when CloudController fails to respond", func() {
-		writer.Write(recorder, services.CCDownError("Bad things happened!"))
+		writer.Write(recorder, services.CCDownError{errors.New("Bad things happened!")})
 
 		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 
@@ -138,7 +138,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 404 when the space cannot be found", func() {
-		writer.Write(recorder, services.CCNotFoundError("Space could not be found"))
+		writer.Write(recorder, services.CCNotFoundError{errors.New("Space could not be found")})
 
 		Expect(recorder.Code).To(Equal(http.StatusNotFound))
 
@@ -148,7 +148,7 @@ var _ = Describe("ErrorWriter", func() {
 			panic(err)
 		}
 
-		Expect(body["errors"]).To(ContainElement("CloudController Error: Space could not be found"))
+		Expect(body["errors"]).To(ContainElement("Space could not be found"))
 	})
 
 	It("returns a 400 when the request cannot be parsed due to syntatically invalid JSON", func() {
@@ -236,7 +236,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 422 when a template cannot be assigned", func() {
-		writer.Write(recorder, services.TemplateAssignmentError("The template could not be assigned"))
+		writer.Write(recorder, services.TemplateAssignmentError{errors.New("The template could not be assigned")})
 		Expect(recorder.Code).To(Equal(422))
 
 		body := make(map[string]interface{})

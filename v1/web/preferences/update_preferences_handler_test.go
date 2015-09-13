@@ -184,7 +184,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 				})
 
 				It("delegates MissingKindOrClientErrors as webutil.ValidationError to the ErrorWriter", func() {
-					updater.ExecuteCall.Returns.Error = services.MissingKindOrClientError("BOOM!")
+					updater.ExecuteCall.Returns.Error = services.MissingKindOrClientError{errors.New("BOOM!")}
 
 					handler.ServeHTTP(writer, request, context)
 
@@ -196,7 +196,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 				})
 
 				It("delegates CriticalKindErrors as webutil.ValidationError to the ErrorWriter", func() {
-					updater.ExecuteCall.Returns.Error = services.CriticalKindError("BOOM!")
+					updater.ExecuteCall.Returns.Error = services.CriticalKindError{errors.New("BOOM!")}
 
 					handler.ServeHTTP(writer, request, context)
 

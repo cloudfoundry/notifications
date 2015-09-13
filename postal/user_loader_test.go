@@ -66,7 +66,6 @@ var _ = Describe("UserLoader", func() {
 					uaaClient.UsersEmailsByIDsCall.Returns.Error = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
 
 					_, err := loader.Load([]string{"user-123"}, token)
-
 					Expect(err).To(BeAssignableToTypeOf(postal.UAADownError{}))
 				})
 			})

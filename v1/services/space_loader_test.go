@@ -47,7 +47,7 @@ var _ = Describe("SpaceLoader", func() {
 				cc.LoadSpaceCall.Returns.Error = cf.NewFailure(404, "not found")
 
 				_, err := loader.Load("missing-space", "some-token")
-				Expect(err).To(Equal(services.CCNotFoundError("CloudController Failure (404): not found")))
+				Expect(err).To(MatchError(services.CCNotFoundError{cf.NewFailure(404, "not found")}))
 			})
 		})
 
@@ -56,7 +56,7 @@ var _ = Describe("SpaceLoader", func() {
 				cc.LoadSpaceCall.Returns.Error = cf.NewFailure(401, "BOOM!")
 
 				_, err := loader.Load("space-001", "some-token")
-				Expect(err).To(Equal(services.CCDownError("CloudController Failure (401): BOOM!")))
+				Expect(err).To(MatchError(services.CCDownError{cf.NewFailure(401, "BOOM!")}))
 			})
 
 			It("returns the same error for all other cases", func() {

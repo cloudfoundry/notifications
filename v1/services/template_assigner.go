@@ -1,6 +1,10 @@
 package services
 
-import "github.com/cloudfoundry-incubator/notifications/v1/models"
+import (
+	"fmt"
+
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
+)
 
 type TemplateAssigner struct {
 	clientsRepo   ClientsRepo
@@ -83,7 +87,7 @@ func (assigner TemplateAssigner) findTemplate(conn ConnectionInterface, template
 	_, err := assigner.templatesRepo.FindByID(conn, templateID)
 	if err != nil {
 		if _, ok := err.(models.RecordNotFoundError); ok {
-			return TemplateAssignmentError("No template with id '" + templateID + "'")
+			return TemplateAssignmentError{fmt.Errorf("No template with id %q", templateID)}
 		}
 		return err
 	}

@@ -79,8 +79,7 @@ var _ = Describe("TemplateAssigner", func() {
 				templatesRepo.FindByIDCall.Returns.Error = models.RecordNotFoundError("not found")
 
 				err := assigner.AssignToClient(database, "my-client", "non-existant-template")
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(BeAssignableToTypeOf(services.TemplateAssignmentError("")))
+				Expect(err).To(MatchError(services.TemplateAssignmentError{errors.New("No template with id \"non-existant-template\"")}))
 			})
 		})
 
@@ -212,8 +211,7 @@ var _ = Describe("TemplateAssigner", func() {
 				templatesRepo.FindByIDCall.Returns.Error = models.RecordNotFoundError("not found")
 
 				err := assigner.AssignToNotification(database, "my-client", "my-kind", "non-existant-template")
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(BeAssignableToTypeOf(services.TemplateAssignmentError("")))
+				Expect(err).To(MatchError(services.TemplateAssignmentError{errors.New("No template with id \"non-existant-template\"")}))
 			})
 		})
 
