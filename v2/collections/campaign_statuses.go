@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
@@ -12,8 +13,12 @@ const (
 	CampaignStatusCompleted = "completed"
 )
 
-type campaignsGetter interface {
+type campaignGetter interface {
 	Get(conn models.ConnectionInterface, campaignID string) (models.Campaign, error)
+}
+
+type senderGetter interface {
+	Get(conn models.ConnectionInterface, senderID string) (models.Sender, error)
 }
 
 type messageCountGetter interface {
@@ -34,26 +39,47 @@ type CampaignStatus struct {
 }
 
 type CampaignStatusesCollection struct {
-	campaignsRepository campaignsGetter
+	campaignsRepository campaignGetter
+	sendersRepository   senderGetter
 	messages            messageCountGetter
 }
 
-func NewCampaignStatusesCollection(campaignsRepository campaignsGetter, messages messageCountGetter) CampaignStatusesCollection {
+func NewCampaignStatusesCollection(campaignsRepository campaignGetter, sendersRepository senderGetter, messages messageCountGetter) CampaignStatusesCollection {
 	return CampaignStatusesCollection{
 		campaignsRepository: campaignsRepository,
+		sendersRepository:   sendersRepository,
 		messages:            messages,
 	}
 }
 
-func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID string) (CampaignStatus, error) {
+func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID, senderID string) (CampaignStatus, error) {
 	campaign, err := csc.campaignsRepository.Get(conn, campaignID)
 	if err != nil {
-		panic(err)
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return CampaignStatus{}, NotFoundError{err}
+		default:
+			return CampaignStatus{}, UnknownError{err}
+		}
+	}
+
+	_, err = csc.sendersRepository.Get(conn, senderID)
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return CampaignStatus{}, NotFoundError{err}
+		default:
+			return CampaignStatus{}, UnknownError{err}
+		}
+	}
+
+	if campaign.SenderID != senderID {
+		return CampaignStatus{}, NotFoundError{fmt.Errorf("Campaign with id %q could not be found", campaignID)}
 	}
 
 	counts, err := csc.messages.CountByStatus(conn, campaign.ID)
 	if err != nil {
-		panic(err)
+		return CampaignStatus{}, UnknownError{err}
 	}
 
 	status := CampaignStatusSending
@@ -64,7 +90,7 @@ func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID s
 
 		mostRecentlyUpdatedMessage, err := csc.messages.MostRecentlyUpdatedByCampaignID(conn, campaign.ID)
 		if err != nil {
-			panic(err)
+			return CampaignStatus{}, UnknownError{err}
 		}
 
 		completedTime.Time = mostRecentlyUpdatedMessage.UpdatedAt

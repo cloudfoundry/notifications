@@ -16,6 +16,7 @@ import (
 var _ = Describe("CampaignStatusesCollection", func() {
 	var (
 		campaignsRepository        *mocks.CampaignsRepository
+		sendersRepository          *mocks.SendersRepository
 		messagesRepository         *mocks.MessagesRepository
 		conn                       *mocks.Connection
 		campaignStatusesCollection collections.CampaignStatusesCollection
@@ -23,10 +24,11 @@ var _ = Describe("CampaignStatusesCollection", func() {
 
 	BeforeEach(func() {
 		campaignsRepository = mocks.NewCampaignsRepository()
+		sendersRepository = mocks.NewSendersRepository()
 		messagesRepository = mocks.NewMessagesRepository()
 		conn = mocks.NewConnection()
 
-		campaignStatusesCollection = collections.NewCampaignStatusesCollection(campaignsRepository, messagesRepository)
+		campaignStatusesCollection = collections.NewCampaignStatusesCollection(campaignsRepository, sendersRepository, messagesRepository)
 	})
 
 	Context("when a valid campaign is queried", func() {
@@ -58,11 +60,16 @@ var _ = Describe("CampaignStatusesCollection", func() {
 			campaignsRepository.GetCall.Returns.Campaign = models.Campaign{
 				ID:        "campaign-id",
 				StartTime: startTime,
+				SenderID:  "sender-id",
+			}
+
+			sendersRepository.GetCall.Returns.Sender = models.Sender{
+				ID: "sender-id",
 			}
 		})
 
 		It("returns the status of the campaign", func() {
-			campaignStatus, err := campaignStatusesCollection.Get(conn, "campaign-id")
+			campaignStatus, err := campaignStatusesCollection.Get(conn, "campaign-id", "sender-id")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(messagesRepository.CountByStatusCall.Receives.Connection).To(Equal(conn))
@@ -86,6 +93,9 @@ var _ = Describe("CampaignStatusesCollection", func() {
 
 			Expect(campaignsRepository.GetCall.Receives.Connection).To(Equal(conn))
 			Expect(campaignsRepository.GetCall.Receives.CampaignID).To(Equal("campaign-id"))
+
+			Expect(sendersRepository.GetCall.Receives.Connection).To(Equal(conn))
+			Expect(sendersRepository.GetCall.Receives.SenderID).To(Equal("sender-id"))
 		})
 
 		Context("when the campaign is not yet completed", func() {
@@ -100,7 +110,7 @@ var _ = Describe("CampaignStatusesCollection", func() {
 
 				messagesRepository.MostRecentlyUpdatedByCampaignIDCall.Returns.Error = errors.New("sql: no rows")
 
-				campaignStatus, err := campaignStatusesCollection.Get(conn, "campaign-id")
+				campaignStatus, err := campaignStatusesCollection.Get(conn, "campaign-id", "sender-id")
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(campaignStatus).To(Equal(collections.CampaignStatus{
@@ -128,7 +138,7 @@ var _ = Describe("CampaignStatusesCollection", func() {
 
 				messagesRepository.MostRecentlyUpdatedByCampaignIDCall.Returns.Error = errors.New("sql: no rows")
 
-				campaignStatus, err := campaignStatusesCollection.Get(conn, "campaign-id")
+				campaignStatus, err := campaignStatusesCollection.Get(conn, "campaign-id", "sender-id")
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(campaignStatus).To(Equal(collections.CampaignStatus{
@@ -141,6 +151,63 @@ var _ = Describe("CampaignStatusesCollection", func() {
 					StartTime:      startTime,
 					CompletedTime:  mysql.NullTime{},
 				}))
+			})
+		})
+
+		Context("failure cases", func() {
+			It("returns an error when the campaign cannot be found", func() {
+				notFoundError := models.RecordNotFoundError{errors.New("not found")}
+				campaignsRepository.GetCall.Returns.Error = notFoundError
+
+				_, err := campaignStatusesCollection.Get(conn, "campaign-id", "sender-id")
+				Expect(err).To(MatchError(collections.NotFoundError{notFoundError}))
+			})
+
+			It("returns an error when the campaign repo errors", func() {
+				campaignsRepository.GetCall.Returns.Error = errors.New("connection error")
+
+				_, err := campaignStatusesCollection.Get(conn, "campaign-id", "sender-id")
+				Expect(err).To(MatchError(collections.UnknownError{errors.New("connection error")}))
+			})
+
+			It("returns an error when the sender cannot be found", func() {
+				notFoundError := models.RecordNotFoundError{errors.New("not found")}
+				sendersRepository.GetCall.Returns.Error = notFoundError
+
+				_, err := campaignStatusesCollection.Get(conn, "campaign-id", "sender-id")
+				Expect(err).To(MatchError(collections.NotFoundError{notFoundError}))
+			})
+
+			It("returns an error when the sender repo errors", func() {
+				sendersRepository.GetCall.Returns.Error = errors.New("connection error")
+
+				_, err := campaignStatusesCollection.Get(conn, "campaign-id", "sender-id")
+				Expect(err).To(MatchError(collections.UnknownError{errors.New("connection error")}))
+			})
+
+			It("returns an error when the campaign does not match the sender", func() {
+				campaignsRepository.GetCall.Returns.Campaign = models.Campaign{
+					ID:        "campaign-id",
+					StartTime: startTime,
+					SenderID:  "different-sender-id",
+				}
+
+				_, err := campaignStatusesCollection.Get(conn, "campaign-id", "sender-id")
+				Expect(err).To(MatchError(collections.NotFoundError{errors.New("Campaign with id \"campaign-id\" could not be found")}))
+			})
+
+			It("returns an error when the messages repo count call errors", func() {
+				messagesRepository.CountByStatusCall.Returns.Error = errors.New("something bad")
+
+				_, err := campaignStatusesCollection.Get(conn, "campaign-id", "sender-id")
+				Expect(err).To(MatchError(collections.UnknownError{errors.New("something bad")}))
+			})
+
+			It("returns an error when the messages repo updated at errors", func() {
+				messagesRepository.MostRecentlyUpdatedByCampaignIDCall.Returns.Error = errors.New("db went away")
+
+				_, err := campaignStatusesCollection.Get(conn, "campaign-id", "sender-id")
+				Expect(err).To(MatchError(collections.UnknownError{errors.New("db went away")}))
 			})
 		})
 	})

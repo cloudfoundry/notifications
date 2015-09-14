@@ -2,6 +2,7 @@ package campaigns
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -11,7 +12,7 @@ import (
 )
 
 type campaignStatusGetter interface {
-	Get(connection collections.ConnectionInterface, campaignID string) (collections.CampaignStatus, error)
+	Get(connection collections.ConnectionInterface, campaignID, senderID string) (collections.CampaignStatus, error)
 }
 
 type StatusHandler struct {
@@ -27,11 +28,19 @@ func NewStatusHandler(campaignStatuses campaignStatusGetter) StatusHandler {
 func (h StatusHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	splitURL := strings.Split(req.URL.Path, "/")
 	campaignID := splitURL[len(splitURL)-2]
+	senderID := splitURL[len(splitURL)-4]
 	conn := context.Get("database").(collections.DatabaseInterface).Connection()
 
-	status, err := h.campaignStatuses.Get(conn, campaignID)
+	status, err := h.campaignStatuses.Get(conn, campaignID, senderID)
 	if err != nil {
-		panic(err)
+		switch err.(type) {
+		case collections.NotFoundError:
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		fmt.Fprintf(w, `{ "errors": [%q] }`, err)
+		return
 	}
 
 	output := map[string]interface{}{

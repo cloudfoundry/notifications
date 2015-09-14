@@ -1,6 +1,7 @@
 package campaigns_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -56,6 +57,9 @@ var _ = Describe("Campaign status handler", func() {
 
 		campaignStatusesCollection = mocks.NewCampaignStatusesCollection()
 
+		request, err = http.NewRequest("GET", "/senders/some-sender-id/campaigns/some-campaign-id/status", nil)
+		Expect(err).NotTo(HaveOccurred())
+
 		handler = campaigns.NewStatusHandler(campaignStatusesCollection)
 	})
 
@@ -81,9 +85,6 @@ var _ = Describe("Campaign status handler", func() {
 			},
 		}
 
-		request, err = http.NewRequest("GET", "/senders/some-sender-id/campaigns/some-campaign-id/status", nil)
-		Expect(err).NotTo(HaveOccurred())
-
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
@@ -101,6 +102,7 @@ var _ = Describe("Campaign status handler", func() {
 
 		Expect(campaignStatusesCollection.GetCall.Receives.Connection).To(Equal(conn))
 		Expect(campaignStatusesCollection.GetCall.Receives.CampaignID).To(Equal("some-campaign-id"))
+		Expect(campaignStatusesCollection.GetCall.Receives.SenderID).To(Equal("some-sender-id"))
 	})
 
 	Context("when the campaign is not yet completed", func() {
@@ -120,9 +122,6 @@ var _ = Describe("Campaign status handler", func() {
 				CompletedTime:  mysql.NullTime{},
 			}
 
-			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaigns/some-campaign-id/status", nil)
-			Expect(err).NotTo(HaveOccurred())
-
 			handler.ServeHTTP(writer, request, context)
 
 			Expect(writer.Code).To(Equal(http.StatusOK))
@@ -136,6 +135,34 @@ var _ = Describe("Campaign status handler", func() {
 				"failed_messages": 2,
 				"start_time": "2015-09-01T12:34:56-07:00",
 				"completed_time": null
+			}`))
+		})
+	})
+
+	Context("failure cases", func() {
+		It("returns a 404 with an appropriate error when the campaign statuses collection returns a not found error", func() {
+			campaignStatusesCollection.GetCall.Returns.Error = collections.NotFoundError{errors.New("not found")}
+
+			handler.ServeHTTP(writer, request, context)
+
+			Expect(writer.Code).To(Equal(http.StatusNotFound))
+			Expect(writer.Body).To(MatchJSON(`{
+				"errors": [
+					"not found"
+				]
+			}`))
+		})
+
+		It("returns a 500 with an appropriate error when the campaign statuses collection blows up", func() {
+			campaignStatusesCollection.GetCall.Returns.Error = errors.New("unexpected")
+
+			handler.ServeHTTP(writer, request, context)
+
+			Expect(writer.Code).To(Equal(http.StatusInternalServerError))
+			Expect(writer.Body).To(MatchJSON(`{
+				"errors": [
+					"unexpected"
+				]
 			}`))
 		})
 	})
