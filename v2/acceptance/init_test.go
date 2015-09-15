@@ -67,6 +67,15 @@ func GetClientTokenFor(clientID string) uaa.Token {
 	return token
 }
 
+func GetUserTokenFor(code string) uaa.Token {
+	token, err := GetUAAClientFor("notifications-sender").Exchange(code)
+	if err != nil {
+		panic(err)
+	}
+
+	return token
+}
+
 func GetUAAClientFor(clientID string) uaa.UAA {
 	return uaa.NewUAA("", Servers.UAA.ServerURL, clientID, "secret", "")
 }

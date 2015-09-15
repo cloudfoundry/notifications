@@ -54,7 +54,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	requestCounter := middleware.NewRequestCounter(mx.GetRouter(), metrics.DefaultLogger)
 	logging := middleware.NewRequestLogging(config.Logger)
 	notificationsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.write")
-	notificationsPreferencesAdminAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notification_preferences.admin")
+	unsubscribesAuthenticator := middleware.NewUnsubscribesAuthenticator(config.UAAPublicKey)
 	databaseAllocator := middleware.NewDatabaseAllocator(config.SQLDB, config.DBLoggingEnabled)
 
 	warrantConfig := warrant.Config{
@@ -128,7 +128,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	unsubscribers.Routes{
 		RequestLogging:          logging,
-		Authenticator:           notificationsPreferencesAdminAuthenticator,
+		Authenticator:           unsubscribesAuthenticator,
 		DatabaseAllocator:       databaseAllocator,
 		UnsubscribersCollection: unsubscribersCollection,
 	}.Register(mx)

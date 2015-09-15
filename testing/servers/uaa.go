@@ -95,8 +95,13 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
 				"notification_templates.write", "notification_templates.read"}
 		}
 	case "authorization_code":
-		token.Claims["scope"] = []string{"notification_preferences.read", "notification_preferences.write"}
 		token.Claims["user_id"] = strings.TrimSuffix(req.Form.Get("code"), "-code")
+		switch token.Claims["user_id"] {
+		case "unauthorized-user":
+			token.Claims["scope"] = []string{}
+		default:
+			token.Claims["scope"] = []string{"notification_preferences.read", "notification_preferences.write"}
+		}
 	}
 
 	tokenString, err := token.SignedString([]byte(ReadFile("/testing/fixtures/private.pem")))
