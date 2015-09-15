@@ -36,7 +36,9 @@ type V2Workflow struct {
 	uaaHost                 string
 }
 
-func NewV2Workflow(mailClient mailSender, packager messagePackager, userLoader userLoader, tokenLoader tokenLoader, messageStatusUpdater messageStatusUpdater, database services.DatabaseInterface, unsubscribersRepository unsubscribersRepositoryInterface, campaignsRepository campaignsRepositoryInterface, sender, domain, uaaHost string) V2Workflow {
+func NewV2Workflow(mailClient mailSender, packager messagePackager, userLoader userLoader, tokenLoader tokenLoader,
+	messageStatusUpdater messageStatusUpdater, database services.DatabaseInterface, unsubscribersRepository unsubscribersRepositoryInterface,
+	campaignsRepository campaignsRepositoryInterface, sender, domain, uaaHost string) V2Workflow {
 	return V2Workflow{
 		mailClient:              mailClient,
 		packager:                packager,

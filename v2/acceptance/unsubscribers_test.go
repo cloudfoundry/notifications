@@ -13,10 +13,10 @@ import (
 
 var _ = Describe("Unsubscribers", func() {
 	var (
-		client   *support.Client
-		token    uaa.Token
-		senderID string
-		userGUID string
+		client *support.Client
+		token  uaa.Token
+
+		senderID, userGUID, campaignTypeID, templateID, campaignID string
 	)
 
 	BeforeEach(func() {
@@ -34,25 +34,23 @@ var _ = Describe("Unsubscribers", func() {
 
 		userGUID = "user-123"
 		senderID = response["id"].(string)
+
+		By("creating a template", func() {
+			status, response, err := client.Do("POST", "/templates", map[string]interface{}{
+				"name":    "Acceptance Template",
+				"text":    "campaign template {{.Text}}",
+				"html":    "{{.HTML}}",
+				"subject": "{{.Subject}}",
+			}, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+
+			templateID = response["id"].(string)
+		})
 	})
 
 	Context("unsubscribing with a client token", func() {
 		It("does not send the user a notification", func() {
-			var campaignTypeID, templateID, campaignID string
-
-			By("creating a template", func() {
-				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
-					"name":    "Acceptance Template",
-					"text":    "campaign template {{.Text}}",
-					"html":    "{{.HTML}}",
-					"subject": "{{.Subject}}",
-				}, token.Access)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(status).To(Equal(http.StatusCreated))
-
-				templateID = response["id"].(string)
-			})
-
 			By("creating a campaign type", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type-name",
@@ -101,21 +99,6 @@ var _ = Describe("Unsubscribers", func() {
 
 		Context("when attempting to unsubscribe from a critical notification", func() {
 			It("returns a 403 status code and reports an error message as JSON", func() {
-				var campaignTypeID, templateID string
-
-				By("creating a template", func() {
-					status, response, err := client.Do("POST", "/templates", map[string]interface{}{
-						"name":    "Acceptance Template",
-						"text":    "campaign template {{.Text}}",
-						"html":    "{{.HTML}}",
-						"subject": "{{.Subject}}",
-					}, token.Access)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(status).To(Equal(http.StatusCreated))
-
-					templateID = response["id"].(string)
-				})
-
 				By("creating a campaign type", func() {
 					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 						"name":        "some-campaign-type-name",
@@ -154,20 +137,6 @@ var _ = Describe("Unsubscribers", func() {
 		Context("when attempting to unsubscribe a non-existent user", func() {
 			It("returns a 404 status code and reports the error message as JSON", func() {
 				var campaignTypeID, templateID string
-
-				By("creating a template", func() {
-					status, response, err := client.Do("POST", "/templates", map[string]interface{}{
-						"name":    "Acceptance Template",
-						"text":    "campaign template {{.Text}}",
-						"html":    "{{.HTML}}",
-						"subject": "{{.Subject}}",
-					}, token.Access)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(status).To(Equal(http.StatusCreated))
-
-					templateID = response["id"].(string)
-				})
-
 				By("creating a campaign type", func() {
 					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 						"name":        "some-campaign-type-name",

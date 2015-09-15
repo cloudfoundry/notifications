@@ -144,7 +144,9 @@ func (app Application) StartWorkers() {
 		unsubscribersRepository := v2models.NewUnsubscribersRepository(uuid.NewV4)
 		campaignsRepository := v2models.NewCampaignsRepository(uuid.NewV4)
 
-		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), postal.NewPackager(app.mother.TemplatesLoader(), cloak), postal.NewUserLoader(zonedUAAClient), uaa.NewTokenLoader(zonedUAAClient), messageStatusUpdater, database, unsubscribersRepository, campaignsRepository, app.env.Sender, app.env.Domain, app.env.UAAHost)
+		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), postal.NewPackager(app.mother.TemplatesLoader(), cloak),
+			postal.NewUserLoader(zonedUAAClient), uaa.NewTokenLoader(zonedUAAClient), messageStatusUpdater, database,
+			unsubscribersRepository, campaignsRepository, app.env.Sender, app.env.Domain, app.env.UAAHost)
 
 		worker := postal.NewDeliveryWorker(v1Workflow, v2Workflow, postal.DeliveryWorkerConfig{
 			ID:                     i,
