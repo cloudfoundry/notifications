@@ -49,8 +49,8 @@ var _ = Describe("Unsubscribers", func() {
 		})
 	})
 
-	Context("unsubscribing with a client token", func() {
-		It("does not send the user a notification", func() {
+	Context("managing subscription with a client token", func() {
+		It("does delivers or not based on the unsubscribe state", func() {
 			By("creating a campaign type", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type-name",
@@ -94,6 +94,45 @@ var _ = Describe("Unsubscribers", func() {
 				}).Should(Equal("completed"))
 
 				Expect(Servers.SMTP.Deliveries).To(HaveLen(0))
+			})
+
+			By("deleting the unsubscribe", func() {
+				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
+				status, _, err := client.Do("DELETE", path, nil, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusNoContent))
+			})
+
+			var secondCampaignID string
+
+			By("sending another campaign", func() {
+				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
+					"send_to": map[string]interface{}{
+						"user": userGUID,
+					},
+					"campaign_type_id": campaignTypeID,
+					"text":             "campaign body",
+					"subject":          "campaign subject",
+					"template_id":      templateID,
+				}, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusAccepted))
+				Expect(response["campaign_id"]).NotTo(BeEmpty())
+
+				secondCampaignID = response["campaign_id"].(string)
+			})
+
+			By("confirming that the email is received", func() {
+				Eventually(func() (interface{}, error) {
+					_, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s/status", senderID, secondCampaignID), nil, token.Access)
+					return response["status"], err
+				}).Should(Equal("completed"))
+
+				Expect(Servers.SMTP.Deliveries).To(HaveLen(1))
+
+				Expect(Servers.SMTP.Deliveries[0].Recipients).To(ConsistOf([]string{
+					"user-123@example.com",
+				}))
 			})
 		})
 

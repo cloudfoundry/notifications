@@ -131,4 +131,22 @@ var _ = Describe("UnsubscribersCollection", func() {
 			})
 		})
 	})
+
+	Describe("Delete", func() {
+		Context("when the unsubscriber exists", func() {
+			It("will delete the unsubscriber from the collection", func() {
+				err := unsubscribersCollection.Delete(connection, collections.Unsubscriber{
+					CampaignTypeID: "some-campaign-type-id",
+					UserGUID:       "some-user-guid",
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(unsubscribersRepository.DeleteCall.Receives.Connection).To(Equal(connection))
+				Expect(unsubscribersRepository.DeleteCall.Receives.Unsubscriber).To(Equal(models.Unsubscriber{
+					CampaignTypeID: "some-campaign-type-id",
+					UserGUID:       "some-user-guid",
+				}))
+			})
+		})
+	})
 })

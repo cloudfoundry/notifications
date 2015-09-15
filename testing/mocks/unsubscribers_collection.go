@@ -16,6 +16,15 @@ type UnsubscribersCollection struct {
 			Error        error
 		}
 	}
+	DeleteCall struct {
+		Receives struct {
+			Unsubscriber collections.Unsubscriber
+			Connection   db.ConnectionInterface
+		}
+		Returns struct {
+			Error error
+		}
+	}
 }
 
 func NewUnsubscribersCollection() *UnsubscribersCollection {
@@ -27,4 +36,11 @@ func (u *UnsubscribersCollection) Set(connection collections.ConnectionInterface
 	u.SetCall.Receives.Connection = connection
 
 	return u.SetCall.Returns.Unsubscriber, u.SetCall.Returns.Error
+}
+
+func (u *UnsubscribersCollection) Delete(connection collections.ConnectionInterface, unsubscriber collections.Unsubscriber) error {
+	u.DeleteCall.Receives.Unsubscriber = unsubscriber
+	u.DeleteCall.Receives.Connection = connection
+
+	return u.DeleteCall.Returns.Error
 }

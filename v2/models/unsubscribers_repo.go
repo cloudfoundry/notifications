@@ -46,3 +46,8 @@ func (r UnsubscribersRepository) Get(connection ConnectionInterface, userGUID, c
 
 	return unsubscriber, err
 }
+
+func (r UnsubscribersRepository) Delete(connection ConnectionInterface, unsubscriber Unsubscriber) error {
+	_, err := connection.Exec("DELETE from `unsubscribers` WHERE user_guid = ? AND campaign_type_id = ?", unsubscriber.UserGUID, unsubscriber.CampaignTypeID)
+	return err
+}

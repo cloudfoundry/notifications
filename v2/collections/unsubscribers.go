@@ -12,17 +12,18 @@ type Unsubscriber struct {
 	UserGUID       string
 }
 
-type unsubscribersSetter interface {
+type unsubscribersSetterDeleter interface {
 	Insert(connection models.ConnectionInterface, unsubscriber models.Unsubscriber) (models.Unsubscriber, error)
+	Delete(connection models.ConnectionInterface, unsubscriber models.Unsubscriber) error
 }
 
 type UnsubscribersCollection struct {
-	unsubscribersRepository unsubscribersSetter
+	unsubscribersRepository unsubscribersSetterDeleter
 	userFinder              existenceChecker
 	campaignTypesRepository campaignTypesGetter
 }
 
-func NewUnsubscribersCollection(unsubscribersRepository unsubscribersSetter,
+func NewUnsubscribersCollection(unsubscribersRepository unsubscribersSetterDeleter,
 	campaignTypesRepository campaignTypesGetter, userFinder existenceChecker) UnsubscribersCollection {
 
 	return UnsubscribersCollection{
@@ -64,4 +65,13 @@ func (c UnsubscribersCollection) Set(connection ConnectionInterface, unsubscribe
 
 	unsubscriber.ID = unsub.ID
 	return unsubscriber, nil
+}
+
+func (c UnsubscribersCollection) Delete(connection ConnectionInterface, unsubscriber Unsubscriber) error {
+	err := c.unsubscribersRepository.Delete(connection, models.Unsubscriber{
+		CampaignTypeID: unsubscriber.CampaignTypeID,
+		UserGUID:       unsubscriber.UserGUID,
+	})
+
+	return err
 }

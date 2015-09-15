@@ -27,6 +27,15 @@ type UnsubscribersRepository struct {
 			Error        error
 		}
 	}
+	DeleteCall struct {
+		Receives struct {
+			Unsubscriber models.Unsubscriber
+			Connection   db.ConnectionInterface
+		}
+		Returns struct {
+			Error error
+		}
+	}
 }
 
 func NewUnsubscribersRepository() *UnsubscribersRepository {
@@ -45,4 +54,10 @@ func (ur *UnsubscribersRepository) Get(connection models.ConnectionInterface, us
 	ur.GetCall.Receives.Connection = connection
 
 	return ur.GetCall.Returns.Unsubscriber, ur.GetCall.Returns.Error
+}
+
+func (ur *UnsubscribersRepository) Delete(connection models.ConnectionInterface, unsubscriber models.Unsubscriber) error {
+	ur.DeleteCall.Receives.Connection = connection
+	ur.DeleteCall.Receives.Unsubscriber = unsubscriber
+	return ur.DeleteCall.Returns.Error
 }

@@ -106,4 +106,47 @@ var _ = Describe("UnsubscribersRepo", func() {
 			})
 		})
 	})
+
+	Describe("Delete", func() {
+		It("deletes the specified record", func() {
+			_, err := repo.Insert(conn, models.Unsubscriber{
+				CampaignTypeID: "some-campaign-type-id",
+				UserGUID:       "some-user-guid",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = repo.Get(conn, "some-user-guid", "some-campaign-type-id")
+			Expect(err).NotTo(HaveOccurred())
+
+			err = repo.Delete(conn, models.Unsubscriber{
+				CampaignTypeID: "some-campaign-type-id",
+				UserGUID:       "some-user-guid",
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = repo.Get(conn, "some-user-guid", "some-campaign-type-id")
+			Expect(err).To(BeAssignableToTypeOf(models.RecordNotFoundError{}))
+		})
+
+		It("does not return an error if the user is not unsubscribed", func() {
+			err := repo.Delete(conn, models.Unsubscriber{
+				CampaignTypeID: "some-campaign-type-id",
+				UserGUID:       "some-user-guid",
+			})
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("when an unknown error happens", func() {
+			It("returns the error", func() {
+				connection := mocks.NewConnection()
+				connection.ExecCall.Returns.Error = errors.New("some other error")
+
+				err := repo.Delete(connection, models.Unsubscriber{
+					CampaignTypeID: "some-campaign-type-id",
+					UserGUID:       "some-user-guid",
+				})
+				Expect(err).To(MatchError(errors.New("some other error")))
+			})
+		})
+	})
 })
