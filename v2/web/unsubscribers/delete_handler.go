@@ -1,6 +1,7 @@
 package unsubscribers
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -33,7 +34,16 @@ func (h DeleteHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		UserGUID:       userGUID,
 	})
 	if err != nil {
-		panic(err)
+		switch err.(type) {
+		case collections.NotFoundError:
+			w.WriteHeader(http.StatusNotFound)
+		case collections.PermissionsError:
+			w.WriteHeader(http.StatusForbidden)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		w.Write([]byte(fmt.Sprintf(`{"errors": [%q]}`, err)))
+		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)

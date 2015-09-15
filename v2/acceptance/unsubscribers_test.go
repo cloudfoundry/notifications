@@ -50,7 +50,7 @@ var _ = Describe("Unsubscribers", func() {
 	})
 
 	Context("managing subscription with a client token", func() {
-		It("does delivers or not based on the unsubscribe state", func() {
+		It("delivers or not based on the unsubscribe state", func() {
 			By("creating a campaign type", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type-name",
@@ -162,7 +162,7 @@ var _ = Describe("Unsubscribers", func() {
 		})
 
 		Context("when the API client lacks the required scopes", func() {
-			It("returns a 403 status code", func() {
+			It("returns a 403 status code for PUTting an unsubscribe", func() {
 				token = GetClientTokenFor("non-admin-client")
 
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "some-campaign-type-id", userGUID)
@@ -171,9 +171,19 @@ var _ = Describe("Unsubscribers", func() {
 				Expect(status).To(Equal(http.StatusForbidden))
 				Expect(response["errors"]).To(ContainElement("You are not authorized to perform the requested action"))
 			})
+
+			It("returns a 403 status code for DELETEing an unsubscribe", func() {
+				token = GetClientTokenFor("non-admin-client")
+
+				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "some-campaign-type-id", userGUID)
+				status, response, err := client.Do("DELETE", path, nil, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusForbidden))
+				Expect(response["errors"]).To(ContainElement("You are not authorized to perform the requested action"))
+			})
 		})
 
-		Context("when attempting to unsubscribe a non-existent user", func() {
+		Context("when attempting to manage subscriptions for a non-existent user", func() {
 			It("returns a 404 status code and reports the error message as JSON", func() {
 				var campaignTypeID, templateID string
 				By("creating a campaign type", func() {
@@ -195,13 +205,28 @@ var _ = Describe("Unsubscribers", func() {
 					Expect(status).To(Equal(http.StatusNotFound))
 					Expect(response["errors"]).To(ContainElement("User \"not-a-user\" not found"))
 				})
+
+				By("removing an unsubscribe from the campaign type", func() {
+					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, "not-a-user")
+					status, response, err := client.Do("DELETE", path, nil, token.Access)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(status).To(Equal(http.StatusNotFound))
+					Expect(response["errors"]).To(ContainElement("User \"not-a-user\" not found"))
+				})
 			})
 		})
 
-		Context("when attempting to unsubscribe with a non-existent campaign type", func() {
-			It("returns a 404 status code and reports the error message as JSON", func() {
+		Context("when attempting to manage subscriptions for a non-existent campaign type", func() {
+			It("returns a 404 status code and reports the error message as JSON for PUTs", func() {
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "not-a-campaign-type", userGUID)
 				status, response, err := client.Do("PUT", path, nil, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusNotFound))
+				Expect(response["errors"]).To(ContainElement("Campaign type with id \"not-a-campaign-type\" could not be found"))
+			})
+			It("returns a 404 status code and reports the error message as JSON for DELETEs", func() {
+				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "not-a-campaign-type", userGUID)
+				status, response, err := client.Do("DELETE", path, nil, token.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement("Campaign type with id \"not-a-campaign-type\" could not be found"))

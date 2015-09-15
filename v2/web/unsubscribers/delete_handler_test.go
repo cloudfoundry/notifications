@@ -1,6 +1,7 @@
 package unsubscribers_test
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 
@@ -55,4 +56,44 @@ var _ = Describe("DeleteHandler", func() {
 		Expect(unsubscribersCollection.DeleteCall.Receives.Connection).To(Equal(connection))
 	})
 
+	Context("failure cases", func() {
+		Context("when the Delete call returns a NotFoundError", func() {
+			It("returns a 404 with the error message in JSON", func() {
+				unsubscribersCollection.DeleteCall.Returns.Error = collections.NotFoundError{errors.New("some-error")}
+				request, err := http.NewRequest("DELETE", "/senders/some-sender-id/campaign_types/some-campaign-type-id/unsubscribers/nonexistent-user", nil)
+				Expect(err).NotTo(HaveOccurred())
+
+				handler.ServeHTTP(writer, request, context)
+
+				Expect(writer.Code).To(Equal(http.StatusNotFound))
+				Expect(writer.Body.String()).To(MatchJSON(`{"errors": ["some-error"]}`))
+			})
+		})
+
+		Context("when the Delete call returns a PermissionsError", func() {
+			It("returns a 403 status code and reports the error in JSON", func() {
+				unsubscribersCollection.DeleteCall.Returns.Error = collections.PermissionsError{errors.New("some-error")}
+				request, err := http.NewRequest("DELETE", "/senders/some-sender-id/campaign_types/some-campaign-type-id/unsubscribers/some-user-guid", nil)
+				Expect(err).NotTo(HaveOccurred())
+
+				handler.ServeHTTP(writer, request, context)
+
+				Expect(writer.Code).To(Equal(http.StatusForbidden))
+				Expect(writer.Body.String()).To(MatchJSON(`{"errors": ["some-error"]}`))
+			})
+		})
+
+		Context("when the Delete call returns any other error", func() {
+			It("returns a 500 status", func() {
+				unsubscribersCollection.DeleteCall.Returns.Error = errors.New("some-bad-error")
+				request, err := http.NewRequest("DELETE", "/senders/some-sender-id/campaign_types/some-campaign-type-id/unsubscribers/nonexistent-user", nil)
+				Expect(err).NotTo(HaveOccurred())
+
+				handler.ServeHTTP(writer, request, context)
+
+				Expect(writer.Code).To(Equal(http.StatusInternalServerError))
+				Expect(writer.Body.String()).To(MatchJSON(`{"errors": ["some-bad-error"]}`))
+			})
+		})
+	})
 })

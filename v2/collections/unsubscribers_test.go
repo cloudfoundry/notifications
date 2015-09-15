@@ -62,17 +62,6 @@ var _ = Describe("UnsubscribersCollection", func() {
 		})
 
 		Context("when an error occurs", func() {
-			Context("when the userFinder errors", func() {
-				It("returns the error", func() {
-					userFinder.ExistsCall.Returns.Error = errors.New("some error")
-					_, err := unsubscribersCollection.Set(connection, collections.Unsubscriber{
-						CampaignTypeID: "some-campaign-type-id",
-						UserGUID:       "some-weird-user",
-					})
-					Expect(err).To(MatchError("some error"))
-				})
-			})
-
 			Describe("when the user does not exist", func() {
 				It("returns a record not found error", func() {
 					userFinder.ExistsCall.Returns.Exists = false
@@ -84,6 +73,17 @@ var _ = Describe("UnsubscribersCollection", func() {
 				})
 			})
 
+			Context("when the userFinder errors", func() {
+				It("returns the error", func() {
+					userFinder.ExistsCall.Returns.Error = errors.New("some error")
+					_, err := unsubscribersCollection.Set(connection, collections.Unsubscriber{
+						CampaignTypeID: "some-campaign-type-id",
+						UserGUID:       "some-weird-user",
+					})
+					Expect(err).To(MatchError("some error"))
+				})
+			})
+
 			Describe("when the campaignType does not exist", func() {
 				It("returns a record not found error", func() {
 					campaignTypesRepository.GetCall.Returns.Error = models.RecordNotFoundError{errors.New("some-record-not-found-error")}
@@ -91,7 +91,7 @@ var _ = Describe("UnsubscribersCollection", func() {
 						CampaignTypeID: "non-existent-campaign-type-id",
 						UserGUID:       "some-user",
 					})
-					Expect(err).To(MatchError(collections.NotFoundError{models.RecordNotFoundError{errors.New(`some-record-not-found-error`)}}))
+					Expect(err).To(MatchError(collections.NotFoundError{models.RecordNotFoundError{errors.New("some-record-not-found-error")}}))
 				})
 			})
 
@@ -113,7 +113,7 @@ var _ = Describe("UnsubscribersCollection", func() {
 						CampaignTypeID: "non-existent-campaign-type-id",
 						UserGUID:       "some-user",
 					})
-					Expect(err).To(MatchError(errors.New("some-error")))
+					Expect(err).To(MatchError("some-error"))
 				})
 			})
 
@@ -125,14 +125,17 @@ var _ = Describe("UnsubscribersCollection", func() {
 						UserGUID:       "some-user-guid",
 					})
 
-					Expect(err).To(MatchError(ContainSubstring("some-other-error")))
-					Expect(err).To(BeAssignableToTypeOf(collections.PersistenceError{}))
+					Expect(err).To(MatchError("some-other-error"))
 				})
 			})
 		})
 	})
 
 	Describe("Delete", func() {
+		BeforeEach(func() {
+			userFinder.ExistsCall.Returns.Exists = true
+		})
+
 		Context("when the unsubscriber exists", func() {
 			It("will delete the unsubscriber from the collection", func() {
 				err := unsubscribersCollection.Delete(connection, collections.Unsubscriber{
@@ -146,6 +149,52 @@ var _ = Describe("UnsubscribersCollection", func() {
 					CampaignTypeID: "some-campaign-type-id",
 					UserGUID:       "some-user-guid",
 				}))
+			})
+		})
+
+		Context("failure cases", func() {
+			Context("when the campaign type does not exist", func() {
+				It("returns a record not found error", func() {
+					campaignTypesRepository.GetCall.Returns.Error = models.RecordNotFoundError{errors.New("not found")}
+					err := unsubscribersCollection.Delete(connection, collections.Unsubscriber{
+						CampaignTypeID: "non-existent-campaign-type-id",
+						UserGUID:       "some-user",
+					})
+					Expect(err).To(MatchError(collections.NotFoundError{models.RecordNotFoundError{errors.New("not found")}}))
+				})
+			})
+
+			Context("when the campaign type repo returns an unknown error", func() {
+				It("returns the error", func() {
+					campaignTypesRepository.GetCall.Returns.Error = errors.New("some-error")
+					err := unsubscribersCollection.Delete(connection, collections.Unsubscriber{
+						CampaignTypeID: "non-existent-campaign-type-id",
+						UserGUID:       "some-user",
+					})
+					Expect(err).To(MatchError("some-error"))
+				})
+			})
+
+			Context("when the user does not exist", func() {
+				It("returns a record not found error", func() {
+					userFinder.ExistsCall.Returns.Exists = false
+					err := unsubscribersCollection.Delete(connection, collections.Unsubscriber{
+						CampaignTypeID: "some-campaign-type-id",
+						UserGUID:       "some-weird-user",
+					})
+					Expect(err).To(MatchError(collections.NotFoundError{errors.New(`User "some-weird-user" not found`)}))
+				})
+			})
+
+			Context("when the user finder returns an error", func() {
+				It("returns the error", func() {
+					userFinder.ExistsCall.Returns.Error = errors.New("user not found")
+					err := unsubscribersCollection.Delete(connection, collections.Unsubscriber{
+						CampaignTypeID: "some-campaign-type-id",
+						UserGUID:       "some-weird-user",
+					})
+					Expect(err).To(MatchError("user not found"))
+				})
 			})
 		})
 	})

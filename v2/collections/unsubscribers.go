@@ -60,7 +60,7 @@ func (c UnsubscribersCollection) Set(connection ConnectionInterface, unsubscribe
 		UserGUID:       unsubscriber.UserGUID,
 	})
 	if err != nil {
-		return Unsubscriber{}, PersistenceError{err}
+		return Unsubscriber{}, err
 	}
 
 	unsubscriber.ID = unsub.ID
@@ -68,7 +68,24 @@ func (c UnsubscribersCollection) Set(connection ConnectionInterface, unsubscribe
 }
 
 func (c UnsubscribersCollection) Delete(connection ConnectionInterface, unsubscriber Unsubscriber) error {
-	err := c.unsubscribersRepository.Delete(connection, models.Unsubscriber{
+	_, err := c.campaignTypesRepository.Get(connection, unsubscriber.CampaignTypeID)
+	if err != nil {
+		if e, ok := err.(models.RecordNotFoundError); ok {
+			return NotFoundError{e}
+		}
+		return err
+	}
+
+	userExists, err := c.userFinder.Exists(unsubscriber.UserGUID)
+	if err != nil {
+		return err
+	}
+
+	if !userExists {
+		return NotFoundError{fmt.Errorf("User %q not found", unsubscriber.UserGUID)}
+	}
+
+	err = c.unsubscribersRepository.Delete(connection, models.Unsubscriber{
 		CampaignTypeID: unsubscriber.CampaignTypeID,
 		UserGUID:       unsubscriber.UserGUID,
 	})
