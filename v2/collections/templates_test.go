@@ -25,8 +25,20 @@ var _ = Describe("TemplatesCollection", func() {
 		conn = mocks.NewConnection()
 	})
 
-	Describe("Set", func() {
+	Describe("DefaultTemplate", func() {
+		It("defines a default template", func() {
+			Expect(collections.DefaultTemplate).To(Equal(collections.Template{
+				ID:       "default",
+				Name:     "The Default Template",
+				Subject:  "{{.Subject}}",
+				Text:     "{{.Text}}",
+				HTML:     "{{.HTML}}",
+				Metadata: "{}",
+			}))
+		})
+	})
 
+	Describe("Set", func() {
 		Context("when no ID is supplied", func() {
 			BeforeEach(func() {
 				templatesRepository.InsertCall.Returns.Template = models.Template{
@@ -215,9 +227,20 @@ var _ = Describe("TemplatesCollection", func() {
 			Expect(templatesRepository.GetCall.Receives.TemplateID).To(Equal("some-template-id"))
 		})
 
+		Context("when the default template does not exist in the repo", func() {
+			It("returns the 'stock' default template", func() {
+				templatesRepository.GetCall.Returns.Error = models.NewRecordNotFoundError("")
+
+				template, err := templatesCollection.Get(conn, "default", "some-client-id")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(template).To(Equal(collections.DefaultTemplate))
+			})
+		})
+
 		Context("failure cases", func() {
 			It("returns a not found error if the template does not exist", func() {
 				templatesRepository.GetCall.Returns.Error = models.NewRecordNotFoundError("")
+
 				_, err := templatesCollection.Get(conn, "missing-template-id", "some-client-id")
 				Expect(err).To(BeAssignableToTypeOf(collections.NotFoundError{}))
 			})

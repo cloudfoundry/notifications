@@ -16,6 +16,15 @@ type Template struct {
 	ClientID string
 }
 
+var DefaultTemplate = Template{
+	ID:       "default",
+	Name:     "The Default Template",
+	Subject:  "{{.Subject}}",
+	Text:     "{{.Text}}",
+	HTML:     "{{.HTML}}",
+	Metadata: "{}",
+}
+
 type templatesRepository interface {
 	Insert(conn models.ConnectionInterface, template models.Template) (createdTemplate models.Template, err error)
 	Update(conn models.ConnectionInterface, template models.Template) (updatedTemplate models.Template, err error)
@@ -92,27 +101,30 @@ func (c TemplatesCollection) Set(conn ConnectionInterface, template Template) (c
 }
 
 func (c TemplatesCollection) Get(conn ConnectionInterface, templateID, clientID string) (Template, error) {
-	model, err := c.repo.Get(conn, templateID)
+	template, err := c.repo.Get(conn, templateID)
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
+			if templateID == DefaultTemplate.ID {
+				return DefaultTemplate, nil
+			}
 			return Template{}, NotFoundError{err}
 		default:
 			return Template{}, PersistenceError{err}
 		}
 	}
-	if model.ClientID != clientID {
+	if template.ClientID != clientID {
 		return Template{}, NotFoundError{fmt.Errorf("Template with id %q could not be found", templateID)}
 	}
 
 	return Template{
-		ID:       model.ID,
-		Name:     model.Name,
-		HTML:     model.HTML,
-		Text:     model.Text,
-		Subject:  model.Subject,
-		Metadata: model.Metadata,
-		ClientID: model.ClientID,
+		ID:       template.ID,
+		Name:     template.Name,
+		HTML:     template.HTML,
+		Text:     template.Text,
+		Subject:  template.Subject,
+		Metadata: template.Metadata,
+		ClientID: template.ClientID,
 	}, nil
 }
 
@@ -131,22 +143,22 @@ func (c TemplatesCollection) Delete(conn ConnectionInterface, templateID string)
 }
 
 func (c TemplatesCollection) List(conn ConnectionInterface, clientID string) ([]Template, error) {
-	templateList := []Template{}
+	var templateList []Template
 
-	models, err := c.repo.List(conn, clientID)
+	templates, err := c.repo.List(conn, clientID)
 	if err != nil {
 		return templateList, UnknownError{err}
 	}
 
-	for _, model := range models {
+	for _, template := range templates {
 		templateList = append(templateList, Template{
-			ID:       model.ID,
-			Name:     model.Name,
-			HTML:     model.HTML,
-			Text:     model.Text,
-			Subject:  model.Subject,
-			Metadata: model.Metadata,
-			ClientID: model.ClientID,
+			ID:       template.ID,
+			Name:     template.Name,
+			HTML:     template.HTML,
+			Text:     template.Text,
+			Subject:  template.Subject,
+			Metadata: template.Metadata,
+			ClientID: template.ClientID,
 		})
 	}
 

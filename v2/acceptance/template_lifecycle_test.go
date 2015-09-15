@@ -400,4 +400,19 @@ var _ = Describe("Template lifecycle", func() {
 			})
 		})
 	})
+
+	Context("when interacting with the default template", func() {
+		It("returns the default template with the default values when it has never been set before", func() {
+			status, response, err := client.Do("GET", "/templates/default", nil, token.Access)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+
+			Expect(response["id"]).To(Equal("default"))
+			Expect(response["name"]).To(Equal("The Default Template"))
+			Expect(response["text"]).To(Equal("{{.Text}}"))
+			Expect(response["html"]).To(Equal("{{.HTML}}"))
+			Expect(response["subject"]).To(Equal("{{.Subject}}"))
+			Expect(response["metadata"]).To(Equal(map[string]interface{}{}))
+		})
+	})
 })
