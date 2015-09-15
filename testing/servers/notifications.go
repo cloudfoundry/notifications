@@ -116,7 +116,9 @@ func (s Notifications) URL() string {
 
 func (s Notifications) MigrateDatabase() {
 	env := application.NewEnvironment()
-	database, gobbleDB := fetchDatabases()
+	sqlDB := openDatabase(env)
+	defer sqlDB.Close()
+	database, gobbleDB := fetchDatabases(env, sqlDB)
 
 	migrator := v1models.DatabaseMigrator{}
 	migrator.Migrate(database.RawConnection(), env.ModelMigrationsPath)
@@ -126,11 +128,16 @@ func (s Notifications) MigrateDatabase() {
 
 func (s Notifications) ResetDatabase() {
 	env := application.NewEnvironment()
-	database, gobbleDB := fetchDatabases()
+	sqlDB := openDatabase(env)
+	defer sqlDB.Close()
+	database, gobbleDB := fetchDatabases(env, sqlDB)
 
 	v1models.Setup(database)
 	v2models.Setup(database)
-	database.Connection().(*db.Connection).TruncateTables()
+	err := database.Connection().(*db.Connection).TruncateTables()
+	if err != nil {
+		panic(err)
+	}
 
 	migrator := v1models.DatabaseMigrator{}
 	migrator.Seed(database, path.Join(env.RootPath, "templates", "default.json"))
@@ -139,7 +146,11 @@ func (s Notifications) ResetDatabase() {
 }
 
 func (s Notifications) WaitForJobsQueueToEmpty() error {
-	_, gobbleDB := fetchDatabases()
+	env := application.NewEnvironment()
+	sqlDB := openDatabase(env)
+	defer sqlDB.Close()
+	_, gobbleDB := fetchDatabases(env, sqlDB)
+
 	timer := time.After(10 * time.Second)
 	for {
 		select {
@@ -169,13 +180,15 @@ func freePort() string {
 	return addressParts[1]
 }
 
-func fetchDatabases() (*db.DB, *gobble.DB) {
-	env := application.NewEnvironment()
+func openDatabase(env application.Environment) *sql.DB {
 	sqlDB, err := sql.Open("mysql", env.DatabaseURL)
 	if err != nil {
 		ginkgo.Fail(err.Error(), 1)
 	}
+	return sqlDB
+}
 
+func fetchDatabases(env application.Environment, sqlDB *sql.DB) (*db.DB, *gobble.DB) {
 	database := db.NewDatabase(sqlDB, db.Config{DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json")})
 	gobbleDB := gobble.NewDatabase(sqlDB)
 

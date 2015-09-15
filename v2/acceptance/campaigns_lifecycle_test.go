@@ -423,10 +423,6 @@ var _ = Describe("Campaign Lifecycle", func() {
 				}
 			})
 
-			AfterEach(func() {
-				Servers.Notifications.ResetDatabase()
-			})
-
 			It("sends a campaign to an email and retrieves the campaign status before the campaign completes", func() {
 				By("sending the campaign", func() {
 					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
