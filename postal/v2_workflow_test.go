@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
+	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
@@ -17,17 +18,19 @@ import (
 
 var _ = Describe("V2Workflow", func() {
 	var (
-		buffer               *bytes.Buffer
-		workflow             postal.V2Workflow
-		logger               lager.Logger
-		mailClient           *mocks.MailClient
-		userLoader           *mocks.UserLoader
-		tokenLoader          *mocks.TokenLoader
-		messageStatusUpdater *mocks.MessageStatusUpdater
-		packager             *mocks.Packager
-		conn                 *mocks.Connection
-		database             *mocks.Database
-		delivery             postal.Delivery
+		buffer                  *bytes.Buffer
+		workflow                postal.V2Workflow
+		logger                  lager.Logger
+		mailClient              *mocks.MailClient
+		userLoader              *mocks.UserLoader
+		tokenLoader             *mocks.TokenLoader
+		messageStatusUpdater    *mocks.MessageStatusUpdater
+		packager                *mocks.Packager
+		conn                    *mocks.Connection
+		database                *mocks.Database
+		delivery                postal.Delivery
+		campaignsRepository     *mocks.CampaignsRepository
+		unsubscribersRepository *mocks.UnsubscribersRepository
 	)
 
 	BeforeEach(func() {
@@ -51,6 +54,10 @@ var _ = Describe("V2Workflow", func() {
 				Emails: []string{"user-123@example.com"},
 			},
 		}
+
+		campaignsRepository = mocks.NewCampaignsRepository()
+		unsubscribersRepository = mocks.NewUnsubscribersRepository()
+		unsubscribersRepository.GetCall.Returns.Error = models.RecordNotFoundError{errors.New("not unsubscribed == will be delivered!")}
 
 		packager = mocks.NewPackager()
 		packager.PrepareContextCall.Returns.MessageContext = postal.MessageContext{
@@ -126,7 +133,7 @@ var _ = Describe("V2Workflow", func() {
 			CampaignID:    "some-campaign-id",
 		}
 
-		workflow = postal.NewV2Workflow(mailClient, packager, userLoader, tokenLoader, messageStatusUpdater, database, "from@example.com", "example.com", "uaa-host")
+		workflow = postal.NewV2Workflow(mailClient, packager, userLoader, tokenLoader, messageStatusUpdater, database, unsubscribersRepository, campaignsRepository, "from@example.com", "example.com", "uaa-host")
 	})
 
 	It("ensures message delivery", func() {
@@ -184,7 +191,62 @@ var _ = Describe("V2Workflow", func() {
 		})
 	})
 
+	Context("when the user is unsubscribed from the campaign type", func() {
+		BeforeEach(func() {
+			unsubscribersRepository.GetCall.Returns.Unsubscriber = models.Unsubscriber{
+				ID:             "some-id",
+				CampaignTypeID: "some-campaign-type-id",
+				UserGUID:       "user-123",
+			}
+			campaignsRepository.GetCall.Returns.Campaign = models.Campaign{
+				CampaignTypeID: "some-campaign-type-id",
+			}
+
+			err := workflow.Deliver(delivery, logger)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("does not send the notification", func() {
+			Expect(campaignsRepository.GetCall.Receives.Connection).To(Equal(conn))
+			Expect(campaignsRepository.GetCall.Receives.CampaignID).To(Equal("some-campaign-id"))
+
+			Expect(unsubscribersRepository.GetCall.Receives.Connection).To(Equal(conn))
+			Expect(unsubscribersRepository.GetCall.Receives.UserGUID).To(Equal("user-123"))
+			Expect(unsubscribersRepository.GetCall.Receives.CampaignTypeID).To(Equal("some-campaign-type-id"))
+
+			Expect(mailClient.SendCall.CallCount).To(Equal(0))
+		})
+
+		It("marks the message as delivered", func() {
+			Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
+			Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal("randomly-generated-guid"))
+			Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusDelivered))
+			Expect(messageStatusUpdater.UpdateCall.Receives.CampaignID).To(Equal("some-campaign-id"))
+			Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
+		})
+	})
+
 	Context("failure cases", func() {
+		Context("when the campaigns repository has an error", func() {
+			It("returns the error", func() {
+				campaignsRepository.GetCall.Returns.Error = errors.New("some-campaigns-repository-error")
+
+				err := workflow.Deliver(delivery, logger)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError(errors.New("some-campaigns-repository-error")))
+			})
+		})
+
+		Context("when the unsubscriber has an unknown error", func() {
+			It("returns the error", func() {
+				unsubscribersRepository.GetCall.Returns.Error = errors.New("some-unsubscriber-error")
+
+				err := workflow.Deliver(delivery, logger)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError(errors.New("some-unsubscriber-error")))
+			})
+		})
+
 		Context("when the token cannot be loaded", func() {
 			It("returns the error", func() {
 				tokenLoader.LoadCall.Returns.Error = errors.New("some-token-error")

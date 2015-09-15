@@ -79,11 +79,20 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
 	case "client_credentials":
 		switch clientID {
 		case "non-critical-client":
-			token.Claims["scope"] = []string{"notifications.manage", "notifications.write", "emails.write", "notification_preferences.admin", "notification_templates.admin", "notification_templates.write", "notification_templates.read"}
+			token.Claims["scope"] = []string{"notifications.manage", "notifications.write",
+				"emails.write", "notification_preferences.admin", "notification_templates.admin",
+				"notification_templates.write", "notification_templates.read"}
 		case "unauthorized-client":
 			token.Claims["scope"] = []string{}
+		case "non-admin-client":
+			token.Claims["scope"] = []string{
+				"notifications.write",
+			}
 		default:
-			token.Claims["scope"] = []string{"notifications.manage", "notifications.write", "emails.write", "notification_preferences.admin", "critical_notifications.write", "notification_templates.admin", "notification_templates.write", "notification_templates.read"}
+			token.Claims["scope"] = []string{"notifications.manage",
+				"notifications.write", "emails.write", "notification_preferences.admin",
+				"critical_notifications.write", "notification_templates.admin",
+				"notification_templates.write", "notification_templates.read"}
 		}
 	case "authorization_code":
 		token.Claims["scope"] = []string{"notification_preferences.read", "notification_preferences.write"}

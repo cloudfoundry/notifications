@@ -17,6 +17,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/senders"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/templates"
+	"github.com/cloudfoundry-incubator/notifications/v2/web/unsubscribers"
 	"github.com/gorilla/mux"
 	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-cf-experimental/rainmaker"
@@ -53,6 +54,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	requestCounter := middleware.NewRequestCounter(mx.GetRouter(), metrics.DefaultLogger)
 	logging := middleware.NewRequestLogging(config.Logger)
 	notificationsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.write")
+	notificationsPreferencesAdminAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notification_preferences.admin")
 	databaseAllocator := middleware.NewDatabaseAllocator(config.SQLDB, config.DBLoggingEnabled)
 
 	warrantConfig := warrant.Config{
@@ -80,12 +82,14 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	templatesRepository := models.NewTemplatesRepository(uuid.NewV4)
 	campaignsRepository := models.NewCampaignsRepository(uuid.NewV4)
 	messagesRepository := models.NewMessagesRepository(util.NewClock())
+	unsubscribersRepository := models.NewUnsubscribersRepository(uuid.NewV4)
 
 	sendersCollection := collections.NewSendersCollection(sendersRepository, campaignTypesRepository)
 	templatesCollection := collections.NewTemplatesCollection(templatesRepository)
 	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository, templatesRepository)
 	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignsRepository, campaignTypesRepository, templatesRepository, sendersRepository, userFinder, spaceFinder, orgFinder)
 	campaignStatusesCollection := collections.NewCampaignStatusesCollection(campaignsRepository, sendersRepository, messagesRepository)
+	unsubscribersCollection := collections.NewUnsubscribersCollection(unsubscribersRepository, campaignTypesRepository, userFinder)
 
 	info.Routes{
 		RequestCounter: requestCounter,
@@ -120,6 +124,13 @@ func NewRouter(mx muxer, config Config) http.Handler {
 		DatabaseAllocator:          databaseAllocator,
 		CampaignsCollection:        campaignsCollection,
 		CampaignStatusesCollection: campaignStatusesCollection,
+	}.Register(mx)
+
+	unsubscribers.Routes{
+		RequestLogging:          logging,
+		Authenticator:           notificationsPreferencesAdminAuthenticator,
+		DatabaseAllocator:       databaseAllocator,
+		UnsubscribersCollection: unsubscribersCollection,
 	}.Register(mx)
 
 	return mx

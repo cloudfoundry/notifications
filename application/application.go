@@ -15,6 +15,7 @@ import (
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/util"
 	"github.com/cloudfoundry-incubator/notifications/web"
+	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/conceal"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/viron"
@@ -140,7 +141,10 @@ func (app Application) StartWorkers() {
 
 		database := v2models.NewDatabase(app.mother.SQLDatabase(), v2models.Config{})
 		messageStatusUpdater := postal.NewV2MessageStatusUpdater(v2models.NewMessagesRepository(util.NewClock()))
-		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), postal.NewPackager(app.mother.TemplatesLoader(), cloak), postal.NewUserLoader(zonedUAAClient), uaa.NewTokenLoader(zonedUAAClient), messageStatusUpdater, database, app.env.Sender, app.env.Domain, app.env.UAAHost)
+		unsubscribersRepository := v2models.NewUnsubscribersRepository(uuid.NewV4)
+		campaignsRepository := v2models.NewCampaignsRepository(uuid.NewV4)
+
+		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), postal.NewPackager(app.mother.TemplatesLoader(), cloak), postal.NewUserLoader(zonedUAAClient), uaa.NewTokenLoader(zonedUAAClient), messageStatusUpdater, database, unsubscribersRepository, campaignsRepository, app.env.Sender, app.env.Domain, app.env.UAAHost)
 
 		worker := postal.NewDeliveryWorker(v1Workflow, v2Workflow, postal.DeliveryWorkerConfig{
 			ID:                     i,
