@@ -27,6 +27,32 @@ func NewClient(config Config) *Client {
 		httpClient: http.DefaultClient,
 	}
 }
+func (c Client) DoTyped(method string, path string, payload map[string]interface{}, token string, results interface{}) (int, error) {
+	var requestBody io.Reader
+
+	if payload != nil {
+		content, err := json.Marshal(payload)
+		if err != nil {
+			return 0, err
+		}
+
+		requestBody = bytes.NewBuffer(content)
+	}
+
+	responseCode, responseBody, err := c.makeRequest(method, c.config.Host+path, requestBody, token)
+	if err != nil {
+		return 0, err
+	}
+
+	if strings.Contains(string(responseBody), "{") {
+		err = json.Unmarshal(responseBody, &results)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return responseCode, err
+}
 
 func (c Client) Do(method string, path string, payload map[string]interface{}, token string) (int, map[string]interface{}, error) {
 	var requestBody io.Reader

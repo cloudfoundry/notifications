@@ -30,15 +30,35 @@ var _ = Describe("Sender lifecycle", func() {
 		var senderID string
 
 		By("creating a sender", func() {
-			status, response, err := client.Do("POST", "/senders", map[string]interface{}{
+			var results struct {
+				ID    string
+				Name  string
+				Links struct {
+					Self struct {
+						Href string
+					}
+
+					CampaignTypes struct {
+						Href string
+					} `json:"campaign_types"`
+
+					Campaigns struct {
+						Href string
+					}
+				} `json:"_links"`
+			}
+			status, err := client.DoTyped("POST", "/senders", map[string]interface{}{
 				"name": "My Cool App",
-			}, token.Access)
+			}, token.Access, &results)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
-			Expect(response["name"]).To(Equal("My Cool App"))
+			Expect(results.Name).To(Equal("My Cool App"))
+			Expect(results.Links.Self.Href).To(Equal(fmt.Sprintf("/senders/%s", results.ID)))
+			Expect(results.Links.CampaignTypes.Href).To(Equal(fmt.Sprintf("/senders/%s/campaign_types", results.ID)))
+			Expect(results.Links.Campaigns.Href).To(Equal(fmt.Sprintf("/senders/%s/campaigns", results.ID)))
 
-			senderID = response["id"].(string)
+			senderID = results.ID
 		})
 
 		By("listing all senders", func() {
