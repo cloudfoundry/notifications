@@ -15,6 +15,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/info"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/middleware"
+	"github.com/cloudfoundry-incubator/notifications/v2/web/root"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/senders"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/unsubscribers"
@@ -90,6 +91,10 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignsRepository, campaignTypesRepository, templatesRepository, sendersRepository, userFinder, spaceFinder, orgFinder)
 	campaignStatusesCollection := collections.NewCampaignStatusesCollection(campaignsRepository, sendersRepository, messagesRepository)
 	unsubscribersCollection := collections.NewUnsubscribersCollection(unsubscribersRepository, campaignTypesRepository, userFinder)
+
+	root.Routes{
+		RequestLogging: logging,
+	}.Register(mx)
 
 	info.Routes{
 		RequestCounter: requestCounter,

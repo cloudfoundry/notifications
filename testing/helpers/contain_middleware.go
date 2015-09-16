@@ -1,19 +1,13 @@
-package info_test
+package helpers
 
 import (
 	"fmt"
-	"testing"
 
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
-
-func TestWebV2InfoSuite(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "v2/web/info")
-}
 
 func ExpectToContainMiddlewareStack(actualMiddleware []stack.Middleware, expectedMiddleware ...stack.Middleware) {
 	if len(actualMiddleware) != len(expectedMiddleware) {

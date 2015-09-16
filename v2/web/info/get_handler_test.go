@@ -18,12 +18,10 @@ var _ = Describe("GetHandler", func() {
 			handler = info.NewGetHandler()
 		})
 
-		It("returns a 200 response code and an empty JSON body", func() {
+		It("returns a 200 response code and a JSON body with version info", func() {
 			writer := httptest.NewRecorder()
 			request, err := http.NewRequest("GET", "/info", nil)
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, nil)
 
