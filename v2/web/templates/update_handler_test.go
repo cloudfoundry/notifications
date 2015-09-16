@@ -97,6 +97,46 @@ var _ = Describe("UpdateHandler", func() {
 		}))
 	})
 
+	Context("when updating the default template", func() {
+		It("saves the client ID", func() {
+			requestBody, err := json.Marshal(map[string]interface{}{
+				"name":     "a default template",
+				"text":     "new text",
+				"html":     "default html",
+				"subject":  "default subject",
+				"metadata": map[string]string{"template": "default"},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			request, err = http.NewRequest("PUT", "/templates/default", bytes.NewBuffer(requestBody))
+			Expect(err).NotTo(HaveOccurred())
+
+			templatesCollection.GetCall.Returns.Template = collections.Template{
+				ID:       "default",
+				Name:     "a default template",
+				HTML:     "default html",
+				Text:     "default text",
+				Subject:  "default subject",
+				Metadata: `{"template": "default"}`,
+			}
+
+			handler.ServeHTTP(writer, request, context)
+
+			Expect(writer.Code).To(Equal(http.StatusOK))
+
+			Expect(templatesCollection.SetCall.Receives.Connection).To(Equal(conn))
+			Expect(templatesCollection.SetCall.Receives.Template).To(Equal(collections.Template{
+				ID:       "default",
+				Name:     "a default template",
+				HTML:     "default html",
+				Text:     "new text",
+				Subject:  "default subject",
+				Metadata: `{"template":"default"}`,
+				ClientID: "some-client-id",
+			}))
+		})
+	})
+
 	Context("when omitting fields", func() {
 		BeforeEach(func() {
 			requestBody, err := json.Marshal(map[string]interface{}{})

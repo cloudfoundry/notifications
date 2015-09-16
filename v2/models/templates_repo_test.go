@@ -43,6 +43,19 @@ var _ = Describe("TemplatesRepo", func() {
 			Expect(createdTemplate.ID).To(Equal("deadbeef-aabb-ccdd-eeff-001122334455"))
 		})
 
+		Context("when the 'default' template ID is supplied", func() {
+			It("does not generate a random guid", func() {
+				createdTemplate, err := repo.Insert(conn, models.Template{
+					ID:       "default",
+					Name:     "some-template",
+					ClientID: "some-client-id",
+				})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(guidGenerator.GenerateCall.CallCount).To(Equal(0))
+				Expect(createdTemplate.ID).To(Equal("default"))
+			})
+		})
+
 		Context("failure cases", func() {
 			It("returns an error if it happens", func() {
 				_, err := repo.Insert(conn, models.Template{

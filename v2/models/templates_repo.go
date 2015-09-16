@@ -16,9 +16,13 @@ func NewTemplatesRepository(guidGenerator guidGeneratorFunc) TemplatesRepository
 }
 
 func (r TemplatesRepository) Insert(conn ConnectionInterface, template Template) (Template, error) {
-	guid, err := r.generateGUID()
-	if err != nil {
-		panic(err)
+	if template.ID != "default" {
+		guid, err := r.generateGUID()
+		if err != nil {
+			panic(err)
+		}
+
+		template.ID = guid.String()
 	}
 
 	present, err := r.templateWithNameAndClientIDIsPresent(conn, template.Name, template.ClientID)
@@ -29,7 +33,6 @@ func (r TemplatesRepository) Insert(conn ConnectionInterface, template Template)
 		return template, DuplicateRecordError{fmt.Errorf("Template with name %q already exists", template.Name)}
 	}
 
-	template.ID = guid.String()
 	err = conn.Insert(&template)
 	if err != nil {
 		return template, err

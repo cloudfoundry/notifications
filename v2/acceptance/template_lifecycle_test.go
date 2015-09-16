@@ -402,17 +402,49 @@ var _ = Describe("Template lifecycle", func() {
 	})
 
 	Context("when interacting with the default template", func() {
-		It("returns the default template with the default values when it has never been set before", func() {
-			status, response, err := client.Do("GET", "/templates/default", nil, token.Access)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(status).To(Equal(http.StatusOK))
+		Context("getting", func() {
+			It("returns the default template with the default values when it has never been set before", func() {
+				status, response, err := client.Do("GET", "/templates/default", nil, token.Access)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusOK))
 
-			Expect(response["id"]).To(Equal("default"))
-			Expect(response["name"]).To(Equal("The Default Template"))
-			Expect(response["text"]).To(Equal("{{.Text}}"))
-			Expect(response["html"]).To(Equal("{{.HTML}}"))
-			Expect(response["subject"]).To(Equal("{{.Subject}}"))
-			Expect(response["metadata"]).To(Equal(map[string]interface{}{}))
+				Expect(response["id"]).To(Equal("default"))
+				Expect(response["name"]).To(Equal("The Default Template"))
+				Expect(response["text"]).To(Equal("{{.Text}}"))
+				Expect(response["html"]).To(Equal("{{.HTML}}"))
+				Expect(response["subject"]).To(Equal("{{.Subject}}"))
+				Expect(response["metadata"]).To(Equal(map[string]interface{}{}))
+			})
+		})
+
+		Context("updating", func() {
+			It("persists the updated default template", func() {
+				By("updating the default template", func() {
+					status, response, err := client.Do("PUT", "/templates/default", map[string]interface{}{
+						"name":     "some other default",
+						"text":     "in default",
+						"html":     "massively defaulting",
+						"subject":  "time to default",
+						"metadata": map[string]interface{}{},
+					}, token.Access)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(status).To(Equal(http.StatusOK))
+					Expect(response["id"]).To(Equal("default"))
+				})
+
+				By("retrieving the newly updated default template", func() {
+					status, response, err := client.Do("GET", "/templates/default", nil, token.Access)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(status).To(Equal(http.StatusOK))
+
+					Expect(response["id"]).To(Equal("default"))
+					Expect(response["name"]).To(Equal("some other default"))
+					Expect(response["text"]).To(Equal("in default"))
+					Expect(response["html"]).To(Equal("massively defaulting"))
+					Expect(response["subject"]).To(Equal("time to default"))
+					Expect(response["metadata"]).To(Equal(map[string]interface{}{}))
+				})
+			})
 		})
 	})
 })
