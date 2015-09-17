@@ -10,6 +10,7 @@ import (
 
 const (
 	VCAPRequestIDKey    = "vcap_request_id"
+	APIVersion          = "api_version"
 	RequestReceivedTime = "request_received_time"
 )
 
@@ -27,9 +28,16 @@ func (r RequestLogging) ServeHTTP(response http.ResponseWriter, request *http.Re
 		requestID = "UNKNOWN"
 	}
 
-	logSession := r.logger.Session("request", lager.Data{
+	logData := lager.Data{
 		VCAPRequestIDKey: requestID,
-	})
+	}
+
+	apiVersion := request.Header.Get("X-NOTIFICATIONS-VERSION")
+	if apiVersion != "" {
+		logData[APIVersion] = apiVersion
+	}
+
+	logSession := r.logger.Session("request", logData)
 
 	logSession.Info("incoming", lager.Data{
 		"method": request.Method,

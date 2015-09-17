@@ -35,9 +35,9 @@ var _ = Describe("RequestLogging", func() {
 	BeforeEach(func() {
 		var err error
 		request, err = http.NewRequest("GET", "/some/path", nil)
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
+		request.Header.Set("X-Vcap-Request-Id", "some-request-id")
+		request.Header.Set("X-NOTIFICATIONS-VERSION", "2")
 
 		logWriter = &bytes.Buffer{}
 		logger = lager.NewLogger("my-app")
@@ -58,14 +58,13 @@ var _ = Describe("RequestLogging", func() {
 		Expect(line.Source).To(Equal("my-app"))
 		Expect(line.Message).To(Equal("my-app.request.incoming"))
 		Expect(line.LogLevel).To(Equal(int(lager.DEBUG)))
-		Expect(line.Data).To(HaveKeyWithValue("vcap_request_id", "UNKNOWN"))
+		Expect(line.Data).To(HaveKeyWithValue("vcap_request_id", "some-request-id"))
+		Expect(line.Data).To(HaveKeyWithValue("api_version", "2"))
 		Expect(line.Data).To(HaveKeyWithValue("method", "GET"))
 		Expect(line.Data).To(HaveKeyWithValue("path", "/some/path"))
 	})
 
-	It("adds a logger to the context that includes the vcap_request_id", func() {
-		request.Header.Set("X-Vcap-Request-Id", "some-request-id")
-
+	It("adds a logger to the context that includes the vcap_request_id and api_version", func() {
 		result := ware.ServeHTTP(writer, request, context)
 		Expect(result).To(BeTrue())
 
@@ -81,11 +80,10 @@ var _ = Describe("RequestLogging", func() {
 		Expect(line.Message).To(Equal("my-app.request.hello"))
 		Expect(line.LogLevel).To(Equal(int(lager.DEBUG)))
 		Expect(line.Data).To(HaveKeyWithValue("vcap_request_id", "some-request-id"))
+		Expect(line.Data).To(HaveKeyWithValue("api_version", "2"))
 	})
 
 	It("adds the request id to the context", func() {
-		request.Header.Set("X-Vcap-Request-Id", "some-request-id")
-
 		result := ware.ServeHTTP(writer, request, context)
 		Expect(result).To(BeTrue())
 
@@ -105,6 +103,8 @@ var _ = Describe("RequestLogging", func() {
 
 	Context("when the request id is unknown", func() {
 		It("generates a logger with a prefix that states the request id is unknown", func() {
+			request.Header.Del("X-Vcap-Request-Id")
+
 			result := ware.ServeHTTP(writer, request, context)
 			Expect(result).To(BeTrue())
 
