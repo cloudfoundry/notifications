@@ -3,6 +3,7 @@ package templates_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 
@@ -46,10 +47,6 @@ var _ = Describe("UpdateDefaultHandler", func() {
 
 		writer = httptest.NewRecorder()
 
-		handler = templates.NewUpdateDefaultHandler(templatesCollection)
-	})
-
-	It("updates the default template", func() {
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"name":     "new template name",
 			"html":     "new html",
@@ -62,6 +59,10 @@ var _ = Describe("UpdateDefaultHandler", func() {
 		request, err = http.NewRequest("PUT", "/templates/default", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
+		handler = templates.NewUpdateDefaultHandler(templatesCollection)
+	})
+
+	It("updates the default template", func() {
 		templatesCollection.SetCall.Returns.Template = collections.Template{
 			ID:       "default",
 			Name:     "new template name",
@@ -219,6 +220,49 @@ var _ = Describe("UpdateDefaultHandler", func() {
 			Expect(writer.Body.String()).To(MatchJSON(`{
 				"errors": ["missing either template text or html"]
 			}`))
+		})
+	})
+
+	Context("failure cases", func() {
+		Context("when the JSON request is invalid", func() {
+			It("returns a 400 error with an error message", func() {
+				var err error
+				request, err = http.NewRequest("PUT", "/templates/default", bytes.NewBuffer([]byte("%%%")))
+				Expect(err).NotTo(HaveOccurred())
+
+				handler.ServeHTTP(writer, request, context)
+
+				Expect(writer.Code).To(Equal(http.StatusBadRequest))
+				Expect(writer.Body.String()).To(MatchJSON(`{
+					"errors": ["malformed JSON request"]
+				}`))
+			})
+		})
+
+		Context("when the templates repo get call returns an error", func() {
+			It("returns a 500 error with an error message", func() {
+				templatesCollection.GetCall.Returns.Error = errors.New("failed to get")
+
+				handler.ServeHTTP(writer, request, context)
+
+				Expect(writer.Code).To(Equal(http.StatusInternalServerError))
+				Expect(writer.Body.String()).To(MatchJSON(`{
+					"errors": ["failed to get"]
+				}`))
+			})
+		})
+
+		Context("when the templates repo set call returns an error", func() {
+			It("returns a 500 error with an error message", func() {
+				templatesCollection.SetCall.Returns.Error = errors.New("failed to set")
+
+				handler.ServeHTTP(writer, request, context)
+
+				Expect(writer.Code).To(Equal(http.StatusInternalServerError))
+				Expect(writer.Body.String()).To(MatchJSON(`{
+					"errors": ["failed to set"]
+				}`))
+			})
 		})
 	})
 })

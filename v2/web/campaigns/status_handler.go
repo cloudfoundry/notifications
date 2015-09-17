@@ -64,10 +64,5 @@ func (h StatusHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		output["completed_time"] = string(completedTimeValue)
 	}
 
-	response, err := json.Marshal(output)
-	if err != nil {
-		panic(err)
-	}
-
-	w.Write(response)
+	json.NewEncoder(w).Encode(output)
 }

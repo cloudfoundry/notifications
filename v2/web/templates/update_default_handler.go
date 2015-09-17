@@ -2,6 +2,7 @@ package templates
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/ryanmoran/stack"
@@ -28,14 +29,18 @@ func (h UpdateDefaultHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 
 	err := json.NewDecoder(req.Body).Decode(&updateRequest)
 	if err != nil {
-		panic(err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{ "errors": [ "malformed JSON request" ] }`))
+		return
 	}
 
 	database := context.Get("database").(DatabaseInterface)
 
 	template, err := h.templatesCollection.Get(database.Connection(), "default", "")
 	if err != nil {
-		panic(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, `{ "errors": [%q] }`, err)
+		return
 	}
 
 	if updateRequest.Name != nil {
@@ -76,7 +81,9 @@ func (h UpdateDefaultHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 
 	template, err = h.templatesCollection.Set(database.Connection(), template)
 	if err != nil {
-		panic(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, `{ "errors": [%q] }`, err)
+		return
 	}
 
 	metadata := json.RawMessage(template.Metadata)

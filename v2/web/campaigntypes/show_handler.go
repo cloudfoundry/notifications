@@ -63,18 +63,11 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 		return
 	}
 
-	jsonMap := map[string]interface{}{
+	json.NewEncoder(writer).Encode(map[string]interface{}{
 		"id":          campaignType.ID,
 		"name":        campaignType.Name,
 		"description": campaignType.Description,
 		"critical":    campaignType.Critical,
 		"template_id": campaignType.TemplateID,
-	}
-
-	jsonBody, err := json.Marshal(jsonMap)
-	if err != nil {
-		panic(err)
-	}
-
-	writer.Write([]byte(jsonBody))
+	})
 }
