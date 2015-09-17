@@ -67,13 +67,40 @@ var _ = Describe("ListHandler", func() {
 			"senders": [
 				{
 					"id": "sender-id-one",
-					"name": "first sender"
+					"name": "first sender",
+					"_links": {
+						"self": {
+							"href": "/senders/sender-id-one"
+						},
+						"campaign_types": {
+							"href": "/senders/sender-id-one/campaign_types"
+						},
+						"campaigns": {
+							"href": "/senders/sender-id-one/campaigns"
+						}
+					}
 				},
 				{
 					"id": "sender-id-two",
-					"name": "second sender"
+					"name": "second sender",
+					"_links": {
+						"self": {
+							"href": "/senders/sender-id-two"
+						},
+						"campaign_types": {
+							"href": "/senders/sender-id-two/campaign_types"
+						},
+						"campaigns": {
+							"href": "/senders/sender-id-two/campaigns"
+						}
+					}
 				}
-			]
+			],
+			"_links": {
+				"self": {
+					"href": "/senders"
+				}
+			}
 		}`))
 	})
 

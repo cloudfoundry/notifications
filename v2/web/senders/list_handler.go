@@ -21,29 +21,16 @@ func NewListHandler(collection collectionLister) ListHandler {
 	return ListHandler{collection: collection}
 }
 
-func (h ListHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request, context stack.Context) {
+func (h ListHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	clientID := context.Get("client_id").(string)
 	database := context.Get("database").(DatabaseInterface)
 
 	senderList, err := h.collection.List(database.Connection(), clientID)
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(writer, `{ "errors": [ %q ] }`, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, `{ "errors": [ %q ] }`, err)
 		return
 	}
 
-	responseList := []interface{}{}
-
-	for _, sender := range senderList {
-		responseList = append(responseList, map[string]interface{}{
-			"id":   sender.ID,
-			"name": sender.Name,
-		})
-	}
-
-	listResponse, _ := json.Marshal(map[string]interface{}{
-		"senders": responseList,
-	})
-
-	writer.Write(listResponse)
+	json.NewEncoder(w).Encode(NewSendersListResponse(senderList))
 }

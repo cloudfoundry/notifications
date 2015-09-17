@@ -29,6 +29,15 @@ type senderResponse struct {
 	} `json:"_links"`
 }
 
+type sendersListResponse struct {
+	Senders []senderResponse
+	Links   struct {
+		Self struct {
+			Href string
+		}
+	} `json:"_links"`
+}
+
 var _ = Describe("Sender lifecycle", func() {
 	var (
 		client *support.Client
@@ -64,14 +73,19 @@ var _ = Describe("Sender lifecycle", func() {
 		})
 
 		By("listing all senders", func() {
-			status, response, err := client.Do("GET", "/senders", nil, token.Access)
+			var response sendersListResponse
+			status, err := client.DoTyped("GET", "/senders", nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
-			senders := response["senders"].([]interface{})
-			Expect(senders).To(HaveLen(1))
-			sender := senders[0].(map[string]interface{})
-			Expect(sender["id"]).To(Equal(senderID))
+			Expect(response.Senders).To(HaveLen(1))
+			Expect(response.Links.Self.Href).To(Equal("/senders"))
+			sender := response.Senders[0]
+			Expect(sender.ID).To(Equal(senderID))
+			Expect(sender.Name).To(Equal("My Cool App"))
+			Expect(sender.Links.Self.Href).To(Equal(fmt.Sprintf("/senders/%s", sender.ID)))
+			Expect(sender.Links.CampaignTypes.Href).To(Equal(fmt.Sprintf("/senders/%s/campaign_types", sender.ID)))
+			Expect(sender.Links.Campaigns.Href).To(Equal(fmt.Sprintf("/senders/%s/campaigns", sender.ID)))
 		})
 
 		By("getting the sender", func() {
