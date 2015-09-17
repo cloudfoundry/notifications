@@ -27,6 +27,7 @@ func NewClient(config Config) *Client {
 		httpClient: http.DefaultClient,
 	}
 }
+
 func (c Client) DoTyped(method string, path string, payload map[string]interface{}, token string, results interface{}) (int, error) {
 	var requestBody io.Reader
 
@@ -117,16 +118,8 @@ func (c Client) printRequest(request *http.Request) {
 		return
 	}
 
-	buffer := bytes.NewBuffer([]byte{})
-	body := bytes.NewBuffer([]byte{})
-	if request.Body != nil {
-		_, err := io.Copy(io.MultiWriter(buffer, body), request.Body)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	request.Body = ioutil.NopCloser(body)
+	var buffer *bytes.Buffer
+	request.Body, buffer = duplicateBuffer(request.Body)
 
 	fmt.Printf("[REQ] %s %s %s\n", request.Method, request.URL.String(), buffer.String())
 }
@@ -136,16 +129,20 @@ func (c Client) printResponse(response *http.Response) {
 		return
 	}
 
+	var buffer *bytes.Buffer
+	response.Body, buffer = duplicateBuffer(response.Body)
+
+	fmt.Printf("[RES] %s %s\n", response.Status, buffer.String())
+}
+
+func duplicateBuffer(originalBody io.Reader) (io.ReadCloser, *bytes.Buffer) {
 	buffer := bytes.NewBuffer([]byte{})
 	body := bytes.NewBuffer([]byte{})
-	if response.Body != nil {
-		_, err := io.Copy(io.MultiWriter(buffer, body), response.Body)
+	if originalBody != nil {
+		_, err := io.Copy(io.MultiWriter(buffer, body), originalBody)
 		if err != nil {
 			panic(err)
 		}
 	}
-
-	response.Body = ioutil.NopCloser(body)
-
-	fmt.Printf("[RES] %s %s\n", response.Status, buffer.String())
+	return ioutil.NopCloser(body), buffer
 }
