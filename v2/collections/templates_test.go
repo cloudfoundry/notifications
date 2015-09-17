@@ -25,19 +25,6 @@ var _ = Describe("TemplatesCollection", func() {
 		conn = mocks.NewConnection()
 	})
 
-	Describe("DefaultTemplate", func() {
-		It("defines a default template", func() {
-			Expect(collections.DefaultTemplate).To(Equal(collections.Template{
-				ID:       "default",
-				Name:     "The Default Template",
-				Subject:  "{{.Subject}}",
-				Text:     "{{.Text}}",
-				HTML:     "{{.HTML}}",
-				Metadata: "{}",
-			}))
-		})
-	})
-
 	Describe("Set", func() {
 		Context("when no ID is supplied", func() {
 			BeforeEach(func() {
@@ -143,7 +130,7 @@ var _ = Describe("TemplatesCollection", func() {
 
 			Context("when the default template ID is supplied", func() {
 				It("will create a new record if it does not already exist", func() {
-					templatesRepository.GetCall.Returns.Error = models.RecordNotFoundError{errors.New("not found")}
+					templatesRepository.GetCall.Returns.Template = models.DefaultTemplate
 
 					_, err := templatesCollection.Set(conn, collections.Template{
 						ID:       "default",
@@ -290,12 +277,20 @@ var _ = Describe("TemplatesCollection", func() {
 		})
 
 		Context("when the default template does not exist in the repo", func() {
-			It("returns the 'stock' default template", func() {
-				templatesRepository.GetCall.Returns.Error = models.NewRecordNotFoundError("")
+			It("returns the 'stock' default template with the client ID injected", func() {
+				templatesRepository.GetCall.Returns.Template = models.DefaultTemplate
 
 				template, err := templatesCollection.Get(conn, "default", "some-client-id")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(template).To(Equal(collections.DefaultTemplate))
+				Expect(template).To(Equal(collections.Template{
+					ID:       models.DefaultTemplate.ID,
+					Name:     models.DefaultTemplate.Name,
+					Text:     models.DefaultTemplate.Text,
+					HTML:     models.DefaultTemplate.HTML,
+					Subject:  models.DefaultTemplate.Subject,
+					Metadata: models.DefaultTemplate.Metadata,
+					ClientID: "some-client-id",
+				}))
 			})
 		})
 

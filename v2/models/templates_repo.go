@@ -5,6 +5,15 @@ import (
 	"fmt"
 )
 
+var DefaultTemplate = Template{
+	ID:       "default",
+	Name:     "The Default Template",
+	Subject:  "{{.Subject}}",
+	Text:     "{{.Text}}",
+	HTML:     "{{.HTML}}",
+	Metadata: "{}",
+}
+
 type TemplatesRepository struct {
 	generateGUID guidGeneratorFunc
 }
@@ -46,6 +55,10 @@ func (r TemplatesRepository) Get(conn ConnectionInterface, templateID string) (T
 	err := conn.SelectOne(&template, "SELECT * FROM `v2_templates` WHERE `id` = ?", templateID)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			if templateID == DefaultTemplate.ID {
+				return DefaultTemplate, nil
+			}
+
 			err = RecordNotFoundError{fmt.Errorf("Template with id %q could not be found", templateID)}
 		}
 

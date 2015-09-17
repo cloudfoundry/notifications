@@ -96,6 +96,51 @@ var _ = Describe("Campaign Lifecycle", func() {
 			})
 		})
 
+		Context("when the campaign uses the default template", func() {
+			var campaignTypeID, campaignID string
+
+			It("sends a campaign using the default template", func() {
+				By("creating a campaign type", func() {
+					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
+						"name":        "some-campaign-type-name",
+						"description": "acceptance campaign type",
+					}, token.Access)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(status).To(Equal(http.StatusCreated))
+
+					campaignTypeID = response["id"].(string)
+				})
+
+				By("sending the campaign", func() {
+					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
+						"send_to": map[string]interface{}{
+							"email": "test@example.com",
+						},
+						"campaign_type_id": campaignTypeID,
+						"text":             "campaign body",
+						"subject":          "campaign subject",
+					}, token.Access)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(status).To(Equal(http.StatusAccepted))
+					Expect(response["campaign_id"]).NotTo(BeEmpty())
+
+					campaignID = response["campaign_id"].(string)
+				})
+
+				By("retrieving the campaign details", func() {
+					status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s", senderID, campaignID), nil, token.Access)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(status).To(Equal(http.StatusOK))
+					Expect(response["id"]).To(Equal(campaignID))
+					Expect(response["send_to"]).To(HaveKeyWithValue("email", "test@example.com"))
+					Expect(response["campaign_type_id"]).To(Equal(campaignTypeID))
+					Expect(response["text"]).To(Equal("campaign body"))
+					Expect(response["subject"]).To(Equal("campaign subject"))
+					Expect(response["template_id"]).To(Equal("default"))
+				})
+			})
+		})
+
 		Context("failure cases", func() {
 			var campaignTypeID, templateID, campaignID string
 

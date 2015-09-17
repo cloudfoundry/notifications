@@ -119,6 +119,10 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 		campaign.TemplateID = campaignType.TemplateID
 	}
 
+	if campaign.TemplateID == "" {
+		campaign.TemplateID = models.DefaultTemplate.ID
+	}
+
 	_, err = c.templatesRepo.Get(conn, campaign.TemplateID)
 	if err != nil {
 		switch err.(type) {

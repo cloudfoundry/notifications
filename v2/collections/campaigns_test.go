@@ -382,6 +382,36 @@ var _ = Describe("CampaignsCollection", func() {
 				}))
 			})
 
+			It("uses the default template if neither the campaign nor the campaign type has one", func() {
+				campaign := collections.Campaign{
+					SendTo:         map[string]string{"user": "some-guid"},
+					CampaignTypeID: "some-id",
+					Text:           "some-test",
+					HTML:           "no-html",
+					Subject:        "some-subject",
+					ReplyTo:        "nothing@example.com",
+					SenderID:       "some-sender-id",
+					StartTime:      startTime,
+				}
+
+				_, err := collection.Create(conn, campaign, "some-client-id", false)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
+					ID:             "a-new-id",
+					SendTo:         map[string]string{"user": "some-guid"},
+					CampaignTypeID: "some-id",
+					Text:           "some-test",
+					HTML:           "no-html",
+					Subject:        "some-subject",
+					TemplateID:     "default",
+					ReplyTo:        "nothing@example.com",
+					SenderID:       "some-sender-id",
+					ClientID:       "some-client-id",
+					StartTime:      startTime,
+				}))
+			})
+
 			It("allows requestors with critical_notifications.write scope to send critical notifications", func() {
 				campaignTypesRepo.GetCall.Returns.CampaignType = models.CampaignType{
 					Critical: true,

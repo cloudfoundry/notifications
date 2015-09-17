@@ -16,15 +16,6 @@ type Template struct {
 	ClientID string
 }
 
-var DefaultTemplate = Template{
-	ID:       "default",
-	Name:     "The Default Template",
-	Subject:  "{{.Subject}}",
-	Text:     "{{.Text}}",
-	HTML:     "{{.HTML}}",
-	Metadata: "{}",
-}
-
 type templatesRepository interface {
 	Insert(conn models.ConnectionInterface, template models.Template) (createdTemplate models.Template, err error)
 	Update(conn models.ConnectionInterface, template models.Template) (updatedTemplate models.Template, err error)
@@ -44,11 +35,11 @@ func NewTemplatesCollection(repo templatesRepository) TemplatesCollection {
 }
 
 func (c TemplatesCollection) Set(conn ConnectionInterface, template Template) (Template, error) {
-	_, err := c.repo.Get(conn, template.ID)
+	existingTemplate, err := c.repo.Get(conn, template.ID)
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
-			if template.ID != "" && template.ID != "default" {
+			if template.ID != "" {
 				return Template{}, NotFoundError{err}
 			}
 
@@ -56,6 +47,10 @@ func (c TemplatesCollection) Set(conn ConnectionInterface, template Template) (T
 		default:
 			return Template{}, PersistenceError{err}
 		}
+	}
+
+	if template.ID == models.DefaultTemplate.ID && existingTemplate.ClientID == "" {
+		return c.insertNewRecord(conn, template)
 	}
 
 	return c.updateExistingRecord(conn, template)
@@ -66,14 +61,16 @@ func (c TemplatesCollection) Get(conn ConnectionInterface, templateID, clientID 
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
-			if templateID == DefaultTemplate.ID {
-				return DefaultTemplate, nil
-			}
 			return Template{}, NotFoundError{err}
 		default:
 			return Template{}, PersistenceError{err}
 		}
 	}
+
+	if templateID == "default" {
+		template.ClientID = clientID
+	}
+
 	if template.ClientID != clientID {
 		return Template{}, NotFoundError{fmt.Errorf("Template with id %q could not be found", templateID)}
 	}

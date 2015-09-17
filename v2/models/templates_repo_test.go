@@ -33,6 +33,19 @@ var _ = Describe("TemplatesRepo", func() {
 		conn = database.Connection()
 	})
 
+	Describe("DefaultTemplate", func() {
+		It("defines a default template", func() {
+			Expect(models.DefaultTemplate).To(Equal(models.Template{
+				ID:       "default",
+				Name:     "The Default Template",
+				Subject:  "{{.Subject}}",
+				Text:     "{{.Text}}",
+				HTML:     "{{.HTML}}",
+				Metadata: "{}",
+			}))
+		})
+	})
+
 	Describe("Insert", func() {
 		It("returns the data", func() {
 			createdTemplate, err := repo.Insert(conn, models.Template{
@@ -114,6 +127,12 @@ var _ = Describe("TemplatesRepo", func() {
 			template, err := repo.Get(conn, createdTemplate.ID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(template).To(Equal(createdTemplate))
+		})
+
+		It("fetches the default template if it does not exist", func() {
+			template, err := repo.Get(conn, "default")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(template).To(Equal(models.DefaultTemplate))
 		})
 
 		Context("failure cases", func() {
