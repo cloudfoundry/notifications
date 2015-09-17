@@ -19,18 +19,21 @@ var _ = Describe("Routes", func() {
 	var (
 		logging     middleware.RequestLogging
 		dbAllocator middleware.DatabaseAllocator
-		auth        middleware.Authenticator
+		writeAuth   middleware.Authenticator
+		adminAuth   middleware.Authenticator
 		muxer       web.Muxer
 	)
 
 	BeforeEach(func() {
 		logging = middleware.NewRequestLogging(lager.NewLogger("log-prefix"))
-		auth = middleware.NewAuthenticator("some-public-key", "notifications.write")
+		writeAuth = middleware.NewAuthenticator("some-public-key", "notifications.write")
+		adminAuth = middleware.NewAuthenticator("some-public-key", "notifications.admin")
 		dbAllocator = middleware.NewDatabaseAllocator(&sql.DB{}, false)
 		muxer = web.NewMuxer()
 		templates.Routes{
 			RequestLogging:      logging,
-			Authenticator:       auth,
+			WriteAuthenticator:  writeAuth,
+			AdminAuthenticator:  adminAuth,
 			DatabaseAllocator:   dbAllocator,
 			TemplatesCollection: collections.TemplatesCollection{},
 		}.Register(muxer)
@@ -48,7 +51,7 @@ var _ = Describe("Routes", func() {
 		Expect(requestLogging).To(Equal(logging))
 
 		authenticator := s.Middleware[1].(middleware.Authenticator)
-		Expect(authenticator).To(Equal(auth))
+		Expect(authenticator).To(Equal(writeAuth))
 
 		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
 		Expect(databaseAllocator).To(Equal(dbAllocator))
@@ -66,7 +69,7 @@ var _ = Describe("Routes", func() {
 		Expect(requestLogging).To(Equal(logging))
 
 		authenticator := s.Middleware[1].(middleware.Authenticator)
-		Expect(authenticator).To(Equal(auth))
+		Expect(authenticator).To(Equal(writeAuth))
 
 		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
 		Expect(databaseAllocator).To(Equal(dbAllocator))
@@ -84,7 +87,7 @@ var _ = Describe("Routes", func() {
 		Expect(requestLogging).To(Equal(logging))
 
 		authenticator := s.Middleware[1].(middleware.Authenticator)
-		Expect(authenticator).To(Equal(auth))
+		Expect(authenticator).To(Equal(writeAuth))
 
 		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
 		Expect(databaseAllocator).To(Equal(dbAllocator))
@@ -102,7 +105,25 @@ var _ = Describe("Routes", func() {
 		Expect(requestLogging).To(Equal(logging))
 
 		authenticator := s.Middleware[1].(middleware.Authenticator)
-		Expect(authenticator).To(Equal(auth))
+		Expect(authenticator).To(Equal(writeAuth))
+
+		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
+		Expect(databaseAllocator).To(Equal(dbAllocator))
+	})
+
+	It("routes PUT /templates/default", func() {
+		request, err := http.NewRequest("PUT", "/templates/default", nil)
+		Expect(err).NotTo(HaveOccurred())
+
+		s := muxer.Match(request).(stack.Stack)
+		Expect(s.Handler).To(BeAssignableToTypeOf(templates.UpdateDefaultHandler{}))
+		Expect(s.Middleware).To(HaveLen(3))
+
+		requestLogging := s.Middleware[0].(middleware.RequestLogging)
+		Expect(requestLogging).To(Equal(logging))
+
+		authenticator := s.Middleware[1].(middleware.Authenticator)
+		Expect(authenticator).To(Equal(adminAuth))
 
 		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
 		Expect(databaseAllocator).To(Equal(dbAllocator))
@@ -120,7 +141,7 @@ var _ = Describe("Routes", func() {
 		Expect(requestLogging).To(Equal(logging))
 
 		authenticator := s.Middleware[1].(middleware.Authenticator)
-		Expect(authenticator).To(Equal(auth))
+		Expect(authenticator).To(Equal(writeAuth))
 
 		databaseAllocator := s.Middleware[2].(middleware.DatabaseAllocator)
 		Expect(databaseAllocator).To(Equal(dbAllocator))

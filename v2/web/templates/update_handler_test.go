@@ -98,7 +98,7 @@ var _ = Describe("UpdateHandler", func() {
 	})
 
 	Context("when updating the default template", func() {
-		It("saves the client ID", func() {
+		It("saves an empty client ID", func() {
 			requestBody, err := json.Marshal(map[string]interface{}{
 				"name":     "a default template",
 				"text":     "new text",
@@ -132,7 +132,7 @@ var _ = Describe("UpdateHandler", func() {
 				Text:     "new text",
 				Subject:  "default subject",
 				Metadata: `{"template":"default"}`,
-				ClientID: "some-client-id",
+				ClientID: "",
 			}))
 		})
 	})
@@ -206,6 +206,7 @@ var _ = Describe("UpdateHandler", func() {
 				Metadata: `{"template": "metadata"}`,
 			}
 		})
+
 		It("repopulates the default subject field", func() {
 			handler.ServeHTTP(writer, request, context)
 

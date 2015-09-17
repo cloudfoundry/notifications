@@ -85,10 +85,6 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		template.Metadata = string(metadata)
 	}
 
-	if templateID == "default" {
-		template.ClientID = clientID
-	}
-
 	if template.Name == "" {
 		w.WriteHeader(422)
 		w.Write([]byte(`{ "errors": [ "Template \"name\" field cannot be empty" ] }`))

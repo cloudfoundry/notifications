@@ -70,18 +70,16 @@ var _ = Describe("TemplatesRepo", func() {
 		})
 
 		Context("failure cases", func() {
-			It("returns an error if it happens", func() {
-				_, err := repo.Insert(conn, models.Template{
-					Name:     "some-template",
-					ClientID: "some-client-id",
-				})
-				Expect(err).NotTo(HaveOccurred())
+			It("returns an error if the database returns one", func() {
+				connection := mocks.NewConnection()
+				connection.InsertCall.Returns.Error = errors.New("some error")
 
-				_, err = repo.Insert(conn, models.Template{
+				_, err := repo.Insert(connection, models.Template{
+					ID:       "default",
 					Name:     "some-template",
 					ClientID: "some-client-id",
 				})
-				Expect(err).To(BeAssignableToTypeOf(models.DuplicateRecordError{}))
+				Expect(err).To(MatchError(errors.New("some error")))
 			})
 		})
 	})

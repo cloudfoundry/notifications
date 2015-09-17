@@ -35,22 +35,34 @@ func NewTemplatesCollection(repo templatesRepository) TemplatesCollection {
 }
 
 func (c TemplatesCollection) Set(conn ConnectionInterface, template Template) (Template, error) {
-	existingTemplate, err := c.repo.Get(conn, template.ID)
-	if err != nil {
-		switch err.(type) {
-		case models.RecordNotFoundError:
-			if template.ID != "" {
-				return Template{}, NotFoundError{err}
+	if template.ID == "" || template.ID == models.DefaultTemplate.ID {
+		model, err := c.repo.Insert(conn, models.Template{
+			ID:       template.ID,
+			Name:     template.Name,
+			HTML:     template.HTML,
+			Text:     template.Text,
+			Subject:  template.Subject,
+			Metadata: template.Metadata,
+			ClientID: template.ClientID,
+		})
+		if err != nil {
+			switch err.(type) {
+			case models.DuplicateRecordError:
+				return c.updateExistingRecord(conn, template)
+			default:
+				return Template{}, PersistenceError{err}
 			}
-
-			return c.insertNewRecord(conn, template)
-		default:
-			return Template{}, PersistenceError{err}
 		}
-	}
 
-	if template.ID == models.DefaultTemplate.ID && existingTemplate.ClientID == "" {
-		return c.insertNewRecord(conn, template)
+		return Template{
+			ID:       model.ID,
+			Name:     model.Name,
+			HTML:     model.HTML,
+			Text:     model.Text,
+			Subject:  model.Subject,
+			Metadata: model.Metadata,
+			ClientID: model.ClientID,
+		}, nil
 	}
 
 	return c.updateExistingRecord(conn, template)
@@ -67,11 +79,7 @@ func (c TemplatesCollection) Get(conn ConnectionInterface, templateID, clientID 
 		}
 	}
 
-	if templateID == "default" {
-		template.ClientID = clientID
-	}
-
-	if template.ClientID != clientID {
+	if template.ClientID != clientID && templateID != "default" {
 		return Template{}, NotFoundError{fmt.Errorf("Template with id %q could not be found", templateID)}
 	}
 
@@ -121,36 +129,6 @@ func (c TemplatesCollection) List(conn ConnectionInterface, clientID string) ([]
 	}
 
 	return templateList, nil
-}
-
-func (c TemplatesCollection) insertNewRecord(conn ConnectionInterface, template Template) (Template, error) {
-	model, err := c.repo.Insert(conn, models.Template{
-		ID:       template.ID,
-		Name:     template.Name,
-		HTML:     template.HTML,
-		Text:     template.Text,
-		Subject:  template.Subject,
-		Metadata: template.Metadata,
-		ClientID: template.ClientID,
-	})
-	if err != nil {
-		switch err.(type) {
-		case models.DuplicateRecordError:
-			return Template{}, DuplicateRecordError{err}
-		default:
-			return Template{}, PersistenceError{err}
-		}
-	}
-
-	return Template{
-		ID:       model.ID,
-		Name:     model.Name,
-		HTML:     model.HTML,
-		Text:     model.Text,
-		Subject:  model.Subject,
-		Metadata: model.Metadata,
-		ClientID: model.ClientID,
-	}, nil
 }
 
 func (c TemplatesCollection) updateExistingRecord(conn ConnectionInterface, template Template) (Template, error) {

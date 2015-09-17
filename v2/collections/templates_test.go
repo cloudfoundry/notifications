@@ -38,7 +38,6 @@ var _ = Describe("TemplatesCollection", func() {
 			})
 
 			It("will insert a template into the collection", func() {
-				templatesRepository.GetCall.Returns.Error = models.RecordNotFoundError{errors.New("not found")}
 				template, err := templatesCollection.Set(conn, collections.Template{
 					Name:     "some-template",
 					HTML:     "<h1>My Cool Template</h1>",
@@ -62,33 +61,10 @@ var _ = Describe("TemplatesCollection", func() {
 					ClientID: "some-client-id",
 				}))
 			})
-
-			Context("failure cases", func() {
-				It("returns a DuplicateRecordError if the repo returns it", func() {
-					templatesRepository.GetCall.Returns.Error = models.RecordNotFoundError{errors.New("not found")}
-					templatesRepository.InsertCall.Returns.Error = models.DuplicateRecordError{}
-
-					_, err := templatesCollection.Set(conn, collections.Template{
-						Name:     "some-template",
-						HTML:     "<h1>My Cool Template</h1>",
-						Subject:  "{{.Subject}}",
-						ClientID: "some-client-id",
-					})
-
-					Expect(err).To(BeAssignableToTypeOf(collections.DuplicateRecordError{}))
-				})
-			})
 		})
 
 		Context("when an existing ID is supplied", func() {
 			BeforeEach(func() {
-				templatesRepository.GetCall.Returns.Template = models.Template{
-					ID:       "existing-id",
-					Name:     "old-template",
-					HTML:     "<h1>My Cool Template</h1>",
-					Subject:  "{{.Subject}}",
-					ClientID: "some-client-id",
-				}
 				templatesRepository.UpdateCall.Returns.Template = models.Template{
 					ID:       "existing-id",
 					Name:     "new-template",
@@ -115,9 +91,6 @@ var _ = Describe("TemplatesCollection", func() {
 					ClientID: "some-client-id",
 				}))
 
-				Expect(templatesRepository.GetCall.Receives.Connection).To(Equal(conn))
-				Expect(templatesRepository.GetCall.Receives.TemplateID).To(Equal("existing-id"))
-
 				Expect(templatesRepository.UpdateCall.Receives.Connection).To(Equal(conn))
 				Expect(templatesRepository.UpdateCall.Receives.Template).To(Equal(models.Template{
 					ID:       "existing-id",
@@ -130,20 +103,15 @@ var _ = Describe("TemplatesCollection", func() {
 
 			Context("when the default template ID is supplied", func() {
 				It("will create a new record if it does not already exist", func() {
-					templatesRepository.GetCall.Returns.Template = models.DefaultTemplate
-
 					_, err := templatesCollection.Set(conn, collections.Template{
 						ID:       "default",
 						Name:     "updated default",
 						Text:     "new default text",
 						HTML:     "new default html",
 						Subject:  "New Default Subject",
-						ClientID: "some-client-id",
+						ClientID: "",
 					})
 					Expect(err).NotTo(HaveOccurred())
-
-					Expect(templatesRepository.GetCall.Receives.Connection).To(Equal(conn))
-					Expect(templatesRepository.GetCall.Receives.TemplateID).To(Equal("default"))
 
 					Expect(templatesRepository.InsertCall.Receives.Connection).To(Equal(conn))
 					Expect(templatesRepository.InsertCall.Receives.Template).To(Equal(models.Template{
@@ -152,31 +120,21 @@ var _ = Describe("TemplatesCollection", func() {
 						Text:     "new default text",
 						HTML:     "new default html",
 						Subject:  "New Default Subject",
-						ClientID: "some-client-id",
+						ClientID: "",
 					}))
 				})
 
 				It("will update the saved template if it already exists", func() {
-					templatesRepository.GetCall.Returns.Template = models.Template{
-						ID:       "default",
-						Name:     "some-template",
-						HTML:     "<h1>My Cool Template</h1>",
-						Subject:  "{{.Subject}}",
-						ClientID: "some-client-id",
-					}
-
+					templatesRepository.InsertCall.Returns.Error = models.DuplicateRecordError{errors.New("dup")}
 					_, err := templatesCollection.Set(conn, collections.Template{
 						ID:       "default",
 						Name:     "updated default",
 						Text:     "new default text",
 						HTML:     "new default html",
 						Subject:  "New Default Subject",
-						ClientID: "some-client-id",
+						ClientID: "",
 					})
 					Expect(err).NotTo(HaveOccurred())
-
-					Expect(templatesRepository.GetCall.Receives.Connection).To(Equal(conn))
-					Expect(templatesRepository.GetCall.Receives.TemplateID).To(Equal("default"))
 
 					Expect(templatesRepository.UpdateCall.Receives.Connection).To(Equal(conn))
 					Expect(templatesRepository.UpdateCall.Receives.Template).To(Equal(models.Template{
@@ -185,42 +143,13 @@ var _ = Describe("TemplatesCollection", func() {
 						Text:     "new default text",
 						HTML:     "new default html",
 						Subject:  "New Default Subject",
-						ClientID: "some-client-id",
+						ClientID: "",
 					}))
 				})
 			})
 
 			Context("failure cases", func() {
-				It("returns a NotFoundError when the ID supplied does not exist", func() {
-					repoError := models.RecordNotFoundError{errors.New("whatever")}
-					templatesRepository.GetCall.Returns.Error = repoError
-
-					_, err := templatesCollection.Set(conn, collections.Template{
-						ID:       "not-existing-id",
-						Name:     "new-template",
-						HTML:     "<h1>My Cool Template</h1>",
-						Subject:  "{{.Subject}}",
-						ClientID: "some-client-id",
-					})
-					Expect(err).To(MatchError(collections.NotFoundError{repoError}))
-				})
-
-				It("returns a PersistenceError when the template repo returns an error from Get", func() {
-					repoError := errors.New("whoops!")
-					templatesRepository.GetCall.Returns.Error = repoError
-
-					_, err := templatesCollection.Set(conn, collections.Template{
-						ID:       "not-existing-id",
-						Name:     "new-template",
-						HTML:     "<h1>My Cool Template</h1>",
-						Subject:  "{{.Subject}}",
-						ClientID: "some-client-id",
-					})
-					Expect(err).To(MatchError(collections.PersistenceError{repoError}))
-				})
-
 				It("returns a PersistenceError when the template repo returns an error from Insert", func() {
-					templatesRepository.GetCall.Returns.Error = models.RecordNotFoundError{errors.New("not found")}
 					repoError := errors.New("failed to save")
 					templatesRepository.InsertCall.Returns.Error = repoError
 
@@ -277,7 +206,7 @@ var _ = Describe("TemplatesCollection", func() {
 		})
 
 		Context("when the default template does not exist in the repo", func() {
-			It("returns the 'stock' default template with the client ID injected", func() {
+			It("returns the 'stock' default template", func() {
 				templatesRepository.GetCall.Returns.Template = models.DefaultTemplate
 
 				template, err := templatesCollection.Get(conn, "default", "some-client-id")
@@ -289,7 +218,6 @@ var _ = Describe("TemplatesCollection", func() {
 					HTML:     models.DefaultTemplate.HTML,
 					Subject:  models.DefaultTemplate.Subject,
 					Metadata: models.DefaultTemplate.Metadata,
-					ClientID: "some-client-id",
 				}))
 			})
 		})

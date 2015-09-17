@@ -241,33 +241,6 @@ var _ = Describe("Template lifecycle", func() {
 
 	Context("failure states", func() {
 		Context("creating", func() {
-			It("returns a 409 with the correct error message when a template already exists", func() {
-				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
-					"name":    "An interesting template",
-					"text":    "template text",
-					"html":    "template html",
-					"subject": "template subject",
-					"metadata": map[string]interface{}{
-						"template": "metadata",
-					},
-				}, token.Access)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(status).To(Equal(http.StatusCreated))
-
-				status, response, err = client.Do("POST", "/templates", map[string]interface{}{
-					"name":    "An interesting template",
-					"text":    "template text",
-					"html":    "template html",
-					"subject": "template subject",
-					"metadata": map[string]interface{}{
-						"template": "metadata",
-					},
-				}, token.Access)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(status).To(Equal(http.StatusConflict))
-				Expect(response["errors"]).To(ContainElement("Template with name \"An interesting template\" already exists"))
-			})
-
 			It("returns a 422 when the name field is empty", func() {
 				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
 					"name":    "",
@@ -418,6 +391,12 @@ var _ = Describe("Template lifecycle", func() {
 		})
 
 		Context("updating", func() {
+			var adminToken uaa.Token
+
+			BeforeEach(func() {
+				adminToken = GetClientTokenFor("admin-client")
+			})
+
 			It("persists the updated default template", func() {
 				By("updating the default template", func() {
 					status, response, err := client.Do("PUT", "/templates/default", map[string]interface{}{
@@ -426,7 +405,7 @@ var _ = Describe("Template lifecycle", func() {
 						"html":     "massively defaulting",
 						"subject":  "time to default",
 						"metadata": map[string]interface{}{},
-					}, token.Access)
+					}, adminToken.Access)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusOK))
 					Expect(response["id"]).To(Equal("default"))

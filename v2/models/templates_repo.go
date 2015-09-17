@@ -34,15 +34,7 @@ func (r TemplatesRepository) Insert(conn ConnectionInterface, template Template)
 		template.ID = guid.String()
 	}
 
-	present, err := r.templateWithNameAndClientIDIsPresent(conn, template.Name, template.ClientID)
-	if err != nil {
-		return template, err
-	}
-	if present {
-		return template, DuplicateRecordError{fmt.Errorf("Template with name %q already exists", template.Name)}
-	}
-
-	err = conn.Insert(&template)
+	err := conn.Insert(&template)
 	if err != nil {
 		return template, err
 	}

@@ -85,9 +85,9 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
 		case "unauthorized-client":
 			token.Claims["scope"] = []string{}
 		case "non-admin-client":
-			token.Claims["scope"] = []string{
-				"notifications.write",
-			}
+			token.Claims["scope"] = []string{"notifications.write"}
+		case "admin-client":
+			token.Claims["scope"] = []string{"notifications.admin"}
 		default:
 			token.Claims["scope"] = []string{"notifications.manage",
 				"notifications.write", "emails.write", "notification_preferences.admin",
