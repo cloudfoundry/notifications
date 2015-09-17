@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"bitbucket.org/chrj/smtpd"
-
 	"github.com/cloudfoundry-incubator/notifications/v2/acceptance/support"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -305,13 +303,12 @@ var _ = Describe("Campaign Lifecycle", func() {
 				campaignID = response["campaign_id"].(string)
 			})
 
-			By("waiting for the email to arrive", func() {
-				Eventually(func() []smtpd.Envelope {
-					return Servers.SMTP.Deliveries
-				}, "10s").Should(HaveLen(1))
-			})
-
 			By("retrieving the campaign status", func() {
+				Eventually(func() (interface{}, error) {
+					_, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s/status", senderID, campaignID), nil, token.Access)
+					return response["status"], err
+				}, "10s").Should(Equal("completed"))
+
 				status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s/status", senderID, campaignID), nil, token.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusOK))
