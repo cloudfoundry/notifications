@@ -19,11 +19,11 @@ func NewUpdateDefaultHandler(collection collectionSetGetter) UpdateDefaultHandle
 
 func (h UpdateDefaultHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	var updateRequest struct {
-		Name     *string                `json:"name"`
-		HTML     *string                `json:"html"`
-		Text     *string                `json:"text"`
-		Subject  *string                `json:"subject"`
-		Metadata map[string]interface{} `json:"metadata"`
+		Name     *string          `json:"name"`
+		HTML     *string          `json:"html"`
+		Text     *string          `json:"text"`
+		Subject  *string          `json:"subject"`
+		Metadata *json.RawMessage `json:"metadata"`
 	}
 
 	err := json.NewDecoder(req.Body).Decode(&updateRequest)
@@ -55,12 +55,7 @@ func (h UpdateDefaultHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 	}
 
 	if updateRequest.Metadata != nil {
-		metadata, err := json.Marshal(updateRequest.Metadata)
-		if err != nil {
-			panic(err)
-		}
-
-		template.Metadata = string(metadata)
+		template.Metadata = string(*updateRequest.Metadata)
 	}
 
 	if template.Name == "" {
@@ -84,23 +79,13 @@ func (h UpdateDefaultHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		panic(err)
 	}
 
-	var decodedMetadata map[string]interface{}
-	err = json.Unmarshal([]byte(template.Metadata), &decodedMetadata)
-	if err != nil {
-		panic(err)
-	}
-
-	updateResponse, err := json.Marshal(map[string]interface{}{
+	metadata := json.RawMessage(template.Metadata)
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"id":       template.ID,
 		"name":     template.Name,
 		"html":     template.HTML,
 		"text":     template.Text,
 		"subject":  template.Subject,
-		"metadata": decodedMetadata,
+		"metadata": &metadata,
 	})
-	if err != nil {
-		panic(err)
-	}
-
-	w.Write(updateResponse)
 }

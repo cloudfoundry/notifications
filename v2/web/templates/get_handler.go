@@ -43,22 +43,13 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 		return
 	}
 
-	var metadata map[string]interface{}
-	err = json.Unmarshal([]byte(template.Metadata), &metadata)
-	if err != nil {
-		panic(err)
-	}
-
-	json, err := json.Marshal(map[string]interface{}{
+	metadata := json.RawMessage(template.Metadata)
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"id":       template.ID,
 		"name":     template.Name,
-		"text":     template.Text,
 		"html":     template.HTML,
+		"text":     template.Text,
 		"subject":  template.Subject,
-		"metadata": metadata,
+		"metadata": &metadata,
 	})
-	if err != nil {
-		panic(err)
-	}
-	w.Write(json)
 }

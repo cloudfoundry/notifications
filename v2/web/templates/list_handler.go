@@ -38,27 +38,18 @@ func (h ListHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context
 	responseList := []interface{}{}
 
 	for _, template := range templates {
-		var metadata map[string]interface{}
-
-		err = json.Unmarshal([]byte(template.Metadata), &metadata)
-		if err != nil {
-			panic(err)
-		}
-
+		metadata := json.RawMessage(template.Metadata)
 		responseList = append(responseList, map[string]interface{}{
 			"id":       template.ID,
 			"name":     template.Name,
 			"text":     template.Text,
 			"html":     template.HTML,
 			"subject":  template.Subject,
-			"metadata": metadata,
+			"metadata": &metadata,
 		})
 	}
 
-	listResponse, _ := json.Marshal(map[string]interface{}{
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"templates": responseList,
 	})
-
-	w.Write(listResponse)
-
 }

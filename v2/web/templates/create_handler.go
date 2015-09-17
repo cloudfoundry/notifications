@@ -25,12 +25,12 @@ func NewCreateHandler(templates collectionSetter) CreateHandler {
 
 func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	var createRequest struct {
-		Name     string                 `json:"name"`
-		HTML     string                 `json:"html"`
-		Text     string                 `json:"text"`
-		Subject  string                 `json:"subject"`
-		Metadata map[string]interface{} `json:"metadata"`
-		ClientID string                 `json:"client_id"`
+		Name     string           `json:"name"`
+		HTML     string           `json:"html"`
+		Text     string           `json:"text"`
+		Subject  string           `json:"subject"`
+		Metadata *json.RawMessage `json:"metadata"`
+		ClientID string           `json:"client_id"`
 	}
 
 	err := json.NewDecoder(req.Body).Decode(&createRequest)
@@ -64,12 +64,8 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	}
 
 	if createRequest.Metadata == nil {
-		createRequest.Metadata = map[string]interface{}{}
-	}
-
-	metadata, err := json.Marshal(createRequest.Metadata)
-	if err != nil {
-		panic(err)
+		metadata := json.RawMessage("{}")
+		createRequest.Metadata = &metadata
 	}
 
 	database := context.Get("database").(DatabaseInterface)
@@ -79,7 +75,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		HTML:     createRequest.HTML,
 		Text:     createRequest.Text,
 		Subject:  createRequest.Subject,
-		Metadata: string(metadata),
+		Metadata: string(*createRequest.Metadata),
 		ClientID: clientID,
 	})
 	if err != nil {
@@ -94,24 +90,15 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
-	var decodedMetadata map[string]interface{}
-	err = json.Unmarshal([]byte(template.Metadata), &decodedMetadata)
-	if err != nil {
-		panic(err)
-	}
+	w.WriteHeader(http.StatusCreated)
 
-	createResponse, err := json.Marshal(map[string]interface{}{
+	metadata := json.RawMessage(template.Metadata)
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"id":       template.ID,
 		"name":     template.Name,
 		"html":     template.HTML,
 		"text":     template.Text,
 		"subject":  template.Subject,
-		"metadata": decodedMetadata,
+		"metadata": &metadata,
 	})
-	if err != nil {
-		panic(err)
-	}
-
-	w.WriteHeader(http.StatusCreated)
-	w.Write(createResponse)
 }
