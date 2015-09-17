@@ -71,10 +71,5 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
-	updateResponse, _ := json.Marshal(map[string]string{
-		"id":   sender.ID,
-		"name": sender.Name,
-	})
-
-	w.Write(updateResponse)
+	json.NewEncoder(w).Encode(NewSenderResponse(sender))
 }

@@ -56,21 +56,5 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 		return
 	}
 
-	getResponse, _ := json.Marshal(map[string]interface{}{
-		"id":   sender.ID,
-		"name": sender.Name,
-		"_links": map[string]interface{}{
-			"self": map[string]string{
-				"href": fmt.Sprintf("/senders/%s", sender.ID),
-			},
-			"campaign_types": map[string]string{
-				"href": fmt.Sprintf("/senders/%s/campaign_types", sender.ID),
-			},
-			"campaigns": map[string]string{
-				"href": fmt.Sprintf("/senders/%s/campaigns", sender.ID),
-			},
-		},
-	})
-
-	w.Write(getResponse)
+	json.NewEncoder(w).Encode(NewSenderResponse(sender))
 }

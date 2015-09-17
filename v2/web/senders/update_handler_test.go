@@ -67,7 +67,18 @@ var _ = Describe("UpdateHandler", func() {
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
 			"id": "some-sender-id",
-			"name": "changed-sender"
+			"name": "changed-sender",
+			"_links": {
+				"self": {
+					"href": "/senders/some-sender-id"
+				},
+				"campaign_types": {
+					"href": "/senders/some-sender-id/campaign_types"
+				},
+				"campaigns": {
+					"href": "/senders/some-sender-id/campaigns"
+				}
+			}
 		}`))
 	})
 

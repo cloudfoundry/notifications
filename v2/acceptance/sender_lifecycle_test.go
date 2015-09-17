@@ -11,6 +11,24 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+type senderResponse struct {
+	ID    string
+	Name  string
+	Links struct {
+		Self struct {
+			Href string
+		}
+
+		CampaignTypes struct {
+			Href string
+		} `json:"campaign_types"`
+
+		Campaigns struct {
+			Href string
+		}
+	} `json:"_links"`
+}
+
 var _ = Describe("Sender lifecycle", func() {
 	var (
 		client *support.Client
@@ -30,35 +48,19 @@ var _ = Describe("Sender lifecycle", func() {
 		var senderID string
 
 		By("creating a sender", func() {
-			var results struct {
-				ID    string
-				Name  string
-				Links struct {
-					Self struct {
-						Href string
-					}
-
-					CampaignTypes struct {
-						Href string
-					} `json:"campaign_types"`
-
-					Campaigns struct {
-						Href string
-					}
-				} `json:"_links"`
-			}
+			var response senderResponse
 			status, err := client.DoTyped("POST", "/senders", map[string]interface{}{
 				"name": "My Cool App",
-			}, token.Access, &results)
+			}, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
-			Expect(results.Name).To(Equal("My Cool App"))
-			Expect(results.Links.Self.Href).To(Equal(fmt.Sprintf("/senders/%s", results.ID)))
-			Expect(results.Links.CampaignTypes.Href).To(Equal(fmt.Sprintf("/senders/%s/campaign_types", results.ID)))
-			Expect(results.Links.Campaigns.Href).To(Equal(fmt.Sprintf("/senders/%s/campaigns", results.ID)))
+			Expect(response.Name).To(Equal("My Cool App"))
+			Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/senders/%s", response.ID)))
+			Expect(response.Links.CampaignTypes.Href).To(Equal(fmt.Sprintf("/senders/%s/campaign_types", response.ID)))
+			Expect(response.Links.Campaigns.Href).To(Equal(fmt.Sprintf("/senders/%s/campaigns", response.ID)))
 
-			senderID = results.ID
+			senderID = response.ID
 		})
 
 		By("listing all senders", func() {
@@ -73,45 +75,33 @@ var _ = Describe("Sender lifecycle", func() {
 		})
 
 		By("getting the sender", func() {
-			var results struct {
-				ID    string
-				Name  string
-				Links struct {
-					Self struct {
-						Href string
-					}
-
-					CampaignTypes struct {
-						Href string
-					} `json:"campaign_types"`
-
-					Campaigns struct {
-						Href string
-					}
-				} `json:"_links"`
-			}
-			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, &results)
+			var response senderResponse
+			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
-			Expect(results.Name).To(Equal("My Cool App"))
-			Expect(results.ID).To(Equal(senderID))
-			Expect(results.Links.Self.Href).To(Equal(fmt.Sprintf("/senders/%s", results.ID)))
-			Expect(results.Links.CampaignTypes.Href).To(Equal(fmt.Sprintf("/senders/%s/campaign_types", results.ID)))
-			Expect(results.Links.Campaigns.Href).To(Equal(fmt.Sprintf("/senders/%s/campaigns", results.ID)))
+			Expect(response.Name).To(Equal("My Cool App"))
+			Expect(response.ID).To(Equal(senderID))
+			Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/senders/%s", response.ID)))
+			Expect(response.Links.CampaignTypes.Href).To(Equal(fmt.Sprintf("/senders/%s/campaign_types", response.ID)))
+			Expect(response.Links.Campaigns.Href).To(Equal(fmt.Sprintf("/senders/%s/campaigns", response.ID)))
 		})
 
 		By("updating the sender", func() {
-			status, response, err := client.Do("PUT", fmt.Sprintf("/senders/%s", senderID),
+			var response senderResponse
+			status, err := client.DoTyped("PUT", fmt.Sprintf("/senders/%s", senderID),
 				map[string]interface{}{
 					"name": "My Not Cool App",
-				}, token.Access)
+				}, token.Access, &response)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
-			Expect(response["id"]).To(Equal(senderID))
-			Expect(response["name"]).To(Equal("My Not Cool App"))
+			Expect(response.ID).To(Equal(senderID))
+			Expect(response.Name).To(Equal("My Not Cool App"))
+			Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/senders/%s", response.ID)))
+			Expect(response.Links.CampaignTypes.Href).To(Equal(fmt.Sprintf("/senders/%s/campaign_types", response.ID)))
+			Expect(response.Links.Campaigns.Href).To(Equal(fmt.Sprintf("/senders/%s/campaigns", response.ID)))
 		})
 
 		By("getting the updated sender", func() {
