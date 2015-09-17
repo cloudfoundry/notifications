@@ -22,18 +22,29 @@ var _ = Describe("v2 Root Link List", func() {
 	})
 
 	It("returns the list of root links", func() {
-		status, response, err := client.Do("GET", "/", nil, "")
+
+		var results struct {
+			Links struct {
+				Self struct {
+					Href string
+				}
+
+				Senders struct {
+					Href string
+				}
+
+				Templates struct {
+					Href string
+				}
+			} `json:"_links"`
+		}
+
+		status, err := client.DoTyped("GET", "/", nil, "", &results)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(status).To(Equal(http.StatusOK))
 
-		Expect(response["_links"]).To(HaveKeyWithValue("self", map[string]interface{}{
-			"href": "/",
-		}))
-		Expect(response["_links"]).To(HaveKeyWithValue("senders", map[string]interface{}{
-			"href": "/senders",
-		}))
-		Expect(response["_links"]).To(HaveKeyWithValue("templates", map[string]interface{}{
-			"href": "/templates",
-		}))
+		Expect(results.Links.Self.Href).To(Equal("/"))
+		Expect(results.Links.Senders.Href).To(Equal("/senders"))
+		Expect(results.Links.Templates.Href).To(Equal("/templates"))
 	})
 })
