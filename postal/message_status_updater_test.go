@@ -25,6 +25,13 @@ var _ = Describe("MessageStatusUpdater", func() {
 	BeforeEach(func() {
 		conn = mocks.NewConnection()
 		messagesRepo = mocks.NewMessagesRepo()
+		messagesRepo.UpsertCall.Returns.Messages = []models.Message{
+			{
+				ID:         "some-message-id",
+				Status:     "message-status",
+				CampaignID: "campaign-id",
+			},
+		}
 
 		buffer = bytes.NewBuffer([]byte{})
 		logger = lager.NewLogger("notifications")

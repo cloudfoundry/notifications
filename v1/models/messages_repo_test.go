@@ -8,6 +8,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 
 	. "github.com/onsi/ginkgo"
@@ -15,21 +16,44 @@ import (
 )
 
 var _ = Describe("MessagesRepo", func() {
-	var repo models.MessagesRepo
-	var conn db.ConnectionInterface
-	var message models.Message
+	var (
+		repo          models.MessagesRepo
+		conn          db.ConnectionInterface
+		message       models.Message
+		guidGenerator *mocks.GUIDGenerator
+	)
 
 	BeforeEach(func() {
-		repo = models.NewMessagesRepo()
 		database := db.NewDatabase(sqlDB, db.Config{})
 		helpers.TruncateTables(database)
 		conn = database.Connection()
 		message = models.Message{
-			ID:         "message-id-123",
 			CampaignID: "some-campaign-id",
 			Status:     postal.StatusDelivered,
 		}
 
+		guidGenerator = mocks.NewGUIDGenerator()
+		guidGenerator.GenerateCall.Returns.GUIDs = []string{
+			"first-random-guid",
+		}
+
+		repo = models.NewMessagesRepo(guidGenerator.Generate)
+	})
+
+	Describe("Create", func() {
+		It("inserts a message into the database", func() {
+			message, err := repo.Create(conn, message)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(message.ID).To(Equal("first-random-guid"))
+		})
+
+		It("returns an error when the guid generator errors", func() {
+			guidGenerator.GenerateCall.Returns.Error = errors.New("something bad")
+
+			_, err := repo.Create(conn, message)
+			Expect(err).To(MatchError(errors.New("something bad")))
+		})
 	})
 
 	Describe("FindByID", func() {
@@ -55,7 +79,8 @@ var _ = Describe("MessagesRepo", func() {
 		Context("when no record exists yet with the message id", func() {
 			It("inserts a new record", func() {
 				message.UpdatedAt = time.Now().Add(100 * time.Hour)
-				_, err := repo.Upsert(conn, message)
+
+				message, err := repo.Upsert(conn, message)
 				Expect(err).NotTo(HaveOccurred())
 
 				messageFound, err := repo.FindByID(conn, message.ID)
@@ -66,31 +91,31 @@ var _ = Describe("MessagesRepo", func() {
 				Expect(messageFound.UpdatedAt).To(BeTemporally("~", time.Now(), time.Minute))
 			})
 		})
+
 		Context("when a record already exists with the message id", func() {
 			It("updates the existing record", func() {
-				_, err := repo.Create(conn, message)
+				message, err := repo.Create(conn, message)
 				Expect(err).NotTo(HaveOccurred())
 
-				updatedMessage := message
-				updatedMessage.Status = postal.StatusFailed
+				message.Status = postal.StatusFailed
 
-				updatedMessage.UpdatedAt = time.Now().Add(100 * time.Hour)
-				updatedMessage, err = repo.Upsert(conn, updatedMessage)
+				message.UpdatedAt = time.Now().Add(100 * time.Hour)
+				message, err = repo.Upsert(conn, message)
 				Expect(err).NotTo(HaveOccurred())
 
 				messageFound, err := repo.FindByID(conn, message.ID)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(messageFound.UpdatedAt).To(BeTemporally("~", time.Now(), time.Minute))
-				Expect(messageFound.ID).To(Equal(updatedMessage.ID))
-				Expect(messageFound.Status).To(Equal(updatedMessage.Status))
+				Expect(messageFound.ID).To(Equal(message.ID))
+				Expect(messageFound.Status).To(Equal(message.Status))
 			})
 		})
 	})
 
 	Describe("DeleteBefore", func() {
 		It("Deletes messages older than the input time", func() {
-			_, err := repo.Create(conn, message)
+			message, err := repo.Create(conn, message)
 			Expect(err).NotTo(HaveOccurred())
 
 			itemsDeleted, err := repo.DeleteBefore(conn, time.Now().Add(1*time.Hour))
@@ -103,7 +128,7 @@ var _ = Describe("MessagesRepo", func() {
 		})
 
 		It("Does not delete messages younger than the input time", func() {
-			_, err := repo.Create(conn, message)
+			message, err := repo.Create(conn, message)
 			Expect(err).NotTo(HaveOccurred())
 
 			itemsDeleted, err := repo.DeleteBefore(conn, time.Now().Add(-1*time.Hour))

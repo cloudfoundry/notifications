@@ -107,7 +107,7 @@ func (m *Mother) EmailStrategy() services.EmailStrategy {
 }
 
 func (m *Mother) Enqueuer() services.Enqueuer {
-	return services.NewEnqueuer(m.Queue(), v2models.NewGUIDGenerator(rand.Reader).Generate, m.MessagesRepo())
+	return services.NewEnqueuer(m.Queue(), m.MessagesRepo())
 }
 
 func (m *Mother) TemplatesLoader() postal.TemplatesLoader {
@@ -207,7 +207,7 @@ func (m *Mother) GlobalUnsubscribesRepo() v1models.GlobalUnsubscribesRepo {
 }
 
 func (m *Mother) MessagesRepo() v1models.MessagesRepo {
-	return v1models.NewMessagesRepo()
+	return v1models.NewMessagesRepo(v2models.NewGUIDGenerator(rand.Reader).Generate)
 }
 
 func (m *Mother) ReceiptsRepo() v1models.ReceiptsRepo {

@@ -10,8 +10,6 @@ import (
 
 const StatusQueued = "queued"
 
-type GUIDGenerationFunc func() (string, error)
-
 type Options struct {
 	ReplyTo           string
 	Subject           string
@@ -45,42 +43,47 @@ type messagesRepoUpserter interface {
 }
 
 type Enqueuer struct {
-	queue         gobble.QueueInterface
-	guidGenerator GUIDGenerationFunc
-	messagesRepo  messagesRepoUpserter
+	queue        gobble.QueueInterface
+	messagesRepo messagesRepoUpserter
 }
 
-func NewEnqueuer(queue gobble.QueueInterface, guidGenerator GUIDGenerationFunc, messagesRepo messagesRepoUpserter) Enqueuer {
+func NewEnqueuer(queue gobble.QueueInterface, messagesRepo messagesRepoUpserter) Enqueuer {
 	return Enqueuer{
-		queue:         queue,
-		guidGenerator: guidGenerator,
-		messagesRepo:  messagesRepo,
+		queue:        queue,
+		messagesRepo: messagesRepo,
 	}
 }
 
 func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []Response {
+	var (
+		responses []Response
+		jobs      []gobble.Job
+	)
 
-	responses := []Response{}
-	jobsByMessageID := map[string]gobble.Job{}
+	transaction := conn.Transaction()
+	transaction.Begin()
 	for _, user := range users {
-		messageID, err := enqueuer.guidGenerator()
+		message, err := enqueuer.messagesRepo.Upsert(transaction, models.Message{
+			Status: StatusQueued,
+		})
 		if err != nil {
-			panic(err)
+			transaction.Rollback()
+			return []Response{}
 		}
 
-		jobsByMessageID[messageID] = gobble.NewJob(Delivery{
+		jobs = append(jobs, gobble.NewJob(Delivery{
 			Options:         options,
 			UserGUID:        user.GUID,
 			Email:           user.Email,
 			Space:           space,
 			Organization:    organization,
 			ClientID:        clientID,
-			MessageID:       messageID,
+			MessageID:       message.ID,
 			UAAHost:         uaaHost,
 			Scope:           scope,
 			VCAPRequestID:   vcapRequestID,
 			RequestReceived: reqReceived,
-		})
+		}))
 
 		recipient := user.Email
 		if recipient == "" {
@@ -88,31 +91,19 @@ func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options
 		}
 
 		responses = append(responses, Response{
-			Status:         StatusQueued,
-			NotificationID: messageID,
+			Status:         message.Status,
+			NotificationID: message.ID,
 			Recipient:      recipient,
 			VCAPRequestID:  vcapRequestID,
 		})
 	}
 
-	transaction := conn.Transaction()
-	transaction.Begin()
-	for messageID := range jobsByMessageID {
-		_, err := enqueuer.messagesRepo.Upsert(transaction, models.Message{
-			ID:     messageID,
-			Status: StatusQueued,
-		})
-		if err != nil {
-			transaction.Rollback()
-			return []Response{}
-		}
-	}
 	err := transaction.Commit()
 	if err != nil {
 		return []Response{}
 	}
 
-	for _, job := range jobsByMessageID {
+	for _, job := range jobs {
 		_, err := enqueuer.queue.Enqueue(job)
 		if err != nil {
 			return []Response{}

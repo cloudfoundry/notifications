@@ -9,22 +9,23 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("MessageGC", func() {
-	var messageGC postal.MessageGC
-	var repo *mocks.MessagesRepo
-	var oldMessageID string
-	var newMessageID string
-	var database *mocks.Database
-	var conn db.ConnectionInterface
-	var loggerBuffer *bytes.Buffer
-	var lifetime time.Duration
-	var pollingInterval time.Duration
+	var (
+		messageGC       postal.MessageGC
+		repo            *mocks.MessagesRepo
+		oldMessageID    string
+		newMessageID    string
+		database        *mocks.Database
+		conn            db.ConnectionInterface
+		loggerBuffer    *bytes.Buffer
+		lifetime        time.Duration
+		pollingInterval time.Duration
+	)
 
 	BeforeEach(func() {
 		loggerBuffer = bytes.NewBuffer([]byte{})
@@ -35,6 +36,7 @@ var _ = Describe("MessageGC", func() {
 		database.ConnectionCall.Returns.Connection = conn
 
 		repo = mocks.NewMessagesRepo()
+
 		lifetime = 2 * time.Minute
 		pollingInterval = 500 * time.Millisecond
 		oldMessageID = "that-message"
@@ -59,20 +61,6 @@ var _ = Describe("MessageGC", func() {
 	})
 
 	Describe("Collect", func() {
-		BeforeEach(func() {
-			_, err := repo.Upsert(conn, models.Message{
-				ID:        oldMessageID,
-				UpdatedAt: time.Now().Add(-2 * lifetime),
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			_, err = repo.Upsert(conn, models.Message{
-				ID:        newMessageID,
-				UpdatedAt: time.Now(),
-			})
-			Expect(err).NotTo(HaveOccurred())
-		})
-
 		It("Deletes message statuses older than the specified time", func() {
 			messageGC.Collect()
 

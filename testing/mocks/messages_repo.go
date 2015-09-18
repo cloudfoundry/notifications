@@ -8,13 +8,14 @@ import (
 
 type MessagesRepo struct {
 	UpsertCall struct {
-		Receives struct {
+		CallCount int
+		Receives  struct {
 			Connection models.ConnectionInterface
 			Messages   []models.Message
 		}
 		Returns struct {
-			Message models.Message
-			Error   error
+			Messages []models.Message
+			Error    error
 		}
 	}
 
@@ -62,7 +63,10 @@ func (mr *MessagesRepo) Upsert(conn models.ConnectionInterface, message models.M
 	mr.UpsertCall.Receives.Connection = conn
 	mr.UpsertCall.Receives.Messages = append(mr.UpsertCall.Receives.Messages, message)
 
-	return mr.UpsertCall.Returns.Message, mr.UpsertCall.Returns.Error
+	message = mr.UpsertCall.Returns.Messages[mr.UpsertCall.CallCount]
+	mr.UpsertCall.CallCount++
+
+	return message, mr.UpsertCall.Returns.Error
 }
 
 func (mr *MessagesRepo) Update(conn models.ConnectionInterface, message models.Message) (models.Message, error) {

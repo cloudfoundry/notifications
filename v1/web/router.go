@@ -1,6 +1,7 @@
 package web
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"net/http"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
+	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/gorilla/mux"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
@@ -45,12 +47,14 @@ type mother interface {
 }
 
 func NewRouter(mx muxer, mom mother, config Config) http.Handler {
+	guidGenerator := v2models.NewGUIDGenerator(rand.Reader)
+
 	clientsRepo := models.NewClientsRepo()
 	kindsRepo := models.NewKindsRepo()
 	globalUnsubscribesRepo := models.NewGlobalUnsubscribesRepo()
 	preferencesRepo := models.NewPreferencesRepo()
 	unsubscribesRepo := models.NewUnsubscribesRepo()
-	messagesRepo := models.NewMessagesRepo()
+	messagesRepo := models.NewMessagesRepo(guidGenerator.Generate)
 	templatesRepo := models.NewTemplatesRepo()
 
 	registrar := services.NewRegistrar(clientsRepo, kindsRepo)

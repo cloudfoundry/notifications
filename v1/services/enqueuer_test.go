@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 
 	. "github.com/onsi/ginkgo"
@@ -16,17 +17,16 @@ import (
 
 var _ = Describe("Enqueuer", func() {
 	var (
-		enqueuer      services.Enqueuer
-		logger        *log.Logger
-		buffer        *bytes.Buffer
-		queue         *mocks.Queue
-		conn          *mocks.Connection
-		transaction   *mocks.Transaction
-		space         cf.CloudControllerSpace
-		org           cf.CloudControllerOrganization
-		reqReceived   time.Time
-		messagesRepo  *mocks.MessagesRepo
-		guidGenerator *mocks.GUIDGenerator
+		enqueuer     services.Enqueuer
+		logger       *log.Logger
+		buffer       *bytes.Buffer
+		queue        *mocks.Queue
+		conn         *mocks.Connection
+		transaction  *mocks.Transaction
+		space        cf.CloudControllerSpace
+		org          cf.CloudControllerOrganization
+		reqReceived  time.Time
+		messagesRepo *mocks.MessagesRepo
 	)
 
 	BeforeEach(func() {
@@ -38,19 +38,31 @@ var _ = Describe("Enqueuer", func() {
 		conn = mocks.NewConnection()
 		conn.TransactionCall.Returns.Transaction = transaction
 
-		guidGenerator = mocks.NewGUIDGenerator()
-		guidGenerator.GenerateCall.Returns.GUIDs = []string{
-			"first-random-guid",
-			"second-random-guid",
-			"third-random-guid",
-			"fourth-random-guid",
-		}
-
-		messagesRepo = mocks.NewMessagesRepo()
-		enqueuer = services.NewEnqueuer(queue, guidGenerator.Generate, messagesRepo)
 		space = cf.CloudControllerSpace{Name: "the-space"}
 		org = cf.CloudControllerOrganization{Name: "the-org"}
 		reqReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:40:12.207187819-07:00")
+
+		messagesRepo = mocks.NewMessagesRepo()
+		messagesRepo.UpsertCall.Returns.Messages = []models.Message{
+			{
+				ID:     "first-random-guid",
+				Status: services.StatusQueued,
+			},
+			{
+				ID:     "second-random-guid",
+				Status: services.StatusQueued,
+			},
+			{
+				ID:     "third-random-guid",
+				Status: services.StatusQueued,
+			},
+			{
+				ID:     "fourth-random-guid",
+				Status: services.StatusQueued,
+			},
+		}
+
+		enqueuer = services.NewEnqueuer(queue, messagesRepo)
 	})
 
 	Describe("Enqueue", func() {
@@ -160,10 +172,12 @@ var _ = Describe("Enqueuer", func() {
 
 			messages := messagesRepo.UpsertCall.Receives.Messages
 			Expect(messages).To(HaveLen(4))
-
-			for _, message := range messages {
-				Expect(message.Status).To(Equal(services.StatusQueued))
-			}
+			Expect(messages).To(Equal([]models.Message{
+				{Status: services.StatusQueued},
+				{Status: services.StatusQueued},
+				{Status: services.StatusQueued},
+				{Status: services.StatusQueued},
+			}))
 		})
 
 		Context("using a transaction", func() {
