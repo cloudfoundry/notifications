@@ -28,8 +28,14 @@ func NewClient(config Config) *Client {
 	}
 }
 
+func (c Client) Do(method string, path string, payload map[string]interface{}, token string) (int, map[string]interface{}, error) {
+	var results map[string]interface{}
+	responseCode, err := c.DoTyped(method, path, payload, token, &results)
+	return responseCode, results, err
+}
+
 func (c Client) DoTyped(method string, path string, payload map[string]interface{}, token string, results interface{}) (int, error) {
-	var requestBody io.Reader
+	var requestBody io.ReadSeeker
 
 	if payload != nil {
 		content, err := json.Marshal(payload)
@@ -37,7 +43,7 @@ func (c Client) DoTyped(method string, path string, payload map[string]interface
 			return 0, err
 		}
 
-		requestBody = bytes.NewBuffer(content)
+		requestBody = bytes.NewReader(content)
 	}
 
 	responseCode, responseBody, err := c.makeRequest(method, c.config.Host+path, requestBody, token)
@@ -55,36 +61,7 @@ func (c Client) DoTyped(method string, path string, payload map[string]interface
 	return responseCode, err
 }
 
-func (c Client) Do(method string, path string, payload map[string]interface{}, token string) (int, map[string]interface{}, error) {
-	var requestBody io.Reader
-
-	if payload != nil {
-		content, err := json.Marshal(payload)
-		if err != nil {
-			return 0, nil, err
-		}
-
-		requestBody = bytes.NewBuffer(content)
-	}
-
-	responseCode, responseBody, err := c.makeRequest(method, c.config.Host+path, requestBody, token)
-	if err != nil {
-		return 0, nil, err
-	}
-
-	var body map[string]interface{}
-
-	if strings.Contains(string(responseBody), "{") {
-		err = json.Unmarshal(responseBody, &body)
-		if err != nil {
-			return 0, nil, err
-		}
-	}
-
-	return responseCode, body, err
-}
-
-func (c Client) makeRequest(method, path string, content io.Reader, token string) (int, []byte, error) {
+func (c Client) makeRequest(method, path string, content io.ReadSeeker, token string) (int, []byte, error) {
 	request, err := http.NewRequest(method, path, content)
 	if err != nil {
 		return 0, []byte{}, err
