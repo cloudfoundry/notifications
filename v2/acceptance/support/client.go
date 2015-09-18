@@ -16,9 +16,36 @@ type Config struct {
 	Routerless bool
 }
 
+type CurlCommand struct {
+	Header         map[string][]string
+	RequestBody    string
+	URL            string
+	ResponseStatus int
+	Method         string
+}
+
+func (c *CurlCommand) String() string {
+	headersString := ""
+	for k, values := range c.Header {
+		for _, v := range values {
+			headersString = fmt.Sprintf("%s -H '%s:%s'", headersString, k, v)
+		}
+	}
+
+	if c.Method == "POST" || c.Method == "PUT" {
+		return fmt.Sprintf("curl%s -X %s -d '%s' %s", headersString, c.Method, c.RequestBody, c.URL)
+	}
+	if c.Method == "GET" {
+		return fmt.Sprintf("curl%s %s", headersString, c.URL)
+	}
+	return fmt.Sprintf("curl%s -X %s -d '%s' %s", headersString, c.Method, c.RequestBody, c.URL)
+}
+
 type Client struct {
 	config     Config
 	httpClient *http.Client
+
+	CurlCommands []CurlCommand
 }
 
 func NewClient(config Config) *Client {
@@ -61,7 +88,10 @@ func (c Client) DoTyped(method string, path string, payload map[string]interface
 	return responseCode, err
 }
 
-func (c Client) makeRequest(method, path string, content io.ReadSeeker, token string) (int, []byte, error) {
+func (c *Client) makeRequest(method, path string, content io.Reader, token string) (int, []byte, error) {
+	var contentCopy *bytes.Buffer
+	content, contentCopy = duplicateBuffer(content)
+
 	request, err := http.NewRequest(method, path, content)
 	if err != nil {
 		return 0, []byte{}, err
@@ -86,6 +116,15 @@ func (c Client) makeRequest(method, path string, content io.ReadSeeker, token st
 	if err != nil {
 		return 0, []byte{}, err
 	}
+
+	var curlCommand CurlCommand
+	curlCommand.RequestBody = contentCopy.String()
+	curlCommand.Header = request.Header
+	curlCommand.URL = request.URL.String()
+	curlCommand.Method = request.Method
+	c.CurlCommands = append(c.CurlCommands, curlCommand)
+
+	fmt.Printf("\n\n%s\n\n", curlCommand.String())
 
 	return response.StatusCode, responseBody, nil
 }
