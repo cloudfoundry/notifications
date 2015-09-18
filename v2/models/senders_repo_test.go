@@ -8,7 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
-	"github.com/nu7hatch/gouuid"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -25,10 +24,8 @@ var _ = Describe("SendersRepo", func() {
 		database := db.NewDatabase(sqlDB, db.Config{})
 		helpers.TruncateTables(database)
 
-		guid1 := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55})
-		guid2 := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x56})
 		guidGenerator = mocks.NewGUIDGenerator()
-		guidGenerator.GenerateCall.Returns.GUIDs = []*uuid.UUID{&guid1, &guid2}
+		guidGenerator.GenerateCall.Returns.GUIDs = []string{"first-random-guid", "second-random-guid"}
 
 		repo = models.NewSendersRepository(guidGenerator.Generate)
 		conn = database.Connection()
@@ -44,23 +41,45 @@ var _ = Describe("SendersRepo", func() {
 			sender, err := repo.Insert(conn, sender)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(sender).To(Equal(models.Sender{
-				ID:       "deadbeef-aabb-ccdd-eeff-001122334455",
+				ID:       "first-random-guid",
 				Name:     "some-sender",
 				ClientID: "some-client-id",
 			}))
 		})
 
-		It("returns a duplicate record error when the name and client_id are taken", func() {
-			sender := models.Sender{
-				Name:     "some-sender",
-				ClientID: "some-client-id",
-			}
+		Context("failure cases", func() {
+			It("returns a duplicate record error when the name and client_id are taken", func() {
+				sender := models.Sender{
+					Name:     "some-sender",
+					ClientID: "some-client-id",
+				}
 
-			_, err := repo.Insert(conn, sender)
-			Expect(err).NotTo(HaveOccurred())
+				_, err := repo.Insert(conn, sender)
+				Expect(err).NotTo(HaveOccurred())
 
-			_, err = repo.Insert(conn, sender)
-			Expect(err).To(MatchError(models.DuplicateRecordError{}))
+				_, err = repo.Insert(conn, sender)
+				Expect(err).To(MatchError(models.DuplicateRecordError{errors.New("Sender with name \"some-sender\" already exists")}))
+			})
+
+			It("returns the error when the insert call fails", func() {
+				connection := mocks.NewConnection()
+				connection.InsertCall.Returns.Error = errors.New("something bad happened")
+
+				sender := models.Sender{
+					Name:     "some-sender",
+					ClientID: "some-client-id",
+				}
+
+				_, err := repo.Insert(connection, sender)
+				Expect(err).To(MatchError(errors.New("something bad happened")))
+			})
+
+			It("returns an error when the guid generator blows up", func() {
+				guidGenerator.GenerateCall.Returns.Error = errors.New("failed to generate")
+
+				_, err := repo.Insert(conn, models.Sender{})
+				Expect(err).To(MatchError(errors.New("failed to generate")))
+			})
 		})
 	})
 
@@ -74,7 +93,7 @@ var _ = Describe("SendersRepo", func() {
 			sender, err := repo.Insert(conn, sender)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(sender).To(Equal(models.Sender{
-				ID:       "deadbeef-aabb-ccdd-eeff-001122334455",
+				ID:       "first-random-guid",
 				Name:     "some-sender",
 				ClientID: "some-client-id",
 			}))
@@ -82,7 +101,7 @@ var _ = Describe("SendersRepo", func() {
 
 		It("updates the name", func() {
 			sender := models.Sender{
-				ID:       "deadbeef-aabb-ccdd-eeff-001122334455",
+				ID:       "first-random-guid",
 				Name:     "new-sender-name",
 				ClientID: "some-client-id",
 			}
@@ -90,42 +109,44 @@ var _ = Describe("SendersRepo", func() {
 			sender, err := repo.Update(conn, sender)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(sender).To(Equal(models.Sender{
-				ID:       "deadbeef-aabb-ccdd-eeff-001122334455",
+				ID:       "first-random-guid",
 				Name:     "new-sender-name",
 				ClientID: "some-client-id",
 			}))
 		})
 
-		It("returns a duplicate record error when the name and client_id are taken", func() {
-			sender := models.Sender{
-				Name:     "new-sender-name",
-				ClientID: "some-client-id",
-			}
-			sender, err := repo.Insert(conn, sender)
-			Expect(err).NotTo(HaveOccurred())
+		Context("failure cases", func() {
+			It("returns a duplicate record error when the name and client_id are taken", func() {
+				sender := models.Sender{
+					Name:     "new-sender-name",
+					ClientID: "some-client-id",
+				}
+				sender, err := repo.Insert(conn, sender)
+				Expect(err).NotTo(HaveOccurred())
 
-			sender = models.Sender{
-				ID:       "deadbeef-aabb-ccdd-eeff-001122334455",
-				Name:     "new-sender-name",
-				ClientID: "some-client-id",
-			}
+				sender = models.Sender{
+					ID:       "first-random-guid",
+					Name:     "new-sender-name",
+					ClientID: "some-client-id",
+				}
 
-			_, err = repo.Update(conn, sender)
-			Expect(err).To(MatchError(models.DuplicateRecordError{errors.New("Sender with name \"new-sender-name\" already exists")}))
-		})
+				_, err = repo.Update(conn, sender)
+				Expect(err).To(MatchError(models.DuplicateRecordError{errors.New("Sender with name \"new-sender-name\" already exists")}))
+			})
 
-		It("returns other errors if they occur", func() {
-			connection := mocks.NewConnection()
+			It("returns other errors if they occur", func() {
+				connection := mocks.NewConnection()
 
-			connection.UpdateCall.Returns.Error = errors.New("potatoes")
+				connection.UpdateCall.Returns.Error = errors.New("potatoes")
 
-			sender := models.Sender{
-				ID:       "deadbeef-aabb-ccdd-eeff-001122334455",
-				Name:     "new-sender-name",
-				ClientID: "some-client-id",
-			}
-			_, err := repo.Update(connection, sender)
-			Expect(err).To(MatchError(errors.New("potatoes")))
+				sender := models.Sender{
+					ID:       "first-random-guid",
+					Name:     "new-sender-name",
+					ClientID: "some-client-id",
+				}
+				_, err := repo.Update(connection, sender)
+				Expect(err).To(MatchError(errors.New("potatoes")))
+			})
 		})
 	})
 
@@ -145,7 +166,7 @@ var _ = Describe("SendersRepo", func() {
 
 			senders, err := repo.List(conn, createdSender.ClientID)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(len(senders)).To(Equal(1))
+			Expect(senders).To(HaveLen(1))
 			Expect(senders[0].ID).To(Equal(createdSender.ID))
 		})
 

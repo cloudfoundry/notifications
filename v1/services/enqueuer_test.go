@@ -9,7 +9,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
-	"github.com/nu7hatch/gouuid"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -40,11 +39,12 @@ var _ = Describe("Enqueuer", func() {
 		conn.TransactionCall.Returns.Transaction = transaction
 
 		guidGenerator = mocks.NewGUIDGenerator()
-		guid1 := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55})
-		guid2 := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x56})
-		guid3 := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x57})
-		guid4 := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x58})
-		guidGenerator.GenerateCall.Returns.GUIDs = []*uuid.UUID{&guid1, &guid2, &guid3, &guid4}
+		guidGenerator.GenerateCall.Returns.GUIDs = []string{
+			"first-random-guid",
+			"second-random-guid",
+			"third-random-guid",
+			"fourth-random-guid",
+		}
 
 		messagesRepo = mocks.NewMessagesRepo()
 		enqueuer = services.NewEnqueuer(queue, guidGenerator.Generate, messagesRepo)
@@ -63,25 +63,25 @@ var _ = Describe("Enqueuer", func() {
 				{
 					Status:         "queued",
 					Recipient:      "user-1",
-					NotificationID: "deadbeef-aabb-ccdd-eeff-001122334455",
+					NotificationID: "first-random-guid",
 					VCAPRequestID:  "some-request-id",
 				},
 				{
 					Status:         "queued",
 					Recipient:      "user-2@example.com",
-					NotificationID: "deadbeef-aabb-ccdd-eeff-001122334456",
+					NotificationID: "second-random-guid",
 					VCAPRequestID:  "some-request-id",
 				},
 				{
 					Status:         "queued",
 					Recipient:      "user-3",
-					NotificationID: "deadbeef-aabb-ccdd-eeff-001122334457",
+					NotificationID: "third-random-guid",
 					VCAPRequestID:  "some-request-id",
 				},
 				{
 					Status:         "queued",
 					Recipient:      "user-4",
-					NotificationID: "deadbeef-aabb-ccdd-eeff-001122334458",
+					NotificationID: "fourth-random-guid",
 					VCAPRequestID:  "some-request-id",
 				},
 			}))
@@ -109,7 +109,7 @@ var _ = Describe("Enqueuer", func() {
 					Space:           space,
 					Organization:    org,
 					ClientID:        "the-client",
-					MessageID:       "deadbeef-aabb-ccdd-eeff-001122334455",
+					MessageID:       "first-random-guid",
 					UAAHost:         "my-uaa-host",
 					Scope:           "my.scope",
 					VCAPRequestID:   "some-request-id",
@@ -121,7 +121,7 @@ var _ = Describe("Enqueuer", func() {
 					Space:           space,
 					Organization:    org,
 					ClientID:        "the-client",
-					MessageID:       "deadbeef-aabb-ccdd-eeff-001122334456",
+					MessageID:       "second-random-guid",
 					UAAHost:         "my-uaa-host",
 					Scope:           "my.scope",
 					VCAPRequestID:   "some-request-id",
@@ -133,7 +133,7 @@ var _ = Describe("Enqueuer", func() {
 					Space:           space,
 					Organization:    org,
 					ClientID:        "the-client",
-					MessageID:       "deadbeef-aabb-ccdd-eeff-001122334457",
+					MessageID:       "third-random-guid",
 					UAAHost:         "my-uaa-host",
 					Scope:           "my.scope",
 					VCAPRequestID:   "some-request-id",
@@ -145,7 +145,7 @@ var _ = Describe("Enqueuer", func() {
 					Space:           space,
 					Organization:    org,
 					ClientID:        "the-client",
-					MessageID:       "deadbeef-aabb-ccdd-eeff-001122334458",
+					MessageID:       "fourth-random-guid",
 					UAAHost:         "my-uaa-host",
 					Scope:           "my.scope",
 					VCAPRequestID:   "some-request-id",

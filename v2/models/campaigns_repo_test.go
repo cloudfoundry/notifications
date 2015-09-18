@@ -7,7 +7,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
-	"github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -20,10 +19,8 @@ var _ = Describe("CampaignsRepository", func() {
 	)
 
 	BeforeEach(func() {
-		guid1 := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55})
-		guid2 := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x56})
 		guidGenerator = mocks.NewGUIDGenerator()
-		guidGenerator.GenerateCall.Returns.GUIDs = []*uuid.UUID{&guid1, &guid2}
+		guidGenerator.GenerateCall.Returns.GUIDs = []string{"first-random-guid", "second-random-guid"}
 
 		repo = models.NewCampaignsRepository(guidGenerator.Generate)
 		database := db.NewDatabase(sqlDB, db.Config{})
@@ -44,7 +41,7 @@ var _ = Describe("CampaignsRepository", func() {
 				SenderID:       "my-sender",
 			})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(campaign.ID).To(Equal("deadbeef-aabb-ccdd-eeff-001122334455"))
+			Expect(campaign.ID).To(Equal("first-random-guid"))
 		})
 
 		Context("failure cases", func() {
@@ -64,6 +61,13 @@ var _ = Describe("CampaignsRepository", func() {
 				})
 				Expect(err).To(MatchError(errors.New("something bad happened")))
 			})
+
+			It("returns an error when the guid generator fails", func() {
+				guidGenerator.GenerateCall.Returns.Error = errors.New("nope")
+
+				_, err := repo.Insert(connection, models.Campaign{})
+				Expect(err).To(MatchError(errors.New("nope")))
+			})
 		})
 	})
 
@@ -80,7 +84,7 @@ var _ = Describe("CampaignsRepository", func() {
 				SenderID:       "my-sender",
 			})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(campaign.ID).To(Equal("deadbeef-aabb-ccdd-eeff-001122334455"))
+			Expect(campaign.ID).To(Equal("first-random-guid"))
 
 			retrievedCampaign, err := repo.Get(connection, campaign.ID)
 			Expect(err).NotTo(HaveOccurred())

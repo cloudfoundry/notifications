@@ -6,6 +6,15 @@ import (
 	"strings"
 )
 
+type CampaignType struct {
+	ID          string `db:"id"`
+	Name        string `db:"name"`
+	Description string `db:"description"`
+	Critical    bool   `db:"critical"`
+	TemplateID  string `db:"template_id"`
+	SenderID    string `db:"sender_id"`
+}
+
 type CampaignTypesRepository struct {
 	guidGenerator guidGeneratorFunc
 }
@@ -18,11 +27,11 @@ func NewCampaignTypesRepository(guidGenerator guidGeneratorFunc) CampaignTypesRe
 
 func (r CampaignTypesRepository) Insert(connection ConnectionInterface, campaignType CampaignType) (CampaignType, error) {
 	if campaignType.ID == "" {
-		id, err := r.guidGenerator()
+		var err error
+		campaignType.ID, err = r.guidGenerator()
 		if err != nil {
-			panic(err)
+			return CampaignType{}, err
 		}
-		campaignType.ID = id.String()
 	}
 
 	err := connection.Insert(&campaignType)

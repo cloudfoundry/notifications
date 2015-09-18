@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -16,10 +15,10 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/nu7hatch/gouuid"
+	"github.com/ryanmoran/stack"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/ryanmoran/stack"
 )
 
 var _ = Describe("UpdateHandler", func() {
@@ -32,7 +31,6 @@ var _ = Describe("UpdateHandler", func() {
 		database                *mocks.Database
 		tokenHeader             map[string]interface{}
 		tokenClaims             map[string]interface{}
-		guid                    string
 	)
 
 	BeforeEach(func() {
@@ -63,14 +61,10 @@ var _ = Describe("UpdateHandler", func() {
 
 		writer = httptest.NewRecorder()
 
-		g, err := uuid.NewV4()
-		Expect(err).NotTo(HaveOccurred())
-		guid = g.String()
-
 		campaignTypesCollection = mocks.NewCampaignTypesCollection()
 
 		campaignTypesCollection.GetCall.Returns.CampaignType = collections.CampaignType{
-			ID:          guid,
+			ID:          "some-campaign-type-id",
 			Name:        "my old name",
 			Description: "old description",
 			Critical:    true,
@@ -86,7 +80,7 @@ var _ = Describe("UpdateHandler", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+		request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
 		handler = campaigntypes.NewUpdateHandler(campaignTypesCollection)
@@ -94,7 +88,7 @@ var _ = Describe("UpdateHandler", func() {
 
 	It("updates an existing campaign type", func() {
 		campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
-			ID:          guid,
+			ID:          "some-campaign-type-id",
 			Name:        "update-campaign-type",
 			Description: "update-campaign-type-description",
 			Critical:    true,
@@ -105,7 +99,7 @@ var _ = Describe("UpdateHandler", func() {
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(campaignTypesCollection.SetCall.Receives.CampaignType).To(Equal(collections.CampaignType{
-			ID:          guid,
+			ID:          "some-campaign-type-id",
 			Name:        "update-campaign-type",
 			Description: "update-campaign-type-description",
 			Critical:    true,
@@ -115,7 +109,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"id": "` + guid + `",
+			"id": "some-campaign-type-id",
 			"name": "update-campaign-type",
 			"description": "update-campaign-type-description",
 			"critical": true,
@@ -130,7 +124,7 @@ var _ = Describe("UpdateHandler", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
-			ID:          guid,
+			ID:          "some-campaign-type-id",
 			Name:        "my new name",
 			Description: "old description",
 			Critical:    true,
@@ -138,13 +132,13 @@ var _ = Describe("UpdateHandler", func() {
 			SenderID:    "some-sender-id",
 		}
 
-		request, err := http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+		request, err := http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(campaignTypesCollection.SetCall.Receives.CampaignType).To(Equal(collections.CampaignType{
-			ID:          guid,
+			ID:          "some-campaign-type-id",
 			Name:        "my new name",
 			Description: "old description",
 			Critical:    true,
@@ -154,7 +148,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"id": "` + guid + `",
+			"id": "some-campaign-type-id",
 			"name": "my new name",
 			"description": "old description",
 			"critical": true,
@@ -167,7 +161,7 @@ var _ = Describe("UpdateHandler", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
-			ID:          guid,
+			ID:          "some-campaign-type-id",
 			Name:        "my old name",
 			Description: "old description",
 			Critical:    true,
@@ -175,13 +169,13 @@ var _ = Describe("UpdateHandler", func() {
 			SenderID:    "some-sender-id",
 		}
 
-		request, err := http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+		request, err := http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
 
 		Expect(campaignTypesCollection.SetCall.Receives.CampaignType).To(Equal(collections.CampaignType{
-			ID:          guid,
+			ID:          "some-campaign-type-id",
 			Name:        "my old name",
 			Description: "old description",
 			Critical:    true,
@@ -191,7 +185,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"id": "` + guid + `",
+			"id": "some-campaign-type-id",
 			"name": "my old name",
 			"description": "old description",
 			"critical": true,
@@ -217,7 +211,8 @@ var _ = Describe("UpdateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+			request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
@@ -232,7 +227,8 @@ var _ = Describe("UpdateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+			request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
@@ -248,7 +244,8 @@ var _ = Describe("UpdateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+			request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
@@ -291,7 +288,7 @@ var _ = Describe("UpdateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+			request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -302,7 +299,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		It("allows an update of critical from true to false even if the client does not have the critical_notifications.write scope", func() {
 			campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
-				ID:          guid,
+				ID:          "some-campaign-type-id",
 				Name:        "update-campaign-type",
 				Description: "update-campaign-type-description",
 				Critical:    false,
@@ -324,13 +321,13 @@ var _ = Describe("UpdateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			request, err = http.NewRequest("PUT", fmt.Sprintf("/senders/some-sender-id/campaign_types/%s", guid), bytes.NewBuffer(requestBody))
+			request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusOK))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"id": "` + guid + `",
+				"id": "some-campaign-type-id",
 				"name": "update-campaign-type",
 				"description": "update-campaign-type-description",
 				"critical": false,

@@ -7,7 +7,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
-	"github.com/nu7hatch/gouuid"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -24,9 +23,8 @@ var _ = Describe("UnsubscribersRepo", func() {
 		database := db.NewDatabase(sqlDB, db.Config{})
 		helpers.TruncateTables(database)
 
-		guid1 := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55})
 		guidGenerator = mocks.NewGUIDGenerator()
-		guidGenerator.GenerateCall.Returns.GUIDs = []*uuid.UUID{&guid1}
+		guidGenerator.GenerateCall.Returns.GUIDs = []string{"first-random-guid", "second-random-guid"}
 
 		repo = models.NewUnsubscribersRepository(guidGenerator.Generate)
 		conn = database.Connection()
@@ -39,7 +37,7 @@ var _ = Describe("UnsubscribersRepo", func() {
 				UserGUID:       "some-user-guid",
 			})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(createdUnsubscriber.ID).To(Equal("deadbeef-aabb-ccdd-eeff-001122334455"))
+			Expect(createdUnsubscriber.ID).To(Equal("first-random-guid"))
 			Expect(createdUnsubscriber.CampaignTypeID).To(Equal("some-campaign-type-id"))
 			Expect(createdUnsubscriber.UserGUID).To(Equal("some-user-guid"))
 		})

@@ -6,12 +6,11 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
-	"github.com/nu7hatch/gouuid"
 )
 
 const StatusQueued = "queued"
 
-type GUIDGenerationFunc func() (*uuid.UUID, error)
+type GUIDGenerationFunc func() (string, error)
 
 type Options struct {
 	ReplyTo           string
@@ -64,11 +63,10 @@ func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options
 	responses := []Response{}
 	jobsByMessageID := map[string]gobble.Job{}
 	for _, user := range users {
-		guid, err := enqueuer.guidGenerator()
+		messageID, err := enqueuer.guidGenerator()
 		if err != nil {
 			panic(err)
 		}
-		messageID := guid.String()
 
 		jobsByMessageID[messageID] = gobble.NewJob(Delivery{
 			Options:         options,

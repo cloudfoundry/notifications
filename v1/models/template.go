@@ -1,10 +1,11 @@
 package models
 
 import (
+	"crypto/rand"
 	"time"
 
+	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/go-gorp/gorp"
-	"github.com/nu7hatch/gouuid"
 )
 
 const (
@@ -27,12 +28,11 @@ type Template struct {
 
 func (t *Template) PreInsert(s gorp.SqlExecutor) error {
 	if t.ID == "" {
-		guid, err := uuid.NewV4()
+		var err error
+		t.ID, err = v2models.NewGUIDGenerator(rand.Reader).Generate()
 		if err != nil {
 			return err
 		}
-
-		t.ID = guid.String()
 	}
 
 	if (t.CreatedAt == time.Time{}) {

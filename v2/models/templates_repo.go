@@ -14,6 +14,16 @@ var DefaultTemplate = Template{
 	Metadata: "{}",
 }
 
+type Template struct {
+	ID       string `db:"id"`
+	Name     string `db:"name"`
+	HTML     string `db:"html"`
+	Text     string `db:"text"`
+	Subject  string `db:"subject"`
+	Metadata string `db:"metadata"`
+	ClientID string `db:"client_id"`
+}
+
 type TemplatesRepository struct {
 	generateGUID guidGeneratorFunc
 }
@@ -26,12 +36,11 @@ func NewTemplatesRepository(guidGenerator guidGeneratorFunc) TemplatesRepository
 
 func (r TemplatesRepository) Insert(conn ConnectionInterface, template Template) (Template, error) {
 	if template.ID != "default" {
-		guid, err := r.generateGUID()
+		var err error
+		template.ID, err = r.generateGUID()
 		if err != nil {
-			panic(err)
+			return Template{}, err
 		}
-
-		template.ID = guid.String()
 	}
 
 	err := conn.Insert(&template)

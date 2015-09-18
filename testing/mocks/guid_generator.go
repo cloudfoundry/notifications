@@ -1,16 +1,12 @@
 package mocks
 
-import (
-	"errors"
-
-	"github.com/nu7hatch/gouuid"
-)
+import "errors"
 
 type GUIDGenerator struct {
 	GenerateCall struct {
 		CallCount int
 		Returns   struct {
-			GUIDs []*uuid.UUID
+			GUIDs []string
 			Error error
 		}
 	}
@@ -20,9 +16,9 @@ func NewGUIDGenerator() *GUIDGenerator {
 	return &GUIDGenerator{}
 }
 
-func (g *GUIDGenerator) Generate() (*uuid.UUID, error) {
+func (g *GUIDGenerator) Generate() (string, error) {
 	if g.GenerateCall.CallCount >= len(g.GenerateCall.Returns.GUIDs) {
-		return nil, errors.New("no GUIDs to return")
+		return "", errors.New("no GUIDs to return")
 	}
 
 	guid := g.GenerateCall.Returns.GUIDs[g.GenerateCall.CallCount]

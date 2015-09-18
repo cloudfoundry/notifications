@@ -1,6 +1,7 @@
 package application
 
 import (
+	"crypto/rand"
 	"errors"
 	"log"
 	"os"
@@ -15,7 +16,6 @@ import (
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/util"
 	"github.com/cloudfoundry-incubator/notifications/web"
-	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/conceal"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/viron"
@@ -141,8 +141,9 @@ func (app Application) StartWorkers() {
 
 		database := v2models.NewDatabase(app.mother.SQLDatabase(), v2models.Config{})
 		messageStatusUpdater := postal.NewV2MessageStatusUpdater(v2models.NewMessagesRepository(util.NewClock()))
-		unsubscribersRepository := v2models.NewUnsubscribersRepository(uuid.NewV4)
-		campaignsRepository := v2models.NewCampaignsRepository(uuid.NewV4)
+		guidGenerator := v2models.NewGUIDGenerator(rand.Reader)
+		unsubscribersRepository := v2models.NewUnsubscribersRepository(guidGenerator.Generate)
+		campaignsRepository := v2models.NewCampaignsRepository(guidGenerator.Generate)
 
 		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), postal.NewPackager(app.mother.TemplatesLoader(), cloak),
 			postal.NewUserLoader(zonedUAAClient), uaa.NewTokenLoader(zonedUAAClient), messageStatusUpdater, database,

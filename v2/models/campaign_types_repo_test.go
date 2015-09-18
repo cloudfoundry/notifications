@@ -7,7 +7,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
-	"github.com/nu7hatch/gouuid"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -21,10 +20,8 @@ var _ = Describe("CampaignTypesRepo", func() {
 	)
 
 	BeforeEach(func() {
-		guid1 := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55})
-		guid2 := uuid.UUID([16]byte{0xDE, 0xAD, 0xBE, 0xEF, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF, 0x00, 0x11, 0x22, 0x33, 0x44, 0x56})
 		guidGenerator = mocks.NewGUIDGenerator()
-		guidGenerator.GenerateCall.Returns.GUIDs = []*uuid.UUID{&guid1, &guid2}
+		guidGenerator.GenerateCall.Returns.GUIDs = []string{"first-random-guid", "second-random-guid"}
 
 		repo = models.NewCampaignTypesRepository(guidGenerator.Generate)
 		database := db.NewDatabase(sqlDB, db.Config{})
@@ -45,7 +42,7 @@ var _ = Describe("CampaignTypesRepo", func() {
 			returnCampaignType, err := repo.Insert(conn, campaignType)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(returnCampaignType.ID).To(Equal("deadbeef-aabb-ccdd-eeff-001122334455"))
+			Expect(returnCampaignType.ID).To(Equal("first-random-guid"))
 		})
 
 		Context("failure cases", func() {
@@ -62,7 +59,14 @@ var _ = Describe("CampaignTypesRepo", func() {
 				}
 
 				_, err := repo.Insert(conn, campaignType)
-				Expect(err).To(MatchError("a useful database error message"))
+				Expect(err).To(MatchError(errors.New("a useful database error message")))
+			})
+
+			It("returns the error when the guid generator fails", func() {
+				guidGenerator.GenerateCall.Returns.Error = errors.New("could not find random bits")
+
+				_, err := repo.Insert(conn, models.CampaignType{})
+				Expect(err).To(MatchError(errors.New("could not find random bits")))
 			})
 		})
 	})

@@ -1,6 +1,7 @@
 package application
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"log"
 	"os"
@@ -20,7 +21,6 @@ import (
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 	"github.com/cloudfoundry-incubator/notifications/v2/util"
-	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -46,7 +46,7 @@ func (m *Mother) Queue() gobble.QueueInterface {
 }
 
 func (m *Mother) V2Enqueuer() queue.JobEnqueuer {
-	return queue.NewJobEnqueuer(m.Queue(), uuid.NewV4, v2models.NewMessagesRepository(util.NewClock()))
+	return queue.NewJobEnqueuer(m.Queue(), v2models.NewGUIDGenerator(rand.Reader).Generate, v2models.NewMessagesRepository(util.NewClock()))
 }
 
 func (m *Mother) UserStrategy() services.UserStrategy {
@@ -107,7 +107,7 @@ func (m *Mother) EmailStrategy() services.EmailStrategy {
 }
 
 func (m *Mother) Enqueuer() services.Enqueuer {
-	return services.NewEnqueuer(m.Queue(), uuid.NewV4, m.MessagesRepo())
+	return services.NewEnqueuer(m.Queue(), v2models.NewGUIDGenerator(rand.Reader).Generate, m.MessagesRepo())
 }
 
 func (m *Mother) TemplatesLoader() postal.TemplatesLoader {
@@ -116,7 +116,8 @@ func (m *Mother) TemplatesLoader() postal.TemplatesLoader {
 	kindsRepo := v1models.NewKindsRepo()
 	templatesRepo := v1models.NewTemplatesRepo()
 
-	v2templatesRepo := v2models.NewTemplatesRepository(uuid.NewV4)
+	guidGenerator := v2models.NewGUIDGenerator(rand.Reader)
+	v2templatesRepo := v2models.NewTemplatesRepository(guidGenerator.Generate)
 	templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
 
 	return postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo, templatesCollection)

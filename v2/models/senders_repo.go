@@ -4,15 +4,19 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
-
-	"github.com/nu7hatch/gouuid"
 )
 
 type SendersRepository struct {
 	generateGUID guidGeneratorFunc
 }
 
-type guidGeneratorFunc func() (*uuid.UUID, error)
+type guidGeneratorFunc func() (string, error)
+
+type Sender struct {
+	ID       string `db:"id"`
+	Name     string `db:"name"`
+	ClientID string `db:"client_id"`
+}
 
 func NewSendersRepository(guidGenerator guidGeneratorFunc) SendersRepository {
 	return SendersRepository{
@@ -21,18 +25,19 @@ func NewSendersRepository(guidGenerator guidGeneratorFunc) SendersRepository {
 }
 
 func (r SendersRepository) Insert(conn ConnectionInterface, sender Sender) (Sender, error) {
-	guid, err := r.generateGUID()
+	var err error
+	sender.ID, err = r.generateGUID()
 	if err != nil {
-		panic(err)
+		return Sender{}, err
 	}
 
-	sender.ID = guid.String()
 	err = conn.Insert(&sender)
 	if err != nil {
 		if strings.Contains(err.Error(), "Duplicate entry") {
-			err = DuplicateRecordError{}
+			return Sender{}, DuplicateRecordError{fmt.Errorf("Sender with name %q already exists", sender.Name)}
 		}
-		return sender, err
+
+		return Sender{}, err
 	}
 
 	return sender, nil

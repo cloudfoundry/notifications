@@ -1,6 +1,7 @@
 package web
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"net/http"
 
@@ -20,7 +21,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/unsubscribers"
 	"github.com/gorilla/mux"
-	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-cf-experimental/rainmaker"
 	"github.com/pivotal-cf-experimental/warrant"
 	"github.com/pivotal-golang/lager"
@@ -79,12 +79,13 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	campaignEnqueuer := queue.NewCampaignEnqueuer(config.Queue)
 
-	sendersRepository := models.NewSendersRepository(uuid.NewV4)
-	campaignTypesRepository := models.NewCampaignTypesRepository(uuid.NewV4)
-	templatesRepository := models.NewTemplatesRepository(uuid.NewV4)
-	campaignsRepository := models.NewCampaignsRepository(uuid.NewV4)
+	guidGenerator := models.NewGUIDGenerator(rand.Reader)
+	sendersRepository := models.NewSendersRepository(guidGenerator.Generate)
+	campaignTypesRepository := models.NewCampaignTypesRepository(guidGenerator.Generate)
+	templatesRepository := models.NewTemplatesRepository(guidGenerator.Generate)
+	campaignsRepository := models.NewCampaignsRepository(guidGenerator.Generate)
 	messagesRepository := models.NewMessagesRepository(util.NewClock())
-	unsubscribersRepository := models.NewUnsubscribersRepository(uuid.NewV4)
+	unsubscribersRepository := models.NewUnsubscribersRepository(guidGenerator.Generate)
 
 	sendersCollection := collections.NewSendersCollection(sendersRepository, campaignTypesRepository)
 	templatesCollection := collections.NewTemplatesCollection(templatesRepository)

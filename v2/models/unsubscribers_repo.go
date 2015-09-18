@@ -22,12 +22,12 @@ func NewUnsubscribersRepository(guidGenerator guidGeneratorFunc) UnsubscribersRe
 }
 
 func (r UnsubscribersRepository) Insert(connection ConnectionInterface, unsubscriber Unsubscriber) (Unsubscriber, error) {
-	guid, err := r.generateGUID()
+	var err error
+	unsubscriber.ID, err = r.generateGUID()
 	if err != nil {
 		return Unsubscriber{}, err
 	}
 
-	unsubscriber.ID = guid.String()
 	err = connection.Insert(&unsubscriber)
 	if err != nil {
 		return Unsubscriber{}, err
