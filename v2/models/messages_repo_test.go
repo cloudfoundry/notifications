@@ -16,9 +16,10 @@ import (
 
 var _ = Describe("Messages Repository", func() {
 	var (
-		repo  models.MessagesRepository
-		conn  *db.Connection
-		clock *mocks.Clock
+		repo          models.MessagesRepository
+		conn          *db.Connection
+		clock         *mocks.Clock
+		guidGenerator *mocks.GUIDGenerator
 	)
 
 	BeforeEach(func() {
@@ -27,42 +28,44 @@ var _ = Describe("Messages Repository", func() {
 		conn = database.Connection().(*db.Connection)
 		conn.AddTableWithName(models.Message{}, "messages")
 		clock = mocks.NewClock()
+		guidGenerator = mocks.NewGUIDGenerator()
+		guidGenerator.GenerateCall.Returns.GUIDs = []string{"random-guid-1"}
 
-		repo = models.NewMessagesRepository(clock)
+		repo = models.NewMessagesRepository(clock, guidGenerator.Generate)
 	})
 
 	Describe("CountByStatus", func() {
 		BeforeEach(func() {
 			err := conn.Insert(&models.Message{
-				ID:         "message-id-123",
+				ID:         "random-guid-1",
 				CampaignID: "some-campaign-id",
 				Status:     postal.StatusDelivered,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			err = conn.Insert(&models.Message{
-				ID:         "message-id-1234",
+				ID:         "random-guid-2",
 				CampaignID: "some-campaign-id",
 				Status:     postal.StatusFailed,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			err = conn.Insert(&models.Message{
-				ID:         "message-id-456",
+				ID:         "random-guid-3",
 				CampaignID: "some-campaign-id",
 				Status:     postal.StatusDelivered,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			err = conn.Insert(&models.Message{
-				ID:         "message-id-789",
+				ID:         "random-guid-4",
 				CampaignID: "some-campaign-id",
 				Status:     postal.StatusRetry,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			err = conn.Insert(&models.Message{
-				ID:         "message-id-567",
+				ID:         "random-guid-5",
 				CampaignID: "some-campaign-id",
 				Status:     postal.StatusQueued,
 			})
@@ -89,17 +92,15 @@ var _ = Describe("Messages Repository", func() {
 		})
 	})
 
-	Describe("MostRecentlyUpatedByCampaignID", func() {
+	Describe("MostRecentlyUpdatedByCampaignID", func() {
 		var anotherUpdatedAt time.Time
 		BeforeEach(func() {
-			var err error
-
 			updatedAt, err := time.Parse(time.RFC3339, "2014-12-31T12:05:05+07:00")
 			Expect(err).NotTo(HaveOccurred())
 			updatedAt = updatedAt.UTC()
 
 			err = conn.Insert(&models.Message{
-				ID:         "message-id-123",
+				ID:         "random-guid-1",
 				CampaignID: "some-campaign-id",
 				Status:     postal.StatusDelivered,
 				UpdatedAt:  updatedAt,
@@ -111,7 +112,7 @@ var _ = Describe("Messages Repository", func() {
 			anotherUpdatedAt = anotherUpdatedAt.UTC()
 
 			err = conn.Insert(&models.Message{
-				ID:         "message-id-1234",
+				ID:         "random-guid-2",
 				CampaignID: "some-campaign-id",
 				Status:     postal.StatusFailed,
 				UpdatedAt:  anotherUpdatedAt,
@@ -124,7 +125,7 @@ var _ = Describe("Messages Repository", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(message).To(Equal(models.Message{
-				ID:         "message-id-1234",
+				ID:         "random-guid-2",
 				CampaignID: "some-campaign-id",
 				Status:     "failed",
 				UpdatedAt:  anotherUpdatedAt,
@@ -145,15 +146,13 @@ var _ = Describe("Messages Repository", func() {
 	Describe("Insert", func() {
 		It("inserts a message into the database table", func() {
 			message, err := repo.Insert(conn, models.Message{
-				ID:         "some-message-id",
 				Status:     "some-status",
 				CampaignID: "some-campaign-id",
 			})
 
 			var msg models.Message
-			err = conn.SelectOne(&msg, "SELECT * FROM `messages` WHERE `id` = ? AND `status` = ? AND `campaign_id` = ?", "some-message-id", "some-status", "some-campaign-id")
+			err = conn.SelectOne(&msg, "SELECT * FROM `messages` WHERE `id` = ? AND `status` = ? AND `campaign_id` = ?", "random-guid-1", "some-status", "some-campaign-id")
 			Expect(err).NotTo(HaveOccurred())
-
 			Expect(msg).To(Equal(message))
 		})
 
@@ -163,11 +162,20 @@ var _ = Describe("Messages Repository", func() {
 				connection.InsertCall.Returns.Error = errors.New("some connection error")
 
 				_, err := repo.Insert(connection, models.Message{
-					ID:         "some-message-id",
 					Status:     "some-status",
 					CampaignID: "some-campaign-id",
 				})
 				Expect(err).To(MatchError(errors.New("some connection error")))
+			})
+
+			It("returns an error when the guid generator errors", func() {
+				guidGenerator.GenerateCall.Returns.Error = errors.New("some guid error")
+
+				_, err := repo.Insert(conn, models.Message{
+					Status:     "some-status",
+					CampaignID: "some-campaign-id",
+				})
+				Expect(err).To(MatchError(errors.New("some guid error")))
 			})
 		})
 	})
@@ -177,7 +185,7 @@ var _ = Describe("Messages Repository", func() {
 
 		BeforeEach(func() {
 			err := conn.Insert(&models.Message{
-				ID:         "some-message-id",
+				ID:         "random-guid-1",
 				Status:     "some-status",
 				CampaignID: "some-campaign-id",
 			})
@@ -189,16 +197,16 @@ var _ = Describe("Messages Repository", func() {
 
 		It("updates an existing message in the database", func() {
 			_, err := repo.Update(conn, models.Message{
-				ID:         "some-message-id",
+				ID:         "random-guid-1",
 				Status:     "some-new-status",
 				CampaignID: "some-campaign-id",
 			})
 
 			var msg models.Message
-			err = conn.SelectOne(&msg, "SELECT * FROM `messages` WHERE `id` = ? AND `status` = ? AND `campaign_id` = ?", "some-message-id", "some-new-status", "some-campaign-id")
+			err = conn.SelectOne(&msg, "SELECT * FROM `messages` WHERE `id` = ? AND `status` = ? AND `campaign_id` = ?", "random-guid-1", "some-new-status", "some-campaign-id")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(msg).To(Equal(models.Message{
-				ID:         "some-message-id",
+				ID:         "random-guid-1",
 				Status:     "some-new-status",
 				CampaignID: "some-campaign-id",
 				UpdatedAt:  updatedAt,
@@ -211,7 +219,6 @@ var _ = Describe("Messages Repository", func() {
 				connection.UpdateCall.Returns.Error = errors.New("some update error")
 
 				_, err := repo.Update(connection, models.Message{
-					ID:         "some-message-id",
 					Status:     "some-status",
 					CampaignID: "some-campaign-id",
 				})

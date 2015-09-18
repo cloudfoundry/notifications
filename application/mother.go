@@ -46,7 +46,7 @@ func (m *Mother) Queue() gobble.QueueInterface {
 }
 
 func (m *Mother) V2Enqueuer() queue.JobEnqueuer {
-	return queue.NewJobEnqueuer(m.Queue(), v2models.NewGUIDGenerator(rand.Reader).Generate, v2models.NewMessagesRepository(util.NewClock()))
+	return queue.NewJobEnqueuer(m.Queue(), v2models.NewMessagesRepository(util.NewClock(), v2models.NewGUIDGenerator(rand.Reader).Generate))
 }
 
 func (m *Mother) UserStrategy() services.UserStrategy {

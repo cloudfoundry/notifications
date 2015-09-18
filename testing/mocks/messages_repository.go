@@ -3,8 +3,9 @@ package mocks
 import "github.com/cloudfoundry-incubator/notifications/v2/models"
 
 type MessagesRepository struct {
-	InsertCall  messagesRepositoryInsertCall
-	InsertCalls []messagesRepositoryInsertCall
+	InsertCall       messagesRepositoryInsertCall
+	InsertCalls      messagesRepositoryInsertCalls
+	InsertCallsCount int
 
 	CountByStatusCall struct {
 		Receives struct {
@@ -53,6 +54,19 @@ type messagesRepositoryInsertCall struct {
 	}
 }
 
+type messagesRepositoryInsertCalls []messagesRepositoryInsertCall
+
+func (c messagesRepositoryInsertCalls) WithMessages(messages []models.Message) messagesRepositoryInsertCalls {
+	var calls messagesRepositoryInsertCalls
+	for _, message := range messages {
+		call := messagesRepositoryInsertCall{}
+		call.Returns.Message = message
+		calls = append(calls, call)
+	}
+
+	return calls
+}
+
 func NewMessagesRepository() *MessagesRepository {
 	return &MessagesRepository{}
 }
@@ -72,10 +86,16 @@ func (mr *MessagesRepository) MostRecentlyUpdatedByCampaignID(conn models.Connec
 }
 
 func (mr *MessagesRepository) Insert(conn models.ConnectionInterface, message models.Message) (models.Message, error) {
+	if len(mr.InsertCalls) <= mr.InsertCallsCount {
+		mr.InsertCalls = append(mr.InsertCalls, messagesRepositoryInsertCall{})
+	}
+	mr.InsertCall = mr.InsertCalls[mr.InsertCallsCount]
+
 	mr.InsertCall.Receives.Connection = conn
 	mr.InsertCall.Receives.Message = message
+	mr.InsertCalls[mr.InsertCallsCount] = mr.InsertCall
 
-	mr.InsertCalls = append(mr.InsertCalls, mr.InsertCall)
+	mr.InsertCallsCount++
 
 	return mr.InsertCall.Returns.Message, mr.InsertCall.Returns.Error
 }

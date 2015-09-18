@@ -27,12 +27,14 @@ type clock interface {
 }
 
 type MessagesRepository struct {
-	clock clock
+	clock        clock
+	generateGUID guidGeneratorFunc
 }
 
-func NewMessagesRepository(clock clock) MessagesRepository {
+func NewMessagesRepository(clock clock, guidGenerator guidGeneratorFunc) MessagesRepository {
 	return MessagesRepository{
-		clock: clock,
+		clock:        clock,
+		generateGUID: guidGenerator,
 	}
 }
 
@@ -73,6 +75,14 @@ func (mr MessagesRepository) MostRecentlyUpdatedByCampaignID(conn ConnectionInte
 }
 
 func (mr MessagesRepository) Insert(conn ConnectionInterface, message Message) (Message, error) {
+	if message.ID == "" {
+		var err error
+		message.ID, err = mr.generateGUID()
+		if err != nil {
+			return Message{}, err
+		}
+	}
+
 	err := conn.Insert(&message)
 	if err != nil {
 		return Message{}, err

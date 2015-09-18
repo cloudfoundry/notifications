@@ -140,8 +140,9 @@ func (app Application) StartWorkers() {
 		})
 
 		database := v2models.NewDatabase(app.mother.SQLDatabase(), v2models.Config{})
-		messageStatusUpdater := postal.NewV2MessageStatusUpdater(v2models.NewMessagesRepository(util.NewClock()))
 		guidGenerator := v2models.NewGUIDGenerator(rand.Reader)
+		messagesRepository := v2models.NewMessagesRepository(util.NewClock(), guidGenerator.Generate)
+		messageStatusUpdater := postal.NewV2MessageStatusUpdater(messagesRepository)
 		unsubscribersRepository := v2models.NewUnsubscribersRepository(guidGenerator.Generate)
 		campaignsRepository := v2models.NewCampaignsRepository(guidGenerator.Generate)
 

@@ -17,17 +17,16 @@ import (
 
 var _ = Describe("JobEnqueuer", func() {
 	var (
-		enqueuer      queue.JobEnqueuer
-		logger        *log.Logger
-		buffer        *bytes.Buffer
-		gobbleQueue   *mocks.Queue
-		conn          *mocks.Connection
-		transaction   *mocks.Transaction
-		messagesRepo  *mocks.MessagesRepository
-		guidGenerator *mocks.GUIDGenerator
-		space         cf.CloudControllerSpace
-		org           cf.CloudControllerOrganization
-		reqReceived   time.Time
+		enqueuer     queue.JobEnqueuer
+		logger       *log.Logger
+		buffer       *bytes.Buffer
+		gobbleQueue  *mocks.Queue
+		conn         *mocks.Connection
+		transaction  *mocks.Transaction
+		messagesRepo *mocks.MessagesRepository
+		space        cf.CloudControllerSpace
+		org          cf.CloudControllerOrganization
+		reqReceived  time.Time
 	)
 
 	BeforeEach(func() {
@@ -39,16 +38,27 @@ var _ = Describe("JobEnqueuer", func() {
 		conn = mocks.NewConnection()
 		conn.TransactionCall.Returns.Transaction = transaction
 
-		guidGenerator = mocks.NewGUIDGenerator()
-		guidGenerator.GenerateCall.Returns.GUIDs = []string{
-			"first-random-guid",
-			"second-random-guid",
-			"third-random-guid",
-			"fourth-random-guid",
-		}
-
 		messagesRepo = mocks.NewMessagesRepository()
-		enqueuer = queue.NewJobEnqueuer(gobbleQueue, guidGenerator.Generate, messagesRepo)
+		messagesRepo.InsertCalls = messagesRepo.InsertCalls.WithMessages([]models.Message{
+			{
+				ID:     "first-random-guid",
+				Status: queue.StatusQueued,
+			},
+			{
+				ID:     "second-random-guid",
+				Status: queue.StatusQueued,
+			},
+			{
+				ID:     "third-random-guid",
+				Status: queue.StatusQueued,
+			},
+			{
+				ID:     "fourth-random-guid",
+				Status: queue.StatusQueued,
+			},
+		})
+
+		enqueuer = queue.NewJobEnqueuer(gobbleQueue, messagesRepo)
 		space = cf.CloudControllerSpace{Name: "the-space"}
 		org = cf.CloudControllerOrganization{Name: "the-org"}
 		reqReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:40:12.207187819-07:00")
@@ -175,22 +185,18 @@ var _ = Describe("JobEnqueuer", func() {
 			Expect(messages).To(HaveLen(4))
 			Expect(messages).To(ConsistOf([]models.Message{
 				{
-					ID:         "first-random-guid",
 					Status:     queue.StatusQueued,
 					CampaignID: "some-campaign",
 				},
 				{
-					ID:         "second-random-guid",
 					Status:     queue.StatusQueued,
 					CampaignID: "some-campaign",
 				},
 				{
-					ID:         "third-random-guid",
 					Status:     queue.StatusQueued,
 					CampaignID: "some-campaign",
 				},
 				{
-					ID:         "fourth-random-guid",
 					Status:     queue.StatusQueued,
 					CampaignID: "some-campaign",
 				},
@@ -210,7 +216,7 @@ var _ = Describe("JobEnqueuer", func() {
 			})
 
 			It("rolls back the transaction when there is an error in message repo upserting", func() {
-				messagesRepo.InsertCall.Returns.Error = errors.New("BOOM!")
+				messagesRepo.InsertCalls[0].Returns.Error = errors.New("BOOM!")
 				users := []queue.User{{GUID: "user-1"}}
 				enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 

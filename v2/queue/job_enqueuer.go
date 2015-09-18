@@ -10,8 +10,6 @@ import (
 
 const StatusQueued = "queued"
 
-type GUIDGenerationFunc func() (string, error)
-
 type User struct {
 	GUID  string
 	Email string
@@ -66,62 +64,28 @@ type messagesRepoInserter interface {
 }
 
 type JobEnqueuer struct {
-	queue         Enqueuer
-	guidGenerator GUIDGenerationFunc
-	messagesRepo  messagesRepoInserter
+	queue        Enqueuer
+	messagesRepo messagesRepoInserter
 }
 
-func NewJobEnqueuer(queue Enqueuer, guidGenerator GUIDGenerationFunc, messagesRepo messagesRepoInserter) JobEnqueuer {
+func NewJobEnqueuer(queue Enqueuer, messagesRepo messagesRepoInserter) JobEnqueuer {
 	return JobEnqueuer{
-		queue:         queue,
-		guidGenerator: guidGenerator,
-		messagesRepo:  messagesRepo,
+		queue:        queue,
+		messagesRepo: messagesRepo,
 	}
 }
 
 func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time, campaignID string) []Response {
-	responses := []Response{}
-	jobsByMessageID := map[string]gobble.Job{}
-	for _, user := range users {
-		messageID, err := enqueuer.guidGenerator()
-		if err != nil {
-			panic(err)
-		}
-
-		jobsByMessageID[messageID] = gobble.NewJob(Delivery{
-			JobType:         "v2",
-			Options:         options,
-			UserGUID:        user.GUID,
-			Email:           user.Email,
-			Space:           space,
-			Organization:    organization,
-			ClientID:        clientID,
-			MessageID:       messageID,
-			UAAHost:         uaaHost,
-			Scope:           scope,
-			VCAPRequestID:   vcapRequestID,
-			RequestReceived: reqReceived,
-			CampaignID:      campaignID,
-		})
-
-		recipient := user.Email
-		if recipient == "" {
-			recipient = user.GUID
-		}
-
-		responses = append(responses, Response{
-			Status:         StatusQueued,
-			NotificationID: messageID,
-			Recipient:      recipient,
-			VCAPRequestID:  vcapRequestID,
-		})
-	}
+	var (
+		responses []Response
+		jobs      []gobble.Job
+	)
 
 	transaction := conn.Transaction()
 	transaction.Begin()
-	for messageID := range jobsByMessageID {
-		_, err := enqueuer.messagesRepo.Insert(transaction, models.Message{
-			ID:         messageID,
+
+	for _, user := range users {
+		message, err := enqueuer.messagesRepo.Insert(transaction, models.Message{
 			Status:     StatusQueued,
 			CampaignID: campaignID,
 		})
@@ -129,13 +93,42 @@ func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, opti
 			transaction.Rollback()
 			return []Response{}
 		}
+
+		jobs = append(jobs, gobble.NewJob(Delivery{
+			JobType:         "v2",
+			Options:         options,
+			UserGUID:        user.GUID,
+			Email:           user.Email,
+			Space:           space,
+			Organization:    organization,
+			ClientID:        clientID,
+			MessageID:       message.ID,
+			UAAHost:         uaaHost,
+			Scope:           scope,
+			VCAPRequestID:   vcapRequestID,
+			RequestReceived: reqReceived,
+			CampaignID:      campaignID,
+		}))
+
+		recipient := user.Email
+		if recipient == "" {
+			recipient = user.GUID
+		}
+
+		responses = append(responses, Response{
+			Status:         message.Status,
+			NotificationID: message.ID,
+			Recipient:      recipient,
+			VCAPRequestID:  vcapRequestID,
+		})
 	}
+
 	err := transaction.Commit()
 	if err != nil {
 		return []Response{}
 	}
 
-	for _, job := range jobsByMessageID {
+	for _, job := range jobs {
 		_, err := enqueuer.queue.Enqueue(job)
 		if err != nil {
 			return []Response{}
