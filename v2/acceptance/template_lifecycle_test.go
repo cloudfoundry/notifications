@@ -50,7 +50,9 @@ var _ = Describe("Template lifecycle", func() {
 
 	It("can create a new template, retrieve, list and delete", func() {
 		By("creating a template", func() {
-			status, response, err := client.Do("POST", "/templates", map[string]interface{}{
+			var response templateResponse
+
+			status, err := client.DoTyped("POST", "/templates", map[string]interface{}{
 				"name":    "An interesting template",
 				"text":    "template text",
 				"html":    "template html",
@@ -58,20 +60,19 @@ var _ = Describe("Template lifecycle", func() {
 				"metadata": map[string]interface{}{
 					"template": "metadata",
 				},
-			}, token.Access)
+			}, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
-			templateID = response["id"].(string)
+			templateID = response.ID
 
 			Expect(templateID).NotTo(BeEmpty())
-			Expect(response["name"]).To(Equal("An interesting template"))
-			Expect(response["text"]).To(Equal("template text"))
-			Expect(response["html"]).To(Equal("template html"))
-			Expect(response["subject"]).To(Equal("template subject"))
-			Expect(response["metadata"]).To(Equal(map[string]interface{}{
-				"template": "metadata",
-			}))
+			Expect(response.Name).To(Equal("An interesting template"))
+			Expect(response.Text).To(Equal("template text"))
+			Expect(response.HTML).To(Equal("template html"))
+			Expect(response.Subject).To(Equal("template subject"))
+			Expect(response.Metadata["template"]).To(Equal("metadata"))
+			Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/templates/%s", templateID)))
 		})
 
 		By("getting the template", func() {

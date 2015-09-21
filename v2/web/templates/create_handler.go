@@ -92,13 +92,5 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	w.WriteHeader(http.StatusCreated)
 
-	metadata := json.RawMessage(template.Metadata)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"id":       template.ID,
-		"name":     template.Name,
-		"html":     template.HTML,
-		"text":     template.Text,
-		"subject":  template.Subject,
-		"metadata": &metadata,
-	})
+	json.NewEncoder(w).Encode(NewTemplateResponse(template))
 }

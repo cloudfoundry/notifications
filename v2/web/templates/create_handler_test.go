@@ -73,6 +73,11 @@ var _ = Describe("CreateHandler", func() {
 			"subject": "template subject",
 			"metadata": {
 				"template": "metadata"
+			},
+			"_links": {
+				"self": {
+					"href": "/templates/some-template-id"
+				}
 			}
 		}`))
 	})
@@ -106,7 +111,12 @@ var _ = Describe("CreateHandler", func() {
 			"text": "this is my text",
 			"html": "",
 			"subject": "{{.Subject}}",
-			"metadata": {}
+			"metadata": {},
+			"_links": {
+				"self": {
+					"href": "/templates/some-template-id"
+				}
+			}
 		}`))
 	})
 
@@ -139,7 +149,12 @@ var _ = Describe("CreateHandler", func() {
 			"text": "",
 			"html": "template html",
 			"subject": "{{.Subject}}",
-			"metadata": {}
+			"metadata": {},
+			"_links": {
+				"self": {
+					"href": "/templates/some-template-id"
+				}
+			}
 		}`))
 	})
 
@@ -172,7 +187,12 @@ var _ = Describe("CreateHandler", func() {
 			"text": "",
 			"html": "template html",
 			"subject": "{{.Subject}}",
-			"metadata": {}
+			"metadata": {},
+			"_links": {
+				"self": {
+					"href": "/templates/some-template-id"
+				}
+			}
 		}`))
 	})
 
