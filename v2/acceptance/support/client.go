@@ -10,15 +10,21 @@ import (
 	"strings"
 )
 
+type docCollection interface {
+	Add(*http.Request, *http.Response) error
+}
+
 type Config struct {
-	Host       string
-	Trace      bool
-	Routerless bool
+	Host          string
+	Trace         bool
+	Routerless    bool
+	DocCollection docCollection
 }
 
 type Client struct {
-	config     Config
-	httpClient *http.Client
+	config              Config
+	httpClient          *http.Client
+	documentNextRequest bool
 }
 
 func NewClient(config Config) *Client {
@@ -28,17 +34,13 @@ func NewClient(config Config) *Client {
 	}
 }
 
-func (c Client) Do(method string, path string, payload map[string]interface{}, token string) (int, map[string]interface{}, error) {
+func (c *Client) Do(method string, path string, payload map[string]interface{}, token string) (int, map[string]interface{}, error) {
 	var results map[string]interface{}
 	responseCode, err := c.DoTyped(method, path, payload, token, &results)
 	return responseCode, results, err
 }
 
-func (c Client) DoTyped(method string, path string, payload map[string]interface{}, token string, results interface{}) (int, error) {
-	return c.DoTypedAndAddToDocs(method, path, payload, token, results, nil)
-}
-
-func (c Client) DoTypedAndAddToDocs(method string, path string, payload map[string]interface{}, token string, results interface{}, docCollection docCollection) (int, error) {
+func (c *Client) DoTyped(method string, path string, payload map[string]interface{}, token string, results interface{}) (int, error) {
 	var requestBody io.ReadSeeker
 
 	if payload != nil {
@@ -50,7 +52,7 @@ func (c Client) DoTypedAndAddToDocs(method string, path string, payload map[stri
 		requestBody = bytes.NewReader(content)
 	}
 
-	responseCode, responseBody, err := c.makeRequest(docCollection, method, c.config.Host+path, requestBody, token)
+	responseCode, responseBody, err := c.makeRequest(method, c.config.Host+path, requestBody, token)
 	if err != nil {
 		return 0, err
 	}
@@ -65,11 +67,11 @@ func (c Client) DoTypedAndAddToDocs(method string, path string, payload map[stri
 	return responseCode, err
 }
 
-type docCollection interface {
-	Add(*http.Request, *http.Response) error
+func (c *Client) Document() {
+	c.documentNextRequest = true
 }
 
-func (c *Client) makeRequest(docCollection docCollection, method, path string, content io.ReadSeeker, token string) (int, []byte, error) {
+func (c *Client) makeRequest(method, path string, content io.ReadSeeker, token string) (int, []byte, error) {
 	request, err := http.NewRequest(method, path, content)
 	if err != nil {
 		return 0, []byte{}, err
@@ -95,7 +97,7 @@ func (c *Client) makeRequest(docCollection docCollection, method, path string, c
 		return 0, []byte{}, err
 	}
 
-	if docCollection != nil {
+	if c.documentNextRequest {
 		if content != nil {
 			_, err := content.Seek(0, 0)
 			if err != nil {
@@ -111,9 +113,11 @@ func (c *Client) makeRequest(docCollection docCollection, method, path string, c
 
 		response.Body = ioutil.NopCloser(bytes.NewReader(responseBody))
 
-		if err := docCollection.Add(request, response); err != nil {
+		if err := c.config.DocCollection.Add(request, response); err != nil {
 			return 0, []byte{}, err
 		}
+
+		c.documentNextRequest = false
 	}
 
 	return response.StatusCode, responseBody, nil

@@ -46,8 +46,9 @@ var _ = Describe("Sender lifecycle", func() {
 
 	BeforeEach(func() {
 		client = support.NewClient(support.Config{
-			Host:  Servers.Notifications.URL(),
-			Trace: Trace,
+			Host:          Servers.Notifications.URL(),
+			Trace:         Trace,
+			DocCollection: docCollection,
 		})
 		token = GetClientTokenFor("my-client")
 
@@ -58,9 +59,10 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("creating a sender", func() {
 			var response senderResponse
-			status, err := client.DoTypedAndAddToDocs("POST", "/senders", map[string]interface{}{
+			client.Document()
+			status, err := client.DoTyped("POST", "/senders", map[string]interface{}{
 				"name": "My Cool App",
-			}, token.Access, &response, docCollection)
+			}, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -74,7 +76,8 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("listing all senders", func() {
 			var response sendersListResponse
-			status, err := client.DoTypedAndAddToDocs("GET", "/senders", nil, token.Access, &response, docCollection)
+			client.Document()
+			status, err := client.DoTyped("GET", "/senders", nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -90,7 +93,8 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("getting the sender", func() {
 			var response senderResponse
-			status, err := client.DoTypedAndAddToDocs("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, &response, docCollection)
+			client.Document()
+			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -103,10 +107,11 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("updating the sender", func() {
 			var response senderResponse
-			status, err := client.DoTypedAndAddToDocs("PUT", fmt.Sprintf("/senders/%s", senderID),
+			client.Document()
+			status, err := client.DoTyped("PUT", fmt.Sprintf("/senders/%s", senderID),
 				map[string]interface{}{
 					"name": "My Not Cool App",
-				}, token.Access, &response, docCollection)
+				}, token.Access, &response)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
@@ -153,7 +158,8 @@ var _ = Describe("Sender lifecycle", func() {
 		})
 
 		By("deleting the sender", func() {
-			status, err := client.DoTypedAndAddToDocs("DELETE", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, nil, docCollection)
+			client.Document()
+			status, err := client.DoTyped("DELETE", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, nil)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNoContent))
 		})
