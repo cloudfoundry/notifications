@@ -58,9 +58,9 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("creating a sender", func() {
 			var response senderResponse
-			status, err := client.DoTyped("POST", "/senders", map[string]interface{}{
+			status, err := client.DoTypedAndAddToDocs("POST", "/senders", map[string]interface{}{
 				"name": "My Cool App",
-			}, token.Access, &response)
+			}, token.Access, &response, docCollection)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -74,7 +74,7 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("listing all senders", func() {
 			var response sendersListResponse
-			status, err := client.DoTyped("GET", "/senders", nil, token.Access, &response)
+			status, err := client.DoTypedAndAddToDocs("GET", "/senders", nil, token.Access, &response, docCollection)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -90,7 +90,7 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("getting the sender", func() {
 			var response senderResponse
-			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, &response)
+			status, err := client.DoTypedAndAddToDocs("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, &response, docCollection)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -103,10 +103,10 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("updating the sender", func() {
 			var response senderResponse
-			status, err := client.DoTyped("PUT", fmt.Sprintf("/senders/%s", senderID),
+			status, err := client.DoTypedAndAddToDocs("PUT", fmt.Sprintf("/senders/%s", senderID),
 				map[string]interface{}{
 					"name": "My Not Cool App",
-				}, token.Access, &response)
+				}, token.Access, &response, docCollection)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
@@ -153,7 +153,7 @@ var _ = Describe("Sender lifecycle", func() {
 		})
 
 		By("deleting the sender", func() {
-			status, _, err := client.Do("DELETE", fmt.Sprintf("/senders/%s", senderID), nil, token.Access)
+			status, err := client.DoTypedAndAddToDocs("DELETE", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, nil, docCollection)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNoContent))
 		})

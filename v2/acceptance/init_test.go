@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/cloudfoundry-incubator/notifications/docs"
 	"github.com/cloudfoundry-incubator/notifications/testing/servers"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
@@ -20,6 +21,8 @@ var (
 		CC            servers.CC
 	}
 	Trace, _ = strconv.ParseBool(os.Getenv("TRACE"))
+
+	docCollection *docs.DocGenerator
 )
 
 func TestAcceptanceSuite(t *testing.T) {
@@ -41,11 +44,15 @@ var _ = BeforeSuite(func() {
 	Servers.Notifications.Compile()
 	Servers.Notifications.ResetDatabase()
 	Servers.Notifications.Boot()
+
+	docCollection = docs.NewDocGenerator(docs.NewRequestInspector())
 })
 
 var _ = AfterSuite(func() {
 	Servers.Notifications.Close()
 	Servers.Notifications.Destroy()
+
+	docCollection.GenerateBlueprint("../../v2_docs.apib")
 })
 
 var _ = BeforeEach(func() {

@@ -1,0 +1,257 @@
+FORMAT: 1A
+
+# Notifications API
+
+# Data Structures
+
+
+
+# Group Senders
+Some description of the Senders
+
+## Sender List [/senders]
+Some description of the Sender list
+
+
+
+### POST Senders [POST]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzI5MDEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTc2ODgvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.0fJKU4LEpezNDVCtgzZ3Py0BKSN2vHcdFyVrxkBxmSY9kB-tjtJusF3aE9KK8F83GJ85efcFQoNIN-CLCG7BFsMr4aRQahIBRR1Gxulx4tnPumL-4mF9GCRkXJqX2plWCIBt2PtvAjitLXDRBH8gtBFOnRvthGqCkZR9OY9VwajAtYLByCq4WMM-EimCMe39wLCIE5qA-Ry9kBYM2TOjfJnR9PX5EnFVhbjTYJLvE3Mfhz2FAxU7CSKoqKbJwM3g6HZpqz9IDc4bsQ69snGWzORUuny3l2gi_89zVAYvtWCtTKHVJPIHPHqfn5f1pE0LUm5U3mTqmC2Qxpo-WoHcUw
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            {"name":"My Cool App"}
+
+
++ Response 201
+
+    + Headers
+
+
+
+            Content-Length: 310
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Mon, 21 Sep 2015 22:15:01 GMT
+
+
+
+    + Body
+
+            {"id":"40f97a99-dd5f-4f3c-4734-a20d291d2331","name":"My Cool App","_links":{"self":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331"},"campaign_types":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaign_types"},"campaigns":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaigns"}}}
+
+
+
+
+
+### GET Senders [GET]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzI5MDEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTc2ODgvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.0fJKU4LEpezNDVCtgzZ3Py0BKSN2vHcdFyVrxkBxmSY9kB-tjtJusF3aE9KK8F83GJ85efcFQoNIN-CLCG7BFsMr4aRQahIBRR1Gxulx4tnPumL-4mF9GCRkXJqX2plWCIBt2PtvAjitLXDRBH8gtBFOnRvthGqCkZR9OY9VwajAtYLByCq4WMM-EimCMe39wLCIE5qA-Ry9kBYM2TOjfJnR9PX5EnFVhbjTYJLvE3Mfhz2FAxU7CSKoqKbJwM3g6HZpqz9IDc4bsQ69snGWzORUuny3l2gi_89zVAYvtWCtTKHVJPIHPHqfn5f1pE0LUm5U3mTqmC2Qxpo-WoHcUw
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            
+
+
++ Response 200
+
+    + Headers
+
+
+
+            Content-Length: 362
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Mon, 21 Sep 2015 22:15:01 GMT
+
+
+
+    + Body
+
+            {"senders":[{"id":"40f97a99-dd5f-4f3c-4734-a20d291d2331","name":"My Cool App","_links":{"self":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331"},"campaign_types":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaign_types"},"campaigns":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaigns"}}}],"_links":{"self":{"href":"/senders"}}}
+
+
+
+
+
+## Sender [/senders/{id}]
+Some description of the Sender
+
++ Parameters
+
+	+ id: `68a5sdf67` (required, string) - The Sender ID
+
+
+
+### DELETE Sender [DELETE]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzI4OTUsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTc2ODgvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.ikhq_sbI12XVY0R4CUSBuEQlUkA8xxR_ntb2P0Ici49C4H54_eO4KWclzfSIqTBd4vkSKKpv3uYh9WycHW4zq64G0ZK4wdL6lALnv81qECVSvjOWNVgPKLCOz2DSuHRZtYwYJRyBsj6TcURbRsfFvP6MlhWoKZRJ6J8n77Ev81UJbntwpyz3Xr6vC8GFQzPLbxBK_nxhadOzulZn6JWF9R4DnjnxSS7ZlAuTf9ib2688OGzs8QrYpLPbPU25HM-N0QebqYJOntA6RUpm4ji8JlX_kyAkm7qGm1FGset969Jc0gKKFPTorQAcp0xxxLqgbVMQxuEFOHAor-fMxJ-SpQ
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            
+
+
++ Response 204
+
+    + Headers
+
+
+
+            Date: Mon, 21 Sep 2015 22:14:55 GMT
+
+
+
+    + Body
+
+            
+
+
+
+
+### GET Sender [GET]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzI5MDEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTc2ODgvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.0fJKU4LEpezNDVCtgzZ3Py0BKSN2vHcdFyVrxkBxmSY9kB-tjtJusF3aE9KK8F83GJ85efcFQoNIN-CLCG7BFsMr4aRQahIBRR1Gxulx4tnPumL-4mF9GCRkXJqX2plWCIBt2PtvAjitLXDRBH8gtBFOnRvthGqCkZR9OY9VwajAtYLByCq4WMM-EimCMe39wLCIE5qA-Ry9kBYM2TOjfJnR9PX5EnFVhbjTYJLvE3Mfhz2FAxU7CSKoqKbJwM3g6HZpqz9IDc4bsQ69snGWzORUuny3l2gi_89zVAYvtWCtTKHVJPIHPHqfn5f1pE0LUm5U3mTqmC2Qxpo-WoHcUw
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            
+
+
++ Response 200
+
+    + Headers
+
+
+
+            Content-Length: 310
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Mon, 21 Sep 2015 22:15:01 GMT
+
+
+
+    + Body
+
+            {"id":"40f97a99-dd5f-4f3c-4734-a20d291d2331","name":"My Cool App","_links":{"self":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331"},"campaign_types":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaign_types"},"campaigns":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaigns"}}}
+
+
+
+
+
+### PUT Sender [PUT]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzI5MDEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTc2ODgvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.0fJKU4LEpezNDVCtgzZ3Py0BKSN2vHcdFyVrxkBxmSY9kB-tjtJusF3aE9KK8F83GJ85efcFQoNIN-CLCG7BFsMr4aRQahIBRR1Gxulx4tnPumL-4mF9GCRkXJqX2plWCIBt2PtvAjitLXDRBH8gtBFOnRvthGqCkZR9OY9VwajAtYLByCq4WMM-EimCMe39wLCIE5qA-Ry9kBYM2TOjfJnR9PX5EnFVhbjTYJLvE3Mfhz2FAxU7CSKoqKbJwM3g6HZpqz9IDc4bsQ69snGWzORUuny3l2gi_89zVAYvtWCtTKHVJPIHPHqfn5f1pE0LUm5U3mTqmC2Qxpo-WoHcUw
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            {"name":"My Not Cool App"}
+
+
++ Response 200
+
+    + Headers
+
+
+
+            Content-Length: 314
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Mon, 21 Sep 2015 22:15:01 GMT
+
+
+
+    + Body
+
+            {"id":"40f97a99-dd5f-4f3c-4734-a20d291d2331","name":"My Not Cool App","_links":{"self":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331"},"campaign_types":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaign_types"},"campaigns":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaigns"}}}
+
+
+
+
+
+

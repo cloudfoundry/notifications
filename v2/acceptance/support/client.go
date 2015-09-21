@@ -35,6 +35,10 @@ func (c Client) Do(method string, path string, payload map[string]interface{}, t
 }
 
 func (c Client) DoTyped(method string, path string, payload map[string]interface{}, token string, results interface{}) (int, error) {
+	return c.DoTypedAndAddToDocs(method, path, payload, token, results, nil)
+}
+
+func (c Client) DoTypedAndAddToDocs(method string, path string, payload map[string]interface{}, token string, results interface{}, docCollection docCollection) (int, error) {
 	var requestBody io.ReadSeeker
 
 	if payload != nil {
@@ -46,7 +50,7 @@ func (c Client) DoTyped(method string, path string, payload map[string]interface
 		requestBody = bytes.NewReader(content)
 	}
 
-	responseCode, responseBody, err := c.makeRequest(method, c.config.Host+path, requestBody, token)
+	responseCode, responseBody, err := c.makeRequest(docCollection, method, c.config.Host+path, requestBody, token)
 	if err != nil {
 		return 0, err
 	}
@@ -61,7 +65,11 @@ func (c Client) DoTyped(method string, path string, payload map[string]interface
 	return responseCode, err
 }
 
-func (c Client) makeRequest(method, path string, content io.ReadSeeker, token string) (int, []byte, error) {
+type docCollection interface {
+	Add(*http.Request, *http.Response) error
+}
+
+func (c *Client) makeRequest(docCollection docCollection, method, path string, content io.ReadSeeker, token string) (int, []byte, error) {
 	request, err := http.NewRequest(method, path, content)
 	if err != nil {
 		return 0, []byte{}, err
@@ -85,6 +93,27 @@ func (c Client) makeRequest(method, path string, content io.ReadSeeker, token st
 	responseBody, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return 0, []byte{}, err
+	}
+
+	if docCollection != nil {
+		if content != nil {
+			_, err := content.Seek(0, 0)
+			if err != nil {
+				return 0, []byte{}, err
+			}
+
+			rc, ok := content.(io.ReadCloser)
+			if !ok && content != nil {
+				rc = ioutil.NopCloser(content)
+			}
+			request.Body = rc
+		}
+
+		response.Body = ioutil.NopCloser(bytes.NewReader(responseBody))
+
+		if err := docCollection.Add(request, response); err != nil {
+			return 0, []byte{}, err
+		}
 	}
 
 	return response.StatusCode, responseBody, nil
