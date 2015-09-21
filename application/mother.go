@@ -13,11 +13,9 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
-	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 	"github.com/cloudfoundry-incubator/notifications/v2/util"
@@ -108,24 +106,6 @@ func (m *Mother) EmailStrategy() services.EmailStrategy {
 
 func (m *Mother) Enqueuer() services.Enqueuer {
 	return services.NewEnqueuer(m.Queue(), m.MessagesRepo())
-}
-
-func (m *Mother) TemplatesLoader() postal.TemplatesLoader {
-	database := m.Database()
-	clientsRepo := v1models.NewClientsRepo()
-	kindsRepo := v1models.NewKindsRepo()
-	templatesRepo := v1models.NewTemplatesRepo()
-
-	return postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
-}
-
-func (m *Mother) V2TemplatesLoader() postal.V2TemplatesLoader {
-	database := m.Database()
-	guidGenerator := v2models.NewGUIDGenerator(rand.Reader)
-	v2templatesRepo := v2models.NewTemplatesRepository(guidGenerator.Generate)
-	templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
-
-	return postal.NewV2TemplatesLoader(database, templatesCollection)
 }
 
 func (m *Mother) MailClient() *mail.Client {

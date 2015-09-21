@@ -1,10 +1,11 @@
-package postal_test
+package v2_test
 
 import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/v2"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 
@@ -17,7 +18,7 @@ var _ = Describe("V2TemplateLoader", func() {
 		conn                db.ConnectionInterface
 		database            *mocks.Database
 		templatesCollection *mocks.TemplatesCollection
-		loader              postal.V2TemplatesLoader
+		loader              v2.TemplatesLoader
 	)
 
 	BeforeEach(func() {
@@ -26,7 +27,7 @@ var _ = Describe("V2TemplateLoader", func() {
 		database.ConnectionCall.Returns.Connection = conn
 
 		templatesCollection = mocks.NewTemplatesCollection()
-		loader = postal.NewV2TemplatesLoader(database, templatesCollection)
+		loader = v2.NewTemplatesLoader(database, templatesCollection)
 	})
 
 	Describe("LoadTemplates", func() {

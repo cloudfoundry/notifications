@@ -10,9 +10,12 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/v1"
+	"github.com/cloudfoundry-incubator/notifications/postal/v2"
 	"github.com/cloudfoundry-incubator/notifications/strategy"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/util"
 	"github.com/cloudfoundry-incubator/notifications/web"
@@ -119,13 +122,19 @@ func (app Application) StartWorkers() {
 		if err != nil {
 			panic(err)
 		}
+
+		clientsRepo := models.NewClientsRepo()
+		kindsRepo := models.NewKindsRepo()
+		templatesRepo := models.NewTemplatesRepo()
+		v1TemplateLoader := v1.NewTemplatesLoader(app.mother.Database(), clientsRepo, kindsRepo, templatesRepo)
+
 		v1Workflow := postal.NewV1Process(postal.V1ProcessConfig{
 			DBTrace: app.env.DBLoggingEnabled,
 			UAAHost: app.env.UAAHost,
 			Sender:  app.env.Sender,
 			Domain:  app.env.Domain,
 
-			Packager:    postal.NewPackager(app.mother.TemplatesLoader(), cloak),
+			Packager:    postal.NewPackager(v1TemplateLoader, cloak),
 			MailClient:  app.mother.MailClient(),
 			Database:    app.mother.Database(),
 			TokenLoader: uaa.NewTokenLoader(zonedUAAClient),
@@ -145,8 +154,11 @@ func (app Application) StartWorkers() {
 		messageStatusUpdater := postal.NewV2MessageStatusUpdater(messagesRepository)
 		unsubscribersRepository := v2models.NewUnsubscribersRepository(guidGenerator.Generate)
 		campaignsRepository := v2models.NewCampaignsRepository(guidGenerator.Generate)
+		v2templatesRepo := v2models.NewTemplatesRepository(guidGenerator.Generate)
+		templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
+		v2TemplateLoader := v2.NewTemplatesLoader(app.mother.Database(), templatesCollection)
 
-		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), postal.NewPackager(app.mother.V2TemplatesLoader(), cloak),
+		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), postal.NewPackager(v2TemplateLoader, cloak),
 			postal.NewUserLoader(zonedUAAClient), uaa.NewTokenLoader(zonedUAAClient), messageStatusUpdater, database,
 			unsubscribersRepository, campaignsRepository, app.env.Sender, app.env.Domain, app.env.UAAHost)
 
