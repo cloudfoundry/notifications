@@ -46,10 +46,20 @@ func (h ListHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context
 			"html":     template.HTML,
 			"subject":  template.Subject,
 			"metadata": &metadata,
+			"_links": map[string]interface{}{
+				"self": map[string]string{
+					"href": fmt.Sprintf("/templates/%s", template.ID),
+				},
+			},
 		})
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"templates": responseList,
+		"_links": map[string]interface{}{
+			"self": map[string]string{
+				"href": "/templates",
+			},
+		},
 	})
 }

@@ -135,14 +135,36 @@ var _ = Describe("Template lifecycle", func() {
 		})
 
 		By("listing all templates", func() {
-			status, response, err := client.Do("GET", "/templates", nil, token.Access)
+			var response struct {
+				Templates []struct {
+					ID       string
+					Name     string
+					Text     string
+					HTML     string
+					Subject  string
+					Metadata map[string]string
+					Links    struct {
+						Self struct {
+							Href string
+						}
+					} `json:"_links"`
+				}
+				Links struct {
+					Self struct {
+						Href string
+					}
+				} `json:"_links"`
+			}
+
+			status, err := client.DoTyped("GET", "/templates", nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
-			templates := response["templates"].([]interface{})
-			Expect(templates).To(HaveLen(1))
-			template := templates[0].(map[string]interface{})
-			Expect(template["id"]).To(Equal(templateID))
+			Expect(response.Templates).To(HaveLen(1))
+			Expect(response.Templates[0].ID).To(Equal(templateID))
+			Expect(response.Templates[0].Links.Self.Href).To(Equal(fmt.Sprintf("/templates/%s", templateID)))
+
+			Expect(response.Links.Self.Href).To(Equal("/templates"))
 		})
 
 		By("deleting the template", func() {

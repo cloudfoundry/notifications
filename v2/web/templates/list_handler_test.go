@@ -70,9 +70,19 @@ var _ = Describe("ListHandler", func() {
 					"subject": "template subject",
 					"metadata": {
 						"template": "metadata"
+					},
+					"_links": {
+						"self": {
+							"href": "/templates/some-template-id"
+						}
 					}
 				}
-			]
+			],
+			"_links": {
+				"self": {
+					"href": "/templates"
+				}
+			}
 		}`))
 
 		Expect(templatesCollection.ListCall.Receives.Connection).To(Equal(conn))
