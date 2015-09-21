@@ -3,46 +3,27 @@ package postal
 import (
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
-	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 )
 
 type TemplatesLoader struct {
 	database db.DatabaseInterface
 
-	clientsRepo         ClientsRepo
-	kindsRepo           KindsRepo
-	templatesRepo       TemplatesRepo
-	templatesCollection templateGetter
+	clientsRepo   ClientsRepo
+	kindsRepo     KindsRepo
+	templatesRepo TemplatesRepo
 }
 
-type templateGetter interface {
-	Get(connection collections.ConnectionInterface, templateID, clientID string) (collections.Template, error)
-}
-
-func NewTemplatesLoader(database db.DatabaseInterface, clientsRepo ClientsRepo, kindsRepo KindsRepo, templatesRepo TemplatesRepo, templatesCollection templateGetter) TemplatesLoader {
+func NewTemplatesLoader(database db.DatabaseInterface, clientsRepo ClientsRepo, kindsRepo KindsRepo, templatesRepo TemplatesRepo) TemplatesLoader {
 	return TemplatesLoader{
-		database:            database,
-		clientsRepo:         clientsRepo,
-		kindsRepo:           kindsRepo,
-		templatesRepo:       templatesRepo,
-		templatesCollection: templatesCollection,
+		database:      database,
+		clientsRepo:   clientsRepo,
+		kindsRepo:     kindsRepo,
+		templatesRepo: templatesRepo,
 	}
 }
 
 func (loader TemplatesLoader) LoadTemplates(clientID, kindID, templateID string) (Templates, error) {
 	conn := loader.database.Connection()
-
-	if templateID != "" {
-		template, err := loader.templatesCollection.Get(conn, templateID, clientID)
-		if err != nil {
-			return Templates{}, err
-		}
-		return Templates{
-			Subject: template.Subject,
-			Text:    template.Text,
-			HTML:    template.HTML,
-		}, nil
-	}
 
 	if kindID != "" {
 		kind, err := loader.kindsRepo.Find(conn, kindID, clientID)

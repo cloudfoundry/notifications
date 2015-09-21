@@ -146,7 +146,7 @@ func (app Application) StartWorkers() {
 		unsubscribersRepository := v2models.NewUnsubscribersRepository(guidGenerator.Generate)
 		campaignsRepository := v2models.NewCampaignsRepository(guidGenerator.Generate)
 
-		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), postal.NewPackager(app.mother.TemplatesLoader(), cloak),
+		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), postal.NewPackager(app.mother.V2TemplatesLoader(), cloak),
 			postal.NewUserLoader(zonedUAAClient), uaa.NewTokenLoader(zonedUAAClient), messageStatusUpdater, database,
 			unsubscribersRepository, campaignsRepository, app.env.Sender, app.env.Domain, app.env.UAAHost)
 

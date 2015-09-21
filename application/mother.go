@@ -116,11 +116,16 @@ func (m *Mother) TemplatesLoader() postal.TemplatesLoader {
 	kindsRepo := v1models.NewKindsRepo()
 	templatesRepo := v1models.NewTemplatesRepo()
 
+	return postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
+}
+
+func (m *Mother) V2TemplatesLoader() postal.V2TemplatesLoader {
+	database := m.Database()
 	guidGenerator := v2models.NewGUIDGenerator(rand.Reader)
 	v2templatesRepo := v2models.NewTemplatesRepository(guidGenerator.Generate)
 	templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
 
-	return postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo, templatesCollection)
+	return postal.NewV2TemplatesLoader(database, templatesCollection)
 }
 
 func (m *Mother) MailClient() *mail.Client {

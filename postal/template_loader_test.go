@@ -7,7 +7,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
-	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,13 +14,12 @@ import (
 
 var _ = Describe("TemplateLoader", func() {
 	var (
-		loader              postal.TemplatesLoader
-		clientsRepo         *mocks.ClientsRepository
-		kindsRepo           *mocks.KindsRepo
-		templatesRepo       *mocks.TemplatesRepo
-		conn                db.ConnectionInterface
-		database            *mocks.Database
-		templatesCollection *mocks.TemplatesCollection
+		loader        postal.TemplatesLoader
+		clientsRepo   *mocks.ClientsRepository
+		kindsRepo     *mocks.KindsRepo
+		templatesRepo *mocks.TemplatesRepo
+		conn          db.ConnectionInterface
+		database      *mocks.Database
 	)
 
 	BeforeEach(func() {
@@ -33,8 +31,7 @@ var _ = Describe("TemplateLoader", func() {
 		database = mocks.NewDatabase()
 		database.ConnectionCall.Returns.Connection = conn
 
-		templatesCollection = mocks.NewTemplatesCollection()
-		loader = postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo, templatesCollection)
+		loader = postal.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
 	})
 
 	Describe("LoadTemplates", func() {
@@ -124,31 +121,6 @@ var _ = Describe("TemplateLoader", func() {
 			})
 		})
 
-		Context("when a templateID is passed", func() {
-			BeforeEach(func() {
-				templatesCollection.GetCall.Returns.Template = collections.Template{
-					Text:     "some testing text",
-					Subject:  "some subject",
-					HTML:     "<p>v2 awesome</p>",
-					ClientID: "my-client-id",
-				}
-			})
-
-			It("returns the template", func() {
-				templates, err := loader.LoadTemplates("my-client-id", "", "some-v2-template-id")
-				Expect(err).ToNot(HaveOccurred())
-
-				Expect(templates).To(Equal(postal.Templates{
-					HTML:    "<p>v2 awesome</p>",
-					Text:    "some testing text",
-					Subject: "some subject",
-				}))
-				Expect(templatesCollection.GetCall.Receives.TemplateID).To(Equal("some-v2-template-id"))
-				Expect(templatesCollection.GetCall.Receives.Connection).To(Equal(conn))
-				Expect(templatesCollection.GetCall.Receives.ClientID).To(Equal("my-client-id"))
-			})
-		})
-
 		Context("when the neither client nor kind has a template", func() {
 			It("returns the default template", func() {
 				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id", "")
@@ -189,15 +161,6 @@ var _ = Describe("TemplateLoader", func() {
 
 				_, err := loader.LoadTemplates("my-client-id", "my-kind-id", "")
 				Expect(err).To(HaveOccurred())
-			})
-		})
-
-		Context("when the templates collection has an error", func() {
-			It("returns the error", func() {
-				templatesCollection.GetCall.Returns.Error = errors.New("some error on the collection")
-
-				_, err := loader.LoadTemplates("my-client-id", "", "some-v2-template-id")
-				Expect(err).To(MatchError("some error on the collection"))
 			})
 		})
 	})
