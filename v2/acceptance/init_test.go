@@ -52,7 +52,7 @@ var _ = AfterSuite(func() {
 	Servers.Notifications.Close()
 	Servers.Notifications.Destroy()
 
-	docCollection.GenerateBlueprint("../../v2_docs.apib")
+	docCollection.GenerateBlueprint(os.Getenv("DOC_FILE"))
 })
 
 var _ = BeforeEach(func() {

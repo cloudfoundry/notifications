@@ -101,6 +101,10 @@ func (g *DocGenerator) Add(request *http.Request, response *http.Response) error
 }
 
 func (g *DocGenerator) GenerateBlueprint(outputFilePath string) error {
+	if outputFilePath == "" {
+		return nil
+	}
+
 	tmpl, err := template.ParseFiles("../../docs/template.tmpl")
 	if err != nil {
 		panic(err)
