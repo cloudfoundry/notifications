@@ -11,6 +11,28 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+type templateResponse struct {
+	ID       string
+	Name     string
+	Text     string
+	HTML     string
+	Subject  string
+	Metadata map[string]string
+	Links    struct {
+		Self struct {
+			Href string
+		}
+	} `json:"_links"`
+}
+type templatesListResponse struct {
+	Templates []templateResponse
+	Links     struct {
+		Self struct {
+			Href string
+		}
+	} `json:"_links"`
+}
+
 var _ = Describe("Template lifecycle", func() {
 	var (
 		client     *support.Client
@@ -53,19 +75,7 @@ var _ = Describe("Template lifecycle", func() {
 		})
 
 		By("getting the template", func() {
-			var response struct {
-				ID       string
-				Name     string
-				Text     string
-				HTML     string
-				Subject  string
-				Metadata map[string]string
-				Links    struct {
-					Self struct {
-						Href string
-					}
-				} `json:"_links"`
-			}
+			var response templateResponse
 			status, err := client.DoTyped("GET", fmt.Sprintf("/templates/%s", templateID), nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
@@ -80,20 +90,7 @@ var _ = Describe("Template lifecycle", func() {
 		})
 
 		By("updating the template", func() {
-			var response struct {
-				ID       string
-				Name     string
-				Text     string
-				HTML     string
-				Subject  string
-				Metadata map[string]string
-				Links    struct {
-					Self struct {
-						Href string
-					}
-				} `json:"_links"`
-			}
-
+			var response templateResponse
 			url := fmt.Sprintf("/templates/%s", templateID)
 			status, err := client.DoTyped("PUT", url, map[string]interface{}{
 				"name":    "A more interesting template",
@@ -147,27 +144,7 @@ var _ = Describe("Template lifecycle", func() {
 		})
 
 		By("listing all templates", func() {
-			var response struct {
-				Templates []struct {
-					ID       string
-					Name     string
-					Text     string
-					HTML     string
-					Subject  string
-					Metadata map[string]string
-					Links    struct {
-						Self struct {
-							Href string
-						}
-					} `json:"_links"`
-				}
-				Links struct {
-					Self struct {
-						Href string
-					}
-				} `json:"_links"`
-			}
-
+			var response templatesListResponse
 			status, err := client.DoTyped("GET", "/templates", nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))

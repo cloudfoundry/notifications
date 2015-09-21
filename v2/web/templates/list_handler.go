@@ -35,31 +35,5 @@ func (h ListHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context
 		return
 	}
 
-	responseList := []interface{}{}
-
-	for _, template := range templates {
-		metadata := json.RawMessage(template.Metadata)
-		responseList = append(responseList, map[string]interface{}{
-			"id":       template.ID,
-			"name":     template.Name,
-			"text":     template.Text,
-			"html":     template.HTML,
-			"subject":  template.Subject,
-			"metadata": &metadata,
-			"_links": map[string]interface{}{
-				"self": map[string]string{
-					"href": fmt.Sprintf("/templates/%s", template.ID),
-				},
-			},
-		})
-	}
-
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"templates": responseList,
-		"_links": map[string]interface{}{
-			"self": map[string]string{
-				"href": "/templates",
-			},
-		},
-	})
+	json.NewEncoder(w).Encode(NewTemplatesListResponse(templates))
 }

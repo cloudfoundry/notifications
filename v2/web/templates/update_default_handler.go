@@ -86,18 +86,5 @@ func (h UpdateDefaultHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	metadata := json.RawMessage(template.Metadata)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"id":       template.ID,
-		"name":     template.Name,
-		"html":     template.HTML,
-		"text":     template.Text,
-		"subject":  template.Subject,
-		"metadata": &metadata,
-		"_links": map[string]interface{}{
-			"self": map[string]string{
-				"href": fmt.Sprintf("/templates/%s", template.ID),
-			},
-		},
-	})
+	json.NewEncoder(w).Encode(NewTemplateResponse(template))
 }
