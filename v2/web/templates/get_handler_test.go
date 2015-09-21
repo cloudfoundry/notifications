@@ -67,6 +67,11 @@ var _ = Describe("GetHandler", func() {
 			"subject": "template subject",
 			"metadata": {
 				"template": "metadata"
+			},
+			"_links": {
+				"self": {
+					"href": "/templates/some-template-id"
+				}
 			}
 		}`))
 

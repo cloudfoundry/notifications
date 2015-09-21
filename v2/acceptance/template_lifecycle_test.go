@@ -53,18 +53,30 @@ var _ = Describe("Template lifecycle", func() {
 		})
 
 		By("getting the template", func() {
-			status, response, err := client.Do("GET", fmt.Sprintf("/templates/%s", templateID), nil, token.Access)
+			var response struct {
+				ID       string
+				Name     string
+				Text     string
+				HTML     string
+				Subject  string
+				Metadata map[string]string
+				Links    struct {
+					Self struct {
+						Href string
+					}
+				} `json:"_links"`
+			}
+			status, err := client.DoTyped("GET", fmt.Sprintf("/templates/%s", templateID), nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
-			Expect(response["id"]).To(Equal(templateID))
-			Expect(response["name"]).To(Equal("An interesting template"))
-			Expect(response["text"]).To(Equal("template text"))
-			Expect(response["html"]).To(Equal("template html"))
-			Expect(response["subject"]).To(Equal("template subject"))
-			Expect(response["metadata"]).To(Equal(map[string]interface{}{
-				"template": "metadata",
-			}))
+			Expect(response.ID).To(Equal(templateID))
+			Expect(response.Name).To(Equal("An interesting template"))
+			Expect(response.Text).To(Equal("template text"))
+			Expect(response.HTML).To(Equal("template html"))
+			Expect(response.Subject).To(Equal("template subject"))
+			Expect(response.Metadata["template"]).To(Equal("metadata"))
+			Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/templates/%s", templateID)))
 		})
 
 		By("updating the template", func() {
@@ -413,16 +425,30 @@ var _ = Describe("Template lifecycle", func() {
 	Context("when interacting with the default template", func() {
 		Context("getting", func() {
 			It("returns the default template with the default values when it has never been set before", func() {
-				status, response, err := client.Do("GET", "/templates/default", nil, token.Access)
+
+				var response struct {
+					ID       string
+					Name     string
+					Text     string
+					HTML     string
+					Subject  string
+					Metadata map[string]string
+					Links    struct {
+						Self struct {
+							Href string
+						}
+					} `json:"_links"`
+				}
+				status, err := client.DoTyped("GET", "/templates/default", nil, token.Access, &response)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusOK))
 
-				Expect(response["id"]).To(Equal("default"))
-				Expect(response["name"]).To(Equal("The Default Template"))
-				Expect(response["text"]).To(Equal("{{.Text}}"))
-				Expect(response["html"]).To(Equal("{{.HTML}}"))
-				Expect(response["subject"]).To(Equal("{{.Subject}}"))
-				Expect(response["metadata"]).To(Equal(map[string]interface{}{}))
+				Expect(response.ID).To(Equal("default"))
+				Expect(response.Name).To(Equal("The Default Template"))
+				Expect(response.Text).To(Equal("{{.Text}}"))
+				Expect(response.HTML).To(Equal("{{.HTML}}"))
+				Expect(response.Subject).To(Equal("{{.Subject}}"))
+				Expect(response.Links.Self.Href).To(Equal("/templates/default"))
 			})
 		})
 
