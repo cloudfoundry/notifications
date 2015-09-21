@@ -68,7 +68,22 @@ var _ = Describe("Template lifecycle", func() {
 		})
 
 		By("updating the template", func() {
-			status, response, err := client.Do("PUT", fmt.Sprintf("/templates/%s", templateID), map[string]interface{}{
+			var response struct {
+				ID       string
+				Name     string
+				Text     string
+				HTML     string
+				Subject  string
+				Metadata map[string]string
+				Links    struct {
+					Self struct {
+						Href string
+					}
+				} `json:"_links"`
+			}
+
+			url := fmt.Sprintf("/templates/%s", templateID)
+			status, err := client.DoTyped("PUT", url, map[string]interface{}{
 				"name":    "A more interesting template",
 				"text":    "text",
 				"html":    "html",
@@ -76,18 +91,17 @@ var _ = Describe("Template lifecycle", func() {
 				"metadata": map[string]interface{}{
 					"banana": "something",
 				},
-			}, token.Access)
+			}, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
-			Expect(response["id"]).To(Equal(templateID))
-			Expect(response["name"]).To(Equal("A more interesting template"))
-			Expect(response["text"]).To(Equal("text"))
-			Expect(response["html"]).To(Equal("html"))
-			Expect(response["subject"]).To(Equal("subject"))
-			Expect(response["metadata"]).To(Equal(map[string]interface{}{
-				"banana": "something",
-			}))
+			Expect(response.ID).To(Equal(templateID))
+			Expect(response.Name).To(Equal("A more interesting template"))
+			Expect(response.Text).To(Equal("text"))
+			Expect(response.HTML).To(Equal("html"))
+			Expect(response.Subject).To(Equal("subject"))
+			Expect(response.Metadata["banana"]).To(Equal("something"))
+			Expect(response.Links.Self.Href).To(Equal(url))
 		})
 
 		By("getting the template", func() {
@@ -399,16 +413,38 @@ var _ = Describe("Template lifecycle", func() {
 
 			It("persists the updated default template", func() {
 				By("updating the default template", func() {
-					status, response, err := client.Do("PUT", "/templates/default", map[string]interface{}{
+					var response struct {
+						ID       string
+						Name     string
+						Text     string
+						HTML     string
+						Subject  string
+						Metadata map[string]string
+						Links    struct {
+							Self struct {
+								Href string
+							}
+						} `json:"_links"`
+					}
+
+					url := "/templates/default"
+					status, err := client.DoTyped("PUT", url, map[string]interface{}{
 						"name":     "some other default",
 						"text":     "in default",
 						"html":     "massively defaulting",
 						"subject":  "time to default",
 						"metadata": map[string]interface{}{},
-					}, adminToken.Access)
+					}, adminToken.Access, &response)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusOK))
-					Expect(response["id"]).To(Equal("default"))
+
+					Expect(response.ID).To(Equal("default"))
+					Expect(response.Name).To(Equal("some other default"))
+					Expect(response.Text).To(Equal("in default"))
+					Expect(response.HTML).To(Equal("massively defaulting"))
+					Expect(response.Subject).To(Equal("time to default"))
+					Expect(response.Links.Self.Href).To(Equal(url))
+
 				})
 
 				By("retrieving the newly updated default template", func() {

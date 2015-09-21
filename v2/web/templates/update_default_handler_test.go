@@ -81,7 +81,12 @@ var _ = Describe("UpdateDefaultHandler", func() {
 			"html":     "new html",
 			"text":     "new text",
 			"subject":  "new subject",
-			"metadata": {"template":"new"}
+			"metadata": {"template":"new"},
+			"_links": {
+				"self": {
+					"href": "/templates/default"
+				}
+			}
 		}`))
 
 		Expect(templatesCollection.SetCall.Receives.Connection).To(Equal(conn))
@@ -124,7 +129,12 @@ var _ = Describe("UpdateDefaultHandler", func() {
 				"html":     "default html",
 				"text":     "default text",
 				"subject":  "default subject",
-				"metadata": {"template":"default"}
+				"metadata": {"template":"default"},
+				"_links": {
+					"self": {
+						"href": "/templates/default"
+					}
+				}
 			}`))
 
 			Expect(templatesCollection.SetCall.Receives.Connection).To(Equal(conn))
@@ -169,7 +179,12 @@ var _ = Describe("UpdateDefaultHandler", func() {
 				"html":     "default html",
 				"text":     "default text",
 				"subject":  "{{.Subject}}",
-				"metadata": {"template":"default"}
+				"metadata": {"template":"default"},
+				"_links": {
+					"self": {
+						"href": "/templates/default"
+					}
+				}
 			}`))
 
 			Expect(templatesCollection.SetCall.Receives.Connection).To(Equal(conn))

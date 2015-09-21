@@ -94,5 +94,10 @@ func (h UpdateDefaultHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		"text":     template.Text,
 		"subject":  template.Subject,
 		"metadata": &metadata,
+		"_links": map[string]interface{}{
+			"self": map[string]string{
+				"href": fmt.Sprintf("/templates/%s", template.ID),
+			},
+		},
 	})
 }
