@@ -9,5 +9,5 @@ import (
 
 func TestDocs(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Docs Suite")
+	RunSpecs(t, "docs")
 }
