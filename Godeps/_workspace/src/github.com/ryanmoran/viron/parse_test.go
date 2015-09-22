@@ -50,7 +50,11 @@ var _ = Describe("Parse", func() {
 			os.Setenv("BOOL", "banana")
 
 			err := viron.Parse(env)
-			Expect(err).To(Equal(viron.ParseError(`BOOL value "banana" could not be parsed into bool value`)))
+			Expect(err).To(Equal(viron.ParseError{
+				Name:  "BOOL",
+				Value: "banana",
+				Kind:  "bool",
+			}))
 		})
 	})
 
@@ -109,7 +113,11 @@ var _ = Describe("Parse", func() {
 			os.Setenv("INT16", "banana")
 
 			err := viron.Parse(env)
-			Expect(err).To(Equal(viron.ParseError(`INT16 value "banana" could not be parsed into int16 value`)))
+			Expect(err).To(Equal(viron.ParseError{
+				Name:  "INT16",
+				Value: "banana",
+				Kind:  "int16",
+			}))
 		})
 	})
 
@@ -166,7 +174,11 @@ var _ = Describe("Parse", func() {
 			os.Setenv("UINT32", "banana")
 
 			err := viron.Parse(env)
-			Expect(err).To(Equal(viron.ParseError(`UINT32 value "banana" could not be parsed into uint32 value`)))
+			Expect(err).To(Equal(viron.ParseError{
+				Name:  "UINT32",
+				Value: "banana",
+				Kind:  "uint32",
+			}))
 		})
 	})
 
@@ -191,7 +203,11 @@ var _ = Describe("Parse", func() {
 			os.Setenv("FLOAT64", "banana")
 
 			err := viron.Parse(env)
-			Expect(err).To(Equal(viron.ParseError(`FLOAT64 value "banana" could not be parsed into float64 value`)))
+			Expect(err).To(Equal(viron.ParseError{
+				Name:  "FLOAT64",
+				Value: "banana",
+				Kind:  "float64",
+			}))
 		})
 	})
 
@@ -212,7 +228,11 @@ var _ = Describe("Parse", func() {
 			os.Setenv("JSON", "banana")
 
 			err := viron.Parse(env)
-			Expect(err).To(Equal(viron.ParseError(`JSON value "banana" could not be parsed into struct value`)))
+			Expect(err).To(Equal(viron.ParseError{
+				Name:  "JSON",
+				Value: "banana",
+				Kind:  "struct",
+			}))
 		})
 	})
 
@@ -229,13 +249,18 @@ var _ = Describe("Parse", func() {
 	Context("when the environment passed-in is not a non-zero pointer", func() {
 		It("returns an InvalidArgumentError", func() {
 			err := viron.Parse(7)
-			Expect(err).To(Equal(viron.InvalidArgumentError("7 is not a non-zero struct pointer")))
+			Expect(err).To(Equal(viron.InvalidArgumentError{
+				Value: 7,
+			}))
 		})
 
 		It("returns an InvalidArgumentError", func() {
-			var nilEnv *Environment
-			err := viron.Parse(nilEnv)
-			Expect(err).To(Equal(viron.InvalidArgumentError("<nil> is not a non-zero struct pointer")))
+			var actualEnv *Environment
+			var expectedEnv *Environment
+			err := viron.Parse(actualEnv)
+			Expect(err).To(Equal(viron.InvalidArgumentError{
+				Value: expectedEnv,
+			}))
 		})
 	})
 
@@ -275,7 +300,9 @@ var _ = Describe("Parse", func() {
 			os.Setenv("REQUIRED", "")
 
 			err := viron.Parse(env)
-			Expect(err).To(Equal(viron.RequiredFieldError("REQUIRED is a required environment variable")))
+			Expect(err).To(Equal(viron.RequiredFieldError{
+				Name: "REQUIRED",
+			}))
 		})
 	})
 
