@@ -144,14 +144,14 @@ func (app Application) StartWorkers() {
 			ReceiptsRepo:           app.mother.ReceiptsRepo(),
 			UnsubscribesRepo:       app.mother.UnsubscribesRepo(),
 			GlobalUnsubscribesRepo: app.mother.GlobalUnsubscribesRepo(),
-			MessageStatusUpdater:   postal.NewMessageStatusUpdater(app.mother.MessagesRepo()),
+			MessageStatusUpdater:   v1.NewMessageStatusUpdater(app.mother.MessagesRepo()),
 			DeliveryFailureHandler: postal.NewDeliveryFailureHandler(),
 		})
 
 		database := v2models.NewDatabase(app.mother.SQLDatabase(), v2models.Config{})
 		guidGenerator := v2models.NewGUIDGenerator(rand.Reader)
 		messagesRepository := v2models.NewMessagesRepository(util.NewClock(), guidGenerator.Generate)
-		messageStatusUpdater := postal.NewV2MessageStatusUpdater(messagesRepository)
+		messageStatusUpdater := v2.NewV2MessageStatusUpdater(messagesRepository)
 		unsubscribersRepository := v2models.NewUnsubscribersRepository(guidGenerator.Generate)
 		campaignsRepository := v2models.NewCampaignsRepository(guidGenerator.Generate)
 		v2templatesRepo := v2models.NewTemplatesRepository(guidGenerator.Generate)

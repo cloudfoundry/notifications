@@ -1,22 +1,22 @@
-package postal_test
+package v2_test
 
 import (
 	"bytes"
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/v2"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("MessageStatusUpdater", func() {
+var _ = Describe("V2MessageStatusUpdater", func() {
 	var (
-		updater      postal.MessageStatusUpdater
-		messagesRepo *mocks.MessagesRepo
+		updater      v2.V2MessageStatusUpdater
+		messagesRepo *mocks.MessagesRepository
 		logger       lager.Logger
 		buffer       *bytes.Buffer
 		conn         *mocks.Connection
@@ -24,27 +24,20 @@ var _ = Describe("MessageStatusUpdater", func() {
 
 	BeforeEach(func() {
 		conn = mocks.NewConnection()
-		messagesRepo = mocks.NewMessagesRepo()
-		messagesRepo.UpsertCall.Returns.Messages = []models.Message{
-			{
-				ID:         "some-message-id",
-				Status:     "message-status",
-				CampaignID: "campaign-id",
-			},
-		}
+		messagesRepo = mocks.NewMessagesRepository()
 
 		buffer = bytes.NewBuffer([]byte{})
 		logger = lager.NewLogger("notifications")
 		logger.RegisterSink(lager.NewWriterSink(buffer, lager.INFO))
 
-		updater = postal.NewMessageStatusUpdater(messagesRepo)
+		updater = v2.NewV2MessageStatusUpdater(messagesRepo)
 	})
 
 	It("updates the status of the message", func() {
 		updater.Update(conn, "some-message-id", "message-status", "campaign-id", logger)
 
-		Expect(messagesRepo.UpsertCall.Receives.Connection).To(Equal(conn))
-		Expect(messagesRepo.UpsertCall.Receives.Messages[0]).To(Equal(models.Message{
+		Expect(messagesRepo.UpdateCall.Receives.Connection).To(Equal(conn))
+		Expect(messagesRepo.UpdateCall.Receives.Message).To(Equal(models.Message{
 			ID:         "some-message-id",
 			Status:     "message-status",
 			CampaignID: "campaign-id",
@@ -52,8 +45,8 @@ var _ = Describe("MessageStatusUpdater", func() {
 	})
 
 	Context("failure cases", func() {
-		It("logs the error when the repository fails to upsert", func() {
-			messagesRepo.UpsertCall.Returns.Error = errors.New("failed to upsert")
+		It("logs the error when the repository fails to update", func() {
+			messagesRepo.UpdateCall.Returns.Error = errors.New("failed to update")
 
 			updater.Update(conn, "some-message-id", "message-status", "campaign-id", logger)
 
@@ -65,11 +58,11 @@ var _ = Describe("MessageStatusUpdater", func() {
 
 			Expect(line).To(Equal(logLine{
 				Source:   "notifications",
-				Message:  "notifications.message-updater.failed-message-status-upsert",
+				Message:  "notifications.message-updater.failed-message-status-update",
 				LogLevel: int(lager.ERROR),
 				Data: map[string]interface{}{
 					"session": "1",
-					"error":   "failed to upsert",
+					"error":   "failed to update",
 					"status":  "message-status",
 				},
 			}))

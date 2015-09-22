@@ -1,4 +1,4 @@
-package postal
+package v2
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/db"
