@@ -22,8 +22,9 @@ var _ = Describe("Campaign Lifecycle", func() {
 
 	BeforeEach(func() {
 		client = support.NewClient(support.Config{
-			Host:  Servers.Notifications.URL(),
-			Trace: Trace,
+			Host:          Servers.Notifications.URL(),
+			Trace:         Trace,
+			DocCollection: docCollection,
 		})
 		token = GetClientTokenFor("my-client")
 
@@ -65,6 +66,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 			})
 
 			By("sending the campaign", func() {
+				client.Document()
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
 						"email": "test@example.com",
@@ -82,6 +84,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 			})
 
 			By("retrieving the campaign details", func() {
+				client.Document()
 				status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s", senderID, campaignID), nil, token.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusOK))

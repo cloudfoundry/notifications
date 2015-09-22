@@ -20,8 +20,9 @@ var _ = Describe("Campaign types lifecycle", func() {
 
 	BeforeEach(func() {
 		client = support.NewClient(support.Config{
-			Host:  Servers.Notifications.URL(),
-			Trace: Trace,
+			Host:          Servers.Notifications.URL(),
+			Trace:         Trace,
+			DocCollection: docCollection,
 		})
 		token = GetClientTokenFor("my-client")
 
@@ -49,6 +50,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 		})
 
 		By("creating a campaign type", func() {
+			client.Document()
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 				"name":        "some-campaign-type",
 				"description": "a great campaign type",
@@ -65,6 +67,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 		})
 
 		By("showing the newly created campaign type", func() {
+			client.Document()
 			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
@@ -92,6 +95,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 		})
 
 		By("updating it with different information", func() {
+			client.Document()
 			status, response, err := client.Do("PUT", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), map[string]interface{}{
 				"name":        "updated-campaign-type",
 				"description": "still the same great campaign type",
@@ -120,6 +124,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 		})
 
 		By("deleting the campaign type", func() {
+			client.Document()
 			status, _, err := client.Do("DELETE", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNoContent))

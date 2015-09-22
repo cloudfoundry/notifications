@@ -6,6 +6,386 @@ FORMAT: 1A
 
 
 
+# Group Campaign types
+Some description of the Campaign types
+
+## Campaign type List [/campaign_types]
+Some description of the Campaign type list
+
+
+
+### POST Campaign types [POST]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MzEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.toJT9CUv_6G59Mb6EDosYWwsSvXFYrMirhm-fqqagnmsTWdIAnwk-IEu_mMWIstypF06w1oVJMay945z1Zv2IOGMAlJG22TJbjhBB2PwX8rQ8qe70vTRTapfxvu7xy_vLXw-R9qZcXhOAOj7yq1u7icUOF1G3y9g1NVvJZtcOtO8S_nb-UbMXCQvvnjJI0u8dmdDbiaADjoh5VdaFaqqIwe48g6TMOoNYPiGl8kesuzL1hKvM04oZgeHd5R6BReTEx7hl9ISF1zGamrO_Ex7k4SLgn3u-qc7QeX_u4EhuiBha-HHEMJoVa9m1LaoW_1oTwPDd1NiHZ8OC7R4-M8wjg
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            {"description":"a great campaign type","name":"some-campaign-type"}
+
+
++ Response 201
+
+    + Headers
+
+
+
+            Content-Length: 145
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Tue, 22 Sep 2015 00:10:31 GMT
+
+
+
+    + Body
+
+            {"critical":false,"description":"a great campaign type","id":"47e2905a-4a56-8bd9-30cd-3e073e971c28","name":"some-campaign-type","template_id":""}
+
+
+
+
+## Campaign type [/campaign_types/{id}]
+Some description of the Campaign type
+
++ Parameters
+
+	+ id: `68a5sdf67` (required, string) - The Campaign type ID
+
+
+
+### GET Campaign type [GET]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MzEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.toJT9CUv_6G59Mb6EDosYWwsSvXFYrMirhm-fqqagnmsTWdIAnwk-IEu_mMWIstypF06w1oVJMay945z1Zv2IOGMAlJG22TJbjhBB2PwX8rQ8qe70vTRTapfxvu7xy_vLXw-R9qZcXhOAOj7yq1u7icUOF1G3y9g1NVvJZtcOtO8S_nb-UbMXCQvvnjJI0u8dmdDbiaADjoh5VdaFaqqIwe48g6TMOoNYPiGl8kesuzL1hKvM04oZgeHd5R6BReTEx7hl9ISF1zGamrO_Ex7k4SLgn3u-qc7QeX_u4EhuiBha-HHEMJoVa9m1LaoW_1oTwPDd1NiHZ8OC7R4-M8wjg
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            
+
+
++ Response 200
+
+    + Headers
+
+
+
+            Content-Length: 146
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Tue, 22 Sep 2015 00:10:31 GMT
+
+
+
+    + Body
+
+            {"critical":false,"description":"a great campaign type","id":"47e2905a-4a56-8bd9-30cd-3e073e971c28","name":"some-campaign-type","template_id":""}
+
+
+
+
+
+### PUT Campaign type [PUT]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MzEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.toJT9CUv_6G59Mb6EDosYWwsSvXFYrMirhm-fqqagnmsTWdIAnwk-IEu_mMWIstypF06w1oVJMay945z1Zv2IOGMAlJG22TJbjhBB2PwX8rQ8qe70vTRTapfxvu7xy_vLXw-R9qZcXhOAOj7yq1u7icUOF1G3y9g1NVvJZtcOtO8S_nb-UbMXCQvvnjJI0u8dmdDbiaADjoh5VdaFaqqIwe48g6TMOoNYPiGl8kesuzL1hKvM04oZgeHd5R6BReTEx7hl9ISF1zGamrO_Ex7k4SLgn3u-qc7QeX_u4EhuiBha-HHEMJoVa9m1LaoW_1oTwPDd1NiHZ8OC7R4-M8wjg
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            {"critical":true,"description":"still the same great campaign type","name":"updated-campaign-type","template_id":"61176ea5-8c48-8283-99dc-588ad0bd7c72"}
+
+
++ Response 200
+
+    + Headers
+
+
+
+            Content-Length: 197
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Tue, 22 Sep 2015 00:10:31 GMT
+
+
+
+    + Body
+
+            {"critical":true,"description":"still the same great campaign type","id":"47e2905a-4a56-8bd9-30cd-3e073e971c28","name":"updated-campaign-type","template_id":"61176ea5-8c48-8283-99dc-588ad0bd7c72"}
+
+
+
+
+
+### DELETE Campaign type [DELETE]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MzEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.toJT9CUv_6G59Mb6EDosYWwsSvXFYrMirhm-fqqagnmsTWdIAnwk-IEu_mMWIstypF06w1oVJMay945z1Zv2IOGMAlJG22TJbjhBB2PwX8rQ8qe70vTRTapfxvu7xy_vLXw-R9qZcXhOAOj7yq1u7icUOF1G3y9g1NVvJZtcOtO8S_nb-UbMXCQvvnjJI0u8dmdDbiaADjoh5VdaFaqqIwe48g6TMOoNYPiGl8kesuzL1hKvM04oZgeHd5R6BReTEx7hl9ISF1zGamrO_Ex7k4SLgn3u-qc7QeX_u4EhuiBha-HHEMJoVa9m1LaoW_1oTwPDd1NiHZ8OC7R4-M8wjg
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            
+
+
++ Response 204
+
+    + Headers
+
+
+
+            Date: Tue, 22 Sep 2015 00:10:31 GMT
+
+
+
+    + Body
+
+            
+
+
+
+
+
+
+# Group Campaigns
+Some description of the Campaigns
+
+## Campaign List [/campaigns]
+Some description of the Campaign list
+
+
+
+### POST Campaigns [POST]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4NDIsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.I0XJB3vEOyhTjfRfbrmHmsyGwhH7Usz8wkM3tSanB9HRCJNPlyTldcbf9ABcRh_NQqoz1s3-5T8YuASP2hKqrzM3iCaPYUK-p01hJqa_gFlXeiO5LryJ3QJUeVVKMQ1bB2dmAcL9ph43XEl7AGyHy5FLdMEFQPdqsSFrt-nzuHYoOnO9jCT5s24mu3u6LDOSp7RSVcqSYs8ZalHv6ZAMXUKIRHVIb7dCN0pJqJG2mrOZo4KIhHBvWUrWqqshZD3E2XzJzlPFtWeBl54BMqgvgdaUv7SlilMYKIimbmNS52yhOjOD8FKXVAyiWcgz6TsMFLYmy0dPIn7ddJoja9W4Xw
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            {"campaign_type_id":"e4b8a447-aeda-a0dd-9304-f3e1414c9e2f","send_to":{"email":"test@example.com"},"subject":"campaign subject","template_id":"162ba521-f97e-6a79-605a-054ab8462145","text":"campaign body"}
+
+
++ Response 202
+
+    + Headers
+
+
+
+            Content-Length: 56
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Tue, 22 Sep 2015 00:10:42 GMT
+
+
+
+    + Body
+
+            { "campaign_id": "55a30996-b56d-fc60-d0c8-d813137b0520"}
+
+
+
+
+## Campaign [/campaigns/{id}]
+Some description of the Campaign
+
++ Parameters
+
+	+ id: `68a5sdf67` (required, string) - The Campaign ID
+
+
+
+### GET Campaign [GET]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4NDIsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.I0XJB3vEOyhTjfRfbrmHmsyGwhH7Usz8wkM3tSanB9HRCJNPlyTldcbf9ABcRh_NQqoz1s3-5T8YuASP2hKqrzM3iCaPYUK-p01hJqa_gFlXeiO5LryJ3QJUeVVKMQ1bB2dmAcL9ph43XEl7AGyHy5FLdMEFQPdqsSFrt-nzuHYoOnO9jCT5s24mu3u6LDOSp7RSVcqSYs8ZalHv6ZAMXUKIRHVIb7dCN0pJqJG2mrOZo4KIhHBvWUrWqqshZD3E2XzJzlPFtWeBl54BMqgvgdaUv7SlilMYKIimbmNS52yhOjOD8FKXVAyiWcgz6TsMFLYmy0dPIn7ddJoja9W4Xw
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            
+
+
++ Response 200
+
+    + Headers
+
+
+
+            Content-Length: 271
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Tue, 22 Sep 2015 00:10:42 GMT
+
+
+
+    + Body
+
+            {"campaign_type_id":"e4b8a447-aeda-a0dd-9304-f3e1414c9e2f","html":"","id":"55a30996-b56d-fc60-d0c8-d813137b0520","reply_to":"","send_to":{"email":"test@example.com"},"subject":"campaign subject","template_id":"162ba521-f97e-6a79-605a-054ab8462145","text":"campaign body"}
+
+
+
+
+
+
+# Group Info
+Some description of the Info
+
+## Inf List [/info]
+Some description of the Inf list
+
+
+
+### GET Info [GET]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer 
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            
+
+
++ Response 200
+
+    + Headers
+
+
+
+            Content-Length: 13
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Tue, 22 Sep 2015 00:10:41 GMT
+
+
+
+    + Body
+
+            {"version":2}
+
+
+
+
+## Inf [/info/{id}]
+Some description of the Inf
+
++ Parameters
+
+	+ id: `68a5sdf67` (required, string) - The Inf ID
+
+
+
+
+
 # Group Senders
 Some description of the Senders
 
@@ -23,7 +403,7 @@ Some description of the Sender list
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzI5MDEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTc2ODgvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.0fJKU4LEpezNDVCtgzZ3Py0BKSN2vHcdFyVrxkBxmSY9kB-tjtJusF3aE9KK8F83GJ85efcFQoNIN-CLCG7BFsMr4aRQahIBRR1Gxulx4tnPumL-4mF9GCRkXJqX2plWCIBt2PtvAjitLXDRBH8gtBFOnRvthGqCkZR9OY9VwajAtYLByCq4WMM-EimCMe39wLCIE5qA-Ry9kBYM2TOjfJnR9PX5EnFVhbjTYJLvE3Mfhz2FAxU7CSKoqKbJwM3g6HZpqz9IDc4bsQ69snGWzORUuny3l2gi_89zVAYvtWCtTKHVJPIHPHqfn5f1pE0LUm5U3mTqmC2Qxpo-WoHcUw
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MzcsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.n9QJnVy5emQzn5d4JBKIAxfozW3KyL9xawyFk7E0cjZ2ut2-6WDWDwdgw-3LSRzZrubIGskML4zqctiNDQjsGSNbRS78moTGGF00GYXfCHUYrQHAU66z3i47UYiMyZCp-naCAnLJgnGGi-FoVNVFBCgQ-CEsFK9fXI88YFOXbUb-ZR2caajgVEPfUOREgE6yw7t13w5bt-s6ftMqWnFu5fJDV8R6X5rO-M5IHhBZFhvJ0aBLnnhE8okUDdu0ir9zVA2cLW87PCZpd0_vx8-eqRP6rVd-GuJoFIsm_CSFNygbeRRV5eIxemEy362d-uENaNNYuclaGgS2pq6Y2rq-eg
 
 
 
@@ -50,13 +430,13 @@ Some description of the Sender list
 
 
 
-            Date: Mon, 21 Sep 2015 22:15:01 GMT
+            Date: Tue, 22 Sep 2015 00:10:37 GMT
 
 
 
     + Body
 
-            {"id":"40f97a99-dd5f-4f3c-4734-a20d291d2331","name":"My Cool App","_links":{"self":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331"},"campaign_types":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaign_types"},"campaigns":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaigns"}}}
+            {"id":"645cff0b-11ff-1797-554e-c9ea02c433b9","name":"My Cool App","_links":{"self":{"href":"/senders/645cff0b-11ff-1797-554e-c9ea02c433b9"},"campaign_types":{"href":"/senders/645cff0b-11ff-1797-554e-c9ea02c433b9/campaign_types"},"campaigns":{"href":"/senders/645cff0b-11ff-1797-554e-c9ea02c433b9/campaigns"}}}
 
 
 
@@ -71,7 +451,7 @@ Some description of the Sender list
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzI5MDEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTc2ODgvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.0fJKU4LEpezNDVCtgzZ3Py0BKSN2vHcdFyVrxkBxmSY9kB-tjtJusF3aE9KK8F83GJ85efcFQoNIN-CLCG7BFsMr4aRQahIBRR1Gxulx4tnPumL-4mF9GCRkXJqX2plWCIBt2PtvAjitLXDRBH8gtBFOnRvthGqCkZR9OY9VwajAtYLByCq4WMM-EimCMe39wLCIE5qA-Ry9kBYM2TOjfJnR9PX5EnFVhbjTYJLvE3Mfhz2FAxU7CSKoqKbJwM3g6HZpqz9IDc4bsQ69snGWzORUuny3l2gi_89zVAYvtWCtTKHVJPIHPHqfn5f1pE0LUm5U3mTqmC2Qxpo-WoHcUw
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MzcsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.n9QJnVy5emQzn5d4JBKIAxfozW3KyL9xawyFk7E0cjZ2ut2-6WDWDwdgw-3LSRzZrubIGskML4zqctiNDQjsGSNbRS78moTGGF00GYXfCHUYrQHAU66z3i47UYiMyZCp-naCAnLJgnGGi-FoVNVFBCgQ-CEsFK9fXI88YFOXbUb-ZR2caajgVEPfUOREgE6yw7t13w5bt-s6ftMqWnFu5fJDV8R6X5rO-M5IHhBZFhvJ0aBLnnhE8okUDdu0ir9zVA2cLW87PCZpd0_vx8-eqRP6rVd-GuJoFIsm_CSFNygbeRRV5eIxemEy362d-uENaNNYuclaGgS2pq6Y2rq-eg
 
 
 
@@ -98,13 +478,13 @@ Some description of the Sender list
 
 
 
-            Date: Mon, 21 Sep 2015 22:15:01 GMT
+            Date: Tue, 22 Sep 2015 00:10:37 GMT
 
 
 
     + Body
 
-            {"senders":[{"id":"40f97a99-dd5f-4f3c-4734-a20d291d2331","name":"My Cool App","_links":{"self":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331"},"campaign_types":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaign_types"},"campaigns":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaigns"}}}],"_links":{"self":{"href":"/senders"}}}
+            {"senders":[{"id":"645cff0b-11ff-1797-554e-c9ea02c433b9","name":"My Cool App","_links":{"self":{"href":"/senders/645cff0b-11ff-1797-554e-c9ea02c433b9"},"campaign_types":{"href":"/senders/645cff0b-11ff-1797-554e-c9ea02c433b9/campaign_types"},"campaigns":{"href":"/senders/645cff0b-11ff-1797-554e-c9ea02c433b9/campaigns"}}}],"_links":{"self":{"href":"/senders"}}}
 
 
 
@@ -128,7 +508,7 @@ Some description of the Sender
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzI4OTUsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTc2ODgvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.ikhq_sbI12XVY0R4CUSBuEQlUkA8xxR_ntb2P0Ici49C4H54_eO4KWclzfSIqTBd4vkSKKpv3uYh9WycHW4zq64G0ZK4wdL6lALnv81qECVSvjOWNVgPKLCOz2DSuHRZtYwYJRyBsj6TcURbRsfFvP6MlhWoKZRJ6J8n77Ev81UJbntwpyz3Xr6vC8GFQzPLbxBK_nxhadOzulZn6JWF9R4DnjnxSS7ZlAuTf9ib2688OGzs8QrYpLPbPU25HM-N0QebqYJOntA6RUpm4ji8JlX_kyAkm7qGm1FGset969Jc0gKKFPTorQAcp0xxxLqgbVMQxuEFOHAor-fMxJ-SpQ
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MzYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.cKDc5Sn9EsBlXyQ0voyhU5fTsNlP1FEtZtvZHovHN4Kfp4KEGyKlm9yHGJmCQ2Jzfx7KqMoKad_MJY0moC1z7ATwDm2VRt_Xi-oAjRhEVjuuDhiOmfxLir-RfV3pP5qx58o1UK5i0IzXzH_oKNip3LbL3-GNok5_eZMdmzxWSSzat17FXnFrrc-3i_BBy3Arz_iIptrnXQ0NeeBAKSYim9hXIuVz27jy9aRsttFxuC6oSbhm4aTw8bvbFphoes9iedmD3wQ3ar2bp90xe4cCpnI3n8UNjNV5jvFv4UTW11BNgCwBaUhAkRnrSQ3BiiSfJktstjcnEKHWuDApDg8IUw
 
 
 
@@ -147,7 +527,7 @@ Some description of the Sender
 
 
 
-            Date: Mon, 21 Sep 2015 22:14:55 GMT
+            Date: Tue, 22 Sep 2015 00:10:36 GMT
 
 
 
@@ -167,7 +547,7 @@ Some description of the Sender
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzI5MDEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTc2ODgvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.0fJKU4LEpezNDVCtgzZ3Py0BKSN2vHcdFyVrxkBxmSY9kB-tjtJusF3aE9KK8F83GJ85efcFQoNIN-CLCG7BFsMr4aRQahIBRR1Gxulx4tnPumL-4mF9GCRkXJqX2plWCIBt2PtvAjitLXDRBH8gtBFOnRvthGqCkZR9OY9VwajAtYLByCq4WMM-EimCMe39wLCIE5qA-Ry9kBYM2TOjfJnR9PX5EnFVhbjTYJLvE3Mfhz2FAxU7CSKoqKbJwM3g6HZpqz9IDc4bsQ69snGWzORUuny3l2gi_89zVAYvtWCtTKHVJPIHPHqfn5f1pE0LUm5U3mTqmC2Qxpo-WoHcUw
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MzcsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.n9QJnVy5emQzn5d4JBKIAxfozW3KyL9xawyFk7E0cjZ2ut2-6WDWDwdgw-3LSRzZrubIGskML4zqctiNDQjsGSNbRS78moTGGF00GYXfCHUYrQHAU66z3i47UYiMyZCp-naCAnLJgnGGi-FoVNVFBCgQ-CEsFK9fXI88YFOXbUb-ZR2caajgVEPfUOREgE6yw7t13w5bt-s6ftMqWnFu5fJDV8R6X5rO-M5IHhBZFhvJ0aBLnnhE8okUDdu0ir9zVA2cLW87PCZpd0_vx8-eqRP6rVd-GuJoFIsm_CSFNygbeRRV5eIxemEy362d-uENaNNYuclaGgS2pq6Y2rq-eg
 
 
 
@@ -194,13 +574,13 @@ Some description of the Sender
 
 
 
-            Date: Mon, 21 Sep 2015 22:15:01 GMT
+            Date: Tue, 22 Sep 2015 00:10:37 GMT
 
 
 
     + Body
 
-            {"id":"40f97a99-dd5f-4f3c-4734-a20d291d2331","name":"My Cool App","_links":{"self":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331"},"campaign_types":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaign_types"},"campaigns":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaigns"}}}
+            {"id":"645cff0b-11ff-1797-554e-c9ea02c433b9","name":"My Cool App","_links":{"self":{"href":"/senders/645cff0b-11ff-1797-554e-c9ea02c433b9"},"campaign_types":{"href":"/senders/645cff0b-11ff-1797-554e-c9ea02c433b9/campaign_types"},"campaigns":{"href":"/senders/645cff0b-11ff-1797-554e-c9ea02c433b9/campaigns"}}}
 
 
 
@@ -215,7 +595,7 @@ Some description of the Sender
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzI5MDEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTc2ODgvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.0fJKU4LEpezNDVCtgzZ3Py0BKSN2vHcdFyVrxkBxmSY9kB-tjtJusF3aE9KK8F83GJ85efcFQoNIN-CLCG7BFsMr4aRQahIBRR1Gxulx4tnPumL-4mF9GCRkXJqX2plWCIBt2PtvAjitLXDRBH8gtBFOnRvthGqCkZR9OY9VwajAtYLByCq4WMM-EimCMe39wLCIE5qA-Ry9kBYM2TOjfJnR9PX5EnFVhbjTYJLvE3Mfhz2FAxU7CSKoqKbJwM3g6HZpqz9IDc4bsQ69snGWzORUuny3l2gi_89zVAYvtWCtTKHVJPIHPHqfn5f1pE0LUm5U3mTqmC2Qxpo-WoHcUw
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MzcsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.n9QJnVy5emQzn5d4JBKIAxfozW3KyL9xawyFk7E0cjZ2ut2-6WDWDwdgw-3LSRzZrubIGskML4zqctiNDQjsGSNbRS78moTGGF00GYXfCHUYrQHAU66z3i47UYiMyZCp-naCAnLJgnGGi-FoVNVFBCgQ-CEsFK9fXI88YFOXbUb-ZR2caajgVEPfUOREgE6yw7t13w5bt-s6ftMqWnFu5fJDV8R6X5rO-M5IHhBZFhvJ0aBLnnhE8okUDdu0ir9zVA2cLW87PCZpd0_vx8-eqRP6rVd-GuJoFIsm_CSFNygbeRRV5eIxemEy362d-uENaNNYuclaGgS2pq6Y2rq-eg
 
 
 
@@ -242,14 +622,264 @@ Some description of the Sender
 
 
 
-            Date: Mon, 21 Sep 2015 22:15:01 GMT
+            Date: Tue, 22 Sep 2015 00:10:37 GMT
 
 
 
     + Body
 
-            {"id":"40f97a99-dd5f-4f3c-4734-a20d291d2331","name":"My Not Cool App","_links":{"self":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331"},"campaign_types":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaign_types"},"campaigns":{"href":"/senders/40f97a99-dd5f-4f3c-4734-a20d291d2331/campaigns"}}}
+            {"id":"645cff0b-11ff-1797-554e-c9ea02c433b9","name":"My Not Cool App","_links":{"self":{"href":"/senders/645cff0b-11ff-1797-554e-c9ea02c433b9"},"campaign_types":{"href":"/senders/645cff0b-11ff-1797-554e-c9ea02c433b9/campaign_types"},"campaigns":{"href":"/senders/645cff0b-11ff-1797-554e-c9ea02c433b9/campaigns"}}}
 
+
+
+
+
+
+
+# Group Templates
+Some description of the Templates
+
+## Template List [/templates]
+Some description of the Template list
+
+
+
+### POST Templates [POST]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MjksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.vioqNKobwTRhgsz10zwihVVgGg1sDmRWZPfeozUECdgCOKjdc8U3wJOYakBCh2oDEsIuMRrHXeGapQOaT7hPD1D4fxTybjEXan-pdUfST7fgp17fLMbDLqRFuVwnWji8ubBT-tN26Eb-Ql4quEeDj1zbL-YbTlyPW5QBH_h7EEFwmItq1ZmR8viV4aAWQpeHhHvqxLsBdzbqBO8rxOJKxnOopQlhnHLvsX4tOKUFFPHTN4d87Nj3h8Kc82Muw2Rt0xkfybmxXkoNtx0QTE9Q9eqh_nUXOhOsNJ9o4U4CxIOKimvUAKH5QGU1V3XPrZfpBKkFSUCs03HY7MIADmIJdg
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            {"html":"template html","metadata":{"template":"metadata"},"name":"An interesting template","subject":"template subject","text":"template text"}
+
+
++ Response 201
+
+    + Headers
+
+
+
+            Content-Length: 189
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Tue, 22 Sep 2015 00:10:29 GMT
+
+
+
+    + Body
+
+            {"html":"template html","id":"6b57a9be-c470-9c26-ddce-a79a47725e46","metadata":{"template":"metadata"},"name":"An interesting template","subject":"template subject","text":"template text"}
+
+
+
+
+
+### GET Templates [GET]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MjksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.vioqNKobwTRhgsz10zwihVVgGg1sDmRWZPfeozUECdgCOKjdc8U3wJOYakBCh2oDEsIuMRrHXeGapQOaT7hPD1D4fxTybjEXan-pdUfST7fgp17fLMbDLqRFuVwnWji8ubBT-tN26Eb-Ql4quEeDj1zbL-YbTlyPW5QBH_h7EEFwmItq1ZmR8viV4aAWQpeHhHvqxLsBdzbqBO8rxOJKxnOopQlhnHLvsX4tOKUFFPHTN4d87Nj3h8Kc82Muw2Rt0xkfybmxXkoNtx0QTE9Q9eqh_nUXOhOsNJ9o4U4CxIOKimvUAKH5QGU1V3XPrZfpBKkFSUCs03HY7MIADmIJdg
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            
+
+
++ Response 200
+
+    + Headers
+
+
+
+            Content-Length: 298
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Tue, 22 Sep 2015 00:10:29 GMT
+
+
+
+    + Body
+
+            {"_links":{"self":{"href":"/templates"}},"templates":[{"_links":{"self":{"href":"/templates/6b57a9be-c470-9c26-ddce-a79a47725e46"}},"html":"html","id":"6b57a9be-c470-9c26-ddce-a79a47725e46","metadata":{"banana":"something"},"name":"A more interesting template","subject":"subject","text":"text"}]}
+
+
+
+
+
+## Template [/templates/{id}]
+Some description of the Template
+
++ Parameters
+
+	+ id: `68a5sdf67` (required, string) - The Template ID
+
+
+
+### GET Template [GET]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MjksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.vioqNKobwTRhgsz10zwihVVgGg1sDmRWZPfeozUECdgCOKjdc8U3wJOYakBCh2oDEsIuMRrHXeGapQOaT7hPD1D4fxTybjEXan-pdUfST7fgp17fLMbDLqRFuVwnWji8ubBT-tN26Eb-Ql4quEeDj1zbL-YbTlyPW5QBH_h7EEFwmItq1ZmR8viV4aAWQpeHhHvqxLsBdzbqBO8rxOJKxnOopQlhnHLvsX4tOKUFFPHTN4d87Nj3h8Kc82Muw2Rt0xkfybmxXkoNtx0QTE9Q9eqh_nUXOhOsNJ9o4U4CxIOKimvUAKH5QGU1V3XPrZfpBKkFSUCs03HY7MIADmIJdg
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            
+
+
++ Response 200
+
+    + Headers
+
+
+
+            Content-Length: 189
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Tue, 22 Sep 2015 00:10:29 GMT
+
+
+
+    + Body
+
+            {"html":"template html","id":"6b57a9be-c470-9c26-ddce-a79a47725e46","metadata":{"template":"metadata"},"name":"An interesting template","subject":"template subject","text":"template text"}
+
+
+
+
+
+### PUT Template [PUT]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MjksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.vioqNKobwTRhgsz10zwihVVgGg1sDmRWZPfeozUECdgCOKjdc8U3wJOYakBCh2oDEsIuMRrHXeGapQOaT7hPD1D4fxTybjEXan-pdUfST7fgp17fLMbDLqRFuVwnWji8ubBT-tN26Eb-Ql4quEeDj1zbL-YbTlyPW5QBH_h7EEFwmItq1ZmR8viV4aAWQpeHhHvqxLsBdzbqBO8rxOJKxnOopQlhnHLvsX4tOKUFFPHTN4d87Nj3h8Kc82Muw2Rt0xkfybmxXkoNtx0QTE9Q9eqh_nUXOhOsNJ9o4U4CxIOKimvUAKH5QGU1V3XPrZfpBKkFSUCs03HY7MIADmIJdg
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            {"html":"html","metadata":{"banana":"something"},"name":"A more interesting template","subject":"subject","text":"text"}
+
+
++ Response 200
+
+    + Headers
+
+
+
+            Content-Length: 242
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Tue, 22 Sep 2015 00:10:29 GMT
+
+
+
+    + Body
+
+            {"_links":{"self":{"href":"/templates/6b57a9be-c470-9c26-ddce-a79a47725e46"}},"html":"html","id":"6b57a9be-c470-9c26-ddce-a79a47725e46","metadata":{"banana":"something"},"name":"A more interesting template","subject":"subject","text":"text"}
+
+
+
+
+
+### DELETE Template [DELETE]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMxMzk4MjksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTIzMTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.vioqNKobwTRhgsz10zwihVVgGg1sDmRWZPfeozUECdgCOKjdc8U3wJOYakBCh2oDEsIuMRrHXeGapQOaT7hPD1D4fxTybjEXan-pdUfST7fgp17fLMbDLqRFuVwnWji8ubBT-tN26Eb-Ql4quEeDj1zbL-YbTlyPW5QBH_h7EEFwmItq1ZmR8viV4aAWQpeHhHvqxLsBdzbqBO8rxOJKxnOopQlhnHLvsX4tOKUFFPHTN4d87Nj3h8Kc82Muw2Rt0xkfybmxXkoNtx0QTE9Q9eqh_nUXOhOsNJ9o4U4CxIOKimvUAKH5QGU1V3XPrZfpBKkFSUCs03HY7MIADmIJdg
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            
+
+
++ Response 204
+
+    + Headers
+
+
+
+            Date: Tue, 22 Sep 2015 00:10:29 GMT
+
+
+
+    + Body
+
+            
 
 
 
