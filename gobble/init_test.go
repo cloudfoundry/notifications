@@ -26,7 +26,9 @@ var _ = BeforeSuite(func() {
 	var err error
 	sqlDB, err = instantiateDBConnection()
 	Expect(err).NotTo(HaveOccurred())
-	env := application.NewEnvironment()
+
+	env, err := application.NewEnvironment()
+	Expect(err).NotTo(HaveOccurred())
 
 	gobble.NewDatabase(sqlDB).Migrate(env.GobbleMigrationsPath)
 })

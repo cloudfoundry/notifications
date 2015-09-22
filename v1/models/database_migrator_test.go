@@ -21,7 +21,9 @@ var _ = Describe("DatabaseMigrator", func() {
 	)
 
 	BeforeEach(func() {
-		env := application.NewEnvironment()
+		env, err := application.NewEnvironment()
+		Expect(err).NotTo(HaveOccurred())
+
 		defaultTemplatePath = env.RootPath + "/templates/default.json"
 		database = db.NewDatabase(sqlDB, db.Config{
 			DefaultTemplatePath: defaultTemplatePath,

@@ -32,8 +32,7 @@ type Application struct {
 	migrator Migrator
 }
 
-func NewApplication(mother *Mother) Application {
-	env := NewEnvironment()
+func NewApplication(env Environment, mother *Mother) Application {
 	databaseMigrator := models.DatabaseMigrator{}
 	return Application{
 		env:      env,

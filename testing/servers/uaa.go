@@ -50,12 +50,17 @@ func (s UAA) Close() {
 }
 
 func ReadFile(filename string) string {
-	env := application.NewEnvironment()
+	env, err := application.NewEnvironment()
+	if err != nil {
+		panic(err)
+	}
+
 	root := env.RootPath
 	fileContents, err := ioutil.ReadFile(root + filename)
 	if err != nil {
 		panic(err)
 	}
+
 	return string(fileContents)
 }
 

@@ -20,9 +20,9 @@ func TestModelsSuite(t *testing.T) {
 var sqlDB *sql.DB
 
 var _ = BeforeEach(func() {
-	env := application.NewEnvironment()
+	env, err := application.NewEnvironment()
+	Expect(err).NotTo(HaveOccurred())
 
-	var err error
 	sqlDB, err = sql.Open("mysql", env.DatabaseURL)
 	Expect(err).NotTo(HaveOccurred())
 })

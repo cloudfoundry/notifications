@@ -17,12 +17,14 @@ var _ = Describe("Send a notification to a user", func() {
 		var (
 			templateID  string
 			response    support.NotifyResponse
-			env         = application.NewEnvironment()
 			clientID    = "notifications-sender"
 			clientToken = GetClientTokenFor(clientID)
 			client      = support.NewClient(Servers.Notifications.URL())
 			userID      = "user-123"
 		)
+
+		env, err := application.NewEnvironment()
+		Expect(err).NotTo(HaveOccurred())
 
 		By("registering a notification", func() {
 			code, err := client.Notifications.Register(clientToken.Access, support.RegisterClient{

@@ -98,7 +98,9 @@ var _ = Describe("Send a notification to all users of UAA", func() {
 				recipientIndex = 1
 			}
 
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
+
 			delivery := Servers.SMTP.Deliveries[recipientIndex]
 			Expect(delivery.Sender).To(Equal(env.Sender))
 

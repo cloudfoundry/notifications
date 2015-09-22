@@ -25,10 +25,13 @@ import (
 type Mother struct {
 	sqlDB *sql.DB
 	mutex sync.Mutex
+	env   Environment
 }
 
-func NewMother() *Mother {
-	return &Mother{}
+func NewMother(env Environment) *Mother {
+	return &Mother{
+		env: env,
+	}
 }
 
 func (m *Mother) GobbleDatabase() gobble.DatabaseInterface {
@@ -36,10 +39,8 @@ func (m *Mother) GobbleDatabase() gobble.DatabaseInterface {
 }
 
 func (m *Mother) Queue() gobble.QueueInterface {
-	env := NewEnvironment()
-
 	return gobble.NewQueue(m.GobbleDatabase(), gobble.Config{
-		WaitMaxDuration: time.Duration(env.GobbleWaitMaxDuration) * time.Millisecond,
+		WaitMaxDuration: time.Duration(m.env.GobbleWaitMaxDuration) * time.Millisecond,
 	})
 }
 
@@ -52,9 +53,8 @@ func (m *Mother) UserStrategy() services.UserStrategy {
 }
 
 func (m *Mother) SpaceStrategy() services.SpaceStrategy {
-	env := NewEnvironment()
-	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
-	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
+	uaaClient := uaa.NewZonedUAAClient(m.env.UAAClientID, m.env.UAAClientSecret, m.env.VerifySSL, UAAPublicKey)
+	cloudController := cf.NewCloudController(m.env.CCHost, !m.env.VerifySSL)
 
 	tokenLoader := uaa.NewTokenLoader(uaaClient)
 	spaceLoader := services.NewSpaceLoader(cloudController)
@@ -66,10 +66,9 @@ func (m *Mother) SpaceStrategy() services.SpaceStrategy {
 }
 
 func (m *Mother) OrganizationStrategy() services.OrganizationStrategy {
-	env := NewEnvironment()
-	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
+	cloudController := cf.NewCloudController(m.env.CCHost, !m.env.VerifySSL)
 
-	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
+	uaaClient := uaa.NewZonedUAAClient(m.env.UAAClientID, m.env.UAAClientSecret, m.env.VerifySSL, UAAPublicKey)
 	tokenLoader := uaa.NewTokenLoader(uaaClient)
 	organizationLoader := services.NewOrganizationLoader(cloudController)
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
@@ -79,8 +78,7 @@ func (m *Mother) OrganizationStrategy() services.OrganizationStrategy {
 }
 
 func (m *Mother) EveryoneStrategy() services.EveryoneStrategy {
-	env := NewEnvironment()
-	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
+	uaaClient := uaa.NewZonedUAAClient(m.env.UAAClientID, m.env.UAAClientSecret, m.env.VerifySSL, UAAPublicKey)
 	tokenLoader := uaa.NewTokenLoader(uaaClient)
 	allUsers := services.NewAllUsers(uaaClient)
 	enqueuer := m.Enqueuer()
@@ -89,15 +87,14 @@ func (m *Mother) EveryoneStrategy() services.EveryoneStrategy {
 }
 
 func (m *Mother) UAAScopeStrategy() services.UAAScopeStrategy {
-	env := NewEnvironment()
-	uaaClient := uaa.NewZonedUAAClient(env.UAAClientID, env.UAAClientSecret, env.VerifySSL, UAAPublicKey)
-	cloudController := cf.NewCloudController(env.CCHost, !env.VerifySSL)
+	uaaClient := uaa.NewZonedUAAClient(m.env.UAAClientID, m.env.UAAClientSecret, m.env.VerifySSL, UAAPublicKey)
+	cloudController := cf.NewCloudController(m.env.CCHost, !m.env.VerifySSL)
 
 	tokenLoader := uaa.NewTokenLoader(uaaClient)
 	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
 	enqueuer := m.Enqueuer()
 
-	return services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer, m.V2Enqueuer(), env.DefaultUAAScopes)
+	return services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer, m.V2Enqueuer(), m.env.DefaultUAAScopes)
 }
 
 func (m *Mother) EmailStrategy() services.EmailStrategy {
@@ -109,20 +106,19 @@ func (m *Mother) Enqueuer() services.Enqueuer {
 }
 
 func (m *Mother) MailClient() *mail.Client {
-	env := NewEnvironment()
 	mailConfig := mail.Config{
-		User:           env.SMTPUser,
-		Pass:           env.SMTPPass,
-		Host:           env.SMTPHost,
-		Port:           env.SMTPPort,
-		Secret:         env.SMTPCRAMMD5Secret,
-		TestMode:       env.TestMode,
-		SkipVerifySSL:  !env.VerifySSL,
-		DisableTLS:     !env.SMTPTLS,
-		LoggingEnabled: env.SMTPLoggingEnabled,
+		User:           m.env.SMTPUser,
+		Pass:           m.env.SMTPPass,
+		Host:           m.env.SMTPHost,
+		Port:           m.env.SMTPPort,
+		Secret:         m.env.SMTPCRAMMD5Secret,
+		TestMode:       m.env.TestMode,
+		SkipVerifySSL:  !m.env.VerifySSL,
+		DisableTLS:     !m.env.SMTPTLS,
+		LoggingEnabled: m.env.SMTPLoggingEnabled,
 	}
 
-	switch env.SMTPAuthMechanism {
+	switch m.env.SMTPAuthMechanism {
 	case SMTPAuthNone:
 		mailConfig.AuthMechanism = mail.AuthNone
 	case SMTPAuthPlain:
@@ -149,10 +145,8 @@ func (m *Mother) SQLDatabase() *sql.DB {
 		return m.sqlDB
 	}
 
-	env := NewEnvironment()
-
 	var err error
-	m.sqlDB, err = sql.Open("mysql", env.DatabaseURL)
+	m.sqlDB, err = sql.Open("mysql", m.env.DatabaseURL)
 	if err != nil {
 		panic(err)
 	}
@@ -161,18 +155,17 @@ func (m *Mother) SQLDatabase() *sql.DB {
 		panic(err)
 	}
 
-	m.sqlDB.SetMaxOpenConns(env.DBMaxOpenConns)
+	m.sqlDB.SetMaxOpenConns(m.env.DBMaxOpenConns)
 
 	return m.sqlDB
 }
 
 func (m *Mother) Database() db.DatabaseInterface {
-	env := NewEnvironment()
 	database := v1models.NewDatabase(m.SQLDatabase(), v1models.Config{
-		DefaultTemplatePath: path.Join(env.RootPath, "templates", "default.json"),
+		DefaultTemplatePath: path.Join(m.env.RootPath, "templates", "default.json"),
 	})
 
-	if env.DBLoggingEnabled {
+	if m.env.DBLoggingEnabled {
 		database.TraceOn("[DB]", log.New(os.Stdout, "", 0))
 	}
 

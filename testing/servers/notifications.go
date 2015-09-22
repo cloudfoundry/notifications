@@ -27,8 +27,13 @@ type Notifications struct {
 }
 
 func NewNotifications() Notifications {
+	env, err := application.NewEnvironment()
+	if err != nil {
+		panic(err)
+	}
+
 	return Notifications{
-		env: application.NewEnvironment(),
+		env: env,
 	}
 }
 
@@ -115,7 +120,11 @@ func (s Notifications) URL() string {
 }
 
 func (s Notifications) MigrateDatabase() {
-	env := application.NewEnvironment()
+	env, err := application.NewEnvironment()
+	if err != nil {
+		panic(err)
+	}
+
 	sqlDB := openDatabase(env)
 	defer sqlDB.Close()
 	database, gobbleDB := fetchDatabases(env, sqlDB)
@@ -127,14 +136,19 @@ func (s Notifications) MigrateDatabase() {
 }
 
 func (s Notifications) ResetDatabase() {
-	env := application.NewEnvironment()
+	env, err := application.NewEnvironment()
+	if err != nil {
+		panic(err)
+	}
+
 	sqlDB := openDatabase(env)
 	defer sqlDB.Close()
 	database, gobbleDB := fetchDatabases(env, sqlDB)
 
 	v1models.Setup(database)
 	v2models.Setup(database)
-	err := database.Connection().(*db.Connection).TruncateTables()
+
+	err = database.Connection().(*db.Connection).TruncateTables()
 	if err != nil {
 		panic(err)
 	}
@@ -146,7 +160,11 @@ func (s Notifications) ResetDatabase() {
 }
 
 func (s Notifications) WaitForJobsQueueToEmpty() error {
-	env := application.NewEnvironment()
+	env, err := application.NewEnvironment()
+	if err != nil {
+		return err
+	}
+
 	sqlDB := openDatabase(env)
 	defer sqlDB.Close()
 	_, gobbleDB := fetchDatabases(env, sqlDB)

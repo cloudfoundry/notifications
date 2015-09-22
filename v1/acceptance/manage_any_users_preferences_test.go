@@ -66,7 +66,9 @@ var _ = Describe("Preferences Endpoint", func() {
 			}, 10*time.Second).Should(Equal(1))
 			delivery := Servers.SMTP.Deliveries[0]
 
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
+
 			Expect(delivery.Sender).To(Equal(env.Sender))
 			Expect(delivery.Recipients).To(Equal([]string{"user-123@example.com"}))
 

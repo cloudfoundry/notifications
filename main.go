@@ -1,10 +1,19 @@
 package main
 
-import "github.com/cloudfoundry-incubator/notifications/application"
+import (
+	"log"
+
+	"github.com/cloudfoundry-incubator/notifications/application"
+)
 
 func main() {
-	mother := application.NewMother()
-	app := application.NewApplication(mother)
+	env, err := application.NewEnvironment()
+	if err != nil {
+		log.Fatalf("CRASHING: %s\n", err)
+	}
+
+	mother := application.NewMother(env)
+	app := application.NewApplication(env, mother)
 	defer app.Crash()
 
 	app.Boot()

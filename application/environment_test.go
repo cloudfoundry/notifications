@@ -1,9 +1,11 @@
 package application_test
 
 import (
+	"errors"
 	"os"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
+	"github.com/ryanmoran/viron"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -55,30 +57,32 @@ var _ = Describe("Environment", func() {
 		Context("when DATABASE_URL is properly formatted", func() {
 			It("converts the DATABASE_URL into a database driver DSN format", func() {
 				os.Setenv("DATABASE_URL", "user-123:mypassword@example.com/banana")
-				env := application.NewEnvironment()
+				env, err := application.NewEnvironment()
+				Expect(err).NotTo(HaveOccurred())
 				Expect(env.DatabaseURL).To(Equal("user-123:mypassword@tcp(example.com)/banana?parseTime=true"))
 			})
 
 			It("converts the DATABASE_URL into a database driver DSN format", func() {
 				os.Setenv("DATABASE_URL", "https://user-123:mypassword@example.com/banana")
-				env := application.NewEnvironment()
+				env, err := application.NewEnvironment()
+				Expect(err).NotTo(HaveOccurred())
 				Expect(env.DatabaseURL).To(Equal("user-123:mypassword@tcp(example.com)/banana?parseTime=true"))
 			})
 		})
 
 		Context("when DATABASE_URL is not properly formatted", func() {
-			It("panics when the url is not set", func() {
+			It("errors when the url is not set", func() {
 				os.Setenv("DATABASE_URL", "")
-				Expect(func() {
-					application.NewEnvironment()
-				}).To(Panic())
+
+				_, err := application.NewEnvironment()
+				Expect(err).To(MatchError(viron.RequiredFieldError{"DATABASE_URL"}))
 			})
 
-			It("panics when the url is not properly formatted", func() {
+			It("errors when the url is not properly formatted", func() {
 				os.Setenv("DATABASE_URL", "s%%oe\\mthing!!")
-				Expect(func() {
-					application.NewEnvironment()
-				}).To(Panic())
+
+				_, err := application.NewEnvironment()
+				Expect(err).To(MatchError(errors.New("Could not parse DATABASE_URL \"s%%oe\\\\mthing!!\", it does not fit format \"tcp://user:pass@host/dname\"")))
 			})
 		})
 	})
@@ -86,13 +90,15 @@ var _ = Describe("Environment", func() {
 	Describe("Database max open connections", func() {
 		It("defaults to 0", func() {
 			os.Setenv("DB_MAX_OPEN_CONNS", "")
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.DBMaxOpenConns).To(Equal(0))
 		})
 
 		It("can be configured", func() {
 			os.Setenv("DB_MAX_OPEN_CONNS", "15")
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.DBMaxOpenConns).To(Equal(15))
 		})
 	})
@@ -100,7 +106,8 @@ var _ = Describe("Environment", func() {
 	Describe("Notifications Migrations Path", func() {
 		It("infers the right location", func() {
 			os.Setenv("ROOT_PATH", "/tmp/foo")
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.ModelMigrationsPath).To(Equal("/tmp/foo/db/migrations"))
 		})
 	})
@@ -108,7 +115,8 @@ var _ = Describe("Environment", func() {
 	Describe("Gobble Migrations Path", func() {
 		It("infers the right location", func() {
 			os.Setenv("ROOT_PATH", "/tmp/foo")
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.GobbleMigrationsPath).To(Equal("/tmp/foo/gobble/migrations"))
 		})
 	})
@@ -116,13 +124,15 @@ var _ = Describe("Environment", func() {
 	Describe("Port configuration", func() {
 		It("loads the value when it is set", func() {
 			os.Setenv("PORT", "5001")
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.Port).To(Equal(5001))
 		})
 
 		It("sets the value to 3000 when it is not set", func() {
 			os.Setenv("PORT", "")
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.Port).To(Equal(3000))
 		})
 	})
@@ -133,37 +143,35 @@ var _ = Describe("Environment", func() {
 			os.Setenv("UAA_CLIENT_ID", "uaa-client-id")
 			os.Setenv("UAA_CLIENT_SECRET", "uaa-client-secret")
 
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(env.UAAHost).To(Equal("https://uaa.example.com"))
 			Expect(env.UAAClientID).To(Equal("uaa-client-id"))
 			Expect(env.UAAClientSecret).To(Equal("uaa-client-secret"))
 		})
 
-		It("panics when the values are missing", func() {
+		It("errors when the values are missing", func() {
 			os.Setenv("UAA_HOST", "")
 			os.Setenv("UAA_CLIENT_ID", "uaa-client-id")
 			os.Setenv("UAA_CLIENT_SECRET", "uaa-client-secret")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			_, err := application.NewEnvironment()
+			Expect(err).To(MatchError(viron.RequiredFieldError{"UAA_HOST"}))
 
 			os.Setenv("UAA_HOST", "https://uaa.example.com")
 			os.Setenv("UAA_CLIENT_ID", "")
 			os.Setenv("UAA_CLIENT_SECRET", "uaa-client-secret")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			_, err = application.NewEnvironment()
+			Expect(err).To(MatchError(viron.RequiredFieldError{"UAA_CLIENT_ID"}))
 
 			os.Setenv("UAA_HOST", "https://uaa.example.com")
 			os.Setenv("UAA_CLIENT_ID", "uaa-client-id")
 			os.Setenv("UAA_CLIENT_SECRET", "")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			_, err = application.NewEnvironment()
+			Expect(err).To(MatchError(viron.RequiredFieldError{"UAA_CLIENT_SECRET"}))
 		})
 	})
 
@@ -177,7 +185,8 @@ var _ = Describe("Environment", func() {
 			os.Setenv("SMTP_CRAMMD5_SECRET", "supersecret")
 			os.Setenv("SMTP_AUTH_MECHANISM", "plain")
 
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(env.SMTPUser).To(Equal("my-smtp-user"))
 			Expect(env.SMTPPass).To(Equal("my-smtp-password"))
@@ -191,70 +200,61 @@ var _ = Describe("Environment", func() {
 		It("defaults to true when SMTP_TLS is not a boolean", func() {
 			os.Setenv("SMTP_TLS", "")
 
-			env := application.NewEnvironment()
-
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.SMTPTLS).To(BeTrue())
 		})
 
-		It("does not panic when SMTP_USER and/or SMTP_PASS are empty", func() {
+		It("does not error when SMTP_USER and/or SMTP_PASS are empty", func() {
 			os.Setenv("SMTP_USER", "")
 			os.Setenv("SMTP_PASS", "")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).NotTo(Panic())
+			_, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("it panics if SMTP_AUTH_MECHANISM is not one of the three supported types", func() {
+		It("it errors if SMTP_AUTH_MECHANISM is not one of the three supported types", func() {
 			os.Setenv("SMTP_AUTH_MECHANISM", "cram-md5")
-			Expect(func() {
-				application.NewEnvironment()
-			}).NotTo(Panic())
+			_, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 
 			os.Setenv("SMTP_AUTH_MECHANISM", "plain")
-			Expect(func() {
-				application.NewEnvironment()
-			}).NotTo(Panic())
+			_, err = application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 
 			os.Setenv("SMTP_AUTH_MECHANISM", "none")
-			Expect(func() {
-				application.NewEnvironment()
-			}).NotTo(Panic())
+			_, err = application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 
 			os.Setenv("SMTP_AUTH_MECHANISM", "banana")
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			_, err = application.NewEnvironment()
+			Expect(err).To(MatchError(errors.New("Could not parse SMTP_AUTH_MECHANISM \"banana\", it is not one of the allowed values: [none plain cram-md5]")))
 		})
 
-		It("panics when the values are missing", func() {
+		It("errors when the values are missing", func() {
 			os.Setenv("SMTP_HOST", "smtp.example.com")
 			os.Setenv("SMTP_PORT", "567")
 			os.Setenv("SMTP_AUTH_MECHANISM", "plain")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).NotTo(Panic())
+			_, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 
 			os.Setenv("SMTP_HOST", "")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			_, err = application.NewEnvironment()
+			Expect(err).To(MatchError(viron.RequiredFieldError{"SMTP_HOST"}))
 
 			os.Setenv("SMTP_HOST", "smtp.example.com")
 			os.Setenv("SMTP_PORT", "")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			_, err = application.NewEnvironment()
+			Expect(err).To(MatchError(viron.RequiredFieldError{"SMTP_PORT"}))
 
 			os.Setenv("SMTP_AUTH_MECHANISM", "")
 			os.Setenv("SMTP_PORT", "567")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			_, err = application.NewEnvironment()
+			Expect(err).To(MatchError(viron.RequiredFieldError{"SMTP_AUTH_MECHANISM"}))
 		})
 	})
 
@@ -262,14 +262,16 @@ var _ = Describe("Environment", func() {
 		It("loads the SMTP_LOGGING_ENABLED variable when it is present", func() {
 			os.Setenv("SMTP_LOGGING_ENABLED", "true")
 
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.SMTPLoggingEnabled).To(BeTrue())
 		})
 
 		It("defaults the SMTP_LOGGING_ENABLED variable to false when it is not set", func() {
 			os.Setenv("SMTP_LOGGING_ENABLED", "")
 
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.SMTPLoggingEnabled).To(BeFalse())
 		})
 	})
@@ -278,17 +280,16 @@ var _ = Describe("Environment", func() {
 		It("loads the SENDER environment variable when it is present", func() {
 			os.Setenv("SENDER", "my-email@example.com")
 
-			env := application.NewEnvironment()
-
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.Sender).To(Equal("my-email@example.com"))
 		})
 
-		It("panics if the SENDER variable is missing", func() {
+		It("errors if the SENDER variable is missing", func() {
 			os.Setenv("SENDER", "")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			_, err := application.NewEnvironment()
+			Expect(err).To(MatchError(viron.RequiredFieldError{"SENDER"}))
 		})
 	})
 
@@ -296,17 +297,16 @@ var _ = Describe("Environment", func() {
 		It("loads the values when they are present", func() {
 			os.Setenv("CC_HOST", "https://api.example.com")
 
-			env := application.NewEnvironment()
-
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.CCHost).To(Equal("https://api.example.com"))
 		})
 
-		It("panics when any of the values are missing", func() {
+		It("errors when any of the values are missing", func() {
 			os.Setenv("CC_HOST", "")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			_, err := application.NewEnvironment()
+			Expect(err).To(MatchError(viron.RequiredFieldError{"CC_HOST"}))
 		})
 	})
 
@@ -314,32 +314,32 @@ var _ = Describe("Environment", func() {
 		It("set the value to true by default", func() {
 			os.Setenv("VERIFY_SSL", "")
 
-			env := application.NewEnvironment()
-
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.VerifySSL).To(BeTrue())
 		})
 
 		It("can be set to false", func() {
 			os.Setenv("VERIFY_SSL", "false")
 
-			env := application.NewEnvironment()
-
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.VerifySSL).To(BeFalse())
 		})
 
 		It("can be set to true", func() {
 			os.Setenv("VERIFY_SSL", "TRUE")
 
-			env := application.NewEnvironment()
-
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.VerifySSL).To(BeTrue())
 		})
 
 		It("sets the value to true if the value is non-boolean", func() {
 			os.Setenv("VERIFY_SSL", "")
 
-			env := application.NewEnvironment()
-
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.VerifySSL).To(BeTrue())
 		})
 	})
@@ -347,16 +347,18 @@ var _ = Describe("Environment", func() {
 	Describe("RootPath config", func() {
 		It("loads the config value", func() {
 			os.Setenv("ROOT_PATH", "bananaDAMAGE")
-			env := application.NewEnvironment()
 
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.RootPath).To(Equal("bananaDAMAGE"))
 		})
 
 		It("expands the path when needed", func() {
 			os.Setenv("HOME", "bananaDAMAGE")
 			os.Setenv("ROOT_PATH", "$HOME")
-			env := application.NewEnvironment()
 
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.RootPath).To(Equal("bananaDAMAGE"))
 		})
 	})
@@ -365,16 +367,16 @@ var _ = Describe("Environment", func() {
 		It("sets the value to false by default", func() {
 			os.Setenv("TEST_MODE", "")
 
-			env := application.NewEnvironment()
-
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.TestMode).To(BeFalse())
 		})
 
 		It("can be set to true", func() {
 			os.Setenv("TEST_MODE", "TRUE")
 
-			env := application.NewEnvironment()
-
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.TestMode).To(BeTrue())
 		})
 	})
@@ -383,43 +385,49 @@ var _ = Describe("Environment", func() {
 		It("sets the value if it is available", func() {
 			os.Setenv("VCAP_APPLICATION", `{"instance_index":1}`)
 
-			env := application.NewEnvironment()
-
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.VCAPApplication.InstanceIndex).To(Equal(1))
 		})
 
-		It("panics if it cannot find the value", func() {
+		It("errors if it cannot find the value", func() {
 			os.Setenv("VCAP_APPLICATION", "")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			_, err := application.NewEnvironment()
+			Expect(err).To(MatchError(viron.RequiredFieldError{"VCAP_APPLICATION"}))
 		})
 	})
 
 	Describe("Database logging config", func() {
 		It("defaults to false", func() {
 			os.Setenv("DB_LOGGING_ENABLED", "")
-			env := application.NewEnvironment()
+
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.DBLoggingEnabled).To(BeFalse())
 		})
 
 		It("can be set to true", func() {
 			os.Setenv("DB_LOGGING_ENABLED", "true")
-			env := application.NewEnvironment()
+
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.DBLoggingEnabled).To(BeTrue())
 		})
 	})
 
 	Describe("CORS origin", func() {
 		It("defaults to *", func() {
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.CORSOrigin).To(Equal("*"))
 		})
 
 		It("uses the value set by CORS_ORIGIN", func() {
 			os.Setenv("CORS_ORIGIN", "banana")
-			env := application.NewEnvironment()
+
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.CORSOrigin).To(Equal("banana"))
 		})
 	})
@@ -429,31 +437,33 @@ var _ = Describe("Environment", func() {
 			key := "this is a very very secret secret!!"
 			os.Setenv("ENCRYPTION_KEY", key)
 
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.EncryptionKey).To(Equal([]byte(key)))
 		})
 
-		It("panics if it is not set", func() {
+		It("errors if it is not set", func() {
 			os.Setenv("ENCRYPTION_KEY", "")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			_, err := application.NewEnvironment()
+			Expect(err).To(MatchError(viron.RequiredFieldError{"ENCRYPTION_KEY"}))
 		})
 	})
 
 	Describe("Gobble WaitMaxDuration", func() {
 		It("sets the value if present", func() {
 			os.Setenv("GOBBLE_WAIT_MAX_DURATION", "2500")
-			env := application.NewEnvironment()
 
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.GobbleWaitMaxDuration).To(Equal(2500))
 		})
 
 		It("defaults to 5000", func() {
 			os.Setenv("GOBBLE_WAIT_MAX_DURATION", "")
-			env := application.NewEnvironment()
 
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.GobbleWaitMaxDuration).To(Equal(5000))
 		})
 	})
@@ -461,8 +471,9 @@ var _ = Describe("Environment", func() {
 	Describe("Default UAA scopes", func() {
 		It("sets the value if present", func() {
 			os.Setenv("DEFAULT_UAA_SCOPES", "my-scope,banana,foo,bar")
-			env := application.NewEnvironment()
 
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.DefaultUAAScopes).To(Equal([]string{
 				"my-scope",
 				"banana",
@@ -476,16 +487,16 @@ var _ = Describe("Environment", func() {
 		It("sets the Domain", func() {
 			os.Setenv("DOMAIN", "example.com")
 
-			env := application.NewEnvironment()
+			env, err := application.NewEnvironment()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(env.Domain).To(Equal("example.com"))
 		})
 
-		It("panics if it is not set", func() {
+		It("errors if it is not set", func() {
 			os.Setenv("DOMAIN", "")
 
-			Expect(func() {
-				application.NewEnvironment()
-			}).To(Panic())
+			_, err := application.NewEnvironment()
+			Expect(err).To(MatchError(viron.RequiredFieldError{"DOMAIN"}))
 		})
 	})
 })

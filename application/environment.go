@@ -56,20 +56,29 @@ type Environment struct {
 	DefaultUAAScopes     []string
 }
 
-func NewEnvironment() Environment {
+func NewEnvironment() (Environment, error) {
 	env := Environment{}
 	err := viron.Parse(&env)
 	if err != nil {
-		panic(err)
+		return env, err
 	}
 
-	env.parseDatabaseURL()
+	err = env.parseDatabaseURL()
+	if err != nil {
+		return env, err
+	}
+
 	env.expandRoot()
-	env.validateSMTPAuthMechanism()
+
+	err = env.validateSMTPAuthMechanism()
+	if err != nil {
+		return env, err
+	}
+
 	env.inferMigrationsDirs()
 	env.parseDefaultUAAScopes()
 
-	return env
+	return env, nil
 }
 
 func (env *Environment) parseDefaultUAAScopes() {
@@ -85,7 +94,7 @@ func (env *Environment) inferMigrationsDirs() {
 	env.GobbleMigrationsPath = path.Join(env.RootPath, "gobble", "migrations")
 }
 
-func (env *Environment) parseDatabaseURL() {
+func (env *Environment) parseDatabaseURL() error {
 	databaseURL := env.DatabaseURL
 	databaseURL = strings.TrimPrefix(databaseURL, "http://")
 	databaseURL = strings.TrimPrefix(databaseURL, "https://")
@@ -94,19 +103,20 @@ func (env *Environment) parseDatabaseURL() {
 	databaseURL = strings.TrimPrefix(databaseURL, "mysql2://")
 	parsedURL, err := url.Parse("tcp://" + databaseURL)
 	if err != nil {
-		panic(fmt.Sprintf("Could not parse DATABASE_URL %q, it does not fit format %q", env.DatabaseURL, "tcp://user:pass@host/dname"))
+		return fmt.Errorf("Could not parse DATABASE_URL %q, it does not fit format %q", env.DatabaseURL, "tcp://user:pass@host/dname")
 	}
 
 	password, _ := parsedURL.User.Password()
 	env.DatabaseURL = fmt.Sprintf("%s:%s@%s(%s)%s?parseTime=true", parsedURL.User.Username(), password, parsedURL.Scheme, parsedURL.Host, parsedURL.Path)
+	return nil
 }
 
-func (env *Environment) validateSMTPAuthMechanism() {
+func (env *Environment) validateSMTPAuthMechanism() error {
 	for _, mechanism := range SMTPAuthMechanisms {
 		if mechanism == env.SMTPAuthMechanism {
-			return
+			return nil
 		}
 	}
 
-	panic(fmt.Sprintf("Could not parse SMTP_AUTH_MECHANISM %q, it is not one of the allowed values: %+v", env.SMTPAuthMechanism, SMTPAuthMechanisms))
+	return fmt.Errorf("Could not parse SMTP_AUTH_MECHANISM %q, it is not one of the allowed values: %+v", env.SMTPAuthMechanism, SMTPAuthMechanisms)
 }
