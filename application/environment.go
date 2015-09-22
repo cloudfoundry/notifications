@@ -56,23 +56,31 @@ type Environment struct {
 	DefaultUAAScopes     []string
 }
 
+type EnvironmentError struct {
+	Err error
+}
+
+func (e EnvironmentError) Error() string {
+	return e.Err.Error() + " (Please see https://github.com/cloudfoundry-incubator/notifications-release to get a find a packaged version of notifications and see the list of required configuration)"
+}
+
 func NewEnvironment() (Environment, error) {
 	env := Environment{}
 	err := viron.Parse(&env)
 	if err != nil {
-		return env, err
+		return env, EnvironmentError{err}
 	}
 
 	err = env.parseDatabaseURL()
 	if err != nil {
-		return env, err
+		return env, EnvironmentError{err}
 	}
 
 	env.expandRoot()
 
 	err = env.validateSMTPAuthMechanism()
 	if err != nil {
-		return env, err
+		return env, EnvironmentError{err}
 	}
 
 	env.inferMigrationsDirs()

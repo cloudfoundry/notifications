@@ -82,6 +82,4 @@ var _ = Describe("DeliveryFailureHandler", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(activeAt.UTC()).To(Equal(expectedActiveAt.UTC()))
 	})
-
-	PIt("records a metric", func() {})
 })

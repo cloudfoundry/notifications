@@ -53,6 +53,13 @@ var _ = Describe("Environment", func() {
 		}
 	})
 
+	Context("when an environment error occurs", func() {
+		It("adds a helpful message about using the bosh release to the error message", func() {
+			err := application.EnvironmentError{errors.New("something is misconfigured")}
+			Expect(err.Error()).To(Equal("something is misconfigured (Please see https://github.com/cloudfoundry-incubator/notifications-release to get a find a packaged version of notifications and see the list of required configuration)"))
+		})
+	})
+
 	Describe("Database URL", func() {
 		Context("when DATABASE_URL is properly formatted", func() {
 			It("converts the DATABASE_URL into a database driver DSN format", func() {
@@ -75,14 +82,14 @@ var _ = Describe("Environment", func() {
 				os.Setenv("DATABASE_URL", "")
 
 				_, err := application.NewEnvironment()
-				Expect(err).To(MatchError(viron.RequiredFieldError{"DATABASE_URL"}))
+				Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"DATABASE_URL"}}))
 			})
 
 			It("errors when the url is not properly formatted", func() {
 				os.Setenv("DATABASE_URL", "s%%oe\\mthing!!")
 
 				_, err := application.NewEnvironment()
-				Expect(err).To(MatchError(errors.New("Could not parse DATABASE_URL \"s%%oe\\\\mthing!!\", it does not fit format \"tcp://user:pass@host/dname\"")))
+				Expect(err).To(MatchError(application.EnvironmentError{errors.New("Could not parse DATABASE_URL \"s%%oe\\\\mthing!!\", it does not fit format \"tcp://user:pass@host/dname\"")}))
 			})
 		})
 	})
@@ -157,21 +164,21 @@ var _ = Describe("Environment", func() {
 			os.Setenv("UAA_CLIENT_SECRET", "uaa-client-secret")
 
 			_, err := application.NewEnvironment()
-			Expect(err).To(MatchError(viron.RequiredFieldError{"UAA_HOST"}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"UAA_HOST"}}))
 
 			os.Setenv("UAA_HOST", "https://uaa.example.com")
 			os.Setenv("UAA_CLIENT_ID", "")
 			os.Setenv("UAA_CLIENT_SECRET", "uaa-client-secret")
 
 			_, err = application.NewEnvironment()
-			Expect(err).To(MatchError(viron.RequiredFieldError{"UAA_CLIENT_ID"}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"UAA_CLIENT_ID"}}))
 
 			os.Setenv("UAA_HOST", "https://uaa.example.com")
 			os.Setenv("UAA_CLIENT_ID", "uaa-client-id")
 			os.Setenv("UAA_CLIENT_SECRET", "")
 
 			_, err = application.NewEnvironment()
-			Expect(err).To(MatchError(viron.RequiredFieldError{"UAA_CLIENT_SECRET"}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"UAA_CLIENT_SECRET"}}))
 		})
 	})
 
@@ -228,7 +235,7 @@ var _ = Describe("Environment", func() {
 
 			os.Setenv("SMTP_AUTH_MECHANISM", "banana")
 			_, err = application.NewEnvironment()
-			Expect(err).To(MatchError(errors.New("Could not parse SMTP_AUTH_MECHANISM \"banana\", it is not one of the allowed values: [none plain cram-md5]")))
+			Expect(err).To(MatchError(application.EnvironmentError{errors.New("Could not parse SMTP_AUTH_MECHANISM \"banana\", it is not one of the allowed values: [none plain cram-md5]")}))
 		})
 
 		It("errors when the values are missing", func() {
@@ -242,19 +249,19 @@ var _ = Describe("Environment", func() {
 			os.Setenv("SMTP_HOST", "")
 
 			_, err = application.NewEnvironment()
-			Expect(err).To(MatchError(viron.RequiredFieldError{"SMTP_HOST"}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"SMTP_HOST"}}))
 
 			os.Setenv("SMTP_HOST", "smtp.example.com")
 			os.Setenv("SMTP_PORT", "")
 
 			_, err = application.NewEnvironment()
-			Expect(err).To(MatchError(viron.RequiredFieldError{"SMTP_PORT"}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"SMTP_PORT"}}))
 
 			os.Setenv("SMTP_AUTH_MECHANISM", "")
 			os.Setenv("SMTP_PORT", "567")
 
 			_, err = application.NewEnvironment()
-			Expect(err).To(MatchError(viron.RequiredFieldError{"SMTP_AUTH_MECHANISM"}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"SMTP_AUTH_MECHANISM"}}))
 		})
 	})
 
@@ -289,7 +296,7 @@ var _ = Describe("Environment", func() {
 			os.Setenv("SENDER", "")
 
 			_, err := application.NewEnvironment()
-			Expect(err).To(MatchError(viron.RequiredFieldError{"SENDER"}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"SENDER"}}))
 		})
 	})
 
@@ -306,7 +313,7 @@ var _ = Describe("Environment", func() {
 			os.Setenv("CC_HOST", "")
 
 			_, err := application.NewEnvironment()
-			Expect(err).To(MatchError(viron.RequiredFieldError{"CC_HOST"}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"CC_HOST"}}))
 		})
 	})
 
@@ -394,7 +401,7 @@ var _ = Describe("Environment", func() {
 			os.Setenv("VCAP_APPLICATION", "")
 
 			_, err := application.NewEnvironment()
-			Expect(err).To(MatchError(viron.RequiredFieldError{"VCAP_APPLICATION"}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"VCAP_APPLICATION"}}))
 		})
 	})
 
@@ -446,7 +453,7 @@ var _ = Describe("Environment", func() {
 			os.Setenv("ENCRYPTION_KEY", "")
 
 			_, err := application.NewEnvironment()
-			Expect(err).To(MatchError(viron.RequiredFieldError{"ENCRYPTION_KEY"}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"ENCRYPTION_KEY"}}))
 		})
 	})
 
@@ -496,7 +503,7 @@ var _ = Describe("Environment", func() {
 			os.Setenv("DOMAIN", "")
 
 			_, err := application.NewEnvironment()
-			Expect(err).To(MatchError(viron.RequiredFieldError{"DOMAIN"}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"DOMAIN"}}))
 		})
 	})
 })
