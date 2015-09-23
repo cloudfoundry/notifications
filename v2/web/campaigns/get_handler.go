@@ -53,6 +53,20 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 		"subject":          campaign.Subject,
 		"template_id":      campaign.TemplateID,
 		"reply_to":         campaign.ReplyTo,
+		"_links": map[string]interface{}{
+			"self": map[string]string{
+				"href": fmt.Sprintf("/campaigns/%s", campaign.ID),
+			},
+			"template": map[string]string{
+				"href": fmt.Sprintf("/templates/%s", campaign.TemplateID),
+			},
+			"campaign_type": map[string]string{
+				"href": fmt.Sprintf("/campaign_types/%s", campaign.CampaignTypeID),
+			},
+			"status": map[string]string{
+				"href": fmt.Sprintf("/campaigns/%s/status", campaign.ID),
+			},
+		},
 	})
 	w.Write(getResponse)
 }

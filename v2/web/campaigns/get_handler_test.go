@@ -87,7 +87,21 @@ var _ = Describe("GetHandler", func() {
 			"html":             "<h1>New stuff</h1>",
 			"subject":          "Cool New Stuff",
 			"template_id":      "random-template-id",
-			"reply_to":         "reply-to-address"
+			"reply_to":         "reply-to-address",
+			"_links": {
+				"self": {
+					"href": "/campaigns/some-campaign-id"
+				},	
+				"template": {
+					"href": "/templates/random-template-id"
+				},	
+				"campaign_type": {
+					"href": "/campaign_types/some-campaign-type-id"
+				},	
+				"status": {
+					"href": "/campaigns/some-campaign-id/status"
+				}
+			}
 		}`))
 
 		Expect(campaignsCollection.GetCall.Receives.Connection).To(Equal(conn))

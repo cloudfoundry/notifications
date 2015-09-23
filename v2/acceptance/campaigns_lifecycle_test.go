@@ -13,6 +13,30 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+type campaignResponse struct {
+	ID             string
+	CampaignTypeID string            `json:"campaign_type_id"`
+	SendTo         map[string]string `json:"send_to"`
+	Text           string
+	Subject        string
+	TemplateID     string `json:"template_id"`
+	ReplyTo        string `json:"reply_to"`
+	Links          struct {
+		Self struct {
+			Href string
+		}
+		Template struct {
+			Href string
+		}
+		CampaignType struct {
+			Href string
+		} `json:"campaign_type"`
+		Status struct {
+			Href string
+		}
+	} `json:"_links"`
+}
+
 var _ = Describe("Campaign Lifecycle", func() {
 	var (
 		client   *support.Client
@@ -39,7 +63,12 @@ var _ = Describe("Campaign Lifecycle", func() {
 
 	Context("retrieving a campaign", func() {
 		It("sends a campaign to an email and retrieves the campaign details", func() {
-			var campaignTypeID, templateID, campaignID string
+			var (
+				response       campaignResponse
+				campaignTypeID string
+				templateID     string
+				campaignID     string
+			)
 
 			By("creating a template", func() {
 				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
@@ -75,6 +104,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      templateID,
+					"reply_to":         "no-reply@example.com",
 				}, token.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
@@ -85,15 +115,20 @@ var _ = Describe("Campaign Lifecycle", func() {
 
 			By("retrieving the campaign details", func() {
 				client.Document()
-				status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s", senderID, campaignID), nil, token.Access)
+				status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s/campaigns/%s", senderID, campaignID), nil, token.Access, &response)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusOK))
-				Expect(response["id"]).To(Equal(campaignID))
-				Expect(response["send_to"]).To(HaveKeyWithValue("email", "test@example.com"))
-				Expect(response["campaign_type_id"]).To(Equal(campaignTypeID))
-				Expect(response["text"]).To(Equal("campaign body"))
-				Expect(response["subject"]).To(Equal("campaign subject"))
-				Expect(response["template_id"]).To(Equal(templateID))
+				Expect(response.ID).To(Equal(campaignID))
+				Expect(response.SendTo).To(HaveKeyWithValue("email", "test@example.com"))
+				Expect(response.CampaignTypeID).To(Equal(campaignTypeID))
+				Expect(response.Text).To(Equal("campaign body"))
+				Expect(response.Subject).To(Equal("campaign subject"))
+				Expect(response.TemplateID).To(Equal(templateID))
+				Expect(response.ReplyTo).To(Equal("no-reply@example.com"))
+				Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/campaigns/%s", campaignID)))
+				Expect(response.Links.Template.Href).To(Equal(fmt.Sprintf("/templates/%s", templateID)))
+				Expect(response.Links.CampaignType.Href).To(Equal(fmt.Sprintf("/campaign_types/%s", campaignTypeID)))
+				Expect(response.Links.Status.Href).To(Equal(fmt.Sprintf("/campaigns/%s/status", campaignID)))
 			})
 		})
 
