@@ -52,7 +52,9 @@ var _ = AfterSuite(func() {
 	Servers.Notifications.Close()
 	Servers.Notifications.Destroy()
 
-	docCollection.GenerateBlueprint(os.Getenv("DOC_FILE"))
+	if docCollection != nil {
+		docCollection.GenerateBlueprint(os.Getenv("DOC_FILE"))
+	}
 })
 
 var _ = BeforeEach(func() {
