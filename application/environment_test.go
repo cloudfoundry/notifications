@@ -56,7 +56,7 @@ var _ = Describe("Environment", func() {
 	Context("when an environment error occurs", func() {
 		It("adds a helpful message about using the bosh release to the error message", func() {
 			err := application.EnvironmentError{errors.New("something is misconfigured")}
-			Expect(err.Error()).To(Equal("something is misconfigured (Please see https://github.com/cloudfoundry-incubator/notifications-release to get a find a packaged version of notifications and see the list of required configuration)"))
+			Expect(err.Error()).To(Equal("something is misconfigured (Please see https://github.com/cloudfoundry-incubator/notifications-release to find a packaged version of notifications and see the required configuration)"))
 		})
 	})
 
