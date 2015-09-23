@@ -63,11 +63,5 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 		return
 	}
 
-	json.NewEncoder(writer).Encode(map[string]interface{}{
-		"id":          campaignType.ID,
-		"name":        campaignType.Name,
-		"description": campaignType.Description,
-		"critical":    campaignType.Critical,
-		"template_id": campaignType.TemplateID,
-	})
+	json.NewEncoder(writer).Encode(NewCampaignTypeResponse(campaignType))
 }

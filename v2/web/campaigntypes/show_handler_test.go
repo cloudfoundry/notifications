@@ -47,8 +47,8 @@ var _ = Describe("ShowHandler", func() {
 			ID:          "campaign-type-id-one",
 			Name:        "first-campaign-type",
 			Description: "first-campaign-type-description",
-			Critical:    false,
-			TemplateID:  "",
+			Critical:    true,
+			TemplateID:  "template-id",
 			SenderID:    "some-sender-id",
 		}
 		var err error
@@ -67,8 +67,13 @@ var _ = Describe("ShowHandler", func() {
 			"id": "campaign-type-id-one",
 			"name": "first-campaign-type",
 			"description": "first-campaign-type-description",
-			"critical": false,
-			"template_id": ""
+			"critical": true,
+			"template_id": "template-id",
+			"_links": {
+				"self": {
+					"href": "/campaign_types/campaign-type-id-one"
+				}
+			}
 		}`))
 	})
 

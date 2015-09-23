@@ -11,6 +11,31 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+type campaignTypeResponse struct {
+	ID          string
+	Name        string
+	Description string
+	Critical    bool
+	TemplateID  string `json:"template_id"`
+	Links       struct {
+		Self struct {
+			Href string
+		}
+	} `json:"_links"`
+}
+
+type campaignTypesListResponse struct {
+	CampaignTypes []campaignTypeResponse `json:"campaign_types"`
+	Links         struct {
+		Self struct {
+			Href string
+		}
+		Sender struct {
+			Href string
+		}
+	} `json:"_links"`
+}
+
 var _ = Describe("Campaign types lifecycle", func() {
 	var (
 		client   *support.Client
@@ -50,18 +75,8 @@ var _ = Describe("Campaign types lifecycle", func() {
 		})
 
 		By("creating a campaign type", func() {
-			var response struct {
-				ID          string
-				Name        string
-				Description string
-				Critical    bool
-				TemplateID  string
-				Links       struct {
-					Self struct {
-						Href string
-					}
-				} `json:"_links"`
-			}
+			var response campaignTypeResponse
+
 			client.Document()
 			status, err := client.DoTyped("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 				"name":        "some-campaign-type",
@@ -80,30 +95,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 		})
 
 		By("listing the campaign types", func() {
-			type CampaignType struct {
-				ID          string
-				Name        string
-				Description string
-				Critical    bool
-				TemplateID  string
-				Links       struct {
-					Self struct {
-						Href string
-					}
-				} `json:"_links"`
-			}
-
-			var list struct {
-				CampaignTypes []CampaignType `json:"campaign_types"`
-				Links         struct {
-					Self struct {
-						Href string
-					}
-					Sender struct {
-						Href string
-					}
-				} `json:"_links"`
-			}
+			var list campaignTypesListResponse
 
 			client.Document()
 			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s/campaign_types", senderID), nil, token.Access, &list)
@@ -116,16 +108,19 @@ var _ = Describe("Campaign types lifecycle", func() {
 		})
 
 		By("showing the newly created campaign type", func() {
+			var response campaignTypeResponse
+
 			client.Document()
-			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)
+			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
-			Expect(response["id"]).To(Equal(campaignTypeID))
-			Expect(response["name"]).To(Equal("some-campaign-type"))
-			Expect(response["description"]).To(Equal("a great campaign type"))
-			Expect(response["critical"]).To(BeFalse())
-			Expect(response["template_id"]).To(BeEmpty())
+			Expect(response.ID).To(Equal(campaignTypeID))
+			Expect(response.Name).To(Equal("some-campaign-type"))
+			Expect(response.Description).To(Equal("a great campaign type"))
+			Expect(response.Critical).To(BeFalse())
+			Expect(response.TemplateID).To(BeEmpty())
+			Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/campaign_types/%s", response.ID)))
 		})
 
 		By("creating it again with the same name", func() {
@@ -144,18 +139,8 @@ var _ = Describe("Campaign types lifecycle", func() {
 		})
 
 		By("updating it with different information", func() {
-			var response struct {
-				ID          string
-				Name        string
-				Description string
-				Critical    bool
-				TemplateID  string `json:"template_id"`
-				Links       struct {
-					Self struct {
-						Href string
-					}
-				} `json:"_links"`
-			}
+			var response campaignTypeResponse
+
 			client.Document()
 			status, err := client.DoTyped("PUT", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), map[string]interface{}{
 				"name":        "updated-campaign-type",
