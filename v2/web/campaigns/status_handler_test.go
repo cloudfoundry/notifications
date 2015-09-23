@@ -97,7 +97,15 @@ var _ = Describe("Campaign status handler", func() {
 			"retry_messages": 0,
 			"failed_messages": 2,
 			"start_time": "2015-09-01T12:34:56-07:00",
-			"completed_time": "2015-09-01T12:34:58-07:00"
+			"completed_time": "2015-09-01T12:34:58-07:00",
+			"_links": {
+				"self": {
+					"href": "/campaigns/some-campaign-id/status"
+				},
+				"campaign": {
+					"href": "/campaigns/some-campaign-id"
+				}
+			}
 		}`))
 
 		Expect(campaignStatusesCollection.GetCall.Receives.Connection).To(Equal(conn))
@@ -134,7 +142,15 @@ var _ = Describe("Campaign status handler", func() {
 				"retry_messages": 1,
 				"failed_messages": 2,
 				"start_time": "2015-09-01T12:34:56-07:00",
-				"completed_time": null
+				"completed_time": null,
+				"_links": {
+					"self": {
+						"href": "/campaigns/some-campaign-id/status"
+					},
+					"campaign": {
+						"href": "/campaigns/some-campaign-id"
+					}
+				}
 			}`))
 		})
 	})

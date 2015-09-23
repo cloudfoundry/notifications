@@ -53,6 +53,14 @@ func (h StatusHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		"queued_messages": status.QueuedMessages,
 		"start_time":      status.StartTime,
 		"completed_time":  nil,
+		"_links": map[string]interface{}{
+			"self": map[string]string{
+				"href": fmt.Sprintf("/campaigns/%s/status", status.CampaignID),
+			},
+			"campaign": map[string]string{
+				"href": fmt.Sprintf("/campaigns/%s", status.CampaignID),
+			},
+		},
 	}
 
 	if (status.CompletedTime != mysql.NullTime{}) {

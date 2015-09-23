@@ -347,24 +347,40 @@ var _ = Describe("Campaign Lifecycle", func() {
 					return response["status"], err
 				}, "10s").Should(Equal("completed"))
 
-				status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s/status", senderID, campaignID), nil, token.Access)
+				var response struct {
+					ID             string
+					Status         string
+					TotalMessages  int       `json:"total_messages"`
+					SentMessages   int       `json:"sent_messages"`
+					RetryMessages  int       `json:"retry_messages"`
+					FailedMessages int       `json:"failed_messages"`
+					QueuedMessages int       `json:"queued_messages"`
+					StartTime      time.Time `json:"start_time"`
+					CompletedTime  time.Time `json:"completed_time"`
+					Links          struct {
+						Self struct {
+							Href string
+						}
+						Campaign struct {
+							Href string
+						}
+					} `json:"_links"`
+				}
+
+				status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s/campaigns/%s/status", senderID, campaignID), nil, token.Access, &response)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusOK))
-				Expect(response["id"]).To(Equal(campaignID))
-				Expect(response["status"]).To(Equal("completed"))
-				Expect(response["total_messages"]).To(Equal(float64(1)))
-				Expect(response["sent_messages"]).To(Equal(float64(1)))
-				Expect(response["retry_messages"]).To(Equal(float64(0)))
-				Expect(response["failed_messages"]).To(Equal(float64(0)))
-
-				startTime, err := time.Parse(time.RFC3339, response["start_time"].(string))
-				Expect(err).NotTo(HaveOccurred())
-
-				completedTime, err := time.Parse(time.RFC3339, response["completed_time"].(string))
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(startTime).To(BeTemporally("~", time.Now(), 10*time.Second))
-				Expect(completedTime).To(BeTemporally("~", time.Now(), 10*time.Second))
+				Expect(response.ID).To(Equal(campaignID))
+				Expect(response.Status).To(Equal("completed"))
+				Expect(response.TotalMessages).To(Equal(1))
+				Expect(response.SentMessages).To(Equal(1))
+				Expect(response.RetryMessages).To(Equal(0))
+				Expect(response.FailedMessages).To(Equal(0))
+				Expect(response.QueuedMessages).To(Equal(0))
+				Expect(response.StartTime).To(BeTemporally("~", time.Now(), 10*time.Second))
+				Expect(response.CompletedTime).To(BeTemporally("~", time.Now(), 10*time.Second))
+				Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/campaigns/%s/status", campaignID)))
+				Expect(response.Links.Campaign.Href).To(Equal(fmt.Sprintf("/campaigns/%s", campaignID)))
 			})
 		})
 
