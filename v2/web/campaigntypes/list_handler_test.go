@@ -79,16 +79,34 @@ var _ = Describe("ListHandler", func() {
 					"name": "first-campaign-type",
 					"description": "first-campaign-type-description",
 					"critical": false,
-					"template_id": ""
+					"template_id": "",
+					"_links": {
+						"self": {
+							"href": "/campaign_types/campaign-type-id-one"
+						}
+					}
 				},
 				{
 					"id": "campaign-type-id-two",
 					"name": "second-campaign-type",
 					"description": "second-campaign-type-description",
 					"critical": true,
-					"template_id": ""
+					"template_id": "",
+					"_links": {
+						"self": {
+							"href": "/campaign_types/campaign-type-id-two"
+						}
+					}
 				}
-			]
+			],
+			"_links": {
+				"self": {
+					"href": "/senders/some-sender-id/campaign_types"
+				},
+				"sender": {
+					"href": "/senders/some-sender-id"
+				}
+			}
 		}`))
 	})
 
@@ -101,7 +119,15 @@ var _ = Describe("ListHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusOK))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"campaign_types": []
+			"campaign_types": [],
+			"_links": {
+				"self": {
+					"href": "/senders/some-sender-id/campaign_types"
+				},
+				"sender": {
+					"href": "/senders/some-sender-id"
+				}
+			}
 		}`))
 	})
 

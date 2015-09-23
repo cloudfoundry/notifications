@@ -79,6 +79,42 @@ var _ = Describe("Campaign types lifecycle", func() {
 			Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/campaign_types/%s", response.ID)))
 		})
 
+		By("listing the campaign types", func() {
+			type CampaignType struct {
+				ID          string
+				Name        string
+				Description string
+				Critical    bool
+				TemplateID  string
+				Links       struct {
+					Self struct {
+						Href string
+					}
+				} `json:"_links"`
+			}
+
+			var list struct {
+				CampaignTypes []CampaignType `json:"campaign_types"`
+				Links         struct {
+					Self struct {
+						Href string
+					}
+					Sender struct {
+						Href string
+					}
+				} `json:"_links"`
+			}
+
+			client.Document()
+			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s/campaign_types", senderID), nil, token.Access, &list)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+
+			Expect(list.CampaignTypes).To(HaveLen(1))
+			Expect(list.Links.Self.Href).To(Equal(fmt.Sprintf("/senders/%s/campaign_types", senderID)))
+			Expect(list.Links.Sender.Href).To(Equal(fmt.Sprintf("/senders/%s", senderID)))
+		})
+
 		By("showing the newly created campaign type", func() {
 			client.Document()
 			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)

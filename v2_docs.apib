@@ -24,7 +24,7 @@ Some description of the Campaign type list
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjg5ODgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.EE9cSRcG080UdthFvnCA1eS2p71MeelCRMoU0WkqpRaxmN6WGKEiYg-TM26tY42otboDsm-ENTyxX_T40zfZxPr4qo_22ovPzckZTZBAAFvotNzmmX-PYNyJQtf0DxR8qRXPiAUuoIEjtcDxYk3SgOzLuIIcrqBWUqKuJr5q9oX81oWyeiwNBXVAL1m_4o4f-pk1xvPGWf3S2TgMxwFmtffgRBkd9S1BvTTgMRmprUR6cIsjhgEwt-5TgP3uU_mmdDwUhmrPeH-dZWMhd_0Gd6Dpc-lPwUCZi_q3Pji9-SRFahvsS1ss-xePvMn-KnWYJ8ahHAND_Jpf1juj6Yq3mw
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTIsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.y8bhvl3lzcWjwwIhSjZPDTNAR03dQgBEaZw6hD7ulg5jM6BmtHs54fpXdQVXnsMewsBf6F0PHPJTRg1rhjDiJjw8uNciR0-QOAX6D70smezBSJmb5GDYCHbjJCZhGUN0kWVQpa1dxczVa-W4OwNwua6D0glMLiJaxqCfpxqna8zBQtboObpWCS69tXGzWYuphwjOpcJqgimwrJYF3CE9iPLbtoJNaks1LLFh7Daj7mEQhWLYQXpkB21PNnwK4Y9uStGhetqgISG1d4YROoBV1ELpo3URdS_yYo8Y9SA9CtFnPVq6BEW2BnPGvPujNPES9TDUzczduf6ZraMS44r84Q
 
 
 
@@ -51,13 +51,60 @@ Some description of the Campaign type list
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:28 GMT
+            Date: Wed, 23 Sep 2015 19:11:52 GMT
 
 
 
     + Body
 
-            {"_links":{"self":{"href":"/campaign_types/e19aeee2-5e63-4d10-da1f-e528dab722ec"}},"critical":false,"description":"a great campaign type","id":"e19aeee2-5e63-4d10-da1f-e528dab722ec","name":"some-campaign-type","template_id":""}
+            {"_links":{"self":{"href":"/campaign_types/f16e97e6-e8a5-e612-22af-24a159da1c18"}},"critical":false,"description":"a great campaign type","id":"f16e97e6-e8a5-e612-22af-24a159da1c18","name":"some-campaign-type","template_id":""}
+
+
+
+
+### GET Campaign types [GET]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTIsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.y8bhvl3lzcWjwwIhSjZPDTNAR03dQgBEaZw6hD7ulg5jM6BmtHs54fpXdQVXnsMewsBf6F0PHPJTRg1rhjDiJjw8uNciR0-QOAX6D70smezBSJmb5GDYCHbjJCZhGUN0kWVQpa1dxczVa-W4OwNwua6D0glMLiJaxqCfpxqna8zBQtboObpWCS69tXGzWYuphwjOpcJqgimwrJYF3CE9iPLbtoJNaks1LLFh7Daj7mEQhWLYQXpkB21PNnwK4Y9uStGhetqgISG1d4YROoBV1ELpo3URdS_yYo8Y9SA9CtFnPVq6BEW2BnPGvPujNPES9TDUzczduf6ZraMS44r84Q
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            
+
+
++ Response 200
+
+    + Headers
+
+
+
+            Content-Length: 404
+
+
+
+            Content-Type: text/plain; charset=utf-8
+
+
+
+            Date: Wed, 23 Sep 2015 19:11:52 GMT
+
+
+
+    + Body
+
+            {"_links":{"self":{"href":"/senders/7af266d0-9bb7-0e86-beb9-6c66c6fe1973/campaign_types"},"sender":{"href":"/senders/7af266d0-9bb7-0e86-beb9-6c66c6fe1973"}},"campaign_types":[{"_links":{"self":{"href":"/campaign_types/f16e97e6-e8a5-e612-22af-24a159da1c18"}},"critical":false,"description":"a great campaign type","id":"f16e97e6-e8a5-e612-22af-24a159da1c18","name":"some-campaign-type","template_id":""}]}
 
 
 
@@ -80,7 +127,7 @@ Some description of the Campaign type
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjg5ODgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.EE9cSRcG080UdthFvnCA1eS2p71MeelCRMoU0WkqpRaxmN6WGKEiYg-TM26tY42otboDsm-ENTyxX_T40zfZxPr4qo_22ovPzckZTZBAAFvotNzmmX-PYNyJQtf0DxR8qRXPiAUuoIEjtcDxYk3SgOzLuIIcrqBWUqKuJr5q9oX81oWyeiwNBXVAL1m_4o4f-pk1xvPGWf3S2TgMxwFmtffgRBkd9S1BvTTgMRmprUR6cIsjhgEwt-5TgP3uU_mmdDwUhmrPeH-dZWMhd_0Gd6Dpc-lPwUCZi_q3Pji9-SRFahvsS1ss-xePvMn-KnWYJ8ahHAND_Jpf1juj6Yq3mw
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTIsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.y8bhvl3lzcWjwwIhSjZPDTNAR03dQgBEaZw6hD7ulg5jM6BmtHs54fpXdQVXnsMewsBf6F0PHPJTRg1rhjDiJjw8uNciR0-QOAX6D70smezBSJmb5GDYCHbjJCZhGUN0kWVQpa1dxczVa-W4OwNwua6D0glMLiJaxqCfpxqna8zBQtboObpWCS69tXGzWYuphwjOpcJqgimwrJYF3CE9iPLbtoJNaks1LLFh7Daj7mEQhWLYQXpkB21PNnwK4Y9uStGhetqgISG1d4YROoBV1ELpo3URdS_yYo8Y9SA9CtFnPVq6BEW2BnPGvPujNPES9TDUzczduf6ZraMS44r84Q
 
 
 
@@ -107,13 +154,13 @@ Some description of the Campaign type
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:28 GMT
+            Date: Wed, 23 Sep 2015 19:11:52 GMT
 
 
 
     + Body
 
-            {"critical":false,"description":"a great campaign type","id":"e19aeee2-5e63-4d10-da1f-e528dab722ec","name":"some-campaign-type","template_id":""}
+            {"critical":false,"description":"a great campaign type","id":"f16e97e6-e8a5-e612-22af-24a159da1c18","name":"some-campaign-type","template_id":""}
 
 
 
@@ -128,7 +175,7 @@ Some description of the Campaign type
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjg5ODgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.EE9cSRcG080UdthFvnCA1eS2p71MeelCRMoU0WkqpRaxmN6WGKEiYg-TM26tY42otboDsm-ENTyxX_T40zfZxPr4qo_22ovPzckZTZBAAFvotNzmmX-PYNyJQtf0DxR8qRXPiAUuoIEjtcDxYk3SgOzLuIIcrqBWUqKuJr5q9oX81oWyeiwNBXVAL1m_4o4f-pk1xvPGWf3S2TgMxwFmtffgRBkd9S1BvTTgMRmprUR6cIsjhgEwt-5TgP3uU_mmdDwUhmrPeH-dZWMhd_0Gd6Dpc-lPwUCZi_q3Pji9-SRFahvsS1ss-xePvMn-KnWYJ8ahHAND_Jpf1juj6Yq3mw
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTIsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.y8bhvl3lzcWjwwIhSjZPDTNAR03dQgBEaZw6hD7ulg5jM6BmtHs54fpXdQVXnsMewsBf6F0PHPJTRg1rhjDiJjw8uNciR0-QOAX6D70smezBSJmb5GDYCHbjJCZhGUN0kWVQpa1dxczVa-W4OwNwua6D0glMLiJaxqCfpxqna8zBQtboObpWCS69tXGzWYuphwjOpcJqgimwrJYF3CE9iPLbtoJNaks1LLFh7Daj7mEQhWLYQXpkB21PNnwK4Y9uStGhetqgISG1d4YROoBV1ELpo3URdS_yYo8Y9SA9CtFnPVq6BEW2BnPGvPujNPES9TDUzczduf6ZraMS44r84Q
 
 
 
@@ -138,7 +185,7 @@ Some description of the Campaign type
 
     + Body
 
-            {"critical":true,"description":"still the same great campaign type","name":"updated-campaign-type","template_id":"bb7c3c10-9244-50af-3392-40f5e4c85f61"}
+            {"critical":true,"description":"still the same great campaign type","name":"updated-campaign-type","template_id":"ca020075-4867-930b-f77b-2c3490863882"}
 
 
 + Response 200
@@ -155,13 +202,13 @@ Some description of the Campaign type
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:28 GMT
+            Date: Wed, 23 Sep 2015 19:11:52 GMT
 
 
 
     + Body
 
-            {"critical":true,"description":"still the same great campaign type","id":"e19aeee2-5e63-4d10-da1f-e528dab722ec","name":"updated-campaign-type","template_id":"bb7c3c10-9244-50af-3392-40f5e4c85f61"}
+            {"critical":true,"description":"still the same great campaign type","id":"f16e97e6-e8a5-e612-22af-24a159da1c18","name":"updated-campaign-type","template_id":"ca020075-4867-930b-f77b-2c3490863882"}
 
 
 
@@ -176,7 +223,7 @@ Some description of the Campaign type
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjg5ODgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.EE9cSRcG080UdthFvnCA1eS2p71MeelCRMoU0WkqpRaxmN6WGKEiYg-TM26tY42otboDsm-ENTyxX_T40zfZxPr4qo_22ovPzckZTZBAAFvotNzmmX-PYNyJQtf0DxR8qRXPiAUuoIEjtcDxYk3SgOzLuIIcrqBWUqKuJr5q9oX81oWyeiwNBXVAL1m_4o4f-pk1xvPGWf3S2TgMxwFmtffgRBkd9S1BvTTgMRmprUR6cIsjhgEwt-5TgP3uU_mmdDwUhmrPeH-dZWMhd_0Gd6Dpc-lPwUCZi_q3Pji9-SRFahvsS1ss-xePvMn-KnWYJ8ahHAND_Jpf1juj6Yq3mw
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTIsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.y8bhvl3lzcWjwwIhSjZPDTNAR03dQgBEaZw6hD7ulg5jM6BmtHs54fpXdQVXnsMewsBf6F0PHPJTRg1rhjDiJjw8uNciR0-QOAX6D70smezBSJmb5GDYCHbjJCZhGUN0kWVQpa1dxczVa-W4OwNwua6D0glMLiJaxqCfpxqna8zBQtboObpWCS69tXGzWYuphwjOpcJqgimwrJYF3CE9iPLbtoJNaks1LLFh7Daj7mEQhWLYQXpkB21PNnwK4Y9uStGhetqgISG1d4YROoBV1ELpo3URdS_yYo8Y9SA9CtFnPVq6BEW2BnPGvPujNPES9TDUzczduf6ZraMS44r84Q
 
 
 
@@ -195,7 +242,7 @@ Some description of the Campaign type
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:28 GMT
+            Date: Wed, 23 Sep 2015 19:11:52 GMT
 
 
 
@@ -225,7 +272,7 @@ Some description of the Campaign list
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjg5OTMsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.VACYWdeeL8aGkxDT9wVAZZAG_pK7q88h4-ZqXucfK3R_b4JYMJB4EeZZzRRUmz4BW3G2PJh6qquCkuI5BYwQR368DiRPDNRS_PMrB6Qvq2w_7GdV0H1pqFVPfRSfZtWP_h6YdinTnx22hyEmJssE85Lm1y6dre39DyN5mwINcVkUAOSH6oeCltGUE4EhDY5hNkIGFmJvkYOjEvySBxFCQPx9rfIv9VexTnOD5_Gkr6DBF0tt8IQtNlLJqxxjkmTeXKH5doUkGCKTz3AbgfoMMkp9bKjr1M5NpMg_SLnIIeJgkj2bskSTka5VthD1PUM_aBAKXwVMgFY__4cqUqgwMg
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTAsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.NYEm3wcHrgamqk5RiOXQ1WwCuT0Bz4SJ6UGKjm2Hi_lyHkdWAPh5DI9tBMuAMp3ya1b8v_4mSPgXuUYxk87dLvN-DoPvYWj4m0i3ZkNHKgHQdmQlv9XyVXu7SykKg0k-J0pJo_4ruP9F1uOt8W20pmh3D1915la_OyiMZmDUa5UIzTcTZ-zl-j5qc2zuRgZvv1jDVSmfk8xdqv3IVRCWkz9YRjTuzj3-94WlJA6OfvD42NPLunsDRTnx6Q7evOoR4b243e-ds9aAS3z9hbcImX3hEYIUrOoHPWHqQ2fAO68PU-UV3SnOjO7ovlTpK09WCLYg3blAyoQ35BscYcrlyA
 
 
 
@@ -235,7 +282,7 @@ Some description of the Campaign list
 
     + Body
 
-            {"campaign_type_id":"78e36655-3f72-ba6d-80f0-4614679ebe64","reply_to":"no-reply@example.com","send_to":{"email":"test@example.com"},"subject":"campaign subject","template_id":"87df462d-d12a-0b99-0cc0-18bfbbff078b","text":"campaign body"}
+            {"campaign_type_id":"e66cdd31-4d53-8c39-64aa-a50c56cec458","reply_to":"no-reply@example.com","send_to":{"email":"test@example.com"},"subject":"campaign subject","template_id":"72d9cadf-5e3b-5b3d-f5fb-87a3f68385c3","text":"campaign body"}
 
 
 + Response 202
@@ -252,13 +299,13 @@ Some description of the Campaign list
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:33 GMT
+            Date: Wed, 23 Sep 2015 19:11:51 GMT
 
 
 
     + Body
 
-            { "campaign_id": "53a3f968-720e-b1cf-534c-c9a845b083af"}
+            { "campaign_id": "27339804-37ee-900f-c176-4cccb4247322"}
 
 
 
@@ -281,7 +328,7 @@ Some description of the Campaign
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjg5OTMsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.VACYWdeeL8aGkxDT9wVAZZAG_pK7q88h4-ZqXucfK3R_b4JYMJB4EeZZzRRUmz4BW3G2PJh6qquCkuI5BYwQR368DiRPDNRS_PMrB6Qvq2w_7GdV0H1pqFVPfRSfZtWP_h6YdinTnx22hyEmJssE85Lm1y6dre39DyN5mwINcVkUAOSH6oeCltGUE4EhDY5hNkIGFmJvkYOjEvySBxFCQPx9rfIv9VexTnOD5_Gkr6DBF0tt8IQtNlLJqxxjkmTeXKH5doUkGCKTz3AbgfoMMkp9bKjr1M5NpMg_SLnIIeJgkj2bskSTka5VthD1PUM_aBAKXwVMgFY__4cqUqgwMg
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTAsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.NYEm3wcHrgamqk5RiOXQ1WwCuT0Bz4SJ6UGKjm2Hi_lyHkdWAPh5DI9tBMuAMp3ya1b8v_4mSPgXuUYxk87dLvN-DoPvYWj4m0i3ZkNHKgHQdmQlv9XyVXu7SykKg0k-J0pJo_4ruP9F1uOt8W20pmh3D1915la_OyiMZmDUa5UIzTcTZ-zl-j5qc2zuRgZvv1jDVSmfk8xdqv3IVRCWkz9YRjTuzj3-94WlJA6OfvD42NPLunsDRTnx6Q7evOoR4b243e-ds9aAS3z9hbcImX3hEYIUrOoHPWHqQ2fAO68PU-UV3SnOjO7ovlTpK09WCLYg3blAyoQ35BscYcrlyA
 
 
 
@@ -308,13 +355,13 @@ Some description of the Campaign
 
 
 
-            Date: Wed, 23 Sep 2015 18:36:25 GMT
+            Date: Wed, 23 Sep 2015 19:11:51 GMT
 
 
 
     + Body
 
-            {"_links":{"campaign_type":{"href":"/campaign_types/78e36655-3f72-ba6d-80f0-4614679ebe64"},"self":{"href":"/campaigns/803f98d6-4810-e6d5-b448-52e211874ace"},"status":{"href":"/campaigns/803f98d6-4810-e6d5-b448-52e211874ace/status"},"template":{"href":"/templates/87df462d-d12a-0b99-0cc0-18bfbbff078b"}},"campaign_type_id":"78e36655-3f72-ba6d-80f0-4614679ebe64","html":"","id":"803f98d6-4810-e6d5-b448-52e211874ace","reply_to":"no-reply@example.com","send_to":{"email":"test@example.com"},"subject":"campaign subject","template_id":"87df462d-d12a-0b99-0cc0-18bfbbff078b","text":"campaign body"}
+            {"_links":{"campaign_type":{"href":"/campaign_types/e66cdd31-4d53-8c39-64aa-a50c56cec458"},"self":{"href":"/campaigns/27339804-37ee-900f-c176-4cccb4247322"},"status":{"href":"/campaigns/27339804-37ee-900f-c176-4cccb4247322/status"},"template":{"href":"/templates/72d9cadf-5e3b-5b3d-f5fb-87a3f68385c3"}},"campaign_type_id":"e66cdd31-4d53-8c39-64aa-a50c56cec458","html":"","id":"27339804-37ee-900f-c176-4cccb4247322","reply_to":"no-reply@example.com","send_to":{"email":"test@example.com"},"subject":"campaign subject","template_id":"72d9cadf-5e3b-5b3d-f5fb-87a3f68385c3","text":"campaign body"}
 
 
 
@@ -365,7 +412,7 @@ Some description of the Inf list
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:24 GMT
+            Date: Wed, 23 Sep 2015 19:11:57 GMT
 
 
 
@@ -404,7 +451,7 @@ Some description of the Sender list
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjg5OTEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.aXK2JBfJSWbaNAGGZciOdoZw4tuMKbQzTK2O9x3-eR2b4_q9fz9Row5Iyhfw85C9eAwCcLHNVnVPpuUP0pwRNhAZ3NxQZYUWVF-4bitU9-6zH8Wm9LhZwSidZ2aMUQmDdBEuZDLcmqdQMSnHxXcx9Oa10UZAyIYR6wqoBjqYUXVJs86wRSEmj1-n3jYMTGvtb9une1njjnyFPvarHdDoAeTh79NuW9k7KsxbCQi4YtiNAhlU709rDYZN4hs-2wMdPBbifMqzYxehXC9byrxySoFpW4w2VrsFqQlgJQzsP7IisLNrHqTCocDl9osR6p6bj90C-CHpAwMWWK_YZjdi2A
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.XzrNZHTww0_AbViNLOr0jOq6_Od5nuUhbstRDIKgqxb8aZJ55LQVMorNrQx_sA6M878PSSpzrVZPHIcks9EggNMjuaDzksfN7EU95GRyBP1sSyYkq5Az4RDpLPiclzsBwh4P-O0l28TmDw0xE7hqRL-Xl48hx0IwcbZzR7O9vnAkR9r5-Fm_kRasICsNzU9EVEvMlf0XSAYh_0z6AP1Ys80bc-5p-dAP375iQTNR09r2muK4-oQQyQvEzLgrzgp5nRHxC2hzsedPhI-5GdHAa2Hm5tN00EKMj5vY8-PKKCKsL1DLoKJPvmrq1isu8n60wVCA0qqE5s-3hMi3A-91bQ
 
 
 
@@ -431,13 +478,13 @@ Some description of the Sender list
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:31 GMT
+            Date: Wed, 23 Sep 2015 19:11:58 GMT
 
 
 
     + Body
 
-            {"id":"608556bb-6e03-f5b8-4861-b6d6d4de923e","name":"My Cool App","_links":{"self":{"href":"/senders/608556bb-6e03-f5b8-4861-b6d6d4de923e"},"campaign_types":{"href":"/senders/608556bb-6e03-f5b8-4861-b6d6d4de923e/campaign_types"},"campaigns":{"href":"/senders/608556bb-6e03-f5b8-4861-b6d6d4de923e/campaigns"}}}
+            {"id":"96c1281e-9a01-412e-c804-872256121070","name":"My Cool App","_links":{"self":{"href":"/senders/96c1281e-9a01-412e-c804-872256121070"},"campaign_types":{"href":"/senders/96c1281e-9a01-412e-c804-872256121070/campaign_types"},"campaigns":{"href":"/senders/96c1281e-9a01-412e-c804-872256121070/campaigns"}}}
 
 
 
@@ -452,7 +499,7 @@ Some description of the Sender list
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjg5OTEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.aXK2JBfJSWbaNAGGZciOdoZw4tuMKbQzTK2O9x3-eR2b4_q9fz9Row5Iyhfw85C9eAwCcLHNVnVPpuUP0pwRNhAZ3NxQZYUWVF-4bitU9-6zH8Wm9LhZwSidZ2aMUQmDdBEuZDLcmqdQMSnHxXcx9Oa10UZAyIYR6wqoBjqYUXVJs86wRSEmj1-n3jYMTGvtb9une1njjnyFPvarHdDoAeTh79NuW9k7KsxbCQi4YtiNAhlU709rDYZN4hs-2wMdPBbifMqzYxehXC9byrxySoFpW4w2VrsFqQlgJQzsP7IisLNrHqTCocDl9osR6p6bj90C-CHpAwMWWK_YZjdi2A
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.XzrNZHTww0_AbViNLOr0jOq6_Od5nuUhbstRDIKgqxb8aZJ55LQVMorNrQx_sA6M878PSSpzrVZPHIcks9EggNMjuaDzksfN7EU95GRyBP1sSyYkq5Az4RDpLPiclzsBwh4P-O0l28TmDw0xE7hqRL-Xl48hx0IwcbZzR7O9vnAkR9r5-Fm_kRasICsNzU9EVEvMlf0XSAYh_0z6AP1Ys80bc-5p-dAP375iQTNR09r2muK4-oQQyQvEzLgrzgp5nRHxC2hzsedPhI-5GdHAa2Hm5tN00EKMj5vY8-PKKCKsL1DLoKJPvmrq1isu8n60wVCA0qqE5s-3hMi3A-91bQ
 
 
 
@@ -479,13 +526,13 @@ Some description of the Sender list
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:31 GMT
+            Date: Wed, 23 Sep 2015 19:11:58 GMT
 
 
 
     + Body
 
-            {"senders":[{"id":"608556bb-6e03-f5b8-4861-b6d6d4de923e","name":"My Cool App","_links":{"self":{"href":"/senders/608556bb-6e03-f5b8-4861-b6d6d4de923e"},"campaign_types":{"href":"/senders/608556bb-6e03-f5b8-4861-b6d6d4de923e/campaign_types"},"campaigns":{"href":"/senders/608556bb-6e03-f5b8-4861-b6d6d4de923e/campaigns"}}}],"_links":{"self":{"href":"/senders"}}}
+            {"senders":[{"id":"96c1281e-9a01-412e-c804-872256121070","name":"My Cool App","_links":{"self":{"href":"/senders/96c1281e-9a01-412e-c804-872256121070"},"campaign_types":{"href":"/senders/96c1281e-9a01-412e-c804-872256121070/campaign_types"},"campaigns":{"href":"/senders/96c1281e-9a01-412e-c804-872256121070/campaigns"}}}],"_links":{"self":{"href":"/senders"}}}
 
 
 
@@ -500,6 +547,45 @@ Some description of the Sender
 
 
 
+### DELETE Sender [DELETE]
+
+
++ Request
+
+    + Headers
+
+
+
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MDksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.jfzbCygjPAJFpb4NGtTE7mOhTvM54cJJZezgpHiXPrbJl8UTUTj6KL9IzK8Ht7oC1D3qdCGA-ywhhDExqg9NPPgSnKvyK4YMQ-7BsFNkvFdx22SMePc7NAjUMrNIMGJA27i1AT94LZg_FDSa5h179LzzMwlp_qaHvMDIsrobQq2JaA7b1I8sqEG_wHpXk6wQiZ1y56SxeU2Db3YLmiutFrXrTsxgiV339Mw7I0NA3rvjx8LJFZ9_SISWw24uiHhtlc5vBxu6n68Gazg4F9TyKpbftmwvyjJOG7re8530GsmirhuxJo1t7DnS-rb0Z6dqS6yyMtNMOZ79HftpOoEh6g
+
+
+
+            X-Notifications-Version: 2
+
+
+
+    + Body
+
+            
+
+
++ Response 204
+
+    + Headers
+
+
+
+            Date: Wed, 23 Sep 2015 19:11:49 GMT
+
+
+
+    + Body
+
+            
+
+
+
+
 ### GET Sender [GET]
 
 
@@ -509,7 +595,7 @@ Some description of the Sender
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjg5OTEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.aXK2JBfJSWbaNAGGZciOdoZw4tuMKbQzTK2O9x3-eR2b4_q9fz9Row5Iyhfw85C9eAwCcLHNVnVPpuUP0pwRNhAZ3NxQZYUWVF-4bitU9-6zH8Wm9LhZwSidZ2aMUQmDdBEuZDLcmqdQMSnHxXcx9Oa10UZAyIYR6wqoBjqYUXVJs86wRSEmj1-n3jYMTGvtb9une1njjnyFPvarHdDoAeTh79NuW9k7KsxbCQi4YtiNAhlU709rDYZN4hs-2wMdPBbifMqzYxehXC9byrxySoFpW4w2VrsFqQlgJQzsP7IisLNrHqTCocDl9osR6p6bj90C-CHpAwMWWK_YZjdi2A
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.XzrNZHTww0_AbViNLOr0jOq6_Od5nuUhbstRDIKgqxb8aZJ55LQVMorNrQx_sA6M878PSSpzrVZPHIcks9EggNMjuaDzksfN7EU95GRyBP1sSyYkq5Az4RDpLPiclzsBwh4P-O0l28TmDw0xE7hqRL-Xl48hx0IwcbZzR7O9vnAkR9r5-Fm_kRasICsNzU9EVEvMlf0XSAYh_0z6AP1Ys80bc-5p-dAP375iQTNR09r2muK4-oQQyQvEzLgrzgp5nRHxC2hzsedPhI-5GdHAa2Hm5tN00EKMj5vY8-PKKCKsL1DLoKJPvmrq1isu8n60wVCA0qqE5s-3hMi3A-91bQ
 
 
 
@@ -536,13 +622,13 @@ Some description of the Sender
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:31 GMT
+            Date: Wed, 23 Sep 2015 19:11:58 GMT
 
 
 
     + Body
 
-            {"id":"608556bb-6e03-f5b8-4861-b6d6d4de923e","name":"My Cool App","_links":{"self":{"href":"/senders/608556bb-6e03-f5b8-4861-b6d6d4de923e"},"campaign_types":{"href":"/senders/608556bb-6e03-f5b8-4861-b6d6d4de923e/campaign_types"},"campaigns":{"href":"/senders/608556bb-6e03-f5b8-4861-b6d6d4de923e/campaigns"}}}
+            {"id":"96c1281e-9a01-412e-c804-872256121070","name":"My Cool App","_links":{"self":{"href":"/senders/96c1281e-9a01-412e-c804-872256121070"},"campaign_types":{"href":"/senders/96c1281e-9a01-412e-c804-872256121070/campaign_types"},"campaigns":{"href":"/senders/96c1281e-9a01-412e-c804-872256121070/campaigns"}}}
 
 
 
@@ -557,7 +643,7 @@ Some description of the Sender
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjg5OTEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.aXK2JBfJSWbaNAGGZciOdoZw4tuMKbQzTK2O9x3-eR2b4_q9fz9Row5Iyhfw85C9eAwCcLHNVnVPpuUP0pwRNhAZ3NxQZYUWVF-4bitU9-6zH8Wm9LhZwSidZ2aMUQmDdBEuZDLcmqdQMSnHxXcx9Oa10UZAyIYR6wqoBjqYUXVJs86wRSEmj1-n3jYMTGvtb9une1njjnyFPvarHdDoAeTh79NuW9k7KsxbCQi4YtiNAhlU709rDYZN4hs-2wMdPBbifMqzYxehXC9byrxySoFpW4w2VrsFqQlgJQzsP7IisLNrHqTCocDl9osR6p6bj90C-CHpAwMWWK_YZjdi2A
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.XzrNZHTww0_AbViNLOr0jOq6_Od5nuUhbstRDIKgqxb8aZJ55LQVMorNrQx_sA6M878PSSpzrVZPHIcks9EggNMjuaDzksfN7EU95GRyBP1sSyYkq5Az4RDpLPiclzsBwh4P-O0l28TmDw0xE7hqRL-Xl48hx0IwcbZzR7O9vnAkR9r5-Fm_kRasICsNzU9EVEvMlf0XSAYh_0z6AP1Ys80bc-5p-dAP375iQTNR09r2muK4-oQQyQvEzLgrzgp5nRHxC2hzsedPhI-5GdHAa2Hm5tN00EKMj5vY8-PKKCKsL1DLoKJPvmrq1isu8n60wVCA0qqE5s-3hMi3A-91bQ
 
 
 
@@ -584,53 +670,14 @@ Some description of the Sender
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:31 GMT
+            Date: Wed, 23 Sep 2015 19:11:58 GMT
 
 
 
     + Body
 
-            {"id":"608556bb-6e03-f5b8-4861-b6d6d4de923e","name":"My Not Cool App","_links":{"self":{"href":"/senders/608556bb-6e03-f5b8-4861-b6d6d4de923e"},"campaign_types":{"href":"/senders/608556bb-6e03-f5b8-4861-b6d6d4de923e/campaign_types"},"campaigns":{"href":"/senders/608556bb-6e03-f5b8-4861-b6d6d4de923e/campaigns"}}}
+            {"id":"96c1281e-9a01-412e-c804-872256121070","name":"My Not Cool App","_links":{"self":{"href":"/senders/96c1281e-9a01-412e-c804-872256121070"},"campaign_types":{"href":"/senders/96c1281e-9a01-412e-c804-872256121070/campaign_types"},"campaigns":{"href":"/senders/96c1281e-9a01-412e-c804-872256121070/campaigns"}}}
 
-
-
-
-
-### DELETE Sender [DELETE]
-
-
-+ Request
-
-    + Headers
-
-
-
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjg5OTYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.J478EtBQ_HPp13UrmKo-yl4UD_FOOPr-yyIAIQ0DpZLXyyLgnT1e3oaVRHMPiFZToP5NzT-M-dUycmKJI_DYenFO4Wy6vRJ5vNQqeQHjT4IWLN6MAgXBKrnHWRY3lq7xEsS7p85CLqYsGCK7sZwaiI0NJdVEZvfPEaUzcEiy-tEHPwPI911yMtcFRn5p_b8JAtuBpgRY2c15D5IbyaapRBNPXRojxP6bcEk0y2LzMAXJ2ZLFBs_QjF_aR6bA8-6oOSd5KrcZQsmgFHRrSVhhUOYojeGD64N4CochRo2bc8aH4IOeIEaDIDMk1k41PzqkzK8MJOsO3dHseMBD2R37WA
-
-
-
-            X-Notifications-Version: 2
-
-
-
-    + Body
-
-            
-
-
-+ Response 204
-
-    + Headers
-
-
-
-            Date: Wed, 23 Sep 2015 00:56:36 GMT
-
-
-
-    + Body
-
-            
 
 
 
@@ -654,7 +701,7 @@ Some description of the Template list
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjkwMDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.UJjeKoUWavB-g-bPu8R6gZQTjys6qqMflH2TlVA4ZFdZtSD3A0JXL3bnOmXISpuPeBlrYajG1504AZbQba_Qna7XdbiAOgr_qxzAi6XBtOOZ4q_6up8SbwzAYQVxRWAwyj6LELd0Qnd3ot0wUycOHwOJf2DF3wHF8cBkzVgmPVO9sKXi8qIdE1kNDdZ-FHJtXJeW5eHl26MXUFMV1fFSi6jG7RzUuO93rLvqFhobIzOzozm9H_14jA2u2UuMraFpKv6ThLX1MwH4Ua_6LHoVBqOncY_94rbukp7MSb675HJPmYZFxOgokcC_yNDcB4Gczr6xMePaadrJ6a9TBDRdPA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTMsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.sIB08qbj-jl2fn6x_j16KTwNjRIp5181XGBf4_SyNT1LuuLq2zqc5yGFMXWAovtSfQI16aP0Sn5_d8n7S-nbotkNWI8_LrW-we2LYisWsI0ckhulYm90o8VOSbklVQKrFMdzGp_8YV606-MwTNFDpfsm5uChNgsD_IZ9jQh-ymhzyCEqRw9sFaFZYVSrexwp5XwwJt_dywwHrWAos9yHsAW1Sr3AHOO1o_z9moOupB8TY6VEvJvhoFMd1qoi26mc9pb3AN19B7xgl7sRFYy6KIVvLRP79--kUKoW9X1nmh3dCvA-3_t-VXZ-R1dMXDRYZ_Tg39uyNLEvMp1svbVcDw
 
 
 
@@ -681,13 +728,13 @@ Some description of the Template list
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:46 GMT
+            Date: Wed, 23 Sep 2015 19:11:53 GMT
 
 
 
     + Body
 
-            {"id":"41386df2-d476-90d9-a8b9-9a19f1eebfcf","name":"An interesting template","text":"template text","html":"template html","subject":"template subject","metadata":{"template":"metadata"},"_links":{"self":{"href":"/templates/41386df2-d476-90d9-a8b9-9a19f1eebfcf"}}}
+            {"id":"0df24841-bf8c-2c87-19fd-6bdcf92e6216","name":"An interesting template","text":"template text","html":"template html","subject":"template subject","metadata":{"template":"metadata"},"_links":{"self":{"href":"/templates/0df24841-bf8c-2c87-19fd-6bdcf92e6216"}}}
 
 
 
@@ -702,7 +749,7 @@ Some description of the Template list
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjkwMDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.UJjeKoUWavB-g-bPu8R6gZQTjys6qqMflH2TlVA4ZFdZtSD3A0JXL3bnOmXISpuPeBlrYajG1504AZbQba_Qna7XdbiAOgr_qxzAi6XBtOOZ4q_6up8SbwzAYQVxRWAwyj6LELd0Qnd3ot0wUycOHwOJf2DF3wHF8cBkzVgmPVO9sKXi8qIdE1kNDdZ-FHJtXJeW5eHl26MXUFMV1fFSi6jG7RzUuO93rLvqFhobIzOzozm9H_14jA2u2UuMraFpKv6ThLX1MwH4Ua_6LHoVBqOncY_94rbukp7MSb675HJPmYZFxOgokcC_yNDcB4Gczr6xMePaadrJ6a9TBDRdPA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTMsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.sIB08qbj-jl2fn6x_j16KTwNjRIp5181XGBf4_SyNT1LuuLq2zqc5yGFMXWAovtSfQI16aP0Sn5_d8n7S-nbotkNWI8_LrW-we2LYisWsI0ckhulYm90o8VOSbklVQKrFMdzGp_8YV606-MwTNFDpfsm5uChNgsD_IZ9jQh-ymhzyCEqRw9sFaFZYVSrexwp5XwwJt_dywwHrWAos9yHsAW1Sr3AHOO1o_z9moOupB8TY6VEvJvhoFMd1qoi26mc9pb3AN19B7xgl7sRFYy6KIVvLRP79--kUKoW9X1nmh3dCvA-3_t-VXZ-R1dMXDRYZ_Tg39uyNLEvMp1svbVcDw
 
 
 
@@ -729,13 +776,13 @@ Some description of the Template list
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:46 GMT
+            Date: Wed, 23 Sep 2015 19:11:53 GMT
 
 
 
     + Body
 
-            {"templates":[{"id":"41386df2-d476-90d9-a8b9-9a19f1eebfcf","name":"A more interesting template","text":"text","html":"html","subject":"subject","metadata":{"banana":"something"},"_links":{"self":{"href":"/templates/41386df2-d476-90d9-a8b9-9a19f1eebfcf"}}}],"_links":{"self":{"href":"/templates"}}}
+            {"templates":[{"id":"0df24841-bf8c-2c87-19fd-6bdcf92e6216","name":"A more interesting template","text":"text","html":"html","subject":"subject","metadata":{"banana":"something"},"_links":{"self":{"href":"/templates/0df24841-bf8c-2c87-19fd-6bdcf92e6216"}}}],"_links":{"self":{"href":"/templates"}}}
 
 
 
@@ -759,7 +806,7 @@ Some description of the Template
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjkwMDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.UJjeKoUWavB-g-bPu8R6gZQTjys6qqMflH2TlVA4ZFdZtSD3A0JXL3bnOmXISpuPeBlrYajG1504AZbQba_Qna7XdbiAOgr_qxzAi6XBtOOZ4q_6up8SbwzAYQVxRWAwyj6LELd0Qnd3ot0wUycOHwOJf2DF3wHF8cBkzVgmPVO9sKXi8qIdE1kNDdZ-FHJtXJeW5eHl26MXUFMV1fFSi6jG7RzUuO93rLvqFhobIzOzozm9H_14jA2u2UuMraFpKv6ThLX1MwH4Ua_6LHoVBqOncY_94rbukp7MSb675HJPmYZFxOgokcC_yNDcB4Gczr6xMePaadrJ6a9TBDRdPA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTMsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.sIB08qbj-jl2fn6x_j16KTwNjRIp5181XGBf4_SyNT1LuuLq2zqc5yGFMXWAovtSfQI16aP0Sn5_d8n7S-nbotkNWI8_LrW-we2LYisWsI0ckhulYm90o8VOSbklVQKrFMdzGp_8YV606-MwTNFDpfsm5uChNgsD_IZ9jQh-ymhzyCEqRw9sFaFZYVSrexwp5XwwJt_dywwHrWAos9yHsAW1Sr3AHOO1o_z9moOupB8TY6VEvJvhoFMd1qoi26mc9pb3AN19B7xgl7sRFYy6KIVvLRP79--kUKoW9X1nmh3dCvA-3_t-VXZ-R1dMXDRYZ_Tg39uyNLEvMp1svbVcDw
 
 
 
@@ -786,13 +833,13 @@ Some description of the Template
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:46 GMT
+            Date: Wed, 23 Sep 2015 19:11:53 GMT
 
 
 
     + Body
 
-            {"id":"41386df2-d476-90d9-a8b9-9a19f1eebfcf","name":"An interesting template","text":"template text","html":"template html","subject":"template subject","metadata":{"template":"metadata"},"_links":{"self":{"href":"/templates/41386df2-d476-90d9-a8b9-9a19f1eebfcf"}}}
+            {"id":"0df24841-bf8c-2c87-19fd-6bdcf92e6216","name":"An interesting template","text":"template text","html":"template html","subject":"template subject","metadata":{"template":"metadata"},"_links":{"self":{"href":"/templates/0df24841-bf8c-2c87-19fd-6bdcf92e6216"}}}
 
 
 
@@ -807,7 +854,7 @@ Some description of the Template
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjkwMDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.UJjeKoUWavB-g-bPu8R6gZQTjys6qqMflH2TlVA4ZFdZtSD3A0JXL3bnOmXISpuPeBlrYajG1504AZbQba_Qna7XdbiAOgr_qxzAi6XBtOOZ4q_6up8SbwzAYQVxRWAwyj6LELd0Qnd3ot0wUycOHwOJf2DF3wHF8cBkzVgmPVO9sKXi8qIdE1kNDdZ-FHJtXJeW5eHl26MXUFMV1fFSi6jG7RzUuO93rLvqFhobIzOzozm9H_14jA2u2UuMraFpKv6ThLX1MwH4Ua_6LHoVBqOncY_94rbukp7MSb675HJPmYZFxOgokcC_yNDcB4Gczr6xMePaadrJ6a9TBDRdPA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTMsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.sIB08qbj-jl2fn6x_j16KTwNjRIp5181XGBf4_SyNT1LuuLq2zqc5yGFMXWAovtSfQI16aP0Sn5_d8n7S-nbotkNWI8_LrW-we2LYisWsI0ckhulYm90o8VOSbklVQKrFMdzGp_8YV606-MwTNFDpfsm5uChNgsD_IZ9jQh-ymhzyCEqRw9sFaFZYVSrexwp5XwwJt_dywwHrWAos9yHsAW1Sr3AHOO1o_z9moOupB8TY6VEvJvhoFMd1qoi26mc9pb3AN19B7xgl7sRFYy6KIVvLRP79--kUKoW9X1nmh3dCvA-3_t-VXZ-R1dMXDRYZ_Tg39uyNLEvMp1svbVcDw
 
 
 
@@ -834,13 +881,13 @@ Some description of the Template
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:46 GMT
+            Date: Wed, 23 Sep 2015 19:11:53 GMT
 
 
 
     + Body
 
-            {"id":"41386df2-d476-90d9-a8b9-9a19f1eebfcf","name":"A more interesting template","text":"text","html":"html","subject":"subject","metadata":{"banana":"something"},"_links":{"self":{"href":"/templates/41386df2-d476-90d9-a8b9-9a19f1eebfcf"}}}
+            {"id":"0df24841-bf8c-2c87-19fd-6bdcf92e6216","name":"A more interesting template","text":"text","html":"html","subject":"subject","metadata":{"banana":"something"},"_links":{"self":{"href":"/templates/0df24841-bf8c-2c87-19fd-6bdcf92e6216"}}}
 
 
 
@@ -855,7 +902,7 @@ Some description of the Template
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyMjkwMDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTkzNjEvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.UJjeKoUWavB-g-bPu8R6gZQTjys6qqMflH2TlVA4ZFdZtSD3A0JXL3bnOmXISpuPeBlrYajG1504AZbQba_Qna7XdbiAOgr_qxzAi6XBtOOZ4q_6up8SbwzAYQVxRWAwyj6LELd0Qnd3ot0wUycOHwOJf2DF3wHF8cBkzVgmPVO9sKXi8qIdE1kNDdZ-FHJtXJeW5eHl26MXUFMV1fFSi6jG7RzUuO93rLvqFhobIzOzozm9H_14jA2u2UuMraFpKv6ThLX1MwH4Ua_6LHoVBqOncY_94rbukp7MSb675HJPmYZFxOgokcC_yNDcB4Gczr6xMePaadrJ6a9TBDRdPA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDMyOTQ3MTMsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTQ0MTYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.sIB08qbj-jl2fn6x_j16KTwNjRIp5181XGBf4_SyNT1LuuLq2zqc5yGFMXWAovtSfQI16aP0Sn5_d8n7S-nbotkNWI8_LrW-we2LYisWsI0ckhulYm90o8VOSbklVQKrFMdzGp_8YV606-MwTNFDpfsm5uChNgsD_IZ9jQh-ymhzyCEqRw9sFaFZYVSrexwp5XwwJt_dywwHrWAos9yHsAW1Sr3AHOO1o_z9moOupB8TY6VEvJvhoFMd1qoi26mc9pb3AN19B7xgl7sRFYy6KIVvLRP79--kUKoW9X1nmh3dCvA-3_t-VXZ-R1dMXDRYZ_Tg39uyNLEvMp1svbVcDw
 
 
 
@@ -874,7 +921,7 @@ Some description of the Template
 
 
 
-            Date: Wed, 23 Sep 2015 00:56:46 GMT
+            Date: Wed, 23 Sep 2015 19:11:53 GMT
 
 
 
