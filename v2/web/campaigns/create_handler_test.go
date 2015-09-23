@@ -63,6 +63,15 @@ var _ = Describe("CreateHandler", func() {
 		campaignsCollection = mocks.NewCampaignsCollection()
 		campaignsCollection.CreateCall.Returns.Campaign = collections.Campaign{
 			ID: "my-campaign-id",
+			SendTo: map[string]string{
+				"user": "user-123",
+			},
+			CampaignTypeID: "some-campaign-type-id",
+			Text:           "come see our new stuff",
+			HTML:           "<h1>New stuff</h1>",
+			Subject:        "Cool New Stuff",
+			TemplateID:     "random-template-id",
+			ReplyTo:        "reply-to-address",
 		}
 
 		writer = httptest.NewRecorder()
@@ -91,7 +100,22 @@ var _ = Describe("CreateHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusAccepted))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"campaign_id": "my-campaign-id"
+			"id": "my-campaign-id",
+		    "send_to": {
+				"user": "user-123"
+			},
+			"campaign_type_id": "some-campaign-type-id",
+			"text":             "come see our new stuff",
+			"html":             "<h1>New stuff</h1>",
+			"subject":          "Cool New Stuff",
+			"template_id":      "random-template-id",
+			"reply_to":         "reply-to-address",
+			"_links": {
+				"self": {"href":"/campaigns/my-campaign-id"},
+				"template": {"href":"/templates/random-template-id"},
+				"campaign_type": {"href":"/campaign_types/some-campaign-type-id"},
+				"status": {"href":"/campaigns/my-campaign-id/status"}
+			}
 		}`))
 
 		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(conn))
@@ -110,6 +134,7 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	It("sends a campaign to a space", func() {
+		campaignsCollection.CreateCall.Returns.Campaign.SendTo = map[string]string{"space": "space-123"}
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"send_to": map[string]string{
 				"space": "space-123",
@@ -130,7 +155,22 @@ var _ = Describe("CreateHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusAccepted))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"campaign_id": "my-campaign-id"
+			"id": "my-campaign-id",
+		    "send_to": {
+				"space": "space-123"
+			},
+			"campaign_type_id": "some-campaign-type-id",
+			"text":             "come see our new stuff",
+			"html":             "<h1>New stuff</h1>",
+			"subject":          "Cool New Stuff",
+			"template_id":      "random-template-id",
+			"reply_to":         "reply-to-address",
+			"_links": {
+				"self": {"href":"/campaigns/my-campaign-id"},
+				"template": {"href":"/templates/random-template-id"},
+				"campaign_type": {"href":"/campaign_types/some-campaign-type-id"},
+				"status": {"href":"/campaigns/my-campaign-id/status"}
+			}
 		}`))
 
 		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(database.Connection()))
@@ -148,6 +188,7 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	It("sends a campaign to an org", func() {
+		campaignsCollection.CreateCall.Returns.Campaign.SendTo = map[string]string{"org": "org-123"}
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"send_to": map[string]string{
 				"org": "org-123",
@@ -168,7 +209,22 @@ var _ = Describe("CreateHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusAccepted))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"campaign_id": "my-campaign-id"
+			"id": "my-campaign-id",
+		    "send_to": {
+				"org": "org-123"
+			},
+			"campaign_type_id": "some-campaign-type-id",
+			"text":             "come see our new stuff",
+			"html":             "<h1>New stuff</h1>",
+			"subject":          "Cool New Stuff",
+			"template_id":      "random-template-id",
+			"reply_to":         "reply-to-address",
+			"_links": {
+				"self": {"href":"/campaigns/my-campaign-id"},
+				"template": {"href":"/templates/random-template-id"},
+				"campaign_type": {"href":"/campaign_types/some-campaign-type-id"},
+				"status": {"href":"/campaigns/my-campaign-id/status"}
+			}
 		}`))
 
 		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(database.Connection()))
@@ -186,6 +242,7 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	It("sends a campaign to an email", func() {
+		campaignsCollection.CreateCall.Returns.Campaign.SendTo = map[string]string{"email": "test@example.com"}
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"send_to": map[string]string{
 				"email": "test@example.com",
@@ -206,7 +263,22 @@ var _ = Describe("CreateHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusAccepted))
 		Expect(writer.Body.String()).To(MatchJSON(`{
-			"campaign_id": "my-campaign-id"
+			"id": "my-campaign-id",
+		    "send_to": {
+				"email": "test@example.com"
+			},
+			"campaign_type_id": "some-campaign-type-id",
+			"text":             "come see our new stuff",
+			"html":             "<h1>New stuff</h1>",
+			"subject":          "Cool New Stuff",
+			"template_id":      "random-template-id",
+			"reply_to":         "reply-to-address",
+			"_links": {
+				"self": {"href":"/campaigns/my-campaign-id"},
+				"template": {"href":"/templates/random-template-id"},
+				"campaign_type": {"href":"/campaign_types/some-campaign-type-id"},
+				"status": {"href":"/campaigns/my-campaign-id/status"}
+			}
 		}`))
 
 		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(database.Connection()))

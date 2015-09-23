@@ -90,7 +90,7 @@ var _ = Describe("Organization Campaigns", func() {
 			}, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusAccepted))
-			Expect(response["campaign_id"]).NotTo(BeEmpty())
+			Expect(response["id"]).NotTo(BeEmpty())
 		})
 
 		By("seeing that the mail was delivered", func() {
@@ -331,7 +331,7 @@ var _ = Describe("Organization Campaigns", func() {
 				}, token.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
-				Expect(response["campaign_id"]).NotTo(BeEmpty())
+				Expect(response["id"]).NotTo(BeEmpty())
 			})
 
 			By("seeing that the mail was delivered", func() {

@@ -90,9 +90,9 @@ var _ = Describe("Email Campaigns", func() {
 			}, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusAccepted))
-			Expect(response["campaign_id"]).NotTo(BeEmpty())
+			Expect(response["id"]).NotTo(BeEmpty())
 
-			campaignID = response["campaign_id"].(string)
+			campaignID = response["id"].(string)
 		})
 
 		By("seeing that the mail was delivered", func() {
@@ -333,7 +333,7 @@ var _ = Describe("Email Campaigns", func() {
 				}, token.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
-				Expect(response["campaign_id"]).NotTo(BeEmpty())
+				Expect(response["id"]).NotTo(BeEmpty())
 			})
 
 			By("seeing that the mail was delivered", func() {

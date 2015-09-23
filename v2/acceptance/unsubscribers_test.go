@@ -84,9 +84,9 @@ var _ = Describe("Unsubscribers", func() {
 				}, clientToken.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
-				Expect(response["campaign_id"]).NotTo(BeEmpty())
+				Expect(response["id"]).NotTo(BeEmpty())
 
-				campaignID = response["campaign_id"].(string)
+				campaignID = response["id"].(string)
 			})
 
 			By("waiting for the email to arrive", func() {
@@ -119,9 +119,9 @@ var _ = Describe("Unsubscribers", func() {
 				}, clientToken.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
-				Expect(response["campaign_id"]).NotTo(BeEmpty())
+				Expect(response["id"]).NotTo(BeEmpty())
 
-				secondCampaignID = response["campaign_id"].(string)
+				secondCampaignID = response["id"].(string)
 			})
 
 			By("confirming that the email is received", func() {
@@ -269,9 +269,9 @@ var _ = Describe("Unsubscribers", func() {
 				}, clientToken.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
-				Expect(response["campaign_id"]).NotTo(BeEmpty())
+				Expect(response["id"]).NotTo(BeEmpty())
 
-				campaignID = response["campaign_id"].(string)
+				campaignID = response["id"].(string)
 			})
 
 			By("waiting for the email to arrive", func() {
@@ -304,9 +304,9 @@ var _ = Describe("Unsubscribers", func() {
 				}, clientToken.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
-				Expect(response["campaign_id"]).NotTo(BeEmpty())
+				Expect(response["id"]).NotTo(BeEmpty())
 
-				secondCampaignID = response["campaign_id"].(string)
+				secondCampaignID = response["id"].(string)
 			})
 
 			By("confirming that the email is received", func() {

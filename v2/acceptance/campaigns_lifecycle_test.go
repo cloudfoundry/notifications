@@ -95,8 +95,9 @@ var _ = Describe("Campaign Lifecycle", func() {
 			})
 
 			By("sending the campaign", func() {
+				var response campaignResponse
 				client.Document()
-				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
+				status, err := client.DoTyped("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
 						"email": "test@example.com",
 					},
@@ -105,12 +106,23 @@ var _ = Describe("Campaign Lifecycle", func() {
 					"subject":          "campaign subject",
 					"template_id":      templateID,
 					"reply_to":         "no-reply@example.com",
-				}, token.Access)
+				}, token.Access, &response)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
-				Expect(response["campaign_id"]).NotTo(BeEmpty())
 
-				campaignID = response["campaign_id"].(string)
+				campaignID = response.ID
+
+				Expect(response.ID).To(Equal(campaignID))
+				Expect(response.SendTo).To(HaveKeyWithValue("email", "test@example.com"))
+				Expect(response.CampaignTypeID).To(Equal(campaignTypeID))
+				Expect(response.Text).To(Equal("campaign body"))
+				Expect(response.Subject).To(Equal("campaign subject"))
+				Expect(response.TemplateID).To(Equal(templateID))
+				Expect(response.ReplyTo).To(Equal("no-reply@example.com"))
+				Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/campaigns/%s", campaignID)))
+				Expect(response.Links.Template.Href).To(Equal(fmt.Sprintf("/templates/%s", templateID)))
+				Expect(response.Links.CampaignType.Href).To(Equal(fmt.Sprintf("/campaign_types/%s", campaignTypeID)))
+				Expect(response.Links.Status.Href).To(Equal(fmt.Sprintf("/campaigns/%s/status", campaignID)))
 			})
 
 			By("retrieving the campaign details", func() {
@@ -158,9 +170,9 @@ var _ = Describe("Campaign Lifecycle", func() {
 					}, token.Access)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusAccepted))
-					Expect(response["campaign_id"]).NotTo(BeEmpty())
+					Expect(response["id"]).NotTo(BeEmpty())
 
-					campaignID = response["campaign_id"].(string)
+					campaignID = response["id"].(string)
 				})
 
 				By("retrieving the campaign details", func() {
@@ -217,9 +229,9 @@ var _ = Describe("Campaign Lifecycle", func() {
 					}, token.Access)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusAccepted))
-					Expect(response["campaign_id"]).NotTo(BeEmpty())
+					Expect(response["id"]).NotTo(BeEmpty())
 
-					campaignID = response["campaign_id"].(string)
+					campaignID = response["id"].(string)
 				})
 			})
 
@@ -336,9 +348,9 @@ var _ = Describe("Campaign Lifecycle", func() {
 				}, token.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
-				Expect(response["campaign_id"]).NotTo(BeEmpty())
+				Expect(response["id"]).NotTo(BeEmpty())
 
-				campaignID = response["campaign_id"].(string)
+				campaignID = response["id"].(string)
 			})
 
 			By("retrieving the campaign status", func() {
@@ -406,9 +418,9 @@ var _ = Describe("Campaign Lifecycle", func() {
 				}, token.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
-				Expect(response["campaign_id"]).NotTo(BeEmpty())
+				Expect(response["id"]).NotTo(BeEmpty())
 
-				campaignID = response["campaign_id"].(string)
+				campaignID = response["id"].(string)
 			})
 
 			By("retrieving the campaign status", func() {
@@ -434,9 +446,9 @@ var _ = Describe("Campaign Lifecycle", func() {
 				}, token.Access)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
-				Expect(response["campaign_id"]).NotTo(BeEmpty())
+				Expect(response["id"]).NotTo(BeEmpty())
 
-				campaignID = response["campaign_id"].(string)
+				campaignID = response["id"].(string)
 			})
 
 			By("creating another sender", func() {
@@ -479,9 +491,9 @@ var _ = Describe("Campaign Lifecycle", func() {
 					}, token.Access)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusAccepted))
-					Expect(response["campaign_id"]).NotTo(BeEmpty())
+					Expect(response["id"]).NotTo(BeEmpty())
 
-					campaignID = response["campaign_id"].(string)
+					campaignID = response["id"].(string)
 				})
 
 				By("waiting for the status to indicate retrying", func() {
@@ -532,9 +544,9 @@ var _ = Describe("Campaign Lifecycle", func() {
 					}, token.Access)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusAccepted))
-					Expect(response["campaign_id"]).NotTo(BeEmpty())
+					Expect(response["id"]).NotTo(BeEmpty())
 
-					campaignID = response["campaign_id"].(string)
+					campaignID = response["id"].(string)
 				})
 
 				By("waiting for the status to indicate queueing", func() {
