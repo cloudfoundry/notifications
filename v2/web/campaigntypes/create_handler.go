@@ -91,19 +91,6 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
-	createResponse, _ := json.Marshal(map[string]interface{}{
-		"id":          campaignType.ID,
-		"name":        campaignType.Name,
-		"description": campaignType.Description,
-		"critical":    campaignType.Critical,
-		"template_id": campaignType.TemplateID,
-		"_links": map[string]interface{}{
-			"self": map[string]string{
-				"href": fmt.Sprintf("/campaign_types/%s", campaignType.ID),
-			},
-		},
-	})
-
 	w.WriteHeader(http.StatusCreated)
-	w.Write(createResponse)
+	json.NewEncoder(w).Encode(NewCampaignTypeResponse(campaignType))
 }

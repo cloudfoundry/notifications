@@ -97,4 +97,21 @@ var _ = Describe("SendersListResponse", func() {
 			}
 		}`))
 	})
+
+	Context("when the list is empty", func() {
+		It("returns an empty list (not null)", func() {
+			response = senders.NewSendersListResponse([]collections.Sender{})
+
+			output, err := json.Marshal(response)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(output).To(MatchJSON(`{
+				"senders": [],
+				"_links": {
+					"self": {
+						"href": "/senders"
+					}
+				}
+			}`))
+		})
+	})
 })

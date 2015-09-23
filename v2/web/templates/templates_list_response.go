@@ -13,9 +13,11 @@ type TemplatesListResponse struct {
 
 func NewTemplatesListResponse(templateList []collections.Template) TemplatesListResponse {
 	templates := []TemplateResponse{}
+
 	for _, t := range templateList {
 		templates = append(templates, NewTemplateResponse(t))
 	}
+
 	return TemplatesListResponse{
 		Templates: templates,
 		Links:     TemplatesListResponseLinks{Link{"/templates"}},

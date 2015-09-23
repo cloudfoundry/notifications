@@ -112,4 +112,21 @@ var _ = Describe("TemplatesListResponse", func() {
 			}
 		}`))
 	})
+
+	Context("when the list is empty", func() {
+		It("returns an empty list (not null)", func() {
+			response = templates.NewTemplatesListResponse([]collections.Template{})
+
+			output, err := json.Marshal(response)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(output).To(MatchJSON(`{
+				"templates": [],
+				"_links": {
+					"self": {
+						"href": "/templates"
+					}
+				}
+			}`))
+		})
+	})
 })

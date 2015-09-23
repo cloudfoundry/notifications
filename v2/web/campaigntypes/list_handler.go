@@ -56,34 +56,5 @@ func (h ListHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 		return
 	}
 
-	responseList := []interface{}{}
-
-	for _, campaignType := range campaignTypes {
-		responseList = append(responseList, map[string]interface{}{
-			"id":          campaignType.ID,
-			"name":        campaignType.Name,
-			"description": campaignType.Description,
-			"critical":    campaignType.Critical,
-			"template_id": campaignType.TemplateID,
-			"_links": map[string]interface{}{
-				"self": map[string]string{
-					"href": fmt.Sprintf("/campaign_types/%s", campaignType.ID),
-				},
-			},
-		})
-	}
-
-	listResponse, _ := json.Marshal(map[string]interface{}{
-		"campaign_types": responseList,
-		"_links": map[string]interface{}{
-			"self": map[string]string{
-				"href": fmt.Sprintf("/senders/%s/campaign_types", senderID),
-			},
-			"sender": map[string]string{
-				"href": fmt.Sprintf("/senders/%s", senderID),
-			},
-		},
-	})
-
-	writer.Write(listResponse)
+	json.NewEncoder(writer).Encode(NewCampaignTypesListResponse(senderID, campaignTypes))
 }

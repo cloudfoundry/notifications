@@ -12,7 +12,7 @@ type SendersListResponseLinks struct {
 }
 
 func NewSendersListResponse(senderList []collections.Sender) SendersListResponse {
-	var senderResponseList []SenderResponse
+	senderResponseList := []SenderResponse{}
 
 	for _, sender := range senderList {
 		senderResponseList = append(senderResponseList, NewSenderResponse(sender))

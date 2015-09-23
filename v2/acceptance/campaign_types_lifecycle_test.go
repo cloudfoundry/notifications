@@ -144,20 +144,33 @@ var _ = Describe("Campaign types lifecycle", func() {
 		})
 
 		By("updating it with different information", func() {
+			var response struct {
+				ID          string
+				Name        string
+				Description string
+				Critical    bool
+				TemplateID  string `json:"template_id"`
+				Links       struct {
+					Self struct {
+						Href string
+					}
+				} `json:"_links"`
+			}
 			client.Document()
-			status, response, err := client.Do("PUT", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), map[string]interface{}{
+			status, err := client.DoTyped("PUT", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), map[string]interface{}{
 				"name":        "updated-campaign-type",
 				"description": "still the same great campaign type",
 				"critical":    true,
 				"template_id": templateID,
-			}, token.Access)
+			}, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
-			Expect(response["name"]).To(Equal("updated-campaign-type"))
-			Expect(response["description"]).To(Equal("still the same great campaign type"))
-			Expect(response["critical"]).To(BeTrue())
-			Expect(response["template_id"]).To(Equal(templateID))
+			Expect(response.Name).To(Equal("updated-campaign-type"))
+			Expect(response.Description).To(Equal("still the same great campaign type"))
+			Expect(response.Critical).To(BeTrue())
+			Expect(response.TemplateID).To(Equal(templateID))
+			Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/campaign_types/%s", response.ID)))
 		})
 
 		By("showing the updated campaign type", func() {

@@ -87,12 +87,23 @@ var _ = Describe("UpdateHandler", func() {
 	})
 
 	It("updates an existing campaign type", func() {
+		requestBody, err := json.Marshal(map[string]interface{}{
+			"name":        "update-campaign-type",
+			"description": "update-campaign-type-description",
+			"critical":    true,
+			"template_id": "some-template-id",
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+		Expect(err).NotTo(HaveOccurred())
+
 		campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
 			ID:          "some-campaign-type-id",
 			Name:        "update-campaign-type",
 			Description: "update-campaign-type-description",
 			Critical:    true,
-			TemplateID:  "",
+			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
 		}
 
@@ -103,7 +114,7 @@ var _ = Describe("UpdateHandler", func() {
 			Name:        "update-campaign-type",
 			Description: "update-campaign-type-description",
 			Critical:    true,
-			TemplateID:  "",
+			TemplateID:  "some-template-id",
 			SenderID:    "some-sender-id",
 		}))
 
@@ -113,7 +124,12 @@ var _ = Describe("UpdateHandler", func() {
 			"name": "update-campaign-type",
 			"description": "update-campaign-type-description",
 			"critical": true,
-			"template_id": ""
+			"template_id": "some-template-id",
+			"_links": {
+				"self": {
+					"href": "/campaign_types/some-campaign-type-id"
+				}
+			}
 		}`))
 	})
 
@@ -152,7 +168,12 @@ var _ = Describe("UpdateHandler", func() {
 			"name": "my new name",
 			"description": "old description",
 			"critical": true,
-			"template_id": ""
+			"template_id": "",
+			"_links": {
+				"self": {
+					"href": "/campaign_types/some-campaign-type-id"
+				}
+			}
 		}`))
 	})
 
@@ -189,8 +210,57 @@ var _ = Describe("UpdateHandler", func() {
 			"name": "my old name",
 			"description": "old description",
 			"critical": true,
-			"template_id": ""
+			"template_id": "",
+			"_links": {
+				"self": {
+					"href": "/campaign_types/some-campaign-type-id"
+				}
+			}
 		}`))
+	})
+
+	It("allows an update of critical from true to false even if the client does not have the critical_notifications.write scope", func() {
+		campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
+			ID:          "some-campaign-type-id",
+			Name:        "update-campaign-type",
+			Description: "update-campaign-type-description",
+			Critical:    false,
+			TemplateID:  "some-template-id",
+			SenderID:    "some-sender-id",
+		}
+
+		tokenClaims["scope"] = []string{"notifications.write"}
+		rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
+		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
+			return []byte(application.UAAPublicKey), nil
+		})
+		Expect(err).NotTo(HaveOccurred())
+		context.Set("token", token)
+
+		requestBody, err := json.Marshal(map[string]interface{}{
+			"description": "new description",
+			"critical":    false,
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+		Expect(err).NotTo(HaveOccurred())
+
+		handler.ServeHTTP(writer, request, context)
+		Expect(writer.Code).To(Equal(http.StatusOK))
+		Expect(writer.Body.String()).To(MatchJSON(`{
+				"id": "some-campaign-type-id",
+				"name": "update-campaign-type",
+				"description": "update-campaign-type-description",
+				"critical": false,
+				"template_id": "some-template-id",
+				"_links": {
+					"self": {
+						"href": "/campaign_types/some-campaign-type-id"
+					}
+				}
+			}`))
+		Expect(campaignTypesCollection.SetCall.WasCalled).To(BeTrue())
 	})
 
 	Context("failure cases", func() {
@@ -201,7 +271,7 @@ var _ = Describe("UpdateHandler", func() {
 
 			Expect(writer.Code).To(Equal(http.StatusBadRequest))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-					"errors": ["invalid json body"]
+				"errors": ["invalid json body"]
 			}`))
 		})
 
@@ -233,7 +303,7 @@ var _ = Describe("UpdateHandler", func() {
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(422))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-					"errors": ["description cannot be blank"]
+				"errors": ["description cannot be blank"]
 			}`))
 		})
 
@@ -293,47 +363,10 @@ var _ = Describe("UpdateHandler", func() {
 
 			handler.ServeHTTP(writer, request, context)
 			Expect(writer.Code).To(Equal(http.StatusForbidden))
-			Expect(writer.Body.String()).To(MatchJSON(`{ "errors": ["Forbidden: cannot update campaign type with critical flag set to true"] }`))
-			Expect(campaignTypesCollection.SetCall.WasCalled).To(BeFalse())
-		})
-
-		It("allows an update of critical from true to false even if the client does not have the critical_notifications.write scope", func() {
-			campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
-				ID:          "some-campaign-type-id",
-				Name:        "update-campaign-type",
-				Description: "update-campaign-type-description",
-				Critical:    false,
-				TemplateID:  "",
-				SenderID:    "some-sender-id",
-			}
-
-			tokenClaims["scope"] = []string{"notifications.write"}
-			rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
-			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-				return []byte(application.UAAPublicKey), nil
-			})
-			Expect(err).NotTo(HaveOccurred())
-			context.Set("token", token)
-
-			requestBody, err := json.Marshal(map[string]interface{}{
-				"description": "new description",
-				"critical":    false,
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
-			Expect(err).NotTo(HaveOccurred())
-
-			handler.ServeHTTP(writer, request, context)
-			Expect(writer.Code).To(Equal(http.StatusOK))
 			Expect(writer.Body.String()).To(MatchJSON(`{
-				"id": "some-campaign-type-id",
-				"name": "update-campaign-type",
-				"description": "update-campaign-type-description",
-				"critical": false,
-				"template_id": ""
+				"errors": ["Forbidden: cannot update campaign type with critical flag set to true"]
 			}`))
-			Expect(campaignTypesCollection.SetCall.WasCalled).To(BeTrue())
+			Expect(campaignTypesCollection.SetCall.WasCalled).To(BeFalse())
 		})
 
 		It("returns a 500 when collections.Get() returns an unexpected error", func() {
