@@ -50,20 +50,33 @@ var _ = Describe("Campaign types lifecycle", func() {
 		})
 
 		By("creating a campaign type", func() {
+			var response struct {
+				ID          string
+				Name        string
+				Description string
+				Critical    bool
+				TemplateID  string
+				Links       struct {
+					Self struct {
+						Href string
+					}
+				} `json:"_links"`
+			}
 			client.Document()
-			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
+			status, err := client.DoTyped("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 				"name":        "some-campaign-type",
 				"description": "a great campaign type",
-			}, token.Access)
+			}, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
-			campaignTypeID = response["id"].(string)
+			campaignTypeID = response.ID
 
-			Expect(response["name"]).To(Equal("some-campaign-type"))
-			Expect(response["description"]).To(Equal("a great campaign type"))
-			Expect(response["critical"]).To(BeFalse())
-			Expect(response["template_id"]).To(BeEmpty())
+			Expect(response.Name).To(Equal("some-campaign-type"))
+			Expect(response.Description).To(Equal("a great campaign type"))
+			Expect(response.Critical).To(BeFalse())
+			Expect(response.TemplateID).To(BeEmpty())
+			Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/campaign_types/%s", response.ID)))
 		})
 
 		By("showing the newly created campaign type", func() {

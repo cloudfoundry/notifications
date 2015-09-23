@@ -100,7 +100,12 @@ var _ = Describe("CreateHandler", func() {
 			"name": "some-campaign-type",
 			"description": "some-campaign-type-description",
 			"critical": false,
-			"template_id": "some-template-id"
+			"template_id": "some-template-id",
+			"_links": {
+				"self": {
+					"href": "/campaign_types/some-campaign-type-id"
+				}
+			}
 		}`))
 	})
 
@@ -149,7 +154,12 @@ var _ = Describe("CreateHandler", func() {
 			"name": "some-campaign-type",
 			"description": "some-campaign-type-description",
 			"critical": true,
-			"template_id": "some-template-id"
+			"template_id": "some-template-id",
+			"_links": {
+				"self": {
+					"href": "/campaign_types/some-campaign-type-id"
+				}
+			}
 		}`))
 	})
 
