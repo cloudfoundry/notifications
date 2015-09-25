@@ -29,7 +29,7 @@ type Template struct {
 func (t *Template) PreInsert(s gorp.SqlExecutor) error {
 	if t.ID == "" {
 		var err error
-		t.ID, err = v2models.NewGUIDGenerator(rand.Reader).Generate()
+		t.ID, err = v2models.NewIDGenerator(rand.Reader).Generate()
 		if err != nil {
 			return err
 		}

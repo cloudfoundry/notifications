@@ -19,7 +19,7 @@ var _ = Describe("Messages Repository", func() {
 		repo          models.MessagesRepository
 		conn          *db.Connection
 		clock         *mocks.Clock
-		guidGenerator *mocks.GUIDGenerator
+		guidGenerator *mocks.IDGenerator
 	)
 
 	BeforeEach(func() {
@@ -28,8 +28,8 @@ var _ = Describe("Messages Repository", func() {
 		conn = database.Connection().(*db.Connection)
 		conn.AddTableWithName(models.Message{}, "messages")
 		clock = mocks.NewClock()
-		guidGenerator = mocks.NewGUIDGenerator()
-		guidGenerator.GenerateCall.Returns.GUIDs = []string{"random-guid-1"}
+		guidGenerator = mocks.NewIDGenerator()
+		guidGenerator.GenerateCall.Returns.IDs = []string{"random-guid-1"}
 
 		repo = models.NewMessagesRepository(clock, guidGenerator.Generate)
 	})

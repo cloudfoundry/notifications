@@ -45,7 +45,7 @@ func (m *Mother) Queue() gobble.QueueInterface {
 }
 
 func (m *Mother) V2Enqueuer() queue.JobEnqueuer {
-	return queue.NewJobEnqueuer(m.Queue(), v2models.NewMessagesRepository(util.NewClock(), v2models.NewGUIDGenerator(rand.Reader).Generate))
+	return queue.NewJobEnqueuer(m.Queue(), v2models.NewMessagesRepository(util.NewClock(), v2models.NewIDGenerator(rand.Reader).Generate))
 }
 
 func (m *Mother) UserStrategy() services.UserStrategy {
@@ -185,7 +185,7 @@ func (m *Mother) GlobalUnsubscribesRepo() v1models.GlobalUnsubscribesRepo {
 }
 
 func (m *Mother) MessagesRepo() v1models.MessagesRepo {
-	return v1models.NewMessagesRepo(v2models.NewGUIDGenerator(rand.Reader).Generate)
+	return v1models.NewMessagesRepo(v2models.NewIDGenerator(rand.Reader).Generate)
 }
 
 func (m *Mother) ReceiptsRepo() v1models.ReceiptsRepo {

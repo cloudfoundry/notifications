@@ -15,12 +15,12 @@ var _ = Describe("CampaignsRepository", func() {
 	var (
 		repo          models.CampaignsRepository
 		connection    db.ConnectionInterface
-		guidGenerator *mocks.GUIDGenerator
+		guidGenerator *mocks.IDGenerator
 	)
 
 	BeforeEach(func() {
-		guidGenerator = mocks.NewGUIDGenerator()
-		guidGenerator.GenerateCall.Returns.GUIDs = []string{"first-random-guid", "second-random-guid"}
+		guidGenerator = mocks.NewIDGenerator()
+		guidGenerator.GenerateCall.Returns.IDs = []string{"first-random-guid", "second-random-guid"}
 
 		repo = models.NewCampaignsRepository(guidGenerator.Generate)
 		database := db.NewDatabase(sqlDB, db.Config{})

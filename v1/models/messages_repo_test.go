@@ -20,7 +20,7 @@ var _ = Describe("MessagesRepo", func() {
 		repo          models.MessagesRepo
 		conn          db.ConnectionInterface
 		message       models.Message
-		guidGenerator *mocks.GUIDGenerator
+		guidGenerator *mocks.IDGenerator
 	)
 
 	BeforeEach(func() {
@@ -32,8 +32,8 @@ var _ = Describe("MessagesRepo", func() {
 			Status:     postal.StatusDelivered,
 		}
 
-		guidGenerator = mocks.NewGUIDGenerator()
-		guidGenerator.GenerateCall.Returns.GUIDs = []string{
+		guidGenerator = mocks.NewIDGenerator()
+		guidGenerator.GenerateCall.Returns.IDs = []string{
 			"first-random-guid",
 		}
 

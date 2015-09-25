@@ -16,15 +16,15 @@ var _ = Describe("TemplatesRepo", func() {
 	var (
 		repo          models.TemplatesRepository
 		conn          db.ConnectionInterface
-		guidGenerator *mocks.GUIDGenerator
+		guidGenerator *mocks.IDGenerator
 	)
 
 	BeforeEach(func() {
 		database := db.NewDatabase(sqlDB, db.Config{})
 		helpers.TruncateTables(database)
 
-		guidGenerator = mocks.NewGUIDGenerator()
-		guidGenerator.GenerateCall.Returns.GUIDs = []string{"first-random-guid", "second-random-guid"}
+		guidGenerator = mocks.NewIDGenerator()
+		guidGenerator.GenerateCall.Returns.IDs = []string{"first-random-guid", "second-random-guid"}
 
 		repo = models.NewTemplatesRepository(guidGenerator.Generate)
 		conn = database.Connection()

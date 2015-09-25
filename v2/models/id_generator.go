@@ -5,17 +5,17 @@ import (
 	"io"
 )
 
-type GUIDGenerator struct {
+type IDGenerator struct {
 	reader io.Reader
 }
 
-func NewGUIDGenerator(reader io.Reader) GUIDGenerator {
-	return GUIDGenerator{
+func NewIDGenerator(reader io.Reader) IDGenerator {
+	return IDGenerator{
 		reader: reader,
 	}
 }
 
-func (g GUIDGenerator) Generate() (string, error) {
+func (g IDGenerator) Generate() (string, error) {
 	var buf [16]byte
 
 	_, err := g.reader.Read(buf[:])

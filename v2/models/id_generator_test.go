@@ -16,10 +16,10 @@ func (e errorReader) Read([]byte) (int, error) {
 	return 0, errors.New("failed to read")
 }
 
-var _ = Describe("GUIDGenerator", func() {
-	It("generates a GUID without generating an error", func() {
+var _ = Describe("IDGenerator", func() {
+	It("generates a ID without generating an error", func() {
 		reader := bytes.NewReader([]byte("abcdefghijklmnopqrstuvwxyz1234567890"))
-		generator := models.NewGUIDGenerator(reader)
+		generator := models.NewIDGenerator(reader)
 
 		guid, err := generator.Generate()
 		Expect(err).NotTo(HaveOccurred())
@@ -28,7 +28,7 @@ var _ = Describe("GUIDGenerator", func() {
 
 	It("returns an error if the reader errors", func() {
 		reader := errorReader{}
-		generator := models.NewGUIDGenerator(reader)
+		generator := models.NewIDGenerator(reader)
 
 		_, err := generator.Generate()
 		Expect(err).To(MatchError(errors.New("failed to read")))

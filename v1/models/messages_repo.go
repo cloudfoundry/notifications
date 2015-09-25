@@ -6,22 +6,22 @@ import (
 	"time"
 )
 
-type GUIDGeneratorFunc func() (string, error)
+type IDGeneratorFunc func() (string, error)
 
 type MessagesRepo struct {
-	generateGUID GUIDGeneratorFunc
+	generateID IDGeneratorFunc
 }
 
-func NewMessagesRepo(guidGenerator GUIDGeneratorFunc) MessagesRepo {
+func NewMessagesRepo(guidGenerator IDGeneratorFunc) MessagesRepo {
 	return MessagesRepo{
-		generateGUID: guidGenerator,
+		generateID: guidGenerator,
 	}
 }
 
 func (repo MessagesRepo) Create(conn ConnectionInterface, message Message) (Message, error) {
 	if message.ID == "" {
 		var err error
-		message.ID, err = repo.generateGUID()
+		message.ID, err = repo.generateID()
 		if err != nil {
 			return Message{}, err
 		}

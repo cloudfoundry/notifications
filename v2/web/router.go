@@ -79,7 +79,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	campaignEnqueuer := queue.NewCampaignEnqueuer(config.Queue)
 
-	guidGenerator := models.NewGUIDGenerator(rand.Reader)
+	guidGenerator := models.NewIDGenerator(rand.Reader)
 	sendersRepository := models.NewSendersRepository(guidGenerator.Generate)
 	campaignTypesRepository := models.NewCampaignTypesRepository(guidGenerator.Generate)
 	templatesRepository := models.NewTemplatesRepository(guidGenerator.Generate)

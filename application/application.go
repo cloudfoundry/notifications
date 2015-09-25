@@ -148,7 +148,7 @@ func (app Application) StartWorkers() {
 		})
 
 		database := v2models.NewDatabase(app.mother.SQLDatabase(), v2models.Config{})
-		guidGenerator := v2models.NewGUIDGenerator(rand.Reader)
+		guidGenerator := v2models.NewIDGenerator(rand.Reader)
 		messagesRepository := v2models.NewMessagesRepository(util.NewClock(), guidGenerator.Generate)
 		messageStatusUpdater := v2.NewV2MessageStatusUpdater(messagesRepository)
 		unsubscribersRepository := v2models.NewUnsubscribersRepository(guidGenerator.Generate)

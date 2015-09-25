@@ -47,7 +47,7 @@ type mother interface {
 }
 
 func NewRouter(mx muxer, mom mother, config Config) http.Handler {
-	guidGenerator := v2models.NewGUIDGenerator(rand.Reader)
+	guidGenerator := v2models.NewIDGenerator(rand.Reader)
 
 	clientsRepo := models.NewClientsRepo()
 	kindsRepo := models.NewKindsRepo()
