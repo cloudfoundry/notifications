@@ -16,38 +16,38 @@ type cloudController interface {
 	LoadOrganization(orgGUID, token string) (cf.CloudControllerOrganization, error)
 }
 
-type FindsUserGUIDs struct {
+type FindsUserIDs struct {
 	cc  cloudController
 	uaa uaaUsersGUIDsByScope
 }
 
-func NewFindsUserGUIDs(cc cloudController, uaa uaaUsersGUIDsByScope) FindsUserGUIDs {
-	return FindsUserGUIDs{
+func NewFindsUserIDs(cc cloudController, uaa uaaUsersGUIDsByScope) FindsUserIDs {
+	return FindsUserIDs{
 		cc:  cc,
 		uaa: uaa,
 	}
 }
 
-func (finder FindsUserGUIDs) UserGUIDsBelongingToSpace(spaceGUID, token string) ([]string, error) {
-	var userGUIDs []string
+func (finder FindsUserIDs) UserIDsBelongingToSpace(spaceGUID, token string) ([]string, error) {
+	var userIDs []string
 
 	users, err := finder.cc.GetUsersBySpaceGuid(spaceGUID, token)
 	if err != nil {
-		return userGUIDs, err
+		return userIDs, err
 	}
 
 	for _, user := range users {
-		userGUIDs = append(userGUIDs, user.GUID)
+		userIDs = append(userIDs, user.GUID)
 	}
 
-	return userGUIDs, nil
+	return userIDs, nil
 }
 
-func (finder FindsUserGUIDs) UserGUIDsBelongingToOrganization(orgGUID, role, token string) ([]string, error) {
+func (finder FindsUserIDs) UserIDsBelongingToOrganization(orgGUID, role, token string) ([]string, error) {
 	var (
-		userGUIDs []string
-		users     []cf.CloudControllerUser
-		err       error
+		userIDs []string
+		users   []cf.CloudControllerUser
+		err     error
 	)
 
 	switch role {
@@ -62,23 +62,16 @@ func (finder FindsUserGUIDs) UserGUIDsBelongingToOrganization(orgGUID, role, tok
 	}
 
 	if err != nil {
-		return userGUIDs, err
+		return userIDs, err
 	}
 
 	for _, user := range users {
-		userGUIDs = append(userGUIDs, user.GUID)
+		userIDs = append(userIDs, user.GUID)
 	}
 
-	return userGUIDs, nil
+	return userIDs, nil
 }
 
-func (finder FindsUserGUIDs) UserGUIDsBelongingToScope(token, scope string) ([]string, error) {
-	var userGUIDs []string
-
-	userGUIDs, err := finder.uaa.UsersGUIDsByScope(token, scope)
-	if err != nil {
-		return userGUIDs, err
-	}
-
-	return userGUIDs, nil
+func (finder FindsUserIDs) UserIDsBelongingToScope(token, scope string) ([]string, error) {
+	return finder.uaa.UsersGUIDsByScope(token, scope)
 }

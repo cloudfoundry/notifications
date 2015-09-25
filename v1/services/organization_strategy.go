@@ -7,8 +7,8 @@ const (
 	OrganizationRoleEndorsement = `You received this message because you are an {{.OrganizationRole}} in the "{{.Organization}}" organization.`
 )
 
-type orgUserGUIDFinder interface {
-	UserGUIDsBelongingToOrganization(orgGUID, role, token string) (userGUIDs []string, err error)
+type orgUserIDFinder interface {
+	UserIDsBelongingToOrganization(orgGUID, role, token string) (userIDs []string, err error)
 }
 
 type loadsOrganizations interface {
@@ -18,16 +18,16 @@ type loadsOrganizations interface {
 type OrganizationStrategy struct {
 	tokenLoader        loadsTokens
 	organizationLoader loadsOrganizations
-	findsUserGUIDs     orgUserGUIDFinder
+	findsUserIDs       orgUserIDFinder
 	v1Enqueuer         v1Enqueuer
 	v2Enqueuer         v2Enqueuer
 }
 
-func NewOrganizationStrategy(tokenLoader loadsTokens, organizationLoader loadsOrganizations, findsUserGUIDs orgUserGUIDFinder, queue v1Enqueuer, v2Enqueuer v2Enqueuer) OrganizationStrategy {
+func NewOrganizationStrategy(tokenLoader loadsTokens, organizationLoader loadsOrganizations, findsUserIDs orgUserIDFinder, queue v1Enqueuer, v2Enqueuer v2Enqueuer) OrganizationStrategy {
 	return OrganizationStrategy{
 		tokenLoader:        tokenLoader,
 		organizationLoader: organizationLoader,
-		findsUserGUIDs:     findsUserGUIDs,
+		findsUserIDs:       findsUserIDs,
 		v1Enqueuer:         queue,
 		v2Enqueuer:         v2Enqueuer,
 	}
@@ -68,7 +68,7 @@ func (strategy OrganizationStrategy) Dispatch(dispatch Dispatch) ([]Response, er
 		return responses, err
 	}
 
-	userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToOrganization(dispatch.GUID, options.Role, token)
+	userGUIDs, err := strategy.findsUserIDs.UserIDsBelongingToOrganization(dispatch.GUID, options.Role, token)
 	if err != nil {
 		return responses, err
 	}

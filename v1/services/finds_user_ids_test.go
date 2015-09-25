@@ -11,9 +11,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("FindsUserGUIDs", func() {
+var _ = Describe("FindsUserIDs", func() {
 	var (
-		finder services.FindsUserGUIDs
+		finder services.FindsUserIDs
 		cc     *mocks.CloudController
 		uaa    *mocks.ZonedUAAClient
 	)
@@ -21,16 +21,16 @@ var _ = Describe("FindsUserGUIDs", func() {
 	BeforeEach(func() {
 		cc = mocks.NewCloudController()
 		uaa = mocks.NewZonedUAAClient()
-		finder = services.NewFindsUserGUIDs(cc, uaa)
+		finder = services.NewFindsUserIDs(cc, uaa)
 	})
 
-	Context("UserGUIDsBelongingToScope", func() {
+	Context("UserIDsBelongingToScope", func() {
 		BeforeEach(func() {
 			uaa.UsersGUIDsByScopeCall.Returns.UserGUIDs = []string{"user-402", "user-525"}
 		})
 
-		It("returns the userGUIDs that have that scope", func() {
-			guids, err := finder.UserGUIDsBelongingToScope("token", "this.scope")
+		It("returns the userIDs that have that scope", func() {
+			guids, err := finder.UserIDsBelongingToScope("token", "this.scope")
 
 			Expect(guids).To(Equal([]string{"user-402", "user-525"}))
 			Expect(err).NotTo(HaveOccurred())
@@ -43,13 +43,13 @@ var _ = Describe("FindsUserGUIDs", func() {
 			It("returns the error", func() {
 				uaa.UsersGUIDsByScopeCall.Returns.Error = errors.New("foobar")
 
-				_, err := finder.UserGUIDsBelongingToScope("token", "this.scope")
+				_, err := finder.UserIDsBelongingToScope("token", "this.scope")
 				Expect(err).To(MatchError(errors.New("foobar")))
 			})
 		})
 	})
 
-	Context("UserGUIDsBelongingToSpace", func() {
+	Context("UserIDsBelongingToSpace", func() {
 		BeforeEach(func() {
 			cc.GetUsersBySpaceGuidCall.Returns.Users = []cf.CloudControllerUser{
 				{GUID: "user-123"},
@@ -57,8 +57,8 @@ var _ = Describe("FindsUserGUIDs", func() {
 			}
 		})
 
-		It("returns the user GUIDs for the space", func() {
-			guids, err := finder.UserGUIDsBelongingToSpace("space-001", "token")
+		It("returns the user IDs for the space", func() {
+			guids, err := finder.UserIDsBelongingToSpace("space-001", "token")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(guids).To(Equal([]string{"user-123", "user-789"}))
 
@@ -70,13 +70,13 @@ var _ = Describe("FindsUserGUIDs", func() {
 			It("returns the error", func() {
 				cc.GetUsersBySpaceGuidCall.Returns.Error = errors.New("BOOM!")
 
-				_, err := finder.UserGUIDsBelongingToSpace("space-001", "token")
+				_, err := finder.UserIDsBelongingToSpace("space-001", "token")
 				Expect(err).To(MatchError(errors.New("BOOM!")))
 			})
 		})
 	})
 
-	Context("UserGUIDsBelongingToOrganization", func() {
+	Context("UserIDsBelongingToOrganization", func() {
 		BeforeEach(func() {
 			cc.GetUsersByOrgGuidCall.Returns.Users = []cf.CloudControllerUser{
 				{GUID: "user-456"},
@@ -85,8 +85,8 @@ var _ = Describe("FindsUserGUIDs", func() {
 		})
 
 		Context("when there is no role", func() {
-			It("returns the user GUIDs for the organization", func() {
-				guids, err := finder.UserGUIDsBelongingToOrganization("org-001", "", "token")
+			It("returns the user IDs for the organization", func() {
+				guids, err := finder.UserIDsBelongingToOrganization("org-001", "", "token")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(guids).To(Equal([]string{"user-456", "user-001"}))
 
@@ -97,7 +97,7 @@ var _ = Describe("FindsUserGUIDs", func() {
 			Context("when CloudController causes an error", func() {
 				It("returns the error", func() {
 					cc.GetUsersByOrgGuidCall.Returns.Error = errors.New("BOOM!")
-					_, err := finder.UserGUIDsBelongingToOrganization("org-001", "", "token")
+					_, err := finder.UserIDsBelongingToOrganization("org-001", "", "token")
 					Expect(err).To(MatchError(errors.New("BOOM!")))
 				})
 			})
@@ -112,7 +112,7 @@ var _ = Describe("FindsUserGUIDs", func() {
 			})
 
 			It("returns the organization managers for the organization", func() {
-				guids, err := finder.UserGUIDsBelongingToOrganization("org-001", "OrgManager", "token")
+				guids, err := finder.UserIDsBelongingToOrganization("org-001", "OrgManager", "token")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(guids).To(Equal([]string{"user-678", "user-xxx"}))
 
@@ -124,7 +124,7 @@ var _ = Describe("FindsUserGUIDs", func() {
 				It("returns the error", func() {
 					cc.GetManagersByOrgGuidCall.Returns.Error = errors.New("BOOM!")
 
-					_, err := finder.UserGUIDsBelongingToOrganization("org-001", "OrgManager", "token")
+					_, err := finder.UserIDsBelongingToOrganization("org-001", "OrgManager", "token")
 					Expect(err).To(MatchError(errors.New("BOOM!")))
 				})
 			})
@@ -139,7 +139,7 @@ var _ = Describe("FindsUserGUIDs", func() {
 			})
 
 			It("returns the organization auditors for the organization", func() {
-				guids, err := finder.UserGUIDsBelongingToOrganization("org-001", "OrgAuditor", "token")
+				guids, err := finder.UserIDsBelongingToOrganization("org-001", "OrgAuditor", "token")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(guids).To(Equal([]string{"user-abc", "user-zzz"}))
 
@@ -151,7 +151,7 @@ var _ = Describe("FindsUserGUIDs", func() {
 				It("returns the error", func() {
 					cc.GetAuditorsByOrgGuidCall.Returns.Error = errors.New("BOOM!")
 
-					_, err := finder.UserGUIDsBelongingToOrganization("org-001", "OrgAuditor", "token")
+					_, err := finder.UserIDsBelongingToOrganization("org-001", "OrgAuditor", "token")
 					Expect(err).To(MatchError(errors.New("BOOM!")))
 				})
 			})
@@ -166,7 +166,7 @@ var _ = Describe("FindsUserGUIDs", func() {
 			})
 
 			It("returns the billing managers for the organization", func() {
-				guids, err := finder.UserGUIDsBelongingToOrganization("org-001", "BillingManager", "token")
+				guids, err := finder.UserIDsBelongingToOrganization("org-001", "BillingManager", "token")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(guids).To(Equal([]string{"user-jkl", "user-aaa"}))
 
@@ -178,7 +178,7 @@ var _ = Describe("FindsUserGUIDs", func() {
 				It("returns the error", func() {
 					cc.GetBillingManagersByOrgGuidCall.Returns.Error = errors.New("BOOM!")
 
-					_, err := finder.UserGUIDsBelongingToOrganization("org-001", "BillingManager", "token")
+					_, err := finder.UserIDsBelongingToOrganization("org-001", "BillingManager", "token")
 					Expect(err).To(MatchError(errors.New("BOOM!")))
 				})
 			})

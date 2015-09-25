@@ -23,7 +23,7 @@ var _ = Describe("Space Strategy", func() {
 		v1Enqueuer         *mocks.Enqueuer
 		v2Enqueuer         *mocks.V2Enqueuer
 		conn               *mocks.Connection
-		findsUserGUIDs     *mocks.FindsUserGUIDs
+		findsUserIDs       *mocks.FindsUserIDs
 		requestReceived    time.Time
 		token              string
 	)
@@ -47,8 +47,8 @@ var _ = Describe("Space Strategy", func() {
 		v1Enqueuer = mocks.NewEnqueuer()
 		v2Enqueuer = mocks.NewV2Enqueuer()
 
-		findsUserGUIDs = mocks.NewFindsUserGUIDs()
-		findsUserGUIDs.UserGUIDsBelongingToSpaceCall.Returns.UserGUIDs = []string{"user-123", "user-456"}
+		findsUserIDs = mocks.NewFindsUserIDs()
+		findsUserIDs.UserIDsBelongingToSpaceCall.Returns.UserIDs = []string{"user-123", "user-456"}
 
 		spaceLoader = mocks.NewSpaceLoader()
 		spaceLoader.LoadCall.Returns.Space = cf.CloudControllerSpace{
@@ -61,7 +61,7 @@ var _ = Describe("Space Strategy", func() {
 			Name: "the-org",
 			GUID: "org-001",
 		}
-		strategy = services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, v1Enqueuer, v2Enqueuer)
+		strategy = services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserIDs, v1Enqueuer, v2Enqueuer)
 	})
 
 	Describe("Dispatch", func() {
@@ -144,8 +144,8 @@ var _ = Describe("Space Strategy", func() {
 
 					Expect(tokenLoader.LoadCall.Receives.UAAHost).To(Equal("uaa"))
 
-					Expect(findsUserGUIDs.UserGUIDsBelongingToSpaceCall.Receives.SpaceGUID).To(Equal("space-001"))
-					Expect(findsUserGUIDs.UserGUIDsBelongingToSpaceCall.Receives.Token).To(Equal(token))
+					Expect(findsUserIDs.UserIDsBelongingToSpaceCall.Receives.SpaceGUID).To(Equal("space-001"))
+					Expect(findsUserIDs.UserIDsBelongingToSpaceCall.Receives.Token).To(Equal(token))
 				})
 			})
 			Context("and the dispatch JobType is v2", func() {
@@ -229,9 +229,9 @@ var _ = Describe("Space Strategy", func() {
 				})
 			})
 
-			Context("when findsUserGUIDs returns an err", func() {
+			Context("when findsUserIDs returns an err", func() {
 				It("returns an error", func() {
-					findsUserGUIDs.UserGUIDsBelongingToSpaceCall.Returns.Error = errors.New("BOOM!")
+					findsUserIDs.UserIDsBelongingToSpaceCall.Returns.Error = errors.New("BOOM!")
 
 					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))

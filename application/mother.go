@@ -60,9 +60,9 @@ func (m *Mother) SpaceStrategy() services.SpaceStrategy {
 	spaceLoader := services.NewSpaceLoader(cloudController)
 	organizationLoader := services.NewOrganizationLoader(cloudController)
 	enqueuer := m.Enqueuer()
-	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
+	findsUserIDs := services.NewFindsUserIDs(cloudController, uaaClient)
 
-	return services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserGUIDs, enqueuer, m.V2Enqueuer())
+	return services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserIDs, enqueuer, m.V2Enqueuer())
 }
 
 func (m *Mother) OrganizationStrategy() services.OrganizationStrategy {
@@ -71,10 +71,10 @@ func (m *Mother) OrganizationStrategy() services.OrganizationStrategy {
 	uaaClient := uaa.NewZonedUAAClient(m.env.UAAClientID, m.env.UAAClientSecret, m.env.VerifySSL, UAAPublicKey)
 	tokenLoader := uaa.NewTokenLoader(uaaClient)
 	organizationLoader := services.NewOrganizationLoader(cloudController)
-	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
+	findsUserIDs := services.NewFindsUserIDs(cloudController, uaaClient)
 	enqueuer := m.Enqueuer()
 
-	return services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, enqueuer, m.V2Enqueuer())
+	return services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserIDs, enqueuer, m.V2Enqueuer())
 }
 
 func (m *Mother) EveryoneStrategy() services.EveryoneStrategy {
@@ -91,10 +91,10 @@ func (m *Mother) UAAScopeStrategy() services.UAAScopeStrategy {
 	cloudController := cf.NewCloudController(m.env.CCHost, !m.env.VerifySSL)
 
 	tokenLoader := uaa.NewTokenLoader(uaaClient)
-	findsUserGUIDs := services.NewFindsUserGUIDs(cloudController, uaaClient)
+	findsUserIDs := services.NewFindsUserIDs(cloudController, uaaClient)
 	enqueuer := m.Enqueuer()
 
-	return services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, enqueuer, m.V2Enqueuer(), m.env.DefaultUAAScopes)
+	return services.NewUAAScopeStrategy(tokenLoader, findsUserIDs, enqueuer, m.V2Enqueuer(), m.env.DefaultUAAScopes)
 }
 
 func (m *Mother) EmailStrategy() services.EmailStrategy {

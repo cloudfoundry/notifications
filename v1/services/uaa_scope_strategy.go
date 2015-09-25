@@ -4,25 +4,25 @@ import "github.com/cloudfoundry-incubator/notifications/cf"
 
 const ScopeEndorsement = "You received this message because you have the {{.Scope}} scope."
 
-type scopeUserGUIDFinder interface {
-	UserGUIDsBelongingToScope(token, scope string) (userGUIDs []string, err error)
+type scopeUserIDFinder interface {
+	UserIDsBelongingToScope(token, scope string) (userIDs []string, err error)
 }
 
 type UAAScopeStrategy struct {
-	findsUserGUIDs scopeUserGUIDFinder
-	tokenLoader    loadsTokens
-	v1Enqueuer     v1Enqueuer
-	v2Enqueuer     v2Enqueuer
-	defaultScopes  []string
+	findsUserIDs  scopeUserIDFinder
+	tokenLoader   loadsTokens
+	v1Enqueuer    v1Enqueuer
+	v2Enqueuer    v2Enqueuer
+	defaultScopes []string
 }
 
-func NewUAAScopeStrategy(tokenLoader loadsTokens, findsUserGUIDs scopeUserGUIDFinder, v1Enqueuer v1Enqueuer, v2Enqueuer v2Enqueuer, defaultScopes []string) UAAScopeStrategy {
+func NewUAAScopeStrategy(tokenLoader loadsTokens, findsUserIDs scopeUserIDFinder, v1Enqueuer v1Enqueuer, v2Enqueuer v2Enqueuer, defaultScopes []string) UAAScopeStrategy {
 	return UAAScopeStrategy{
-		findsUserGUIDs: findsUserGUIDs,
-		tokenLoader:    tokenLoader,
-		v1Enqueuer:     v1Enqueuer,
-		v2Enqueuer:     v2Enqueuer,
-		defaultScopes:  defaultScopes,
+		findsUserIDs:  findsUserIDs,
+		tokenLoader:   tokenLoader,
+		v1Enqueuer:    v1Enqueuer,
+		v2Enqueuer:    v2Enqueuer,
+		defaultScopes: defaultScopes,
 	}
 }
 
@@ -55,7 +55,7 @@ func (strategy UAAScopeStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		return responses, err
 	}
 
-	userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToScope(token, dispatch.GUID)
+	userGUIDs, err := strategy.findsUserIDs.UserIDsBelongingToScope(token, dispatch.GUID)
 	if err != nil {
 		return responses, err
 	}

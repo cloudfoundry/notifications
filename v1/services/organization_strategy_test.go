@@ -22,7 +22,7 @@ var _ = Describe("Organization Strategy", func() {
 		v1Enqueuer         *mocks.Enqueuer
 		v2Enqueuer         *mocks.V2Enqueuer
 		conn               *mocks.Connection
-		findsUserGUIDs     *mocks.FindsUserGUIDs
+		findsUserIDs       *mocks.FindsUserIDs
 		requestReceived    time.Time
 		token              string
 	)
@@ -45,15 +45,15 @@ var _ = Describe("Organization Strategy", func() {
 		v1Enqueuer = mocks.NewEnqueuer()
 		v2Enqueuer = mocks.NewV2Enqueuer()
 
-		findsUserGUIDs = mocks.NewFindsUserGUIDs()
-		findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Returns.UserGUIDs = []string{"user-123", "user-456"}
+		findsUserIDs = mocks.NewFindsUserIDs()
+		findsUserIDs.UserIDsBelongingToOrganizationCall.Returns.UserIDs = []string{"user-123", "user-456"}
 
 		organizationLoader = mocks.NewOrganizationLoader()
 		organizationLoader.LoadCall.Returns.Organization = cf.CloudControllerOrganization{
 			Name: "my-org",
 			GUID: "org-001",
 		}
-		strategy = services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserGUIDs, v1Enqueuer, v2Enqueuer)
+		strategy = services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserIDs, v1Enqueuer, v2Enqueuer)
 	})
 
 	Describe("Dispatch", func() {
@@ -132,9 +132,9 @@ var _ = Describe("Organization Strategy", func() {
 
 					Expect(tokenLoader.LoadCall.Receives.UAAHost).To(Equal("testzone1"))
 
-					Expect(findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Receives.OrgGUID).To(Equal("org-001"))
-					Expect(findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Receives.Role).To(Equal(""))
-					Expect(findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Receives.Token).To(Equal(token))
+					Expect(findsUserIDs.UserIDsBelongingToOrganizationCall.Receives.OrgGUID).To(Equal("org-001"))
+					Expect(findsUserIDs.UserIDsBelongingToOrganizationCall.Receives.Role).To(Equal(""))
+					Expect(findsUserIDs.UserIDsBelongingToOrganizationCall.Receives.Token).To(Equal(token))
 				})
 
 				Context("when the org role field is set", func() {
@@ -188,9 +188,9 @@ var _ = Describe("Organization Strategy", func() {
 							Endorsement: services.OrganizationRoleEndorsement,
 						}))
 
-						Expect(findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Receives.OrgGUID).To(Equal("org-001"))
-						Expect(findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Receives.Role).To(Equal("OrgManager"))
-						Expect(findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Receives.Token).To(Equal(token))
+						Expect(findsUserIDs.UserIDsBelongingToOrganizationCall.Receives.OrgGUID).To(Equal("org-001"))
+						Expect(findsUserIDs.UserIDsBelongingToOrganizationCall.Receives.Role).To(Equal("OrgManager"))
+						Expect(findsUserIDs.UserIDsBelongingToOrganizationCall.Receives.Token).To(Equal(token))
 					})
 				})
 			})
@@ -280,9 +280,9 @@ var _ = Describe("Organization Strategy", func() {
 				})
 			})
 
-			Context("when finds user GUIDs returns an error", func() {
+			Context("when finds user IDs returns an error", func() {
 				It("returns an error", func() {
-					findsUserGUIDs.UserGUIDsBelongingToOrganizationCall.Returns.Error = errors.New("BOOM!")
+					findsUserIDs.UserIDsBelongingToOrganizationCall.Returns.Error = errors.New("BOOM!")
 
 					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))

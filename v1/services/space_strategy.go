@@ -4,8 +4,8 @@ import "github.com/cloudfoundry-incubator/notifications/cf"
 
 const SpaceEndorsement = `You received this message because you belong to the "{{.Space}}" space in the "{{.Organization}}" organization.`
 
-type spaceUserGUIDFinder interface {
-	UserGUIDsBelongingToSpace(spaceGUID, token string) (userGUIDs []string, err error)
+type spaceUserIDFinder interface {
+	UserIDsBelongingToSpace(spaceGUID, token string) (userIDs []string, err error)
 }
 
 type loadsSpaces interface {
@@ -16,17 +16,17 @@ type SpaceStrategy struct {
 	tokenLoader        loadsTokens
 	spaceLoader        loadsSpaces
 	organizationLoader loadsOrganizations
-	findsUserGUIDs     spaceUserGUIDFinder
+	findsUserIDs       spaceUserIDFinder
 	v1Enqueuer         v1Enqueuer
 	v2Enqueuer         v2Enqueuer
 }
 
-func NewSpaceStrategy(tokenLoader loadsTokens, spaceLoader loadsSpaces, organizationLoader loadsOrganizations, findsUserGUIDs spaceUserGUIDFinder, v1Enqueuer v1Enqueuer, v2Enqueuer v2Enqueuer) SpaceStrategy {
+func NewSpaceStrategy(tokenLoader loadsTokens, spaceLoader loadsSpaces, organizationLoader loadsOrganizations, findsUserIDs spaceUserIDFinder, v1Enqueuer v1Enqueuer, v2Enqueuer v2Enqueuer) SpaceStrategy {
 	return SpaceStrategy{
 		tokenLoader:        tokenLoader,
 		spaceLoader:        spaceLoader,
 		organizationLoader: organizationLoader,
-		findsUserGUIDs:     findsUserGUIDs,
+		findsUserIDs:       findsUserIDs,
 		v1Enqueuer:         v1Enqueuer,
 		v2Enqueuer:         v2Enqueuer,
 	}
@@ -59,7 +59,7 @@ func (strategy SpaceStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		return responses, err
 	}
 
-	userGUIDs, err := strategy.findsUserGUIDs.UserGUIDsBelongingToSpace(dispatch.GUID, token)
+	userGUIDs, err := strategy.findsUserIDs.UserIDsBelongingToSpace(dispatch.GUID, token)
 	if err != nil {
 		return responses, err
 	}

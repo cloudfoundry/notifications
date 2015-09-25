@@ -21,7 +21,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 		v1Enqueuer      *mocks.Enqueuer
 		v2Enqueuer      *mocks.V2Enqueuer
 		conn            *mocks.Connection
-		findsUserGUIDs  *mocks.FindsUserGUIDs
+		findsUserIDs    *mocks.FindsUserIDs
 		requestReceived time.Time
 		defaultScopes   []string
 		token           string
@@ -59,10 +59,10 @@ var _ = Describe("UAA Scope Strategy", func() {
 		v1Enqueuer = mocks.NewEnqueuer()
 		v2Enqueuer = mocks.NewV2Enqueuer()
 
-		findsUserGUIDs = mocks.NewFindsUserGUIDs()
-		findsUserGUIDs.UserGUIDsBelongingToScopeCall.Returns.UserGUIDs = []string{"user-311"}
+		findsUserIDs = mocks.NewFindsUserIDs()
+		findsUserIDs.UserIDsBelongingToScopeCall.Returns.UserIDs = []string{"user-311"}
 
-		strategy = services.NewUAAScopeStrategy(tokenLoader, findsUserGUIDs, v1Enqueuer, v2Enqueuer, defaultScopes)
+		strategy = services.NewUAAScopeStrategy(tokenLoader, findsUserIDs, v1Enqueuer, v2Enqueuer, defaultScopes)
 	})
 
 	Describe("Dispatch", func() {
@@ -130,8 +130,8 @@ var _ = Describe("UAA Scope Strategy", func() {
 					Expect(v1Enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceived))
 					Expect(v1Enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("uaa"))
 
-					Expect(findsUserGUIDs.UserGUIDsBelongingToScopeCall.Receives.Scope).To(Equal("great.scope"))
-					Expect(findsUserGUIDs.UserGUIDsBelongingToScopeCall.Receives.Token).To(Equal(token))
+					Expect(findsUserIDs.UserIDsBelongingToScopeCall.Receives.Scope).To(Equal("great.scope"))
+					Expect(findsUserIDs.UserIDsBelongingToScopeCall.Receives.Token).To(Equal(token))
 				})
 			})
 		})
@@ -210,9 +210,9 @@ var _ = Describe("UAA Scope Strategy", func() {
 				})
 			})
 
-			Context("when finds user GUIDs returns an error", func() {
+			Context("when finds user IDs returns an error", func() {
 				It("returns an error", func() {
-					findsUserGUIDs.UserGUIDsBelongingToScopeCall.Returns.Error = errors.New("BOOM!")
+					findsUserIDs.UserIDsBelongingToScopeCall.Returns.Error = errors.New("BOOM!")
 
 					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(HaveOccurred())
