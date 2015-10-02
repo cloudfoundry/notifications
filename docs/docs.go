@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"text/template"
 )
 
@@ -33,8 +34,10 @@ type ResourceEntry struct {
 }
 
 type DocGenerator struct {
-	RequestInspector requestInspector
-	Resources        map[string]ResourceEntry
+	RequestInspector         requestInspector
+	Resources                map[string]ResourceEntry
+	SampleAuthorizationToken string
+	DecodedToken             string
 }
 
 type requestInspector interface {
@@ -97,10 +100,14 @@ func (g *DocGenerator) Add(request *http.Request, response *http.Response) error
 
 	g.Resources[resourceInfo.ResourceType] = resourceEntry
 
+	g.SampleAuthorizationToken = resourceInfo.AuthorizationToken
+
 	return nil
 }
 
 func (g *DocGenerator) GenerateBlueprint(outputFilePath string) error {
+	g.DecodedToken = decodeSampleAuthorizationToken(g.SampleAuthorizationToken)
+
 	if outputFilePath == "" {
 		return nil
 	}
@@ -119,7 +126,17 @@ func (g *DocGenerator) GenerateBlueprint(outputFilePath string) error {
 	if err != nil {
 		panic(err)
 	}
-	outFile.Close()
 
+	outFile.Close()
 	return nil
+}
+
+func decodeSampleAuthorizationToken(token string) string {
+	cmd := exec.Command("uaac", "token", "decode", token)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		panic(err)
+	}
+
+	return string(output)
 }

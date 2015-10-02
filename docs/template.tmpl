@@ -1,9 +1,21 @@
 FORMAT: 1A
 
 # Notifications API
-This is version 2 of the Cloud Foundry notifications API. Integrate with this api in order to send messages to developers and billing contacts in your CF deployment.
+This is version 2 of the Cloud Foundry notifications API. Integrate with this API in order to send messages to developers and billing contacts in your CF deployment.
 
-# Data Structures
+## Authorization Tokens
+See [here](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-Tokens.md) for more information about UAA tokens.
+
+```http
+Authorization: bearer {{.SampleAuthorizationToken}}
+```
+
+Authorization tokens can be decoded to view the information they contain:
+
+```no-highlight
+$ uaac token decode {{.SampleAuthorizationToken}}
+{{.DecodedToken}}
+```
 
 {{ range $resource, $resourceEntry := .Resources }}
 
@@ -11,7 +23,6 @@ This is version 2 of the Cloud Foundry notifications API. Integrate with this ap
 Some description of the {{.ListResourceName}}
 
 ## {{.ItemResourceName}} List [/{{$resource}}]
-Some description of the {{.ItemResourceName}} list
 
 {{ range $index, $methodEntry := .ListMethodEntries }}
 
@@ -51,7 +62,6 @@ Some description of the {{.ItemResourceName}} list
 {{ end }}
 
 ## {{.ItemResourceName}} [/{{$resource}}/{id}]
-Some description of the {{.ItemResourceName}}
 
 + Parameters
 

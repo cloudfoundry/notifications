@@ -21,12 +21,16 @@ var _ = Describe("RequestInspector", func() {
 					URL: url,
 				}
 
+				request.Header = http.Header{
+					"X-NOTIFICATIONS-VERSION": []string{"2"},
+					"Authorization":           []string{"bearer some-client-token"},
+				}
+
 				inspector := docs.NewRequestInspector()
 				resourceInfo = inspector.GetResourceInfo(request)
 			})
 
 			It("should return the cannonical resource type from the request's URL", func() {
-
 				Expect(resourceInfo.ResourceType).To(Equal("senders"))
 				Expect(resourceInfo.ListName).To(Equal("Senders"))
 				Expect(resourceInfo.ItemName).To(Equal("Sender"))
@@ -34,6 +38,10 @@ var _ = Describe("RequestInspector", func() {
 
 			It("sets a flag for the list resource", func() {
 				Expect(resourceInfo.IsItem).To(BeFalse())
+			})
+
+			It("extracts the authorization token from the header", func() {
+				Expect(resourceInfo.AuthorizationToken).To(Equal("some-client-token"))
 			})
 		})
 

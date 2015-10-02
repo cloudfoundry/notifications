@@ -10,10 +10,11 @@ type RequestInspector struct {
 }
 
 type ResourceInfo struct {
-	ResourceType string
-	ListName     string
-	ItemName     string
-	IsItem       bool
+	ResourceType       string
+	ListName           string
+	ItemName           string
+	AuthorizationToken string
+	IsItem             bool
 }
 
 func NewRequestInspector() *RequestInspector {
@@ -39,6 +40,12 @@ func (i *RequestInspector) GetResourceInfo(request *http.Request) ResourceInfo {
 
 	resourceInfo.ListName = capitalizeFirstLetter(strings.Replace(resourceInfo.ResourceType, "_", " ", -1))
 	resourceInfo.ItemName = resourceInfo.ListName[0 : len(resourceInfo.ListName)-1]
+
+	tokenParts := strings.Split(request.Header.Get("Authorization"), " ")
+
+	if len(tokenParts) == 2 {
+		resourceInfo.AuthorizationToken = tokenParts[1]
+	}
 
 	return resourceInfo
 }

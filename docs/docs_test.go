@@ -63,6 +63,30 @@ var _ = Describe("DocsGenerator", func() {
 				Expect(resourceEntry.ListMethodEntries[0].Responses[0].Headers).To(HaveKeyWithValue("X-Cf-Requestid", []string{"some-request-id"}))
 				Expect(resourceEntry.ListMethodEntries[0].Responses[0].Body).To(Equal(`{ "some": "response" }`))
 			})
+
+			It("should save the authorization header", func() {
+				requestInspector := mocks.NewRequestInspector()
+				requestInspector.GetResourceInfoCall.Returns.ResourceInfo = docs.ResourceInfo{
+					ResourceType:       "some-resource-types",
+					ListName:           "Some resource types",
+					ItemName:           "Some resource type",
+					AuthorizationToken: "some-client-token",
+				}
+
+				docGenerator := docs.NewDocGenerator(requestInspector)
+
+				request, err := http.NewRequest("GET", "/some-resource-types", nil)
+				Expect(err).NotTo(HaveOccurred())
+
+				response := &http.Response{
+					StatusCode: http.StatusOK,
+					Body:       ioutil.NopCloser(bytes.NewReader([]byte(`{ "some": "response" }`))),
+					Request:    request,
+				}
+
+				Expect(docGenerator.Add(request, response)).To(Succeed())
+				Expect(docGenerator.SampleAuthorizationToken).To(Equal("some-client-token"))
+			})
 		})
 
 		Context("when an item request is added to the document generator", func() {
