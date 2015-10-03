@@ -1,4 +1,4 @@
-package postal
+package common
 
 import (
 	"bytes"

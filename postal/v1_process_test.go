@@ -10,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -26,7 +27,7 @@ var _ = Describe("V1Process", func() {
 		v1Process              postal.V1Process
 		logger                 lager.Logger
 		buffer                 *bytes.Buffer
-		delivery               postal.Delivery
+		delivery               common.Delivery
 		queue                  *mocks.Queue
 		unsubscribesRepo       *mocks.UnsubscribesRepo
 		globalUnsubscribesRepo *mocks.GlobalUnsubscribesRepo
@@ -82,7 +83,7 @@ var _ = Describe("V1Process", func() {
 		}
 		tokenLoader = mocks.NewTokenLoader()
 		templateLoader = mocks.NewTemplatesLoader()
-		templateLoader.LoadTemplatesCall.Returns.Templates = postal.Templates{
+		templateLoader.LoadTemplatesCall.Returns.Templates = common.Templates{
 			Text:    "{{.Text}} {{.Domain}}",
 			HTML:    "<p>{{.HTML}}</p>",
 			Subject: "{{.Subject}}",
@@ -100,7 +101,7 @@ var _ = Describe("V1Process", func() {
 			Sender:  "from@example.com",
 			Domain:  "example.com",
 
-			Packager:    postal.NewPackager(templateLoader, cloak),
+			Packager:    common.NewPackager(templateLoader, cloak),
 			MailClient:  mailClient,
 			Database:    database,
 			TokenLoader: tokenLoader,
@@ -115,10 +116,10 @@ var _ = Describe("V1Process", func() {
 		})
 
 		messageID = "randomly-generated-guid"
-		delivery = postal.Delivery{
+		delivery = common.Delivery{
 			ClientID: "some-client",
 			UserGUID: userGUID,
-			Options: postal.Options{
+			Options: common.Options{
 				Subject:    "the subject",
 				Text:       "body content",
 				ReplyTo:    "thesender@example.com",
@@ -197,7 +198,7 @@ var _ = Describe("V1Process", func() {
 				Sender:  "from@example.com",
 				Domain:  "example.com",
 
-				Packager:    postal.NewPackager(templateLoader, cloak),
+				Packager:    common.NewPackager(templateLoader, cloak),
 				MailClient:  mailClient,
 				Database:    database,
 				TokenLoader: tokenLoader,
@@ -370,7 +371,7 @@ var _ = Describe("V1Process", func() {
 				})
 
 				It("updates the message status as unavailable", func() {
-					var jobDelivery postal.Delivery
+					var jobDelivery common.Delivery
 					err := job.Unmarshal(&jobDelivery)
 					if err != nil {
 						panic(err)
@@ -581,7 +582,7 @@ var _ = Describe("V1Process", func() {
 
 		Context("when the template contains syntax errors", func() {
 			BeforeEach(func() {
-				templateLoader.LoadTemplatesCall.Returns.Templates = postal.Templates{
+				templateLoader.LoadTemplatesCall.Returns.Templates = common.Templates{
 					Text:    "This message is a test of the endorsement broadcast system. \n\n {{.Text}} \n\n ==Endorsement== \n {{.Endorsement} \n ==End Endorsement==",
 					HTML:    "<h3>This message is a test of the Endorsement Broadcast System</h3><p>{{.HTML}}</p><h3>Endorsement:</h3><p>{.Endorsement}</p>",
 					Subject: "Endorsement Test: {{.Subject}}",

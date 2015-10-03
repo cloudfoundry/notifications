@@ -1,10 +1,10 @@
-package postal_test
+package common_test
 
 import (
 	"bytes"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/pivotal-golang/lager"
 
@@ -17,7 +17,7 @@ var _ = Describe("DeliveryFailureHandler", func() {
 		job     *mocks.GobbleJob
 		buffer  *bytes.Buffer
 		logger  lager.Logger
-		handler postal.DeliveryFailureHandler
+		handler common.DeliveryFailureHandler
 	)
 
 	BeforeEach(func() {
@@ -26,7 +26,7 @@ var _ = Describe("DeliveryFailureHandler", func() {
 		logger = lager.NewLogger("notifications")
 		logger.RegisterSink(lager.NewWriterSink(buffer, lager.INFO))
 
-		handler = postal.NewDeliveryFailureHandler()
+		handler = common.NewDeliveryFailureHandler()
 	})
 
 	It("retries the job using an exponential backoff algorithm", func() {

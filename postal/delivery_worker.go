@@ -2,12 +2,11 @@ package postal
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/pivotal-golang/lager"
 )
@@ -21,7 +20,7 @@ type process interface {
 }
 
 type workflow interface {
-	Deliver(delivery Delivery, logger lager.Logger) error
+	Deliver(delivery common.Delivery, logger lager.Logger) error
 }
 
 type strategyDeterminer interface {
@@ -33,22 +32,7 @@ type messageStatusUpdater interface {
 }
 
 type deliveryFailureHandler interface {
-	Handle(job Retryable, logger lager.Logger)
-}
-
-type Delivery struct {
-	MessageID       string
-	Options         Options
-	UserGUID        string
-	Email           string
-	Space           cf.CloudControllerSpace
-	Organization    cf.CloudControllerOrganization
-	ClientID        string
-	UAAHost         string
-	Scope           string
-	VCAPRequestID   string
-	RequestReceived time.Time
-	CampaignID      string
+	Handle(job common.Retryable, logger lager.Logger)
 }
 
 type DeliveryWorkerConfig struct {
@@ -116,7 +100,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 			worker.deliveryFailureHandler.Handle(job, worker.logger)
 		}
 	case "v2":
-		var delivery Delivery
+		var delivery common.Delivery
 		job.Unmarshal(&delivery)
 
 		err = worker.V2Workflow.Deliver(delivery, worker.logger)

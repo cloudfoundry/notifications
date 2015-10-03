@@ -2,7 +2,7 @@ package v2
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 )
 
@@ -22,14 +22,14 @@ func NewTemplatesLoader(database db.DatabaseInterface, templatesCollection templ
 	}
 }
 
-func (loader TemplatesLoader) LoadTemplates(clientID, kindID, templateID string) (postal.Templates, error) {
+func (loader TemplatesLoader) LoadTemplates(clientID, kindID, templateID string) (common.Templates, error) {
 	conn := loader.database.Connection()
 	template, err := loader.templatesCollection.Get(conn, templateID, clientID)
 	if err != nil {
-		return postal.Templates{}, err
+		return common.Templates{}, err
 	}
 
-	return postal.Templates{
+	return common.Templates{
 		Subject: template.Subject,
 		Text:    template.Text,
 		HTML:    template.HTML,

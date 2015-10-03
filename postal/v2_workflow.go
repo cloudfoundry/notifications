@@ -4,14 +4,15 @@ import (
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/mail"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/pivotal-golang/lager"
 )
 
 type messagePackager interface {
-	PrepareContext(delivery Delivery, sender, domain string) (MessageContext, error)
-	Pack(context MessageContext) (mail.Message, error)
+	PrepareContext(delivery common.Delivery, sender, domain string) (common.MessageContext, error)
+	Pack(context common.MessageContext) (mail.Message, error)
 }
 
 type unsubscribersRepositoryInterface interface {
@@ -54,7 +55,7 @@ func NewV2Workflow(mailClient mailSender, packager messagePackager, userLoader u
 	}
 }
 
-func (w V2Workflow) Deliver(delivery Delivery, logger lager.Logger) error {
+func (w V2Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error {
 	conn := w.database.Connection()
 
 	campaign, err := w.campaignsRepository.Get(conn, delivery.CampaignID)

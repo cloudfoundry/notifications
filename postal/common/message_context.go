@@ -1,11 +1,55 @@
-package postal
+package common
 
 import (
 	"html"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/pivotal-golang/conceal"
 )
+
+type Options struct {
+	ReplyTo           string
+	Subject           string
+	KindDescription   string
+	SourceDescription string
+	Text              string
+	HTML              HTML
+	KindID            string
+	To                string
+	Role              string
+	Endorsement       string
+	TemplateID        string
+}
+
+type Delivery struct {
+	MessageID       string
+	Options         Options
+	UserGUID        string
+	Email           string
+	Space           cf.CloudControllerSpace
+	Organization    cf.CloudControllerOrganization
+	ClientID        string
+	UAAHost         string
+	Scope           string
+	VCAPRequestID   string
+	RequestReceived time.Time
+	CampaignID      string
+}
+
+type Templates struct {
+	Name    string
+	Subject string
+	Text    string
+	HTML    string
+}
+
+type HTML struct {
+	BodyContent    string
+	BodyAttributes string
+	Head           string
+	Doctype        string
+}
 
 type MessageContext struct {
 	From              string

@@ -2,25 +2,25 @@ package mocks
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/mail"
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 )
 
 type Packager struct {
 	PrepareContextCall struct {
 		Receives struct {
-			Delivery postal.Delivery
+			Delivery common.Delivery
 			Sender   string
 			Domain   string
 		}
 		Returns struct {
-			MessageContext postal.MessageContext
+			MessageContext common.MessageContext
 			Error          error
 		}
 	}
 
 	PackCall struct {
 		Receives struct {
-			MessageContext postal.MessageContext
+			MessageContext common.MessageContext
 		}
 		Returns struct {
 			Message mail.Message
@@ -33,7 +33,7 @@ func NewPackager() *Packager {
 	return &Packager{}
 }
 
-func (p *Packager) PrepareContext(delivery postal.Delivery, sender, domain string) (postal.MessageContext, error) {
+func (p *Packager) PrepareContext(delivery common.Delivery, sender, domain string) (common.MessageContext, error) {
 	p.PrepareContextCall.Receives.Delivery = delivery
 	p.PrepareContextCall.Receives.Sender = sender
 	p.PrepareContextCall.Receives.Domain = domain
@@ -41,7 +41,7 @@ func (p *Packager) PrepareContext(delivery postal.Delivery, sender, domain strin
 	return p.PrepareContextCall.Returns.MessageContext, p.PrepareContextCall.Returns.Error
 }
 
-func (p *Packager) Pack(context postal.MessageContext) (mail.Message, error) {
+func (p *Packager) Pack(context common.MessageContext) (mail.Message, error) {
 	p.PackCall.Receives.MessageContext = context
 
 	return p.PackCall.Returns.Message, p.PackCall.Returns.Error

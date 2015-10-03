@@ -1,10 +1,10 @@
-package postal_test
+package common_test
 
 import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 
 	. "github.com/onsi/ginkgo"
@@ -12,11 +12,11 @@ import (
 )
 
 var _ = Describe("MessageContext", func() {
-	var templates postal.Templates
+	var templates common.Templates
 	var email, sender, domain string
-	var options postal.Options
-	var html postal.HTML
-	var delivery postal.Delivery
+	var options common.Options
+	var html common.HTML
+	var delivery common.Delivery
 	var cloak *mocks.Cloak
 	var reqReceived time.Time
 
@@ -25,17 +25,17 @@ var _ = Describe("MessageContext", func() {
 		sender = "no-reply@notifications.example.com"
 		domain = "http://www.example.com"
 
-		templates = postal.Templates{
+		templates = common.Templates{
 			Text:    "the plainText email < template",
 			HTML:    "the html <h1> email < template</h1>",
 			Subject: "the subject < template",
 		}
 
-		html = postal.HTML{
+		html = common.HTML{
 			BodyContent: "user supplied html",
 		}
 
-		options = postal.Options{
+		options = common.Options{
 			ReplyTo:           "awesomeness",
 			Subject:           "the subject",
 			KindDescription:   "the kind description",
@@ -49,7 +49,7 @@ var _ = Describe("MessageContext", func() {
 
 		reqReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:40:12.207187819-07:00")
 
-		delivery = postal.Delivery{
+		delivery = common.Delivery{
 			Options:   options,
 			UserGUID:  "the-user",
 			ClientID:  "the-client-id",
@@ -73,7 +73,7 @@ var _ = Describe("MessageContext", func() {
 
 	Describe("NewMessageContext", func() {
 		It("returns the appropriate MessageContext when all options are specified", func() {
-			context := postal.NewMessageContext(delivery, sender, domain, cloak, templates)
+			context := common.NewMessageContext(delivery, sender, domain, cloak, templates)
 
 			Expect(cloak.VeilCall.Receives.PlainText).To(Equal([]byte("the-user|the-client-id|the-kind-id")))
 
@@ -106,34 +106,34 @@ var _ = Describe("MessageContext", func() {
 
 		It("falls back to Kind if KindDescription is missing", func() {
 			delivery.Options.KindDescription = ""
-			context := postal.NewMessageContext(delivery, sender, domain, cloak, templates)
+			context := common.NewMessageContext(delivery, sender, domain, cloak, templates)
 
 			Expect(context.KindDescription).To(Equal("the-kind-id"))
 		})
 
 		It("falls back to clientID when SourceDescription is missing", func() {
 			delivery.Options.SourceDescription = ""
-			context := postal.NewMessageContext(delivery, sender, domain, cloak, templates)
+			context := common.NewMessageContext(delivery, sender, domain, cloak, templates)
 
 			Expect(context.SourceDescription).To(Equal("the-client-id"))
 		})
 
 		It("fills in subject when subject is not specified", func() {
 			delivery.Options.Subject = ""
-			context := postal.NewMessageContext(delivery, sender, domain, cloak, templates)
+			context := common.NewMessageContext(delivery, sender, domain, cloak, templates)
 			Expect(context.Subject).To(Equal("[no subject]"))
 		})
 	})
 
 	Describe("Escape", func() {
 		BeforeEach(func() {
-			options = postal.Options{
+			options = common.Options{
 				ReplyTo:           "awesomeness",
 				Subject:           "the & subject",
 				KindDescription:   "the & kind description",
 				SourceDescription: "the & source description",
 				Text:              "user & supplied email text",
-				HTML:              postal.HTML{BodyContent: "user & supplied html"},
+				HTML:              common.HTML{BodyContent: "user & supplied html"},
 				KindID:            "the & kind",
 				Endorsement:       "this & is the endorsement",
 				Role:              "OrgRole",
@@ -148,7 +148,7 @@ var _ = Describe("MessageContext", func() {
 		})
 
 		It("html escapes various fields on the message context", func() {
-			context := postal.NewMessageContext(delivery, sender, domain, cloak, templates)
+			context := common.NewMessageContext(delivery, sender, domain, cloak, templates)
 			context.Escape()
 
 			Expect(context.From).To(Equal("no-reply@notifications.example.com"))

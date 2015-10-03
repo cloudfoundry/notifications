@@ -7,6 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/pivotal-golang/lager"
@@ -27,7 +28,7 @@ type V1ProcessConfig struct {
 	Sender  string
 	Domain  string
 
-	Packager    Packager
+	Packager    common.Packager
 	MailClient  mailSender
 	Database    db.DatabaseInterface
 	TokenLoader tokenLoader
@@ -47,7 +48,7 @@ type V1Process struct {
 	sender  string
 	domain  string
 
-	packager    Packager
+	packager    common.Packager
 	mailClient  mailSender
 	database    db.DatabaseInterface
 	tokenLoader tokenLoader
@@ -84,7 +85,7 @@ func NewV1Process(config V1ProcessConfig) V1Process {
 }
 
 func (p V1Process) Deliver(job *gobble.Job, logger lager.Logger) error {
-	var delivery Delivery
+	var delivery common.Delivery
 	err := job.Unmarshal(&delivery)
 	if err != nil {
 		metrics.NewMetric("counter", map[string]interface{}{
@@ -155,7 +156,7 @@ func (p V1Process) Deliver(job *gobble.Job, logger lager.Logger) error {
 	return nil
 }
 
-func (p V1Process) deliver(delivery Delivery, logger lager.Logger) string {
+func (p V1Process) deliver(delivery common.Delivery, logger lager.Logger) string {
 	context, err := p.packager.PrepareContext(delivery, p.sender, p.domain)
 	if err != nil {
 		panic(err)
@@ -174,7 +175,7 @@ func (p V1Process) deliver(delivery Delivery, logger lager.Logger) string {
 	return status
 }
 
-func (p V1Process) shouldDeliver(delivery Delivery, logger lager.Logger) bool {
+func (p V1Process) shouldDeliver(delivery common.Delivery, logger lager.Logger) bool {
 	conn := p.database.Connection()
 	if p.isCritical(conn, delivery.Options.KindID, delivery.ClientID) {
 		return true

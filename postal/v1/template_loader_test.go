@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/postal/v1"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -81,7 +81,7 @@ var _ = Describe("TemplateLoader", func() {
 			It("returns the template belonging to the kind", func() {
 				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id", "")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(templates).To(Equal(postal.Templates{
+				Expect(templates).To(Equal(common.Templates{
 					HTML:    "<p>kind template</p>",
 					Text:    "some kind template text",
 					Subject: "kind subject",
@@ -111,7 +111,7 @@ var _ = Describe("TemplateLoader", func() {
 			It("returns the template belonging to the client", func() {
 				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id", "")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(templates).To(Equal(postal.Templates{
+				Expect(templates).To(Equal(common.Templates{
 					HTML:    "<p>client template</p>",
 					Text:    "some client template text",
 					Subject: "client subject",
@@ -126,7 +126,7 @@ var _ = Describe("TemplateLoader", func() {
 			It("returns the default template", func() {
 				templates, err := loader.LoadTemplates("my-client-id", "my-kind-id", "")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(templates).To(Equal(postal.Templates{
+				Expect(templates).To(Equal(common.Templates{
 					HTML:    "<p>The default template</p>",
 					Text:    "The default template",
 					Subject: "default subject",
@@ -138,7 +138,7 @@ var _ = Describe("TemplateLoader", func() {
 			It("does not look for a template belonging to the kind", func() {
 				templates, err := loader.LoadTemplates("my-client-id", "", "")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(templates).To(Equal(postal.Templates{
+				Expect(templates).To(Equal(common.Templates{
 					HTML:    "<p>The default template</p>",
 					Text:    "The default template",
 					Subject: "default subject",

@@ -10,6 +10,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/postal/v1"
 	"github.com/cloudfoundry-incubator/notifications/postal/v2"
 	"github.com/cloudfoundry-incubator/notifications/strategy"
@@ -133,18 +134,18 @@ func (app Application) StartWorkers() {
 			Sender:  app.env.Sender,
 			Domain:  app.env.Domain,
 
-			Packager:    postal.NewPackager(v1TemplateLoader, cloak),
+			Packager:    common.NewPackager(v1TemplateLoader, cloak),
 			MailClient:  app.mother.MailClient(),
 			Database:    app.mother.Database(),
 			TokenLoader: uaa.NewTokenLoader(zonedUAAClient),
-			UserLoader:  postal.NewUserLoader(zonedUAAClient),
+			UserLoader:  common.NewUserLoader(zonedUAAClient),
 
 			KindsRepo:              app.mother.KindsRepo(),
 			ReceiptsRepo:           app.mother.ReceiptsRepo(),
 			UnsubscribesRepo:       app.mother.UnsubscribesRepo(),
 			GlobalUnsubscribesRepo: app.mother.GlobalUnsubscribesRepo(),
 			MessageStatusUpdater:   v1.NewMessageStatusUpdater(app.mother.MessagesRepo()),
-			DeliveryFailureHandler: postal.NewDeliveryFailureHandler(),
+			DeliveryFailureHandler: common.NewDeliveryFailureHandler(),
 		})
 
 		database := v2models.NewDatabase(app.mother.SQLDatabase(), v2models.Config{})
@@ -157,8 +158,8 @@ func (app Application) StartWorkers() {
 		templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
 		v2TemplateLoader := v2.NewTemplatesLoader(app.mother.Database(), templatesCollection)
 
-		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), postal.NewPackager(v2TemplateLoader, cloak),
-			postal.NewUserLoader(zonedUAAClient), uaa.NewTokenLoader(zonedUAAClient), messageStatusUpdater, database,
+		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), common.NewPackager(v2TemplateLoader, cloak),
+			common.NewUserLoader(zonedUAAClient), uaa.NewTokenLoader(zonedUAAClient), messageStatusUpdater, database,
 			unsubscribersRepository, campaignsRepository, app.env.Sender, app.env.Domain, app.env.UAAHost)
 
 		worker := postal.NewDeliveryWorker(v1Workflow, v2Workflow, postal.DeliveryWorkerConfig{
@@ -169,7 +170,7 @@ func (app Application) StartWorkers() {
 			DBTrace:                app.env.DBLoggingEnabled,
 			Database:               database,
 			StrategyDeterminer:     strategy.NewStrategyDeterminer(app.mother.UserStrategy(), app.mother.SpaceStrategy(), app.mother.OrganizationStrategy(), app.mother.EmailStrategy()),
-			DeliveryFailureHandler: postal.NewDeliveryFailureHandler(),
+			DeliveryFailureHandler: common.NewDeliveryFailureHandler(),
 			MessageStatusUpdater:   messageStatusUpdater,
 		})
 		return &worker

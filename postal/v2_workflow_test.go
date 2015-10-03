@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
@@ -28,7 +29,7 @@ var _ = Describe("V2Workflow", func() {
 		packager                *mocks.Packager
 		conn                    *mocks.Connection
 		database                *mocks.Database
-		delivery                postal.Delivery
+		delivery                common.Delivery
 		campaignsRepository     *mocks.CampaignsRepository
 		unsubscribersRepository *mocks.UnsubscribersRepository
 	)
@@ -60,14 +61,14 @@ var _ = Describe("V2Workflow", func() {
 		unsubscribersRepository.GetCall.Returns.Error = models.RecordNotFoundError{errors.New("not unsubscribed == will be delivered!")}
 
 		packager = mocks.NewPackager()
-		packager.PrepareContextCall.Returns.MessageContext = postal.MessageContext{
+		packager.PrepareContextCall.Returns.MessageContext = common.MessageContext{
 			From:    "from@example.com",
 			ReplyTo: "thesender@example.com",
 			To:      "user-123@example.com",
 			Subject: "the subject",
 			Text:    "body content",
 			HTML:    "",
-			HTMLComponents: postal.HTML{
+			HTMLComponents: common.HTML{
 				BodyContent:    "",
 				BodyAttributes: "",
 				Head:           "",
@@ -118,10 +119,10 @@ var _ = Describe("V2Workflow", func() {
 
 		mailClient = mocks.NewMailClient()
 
-		delivery = postal.Delivery{
+		delivery = common.Delivery{
 			ClientID: "some-client",
 			UserGUID: "user-123",
-			Options: postal.Options{
+			Options: common.Options{
 				Subject:    "the subject",
 				Text:       "body content",
 				ReplyTo:    "thesender@example.com",

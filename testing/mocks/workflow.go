@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -9,7 +9,7 @@ type Workflow struct {
 	DeliverCall struct {
 		CallCount int
 		Receives  struct {
-			Delivery postal.Delivery
+			Delivery common.Delivery
 			Logger   lager.Logger
 		}
 		Returns struct {
@@ -22,7 +22,7 @@ func NewWorkflow() *Workflow {
 	return &Workflow{}
 }
 
-func (w *Workflow) Deliver(delivery postal.Delivery, logger lager.Logger) error {
+func (w *Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error {
 	w.DeliverCall.Receives.Delivery = delivery
 	w.DeliverCall.Receives.Logger = logger
 	w.DeliverCall.CallCount++

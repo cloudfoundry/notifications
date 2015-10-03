@@ -1,7 +1,7 @@
-package postal_test
+package common_test
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
@@ -12,7 +12,7 @@ import (
 
 var _ = Describe("UserLoader", func() {
 	var (
-		loader    postal.UserLoader
+		loader    common.UserLoader
 		token     string
 		uaaClient *mocks.ZonedUAAClient
 	)
@@ -37,7 +37,7 @@ var _ = Describe("UserLoader", func() {
 				},
 			}
 
-			loader = postal.NewUserLoader(uaaClient)
+			loader = common.NewUserLoader(uaaClient)
 		})
 
 		Context("UAA returns a collection of users", func() {
@@ -66,7 +66,7 @@ var _ = Describe("UserLoader", func() {
 					uaaClient.UsersEmailsByIDsCall.Returns.Error = uaa.NewFailure(404, []byte("Requested route ('uaa.10.244.0.34.xip.io') does not exist"))
 
 					_, err := loader.Load([]string{"user-123"}, token)
-					Expect(err).To(BeAssignableToTypeOf(postal.UAADownError{}))
+					Expect(err).To(BeAssignableToTypeOf(common.UAADownError{}))
 				})
 			})
 
@@ -76,7 +76,7 @@ var _ = Describe("UserLoader", func() {
 
 					_, err := loader.Load([]string{"user-123"}, token)
 
-					Expect(err).To(BeAssignableToTypeOf(postal.UAAGenericError{}))
+					Expect(err).To(BeAssignableToTypeOf(common.UAAGenericError{}))
 				})
 			})
 
@@ -86,7 +86,7 @@ var _ = Describe("UserLoader", func() {
 
 					_, err := loader.Load([]string{"user-123"}, token)
 
-					Expect(err).To(BeAssignableToTypeOf(postal.UAADownError{}))
+					Expect(err).To(BeAssignableToTypeOf(common.UAADownError{}))
 				})
 			})
 		})

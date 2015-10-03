@@ -1,4 +1,4 @@
-package postal_test
+package common_test
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/mail"
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 
 	. "github.com/onsi/ginkgo"
@@ -15,11 +15,11 @@ import (
 
 var _ = Describe("Packager", func() {
 	var (
-		packager        postal.Packager
-		context         postal.MessageContext
+		packager        common.Packager
+		context         common.MessageContext
 		client          mail.Client
 		templatesLoader *mocks.TemplatesLoader
-		delivery        postal.Delivery
+		delivery        common.Delivery
 		cloak           *mocks.Cloak
 	)
 
@@ -28,14 +28,14 @@ var _ = Describe("Packager", func() {
 		templatesLoader = mocks.NewTemplatesLoader()
 		cloak = mocks.NewCloak()
 
-		delivery = postal.Delivery{
+		delivery = common.Delivery{
 			UserGUID: "some-user-guid",
 			ClientID: "some-client-id",
-			Options: postal.Options{
+			Options: common.Options{
 				Subject:    "Some crazy subject",
 				TemplateID: "some-template-id",
 				KindID:     "some-kind-id",
-				HTML: postal.HTML{
+				HTML: common.HTML{
 					BodyContent:    "<p>user supplied banana html</p>",
 					BodyAttributes: "class=\"bananaBody\"",
 					Head:           "<title>The title</title>",
@@ -45,11 +45,11 @@ var _ = Describe("Packager", func() {
 			},
 		}
 
-		packager = postal.NewPackager(templatesLoader, cloak)
+		packager = common.NewPackager(templatesLoader, cloak)
 
 		requestReceivedTime, _ := time.Parse(time.RFC3339Nano, "2015-06-08T14:38:03.180764129-07:00")
 
-		context = postal.MessageContext{
+		context = common.MessageContext{
 			From:      "banana man",
 			ReplyTo:   "awesomeness",
 			To:        "endless monkeys",
@@ -58,7 +58,7 @@ var _ = Describe("Packager", func() {
 			MessageID: "4'4",
 			Text:      "User <supplied> \"banana\" text",
 			UserGUID:  "user-123",
-			HTMLComponents: postal.HTML{
+			HTMLComponents: common.HTML{
 				BodyContent:    "<p>user supplied banana html</p>",
 				BodyAttributes: "class=\"bananaBody\"",
 				Head:           "<title>The title</title>",
@@ -77,7 +77,7 @@ var _ = Describe("Packager", func() {
 
 	Describe("PrepareContext", func() {
 		BeforeEach(func() {
-			templatesLoader.LoadTemplatesCall.Returns.Templates = postal.Templates{
+			templatesLoader.LoadTemplatesCall.Returns.Templates = common.Templates{
 				Name:    "some-name",
 				Subject: "subject template: {{.Subject}}",
 				Text:    "Some {{.Text}} text",
@@ -98,7 +98,7 @@ var _ = Describe("Packager", func() {
 
 			Expect(cloak.VeilCall.Receives.PlainText).To(Equal([]byte("some-user-guid|some-client-id|some-kind-id")))
 
-			Expect(context).To(Equal(postal.MessageContext{
+			Expect(context).To(Equal(common.MessageContext{
 				UnsubscribeID: "some-encrypted-text",
 				Domain:        "example.com",
 				From:          "some-sender@example.com",
@@ -107,7 +107,7 @@ var _ = Describe("Packager", func() {
 				ClientID:      "some-client-id",
 				Text:          "some-text",
 				HTML:          "<p>user supplied banana html</p>",
-				HTMLComponents: postal.HTML{
+				HTMLComponents: common.HTML{
 					BodyContent:    "<p>user supplied banana html</p>",
 					BodyAttributes: "class=\"bananaBody\"",
 					Head:           "<title>The title</title>",

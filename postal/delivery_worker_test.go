@@ -7,6 +7,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/pivotal-golang/lager"
 
@@ -19,7 +20,7 @@ var _ = Describe("DeliveryWorker", func() {
 		worker                 postal.DeliveryWorker
 		logger                 lager.Logger
 		buffer                 *bytes.Buffer
-		delivery               postal.Delivery
+		delivery               common.Delivery
 		queue                  *mocks.Queue
 		deliveryFailureHandler *mocks.DeliveryFailureHandler
 		v1Workflow             *mocks.Process
@@ -148,7 +149,7 @@ var _ = Describe("DeliveryWorker", func() {
 			It("should hand the job to the v2 workflow", func() {
 				worker.Deliver(job)
 
-				Expect(v2Workflow.DeliverCall.Receives.Delivery).To(Equal(postal.Delivery{
+				Expect(v2Workflow.DeliverCall.Receives.Delivery).To(Equal(common.Delivery{
 					MessageID:  "some-message-id",
 					CampaignID: "some-campaign-id",
 				}))

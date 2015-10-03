@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/postal/v2"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
@@ -45,7 +45,7 @@ var _ = Describe("V2TemplateLoader", func() {
 				templates, err := loader.LoadTemplates("my-client-id", "", "some-v2-template-id")
 				Expect(err).ToNot(HaveOccurred())
 
-				Expect(templates).To(Equal(postal.Templates{
+				Expect(templates).To(Equal(common.Templates{
 					HTML:    "<p>v2 awesome</p>",
 					Text:    "some testing text",
 					Subject: "some subject",

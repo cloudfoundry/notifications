@@ -1,4 +1,4 @@
-package postal
+package common
 
 import (
 	"errors"
@@ -14,6 +14,22 @@ type UAAUserNotFoundError struct {
 }
 
 func (e UAAUserNotFoundError) Error() string {
+	return e.Err.Error()
+}
+
+type UAADownError struct {
+	Err error
+}
+
+func (e UAADownError) Error() string {
+	return e.Err.Error()
+}
+
+type UAAGenericError struct {
+	Err error
+}
+
+func (e UAAGenericError) Error() string {
 	return e.Err.Error()
 }
 
@@ -36,20 +52,4 @@ func UAAErrorFor(err error) error {
 	default:
 		return UAAGenericError{errors.New("UAA Unknown Error: " + err.Error())}
 	}
-}
-
-type UAADownError struct {
-	Err error
-}
-
-func (e UAADownError) Error() string {
-	return e.Err.Error()
-}
-
-type UAAGenericError struct {
-	Err error
-}
-
-func (e UAAGenericError) Error() string {
-	return e.Err.Error()
 }
