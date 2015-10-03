@@ -1,8 +1,6 @@
 package postal
 
 import (
-	"fmt"
-
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
@@ -10,10 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/pivotal-golang/lager"
 )
-
-type tokenLoader interface {
-	Load(string) (string, error)
-}
 
 type process interface {
 	Deliver(job *gobble.Job, logger lager.Logger) error
@@ -60,11 +54,11 @@ type DeliveryWorker struct {
 	messageStatusUpdater   messageStatusUpdater
 }
 
-func NewDeliveryWorker(v1workflow process, v2workflow workflow, config DeliveryWorkerConfig) DeliveryWorker {
+func NewDeliveryWorker(v1process process, v2workflow workflow, config DeliveryWorkerConfig) DeliveryWorker {
 	logger := config.Logger.Session("worker", lager.Data{"worker_id": config.ID})
 
 	worker := DeliveryWorker{
-		V1Process:              v1workflow,
+		V1Process:              v1process,
 		V2Workflow:             v2workflow,
 		uaaHost:                config.UAAHost,
 		logger:                 logger,
@@ -106,9 +100,9 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 		err = worker.V2Workflow.Deliver(delivery, worker.logger)
 		if err != nil {
 			worker.deliveryFailureHandler.Handle(job, worker.logger)
-			status := StatusFailed
+			status := common.StatusFailed
 			if job.ShouldRetry {
-				status = StatusRetry
+				status = common.StatusRetry
 			}
 
 			worker.messageStatusUpdater.Update(worker.database.Connection(), delivery.MessageID, status, delivery.CampaignID, worker.logger)
@@ -116,14 +110,4 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 	default:
 		worker.V1Process.Deliver(job, worker.logger)
 	}
-}
-
-type gorpCompatibleLogger struct {
-	logger lager.Logger
-}
-
-func (g gorpCompatibleLogger) Printf(format string, v ...interface{}) {
-	g.logger.Info("db", lager.Data{
-		"statement": fmt.Sprintf(format, v...),
-	})
 }

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
@@ -39,35 +39,35 @@ var _ = Describe("Messages Repository", func() {
 			err := conn.Insert(&models.Message{
 				ID:         "random-guid-1",
 				CampaignID: "some-campaign-id",
-				Status:     postal.StatusDelivered,
+				Status:     common.StatusDelivered,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			err = conn.Insert(&models.Message{
 				ID:         "random-guid-2",
 				CampaignID: "some-campaign-id",
-				Status:     postal.StatusFailed,
+				Status:     common.StatusFailed,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			err = conn.Insert(&models.Message{
 				ID:         "random-guid-3",
 				CampaignID: "some-campaign-id",
-				Status:     postal.StatusDelivered,
+				Status:     common.StatusDelivered,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			err = conn.Insert(&models.Message{
 				ID:         "random-guid-4",
 				CampaignID: "some-campaign-id",
-				Status:     postal.StatusRetry,
+				Status:     common.StatusRetry,
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			err = conn.Insert(&models.Message{
 				ID:         "random-guid-5",
 				CampaignID: "some-campaign-id",
-				Status:     postal.StatusQueued,
+				Status:     common.StatusQueued,
 			})
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -102,7 +102,7 @@ var _ = Describe("Messages Repository", func() {
 			err = conn.Insert(&models.Message{
 				ID:         "random-guid-1",
 				CampaignID: "some-campaign-id",
-				Status:     postal.StatusDelivered,
+				Status:     common.StatusDelivered,
 				UpdatedAt:  updatedAt,
 			})
 			Expect(err).NotTo(HaveOccurred())
@@ -114,7 +114,7 @@ var _ = Describe("Messages Repository", func() {
 			err = conn.Insert(&models.Message{
 				ID:         "random-guid-2",
 				CampaignID: "some-campaign-id",
-				Status:     postal.StatusFailed,
+				Status:     common.StatusFailed,
 				UpdatedAt:  anotherUpdatedAt,
 			})
 			Expect(err).NotTo(HaveOccurred())

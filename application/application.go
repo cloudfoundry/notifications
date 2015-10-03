@@ -128,7 +128,7 @@ func (app Application) StartWorkers() {
 		templatesRepo := models.NewTemplatesRepo()
 		v1TemplateLoader := v1.NewTemplatesLoader(app.mother.Database(), clientsRepo, kindsRepo, templatesRepo)
 
-		v1Workflow := postal.NewV1Process(postal.V1ProcessConfig{
+		v1Workflow := v1.NewProcess(v1.ProcessConfig{
 			DBTrace: app.env.DBLoggingEnabled,
 			UAAHost: app.env.UAAHost,
 			Sender:  app.env.Sender,
@@ -158,7 +158,7 @@ func (app Application) StartWorkers() {
 		templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
 		v2TemplateLoader := v2.NewTemplatesLoader(app.mother.Database(), templatesCollection)
 
-		v2Workflow := postal.NewV2Workflow(app.mother.MailClient(), common.NewPackager(v2TemplateLoader, cloak),
+		v2Workflow := v2.NewWorkflow(app.mother.MailClient(), common.NewPackager(v2TemplateLoader, cloak),
 			common.NewUserLoader(zonedUAAClient), uaa.NewTokenLoader(zonedUAAClient), messageStatusUpdater, database,
 			unsubscribersRepository, campaignsRepository, app.env.Sender, app.env.Domain, app.env.UAAHost)
 

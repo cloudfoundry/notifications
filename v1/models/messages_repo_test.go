@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -29,7 +29,7 @@ var _ = Describe("MessagesRepo", func() {
 		conn = database.Connection()
 		message = models.Message{
 			CampaignID: "some-campaign-id",
-			Status:     postal.StatusDelivered,
+			Status:     common.StatusDelivered,
 		}
 
 		guidGenerator = mocks.NewIDGenerator()
@@ -97,7 +97,7 @@ var _ = Describe("MessagesRepo", func() {
 				message, err := repo.Create(conn, message)
 				Expect(err).NotTo(HaveOccurred())
 
-				message.Status = postal.StatusFailed
+				message.Status = common.StatusFailed
 
 				message.UpdatedAt = time.Now().Add(100 * time.Hour)
 				message, err = repo.Upsert(conn, message)

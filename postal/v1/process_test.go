@@ -1,4 +1,4 @@
-package postal_test
+package v1_test
 
 import (
 	"bytes"
@@ -9,8 +9,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/common"
+	"github.com/cloudfoundry-incubator/notifications/postal/v1"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -21,10 +21,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("V1Process", func() {
+var _ = Describe("Process", func() {
 	var (
 		mailClient             *mocks.MailClient
-		v1Process              postal.V1Process
+		v1Process              v1.Process
 		logger                 lager.Logger
 		buffer                 *bytes.Buffer
 		delivery               common.Delivery
@@ -95,7 +95,7 @@ var _ = Describe("V1Process", func() {
 		cloak, err := conceal.NewCloak(encryptionKey)
 		Expect(err).NotTo(HaveOccurred())
 
-		v1Process = postal.NewV1Process(postal.V1ProcessConfig{
+		v1Process = v1.NewProcess(v1.ProcessConfig{
 			DBTrace: false,
 			UAAHost: "https://uaa.example.com",
 			Sender:  "from@example.com",
@@ -192,7 +192,7 @@ var _ = Describe("V1Process", func() {
 			encryptionKey := sum[:]
 			cloak, err := conceal.NewCloak(encryptionKey)
 			Expect(err).NotTo(HaveOccurred())
-			v1Process = postal.NewV1Process(postal.V1ProcessConfig{
+			v1Process = v1.NewProcess(v1.ProcessConfig{
 				DBTrace: true,
 				UAAHost: "https://uaa.example.com",
 				Sender:  "from@example.com",
@@ -228,7 +228,7 @@ var _ = Describe("V1Process", func() {
 
 			Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 			Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
-			Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusDelivered))
+			Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusDelivered))
 			Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 		})
 
@@ -342,7 +342,7 @@ var _ = Describe("V1Process", func() {
 
 					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
-					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusFailed))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusFailed))
 					Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 				})
 			})
@@ -383,7 +383,7 @@ var _ = Describe("V1Process", func() {
 
 					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
-					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusUnavailable))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusUnavailable))
 					Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 				})
 			})
@@ -421,7 +421,7 @@ var _ = Describe("V1Process", func() {
 			It("updates the message status as undeliverable", func() {
 				Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 				Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
-				Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusUndeliverable))
+				Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusUndeliverable))
 				Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 			})
 		})
@@ -460,7 +460,7 @@ var _ = Describe("V1Process", func() {
 				It("updates the message status as undeliverable", func() {
 					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
-					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusUndeliverable))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusUndeliverable))
 					Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 				})
 			})
@@ -495,7 +495,7 @@ var _ = Describe("V1Process", func() {
 				It("updates the message status as undeliverable", func() {
 					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
-					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusUndeliverable))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusUndeliverable))
 					Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 				})
 			})
@@ -531,7 +531,7 @@ var _ = Describe("V1Process", func() {
 
 				Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 				Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
-				Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusUndeliverable))
+				Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusUndeliverable))
 				Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 			})
 
@@ -629,7 +629,7 @@ var _ = Describe("V1Process", func() {
 
 				Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 				Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
-				Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusFailed))
+				Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusFailed))
 				Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 			})
 		})

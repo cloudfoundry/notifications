@@ -3,7 +3,7 @@ package services_test
 import (
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/postal"
+	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
@@ -31,12 +31,12 @@ var _ = Describe("MessageFinder.Find", func() {
 
 	Context("when a message exists with the given id", func() {
 		It("returns the right Message struct", func() {
-			messagesRepo.FindByIDCall.Returns.Message = models.Message{Status: postal.StatusDelivered}
+			messagesRepo.FindByIDCall.Returns.Message = models.Message{Status: common.StatusDelivered}
 
 			message, err := finder.Find(database, "a-message-id")
 
 			Expect(err).NotTo(HaveOccurred())
-			Expect(message.Status).To(Equal(postal.StatusDelivered))
+			Expect(message.Status).To(Equal(common.StatusDelivered))
 
 			Expect(messagesRepo.FindByIDCall.Receives.Connection).To(Equal(conn))
 			Expect(messagesRepo.FindByIDCall.Receives.MessageID).To(Equal("a-message-id"))

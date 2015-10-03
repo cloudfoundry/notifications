@@ -1,4 +1,4 @@
-package postal_test
+package v2_test
 
 import (
 	"bytes"
@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/mail"
-	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/postal/common"
+	"github.com/cloudfoundry-incubator/notifications/postal/v2"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
@@ -17,10 +17,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("V2Workflow", func() {
+var _ = Describe("Workflow", func() {
 	var (
 		buffer                  *bytes.Buffer
-		workflow                postal.V2Workflow
+		workflow                v2.Workflow
 		logger                  lager.Logger
 		mailClient              *mocks.MailClient
 		userLoader              *mocks.UserLoader
@@ -134,7 +134,7 @@ var _ = Describe("V2Workflow", func() {
 			CampaignID:    "some-campaign-id",
 		}
 
-		workflow = postal.NewV2Workflow(mailClient, packager, userLoader, tokenLoader, messageStatusUpdater, database, unsubscribersRepository, campaignsRepository, "from@example.com", "example.com", "uaa-host")
+		workflow = v2.NewWorkflow(mailClient, packager, userLoader, tokenLoader, messageStatusUpdater, database, unsubscribersRepository, campaignsRepository, "from@example.com", "example.com", "uaa-host")
 	})
 
 	It("ensures message delivery", func() {
@@ -172,7 +172,7 @@ var _ = Describe("V2Workflow", func() {
 
 		Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 		Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal("randomly-generated-guid"))
-		Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusDelivered))
+		Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusDelivered))
 		Expect(messageStatusUpdater.UpdateCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 		Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 	})
@@ -188,7 +188,7 @@ var _ = Describe("V2Workflow", func() {
 			err := workflow.Deliver(delivery, logger)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusUndeliverable))
+			Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusUndeliverable))
 		})
 	})
 
@@ -221,7 +221,7 @@ var _ = Describe("V2Workflow", func() {
 		It("marks the message as delivered", func() {
 			Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 			Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal("randomly-generated-guid"))
-			Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(postal.StatusDelivered))
+			Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusDelivered))
 			Expect(messageStatusUpdater.UpdateCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 			Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 		})

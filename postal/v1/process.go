@@ -1,4 +1,4 @@
-package postal
+package v1
 
 import (
 	"strings"
@@ -9,9 +9,13 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
-	"github.com/cloudfoundry-incubator/notifications/v2/models"
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/pivotal-golang/lager"
 )
+
+type tokenLoader interface {
+	Load(string) (string, error)
+}
 
 type mailSender interface {
 	Connect(lager.Logger) error
@@ -22,7 +26,31 @@ type userLoader interface {
 	Load(userGUIDs []string, token string) (map[string]uaa.User, error)
 }
 
-type V1ProcessConfig struct {
+type messageStatusUpdater interface {
+	Update(conn db.ConnectionInterface, messageID, messageStatus, campaignID string, logger lager.Logger)
+}
+
+type deliveryFailureHandler interface {
+	Handle(job common.Retryable, logger lager.Logger)
+}
+
+type kindsFinder interface {
+	Find(connection models.ConnectionInterface, kindID string, clientID string) (models.Kind, error)
+}
+
+type receiptsCreator interface {
+	CreateReceipts(connection models.ConnectionInterface, userGUIDs []string, clientID string, kindID string) error
+}
+
+type unsubscribesGetter interface {
+	Get(connection models.ConnectionInterface, userGUID string, clientID string, kindID string) (bool, error)
+}
+
+type globalUnsubscribesGetter interface {
+	Get(connection models.ConnectionInterface, userGUID string) (bool, error)
+}
+
+type ProcessConfig struct {
 	DBTrace bool
 	UAAHost string
 	Sender  string
@@ -34,15 +62,15 @@ type V1ProcessConfig struct {
 	TokenLoader tokenLoader
 	UserLoader  userLoader
 
-	KindsRepo              KindsRepo
-	ReceiptsRepo           ReceiptsRepo
-	UnsubscribesRepo       UnsubscribesRepo
-	GlobalUnsubscribesRepo GlobalUnsubscribesRepo
+	KindsRepo              kindsFinder
+	ReceiptsRepo           receiptsCreator
+	UnsubscribesRepo       unsubscribesGetter
+	GlobalUnsubscribesRepo globalUnsubscribesGetter
 	MessageStatusUpdater   messageStatusUpdater
 	DeliveryFailureHandler deliveryFailureHandler
 }
 
-type V1Process struct {
+type Process struct {
 	dbTrace bool
 	uaaHost string
 	sender  string
@@ -54,16 +82,16 @@ type V1Process struct {
 	tokenLoader tokenLoader
 	userLoader  userLoader
 
-	kindsRepo              KindsRepo
-	receiptsRepo           ReceiptsRepo
-	unsubscribesRepo       UnsubscribesRepo
-	globalUnsubscribesRepo GlobalUnsubscribesRepo
+	kindsRepo              kindsFinder
+	receiptsRepo           receiptsCreator
+	unsubscribesRepo       unsubscribesGetter
+	globalUnsubscribesRepo globalUnsubscribesGetter
 	messageStatusUpdater   messageStatusUpdater
 	deliveryFailureHandler deliveryFailureHandler
 }
 
-func NewV1Process(config V1ProcessConfig) V1Process {
-	return V1Process{
+func NewProcess(config ProcessConfig) Process {
+	return Process{
 		dbTrace: config.DBTrace,
 		uaaHost: config.UAAHost,
 		sender:  config.Sender,
@@ -84,7 +112,7 @@ func NewV1Process(config V1ProcessConfig) V1Process {
 	}
 }
 
-func (p V1Process) Deliver(job *gobble.Job, logger lager.Logger) error {
+func (p Process) Deliver(job *gobble.Job, logger lager.Logger) error {
 	var delivery common.Delivery
 	err := job.Unmarshal(&delivery)
 	if err != nil {
@@ -139,7 +167,7 @@ func (p V1Process) Deliver(job *gobble.Job, logger lager.Logger) error {
 	if p.shouldDeliver(delivery, logger) {
 		status := p.deliver(delivery, logger)
 
-		if status != StatusDelivered {
+		if status != common.StatusDelivered {
 			p.deliveryFailureHandler.Handle(job, logger)
 			return nil
 		} else {
@@ -156,7 +184,7 @@ func (p V1Process) Deliver(job *gobble.Job, logger lager.Logger) error {
 	return nil
 }
 
-func (p V1Process) deliver(delivery common.Delivery, logger lager.Logger) string {
+func (p Process) deliver(delivery common.Delivery, logger lager.Logger) string {
 	context, err := p.packager.PrepareContext(delivery, p.sender, p.domain)
 	if err != nil {
 		panic(err)
@@ -165,8 +193,8 @@ func (p V1Process) deliver(delivery common.Delivery, logger lager.Logger) string
 	message, err := p.packager.Pack(context)
 	if err != nil {
 		logger.Info("template-pack-failed")
-		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusFailed, "", logger)
-		return StatusFailed
+		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, common.StatusFailed, "", logger)
+		return common.StatusFailed
 	}
 
 	status := p.sendMail(delivery.MessageID, message, logger)
@@ -175,7 +203,7 @@ func (p V1Process) deliver(delivery common.Delivery, logger lager.Logger) string
 	return status
 }
 
-func (p V1Process) shouldDeliver(delivery common.Delivery, logger lager.Logger) bool {
+func (p Process) shouldDeliver(delivery common.Delivery, logger lager.Logger) bool {
 	conn := p.database.Connection()
 	if p.isCritical(conn, delivery.Options.KindID, delivery.ClientID) {
 		return true
@@ -184,37 +212,37 @@ func (p V1Process) shouldDeliver(delivery common.Delivery, logger lager.Logger) 
 	globallyUnsubscribed, err := p.globalUnsubscribesRepo.Get(conn, delivery.UserGUID)
 	if err != nil || globallyUnsubscribed {
 		logger.Info("user-unsubscribed")
-		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusUndeliverable, "", logger)
+		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, common.StatusUndeliverable, "", logger)
 		return false
 	}
 
 	isUnsubscribed, err := p.unsubscribesRepo.Get(conn, delivery.UserGUID, delivery.ClientID, delivery.Options.KindID)
 	if err != nil || isUnsubscribed {
 		logger.Info("user-unsubscribed")
-		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusUndeliverable, "", logger)
+		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, common.StatusUndeliverable, "", logger)
 		return false
 	}
 
 	if delivery.Email == "" {
 		logger.Info("no-email-address-for-user")
-		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusUndeliverable, "", logger)
+		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, common.StatusUndeliverable, "", logger)
 		return false
 	}
 
 	if !strings.Contains(delivery.Email, "@") {
 		logger.Info("malformatted-email-address")
-		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, StatusUndeliverable, "", logger)
+		p.messageStatusUpdater.Update(p.database.Connection(), delivery.MessageID, common.StatusUndeliverable, "", logger)
 		return false
 	}
 
 	return true
 }
 
-func (p V1Process) sendMail(messageID string, message mail.Message, logger lager.Logger) string {
+func (p Process) sendMail(messageID string, message mail.Message, logger lager.Logger) string {
 	err := p.mailClient.Connect(logger)
 	if err != nil {
 		logger.Error("smtp-connection-error", err)
-		return StatusUnavailable
+		return common.StatusUnavailable
 	}
 
 	logger.Info("delivery-start")
@@ -222,17 +250,17 @@ func (p V1Process) sendMail(messageID string, message mail.Message, logger lager
 	err = p.mailClient.Send(message, logger)
 	if err != nil {
 		logger.Error("delivery-failed-smtp-error", err)
-		return StatusFailed
+		return common.StatusFailed
 	}
 
 	logger.Info("message-sent")
 
-	return StatusDelivered
+	return common.StatusDelivered
 }
 
-func (p V1Process) isCritical(conn db.ConnectionInterface, kindID, clientID string) bool {
+func (p Process) isCritical(conn db.ConnectionInterface, kindID, clientID string) bool {
 	kind, err := p.kindsRepo.Find(conn, kindID, clientID)
-	if _, ok := err.(models.RecordNotFoundError); ok {
+	if _, ok := err.(models.NotFoundError); ok {
 		return false
 	}
 

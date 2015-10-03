@@ -1,18 +1,37 @@
-package postal
+package v2
 
 import (
 	"strings"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/postal/common"
+	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/pivotal-golang/lager"
 )
 
+type tokenLoader interface {
+	Load(string) (string, error)
+}
+
+type messageStatusUpdater interface {
+	Update(conn db.ConnectionInterface, messageID, messageStatus, campaignID string, logger lager.Logger)
+}
+
 type messagePackager interface {
 	PrepareContext(delivery common.Delivery, sender, domain string) (common.MessageContext, error)
 	Pack(context common.MessageContext) (mail.Message, error)
+}
+
+type userLoader interface {
+	Load(userGUIDs []string, token string) (map[string]uaa.User, error)
+}
+
+type mailSender interface {
+	Connect(lager.Logger) error
+	Send(mail.Message, lager.Logger) error
 }
 
 type unsubscribersRepositoryInterface interface {
@@ -23,7 +42,7 @@ type campaignsRepositoryInterface interface {
 	Get(connection models.ConnectionInterface, campaignID string) (models.Campaign, error)
 }
 
-type V2Workflow struct {
+type Workflow struct {
 	mailClient              mailSender
 	packager                messagePackager
 	userLoader              userLoader
@@ -37,10 +56,10 @@ type V2Workflow struct {
 	uaaHost                 string
 }
 
-func NewV2Workflow(mailClient mailSender, packager messagePackager, userLoader userLoader, tokenLoader tokenLoader,
+func NewWorkflow(mailClient mailSender, packager messagePackager, userLoader userLoader, tokenLoader tokenLoader,
 	messageStatusUpdater messageStatusUpdater, database services.DatabaseInterface, unsubscribersRepository unsubscribersRepositoryInterface,
-	campaignsRepository campaignsRepositoryInterface, sender, domain, uaaHost string) V2Workflow {
-	return V2Workflow{
+	campaignsRepository campaignsRepositoryInterface, sender, domain, uaaHost string) Workflow {
+	return Workflow{
 		mailClient:              mailClient,
 		packager:                packager,
 		userLoader:              userLoader,
@@ -55,7 +74,7 @@ func NewV2Workflow(mailClient mailSender, packager messagePackager, userLoader u
 	}
 }
 
-func (w V2Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error {
+func (w Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error {
 	conn := w.database.Connection()
 
 	campaign, err := w.campaignsRepository.Get(conn, delivery.CampaignID)
@@ -71,7 +90,7 @@ func (w V2Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error
 	}
 
 	if unsubscriber.ID != "" {
-		w.messageStatusUpdater.Update(w.database.Connection(), delivery.MessageID, StatusDelivered, delivery.CampaignID, logger)
+		w.messageStatusUpdater.Update(w.database.Connection(), delivery.MessageID, common.StatusDelivered, delivery.CampaignID, logger)
 		return nil
 	}
 
@@ -91,7 +110,7 @@ func (w V2Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error
 	}
 
 	if !strings.Contains(delivery.Email, "@") {
-		w.messageStatusUpdater.Update(w.database.Connection(), delivery.MessageID, StatusUndeliverable, delivery.CampaignID, logger)
+		w.messageStatusUpdater.Update(w.database.Connection(), delivery.MessageID, common.StatusUndeliverable, delivery.CampaignID, logger)
 		return nil
 	}
 
@@ -110,7 +129,7 @@ func (w V2Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error
 		return err
 	}
 
-	w.messageStatusUpdater.Update(w.database.Connection(), delivery.MessageID, StatusDelivered, delivery.CampaignID, logger)
+	w.messageStatusUpdater.Update(w.database.Connection(), delivery.MessageID, common.StatusDelivered, delivery.CampaignID, logger)
 
 	return nil
 }
