@@ -9,16 +9,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
-	"github.com/cloudfoundry-incubator/notifications/uaa"
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
-	"github.com/cloudfoundry-incubator/notifications/v2/queue"
-	"github.com/cloudfoundry-incubator/notifications/v2/util"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -44,69 +39,18 @@ func (m *Mother) Queue() gobble.QueueInterface {
 	})
 }
 
-func (m *Mother) V2Enqueuer() queue.JobEnqueuer {
-	return queue.NewJobEnqueuer(m.Queue(), v2models.NewMessagesRepository(util.NewClock(), v2models.NewIDGenerator(rand.Reader).Generate))
-}
-
-func (m *Mother) UserStrategy() services.UserStrategy {
-	return services.NewUserStrategy(m.Enqueuer(), m.V2Enqueuer())
-}
-
-func (m *Mother) SpaceStrategy() services.SpaceStrategy {
-	uaaClient := uaa.NewZonedUAAClient(m.env.UAAClientID, m.env.UAAClientSecret, m.env.VerifySSL, UAAPublicKey)
-	cloudController := cf.NewCloudController(m.env.CCHost, !m.env.VerifySSL)
-
-	tokenLoader := uaa.NewTokenLoader(uaaClient)
-	spaceLoader := services.NewSpaceLoader(cloudController)
-	organizationLoader := services.NewOrganizationLoader(cloudController)
-	enqueuer := m.Enqueuer()
-	findsUserIDs := services.NewFindsUserIDs(cloudController, uaaClient)
-
-	return services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserIDs, enqueuer, m.V2Enqueuer())
-}
-
-func (m *Mother) OrganizationStrategy() services.OrganizationStrategy {
-	cloudController := cf.NewCloudController(m.env.CCHost, !m.env.VerifySSL)
-
-	uaaClient := uaa.NewZonedUAAClient(m.env.UAAClientID, m.env.UAAClientSecret, m.env.VerifySSL, UAAPublicKey)
-	tokenLoader := uaa.NewTokenLoader(uaaClient)
-	organizationLoader := services.NewOrganizationLoader(cloudController)
-	findsUserIDs := services.NewFindsUserIDs(cloudController, uaaClient)
-	enqueuer := m.Enqueuer()
-
-	return services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserIDs, enqueuer, m.V2Enqueuer())
-}
-
-func (m *Mother) EveryoneStrategy() services.EveryoneStrategy {
-	uaaClient := uaa.NewZonedUAAClient(m.env.UAAClientID, m.env.UAAClientSecret, m.env.VerifySSL, UAAPublicKey)
-	tokenLoader := uaa.NewTokenLoader(uaaClient)
-	allUsers := services.NewAllUsers(uaaClient)
-	enqueuer := m.Enqueuer()
-
-	return services.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer, m.V2Enqueuer())
-}
-
-func (m *Mother) UAAScopeStrategy() services.UAAScopeStrategy {
-	uaaClient := uaa.NewZonedUAAClient(m.env.UAAClientID, m.env.UAAClientSecret, m.env.VerifySSL, UAAPublicKey)
-	cloudController := cf.NewCloudController(m.env.CCHost, !m.env.VerifySSL)
-
-	tokenLoader := uaa.NewTokenLoader(uaaClient)
-	findsUserIDs := services.NewFindsUserIDs(cloudController, uaaClient)
-	enqueuer := m.Enqueuer()
-
-	return services.NewUAAScopeStrategy(tokenLoader, findsUserIDs, enqueuer, m.V2Enqueuer(), m.env.DefaultUAAScopes)
-}
-
-func (m *Mother) EmailStrategy() services.EmailStrategy {
-	return services.NewEmailStrategy(m.Enqueuer(), m.V2Enqueuer())
-}
-
-func (m *Mother) Enqueuer() services.Enqueuer {
-	return services.NewEnqueuer(m.Queue(), m.MessagesRepo())
-}
-
 func (m *Mother) MailClient() *mail.Client {
-	mailConfig := mail.Config{
+	var authMechanism mail.AuthMechanism
+	switch m.env.SMTPAuthMechanism {
+	case SMTPAuthNone:
+		authMechanism = mail.AuthNone
+	case SMTPAuthPlain:
+		authMechanism = mail.AuthPlain
+	case SMTPAuthCRAMMD5:
+		authMechanism = mail.AuthCRAMMD5
+	}
+
+	return mail.NewClient(mail.Config{
 		User:           m.env.SMTPUser,
 		Pass:           m.env.SMTPPass,
 		Host:           m.env.SMTPHost,
@@ -116,18 +60,8 @@ func (m *Mother) MailClient() *mail.Client {
 		SkipVerifySSL:  !m.env.VerifySSL,
 		DisableTLS:     !m.env.SMTPTLS,
 		LoggingEnabled: m.env.SMTPLoggingEnabled,
-	}
-
-	switch m.env.SMTPAuthMechanism {
-	case SMTPAuthNone:
-		mailConfig.AuthMechanism = mail.AuthNone
-	case SMTPAuthPlain:
-		mailConfig.AuthMechanism = mail.AuthPlain
-	case SMTPAuthCRAMMD5:
-		mailConfig.AuthMechanism = mail.AuthCRAMMD5
-	}
-
-	return mail.NewClient(mailConfig)
+		AuthMechanism:  authMechanism,
+	})
 }
 
 func (m *Mother) Logger() lager.Logger {
@@ -172,22 +106,6 @@ func (m *Mother) Database() db.DatabaseInterface {
 	return database
 }
 
-func (m *Mother) KindsRepo() v1models.KindsRepo {
-	return v1models.NewKindsRepo()
-}
-
-func (m *Mother) UnsubscribesRepo() v1models.UnsubscribesRepo {
-	return v1models.NewUnsubscribesRepo()
-}
-
-func (m *Mother) GlobalUnsubscribesRepo() v1models.GlobalUnsubscribesRepo {
-	return v1models.NewGlobalUnsubscribesRepo()
-}
-
 func (m *Mother) MessagesRepo() v1models.MessagesRepo {
 	return v1models.NewMessagesRepo(v2models.NewIDGenerator(rand.Reader).Generate)
-}
-
-func (m *Mother) ReceiptsRepo() v1models.ReceiptsRepo {
-	return v1models.NewReceiptsRepo()
 }

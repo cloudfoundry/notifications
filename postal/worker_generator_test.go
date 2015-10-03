@@ -1,7 +1,7 @@
-package application_test
+package postal_test
 
 import (
-	"github.com/cloudfoundry-incubator/notifications/application"
+	"github.com/cloudfoundry-incubator/notifications/postal"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -23,12 +23,12 @@ var _ = Describe("WorkerGenerator", func() {
 		BeforeEach(func() {
 			workerIDs = make([]int, 0)
 			worker = mockWorker(0)
-			generator := application.WorkerGenerator{
+			generator := postal.WorkerGenerator{
 				Count:         5,
 				InstanceIndex: 2,
 			}
 
-			generator.Work(func(id int) application.Worker {
+			generator.Work(func(id int) postal.Worker {
 				workerIDs = append(workerIDs, id)
 				return &worker
 			})

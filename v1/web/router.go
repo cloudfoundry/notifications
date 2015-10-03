@@ -4,8 +4,12 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"net/http"
+	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/cf"
+	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/clients"
@@ -18,7 +22,9 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
+	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 	"github.com/gorilla/mux"
+	"github.com/pivotal-cf/cf-autoscaling/util"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
 )
@@ -30,23 +36,20 @@ type muxer interface {
 }
 
 type Config struct {
-	DBLoggingEnabled bool
-	Logger           lager.Logger
-	UAAPublicKey     string
-	CORSOrigin       string
-	SQLDB            *sql.DB
+	UAAPublicKey         string
+	UAAClientID          string
+	UAAClientSecret      string
+	DefaultUAAScopes     []string
+	VerifySSL            bool
+	CCHost               string
+	DBLoggingEnabled     bool
+	Logger               lager.Logger
+	CORSOrigin           string
+	SQLDB                *sql.DB
+	QueueWaitMaxDuration int
 }
 
-type mother interface {
-	EmailStrategy() services.EmailStrategy
-	UserStrategy() services.UserStrategy
-	SpaceStrategy() services.SpaceStrategy
-	OrganizationStrategy() services.OrganizationStrategy
-	EveryoneStrategy() services.EveryoneStrategy
-	UAAScopeStrategy() services.UAAScopeStrategy
-}
-
-func NewRouter(mx muxer, mom mother, config Config) http.Handler {
+func NewRouter(mx muxer, config Config) http.Handler {
 	guidGenerator := v2models.NewIDGenerator(rand.Reader)
 
 	clientsRepo := models.NewClientsRepo()
@@ -74,12 +77,26 @@ func NewRouter(mx muxer, mom mother, config Config) http.Handler {
 
 	notifyObj := notify.NewNotify(notificationsFinder, registrar)
 
-	emailStrategy := mom.EmailStrategy()
-	userStrategy := mom.UserStrategy()
-	spaceStrategy := mom.SpaceStrategy()
-	organizationStrategy := mom.OrganizationStrategy()
-	everyoneStrategy := mom.EveryoneStrategy()
-	uaaScopeStrategy := mom.UAAScopeStrategy()
+	gobbleQueue := gobble.NewQueue(gobble.NewDatabase(config.SQLDB), gobble.Config{
+		WaitMaxDuration: time.Duration(config.QueueWaitMaxDuration) * time.Millisecond,
+	})
+	v1enqueuer := services.NewEnqueuer(gobbleQueue, messagesRepo)
+	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, v2models.NewMessagesRepository(util.NewClock(), v2models.NewIDGenerator(rand.Reader).Generate))
+
+	uaaClient := uaa.NewZonedUAAClient(config.UAAClientID, config.UAAClientSecret, config.VerifySSL, config.UAAPublicKey)
+	cloudController := cf.NewCloudController(config.CCHost, !config.VerifySSL)
+	tokenLoader := uaa.NewTokenLoader(uaaClient)
+	spaceLoader := services.NewSpaceLoader(cloudController)
+	organizationLoader := services.NewOrganizationLoader(cloudController)
+	findsUserIDs := services.NewFindsUserIDs(cloudController, uaaClient)
+	allUsers := services.NewAllUsers(uaaClient)
+
+	emailStrategy := services.NewEmailStrategy(v1enqueuer, v2enqueuer)
+	userStrategy := services.NewUserStrategy(v1enqueuer, v2enqueuer)
+	spaceStrategy := services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserIDs, v1enqueuer, v2enqueuer)
+	organizationStrategy := services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserIDs, v1enqueuer, v2enqueuer)
+	everyoneStrategy := services.NewEveryoneStrategy(tokenLoader, allUsers, v1enqueuer, v2enqueuer)
+	uaaScopeStrategy := services.NewUAAScopeStrategy(tokenLoader, findsUserIDs, v1enqueuer, v2enqueuer, config.DefaultUAAScopes)
 
 	errorWriter := webutil.NewErrorWriter()
 

@@ -1,4 +1,4 @@
-package application
+package postal
 
 type WorkerGenerator struct {
 	InstanceIndex int

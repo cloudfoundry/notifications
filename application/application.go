@@ -1,7 +1,6 @@
 package application
 
 import (
-	"crypto/rand"
 	"errors"
 	"log"
 	"os"
@@ -10,17 +9,9 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal"
-	"github.com/cloudfoundry-incubator/notifications/postal/common"
-	"github.com/cloudfoundry-incubator/notifications/postal/v1"
-	"github.com/cloudfoundry-incubator/notifications/postal/v2"
-	"github.com/cloudfoundry-incubator/notifications/strategy"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
-	"github.com/cloudfoundry-incubator/notifications/v2/collections"
-	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
-	"github.com/cloudfoundry-incubator/notifications/v2/util"
 	"github.com/cloudfoundry-incubator/notifications/web"
-	"github.com/pivotal-golang/conceal"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/viron"
 )
@@ -45,18 +36,17 @@ func NewApplication(env Environment, mother *Mother) Application {
 func (app Application) Boot() {
 	session := app.mother.Logger().Session("boot")
 
-	app.PrintConfiguration(session)
+	viron.Print(app.env, vironCompatibleLogger{session})
+
 	app.ConfigureSMTP(session)
 	app.RetrieveUAAPublicKey(session)
+
 	app.migrator.Migrate()
+
 	app.StartQueueGauge()
 	app.StartWorkers()
 	app.StartMessageGC()
 	app.StartServer(session)
-}
-
-func (app Application) PrintConfiguration(logger lager.Logger) {
-	viron.Print(app.env, vironCompatibleLogger{logger})
 }
 
 func (app Application) ConfigureSMTP(logger lager.Logger) {
@@ -112,68 +102,20 @@ func (app Application) StartQueueGauge() {
 }
 
 func (app Application) StartWorkers() {
-	zonedUAAClient := uaa.NewZonedUAAClient(app.env.UAAClientID, app.env.UAAClientSecret, app.env.VerifySSL, UAAPublicKey)
-
-	WorkerGenerator{
-		InstanceIndex: app.env.VCAPApplication.InstanceIndex,
-		Count:         WorkerCount,
-	}.Work(func(i int) Worker {
-		cloak, err := conceal.NewCloak(app.env.EncryptionKey)
-		if err != nil {
-			panic(err)
-		}
-
-		clientsRepo := models.NewClientsRepo()
-		kindsRepo := models.NewKindsRepo()
-		templatesRepo := models.NewTemplatesRepo()
-		v1TemplateLoader := v1.NewTemplatesLoader(app.mother.Database(), clientsRepo, kindsRepo, templatesRepo)
-
-		v1Workflow := v1.NewProcess(v1.ProcessConfig{
-			DBTrace: app.env.DBLoggingEnabled,
-			UAAHost: app.env.UAAHost,
-			Sender:  app.env.Sender,
-			Domain:  app.env.Domain,
-
-			Packager:    common.NewPackager(v1TemplateLoader, cloak),
-			MailClient:  app.mother.MailClient(),
-			Database:    app.mother.Database(),
-			TokenLoader: uaa.NewTokenLoader(zonedUAAClient),
-			UserLoader:  common.NewUserLoader(zonedUAAClient),
-
-			KindsRepo:              app.mother.KindsRepo(),
-			ReceiptsRepo:           app.mother.ReceiptsRepo(),
-			UnsubscribesRepo:       app.mother.UnsubscribesRepo(),
-			GlobalUnsubscribesRepo: app.mother.GlobalUnsubscribesRepo(),
-			MessageStatusUpdater:   v1.NewMessageStatusUpdater(app.mother.MessagesRepo()),
-			DeliveryFailureHandler: common.NewDeliveryFailureHandler(),
-		})
-
-		database := v2models.NewDatabase(app.mother.SQLDatabase(), v2models.Config{})
-		guidGenerator := v2models.NewIDGenerator(rand.Reader)
-		messagesRepository := v2models.NewMessagesRepository(util.NewClock(), guidGenerator.Generate)
-		messageStatusUpdater := v2.NewV2MessageStatusUpdater(messagesRepository)
-		unsubscribersRepository := v2models.NewUnsubscribersRepository(guidGenerator.Generate)
-		campaignsRepository := v2models.NewCampaignsRepository(guidGenerator.Generate)
-		v2templatesRepo := v2models.NewTemplatesRepository(guidGenerator.Generate)
-		templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
-		v2TemplateLoader := v2.NewTemplatesLoader(app.mother.Database(), templatesCollection)
-
-		v2Workflow := v2.NewWorkflow(app.mother.MailClient(), common.NewPackager(v2TemplateLoader, cloak),
-			common.NewUserLoader(zonedUAAClient), uaa.NewTokenLoader(zonedUAAClient), messageStatusUpdater, database,
-			unsubscribersRepository, campaignsRepository, app.env.Sender, app.env.Domain, app.env.UAAHost)
-
-		worker := postal.NewDeliveryWorker(v1Workflow, v2Workflow, postal.DeliveryWorkerConfig{
-			ID:                     i,
-			UAAHost:                app.env.UAAHost,
-			Logger:                 app.mother.Logger(),
-			Queue:                  app.mother.Queue(),
-			DBTrace:                app.env.DBLoggingEnabled,
-			Database:               database,
-			StrategyDeterminer:     strategy.NewStrategyDeterminer(app.mother.UserStrategy(), app.mother.SpaceStrategy(), app.mother.OrganizationStrategy(), app.mother.EmailStrategy()),
-			DeliveryFailureHandler: common.NewDeliveryFailureHandler(),
-			MessageStatusUpdater:   messageStatusUpdater,
-		})
-		return &worker
+	postal.Boot(app.mother, postal.Config{
+		UAAClientID:          app.env.UAAClientID,
+		UAAClientSecret:      app.env.UAAClientSecret,
+		UAAPublicKey:         UAAPublicKey,
+		UAAHost:              app.env.UAAHost,
+		VerifySSL:            app.env.VerifySSL,
+		InstanceIndex:        app.env.VCAPApplication.InstanceIndex,
+		WorkerCount:          WorkerCount,
+		EncryptionKey:        app.env.EncryptionKey,
+		DBLoggingEnabled:     app.env.DBLoggingEnabled,
+		Sender:               app.env.Sender,
+		Domain:               app.env.Domain,
+		QueueWaitMaxDuration: app.env.GobbleWaitMaxDuration,
+		CCHost:               app.env.CCHost,
 	})
 }
 
@@ -190,18 +132,20 @@ func (app Application) StartMessageGC() {
 
 func (app Application) StartServer(logger lager.Logger) {
 	web.NewServer().Run(app.mother, web.Config{
-		DBLoggingEnabled: app.env.DBLoggingEnabled,
-		SkipVerifySSL:    !app.env.VerifySSL,
-		Port:             app.env.Port,
-		Logger:           logger,
-		CORSOrigin:       app.env.CORSOrigin,
-		SQLDB:            app.mother.SQLDatabase(),
+		DBLoggingEnabled:     app.env.DBLoggingEnabled,
+		SkipVerifySSL:        !app.env.VerifySSL,
+		Port:                 app.env.Port,
+		Logger:               logger,
+		CORSOrigin:           app.env.CORSOrigin,
+		SQLDB:                app.mother.SQLDatabase(),
+		QueueWaitMaxDuration: app.env.GobbleWaitMaxDuration,
 
-		UAAPublicKey:    UAAPublicKey,
-		UAAHost:         app.env.UAAHost,
-		UAAClientID:     app.env.UAAClientID,
-		UAAClientSecret: app.env.UAAClientSecret,
-		CCHost:          app.env.CCHost,
+		UAAPublicKey:     UAAPublicKey,
+		UAAHost:          app.env.UAAHost,
+		UAAClientID:      app.env.UAAClientID,
+		UAAClientSecret:  app.env.UAAClientSecret,
+		DefaultUAAScopes: app.env.DefaultUAAScopes,
+		CCHost:           app.env.CCHost,
 	})
 }
 

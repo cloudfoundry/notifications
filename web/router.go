@@ -4,27 +4,24 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/gobble"
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	v1web "github.com/cloudfoundry-incubator/notifications/v1/web"
 	v2web "github.com/cloudfoundry-incubator/notifications/v2/web"
 )
 
 type MotherInterface interface {
 	Queue() gobble.QueueInterface
-
-	EmailStrategy() services.EmailStrategy
-	UserStrategy() services.UserStrategy
-	SpaceStrategy() services.SpaceStrategy
-	OrganizationStrategy() services.OrganizationStrategy
-	EveryoneStrategy() services.EveryoneStrategy
-	UAAScopeStrategy() services.UAAScopeStrategy
 }
 
 func NewRouter(mother MotherInterface, config Config) http.Handler {
-	v1 := v1web.NewRouter(NewMuxer(), mother, v1web.Config{
+	v1 := v1web.NewRouter(NewMuxer(), v1web.Config{
+		UAAPublicKey:     config.UAAPublicKey,
+		UAAClientID:      config.UAAClientID,
+		UAAClientSecret:  config.UAAClientSecret,
+		DefaultUAAScopes: config.DefaultUAAScopes,
 		DBLoggingEnabled: config.DBLoggingEnabled,
 		Logger:           config.Logger,
-		UAAPublicKey:     config.UAAPublicKey,
+		VerifySSL:        !config.SkipVerifySSL,
+		CCHost:           config.CCHost,
 		CORSOrigin:       config.CORSOrigin,
 		SQLDB:            config.SQLDB,
 	})

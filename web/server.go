@@ -9,18 +9,20 @@ import (
 )
 
 type Config struct {
-	DBLoggingEnabled bool
-	SkipVerifySSL    bool
-	Port             int
-	Logger           lager.Logger
-	CORSOrigin       string
-	SQLDB            *sql.DB
+	DBLoggingEnabled     bool
+	SkipVerifySSL        bool
+	Port                 int
+	CORSOrigin           string
+	QueueWaitMaxDuration int
+	SQLDB                *sql.DB
+	Logger               lager.Logger
 
-	UAAPublicKey    string
-	UAAHost         string
-	UAAClientID     string
-	UAAClientSecret string
-	CCHost          string
+	UAAPublicKey     string
+	UAAHost          string
+	UAAClientID      string
+	UAAClientSecret  string
+	DefaultUAAScopes []string
+	CCHost           string
 }
 
 type Server struct{}

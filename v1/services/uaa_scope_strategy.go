@@ -50,7 +50,7 @@ func (strategy UAAScopeStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		return responses, DefaultScopeError{}
 	}
 
-	token, err := strategy.tokenLoader.Load(dispatch.UAAHost) // TODO: (rm) this triggers a weird side-effect that is required
+	token, err := strategy.tokenLoader.Load(dispatch.UAAHost)
 	if err != nil {
 		return responses, err
 	}
