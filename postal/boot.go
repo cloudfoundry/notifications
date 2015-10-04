@@ -13,7 +13,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/postal/v1"
 	"github.com/cloudfoundry-incubator/notifications/postal/v2"
-	"github.com/cloudfoundry-incubator/notifications/strategy"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/util"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -106,7 +105,7 @@ func Boot(mom mother, config Config) {
 	templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
 	v2TemplateLoader := v2.NewTemplatesLoader(v2database, templatesCollection)
 	v2deliveryFailureHandler := common.NewDeliveryFailureHandler()
-	strategyDeterminer := strategy.NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy, emailStrategy)
+	strategyDeterminer := v2.NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy, emailStrategy)
 
 	WorkerGenerator{
 		InstanceIndex: config.InstanceIndex,

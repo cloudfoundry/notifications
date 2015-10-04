@@ -1,10 +1,10 @@
-package strategy_test
+package v2_test
 
 import (
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/gobble"
-	"github.com/cloudfoundry-incubator/notifications/strategy"
+	"github.com/cloudfoundry-incubator/notifications/postal/v2"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
@@ -15,7 +15,7 @@ import (
 
 var _ = Describe("Determiner", func() {
 	var (
-		determiner    strategy.Determiner
+		determiner    v2.Determiner
 		userStrategy  *mocks.Strategy
 		spaceStrategy *mocks.Strategy
 		orgStrategy   *mocks.Strategy
@@ -28,7 +28,7 @@ var _ = Describe("Determiner", func() {
 		orgStrategy = mocks.NewStrategy()
 		emailStrategy = mocks.NewStrategy()
 		database = mocks.NewDatabase()
-		determiner = strategy.NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy, emailStrategy)
+		determiner = v2.NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy, emailStrategy)
 	})
 
 	Context("when dispatching to a user", func() {
@@ -218,7 +218,7 @@ var _ = Describe("Determiner", func() {
 						SendTo: map[string]string{"some-audience": "wut"},
 					},
 				}))
-				Expect(err).To(MatchError(strategy.NoStrategyError{errors.New("Strategy for the \"some-audience\" audience could not be found")}))
+				Expect(err).To(MatchError(v2.NoStrategyError{errors.New("Strategy for the \"some-audience\" audience could not be found")}))
 			})
 		})
 	})
