@@ -3,7 +3,7 @@ package util_test
 import (
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/v2/util"
+	"github.com/cloudfoundry-incubator/notifications/util"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

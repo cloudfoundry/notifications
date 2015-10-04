@@ -1,10 +1,10 @@
-package models_test
+package util_test
 
 import (
 	"bytes"
 	"errors"
 
-	"github.com/cloudfoundry-incubator/notifications/v2/models"
+	"github.com/cloudfoundry-incubator/notifications/util"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,7 +19,7 @@ func (e errorReader) Read([]byte) (int, error) {
 var _ = Describe("IDGenerator", func() {
 	It("generates a ID without generating an error", func() {
 		reader := bytes.NewReader([]byte("abcdefghijklmnopqrstuvwxyz1234567890"))
-		generator := models.NewIDGenerator(reader)
+		generator := util.NewIDGenerator(reader)
 
 		guid, err := generator.Generate()
 		Expect(err).NotTo(HaveOccurred())
@@ -28,7 +28,7 @@ var _ = Describe("IDGenerator", func() {
 
 	It("returns an error if the reader errors", func() {
 		reader := errorReader{}
-		generator := models.NewIDGenerator(reader)
+		generator := util.NewIDGenerator(reader)
 
 		_, err := generator.Generate()
 		Expect(err).To(MatchError(errors.New("failed to read")))

@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"time"
 
-	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
+	"github.com/cloudfoundry-incubator/notifications/util"
 	"github.com/go-gorp/gorp"
 )
 
@@ -29,7 +29,7 @@ type Template struct {
 func (t *Template) PreInsert(s gorp.SqlExecutor) error {
 	if t.ID == "" {
 		var err error
-		t.ID, err = v2models.NewIDGenerator(rand.Reader).Generate()
+		t.ID, err = util.NewIDGenerator(rand.Reader).Generate()
 		if err != nil {
 			return err
 		}

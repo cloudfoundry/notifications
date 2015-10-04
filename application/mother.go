@@ -12,8 +12,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
+	"github.com/cloudfoundry-incubator/notifications/util"
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
-	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -107,5 +107,5 @@ func (m *Mother) Database() db.DatabaseInterface {
 }
 
 func (m *Mother) MessagesRepo() v1models.MessagesRepo {
-	return v1models.NewMessagesRepo(v2models.NewIDGenerator(rand.Reader).Generate)
+	return v1models.NewMessagesRepo(util.NewIDGenerator(rand.Reader).Generate)
 }

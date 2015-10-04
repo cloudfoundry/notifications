@@ -15,12 +15,12 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/v2"
 	"github.com/cloudfoundry-incubator/notifications/strategy"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
+	"github.com/cloudfoundry-incubator/notifications/util"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
-	"github.com/pivotal-cf/cf-autoscaling/util"
 	"github.com/pivotal-golang/conceal"
 	"github.com/pivotal-golang/lager"
 )
@@ -66,7 +66,7 @@ func Boot(mom mother, config Config) {
 		panic(err)
 	}
 
-	guidGenerator := v2models.NewIDGenerator(rand.Reader)
+	guidGenerator := util.NewIDGenerator(rand.Reader)
 
 	// V1
 	receiptsRepo := models.NewReceiptsRepo()

@@ -10,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
+	"github.com/cloudfoundry-incubator/notifications/util"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/clients"
@@ -24,7 +25,6 @@ import (
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 	"github.com/gorilla/mux"
-	"github.com/pivotal-cf/cf-autoscaling/util"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
 )
@@ -50,7 +50,7 @@ type Config struct {
 }
 
 func NewRouter(mx muxer, config Config) http.Handler {
-	guidGenerator := v2models.NewIDGenerator(rand.Reader)
+	guidGenerator := util.NewIDGenerator(rand.Reader)
 
 	clientsRepo := models.NewClientsRepo()
 	kindsRepo := models.NewKindsRepo()
@@ -81,7 +81,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 		WaitMaxDuration: time.Duration(config.QueueWaitMaxDuration) * time.Millisecond,
 	})
 	v1enqueuer := services.NewEnqueuer(gobbleQueue, messagesRepo)
-	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, v2models.NewMessagesRepository(util.NewClock(), v2models.NewIDGenerator(rand.Reader).Generate))
+	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, v2models.NewMessagesRepository(util.NewClock(), guidGenerator.Generate))
 
 	uaaClient := uaa.NewZonedUAAClient(config.UAAClientID, config.UAAClientSecret, config.VerifySSL, config.UAAPublicKey)
 	cloudController := cf.NewCloudController(config.CCHost, !config.VerifySSL)

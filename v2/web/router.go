@@ -8,10 +8,10 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
+	"github.com/cloudfoundry-incubator/notifications/util"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
-	"github.com/cloudfoundry-incubator/notifications/v2/util"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigns"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigntypes"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/info"
@@ -79,7 +79,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	campaignEnqueuer := queue.NewCampaignEnqueuer(config.Queue)
 
-	guidGenerator := models.NewIDGenerator(rand.Reader)
+	guidGenerator := util.NewIDGenerator(rand.Reader)
 	sendersRepository := models.NewSendersRepository(guidGenerator.Generate)
 	campaignTypesRepository := models.NewCampaignTypesRepository(guidGenerator.Generate)
 	templatesRepository := models.NewTemplatesRepository(guidGenerator.Generate)
