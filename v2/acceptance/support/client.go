@@ -79,7 +79,9 @@ func (c *Client) makeRequest(method, path string, content io.ReadSeeker, token s
 	c.printRequest(request)
 
 	request.Header.Set("X-NOTIFICATIONS-VERSION", "2")
-	request.Header.Set("Authorization", "Bearer "+token)
+	if token != "" {
+		request.Header.Set("Authorization", "Bearer "+token)
+	}
 	if c.config.Routerless {
 		request.Header.Set("X-Vcap-Request-Id", "some-totally-fake-vcap-request-id")
 	}

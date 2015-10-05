@@ -6,16 +6,6 @@ This is version 2 of the Cloud Foundry notifications API. Integrate with this AP
 ## Authorization Tokens
 See [here](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-Tokens.md) for more information about UAA tokens.
 
-```http
-Authorization: bearer {{.SampleAuthorizationToken}}
-```
-
-Authorization tokens can be decoded to view the information they contain:
-
-```no-highlight
-{{.DecodedToken}}
-```
-
 {{ range $resource, $resourceEntry := .Resources }}
 
 # Group {{.ListResourceName}}
@@ -29,6 +19,11 @@ Some description of the {{.ListResourceName}}
 {{ $methodEntry.Description }}
 
 + Request
+
+    Required scopes:
+    ```no-highlight
+    {{ range $index, $value := $methodEntry.Request.Scopes  }} {{ $value }}{{ end }}
+    ```
 
     + Headers
 
@@ -72,6 +67,11 @@ Some description of the {{.ListResourceName}}
 {{ $methodEntry.Description }}
 
 + Request
+
+    Required scopes:
+    ```no-highlight
+    {{ range $index, $value := $methodEntry.Request.Scopes  }} {{ $value }}{{ end }}
+    ```
 
     + Headers
 

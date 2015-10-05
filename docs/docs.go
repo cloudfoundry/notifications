@@ -1,10 +1,10 @@
 package docs
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"text/template"
 
 	"github.com/pivotal-cf-experimental/warrant"
@@ -13,6 +13,7 @@ import (
 type MethodRequest struct {
 	Headers map[string][]string
 	Body    string
+	Scopes  []string
 }
 
 type MethodResponse struct {
@@ -39,7 +40,7 @@ type DocGenerator struct {
 	RequestInspector         requestInspector
 	Resources                map[string]ResourceEntry
 	SampleAuthorizationToken string
-	DecodedToken             string
+	Warrant                  warrant.Warrant
 }
 
 type requestInspector interface {
@@ -50,7 +51,22 @@ func NewDocGenerator(requestInspector requestInspector) *DocGenerator {
 	return &DocGenerator{
 		Resources:        map[string]ResourceEntry{},
 		RequestInspector: requestInspector,
+		Warrant:          warrant.New(warrant.Config{}),
 	}
+}
+
+func (g *DocGenerator) decodeScopes(request *http.Request) ([]string, error) {
+	headerValue := request.Header.Get("Authorization")
+	splitted := strings.Split(headerValue, " ")
+	if len(splitted) != 2 {
+		return nil, nil
+	}
+
+	decodedToken, err := g.Warrant.Tokens.Decode(splitted[1])
+	if err != nil {
+		return nil, err
+	}
+	return decodedToken.Scopes, nil
 }
 
 func (g *DocGenerator) Add(request *http.Request, response *http.Response) error {
@@ -79,11 +95,17 @@ func (g *DocGenerator) Add(request *http.Request, response *http.Response) error
 		panic(err)
 	}
 
+	scopes, err := g.decodeScopes(request)
+	if err != nil {
+		panic(err)
+	}
+
 	methodEntry := MethodEntry{
 		Verb: request.Method,
 		Request: MethodRequest{
 			Headers: request.Header,
 			Body:    string(requestBody),
+			Scopes:  scopes,
 		},
 		Responses: []MethodResponse{
 			{
@@ -108,8 +130,6 @@ func (g *DocGenerator) Add(request *http.Request, response *http.Response) error
 }
 
 func (g *DocGenerator) GenerateBlueprint(outputFilePath string) error {
-	g.DecodedToken = decodeSampleAuthorizationToken(g.SampleAuthorizationToken)
-
 	if outputFilePath == "" {
 		return nil
 	}
@@ -131,15 +151,4 @@ func (g *DocGenerator) GenerateBlueprint(outputFilePath string) error {
 
 	outFile.Close()
 	return nil
-}
-
-func decodeSampleAuthorizationToken(userToken string) string {
-	w := warrant.New(warrant.Config{})
-
-	decodedToken, err := w.Tokens.Decode(userToken)
-	if err != nil {
-		panic(err)
-	}
-
-	return fmt.Sprintf("ClientID: %s\nScopes: %+v\n", decodedToken.ClientID, decodedToken.Scopes)
 }

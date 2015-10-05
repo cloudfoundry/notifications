@@ -6,18 +6,6 @@ This is version 2 of the Cloud Foundry notifications API. Integrate with this AP
 ## Authorization Tokens
 See [here](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-Tokens.md) for more information about UAA tokens.
 
-```http
-Authorization: bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.BZaUJhR-oJXju0AINY59lyHKFe6KYGncrk-Wv0Nm_rfX2gk7t9V38NUWG5j1VutKisBnFI40BH4sUNFcZhNIwxsypnECp8uGS_J00jTxkj-DNWfblMld93PXqnNsevZxhrnotvQmPXQW2jq8XAjOMUHw1T5epzHowvUYY6tUD1sf482s465Ygd1dF1LApvBYvEQYnanuGy1hLhMAe-IX83U__5HokQA-GsBTdVuXxXM8iUv-AtmyGgZW2jTV9Nl0iZp1VTfWd1M6_5mumMbLM1zGJikfz5jHUrmFofau1ajeGsxcC66rcleM80WTQwrxwxm2lMsyk4SdZrw9GC_uoQ
-```
-
-Authorization tokens can be decoded to view the information they contain:
-
-```no-highlight
-ClientID: my-client
-Scopes: [notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read]
-
-```
-
 
 
 # Group Campaign types
@@ -32,11 +20,16 @@ Some description of the Campaign types
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.BZaUJhR-oJXju0AINY59lyHKFe6KYGncrk-Wv0Nm_rfX2gk7t9V38NUWG5j1VutKisBnFI40BH4sUNFcZhNIwxsypnECp8uGS_J00jTxkj-DNWfblMld93PXqnNsevZxhrnotvQmPXQW2jq8XAjOMUHw1T5epzHowvUYY6tUD1sf482s465Ygd1dF1LApvBYvEQYnanuGy1hLhMAe-IX83U__5HokQA-GsBTdVuXxXM8iUv-AtmyGgZW2jTV9Nl0iZp1VTfWd1M6_5mumMbLM1zGJikfz5jHUrmFofau1ajeGsxcC66rcleM80WTQwrxwxm2lMsyk4SdZrw9GC_uoQ
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NDksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.ByTi7K2G_O1nIv4QmFy6-uoJAbAMgSjtOf2l5uOgX5MdolWoS0E4LtVrOYvakaBlJy1-Ltv1XsOAveSF4JvteELd8dwpyBjHFc0-yxqNsvkpa2ZOTzyj1B-xR4HHcPL8_398wXLM0JMRS2AuJjuGaIm4bAuQ2fYkI5ESMfgQwDsRyhATle3S9eGN1q8Cqm5d2NfAaDQXQxhsslzBJFWwZgbOnW7-zoFxXykHPG7K5il6tdaArcpQxqTlRW3r182YImv07hy6XxQnRixIZIoYeHOG9ZMgchOcZn0vI1t5c2zpg8a-QMjNG0w0-xiWaNTWkji73Q_qF9tru50bSelNGQ
 
 
 
@@ -63,13 +56,13 @@ Some description of the Campaign types
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:06 GMT
+            Date: Mon, 05 Oct 2015 17:17:29 GMT
 
 
 
     + Body
 
-            {"id":"2c2e0728-f5c4-4d5d-d378-ff0868f94cf1","name":"some-campaign-type","description":"a great campaign type","critical":false,"template_id":"","_links":{"self":{"href":"/campaign_types/2c2e0728-f5c4-4d5d-d378-ff0868f94cf1"}}}
+            {"id":"18ba4582-c061-f664-fa16-0f477effd61c","name":"some-campaign-type","description":"a great campaign type","critical":false,"template_id":"","_links":{"self":{"href":"/campaign_types/18ba4582-c061-f664-fa16-0f477effd61c"}}}
 
 
 
@@ -80,11 +73,16 @@ Some description of the Campaign types
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.BZaUJhR-oJXju0AINY59lyHKFe6KYGncrk-Wv0Nm_rfX2gk7t9V38NUWG5j1VutKisBnFI40BH4sUNFcZhNIwxsypnECp8uGS_J00jTxkj-DNWfblMld93PXqnNsevZxhrnotvQmPXQW2jq8XAjOMUHw1T5epzHowvUYY6tUD1sf482s465Ygd1dF1LApvBYvEQYnanuGy1hLhMAe-IX83U__5HokQA-GsBTdVuXxXM8iUv-AtmyGgZW2jTV9Nl0iZp1VTfWd1M6_5mumMbLM1zGJikfz5jHUrmFofau1ajeGsxcC66rcleM80WTQwrxwxm2lMsyk4SdZrw9GC_uoQ
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NDksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.ByTi7K2G_O1nIv4QmFy6-uoJAbAMgSjtOf2l5uOgX5MdolWoS0E4LtVrOYvakaBlJy1-Ltv1XsOAveSF4JvteELd8dwpyBjHFc0-yxqNsvkpa2ZOTzyj1B-xR4HHcPL8_398wXLM0JMRS2AuJjuGaIm4bAuQ2fYkI5ESMfgQwDsRyhATle3S9eGN1q8Cqm5d2NfAaDQXQxhsslzBJFWwZgbOnW7-zoFxXykHPG7K5il6tdaArcpQxqTlRW3r182YImv07hy6XxQnRixIZIoYeHOG9ZMgchOcZn0vI1t5c2zpg8a-QMjNG0w0-xiWaNTWkji73Q_qF9tru50bSelNGQ
 
 
 
@@ -111,13 +109,13 @@ Some description of the Campaign types
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:06 GMT
+            Date: Mon, 05 Oct 2015 17:17:29 GMT
 
 
 
     + Body
 
-            {"campaign_types":[{"id":"2c2e0728-f5c4-4d5d-d378-ff0868f94cf1","name":"some-campaign-type","description":"a great campaign type","critical":false,"template_id":"","_links":{"self":{"href":"/campaign_types/2c2e0728-f5c4-4d5d-d378-ff0868f94cf1"}}}],"_links":{"self":{"href":"/senders/508e2bdd-fa61-bccf-6986-9e594a2218ba/campaign_types"},"sender":{"href":"/senders/508e2bdd-fa61-bccf-6986-9e594a2218ba"}}}
+            {"campaign_types":[{"id":"18ba4582-c061-f664-fa16-0f477effd61c","name":"some-campaign-type","description":"a great campaign type","critical":false,"template_id":"","_links":{"self":{"href":"/campaign_types/18ba4582-c061-f664-fa16-0f477effd61c"}}}],"_links":{"self":{"href":"/senders/109ab7f2-7cc3-0633-d46d-51ed4ded5060/campaign_types"},"sender":{"href":"/senders/109ab7f2-7cc3-0633-d46d-51ed4ded5060"}}}
 
 
 
@@ -136,11 +134,16 @@ Some description of the Campaign types
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.BZaUJhR-oJXju0AINY59lyHKFe6KYGncrk-Wv0Nm_rfX2gk7t9V38NUWG5j1VutKisBnFI40BH4sUNFcZhNIwxsypnECp8uGS_J00jTxkj-DNWfblMld93PXqnNsevZxhrnotvQmPXQW2jq8XAjOMUHw1T5epzHowvUYY6tUD1sf482s465Ygd1dF1LApvBYvEQYnanuGy1hLhMAe-IX83U__5HokQA-GsBTdVuXxXM8iUv-AtmyGgZW2jTV9Nl0iZp1VTfWd1M6_5mumMbLM1zGJikfz5jHUrmFofau1ajeGsxcC66rcleM80WTQwrxwxm2lMsyk4SdZrw9GC_uoQ
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NDksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.ByTi7K2G_O1nIv4QmFy6-uoJAbAMgSjtOf2l5uOgX5MdolWoS0E4LtVrOYvakaBlJy1-Ltv1XsOAveSF4JvteELd8dwpyBjHFc0-yxqNsvkpa2ZOTzyj1B-xR4HHcPL8_398wXLM0JMRS2AuJjuGaIm4bAuQ2fYkI5ESMfgQwDsRyhATle3S9eGN1q8Cqm5d2NfAaDQXQxhsslzBJFWwZgbOnW7-zoFxXykHPG7K5il6tdaArcpQxqTlRW3r182YImv07hy6XxQnRixIZIoYeHOG9ZMgchOcZn0vI1t5c2zpg8a-QMjNG0w0-xiWaNTWkji73Q_qF9tru50bSelNGQ
 
 
 
@@ -167,13 +170,13 @@ Some description of the Campaign types
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:06 GMT
+            Date: Mon, 05 Oct 2015 17:17:29 GMT
 
 
 
     + Body
 
-            {"id":"2c2e0728-f5c4-4d5d-d378-ff0868f94cf1","name":"some-campaign-type","description":"a great campaign type","critical":false,"template_id":"","_links":{"self":{"href":"/campaign_types/2c2e0728-f5c4-4d5d-d378-ff0868f94cf1"}}}
+            {"id":"18ba4582-c061-f664-fa16-0f477effd61c","name":"some-campaign-type","description":"a great campaign type","critical":false,"template_id":"","_links":{"self":{"href":"/campaign_types/18ba4582-c061-f664-fa16-0f477effd61c"}}}
 
 
 
@@ -184,11 +187,16 @@ Some description of the Campaign types
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.BZaUJhR-oJXju0AINY59lyHKFe6KYGncrk-Wv0Nm_rfX2gk7t9V38NUWG5j1VutKisBnFI40BH4sUNFcZhNIwxsypnECp8uGS_J00jTxkj-DNWfblMld93PXqnNsevZxhrnotvQmPXQW2jq8XAjOMUHw1T5epzHowvUYY6tUD1sf482s465Ygd1dF1LApvBYvEQYnanuGy1hLhMAe-IX83U__5HokQA-GsBTdVuXxXM8iUv-AtmyGgZW2jTV9Nl0iZp1VTfWd1M6_5mumMbLM1zGJikfz5jHUrmFofau1ajeGsxcC66rcleM80WTQwrxwxm2lMsyk4SdZrw9GC_uoQ
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NDksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.ByTi7K2G_O1nIv4QmFy6-uoJAbAMgSjtOf2l5uOgX5MdolWoS0E4LtVrOYvakaBlJy1-Ltv1XsOAveSF4JvteELd8dwpyBjHFc0-yxqNsvkpa2ZOTzyj1B-xR4HHcPL8_398wXLM0JMRS2AuJjuGaIm4bAuQ2fYkI5ESMfgQwDsRyhATle3S9eGN1q8Cqm5d2NfAaDQXQxhsslzBJFWwZgbOnW7-zoFxXykHPG7K5il6tdaArcpQxqTlRW3r182YImv07hy6XxQnRixIZIoYeHOG9ZMgchOcZn0vI1t5c2zpg8a-QMjNG0w0-xiWaNTWkji73Q_qF9tru50bSelNGQ
 
 
 
@@ -198,7 +206,7 @@ Some description of the Campaign types
 
     + Body
 
-            {"critical":true,"description":"still the same great campaign type","name":"updated-campaign-type","template_id":"8f0832ea-daf5-b2ba-39e4-697d17c90a25"}
+            {"critical":true,"description":"still the same great campaign type","name":"updated-campaign-type","template_id":"097050d1-c9e8-9a5c-83fd-3bc3b29de932"}
 
 
 + Response 200
@@ -215,13 +223,13 @@ Some description of the Campaign types
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:06 GMT
+            Date: Mon, 05 Oct 2015 17:17:29 GMT
 
 
 
     + Body
 
-            {"id":"2c2e0728-f5c4-4d5d-d378-ff0868f94cf1","name":"updated-campaign-type","description":"still the same great campaign type","critical":true,"template_id":"8f0832ea-daf5-b2ba-39e4-697d17c90a25","_links":{"self":{"href":"/campaign_types/2c2e0728-f5c4-4d5d-d378-ff0868f94cf1"}}}
+            {"id":"18ba4582-c061-f664-fa16-0f477effd61c","name":"updated-campaign-type","description":"still the same great campaign type","critical":true,"template_id":"097050d1-c9e8-9a5c-83fd-3bc3b29de932","_links":{"self":{"href":"/campaign_types/18ba4582-c061-f664-fa16-0f477effd61c"}}}
 
 
 
@@ -232,11 +240,16 @@ Some description of the Campaign types
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.BZaUJhR-oJXju0AINY59lyHKFe6KYGncrk-Wv0Nm_rfX2gk7t9V38NUWG5j1VutKisBnFI40BH4sUNFcZhNIwxsypnECp8uGS_J00jTxkj-DNWfblMld93PXqnNsevZxhrnotvQmPXQW2jq8XAjOMUHw1T5epzHowvUYY6tUD1sf482s465Ygd1dF1LApvBYvEQYnanuGy1hLhMAe-IX83U__5HokQA-GsBTdVuXxXM8iUv-AtmyGgZW2jTV9Nl0iZp1VTfWd1M6_5mumMbLM1zGJikfz5jHUrmFofau1ajeGsxcC66rcleM80WTQwrxwxm2lMsyk4SdZrw9GC_uoQ
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NDksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.ByTi7K2G_O1nIv4QmFy6-uoJAbAMgSjtOf2l5uOgX5MdolWoS0E4LtVrOYvakaBlJy1-Ltv1XsOAveSF4JvteELd8dwpyBjHFc0-yxqNsvkpa2ZOTzyj1B-xR4HHcPL8_398wXLM0JMRS2AuJjuGaIm4bAuQ2fYkI5ESMfgQwDsRyhATle3S9eGN1q8Cqm5d2NfAaDQXQxhsslzBJFWwZgbOnW7-zoFxXykHPG7K5il6tdaArcpQxqTlRW3r182YImv07hy6XxQnRixIZIoYeHOG9ZMgchOcZn0vI1t5c2zpg8a-QMjNG0w0-xiWaNTWkji73Q_qF9tru50bSelNGQ
 
 
 
@@ -255,7 +268,7 @@ Some description of the Campaign types
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:06 GMT
+            Date: Mon, 05 Oct 2015 17:17:29 GMT
 
 
 
@@ -280,11 +293,16 @@ Some description of the Campaigns
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.BZaUJhR-oJXju0AINY59lyHKFe6KYGncrk-Wv0Nm_rfX2gk7t9V38NUWG5j1VutKisBnFI40BH4sUNFcZhNIwxsypnECp8uGS_J00jTxkj-DNWfblMld93PXqnNsevZxhrnotvQmPXQW2jq8XAjOMUHw1T5epzHowvUYY6tUD1sf482s465Ygd1dF1LApvBYvEQYnanuGy1hLhMAe-IX83U__5HokQA-GsBTdVuXxXM8iUv-AtmyGgZW2jTV9Nl0iZp1VTfWd1M6_5mumMbLM1zGJikfz5jHUrmFofau1ajeGsxcC66rcleM80WTQwrxwxm2lMsyk4SdZrw9GC_uoQ
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NTEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.CclFdQ_Utv6LYarYNwOqVdkSGr_B0cuJoo9PBvavOp5q6RMUAQ6BMOvKZrTmhBfZfTpcLub0ZmLsNvYHtZn7v1zbrzBaaCwqiQTTg5t2OvGxbqHjyMYUMcfhdD8C4X-3uFb4VqklGMv0BlhN_-N2SLi1gl6gnDWrgMzvLNV-3uu8NZ-0QIZ8iY2TTlLY02UAbZr8Bpneg_hq9T4WW1OuA2e98N7orJJNF824R41CYE4fTwiTPNCXCaem7y3gStX6kL61Fl4YjrRiWad8Dq_TN-dBVCS85Bz_kilnUVDLAsQW8P9bycoVp1uLyU15Nb7xsVvVYTmdmmgfVWfg8PrN5w
 
 
 
@@ -294,7 +312,7 @@ Some description of the Campaigns
 
     + Body
 
-            {"campaign_type_id":"cbd296c8-abb6-27ef-7a39-2d095390a762","reply_to":"no-reply@example.com","send_to":{"email":"test@example.com"},"subject":"campaign subject","template_id":"8548f98a-8681-9811-8e44-69e3d74f4437","text":"campaign body"}
+            {"campaign_type_id":"3c1707bf-ebc3-a428-6c65-30e411eee0d2","reply_to":"no-reply@example.com","send_to":{"email":"test@example.com"},"subject":"campaign subject","template_id":"8b490315-0b20-6607-d997-855c2f86895e","text":"campaign body"}
 
 
 + Response 202
@@ -311,13 +329,13 @@ Some description of the Campaigns
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:06 GMT
+            Date: Mon, 05 Oct 2015 17:17:31 GMT
 
 
 
     + Body
 
-            {"_links":{"campaign_type":{"href":"/campaign_types/cbd296c8-abb6-27ef-7a39-2d095390a762"},"self":{"href":"/campaigns/fe6e81c8-064b-b8d7-a1ab-de1c17694ec5"},"status":{"href":"/campaigns/fe6e81c8-064b-b8d7-a1ab-de1c17694ec5/status"},"template":{"href":"/templates/8548f98a-8681-9811-8e44-69e3d74f4437"}},"campaign_type_id":"cbd296c8-abb6-27ef-7a39-2d095390a762","html":"","id":"fe6e81c8-064b-b8d7-a1ab-de1c17694ec5","reply_to":"no-reply@example.com","send_to":{"email":"test@example.com"},"subject":"campaign subject","template_id":"8548f98a-8681-9811-8e44-69e3d74f4437","text":"campaign body"}
+            {"_links":{"campaign_type":{"href":"/campaign_types/3c1707bf-ebc3-a428-6c65-30e411eee0d2"},"self":{"href":"/campaigns/9e2033f3-68e2-db78-d209-8369642f204a"},"status":{"href":"/campaigns/9e2033f3-68e2-db78-d209-8369642f204a/status"},"template":{"href":"/templates/8b490315-0b20-6607-d997-855c2f86895e"}},"campaign_type_id":"3c1707bf-ebc3-a428-6c65-30e411eee0d2","html":"","id":"9e2033f3-68e2-db78-d209-8369642f204a","reply_to":"no-reply@example.com","send_to":{"email":"test@example.com"},"subject":"campaign subject","template_id":"8b490315-0b20-6607-d997-855c2f86895e","text":"campaign body"}
 
 
 
@@ -335,11 +353,16 @@ Some description of the Campaigns
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDYsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.BZaUJhR-oJXju0AINY59lyHKFe6KYGncrk-Wv0Nm_rfX2gk7t9V38NUWG5j1VutKisBnFI40BH4sUNFcZhNIwxsypnECp8uGS_J00jTxkj-DNWfblMld93PXqnNsevZxhrnotvQmPXQW2jq8XAjOMUHw1T5epzHowvUYY6tUD1sf482s465Ygd1dF1LApvBYvEQYnanuGy1hLhMAe-IX83U__5HokQA-GsBTdVuXxXM8iUv-AtmyGgZW2jTV9Nl0iZp1VTfWd1M6_5mumMbLM1zGJikfz5jHUrmFofau1ajeGsxcC66rcleM80WTQwrxwxm2lMsyk4SdZrw9GC_uoQ
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NTEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.CclFdQ_Utv6LYarYNwOqVdkSGr_B0cuJoo9PBvavOp5q6RMUAQ6BMOvKZrTmhBfZfTpcLub0ZmLsNvYHtZn7v1zbrzBaaCwqiQTTg5t2OvGxbqHjyMYUMcfhdD8C4X-3uFb4VqklGMv0BlhN_-N2SLi1gl6gnDWrgMzvLNV-3uu8NZ-0QIZ8iY2TTlLY02UAbZr8Bpneg_hq9T4WW1OuA2e98N7orJJNF824R41CYE4fTwiTPNCXCaem7y3gStX6kL61Fl4YjrRiWad8Dq_TN-dBVCS85Bz_kilnUVDLAsQW8P9bycoVp1uLyU15Nb7xsVvVYTmdmmgfVWfg8PrN5w
 
 
 
@@ -366,13 +389,13 @@ Some description of the Campaigns
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:06 GMT
+            Date: Mon, 05 Oct 2015 17:17:31 GMT
 
 
 
     + Body
 
-            {"_links":{"campaign_type":{"href":"/campaign_types/cbd296c8-abb6-27ef-7a39-2d095390a762"},"self":{"href":"/campaigns/fe6e81c8-064b-b8d7-a1ab-de1c17694ec5"},"status":{"href":"/campaigns/fe6e81c8-064b-b8d7-a1ab-de1c17694ec5/status"},"template":{"href":"/templates/8548f98a-8681-9811-8e44-69e3d74f4437"}},"campaign_type_id":"cbd296c8-abb6-27ef-7a39-2d095390a762","html":"","id":"fe6e81c8-064b-b8d7-a1ab-de1c17694ec5","reply_to":"no-reply@example.com","send_to":{"email":"test@example.com"},"subject":"campaign subject","template_id":"8548f98a-8681-9811-8e44-69e3d74f4437","text":"campaign body"}
+            {"_links":{"campaign_type":{"href":"/campaign_types/3c1707bf-ebc3-a428-6c65-30e411eee0d2"},"self":{"href":"/campaigns/9e2033f3-68e2-db78-d209-8369642f204a"},"status":{"href":"/campaigns/9e2033f3-68e2-db78-d209-8369642f204a/status"},"template":{"href":"/templates/8b490315-0b20-6607-d997-855c2f86895e"}},"campaign_type_id":"3c1707bf-ebc3-a428-6c65-30e411eee0d2","html":"","id":"9e2033f3-68e2-db78-d209-8369642f204a","reply_to":"no-reply@example.com","send_to":{"email":"test@example.com"},"subject":"campaign subject","template_id":"8b490315-0b20-6607-d997-855c2f86895e","text":"campaign body"}
 
 
 
@@ -391,11 +414,12 @@ Some description of the Info
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+    
+    ```
+
     + Headers
-
-
-
-            Authorization: Bearer 
 
 
 
@@ -422,7 +446,7 @@ Some description of the Info
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:04 GMT
+            Date: Mon, 05 Oct 2015 17:17:31 GMT
 
 
 
@@ -455,11 +479,16 @@ Some description of the Senders
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDUsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kfrKOQ-UxAnLU1xm4uRV_KLK0lrL54lUFO-3-K08e2_AEs68d8mnuORYG4ULWKCIm7sQmcEeUwVvsnOmd-2zt7M0ARBX9Vlh9Z4vNkCKSG_lmkq2A3HFywoCmXYeStWgXTas4HFdqC1KKLP444sa-L5wbHs1Oq-lsBn0kpNyKaYS512-Br7xzldCEnoUoDkEgulKmIUaDbyLiJl8qkG8Vu3DTXNNAgJds8EKTZ_fJBJiV36DTR0ahtI5ADeVWdb7NJbSq1hzN5F4nPQs5UWFOz0KvFx9ElCcF1f0BW7iJiQW1Lq7gIlmSf_t2OTRfkBvW2XZSsNtzfaqV7IOmGulZA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NDksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.ByTi7K2G_O1nIv4QmFy6-uoJAbAMgSjtOf2l5uOgX5MdolWoS0E4LtVrOYvakaBlJy1-Ltv1XsOAveSF4JvteELd8dwpyBjHFc0-yxqNsvkpa2ZOTzyj1B-xR4HHcPL8_398wXLM0JMRS2AuJjuGaIm4bAuQ2fYkI5ESMfgQwDsRyhATle3S9eGN1q8Cqm5d2NfAaDQXQxhsslzBJFWwZgbOnW7-zoFxXykHPG7K5il6tdaArcpQxqTlRW3r182YImv07hy6XxQnRixIZIoYeHOG9ZMgchOcZn0vI1t5c2zpg8a-QMjNG0w0-xiWaNTWkji73Q_qF9tru50bSelNGQ
 
 
 
@@ -486,13 +515,13 @@ Some description of the Senders
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:05 GMT
+            Date: Mon, 05 Oct 2015 17:17:29 GMT
 
 
 
     + Body
 
-            {"id":"c91fa81c-5b92-7ee4-9a27-e683fa21e58e","name":"My Cool App","_links":{"self":{"href":"/senders/c91fa81c-5b92-7ee4-9a27-e683fa21e58e"},"campaign_types":{"href":"/senders/c91fa81c-5b92-7ee4-9a27-e683fa21e58e/campaign_types"},"campaigns":{"href":"/senders/c91fa81c-5b92-7ee4-9a27-e683fa21e58e/campaigns"}}}
+            {"id":"fa387717-32b5-953e-568a-ad2aee2d4052","name":"My Cool App","_links":{"self":{"href":"/senders/fa387717-32b5-953e-568a-ad2aee2d4052"},"campaign_types":{"href":"/senders/fa387717-32b5-953e-568a-ad2aee2d4052/campaign_types"},"campaigns":{"href":"/senders/fa387717-32b5-953e-568a-ad2aee2d4052/campaigns"}}}
 
 
 
@@ -503,11 +532,16 @@ Some description of the Senders
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDUsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kfrKOQ-UxAnLU1xm4uRV_KLK0lrL54lUFO-3-K08e2_AEs68d8mnuORYG4ULWKCIm7sQmcEeUwVvsnOmd-2zt7M0ARBX9Vlh9Z4vNkCKSG_lmkq2A3HFywoCmXYeStWgXTas4HFdqC1KKLP444sa-L5wbHs1Oq-lsBn0kpNyKaYS512-Br7xzldCEnoUoDkEgulKmIUaDbyLiJl8qkG8Vu3DTXNNAgJds8EKTZ_fJBJiV36DTR0ahtI5ADeVWdb7NJbSq1hzN5F4nPQs5UWFOz0KvFx9ElCcF1f0BW7iJiQW1Lq7gIlmSf_t2OTRfkBvW2XZSsNtzfaqV7IOmGulZA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NDksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.ByTi7K2G_O1nIv4QmFy6-uoJAbAMgSjtOf2l5uOgX5MdolWoS0E4LtVrOYvakaBlJy1-Ltv1XsOAveSF4JvteELd8dwpyBjHFc0-yxqNsvkpa2ZOTzyj1B-xR4HHcPL8_398wXLM0JMRS2AuJjuGaIm4bAuQ2fYkI5ESMfgQwDsRyhATle3S9eGN1q8Cqm5d2NfAaDQXQxhsslzBJFWwZgbOnW7-zoFxXykHPG7K5il6tdaArcpQxqTlRW3r182YImv07hy6XxQnRixIZIoYeHOG9ZMgchOcZn0vI1t5c2zpg8a-QMjNG0w0-xiWaNTWkji73Q_qF9tru50bSelNGQ
 
 
 
@@ -534,13 +568,13 @@ Some description of the Senders
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:05 GMT
+            Date: Mon, 05 Oct 2015 17:17:29 GMT
 
 
 
     + Body
 
-            {"senders":[{"id":"c91fa81c-5b92-7ee4-9a27-e683fa21e58e","name":"My Cool App","_links":{"self":{"href":"/senders/c91fa81c-5b92-7ee4-9a27-e683fa21e58e"},"campaign_types":{"href":"/senders/c91fa81c-5b92-7ee4-9a27-e683fa21e58e/campaign_types"},"campaigns":{"href":"/senders/c91fa81c-5b92-7ee4-9a27-e683fa21e58e/campaigns"}}}],"_links":{"self":{"href":"/senders"}}}
+            {"senders":[{"id":"fa387717-32b5-953e-568a-ad2aee2d4052","name":"My Cool App","_links":{"self":{"href":"/senders/fa387717-32b5-953e-568a-ad2aee2d4052"},"campaign_types":{"href":"/senders/fa387717-32b5-953e-568a-ad2aee2d4052/campaign_types"},"campaigns":{"href":"/senders/fa387717-32b5-953e-568a-ad2aee2d4052/campaigns"}}}],"_links":{"self":{"href":"/senders"}}}
 
 
 
@@ -559,11 +593,16 @@ Some description of the Senders
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDUsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kfrKOQ-UxAnLU1xm4uRV_KLK0lrL54lUFO-3-K08e2_AEs68d8mnuORYG4ULWKCIm7sQmcEeUwVvsnOmd-2zt7M0ARBX9Vlh9Z4vNkCKSG_lmkq2A3HFywoCmXYeStWgXTas4HFdqC1KKLP444sa-L5wbHs1Oq-lsBn0kpNyKaYS512-Br7xzldCEnoUoDkEgulKmIUaDbyLiJl8qkG8Vu3DTXNNAgJds8EKTZ_fJBJiV36DTR0ahtI5ADeVWdb7NJbSq1hzN5F4nPQs5UWFOz0KvFx9ElCcF1f0BW7iJiQW1Lq7gIlmSf_t2OTRfkBvW2XZSsNtzfaqV7IOmGulZA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NDksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.ByTi7K2G_O1nIv4QmFy6-uoJAbAMgSjtOf2l5uOgX5MdolWoS0E4LtVrOYvakaBlJy1-Ltv1XsOAveSF4JvteELd8dwpyBjHFc0-yxqNsvkpa2ZOTzyj1B-xR4HHcPL8_398wXLM0JMRS2AuJjuGaIm4bAuQ2fYkI5ESMfgQwDsRyhATle3S9eGN1q8Cqm5d2NfAaDQXQxhsslzBJFWwZgbOnW7-zoFxXykHPG7K5il6tdaArcpQxqTlRW3r182YImv07hy6XxQnRixIZIoYeHOG9ZMgchOcZn0vI1t5c2zpg8a-QMjNG0w0-xiWaNTWkji73Q_qF9tru50bSelNGQ
 
 
 
@@ -590,13 +629,13 @@ Some description of the Senders
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:05 GMT
+            Date: Mon, 05 Oct 2015 17:17:29 GMT
 
 
 
     + Body
 
-            {"id":"c91fa81c-5b92-7ee4-9a27-e683fa21e58e","name":"My Cool App","_links":{"self":{"href":"/senders/c91fa81c-5b92-7ee4-9a27-e683fa21e58e"},"campaign_types":{"href":"/senders/c91fa81c-5b92-7ee4-9a27-e683fa21e58e/campaign_types"},"campaigns":{"href":"/senders/c91fa81c-5b92-7ee4-9a27-e683fa21e58e/campaigns"}}}
+            {"id":"fa387717-32b5-953e-568a-ad2aee2d4052","name":"My Cool App","_links":{"self":{"href":"/senders/fa387717-32b5-953e-568a-ad2aee2d4052"},"campaign_types":{"href":"/senders/fa387717-32b5-953e-568a-ad2aee2d4052/campaign_types"},"campaigns":{"href":"/senders/fa387717-32b5-953e-568a-ad2aee2d4052/campaigns"}}}
 
 
 
@@ -607,11 +646,16 @@ Some description of the Senders
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDUsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kfrKOQ-UxAnLU1xm4uRV_KLK0lrL54lUFO-3-K08e2_AEs68d8mnuORYG4ULWKCIm7sQmcEeUwVvsnOmd-2zt7M0ARBX9Vlh9Z4vNkCKSG_lmkq2A3HFywoCmXYeStWgXTas4HFdqC1KKLP444sa-L5wbHs1Oq-lsBn0kpNyKaYS512-Br7xzldCEnoUoDkEgulKmIUaDbyLiJl8qkG8Vu3DTXNNAgJds8EKTZ_fJBJiV36DTR0ahtI5ADeVWdb7NJbSq1hzN5F4nPQs5UWFOz0KvFx9ElCcF1f0BW7iJiQW1Lq7gIlmSf_t2OTRfkBvW2XZSsNtzfaqV7IOmGulZA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NDksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.ByTi7K2G_O1nIv4QmFy6-uoJAbAMgSjtOf2l5uOgX5MdolWoS0E4LtVrOYvakaBlJy1-Ltv1XsOAveSF4JvteELd8dwpyBjHFc0-yxqNsvkpa2ZOTzyj1B-xR4HHcPL8_398wXLM0JMRS2AuJjuGaIm4bAuQ2fYkI5ESMfgQwDsRyhATle3S9eGN1q8Cqm5d2NfAaDQXQxhsslzBJFWwZgbOnW7-zoFxXykHPG7K5il6tdaArcpQxqTlRW3r182YImv07hy6XxQnRixIZIoYeHOG9ZMgchOcZn0vI1t5c2zpg8a-QMjNG0w0-xiWaNTWkji73Q_qF9tru50bSelNGQ
 
 
 
@@ -638,13 +682,13 @@ Some description of the Senders
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:05 GMT
+            Date: Mon, 05 Oct 2015 17:17:29 GMT
 
 
 
     + Body
 
-            {"id":"c91fa81c-5b92-7ee4-9a27-e683fa21e58e","name":"My Not Cool App","_links":{"self":{"href":"/senders/c91fa81c-5b92-7ee4-9a27-e683fa21e58e"},"campaign_types":{"href":"/senders/c91fa81c-5b92-7ee4-9a27-e683fa21e58e/campaign_types"},"campaigns":{"href":"/senders/c91fa81c-5b92-7ee4-9a27-e683fa21e58e/campaigns"}}}
+            {"id":"fa387717-32b5-953e-568a-ad2aee2d4052","name":"My Not Cool App","_links":{"self":{"href":"/senders/fa387717-32b5-953e-568a-ad2aee2d4052"},"campaign_types":{"href":"/senders/fa387717-32b5-953e-568a-ad2aee2d4052/campaign_types"},"campaigns":{"href":"/senders/fa387717-32b5-953e-568a-ad2aee2d4052/campaigns"}}}
 
 
 
@@ -655,11 +699,16 @@ Some description of the Senders
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDUsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kfrKOQ-UxAnLU1xm4uRV_KLK0lrL54lUFO-3-K08e2_AEs68d8mnuORYG4ULWKCIm7sQmcEeUwVvsnOmd-2zt7M0ARBX9Vlh9Z4vNkCKSG_lmkq2A3HFywoCmXYeStWgXTas4HFdqC1KKLP444sa-L5wbHs1Oq-lsBn0kpNyKaYS512-Br7xzldCEnoUoDkEgulKmIUaDbyLiJl8qkG8Vu3DTXNNAgJds8EKTZ_fJBJiV36DTR0ahtI5ADeVWdb7NJbSq1hzN5F4nPQs5UWFOz0KvFx9ElCcF1f0BW7iJiQW1Lq7gIlmSf_t2OTRfkBvW2XZSsNtzfaqV7IOmGulZA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NDksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.ByTi7K2G_O1nIv4QmFy6-uoJAbAMgSjtOf2l5uOgX5MdolWoS0E4LtVrOYvakaBlJy1-Ltv1XsOAveSF4JvteELd8dwpyBjHFc0-yxqNsvkpa2ZOTzyj1B-xR4HHcPL8_398wXLM0JMRS2AuJjuGaIm4bAuQ2fYkI5ESMfgQwDsRyhATle3S9eGN1q8Cqm5d2NfAaDQXQxhsslzBJFWwZgbOnW7-zoFxXykHPG7K5il6tdaArcpQxqTlRW3r182YImv07hy6XxQnRixIZIoYeHOG9ZMgchOcZn0vI1t5c2zpg8a-QMjNG0w0-xiWaNTWkji73Q_qF9tru50bSelNGQ
 
 
 
@@ -678,7 +727,7 @@ Some description of the Senders
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:05 GMT
+            Date: Mon, 05 Oct 2015 17:17:29 GMT
 
 
 
@@ -703,11 +752,16 @@ Some description of the Templates
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDUsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kfrKOQ-UxAnLU1xm4uRV_KLK0lrL54lUFO-3-K08e2_AEs68d8mnuORYG4ULWKCIm7sQmcEeUwVvsnOmd-2zt7M0ARBX9Vlh9Z4vNkCKSG_lmkq2A3HFywoCmXYeStWgXTas4HFdqC1KKLP444sa-L5wbHs1Oq-lsBn0kpNyKaYS512-Br7xzldCEnoUoDkEgulKmIUaDbyLiJl8qkG8Vu3DTXNNAgJds8EKTZ_fJBJiV36DTR0ahtI5ADeVWdb7NJbSq1hzN5F4nPQs5UWFOz0KvFx9ElCcF1f0BW7iJiQW1Lq7gIlmSf_t2OTRfkBvW2XZSsNtzfaqV7IOmGulZA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NTEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.CclFdQ_Utv6LYarYNwOqVdkSGr_B0cuJoo9PBvavOp5q6RMUAQ6BMOvKZrTmhBfZfTpcLub0ZmLsNvYHtZn7v1zbrzBaaCwqiQTTg5t2OvGxbqHjyMYUMcfhdD8C4X-3uFb4VqklGMv0BlhN_-N2SLi1gl6gnDWrgMzvLNV-3uu8NZ-0QIZ8iY2TTlLY02UAbZr8Bpneg_hq9T4WW1OuA2e98N7orJJNF824R41CYE4fTwiTPNCXCaem7y3gStX6kL61Fl4YjrRiWad8Dq_TN-dBVCS85Bz_kilnUVDLAsQW8P9bycoVp1uLyU15Nb7xsVvVYTmdmmgfVWfg8PrN5w
 
 
 
@@ -734,13 +788,13 @@ Some description of the Templates
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:05 GMT
+            Date: Mon, 05 Oct 2015 17:17:31 GMT
 
 
 
     + Body
 
-            {"id":"a74b77fd-8e5f-6e6c-578c-1b237d8dfb40","name":"An interesting template","text":"template text","html":"template html","subject":"template subject","metadata":{"template":"metadata"},"_links":{"self":{"href":"/templates/a74b77fd-8e5f-6e6c-578c-1b237d8dfb40"}}}
+            {"id":"004b1871-e8da-d57d-496e-7d85fde096b3","name":"An interesting template","text":"template text","html":"template html","subject":"template subject","metadata":{"template":"metadata"},"_links":{"self":{"href":"/templates/004b1871-e8da-d57d-496e-7d85fde096b3"}}}
 
 
 
@@ -751,11 +805,16 @@ Some description of the Templates
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDUsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kfrKOQ-UxAnLU1xm4uRV_KLK0lrL54lUFO-3-K08e2_AEs68d8mnuORYG4ULWKCIm7sQmcEeUwVvsnOmd-2zt7M0ARBX9Vlh9Z4vNkCKSG_lmkq2A3HFywoCmXYeStWgXTas4HFdqC1KKLP444sa-L5wbHs1Oq-lsBn0kpNyKaYS512-Br7xzldCEnoUoDkEgulKmIUaDbyLiJl8qkG8Vu3DTXNNAgJds8EKTZ_fJBJiV36DTR0ahtI5ADeVWdb7NJbSq1hzN5F4nPQs5UWFOz0KvFx9ElCcF1f0BW7iJiQW1Lq7gIlmSf_t2OTRfkBvW2XZSsNtzfaqV7IOmGulZA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NTEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.CclFdQ_Utv6LYarYNwOqVdkSGr_B0cuJoo9PBvavOp5q6RMUAQ6BMOvKZrTmhBfZfTpcLub0ZmLsNvYHtZn7v1zbrzBaaCwqiQTTg5t2OvGxbqHjyMYUMcfhdD8C4X-3uFb4VqklGMv0BlhN_-N2SLi1gl6gnDWrgMzvLNV-3uu8NZ-0QIZ8iY2TTlLY02UAbZr8Bpneg_hq9T4WW1OuA2e98N7orJJNF824R41CYE4fTwiTPNCXCaem7y3gStX6kL61Fl4YjrRiWad8Dq_TN-dBVCS85Bz_kilnUVDLAsQW8P9bycoVp1uLyU15Nb7xsVvVYTmdmmgfVWfg8PrN5w
 
 
 
@@ -782,13 +841,13 @@ Some description of the Templates
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:06 GMT
+            Date: Mon, 05 Oct 2015 17:17:31 GMT
 
 
 
     + Body
 
-            {"templates":[{"id":"a74b77fd-8e5f-6e6c-578c-1b237d8dfb40","name":"A more interesting template","text":"text","html":"html","subject":"subject","metadata":{"banana":"something"},"_links":{"self":{"href":"/templates/a74b77fd-8e5f-6e6c-578c-1b237d8dfb40"}}}],"_links":{"self":{"href":"/templates"}}}
+            {"templates":[{"id":"004b1871-e8da-d57d-496e-7d85fde096b3","name":"A more interesting template","text":"text","html":"html","subject":"subject","metadata":{"banana":"something"},"_links":{"self":{"href":"/templates/004b1871-e8da-d57d-496e-7d85fde096b3"}}}],"_links":{"self":{"href":"/templates"}}}
 
 
 
@@ -807,11 +866,16 @@ Some description of the Templates
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDUsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kfrKOQ-UxAnLU1xm4uRV_KLK0lrL54lUFO-3-K08e2_AEs68d8mnuORYG4ULWKCIm7sQmcEeUwVvsnOmd-2zt7M0ARBX9Vlh9Z4vNkCKSG_lmkq2A3HFywoCmXYeStWgXTas4HFdqC1KKLP444sa-L5wbHs1Oq-lsBn0kpNyKaYS512-Br7xzldCEnoUoDkEgulKmIUaDbyLiJl8qkG8Vu3DTXNNAgJds8EKTZ_fJBJiV36DTR0ahtI5ADeVWdb7NJbSq1hzN5F4nPQs5UWFOz0KvFx9ElCcF1f0BW7iJiQW1Lq7gIlmSf_t2OTRfkBvW2XZSsNtzfaqV7IOmGulZA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NTEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.CclFdQ_Utv6LYarYNwOqVdkSGr_B0cuJoo9PBvavOp5q6RMUAQ6BMOvKZrTmhBfZfTpcLub0ZmLsNvYHtZn7v1zbrzBaaCwqiQTTg5t2OvGxbqHjyMYUMcfhdD8C4X-3uFb4VqklGMv0BlhN_-N2SLi1gl6gnDWrgMzvLNV-3uu8NZ-0QIZ8iY2TTlLY02UAbZr8Bpneg_hq9T4WW1OuA2e98N7orJJNF824R41CYE4fTwiTPNCXCaem7y3gStX6kL61Fl4YjrRiWad8Dq_TN-dBVCS85Bz_kilnUVDLAsQW8P9bycoVp1uLyU15Nb7xsVvVYTmdmmgfVWfg8PrN5w
 
 
 
@@ -838,13 +902,13 @@ Some description of the Templates
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:05 GMT
+            Date: Mon, 05 Oct 2015 17:17:31 GMT
 
 
 
     + Body
 
-            {"id":"a74b77fd-8e5f-6e6c-578c-1b237d8dfb40","name":"An interesting template","text":"template text","html":"template html","subject":"template subject","metadata":{"template":"metadata"},"_links":{"self":{"href":"/templates/a74b77fd-8e5f-6e6c-578c-1b237d8dfb40"}}}
+            {"id":"004b1871-e8da-d57d-496e-7d85fde096b3","name":"An interesting template","text":"template text","html":"template html","subject":"template subject","metadata":{"template":"metadata"},"_links":{"self":{"href":"/templates/004b1871-e8da-d57d-496e-7d85fde096b3"}}}
 
 
 
@@ -855,11 +919,16 @@ Some description of the Templates
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDUsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kfrKOQ-UxAnLU1xm4uRV_KLK0lrL54lUFO-3-K08e2_AEs68d8mnuORYG4ULWKCIm7sQmcEeUwVvsnOmd-2zt7M0ARBX9Vlh9Z4vNkCKSG_lmkq2A3HFywoCmXYeStWgXTas4HFdqC1KKLP444sa-L5wbHs1Oq-lsBn0kpNyKaYS512-Br7xzldCEnoUoDkEgulKmIUaDbyLiJl8qkG8Vu3DTXNNAgJds8EKTZ_fJBJiV36DTR0ahtI5ADeVWdb7NJbSq1hzN5F4nPQs5UWFOz0KvFx9ElCcF1f0BW7iJiQW1Lq7gIlmSf_t2OTRfkBvW2XZSsNtzfaqV7IOmGulZA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NTEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.CclFdQ_Utv6LYarYNwOqVdkSGr_B0cuJoo9PBvavOp5q6RMUAQ6BMOvKZrTmhBfZfTpcLub0ZmLsNvYHtZn7v1zbrzBaaCwqiQTTg5t2OvGxbqHjyMYUMcfhdD8C4X-3uFb4VqklGMv0BlhN_-N2SLi1gl6gnDWrgMzvLNV-3uu8NZ-0QIZ8iY2TTlLY02UAbZr8Bpneg_hq9T4WW1OuA2e98N7orJJNF824R41CYE4fTwiTPNCXCaem7y3gStX6kL61Fl4YjrRiWad8Dq_TN-dBVCS85Bz_kilnUVDLAsQW8P9bycoVp1uLyU15Nb7xsVvVYTmdmmgfVWfg8PrN5w
 
 
 
@@ -886,13 +955,13 @@ Some description of the Templates
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:05 GMT
+            Date: Mon, 05 Oct 2015 17:17:31 GMT
 
 
 
     + Body
 
-            {"id":"a74b77fd-8e5f-6e6c-578c-1b237d8dfb40","name":"A more interesting template","text":"text","html":"html","subject":"subject","metadata":{"banana":"something"},"_links":{"self":{"href":"/templates/a74b77fd-8e5f-6e6c-578c-1b237d8dfb40"}}}
+            {"id":"004b1871-e8da-d57d-496e-7d85fde096b3","name":"A more interesting template","text":"text","html":"html","subject":"subject","metadata":{"banana":"something"},"_links":{"self":{"href":"/templates/004b1871-e8da-d57d-496e-7d85fde096b3"}}}
 
 
 
@@ -903,11 +972,16 @@ Some description of the Templates
 
 + Request
 
+    Required scopes:
+    ```no-highlight
+     notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+    ```
+
     + Headers
 
 
 
-            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMTk5NDUsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjExMTQvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kfrKOQ-UxAnLU1xm4uRV_KLK0lrL54lUFO-3-K08e2_AEs68d8mnuORYG4ULWKCIm7sQmcEeUwVvsnOmd-2zt7M0ARBX9Vlh9Z4vNkCKSG_lmkq2A3HFywoCmXYeStWgXTas4HFdqC1KKLP444sa-L5wbHs1Oq-lsBn0kpNyKaYS512-Br7xzldCEnoUoDkEgulKmIUaDbyLiJl8qkG8Vu3DTXNNAgJds8EKTZ_fJBJiV36DTR0ahtI5ADeVWdb7NJbSq1hzN5F4nPQs5UWFOz0KvFx9ElCcF1f0BW7iJiQW1Lq7gIlmSf_t2OTRfkBvW2XZSsNtzfaqV7IOmGulZA
+            Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQzMjQ2NTEsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NjUwMzYvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.CclFdQ_Utv6LYarYNwOqVdkSGr_B0cuJoo9PBvavOp5q6RMUAQ6BMOvKZrTmhBfZfTpcLub0ZmLsNvYHtZn7v1zbrzBaaCwqiQTTg5t2OvGxbqHjyMYUMcfhdD8C4X-3uFb4VqklGMv0BlhN_-N2SLi1gl6gnDWrgMzvLNV-3uu8NZ-0QIZ8iY2TTlLY02UAbZr8Bpneg_hq9T4WW1OuA2e98N7orJJNF824R41CYE4fTwiTPNCXCaem7y3gStX6kL61Fl4YjrRiWad8Dq_TN-dBVCS85Bz_kilnUVDLAsQW8P9bycoVp1uLyU15Nb7xsVvVYTmdmmgfVWfg8PrN5w
 
 
 
@@ -926,7 +1000,7 @@ Some description of the Templates
 
 
 
-            Date: Mon, 05 Oct 2015 15:59:06 GMT
+            Date: Mon, 05 Oct 2015 17:17:31 GMT
 
 
 
