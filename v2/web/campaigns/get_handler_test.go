@@ -71,7 +71,7 @@ var _ = Describe("GetHandler", func() {
 
 	It("gets the details about an existing campaign", func() {
 		var err error
-		request, err = http.NewRequest("GET", "/senders/some-sender-id/campaigns/some-campaign-id", nil)
+		request, err = http.NewRequest("GET", "/campaigns/some-campaign-id", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
@@ -106,7 +106,6 @@ var _ = Describe("GetHandler", func() {
 
 		Expect(campaignsCollection.GetCall.Receives.Connection).To(Equal(conn))
 		Expect(campaignsCollection.GetCall.Receives.ClientID).To(Equal("my-client"))
-		Expect(campaignsCollection.GetCall.Receives.SenderID).To(Equal("some-sender-id"))
 		Expect(campaignsCollection.GetCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 	})
 
@@ -115,7 +114,7 @@ var _ = Describe("GetHandler", func() {
 			campaignsCollection.GetCall.Returns.Error = collections.NotFoundError{errors.New("campaign not found")}
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaigns/missing-campaign-id", nil)
+			request, err = http.NewRequest("GET", "/campaigns/missing-campaign-id", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -132,7 +131,7 @@ var _ = Describe("GetHandler", func() {
 			campaignsCollection.GetCall.Returns.Error = errors.New("something went wrong")
 
 			var err error
-			request, err = http.NewRequest("GET", "/senders/some-sender-id/campaigns/missing-campaign-id", nil)
+			request, err = http.NewRequest("GET", "/campaigns/missing-campaign-id", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)

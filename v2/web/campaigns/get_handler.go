@@ -11,7 +11,7 @@ import (
 )
 
 type campaignGetter interface {
-	Get(connection collections.ConnectionInterface, campaignID, senderID, clientID string) (collections.Campaign, error)
+	Get(connection collections.ConnectionInterface, campaignID, clientID string) (collections.Campaign, error)
 }
 
 type GetHandler struct {
@@ -26,13 +26,12 @@ func NewGetHandler(campaigns campaignGetter) GetHandler {
 
 func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	splitURL := strings.Split(req.URL.Path, "/")
-	senderID := splitURL[len(splitURL)-3]
 	campaignID := splitURL[len(splitURL)-1]
 
 	clientID := context.Get("client_id").(string)
 	database := context.Get("database").(collections.DatabaseInterface)
 
-	campaign, err := h.campaigns.Get(database.Connection(), campaignID, senderID, clientID)
+	campaign, err := h.campaigns.Get(database.Connection(), campaignID, clientID)
 	if err != nil {
 		switch err.(type) {
 		case collections.NotFoundError:

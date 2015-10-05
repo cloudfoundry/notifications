@@ -179,8 +179,18 @@ func (c CampaignsCollection) checkForExistence(audience, guid string) (bool, err
 	}
 }
 
-func (c CampaignsCollection) Get(connection ConnectionInterface, campaignID, senderID, clientID string) (Campaign, error) {
-	sender, err := c.sendersRepo.Get(connection, senderID)
+func (c CampaignsCollection) Get(connection ConnectionInterface, campaignID, clientID string) (Campaign, error) {
+	campaign, err := c.campaignsRepo.Get(connection, campaignID)
+	if err != nil {
+		switch err.(type) {
+		case models.RecordNotFoundError:
+			return Campaign{}, NotFoundError{err}
+		default:
+			return Campaign{}, UnknownError{err}
+		}
+	}
+
+	sender, err := c.sendersRepo.Get(connection, campaign.SenderID)
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
@@ -191,25 +201,11 @@ func (c CampaignsCollection) Get(connection ConnectionInterface, campaignID, sen
 	}
 
 	if sender.ClientID != clientID {
-		return Campaign{}, NotFoundError{fmt.Errorf("Sender with id %q could not be found", senderID)}
-	}
-
-	model, err := c.campaignsRepo.Get(connection, campaignID)
-	if err != nil {
-		switch err.(type) {
-		case models.RecordNotFoundError:
-			return Campaign{}, NotFoundError{err}
-		default:
-			return Campaign{}, UnknownError{err}
-		}
-	}
-
-	if model.SenderID != senderID {
 		return Campaign{}, NotFoundError{fmt.Errorf("Campaign with id %q could not be found", campaignID)}
 	}
 
 	var sendTo map[string]string
-	err = json.Unmarshal([]byte(model.SendTo), &sendTo)
+	err = json.Unmarshal([]byte(campaign.SendTo), &sendTo)
 	if err != nil {
 		panic(err)
 	}
@@ -217,12 +213,12 @@ func (c CampaignsCollection) Get(connection ConnectionInterface, campaignID, sen
 	return Campaign{
 		ID:             campaignID,
 		SendTo:         sendTo,
-		CampaignTypeID: model.CampaignTypeID,
-		Text:           model.Text,
-		HTML:           model.HTML,
-		Subject:        model.Subject,
-		TemplateID:     model.TemplateID,
-		ReplyTo:        model.ReplyTo,
-		SenderID:       model.SenderID,
+		CampaignTypeID: campaign.CampaignTypeID,
+		Text:           campaign.Text,
+		HTML:           campaign.HTML,
+		Subject:        campaign.Subject,
+		TemplateID:     campaign.TemplateID,
+		ReplyTo:        campaign.ReplyTo,
+		SenderID:       campaign.SenderID,
 	}, nil
 }

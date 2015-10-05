@@ -127,7 +127,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 
 			By("retrieving the campaign details", func() {
 				client.Document()
-				status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s/campaigns/%s", senderID, campaignID), nil, token.Access, &response)
+				status, err := client.DoTyped("GET", fmt.Sprintf("/campaigns/%s", campaignID), nil, token.Access, &response)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusOK))
 				Expect(response.ID).To(Equal(campaignID))
@@ -176,7 +176,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 				})
 
 				By("retrieving the campaign details", func() {
-					status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s", senderID, campaignID), nil, token.Access)
+					status, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s", campaignID), nil, token.Access)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusOK))
 					Expect(response["id"]).To(Equal(campaignID))
@@ -245,51 +245,30 @@ var _ = Describe("Campaign Lifecycle", func() {
 				})
 
 				By("attempting to retrieve the campaign details", func() {
-					status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s", senderID, campaignID), nil, token.Access)
+					status, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s", campaignID), nil, token.Access)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
 					Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Sender with id %q could not be found", senderID)))
 				})
 			})
 
-			It("verifies that the sender belongs to the authenticated client", func() {
+			It("verifies that the campaign belongs to the authenticated client", func() {
 				token = GetClientTokenFor("other-client")
 
 				By("attempting to retrieve the campaign details with a different token", func() {
-					status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s", senderID, campaignID), nil, token.Access)
+					status, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s", campaignID), nil, token.Access)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
-					Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Sender with id %q could not be found", senderID)))
+					Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Campaign with id %q could not be found", campaignID)))
 				})
 			})
 
 			It("verifies that the campaign exists", func() {
 				By("attempting to retrieve an unknown campaign", func() {
-					status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/unknown-campaign-id", senderID), nil, token.Access)
+					status, response, err := client.Do("GET", "/campaigns/unknown-campaign-id", nil, token.Access)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
 					Expect(response["errors"]).To(ContainElement("Campaign with id \"unknown-campaign-id\" could not be found"))
-				})
-			})
-
-			It("verifies that the campaign belongs to the sender", func() {
-				var otherSenderID string
-
-				By("creating another sender", func() {
-					status, response, err := client.Do("POST", "/senders", map[string]interface{}{
-						"name": "another-sender",
-					}, token.Access)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(status).To(Equal(http.StatusCreated))
-
-					otherSenderID = response["id"].(string)
-				})
-
-				By("attempting to retrieve a campaign with a different sender", func() {
-					status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s", otherSenderID, campaignID), nil, token.Access)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(status).To(Equal(http.StatusNotFound))
-					Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Campaign with id %q could not be found", campaignID)))
 				})
 			})
 
@@ -297,7 +276,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 				token = GetClientTokenFor("unauthorized-client")
 
 				By("attempting to retrieve the campaign details with a different token", func() {
-					status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s", senderID, campaignID), nil, token.Access)
+					status, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s", campaignID), nil, token.Access)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusForbidden))
 					Expect(response["errors"]).To(ContainElement("You are not authorized to perform the requested action"))

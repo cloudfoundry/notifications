@@ -667,6 +667,7 @@ var _ = Describe("CampaignsCollection", func() {
 	Describe("Get", func() {
 		BeforeEach(func() {
 			campaignsRepo.GetCall.Returns.Campaign = models.Campaign{
+				ID:             "my-campaign-id",
 				SendTo:         `{"user": "some-guid"}`,
 				CampaignTypeID: "some-id",
 				Text:           "some-text",
@@ -685,7 +686,7 @@ var _ = Describe("CampaignsCollection", func() {
 		})
 
 		It("returns the details about the campaign", func() {
-			campaign, err := collection.Get(conn, "my-campaign-id", "some-sender-id", "some-client-id")
+			campaign, err := collection.Get(conn, "my-campaign-id", "some-client-id")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(campaign.ID).To(Equal("my-campaign-id"))
 			Expect(campaign.Text).To(Equal("some-text"))
@@ -695,56 +696,40 @@ var _ = Describe("CampaignsCollection", func() {
 			It("returns a not found error when the sender does not exist", func() {
 				sendersRepo.GetCall.Returns.Error = models.RecordNotFoundError{errors.New("sender not found")}
 
-				_, err := collection.Get(conn, "my-campaign-id", "missing-sender-id", "some-client-id")
+				_, err := collection.Get(conn, "my-campaign-id", "some-client-id")
 				Expect(err).To(MatchError(collections.NotFoundError{models.RecordNotFoundError{errors.New("sender not found")}}))
 			})
 
 			It("returns an unknown error if the senders repo returns an error", func() {
 				sendersRepo.GetCall.Returns.Error = errors.New("i made a bad")
 
-				_, err := collection.Get(conn, "my-campaign-id", "some-sender-id", "some-client-id")
+				_, err := collection.Get(conn, "my-campaign-id", "some-client-id")
 				Expect(err).To(MatchError(collections.UnknownError{errors.New("i made a bad")}))
 			})
 
-			It("returns a not found error when the sender belongs to a different client", func() {
+			It("returns a not found error when the campaign belongs to a different client", func() {
 				sendersRepo.GetCall.Returns.Sender = models.Sender{
 					ID:       "some-sender-id",
 					Name:     "some-sender",
 					ClientID: "other-client-id",
 				}
 
-				_, err := collection.Get(conn, "my-campaign-id", "some-sender-id", "some-client-id")
-				Expect(err).To(MatchError(collections.NotFoundError{errors.New("Sender with id \"some-sender-id\" could not be found")}))
+				_, err := collection.Get(conn, "my-campaign-id", "some-client-id")
+				Expect(err).To(MatchError(collections.NotFoundError{errors.New("Campaign with id \"my-campaign-id\" could not be found")}))
 			})
 
 			It("returns a not found error when the campaign does not exist", func() {
 				campaignsRepo.GetCall.Returns.Error = models.RecordNotFoundError{errors.New("campaign not found")}
 
-				_, err := collection.Get(conn, "missing-campaign-id", "some-sender-id", "some-client-id")
+				_, err := collection.Get(conn, "missing-campaign-id", "some-client-id")
 				Expect(err).To(MatchError(collections.NotFoundError{models.RecordNotFoundError{errors.New("campaign not found")}}))
 			})
 
 			It("returns an unknown error if the campaigns repo returns an error", func() {
 				campaignsRepo.GetCall.Returns.Error = errors.New("my bad")
 
-				_, err := collection.Get(conn, "my-campaign-id", "some-sender-id", "some-client-id")
+				_, err := collection.Get(conn, "my-campaign-id", "some-client-id")
 				Expect(err).To(MatchError(collections.UnknownError{errors.New("my bad")}))
-			})
-
-			It("returns a not found error when the campaign belongs to a different sender", func() {
-				campaignsRepo.GetCall.Returns.Campaign = models.Campaign{
-					SendTo:         `{"user": "some-guid"}`,
-					CampaignTypeID: "some-id",
-					Text:           "some-text",
-					HTML:           "no-html",
-					Subject:        "some-subject",
-					TemplateID:     "error",
-					ReplyTo:        "nothing@example.com",
-					SenderID:       "other-sender-id",
-				}
-
-				_, err := collection.Get(conn, "my-campaign-id", "some-sender-id", "some-client-id")
-				Expect(err).To(MatchError(collections.NotFoundError{errors.New("Campaign with id \"my-campaign-id\" could not be found")}))
 			})
 		})
 	})

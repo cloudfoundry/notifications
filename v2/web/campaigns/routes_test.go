@@ -55,8 +55,8 @@ var _ = Describe("Routes", func() {
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 
-	It("routes GET /senders/{sender_id}/campaigns/{campaign_id}", func() {
-		request, err := http.NewRequest("GET", "/senders/some-sender-id/campaigns/campaign-id", nil)
+	It("routes GET /campaigns/{campaign_id}", func() {
+		request, err := http.NewRequest("GET", "/campaigns/campaign-id", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		s := muxer.Match(request).(stack.Stack)
@@ -73,7 +73,7 @@ var _ = Describe("Routes", func() {
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 
-	It("routes GET campaigns/{campaign_id}/status", func() {
+	It("routes GET /campaigns/{campaign_id}/status", func() {
 		request, err := http.NewRequest("GET", "/campaigns/campaign-id/status", nil)
 		Expect(err).NotTo(HaveOccurred())
 

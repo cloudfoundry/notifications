@@ -21,7 +21,6 @@ type CampaignsCollection struct {
 		Receives struct {
 			Connection collections.ConnectionInterface
 			CampaignID string
-			SenderID   string
 			ClientID   string
 		}
 		Returns struct {
@@ -45,10 +44,9 @@ func (c *CampaignsCollection) Create(conn collections.ConnectionInterface, campa
 	return c.CreateCall.Returns.Campaign, c.CreateCall.Returns.Error
 }
 
-func (c *CampaignsCollection) Get(connection collections.ConnectionInterface, campaignID, senderID, clientID string) (collections.Campaign, error) {
+func (c *CampaignsCollection) Get(connection collections.ConnectionInterface, campaignID, clientID string) (collections.Campaign, error) {
 	c.GetCall.Receives.Connection = connection
 	c.GetCall.Receives.CampaignID = campaignID
-	c.GetCall.Receives.SenderID = senderID
 	c.GetCall.Receives.ClientID = clientID
 
 	return c.GetCall.Returns.Campaign, c.GetCall.Returns.Error
