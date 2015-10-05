@@ -11,6 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/util"
+	"github.com/cloudfoundry-incubator/notifications/v1/collections"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/clients"
@@ -67,13 +68,13 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	notificationsUpdater := services.NewNotificationsUpdater(kindsRepo)
 	messageFinder := services.NewMessageFinder(messagesRepo)
 
+	templatesCollection := collections.NewTemplatesCollection(clientsRepo, kindsRepo, templatesRepo)
+
 	templateCreator := services.NewTemplateCreator(templatesRepo)
 	templateFinder := services.NewTemplateFinder(templatesRepo)
 	templateUpdater := services.NewTemplateUpdater(templatesRepo)
 	templateDeleter := services.NewTemplateDeleter(templatesRepo)
 	templateLister := services.NewTemplateLister(templatesRepo)
-	templateAssigner := services.NewTemplateAssigner(clientsRepo, kindsRepo, templatesRepo)
-	templateAssociationLister := services.NewTemplateAssociationLister(clientsRepo, kindsRepo, templatesRepo)
 
 	notifyObj := notify.NewNotify(notificationsFinder, registrar)
 
@@ -134,7 +135,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 		NotificationsManageAuthenticator: auth("notifications.manage"),
 
 		ErrorWriter:      errorWriter,
-		TemplateAssigner: templateAssigner,
+		TemplateAssigner: templatesCollection,
 	}.Register(mx)
 
 	messages.Routes{
@@ -161,7 +162,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 		TemplateCreator:           templateCreator,
 		TemplateDeleter:           templateDeleter,
 		TemplateLister:            templateLister,
-		TemplateAssociationLister: templateAssociationLister,
+		TemplateAssociationLister: templatesCollection,
 	}.Register(mx)
 
 	notifications.Routes{
@@ -175,7 +176,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 		Registrar:            registrar,
 		NotificationsFinder:  notificationsFinder,
 		NotificationsUpdater: notificationsUpdater,
-		TemplateAssigner:     templateAssigner,
+		TemplateAssigner:     templatesCollection,
 	}.Register(mx)
 
 	notify.Routes{

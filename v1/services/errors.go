@@ -38,14 +38,6 @@ func (e KindMissingError) Error() string {
 	return e.Err.Error()
 }
 
-type TemplateAssignmentError struct {
-	Err error
-}
-
-func (e TemplateAssignmentError) Error() string {
-	return e.Err.Error()
-}
-
 func CCErrorFor(err error) error {
 	if failure, ok := err.(cf.Failure); ok {
 		if failure.Code == http.StatusNotFound {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/v1/collections"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 )
@@ -16,7 +17,7 @@ func NewErrorWriter() ErrorWriter {
 
 func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 	switch err.(type) {
-	case UAAScopesError, CriticalNotificationError, services.TemplateAssignmentError, MissingUserTokenError, ValidationError:
+	case UAAScopesError, CriticalNotificationError, collections.TemplateAssignmentError, MissingUserTokenError, ValidationError:
 		w.WriteHeader(422)
 	case services.CCDownError:
 		w.WriteHeader(http.StatusBadGateway)

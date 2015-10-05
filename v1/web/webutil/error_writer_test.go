@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/cloudfoundry-incubator/notifications/v1/collections"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
@@ -113,7 +114,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 422 when a template cannot be assigned", func() {
-		writer.Write(recorder, services.TemplateAssignmentError{errors.New("The template could not be assigned")})
+		writer.Write(recorder, collections.TemplateAssignmentError{errors.New("The template could not be assigned")})
 		Expect(recorder.Code).To(Equal(422))
 		Expect(recorder.Body).To(MatchJSON(`{
 			"errors": ["The template could not be assigned"]	

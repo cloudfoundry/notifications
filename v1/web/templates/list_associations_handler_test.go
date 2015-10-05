@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/collections"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/ryanmoran/stack"
 
@@ -29,6 +29,7 @@ var _ = Describe("ListAssociationsHandler", func() {
 		lister      *mocks.TemplateAssociationLister
 		errorWriter *mocks.ErrorWriter
 		database    *mocks.Database
+		connection  *mocks.Connection
 		context     stack.Context
 	)
 
@@ -37,7 +38,7 @@ var _ = Describe("ListAssociationsHandler", func() {
 
 		templateID = "banana-template"
 		lister = mocks.NewTemplateAssociationLister()
-		lister.ListCall.Returns.Associations = []services.TemplateAssociation{
+		lister.ListCall.Returns.Associations = []collections.TemplateAssociation{
 			{
 				ClientID: "some-client",
 			},
@@ -57,7 +58,10 @@ var _ = Describe("ListAssociationsHandler", func() {
 		request, err = http.NewRequest("GET", "/templates/"+templateID+"/associations", nil)
 		Expect(err).NotTo(HaveOccurred())
 
+		connection = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = connection
+
 		context = stack.NewContext()
 		context.Set("database", database)
 
@@ -90,7 +94,7 @@ var _ = Describe("ListAssociationsHandler", func() {
 			Notification: "another-notification",
 		}))
 
-		Expect(lister.ListCall.Receives.Database).To(Equal(database))
+		Expect(lister.ListCall.Receives.Connection).To(Equal(connection))
 		Expect(lister.ListCall.Receives.TemplateID).To(Equal(templateID))
 	})
 

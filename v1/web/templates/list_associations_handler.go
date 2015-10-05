@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/collections"
 	"github.com/ryanmoran/stack"
 )
 
@@ -14,7 +14,7 @@ type TemplateAssociation struct {
 }
 
 type templateAssociationLister interface {
-	List(database services.DatabaseInterface, templateID string) ([]services.TemplateAssociation, error)
+	ListAssociations(connection collections.ConnectionInterface, templateID string) ([]collections.TemplateAssociation, error)
 }
 
 type ListAssociationsHandler struct {
@@ -31,7 +31,9 @@ func NewListAssociationsHandler(lister templateAssociationLister, errWriter erro
 
 func (h ListAssociationsHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	templateID := h.parseTemplateID(req.URL.Path)
-	associations, err := h.lister.List(context.Get("database").(DatabaseInterface), templateID)
+	database := context.Get("database").(DatabaseInterface)
+
+	associations, err := h.lister.ListAssociations(database.Connection(), templateID)
 	if err != nil {
 		h.errorWriter.Write(w, err)
 		return
@@ -48,7 +50,7 @@ func (h ListAssociationsHandler) parseTemplateID(path string) string {
 	return matches[1]
 }
 
-func (h ListAssociationsHandler) mapToJSON(associations []services.TemplateAssociation) map[string][]TemplateAssociation {
+func (h ListAssociationsHandler) mapToJSON(associations []collections.TemplateAssociation) map[string][]TemplateAssociation {
 	structure := map[string][]TemplateAssociation{
 		"associations": {},
 	}

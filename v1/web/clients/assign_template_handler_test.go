@@ -23,12 +23,15 @@ var _ = Describe("AssignTemplateHandler", func() {
 		errorWriter      *mocks.ErrorWriter
 		context          stack.Context
 		database         *mocks.Database
+		connection       *mocks.Connection
 	)
 
 	BeforeEach(func() {
 		templateAssigner = mocks.NewTemplateAssigner()
 		errorWriter = mocks.NewErrorWriter()
+		connection = mocks.NewConnection()
 		database = mocks.NewDatabase()
+		database.ConnectionCall.Returns.Connection = connection
 		context = stack.NewContext()
 		context.Set("database", database)
 
@@ -39,21 +42,16 @@ var _ = Describe("AssignTemplateHandler", func() {
 		body, err := json.Marshal(map[string]string{
 			"template": "my-template",
 		})
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
 
 		w := httptest.NewRecorder()
 		request, err := http.NewRequest("PUT", "/clients/my-client/template", bytes.NewBuffer(body))
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(w, request, context)
 
 		Expect(w.Code).To(Equal(http.StatusNoContent))
-
-		Expect(templateAssigner.AssignToClientCall.Receives.Database).To(Equal(database))
+		Expect(templateAssigner.AssignToClientCall.Receives.Connection).To(Equal(connection))
 		Expect(templateAssigner.AssignToClientCall.Receives.ClientID).To(Equal("my-client"))
 		Expect(templateAssigner.AssignToClientCall.Receives.TemplateID).To(Equal("my-template"))
 	})
@@ -63,15 +61,11 @@ var _ = Describe("AssignTemplateHandler", func() {
 		body, err := json.Marshal(map[string]string{
 			"template": "my-template",
 		})
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
 
 		w := httptest.NewRecorder()
 		request, err := http.NewRequest("PUT", "/clients/my-client/template", bytes.NewBuffer(body))
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(w, request, context)
 		Expect(errorWriter.WriteCall.Receives.Error).To(Equal(errors.New("banana")))
@@ -82,9 +76,7 @@ var _ = Describe("AssignTemplateHandler", func() {
 
 		w := httptest.NewRecorder()
 		request, err := http.NewRequest("PUT", "/clients/my-client/template", bytes.NewBuffer(body))
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(w, request, context)
 		Expect(errorWriter.WriteCall.Receives.Error).To(BeAssignableToTypeOf(webutil.ParseError{}))

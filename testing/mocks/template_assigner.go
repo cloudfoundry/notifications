@@ -1,11 +1,11 @@
 package mocks
 
-import "github.com/cloudfoundry-incubator/notifications/v1/services"
+import "github.com/cloudfoundry-incubator/notifications/v1/collections"
 
 type TemplateAssigner struct {
 	AssignToClientCall struct {
 		Receives struct {
-			Database   services.DatabaseInterface
+			Connection collections.ConnectionInterface
 			ClientID   string
 			TemplateID string
 		}
@@ -16,7 +16,7 @@ type TemplateAssigner struct {
 
 	AssignToNotificationCall struct {
 		Receives struct {
-			Database       services.DatabaseInterface
+			Connection     collections.ConnectionInterface
 			ClientID       string
 			NotificationID string
 			TemplateID     string
@@ -31,16 +31,16 @@ func NewTemplateAssigner() *TemplateAssigner {
 	return &TemplateAssigner{}
 }
 
-func (a *TemplateAssigner) AssignToClient(database services.DatabaseInterface, clientID, templateID string) error {
-	a.AssignToClientCall.Receives.Database = database
+func (a *TemplateAssigner) AssignToClient(connection collections.ConnectionInterface, clientID, templateID string) error {
+	a.AssignToClientCall.Receives.Connection = connection
 	a.AssignToClientCall.Receives.ClientID = clientID
 	a.AssignToClientCall.Receives.TemplateID = templateID
 
 	return a.AssignToClientCall.Returns.Error
 }
 
-func (a *TemplateAssigner) AssignToNotification(database services.DatabaseInterface, clientID, notificationID, templateID string) error {
-	a.AssignToNotificationCall.Receives.Database = database
+func (a *TemplateAssigner) AssignToNotification(connection collections.ConnectionInterface, clientID, notificationID, templateID string) error {
+	a.AssignToNotificationCall.Receives.Connection = connection
 	a.AssignToNotificationCall.Receives.ClientID = clientID
 	a.AssignToNotificationCall.Receives.NotificationID = notificationID
 	a.AssignToNotificationCall.Receives.TemplateID = templateID

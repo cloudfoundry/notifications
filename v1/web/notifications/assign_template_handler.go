@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/collections"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/ryanmoran/stack"
 )
@@ -15,7 +15,7 @@ type TemplateAssignment struct {
 }
 
 type assignsTemplates interface {
-	AssignToNotification(database services.DatabaseInterface, clientID, notificationID, templateID string) error
+	AssignToNotification(connection collections.ConnectionInterface, clientID, notificationID, templateID string) error
 }
 
 type AssignTemplateHandler struct {
@@ -41,7 +41,7 @@ func (h AssignTemplateHandler) ServeHTTP(w http.ResponseWriter, req *http.Reques
 	}
 
 	database := context.Get("database").(DatabaseInterface)
-	err = h.templateAssigner.AssignToNotification(database, clientID, notificationID, templateAssignment.Template)
+	err = h.templateAssigner.AssignToNotification(database.Connection(), clientID, notificationID, templateAssignment.Template)
 	if err != nil {
 		h.errorWriter.Write(w, err)
 		return
