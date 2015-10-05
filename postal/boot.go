@@ -15,8 +15,9 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/v2"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/util"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
@@ -68,13 +69,13 @@ func Boot(mom mother, config Config) {
 	guidGenerator := util.NewIDGenerator(rand.Reader)
 
 	// V1
-	receiptsRepo := models.NewReceiptsRepo()
-	unsubscribesRepo := models.NewUnsubscribesRepo()
-	globalUnsubscribesRepo := models.NewGlobalUnsubscribesRepo()
-	messagesRepo := models.NewMessagesRepo(guidGenerator.Generate)
-	clientsRepo := models.NewClientsRepo()
-	kindsRepo := models.NewKindsRepo()
-	templatesRepo := models.NewTemplatesRepo()
+	receiptsRepo := v1models.NewReceiptsRepo()
+	unsubscribesRepo := v1models.NewUnsubscribesRepo()
+	globalUnsubscribesRepo := v1models.NewGlobalUnsubscribesRepo()
+	messagesRepo := v1models.NewMessagesRepo(guidGenerator.Generate)
+	clientsRepo := v1models.NewClientsRepo()
+	kindsRepo := v1models.NewKindsRepo()
+	templatesRepo := v1models.NewTemplatesRepo()
 	v1TemplateLoader := v1.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
 	deliveryFailureHandler := common.NewDeliveryFailureHandler()
 	messageStatusUpdater := v1.NewMessageStatusUpdater(messagesRepo)
@@ -105,7 +106,7 @@ func Boot(mom mother, config Config) {
 	templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
 	v2TemplateLoader := v2.NewTemplatesLoader(v2database, templatesCollection)
 	v2deliveryFailureHandler := common.NewDeliveryFailureHandler()
-	strategyDeterminer := v2.NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy, emailStrategy)
+	strategyDeterminer := v2.NewStrategyDeterminer(notify.EmailFormatter{}, notify.HTMLExtractor{}, userStrategy, spaceStrategy, orgStrategy, emailStrategy)
 
 	WorkerGenerator{
 		InstanceIndex: config.InstanceIndex,

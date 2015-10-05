@@ -13,20 +13,24 @@ import (
 
 const InvalidEmail = "<>InvalidEmail<>"
 
-var validOrganizationRoles = []string{"OrgManager", "OrgAuditor", "BillingManager"}
+var (
+	validOrganizationRoles = []string{"OrgManager", "OrgAuditor", "BillingManager"}
+	emailRegexp            = regexp.MustCompile("[^<]*<([^@]*@[^@]*)>|([^<][^@]*@[^@]*)")
+)
 
 type NotifyParams struct {
-	ReplyTo           string `json:"reply_to"`
-	Subject           string `json:"subject"`
-	Text              string `json:"text"`
-	RawHTML           string `json:"html"`
+	ReplyTo string `json:"reply_to"`
+	Subject string `json:"subject"`
+	Text    string `json:"text"`
+	RawHTML string `json:"html"`
+	KindID  string `json:"kind_id"`
+	To      string `json:"to"`
+	Role    string `json:"role"`
+
 	ParsedHTML        HTML
-	KindID            string `json:"kind_id"`
 	KindDescription   string
 	SourceDescription string
 	Errors            []string
-	To                string `json:"to"`
-	Role              string `json:"role"`
 }
 
 type HTML struct {
@@ -52,34 +56,6 @@ func NewNotifyParams(body io.ReadCloser) (NotifyParams, error) {
 	return notify, nil
 }
 
-func (notify *NotifyParams) FormatEmailAndExtractHTML() error {
-	notify.formatEmail()
-
-	err := notify.extractHTML()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (notify *NotifyParams) formatEmail() {
-	if notify.To == "" {
-		return
-	}
-	regex := regexp.MustCompile("[^<]*<([^@]*@[^@]*)>|([^<][^@]*@[^@]*)")
-	email := regex.FindStringSubmatch(notify.To)
-	if len(email) == 0 {
-		notify.To = InvalidEmail
-		return
-	}
-
-	if email[1] != "" {
-		notify.To = email[1]
-	} else {
-		notify.To = email[2]
-	}
-}
-
 func (notify *NotifyParams) parseRequestBody(body io.ReadCloser) error {
 	defer body.Close()
 
@@ -94,21 +70,59 @@ func (notify *NotifyParams) parseRequestBody(body io.ReadCloser) error {
 	return nil
 }
 
-func (notify *NotifyParams) extractHTML() error {
-	reader := strings.NewReader(notify.RawHTML)
+func (notify *NotifyParams) FormatEmailAndExtractHTML() error {
+	notify.To = EmailFormatter{}.Format(notify.To)
+
+	doctype, head, bodyContent, bodyAttributes, err := HTMLExtractor{}.Extract(notify.RawHTML)
+	if err != nil {
+		return err
+	}
+
+	notify.ParsedHTML.Doctype = doctype
+	notify.ParsedHTML.Head = head
+	notify.ParsedHTML.BodyContent = bodyContent
+	notify.ParsedHTML.BodyAttributes = bodyAttributes
+
+	return nil
+}
+
+type EmailFormatter struct{}
+
+func (EmailFormatter) Format(email string) string {
+	if email == "" {
+		return email
+	}
+
+	matches := emailRegexp.FindStringSubmatch(email)
+
+	if len(matches) == 0 {
+		return InvalidEmail
+	}
+
+	if matches[1] != "" {
+		return matches[1]
+	}
+
+	return matches[2]
+}
+
+type HTMLExtractor struct{}
+
+func (HTMLExtractor) Extract(rawHTML string) (string, string, string, string, error) {
+	reader := strings.NewReader(rawHTML)
 	document, err := goquery.NewDocumentFromReader(reader)
 	if err != nil {
-		return err
+		return "", "", "", "", err
 	}
 
-	notify.ParsedHTML.Doctype, err = notify.extractDoctype(notify.RawHTML)
+	doctype, err := extractDoctype(rawHTML)
 	if err != nil {
-		return err
+		return "", "", "", "", err
 	}
 
-	notify.ParsedHTML.Head, err = notify.extractHead(document)
+	head, err := extractHead(document)
 	if err != nil {
-		return err
+		return "", "", "", "", err
 	}
 
 	bodyAttributes := ""
@@ -119,18 +133,13 @@ func (notify *NotifyParams) extractHTML() error {
 
 	bodyContent, err := document.Find("body").Html()
 	if err != nil {
-		return err
+		return "", "", "", "", err
 	}
 
-	if bodyContent != "" {
-		notify.ParsedHTML.BodyAttributes = bodyAttributes
-		notify.ParsedHTML.BodyContent = bodyContent
-	}
-
-	return nil
+	return doctype, head, bodyContent, bodyAttributes, nil
 }
 
-func (notify *NotifyParams) extractDoctype(rawHTML string) (string, error) {
+func extractDoctype(rawHTML string) (string, error) {
 	r, err := regexp.Compile("<!DOCTYPE[^>]*>")
 	if err != nil {
 		return "", err
@@ -139,7 +148,7 @@ func (notify *NotifyParams) extractDoctype(rawHTML string) (string, error) {
 
 }
 
-func (notify *NotifyParams) extractHead(document *goquery.Document) (string, error) {
+func extractHead(document *goquery.Document) (string, error) {
 	htmlHead, err := document.Find("head").Html()
 	if err != nil {
 		return "", err

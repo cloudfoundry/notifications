@@ -7,7 +7,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/pivotal-golang/lager"
 )
@@ -50,14 +49,14 @@ type Workflow struct {
 	messageStatusUpdater    messageStatusUpdater
 	unsubscribersRepository unsubscribersRepositoryInterface
 	campaignsRepository     campaignsRepositoryInterface
-	database                services.DatabaseInterface
+	database                db.DatabaseInterface
 	sender                  string
 	domain                  string
 	uaaHost                 string
 }
 
 func NewWorkflow(mailClient mailSender, packager messagePackager, userLoader userLoader, tokenLoader tokenLoader,
-	messageStatusUpdater messageStatusUpdater, database services.DatabaseInterface, unsubscribersRepository unsubscribersRepositoryInterface,
+	messageStatusUpdater messageStatusUpdater, database db.DatabaseInterface, unsubscribersRepository unsubscribersRepositoryInterface,
 	campaignsRepository campaignsRepositoryInterface, sender, domain, uaaHost string) Workflow {
 	return Workflow{
 		mailClient:              mailClient,
@@ -90,7 +89,7 @@ func (w Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error {
 	}
 
 	if unsubscriber.ID != "" {
-		w.messageStatusUpdater.Update(w.database.Connection(), delivery.MessageID, common.StatusDelivered, delivery.CampaignID, logger)
+		w.messageStatusUpdater.Update(conn, delivery.MessageID, common.StatusDelivered, delivery.CampaignID, logger)
 		return nil
 	}
 
@@ -110,7 +109,7 @@ func (w Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error {
 	}
 
 	if !strings.Contains(delivery.Email, "@") {
-		w.messageStatusUpdater.Update(w.database.Connection(), delivery.MessageID, common.StatusUndeliverable, delivery.CampaignID, logger)
+		w.messageStatusUpdater.Update(conn, delivery.MessageID, common.StatusUndeliverable, delivery.CampaignID, logger)
 		return nil
 	}
 
@@ -129,7 +128,7 @@ func (w Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error {
 		return err
 	}
 
-	w.messageStatusUpdater.Update(w.database.Connection(), delivery.MessageID, common.StatusDelivered, delivery.CampaignID, logger)
+	w.messageStatusUpdater.Update(conn, delivery.MessageID, common.StatusDelivered, delivery.CampaignID, logger)
 
 	return nil
 }

@@ -5,7 +5,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
-	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 )
 
@@ -17,7 +16,18 @@ func (e NoStrategyError) Error() string {
 	return e.Err.Error()
 }
 
+type emailAddressFormatter interface {
+	Format(email string) (formattedEmail string)
+}
+
+type htmlPartsExtractor interface {
+	Extract(html string) (doctype, head, bodyContent, bodyAttributes string, err error)
+}
+
 type Determiner struct {
+	emailFormatter emailAddressFormatter
+	htmlExtractor  htmlPartsExtractor
+
 	userStrategy  dispatcher
 	spaceStrategy dispatcher
 	orgStrategy   dispatcher
@@ -28,12 +38,14 @@ type dispatcher interface {
 	Dispatch(dispatch services.Dispatch) ([]services.Response, error)
 }
 
-func NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy, emailStrategy dispatcher) Determiner {
+func NewStrategyDeterminer(emailFormatter emailAddressFormatter, htmlExtractor htmlPartsExtractor, userStrategy, spaceStrategy, orgStrategy, emailStrategy dispatcher) Determiner {
 	return Determiner{
-		userStrategy:  userStrategy,
-		spaceStrategy: spaceStrategy,
-		orgStrategy:   orgStrategy,
-		emailStrategy: emailStrategy,
+		emailFormatter: emailFormatter,
+		htmlExtractor:  htmlExtractor,
+		userStrategy:   userStrategy,
+		spaceStrategy:  spaceStrategy,
+		orgStrategy:    orgStrategy,
+		emailStrategy:  emailStrategy,
 	}
 }
 
@@ -50,17 +62,15 @@ func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string,
 		audience = key
 	}
 
-	params := notify.NotifyParams{
-		ReplyTo: campaignJob.Campaign.ReplyTo,
-		Subject: campaignJob.Campaign.Subject,
-		Text:    campaignJob.Campaign.Text,
-		RawHTML: campaignJob.Campaign.HTML,
-	}
-	if audience == "email" {
-		params.To = campaignJob.Campaign.SendTo[audience]
+	doctype, head, bodyContent, bodyAttributes, err := d.htmlExtractor.Extract(campaignJob.Campaign.HTML)
+	if err != nil {
+		panic(err)
 	}
 
-	params.FormatEmailAndExtractHTML()
+	var recipient string
+	if audience == "email" {
+		recipient = d.emailFormatter.Format(campaignJob.Campaign.SendTo[audience])
+	}
 
 	strategy, err := d.findStrategy(audience)
 	if err != nil {
@@ -83,15 +93,15 @@ func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string,
 			ID: campaignJob.Campaign.ClientID,
 		},
 		Message: services.DispatchMessage{
-			To:      params.To,
-			ReplyTo: params.ReplyTo,
-			Subject: params.Subject,
-			Text:    params.Text,
+			To:      recipient,
+			ReplyTo: campaignJob.Campaign.ReplyTo,
+			Subject: campaignJob.Campaign.Subject,
+			Text:    campaignJob.Campaign.Text,
 			HTML: services.HTML{
-				BodyContent:    params.ParsedHTML.BodyContent,
-				BodyAttributes: params.ParsedHTML.BodyAttributes,
-				Head:           params.ParsedHTML.Head,
-				Doctype:        params.ParsedHTML.Doctype,
+				Doctype:        doctype,
+				Head:           head,
+				BodyContent:    bodyContent,
+				BodyAttributes: bodyAttributes,
 			},
 		},
 	})

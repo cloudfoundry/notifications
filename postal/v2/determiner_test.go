@@ -7,8 +7,10 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/postal/v2"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -28,7 +30,7 @@ var _ = Describe("Determiner", func() {
 		orgStrategy = mocks.NewStrategy()
 		emailStrategy = mocks.NewStrategy()
 		database = mocks.NewDatabase()
-		determiner = v2.NewStrategyDeterminer(userStrategy, spaceStrategy, orgStrategy, emailStrategy)
+		determiner = v2.NewStrategyDeterminer(notify.EmailFormatter{}, notify.HTMLExtractor{}, userStrategy, spaceStrategy, orgStrategy, emailStrategy)
 	})
 
 	Context("when dispatching to a user", func() {
