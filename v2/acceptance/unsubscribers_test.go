@@ -91,7 +91,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("waiting for the email to arrive", func() {
 				Eventually(func() (interface{}, error) {
-					_, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s/status", senderID, campaignID), nil, clientToken.Access)
+					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", campaignID), nil, clientToken.Access)
 					return response["status"], err
 				}).Should(Equal("completed"))
 
@@ -126,7 +126,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("confirming that the email is received", func() {
 				Eventually(func() (interface{}, error) {
-					_, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s/status", senderID, secondCampaignID), nil, clientToken.Access)
+					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", secondCampaignID), nil, clientToken.Access)
 					return response["status"], err
 				}).Should(Equal("completed"))
 
@@ -276,7 +276,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("waiting for the email to arrive", func() {
 				Eventually(func() (interface{}, error) {
-					_, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s/status", senderID, campaignID), nil, clientToken.Access)
+					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", campaignID), nil, clientToken.Access)
 					return response["status"], err
 				}).Should(Equal("completed"))
 
@@ -311,7 +311,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("confirming that the email is received", func() {
 				Eventually(func() (interface{}, error) {
-					_, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaigns/%s/status", senderID, secondCampaignID), nil, clientToken.Access)
+					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", secondCampaignID), nil, clientToken.Access)
 					return response["status"], err
 				}).Should(Equal("completed"))
 

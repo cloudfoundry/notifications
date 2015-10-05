@@ -52,7 +52,7 @@ func NewCampaignStatusesCollection(campaignsRepository campaignGetter, sendersRe
 	}
 }
 
-func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID, senderID string) (CampaignStatus, error) {
+func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID, clientID string) (CampaignStatus, error) {
 	campaign, err := csc.campaignsRepository.Get(conn, campaignID)
 	if err != nil {
 		switch err.(type) {
@@ -63,7 +63,7 @@ func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID, 
 		}
 	}
 
-	_, err = csc.sendersRepository.Get(conn, senderID)
+	sender, err := csc.sendersRepository.Get(conn, campaign.SenderID)
 	if err != nil {
 		switch err.(type) {
 		case models.RecordNotFoundError:
@@ -73,7 +73,7 @@ func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID, 
 		}
 	}
 
-	if campaign.SenderID != senderID {
+	if sender.ClientID != clientID {
 		return CampaignStatus{}, NotFoundError{fmt.Errorf("Campaign with id %q could not be found", campaignID)}
 	}
 

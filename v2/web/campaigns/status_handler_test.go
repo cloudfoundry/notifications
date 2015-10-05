@@ -57,7 +57,7 @@ var _ = Describe("Campaign status handler", func() {
 
 		campaignStatusesCollection = mocks.NewCampaignStatusesCollection()
 
-		request, err = http.NewRequest("GET", "/senders/some-sender-id/campaigns/some-campaign-id/status", nil)
+		request, err = http.NewRequest("GET", "/campaigns/some-campaign-id/status", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		handler = campaigns.NewStatusHandler(campaignStatusesCollection)
@@ -110,7 +110,7 @@ var _ = Describe("Campaign status handler", func() {
 
 		Expect(campaignStatusesCollection.GetCall.Receives.Connection).To(Equal(conn))
 		Expect(campaignStatusesCollection.GetCall.Receives.CampaignID).To(Equal("some-campaign-id"))
-		Expect(campaignStatusesCollection.GetCall.Receives.SenderID).To(Equal("some-sender-id"))
+		Expect(campaignStatusesCollection.GetCall.Receives.ClientID).To(Equal("my-client"))
 	})
 
 	Context("when the campaign is not yet completed", func() {

@@ -28,10 +28,10 @@ func NewStatusHandler(campaignStatuses campaignStatusGetter) StatusHandler {
 func (h StatusHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	splitURL := strings.Split(req.URL.Path, "/")
 	campaignID := splitURL[len(splitURL)-2]
-	senderID := splitURL[len(splitURL)-4]
+	clientID := context.Get("client_id").(string)
 	conn := context.Get("database").(collections.DatabaseInterface).Connection()
 
-	status, err := h.campaignStatuses.Get(conn, campaignID, senderID)
+	status, err := h.campaignStatuses.Get(conn, campaignID, clientID)
 	if err != nil {
 		switch err.(type) {
 		case collections.NotFoundError:
