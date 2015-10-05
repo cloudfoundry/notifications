@@ -1,11 +1,13 @@
 package docs
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"text/template"
+
+	"github.com/pivotal-cf-experimental/warrant"
 )
 
 type MethodRequest struct {
@@ -131,12 +133,13 @@ func (g *DocGenerator) GenerateBlueprint(outputFilePath string) error {
 	return nil
 }
 
-func decodeSampleAuthorizationToken(token string) string {
-	cmd := exec.Command("uaac", "token", "decode", token)
-	output, err := cmd.CombinedOutput()
+func decodeSampleAuthorizationToken(userToken string) string {
+	w := warrant.New(warrant.Config{})
+
+	decodedToken, err := w.Tokens.Decode(userToken)
 	if err != nil {
 		panic(err)
 	}
 
-	return string(output)
+	return fmt.Sprintf("ClientID: %s\nScopes: %+v\n", decodedToken.ClientID, decodedToken.Scopes)
 }

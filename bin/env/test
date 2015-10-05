@@ -21,3 +21,4 @@ export UAA_CLIENT_SECRET=secret
 export UAA_HOST=http://uaa.example.com
 export VCAP_APPLICATION='{"instance_index":0}'
 export DOMAIN=localhost
+export DOC_FILE=../../v2_docs.apib
