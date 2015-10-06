@@ -46,9 +46,9 @@ var _ = Describe("Sender lifecycle", func() {
 
 	BeforeEach(func() {
 		client = support.NewClient(support.Config{
-			Host:          Servers.Notifications.URL(),
-			Trace:         Trace,
-			DocCollection: docCollection,
+			Host:              Servers.Notifications.URL(),
+			Trace:             Trace,
+			RoundTripRecorder: roundtripRecorder,
 		})
 		token = GetClientTokenFor("my-client")
 
@@ -59,7 +59,7 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("creating a sender", func() {
 			var response senderResponse
-			client.Document()
+			client.Document("sender-create")
 			status, err := client.DoTyped("POST", "/senders", map[string]interface{}{
 				"name": "My Cool App",
 			}, token.Access, &response)
@@ -76,7 +76,7 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("listing all senders", func() {
 			var response sendersListResponse
-			client.Document()
+			client.Document("sender-list")
 			status, err := client.DoTyped("GET", "/senders", nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
@@ -93,7 +93,7 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("getting the sender", func() {
 			var response senderResponse
-			client.Document()
+			client.Document("sender-get")
 			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
@@ -107,7 +107,7 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("updating the sender", func() {
 			var response senderResponse
-			client.Document()
+			client.Document("sender-update")
 			status, err := client.DoTyped("PUT", fmt.Sprintf("/senders/%s", senderID),
 				map[string]interface{}{
 					"name": "My Not Cool App",
@@ -158,7 +158,7 @@ var _ = Describe("Sender lifecycle", func() {
 		})
 
 		By("deleting the sender", func() {
-			client.Document()
+			client.Document("sender-delete")
 			status, err := client.DoTyped("DELETE", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, nil)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNoContent))

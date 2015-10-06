@@ -1,6 +1,8 @@
 package acceptance
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
@@ -22,7 +24,7 @@ var (
 	}
 	Trace, _ = strconv.ParseBool(os.Getenv("TRACE"))
 
-	docCollection *docs.DocGenerator
+	roundtripRecorder *docs.RoundTripRecorder
 )
 
 func TestAcceptanceSuite(t *testing.T) {
@@ -45,15 +47,22 @@ var _ = BeforeSuite(func() {
 	Servers.Notifications.ResetDatabase()
 	Servers.Notifications.Boot()
 
-	docCollection = docs.NewDocGenerator(docs.NewRequestInspector())
+	roundtripRecorder = docs.NewRoundTripRecorder()
 })
 
 var _ = AfterSuite(func() {
 	Servers.Notifications.Close()
 	Servers.Notifications.Destroy()
 
-	if docCollection != nil {
-		docCollection.GenerateBlueprint(os.Getenv("DOC_FILE"))
+	if roundtripRecorder != nil {
+		context, err := docs.BuildTemplateContext(docs.Structure, roundtripRecorder.RoundTrips)
+		Expect(err).NotTo(HaveOccurred())
+
+		markdown, err := docs.GenerateMarkdown(context)
+		Expect(err).NotTo(HaveOccurred())
+
+		err = ioutil.WriteFile(fmt.Sprintf("%s/V2_API.md", os.Getenv("ROOT_PATH")), []byte(markdown), 0644)
+		Expect(err).NotTo(HaveOccurred())
 	}
 })
 

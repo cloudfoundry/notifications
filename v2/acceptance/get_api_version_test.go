@@ -16,14 +16,14 @@ var _ = Describe("v2 API", func() {
 
 	BeforeEach(func() {
 		client = support.NewClient(support.Config{
-			Host:          Servers.Notifications.URL(),
-			Trace:         Trace,
-			DocCollection: docCollection,
+			Host:              Servers.Notifications.URL(),
+			Trace:             Trace,
+			RoundTripRecorder: roundtripRecorder,
 		})
 	})
 
 	It("serves the correct API version number", func() {
-		client.Document()
+		client.Document("info-get")
 		status, response, err := client.Do("GET", "/info", nil, "")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(status).To(Equal(http.StatusOK))

@@ -10,21 +10,22 @@ import (
 	"strings"
 )
 
-type docCollection interface {
-	Add(*http.Request, *http.Response) error
+type roundtripRecorder interface {
+	Record(key string, req *http.Request, resp *http.Response) error
 }
 
 type Config struct {
-	Host          string
-	Trace         bool
-	Routerless    bool
-	DocCollection docCollection
+	Host              string
+	Trace             bool
+	Routerless        bool
+	RoundTripRecorder roundtripRecorder
 }
 
 type Client struct {
-	config              Config
-	httpClient          *http.Client
-	documentNextRequest bool
+	config                  Config
+	httpClient              *http.Client
+	documentNextRequest     bool
+	documentationRequestKey string
 }
 
 func NewClient(config Config) *Client {
@@ -67,8 +68,9 @@ func (c *Client) DoTyped(method string, path string, payload map[string]interfac
 	return responseCode, err
 }
 
-func (c *Client) Document() {
+func (c *Client) Document(requestKey string) {
 	c.documentNextRequest = true
+	c.documentationRequestKey = requestKey
 }
 
 func (c *Client) makeRequest(method, path string, content io.ReadSeeker, token string) (int, []byte, error) {
@@ -115,7 +117,7 @@ func (c *Client) makeRequest(method, path string, content io.ReadSeeker, token s
 
 		response.Body = ioutil.NopCloser(bytes.NewReader(responseBody))
 
-		if err := c.config.DocCollection.Add(request, response); err != nil {
+		if err := c.config.RoundTripRecorder.Record(c.documentationRequestKey, request, response); err != nil {
 			return 0, []byte{}, err
 		}
 

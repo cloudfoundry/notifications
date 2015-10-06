@@ -1,106 +1,38 @@
-FORMAT: 1A
-
-# Notifications API
+# API docs
 This is version 2 of the Cloud Foundry notifications API. Integrate with this API in order to send messages to developers and billing contacts in your CF deployment.
 
 ## Authorization Tokens
 See [here](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-Tokens.md) for more information about UAA tokens.
 
-{{ range $resource, $resourceEntry := .Resources }}
-
-# Group {{.ListResourceName}}
-Some description of the {{.ListResourceName}}
-
-## {{.ItemResourceName}} List [/{{$resource}}]
-
-{{ range $index, $methodEntry := .ListMethodEntries }}
-
-### {{ $methodEntry.Verb }} {{$resourceEntry.ListResourceName}} [{{ $methodEntry.Verb }}]
-{{ $methodEntry.Description }}
-
-+ Request
-
-    Required scopes:
-    ```no-highlight
-    {{ range $index, $value := $methodEntry.Request.Scopes  }} {{ $value }}{{ end }}
-    ```
-
-    + Headers
-
-{{ range $key, $values := $methodEntry.Request.Headers }}
-{{ range $index, $value := $values }}
-            {{ $key }}: {{ $value }}
-{{ end }}
-{{ end }}
-
-    + Body
-
-            {{$methodEntry.Request.Body}}
-
-{{ range $index, $response := $methodEntry.Responses }}
-+ Response {{$response.Code}}
-
-    + Headers
-
-{{ range $key, $values := $response.Headers }}
-{{ range $index, $value := $values }}
-            {{ $key }}: {{ $value }}
-{{ end }}
-{{ end }}
-
-    + Body
-
-            {{$response.Body}}
-{{ end }}
-
-{{ end }}
-
-## {{.ItemResourceName}} [/{{$resource}}/{id}]
-
-+ Parameters
-
-	+ id: `68a5sdf67` (required, string) - The {{.ItemResourceName}} ID
-
-{{ range $index, $methodEntry := .ItemMethodEntries }}
-
-### {{ $methodEntry.Verb }} {{$resourceEntry.ItemResourceName}} [{{ $methodEntry.Verb }}]
-{{ $methodEntry.Description }}
-
-+ Request
-
-    Required scopes:
-    ```no-highlight
-    {{ range $index, $value := $methodEntry.Request.Scopes  }} {{ $value }}{{ end }}
-    ```
-
-    + Headers
-
-{{ range $key, $values := $methodEntry.Request.Headers }}
-{{ range $index, $value := $values }}
-            {{ $key }}: {{ $value }}
-{{ end }}
-{{ end }}
-
-    + Body
-
-            {{$methodEntry.Request.Body}}
-
-{{ range $index, $response := $methodEntry.Responses }}
-+ Response {{$response.Code}}
-
-    + Headers
-
-{{ range $key, $values := $response.Headers }}
-{{ range $index, $value := $values }}
-            {{ $key }}: {{ $value }}
-{{ end }}
-{{ end }}
-
-    + Body
-
-            {{$response.Body}}
-{{ end }}
-
-{{ end }}
-
-{{ end }}
+## Table of Contents{{range $resource := .Resources}}
+* {{$resource.Name}}{{range $endpoint := $resource.Endpoints}}
+  * [{{$endpoint.Description}}](#{{$endpoint.Key}}){{end}}{{end}}
+{{range $resource := .Resources}}
+## {{$resource.Name}}
+{{$resource.Description}}{{range $endpoint := $resource.Endpoints}}
+<a name="{{$endpoint.Key}}"></a>
+### {{$endpoint.Description}}
+#### Request **{{$endpoint.Method}}** {{$endpoint.Path}}{{if $endpoint.RequiredScopes}}
+##### Required Scopes
+```
+{{$endpoint.RequiredScopes}}
+```{{end}}
+##### Headers
+```{{range $requestHeader := $endpoint.RequestHeaders}}
+{{$requestHeader}}{{end}}
+```{{if $endpoint.RequestBody}}
+##### Body
+```
+{{$endpoint.RequestBody}}
+```{{end}}
+#### Response {{$endpoint.ResponseStatus}}
+##### Headers
+```{{range $responseHeader := $endpoint.ResponseHeaders}}
+{{$responseHeader}}{{end}}
+```{{if $endpoint.ResponseBody}}
+##### Body
+```
+{{$endpoint.ResponseBody}}
+```{{end}}
+{{end}}
+{{end}}

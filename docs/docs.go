@@ -1,154 +1,105 @@
 package docs
 
 import (
-	"io/ioutil"
-	"net/http"
+	"bytes"
+	"fmt"
 	"os"
-	"strings"
+	"regexp"
+	"sort"
 	"text/template"
-
-	"github.com/pivotal-cf-experimental/warrant"
 )
 
-type MethodRequest struct {
-	Headers map[string][]string
-	Body    string
-	Scopes  []string
+const preamble = `<!---
+This document is automatically generated.
+DO NOT EDIT THIS BY HAND.
+Run the acceptance suite to re-generate the documentation.
+-->
+
+`
+
+var guidRegexp = regexp.MustCompile(`[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}`)
+
+type TemplateContext struct {
+	Resources []TemplateResource
 }
 
-type MethodResponse struct {
-	Headers map[string][]string
-	Code    int
-	Body    string
-}
-
-type MethodEntry struct {
-	Verb        string
+type TemplateResource struct {
+	Name        string
 	Description string
-	Request     MethodRequest
-	Responses   []MethodResponse
+	Endpoints   []TemplateEndpoint
 }
 
-type ResourceEntry struct {
-	ListResourceName  string
-	ItemResourceName  string
-	ListMethodEntries []MethodEntry
-	ItemMethodEntries []MethodEntry
+type TemplateEndpoint struct {
+	Key             string
+	Description     string
+	Method          string
+	Path            string
+	RequiredScopes  string
+	RequestHeaders  []string
+	RequestBody     string
+	ResponseStatus  string
+	ResponseHeaders []string
+	ResponseBody    string
 }
 
-type DocGenerator struct {
-	RequestInspector         requestInspector
-	Resources                map[string]ResourceEntry
-	SampleAuthorizationToken string
-	Warrant                  warrant.Warrant
-}
+func BuildTemplateContext(resources []Resource, roundtrips map[string]RoundTrip) (TemplateContext, error) {
+	var context TemplateContext
 
-type requestInspector interface {
-	GetResourceInfo(request *http.Request) ResourceInfo
-}
-
-func NewDocGenerator(requestInspector requestInspector) *DocGenerator {
-	return &DocGenerator{
-		Resources:        map[string]ResourceEntry{},
-		RequestInspector: requestInspector,
-		Warrant:          warrant.New(warrant.Config{}),
-	}
-}
-
-func (g *DocGenerator) decodeScopes(request *http.Request) ([]string, error) {
-	headerValue := request.Header.Get("Authorization")
-	splitted := strings.Split(headerValue, " ")
-	if len(splitted) != 2 {
-		return nil, nil
-	}
-
-	decodedToken, err := g.Warrant.Tokens.Decode(splitted[1])
-	if err != nil {
-		return nil, err
-	}
-	return decodedToken.Scopes, nil
-}
-
-func (g *DocGenerator) Add(request *http.Request, response *http.Response) error {
-	var resourceEntry ResourceEntry
-	var requestBody []byte
-
-	resourceInfo := g.RequestInspector.GetResourceInfo(request)
-
-	if retrievedResource, ok := g.Resources[resourceInfo.ResourceType]; ok {
-		resourceEntry = retrievedResource
-	}
-
-	resourceEntry.ListResourceName = resourceInfo.ListName
-	resourceEntry.ItemResourceName = resourceInfo.ItemName
-
-	if request.Body != nil {
-		var err error
-		requestBody, err = ioutil.ReadAll(request.Body)
-		if err != nil {
-			panic(err)
+	for _, resource := range resources {
+		templateResource := TemplateResource{
+			Name:        resource.Name,
+			Description: resource.Description,
 		}
+
+		for _, endpoint := range resource.Endpoints {
+			roundtrip, ok := roundtrips[endpoint.Key]
+			if !ok {
+				return TemplateContext{}, fmt.Errorf("missing roundtrip %q", endpoint.Key)
+			}
+
+			templateResource.Endpoints = append(templateResource.Endpoints, TemplateEndpoint{
+				Key:             endpoint.Key,
+				Description:     endpoint.Description,
+				Method:          roundtrip.Method(),
+				Path:            roundtrip.Path(),
+				RequiredScopes:  roundtrip.RequiredScopes(),
+				RequestHeaders:  roundtrip.RequestHeaders(),
+				RequestBody:     roundtrip.RequestBody(),
+				ResponseStatus:  roundtrip.ResponseStatus(),
+				ResponseHeaders: roundtrip.ResponseHeaders(),
+				ResponseBody:    roundtrip.ResponseBody(),
+			})
+
+			delete(roundtrips, endpoint.Key)
+		}
+
+		context.Resources = append(context.Resources, templateResource)
 	}
 
-	responseBody, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
+	if len(roundtrips) > 0 {
+		var keys []string
+		for key, _ := range roundtrips {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+
+		return TemplateContext{}, fmt.Errorf("unused roundtrips %v", keys)
 	}
 
-	scopes, err := g.decodeScopes(request)
-	if err != nil {
-		panic(err)
-	}
-
-	methodEntry := MethodEntry{
-		Verb: request.Method,
-		Request: MethodRequest{
-			Headers: request.Header,
-			Body:    string(requestBody),
-			Scopes:  scopes,
-		},
-		Responses: []MethodResponse{
-			{
-				Code:    response.StatusCode,
-				Headers: response.Header,
-				Body:    string(responseBody),
-			},
-		},
-	}
-
-	if resourceInfo.IsItem {
-		resourceEntry.ItemMethodEntries = append(resourceEntry.ItemMethodEntries, methodEntry)
-	} else {
-		resourceEntry.ListMethodEntries = append(resourceEntry.ListMethodEntries, methodEntry)
-	}
-
-	g.Resources[resourceInfo.ResourceType] = resourceEntry
-
-	g.SampleAuthorizationToken = resourceInfo.AuthorizationToken
-
-	return nil
+	return context, nil
 }
 
-func (g *DocGenerator) GenerateBlueprint(outputFilePath string) error {
-	if outputFilePath == "" {
-		return nil
-	}
-
-	tmpl, err := template.ParseFiles("../../docs/template.tmpl")
+func GenerateMarkdown(context TemplateContext) (string, error) {
+	tmpl, err := template.ParseFiles(fmt.Sprintf("%s/docs/template.tmpl", os.Getenv("ROOT_PATH")))
 	if err != nil {
 		panic(err)
 	}
 
-	outFile, err := os.Create(outputFilePath)
+	output := bytes.NewBuffer([]byte{})
+	err = tmpl.Execute(output, context)
 	if err != nil {
 		panic(err)
 	}
 
-	err = tmpl.Execute(outFile, g)
-	if err != nil {
-		panic(err)
-	}
-
-	outFile.Close()
-	return nil
+	return preamble + output.String(), nil
 }

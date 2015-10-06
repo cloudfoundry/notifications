@@ -1,1096 +1,764 @@
-# Notifications V2 Documentation
+<!---
+This document is automatically generated.
+DO NOT EDIT THIS BY HAND.
+Run the acceptance suite to re-generate the documentation.
+-->
 
-- System Status
-  - [Check Service Status](#get-info)
-- Senders
-  - [Creating a Sender](#create-sender)
-  - [Listing your Senders](#list-senders)
-  - [Retrieving a Sender](#retrieve-sender)
-  - [Updating a Sender](#update-sender)
-  - [Deleting a Sender](#delete-sender)
-- Templates
-  - [Creating a Template](#create-template)
-  - [Listing your Templates](#list-templates)
-  - [Retrieving a Template](#retrieve-template)
-  - [Updating a Template](#update-template)
-  - [Deleting a Template](#delete-template)
-- Campaign types
-  - [Creating a Campaign Type](#create-campaign-type)
-  - [Listing your Campaign Types](#list-campaign-types)
-  - [Retrieving a Campaign Type](#retrieve-campaign-type)
-  - [Updating a Campaign Type](#update-campaign-type)
-  - [Deleting a Campaign Type](#delete-campaign-type)
-- Campaigns
-  - [Sending a Campaign](#send-campaign)
-  - [Retrieving a Campaign](#retrieve-campaign)
+# API docs
+This is version 2 of the Cloud Foundry notifications API. Integrate with this API in order to send messages to developers and billing contacts in your CF deployment.
 
-## System Status
+## Authorization Tokens
+See [here](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-Tokens.md) for more information about UAA tokens.
 
-<a name="get-info"></a>
-#### Check Service Status
+## Table of Contents
+* Info
+  * [Retrieve information about the API](#info-get)
+* Senders
+  * [Create a new sender](#sender-create)
+  * [List all senders](#sender-list)
+  * [Retrieve a senders](#sender-get)
+  * [Update a sender](#sender-update)
+  * [Delete a sender](#sender-delete)
+* Templates
+  * [Create a new template](#template-create)
+  * [Retrieve a list of templates](#template-list)
+  * [Retrieve a template](#template-get)
+  * [Update a template](#template-update)
+  * [Delete a template](#template-delete)
+* Campaign Types
+  * [Create a new campaign type](#campaign-type-create)
+  * [Retrieve a list of campaign types](#campaign-type-list)
+  * [Retrieve a campaign type](#campaign-type-get)
+  * [Update a campaign type](#campaign-type-update)
+  * [Delete a campaign type](#campaign-type-delete)
+* Campaigns
+  * [Create a new campaign](#campaign-create)
+  * [Retrieve a campaign](#campaign-get)
 
-##### Request
-
-###### Headers
+## Info
+EVAN WILL EDIT THIS
+<a name="info-get"></a>
+### Retrieve information about the API
+#### Request **GET** /info
+##### Headers
 ```
-X-NOTIFICATIONS-VERSION: 2
+X-Notifications-Version: 2
 ```
-
-###### Route
+#### Response 200 OK
+##### Headers
 ```
-GET /info
-```
-
-###### CURL example
-```
-$ curl -i -X GET \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  http://notifications.example.com/info
-
-HTTP/1.1 200 OK
-Connection: close
 Content-Length: 13
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 30 Sep 2014 21:29:36 GMT
-X-Cf-Requestid: 2cf01258-ccff-41e9-6d82-41a4441af4af
-
-{"version": 2}
+Date: Tue, 06 Oct 2015 21:22:19 GMT
+```
+##### Body
+```
+{
+  "version": 2
+}
 ```
 
-##### Response
-
-###### Status
-```
-200 OK
-```
-
-###### Body
-| Fields  | Description        |
-| ------- | ------------------ |
-| version | API version number |
 
 ## Senders
-
-<a name="create-sender"></a>
-#### Creating a Sender
-
-##### Request
-
-###### Headers
+EVAN WILL EDIT THIS
+<a name="sender-create"></a>
+### Create a new sender
+#### Request **POST** /senders
+##### Required Scopes
 ```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
 ```
-\* The token requires `notifications.write` scope.
-
-###### Route
+##### Headers
 ```
-POST /senders
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3NDAsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kSqsfCXuOLZHA8y4N3dif5mGfz_rfJJOiTw-Hk5mNsLm5X59P55UvyZ4X0fXQYujwc43d6y3sw7yyQVD7oiAAKj2i5zW1ZGudoW9REyM_E3J0nbVjI5IXL7UBow7nOKGyNZ6UnzyzDiu3w0oUHZucCSGshKMrFhbTb71iFiojFaid1UZVZ_5zRMEArB5dzzFDUglt4sNsLhXam5L34W-B-dar5YNkxQFprVRFkrGxqTS-jjDdGFV7MFCfsKuGdfKbL3l9N4JkU9bBKe1dnuA8ToW6BPD-ZBQDwStysphR6wmuXTaZTa55S6Cr3RBCOwjiM2VuRbfoGjDLqcwU1AhqA
+X-Notifications-Version: 2
 ```
-###### Params
-
-| Key    | Description                               |
-| ------ | ----------------------------------------- |
-| name\* | the human-readable name given to a sender |
-
-\* required
-
-###### CURL example
+##### Body
 ```
-$ curl -i -X POST \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"name":"my-sender"}'
-  http://notifications.example.com/senders
-
-HTTP/1.1 201 Created
-Content-Length: 64
-Content-Type: text/plain; charset=utf-8
-Date: Fri, 17 Jul 2015 19:30:32 GMT
-X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
-
 {
-  "id":"4bbd0431-9f5b-49bb-701d-8c2caa755ed0",
-  "name":"my-sender"
+  "name": "My Cool App"
+}
+```
+#### Response 201 Created
+##### Headers
+```
+Content-Length: 310
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 06 Oct 2015 21:22:20 GMT
+```
+##### Body
+```
+{
+  "_links": {
+    "campaign_types": {
+      "href": "/senders/a5ebf2c2-6b1a-ad6d-8df0-b0265947892f/campaign_types"
+    },
+    "campaigns": {
+      "href": "/senders/a5ebf2c2-6b1a-ad6d-8df0-b0265947892f/campaigns"
+    },
+    "self": {
+      "href": "/senders/a5ebf2c2-6b1a-ad6d-8df0-b0265947892f"
+    }
+  },
+  "id": "a5ebf2c2-6b1a-ad6d-8df0-b0265947892f",
+  "name": "My Cool App"
 }
 ```
 
-##### Response
-
-###### Status
+<a name="sender-list"></a>
+### List all senders
+#### Request **GET** /senders
+##### Required Scopes
 ```
-201 Created
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
 ```
-
-###### Body
-| Fields | Description                  |
-| ------ | ---------------------------- |
-| id     | System-generated sender ID   |
-| name   | Sender name                  |
-
-<a name="list-senders"></a>
-#### Listing your Senders
-
-##### Request
-
-###### Headers
+##### Headers
 ```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3NDAsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kSqsfCXuOLZHA8y4N3dif5mGfz_rfJJOiTw-Hk5mNsLm5X59P55UvyZ4X0fXQYujwc43d6y3sw7yyQVD7oiAAKj2i5zW1ZGudoW9REyM_E3J0nbVjI5IXL7UBow7nOKGyNZ6UnzyzDiu3w0oUHZucCSGshKMrFhbTb71iFiojFaid1UZVZ_5zRMEArB5dzzFDUglt4sNsLhXam5L34W-B-dar5YNkxQFprVRFkrGxqTS-jjDdGFV7MFCfsKuGdfKbL3l9N4JkU9bBKe1dnuA8ToW6BPD-ZBQDwStysphR6wmuXTaZTa55S6Cr3RBCOwjiM2VuRbfoGjDLqcwU1AhqA
+X-Notifications-Version: 2
 ```
-\* The token requires `notifications.write` scope.
-
-###### Route
+#### Response 200 OK
+##### Headers
 ```
-GET /senders
-```
-
-###### CURL Example
-```
-$ curl -i -X GET \
-  -H "Authorization: bearer <CLIENT-TOKEN>" \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  http://notifications.example.com/senders
-
-HTTP/1.1 200 OK
-Date: Mon, 17 Aug 2015 21:39:31 GMT
-Content-Length: 145
+Content-Length: 362
 Content-Type: text/plain; charset=utf-8
-
+Date: Tue, 06 Oct 2015 21:22:20 GMT
+```
+##### Body
+```
 {
-  "senders":[
+  "_links": {
+    "self": {
+      "href": "/senders"
+    }
+  },
+  "senders": [
     {
-      "id":"abb9b009-d3c3-4de2-43f0-341e671e2f3d",
-      "name":"sender one"
-    },
-    {
-      "id":"379c5b3d-d3ec-4148-6608-68638ca977c5",
-      "name":"sender two"
+      "_links": {
+        "campaign_types": {
+          "href": "/senders/a5ebf2c2-6b1a-ad6d-8df0-b0265947892f/campaign_types"
+        },
+        "campaigns": {
+          "href": "/senders/a5ebf2c2-6b1a-ad6d-8df0-b0265947892f/campaigns"
+        },
+        "self": {
+          "href": "/senders/a5ebf2c2-6b1a-ad6d-8df0-b0265947892f"
+        }
+      },
+      "id": "a5ebf2c2-6b1a-ad6d-8df0-b0265947892f",
+      "name": "My Cool App"
     }
   ]
 }
 ```
 
-##### Response
-
-###### Status
+<a name="sender-get"></a>
+### Retrieve a senders
+#### Request **GET** /senders/{id}
+##### Required Scopes
 ```
-200 OK
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
 ```
-
-###### Body
-| Fields | Description |
-| ------ | ----------- |
-| id     | Sender ID   |
-| name   | Sender name |
-
-<a name="retrieve-sender"></a>
-#### Retrieving a Sender
-
-##### Request
-
-###### Headers
+##### Headers
 ```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3NDAsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kSqsfCXuOLZHA8y4N3dif5mGfz_rfJJOiTw-Hk5mNsLm5X59P55UvyZ4X0fXQYujwc43d6y3sw7yyQVD7oiAAKj2i5zW1ZGudoW9REyM_E3J0nbVjI5IXL7UBow7nOKGyNZ6UnzyzDiu3w0oUHZucCSGshKMrFhbTb71iFiojFaid1UZVZ_5zRMEArB5dzzFDUglt4sNsLhXam5L34W-B-dar5YNkxQFprVRFkrGxqTS-jjDdGFV7MFCfsKuGdfKbL3l9N4JkU9bBKe1dnuA8ToW6BPD-ZBQDwStysphR6wmuXTaZTa55S6Cr3RBCOwjiM2VuRbfoGjDLqcwU1AhqA
+X-Notifications-Version: 2
 ```
-\* The token requires `notifications.write` scope.
-
-###### Route
+#### Response 200 OK
+##### Headers
 ```
-GET /senders/{senderID}
-```
-
-###### Params
-| Key          | Description                              |
-| -------------| ---------------------------------------- |
-| senderID\*   | The "id" returned when creating a sender |
-
-\* required
-
-###### CURL Example
-```
-$ curl -i -X GET \
-  -H "Authorization: bearer <CLIENT-TOKEN>" \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0
-
-HTTP/1.1 200 OK
-Content-Length: 64
+Content-Length: 310
 Content-Type: text/plain; charset=utf-8
-Date: Fri, 17 Jul 2015 21:00:06 GMT
-X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
-
+Date: Tue, 06 Oct 2015 21:22:20 GMT
+```
+##### Body
+```
 {
-  "id":"4bbd0431-9f5b-49bb-701d-8c2caa755ed0",
-  "name":"my-sender"
+  "_links": {
+    "campaign_types": {
+      "href": "/senders/a5ebf2c2-6b1a-ad6d-8df0-b0265947892f/campaign_types"
+    },
+    "campaigns": {
+      "href": "/senders/a5ebf2c2-6b1a-ad6d-8df0-b0265947892f/campaigns"
+    },
+    "self": {
+      "href": "/senders/a5ebf2c2-6b1a-ad6d-8df0-b0265947892f"
+    }
+  },
+  "id": "a5ebf2c2-6b1a-ad6d-8df0-b0265947892f",
+  "name": "My Cool App"
 }
 ```
 
-##### Response
-
-###### Status
+<a name="sender-update"></a>
+### Update a sender
+#### Request **PUT** /senders/{id}
+##### Required Scopes
 ```
-200 OK
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
 ```
-
-###### Body
-| Fields | Description |
-| ------ | ----------- |
-| id     | Sender ID   |
-| name   | Sender name |
-
-<a name="update-sender"></a>
-#### Updating a Sender
-
-##### Request
-
-###### Headers
+##### Headers
 ```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3NDAsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kSqsfCXuOLZHA8y4N3dif5mGfz_rfJJOiTw-Hk5mNsLm5X59P55UvyZ4X0fXQYujwc43d6y3sw7yyQVD7oiAAKj2i5zW1ZGudoW9REyM_E3J0nbVjI5IXL7UBow7nOKGyNZ6UnzyzDiu3w0oUHZucCSGshKMrFhbTb71iFiojFaid1UZVZ_5zRMEArB5dzzFDUglt4sNsLhXam5L34W-B-dar5YNkxQFprVRFkrGxqTS-jjDdGFV7MFCfsKuGdfKbL3l9N4JkU9bBKe1dnuA8ToW6BPD-ZBQDwStysphR6wmuXTaZTa55S6Cr3RBCOwjiM2VuRbfoGjDLqcwU1AhqA
+X-Notifications-Version: 2
 ```
-\* The token requires `notifications.write` scope.
-
-###### Route
+##### Body
 ```
-PUT /senders/{senderID}
-```
-
-###### Params
-| Key          | Description                              |
-| -------------| ---------------------------------------- |
-| senderID\*   | The "id" returned when creating a sender |
-
-###### Body
-| Fields | Description |
-| ------ | ----------- |
-| name   | Sender name |
-
-\* required
-
-###### CURL Example
-```
-$ curl -i -X GET \
-  -H "Authorization: bearer <CLIENT-TOKEN>" \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -d '{"name": "my-updated-sender"}'
-  http://notifications.example.com/senders/64816c21-9eb3-49f0-6489-699cb2defe6b
-
-HTTP/1.1 200 OK
-Content-Length: 72
-Content-Type: text/plain; charset=utf-8
-Date: Fri, 17 Jul 2015 21:00:06 GMT
-X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
-
 {
-  "id":"64816c21-9eb3-49f0-6489-699cb2defe6b",
-  "name":"my-updated-sender"
+  "name": "My Not Cool App"
+}
+```
+#### Response 200 OK
+##### Headers
+```
+Content-Length: 314
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 06 Oct 2015 21:22:20 GMT
+```
+##### Body
+```
+{
+  "_links": {
+    "campaign_types": {
+      "href": "/senders/a5ebf2c2-6b1a-ad6d-8df0-b0265947892f/campaign_types"
+    },
+    "campaigns": {
+      "href": "/senders/a5ebf2c2-6b1a-ad6d-8df0-b0265947892f/campaigns"
+    },
+    "self": {
+      "href": "/senders/a5ebf2c2-6b1a-ad6d-8df0-b0265947892f"
+    }
+  },
+  "id": "a5ebf2c2-6b1a-ad6d-8df0-b0265947892f",
+  "name": "My Not Cool App"
 }
 ```
 
-##### Response
-
-###### Status
+<a name="sender-delete"></a>
+### Delete a sender
+#### Request **DELETE** /senders/{id}
+##### Required Scopes
 ```
-200 OK
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
 ```
-
-###### Body
-| Fields | Description |
-| ------ | ----------- |
-| id     | Sender ID   |
-| name   | Sender name |
-
-<a name="delete-sender"></a>
-#### Deleting a Sender
-
-##### Request
-
-###### Headers
+##### Headers
 ```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3NDAsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.kSqsfCXuOLZHA8y4N3dif5mGfz_rfJJOiTw-Hk5mNsLm5X59P55UvyZ4X0fXQYujwc43d6y3sw7yyQVD7oiAAKj2i5zW1ZGudoW9REyM_E3J0nbVjI5IXL7UBow7nOKGyNZ6UnzyzDiu3w0oUHZucCSGshKMrFhbTb71iFiojFaid1UZVZ_5zRMEArB5dzzFDUglt4sNsLhXam5L34W-B-dar5YNkxQFprVRFkrGxqTS-jjDdGFV7MFCfsKuGdfKbL3l9N4JkU9bBKe1dnuA8ToW6BPD-ZBQDwStysphR6wmuXTaZTa55S6Cr3RBCOwjiM2VuRbfoGjDLqcwU1AhqA
+X-Notifications-Version: 2
 ```
-\* The token requires `notifications.write` scope.
-
-###### Route
+#### Response 204 No Content
+##### Headers
 ```
-DELETE /senders/{senderID}
+Date: Tue, 06 Oct 2015 21:22:20 GMT
 ```
 
-###### Params
-| Key          | Description                              |
-| -------------| ---------------------------------------- |
-| senderID\*   | The "id" returned when creating a sender |
-
-\* required
-
-###### CURL Example
-```
-$ curl -i -X DELETE \
-  -H "Authorization: bearer <CLIENT-TOKEN>" \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  http://notifications.example.com/senders/64816c21-9eb3-49f0-6489-699cb2defe6b
-
-HTTP/1.1 204 No Content
-Content-Length: 0
-Content-Type: text/plain; charset=utf-8
-Date: Fri, 17 Jul 2015 21:00:06 GMT
-X-Cf-Requestid: 4fab7338-11ba-44d2-75fd-c34046518dae
-```
-
-##### Response
-
-###### Status
-```
-204 No Content
-```
 
 ## Templates
-
-<a name="create-template"></a>
-#### Creating a Template
-
-##### Request
-
-###### Headers
+EVAN WILL EDIT THIS
+<a name="template-create"></a>
+### Create a new template
+#### Request **POST** /templates
+##### Required Scopes
 ```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
 ```
-\* The token requires `notifications.write` scope.
-
-###### Route
+##### Headers
 ```
-POST /template
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3MzgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.mM4oj3NYciRFkmYUfT9HrC0Pl19zGFQXTPpS82PZ8oZhmSkCtlg_BQM0xJl37nQslX9jGaphr_eYGhk08ENvOL6HOeglkBDSr4CC3c4KtuMCYOWaK9NQesAaozmjpug1_QxkngRRoka62UeTRQkKlBPsTghS6GN7F6uELdzKuhIZYgUSF0DVX2t8sPMr0-pomLxFDFCT94Dwc5HOmjngzlsljNoPoJFIFc1Nyb8SX4zw7GDe6LcVSQMklThhx-0VUhQKPHLkXP61hFKU7SOl_ZprNvN1NfJmpT8UPEa4kQMo-P9wCTNGskSGweQzwTlmyNkTphfHg4ldeuHRB4s_7Q
+X-Notifications-Version: 2
 ```
-###### Params
-
-| Key      | Description                                 |
-| -------- | ------------------------------------------- |
-| name\*   | the human-readable name given to a template |
-| html\*\* | Template html body                          |
-| text\*\* | Template text body                          |
-| subject  | Template subject                            |
-| metadata | Template metadata in JSON format            |
-
-\* required
-\*\* either html or text is required
-
-###### CURL example
+##### Body
 ```
-$ curl -i -X POST \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"name":"my-template", "text": "template text"}'
-  http://notifications.example.com/templates
-
-HTTP/1.1 201 Created
-Content-Length: 138
-Content-Type: text/plain; charset=utf-8
-Date: Fri, 17 Jul 2015 19:30:32 GMT
-X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
-
 {
-  "html":"",
-  "id":"54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5",
-  "metadata":{},
-  "name":"my-template",
-  "subject":"{{.Subject}}",
-  "text":"template text"
+  "html": "template html",
+  "metadata": {
+    "template": "metadata"
+  },
+  "name": "An interesting template",
+  "subject": "template subject",
+  "text": "template text"
+}
+```
+#### Response 201 Created
+##### Headers
+```
+Content-Length: 266
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 06 Oct 2015 21:22:18 GMT
+```
+##### Body
+```
+{
+  "_links": {
+    "self": {
+      "href": "/templates/4b88c433-28fd-deaf-da92-5a1cf6abc09a"
+    }
+  },
+  "html": "template html",
+  "id": "4b88c433-28fd-deaf-da92-5a1cf6abc09a",
+  "metadata": {
+    "template": "metadata"
+  },
+  "name": "An interesting template",
+  "subject": "template subject",
+  "text": "template text"
 }
 ```
 
-##### Response
-
-###### Status
+<a name="template-list"></a>
+### Retrieve a list of templates
+#### Request **GET** /templates
+##### Required Scopes
 ```
-201 Created
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
 ```
-
-###### Body
-| Fields   | Description                      |
-| -------- | -------------------------------- |
-| id       | System-generated template ID     |
-| name     | Template name                    |
-| html     | Template html body               |
-| text     | Template text body               |
-| subject  | Template subject                 |
-| metadata | Template metadata in JSON format |
-
-<a name="list-templates"></a>
-#### Listing your Templates
-
-##### Request
-
-###### Headers
+##### Headers
 ```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3MzgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.mM4oj3NYciRFkmYUfT9HrC0Pl19zGFQXTPpS82PZ8oZhmSkCtlg_BQM0xJl37nQslX9jGaphr_eYGhk08ENvOL6HOeglkBDSr4CC3c4KtuMCYOWaK9NQesAaozmjpug1_QxkngRRoka62UeTRQkKlBPsTghS6GN7F6uELdzKuhIZYgUSF0DVX2t8sPMr0-pomLxFDFCT94Dwc5HOmjngzlsljNoPoJFIFc1Nyb8SX4zw7GDe6LcVSQMklThhx-0VUhQKPHLkXP61hFKU7SOl_ZprNvN1NfJmpT8UPEa4kQMo-P9wCTNGskSGweQzwTlmyNkTphfHg4ldeuHRB4s_7Q
+X-Notifications-Version: 2
 ```
-\* The token requires `notifications.write` scope.
-
-###### Route
+#### Response 200 OK
+##### Headers
 ```
-GET /templates
-```
-
-###### CURL Example
-```
-$ curl -i -X GET \
-  -H "Authorization: bearer <CLIENT-TOKEN>" \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  http://notifications.example.com/templates
-
-HTTP/1.1 200 OK
-Date: Mon, 17 Aug 2015 21:39:31 GMT
-Content-Length: 300
+Content-Length: 298
 Content-Type: text/plain; charset=utf-8
-
+Date: Tue, 06 Oct 2015 21:22:18 GMT
+```
+##### Body
+```
 {
-  "templates":[
+  "_links": {
+    "self": {
+      "href": "/templates"
+    }
+  },
+  "templates": [
     {
-      "html":"",
-      "id":"4cc9ba2e-97ad-4541-70a4-1bf3e9c0d76d",
-      "metadata":{},
-      "name":"text-template",
-      "subject":"Text Subject",
-      "text":"Template Body"
+      "_links": {
+        "self": {
+          "href": "/templates/4b88c433-28fd-deaf-da92-5a1cf6abc09a"
+        }
+      },
+      "html": "html",
+      "id": "4b88c433-28fd-deaf-da92-5a1cf6abc09a",
+      "metadata": {
+        "banana": "something"
+      },
+      "name": "A more interesting template",
+      "subject": "subject",
+      "text": "text"
+    }
+  ]
+}
+```
+
+<a name="template-get"></a>
+### Retrieve a template
+#### Request **GET** /templates/{id}
+##### Required Scopes
+```
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+```
+##### Headers
+```
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3MzgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.mM4oj3NYciRFkmYUfT9HrC0Pl19zGFQXTPpS82PZ8oZhmSkCtlg_BQM0xJl37nQslX9jGaphr_eYGhk08ENvOL6HOeglkBDSr4CC3c4KtuMCYOWaK9NQesAaozmjpug1_QxkngRRoka62UeTRQkKlBPsTghS6GN7F6uELdzKuhIZYgUSF0DVX2t8sPMr0-pomLxFDFCT94Dwc5HOmjngzlsljNoPoJFIFc1Nyb8SX4zw7GDe6LcVSQMklThhx-0VUhQKPHLkXP61hFKU7SOl_ZprNvN1NfJmpT8UPEa4kQMo-P9wCTNGskSGweQzwTlmyNkTphfHg4ldeuHRB4s_7Q
+X-Notifications-Version: 2
+```
+#### Response 200 OK
+##### Headers
+```
+Content-Length: 266
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 06 Oct 2015 21:22:18 GMT
+```
+##### Body
+```
+{
+  "_links": {
+    "self": {
+      "href": "/templates/4b88c433-28fd-deaf-da92-5a1cf6abc09a"
+    }
+  },
+  "html": "template html",
+  "id": "4b88c433-28fd-deaf-da92-5a1cf6abc09a",
+  "metadata": {
+    "template": "metadata"
+  },
+  "name": "An interesting template",
+  "subject": "template subject",
+  "text": "template text"
+}
+```
+
+<a name="template-update"></a>
+### Update a template
+#### Request **PUT** /templates/{id}
+##### Required Scopes
+```
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+```
+##### Headers
+```
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3MzgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.mM4oj3NYciRFkmYUfT9HrC0Pl19zGFQXTPpS82PZ8oZhmSkCtlg_BQM0xJl37nQslX9jGaphr_eYGhk08ENvOL6HOeglkBDSr4CC3c4KtuMCYOWaK9NQesAaozmjpug1_QxkngRRoka62UeTRQkKlBPsTghS6GN7F6uELdzKuhIZYgUSF0DVX2t8sPMr0-pomLxFDFCT94Dwc5HOmjngzlsljNoPoJFIFc1Nyb8SX4zw7GDe6LcVSQMklThhx-0VUhQKPHLkXP61hFKU7SOl_ZprNvN1NfJmpT8UPEa4kQMo-P9wCTNGskSGweQzwTlmyNkTphfHg4ldeuHRB4s_7Q
+X-Notifications-Version: 2
+```
+##### Body
+```
+{
+  "html": "html",
+  "metadata": {
+    "banana": "something"
+  },
+  "name": "A more interesting template",
+  "subject": "subject",
+  "text": "text"
+}
+```
+#### Response 200 OK
+##### Headers
+```
+Content-Length: 242
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 06 Oct 2015 21:22:18 GMT
+```
+##### Body
+```
+{
+  "_links": {
+    "self": {
+      "href": "/templates/4b88c433-28fd-deaf-da92-5a1cf6abc09a"
+    }
+  },
+  "html": "html",
+  "id": "4b88c433-28fd-deaf-da92-5a1cf6abc09a",
+  "metadata": {
+    "banana": "something"
+  },
+  "name": "A more interesting template",
+  "subject": "subject",
+  "text": "text"
+}
+```
+
+<a name="template-delete"></a>
+### Delete a template
+#### Request **DELETE** /templates/{id}
+##### Required Scopes
+```
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+```
+##### Headers
+```
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3MzgsImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.mM4oj3NYciRFkmYUfT9HrC0Pl19zGFQXTPpS82PZ8oZhmSkCtlg_BQM0xJl37nQslX9jGaphr_eYGhk08ENvOL6HOeglkBDSr4CC3c4KtuMCYOWaK9NQesAaozmjpug1_QxkngRRoka62UeTRQkKlBPsTghS6GN7F6uELdzKuhIZYgUSF0DVX2t8sPMr0-pomLxFDFCT94Dwc5HOmjngzlsljNoPoJFIFc1Nyb8SX4zw7GDe6LcVSQMklThhx-0VUhQKPHLkXP61hFKU7SOl_ZprNvN1NfJmpT8UPEa4kQMo-P9wCTNGskSGweQzwTlmyNkTphfHg4ldeuHRB4s_7Q
+X-Notifications-Version: 2
+```
+#### Response 204 No Content
+##### Headers
+```
+Date: Tue, 06 Oct 2015 21:22:18 GMT
+```
+
+
+## Campaign Types
+EVAN WILL EDIT THIS
+<a name="campaign-type-create"></a>
+### Create a new campaign type
+#### Request **POST** /senders/{id}/campaign_types
+##### Required Scopes
+```
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+```
+##### Headers
+```
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3MzksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.eo13IleXhSxNJItX4qa8G-zq5JkZI5bu-aRg9hAwGE-5OpJS2h4rTFksWmCUsqjDk3xVHpJZoIjC2wqO8mO1VokzAMosDQu0P9ux11DBmze2HfeQd72cpcjKqD2zVFImNFJarQWvToykiKGyMx5gVgpwWT-pDgaAAwPSZXbHQyN-E3TbCFRtrTvTgC994r6xah36zj9bbCyPvxU6dy2tWkBbkhYfwOTW5-qntiIg-_R91_dLQpGoKZV-T7W48yJ6kgFElq1FDjOLzvgSI_YdnygWm6asjrucxM-rbv07_ObiTqC9GK1eieel07yHvUrpIwvfm0MnTQK-ICijtiOSPA
+X-Notifications-Version: 2
+```
+##### Body
+```
+{
+  "description": "a great campaign type",
+  "name": "some-campaign-type"
+}
+```
+#### Response 201 Created
+##### Headers
+```
+Content-Length: 228
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 06 Oct 2015 21:22:19 GMT
+```
+##### Body
+```
+{
+  "_links": {
+    "self": {
+      "href": "/campaign_types/906104fe-4208-5c46-6894-1fa0e65c3d73"
+    }
+  },
+  "critical": false,
+  "description": "a great campaign type",
+  "id": "906104fe-4208-5c46-6894-1fa0e65c3d73",
+  "name": "some-campaign-type",
+  "template_id": ""
+}
+```
+
+<a name="campaign-type-list"></a>
+### Retrieve a list of campaign types
+#### Request **GET** /senders/{id}/campaign_types
+##### Required Scopes
+```
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+```
+##### Headers
+```
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3MzksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.eo13IleXhSxNJItX4qa8G-zq5JkZI5bu-aRg9hAwGE-5OpJS2h4rTFksWmCUsqjDk3xVHpJZoIjC2wqO8mO1VokzAMosDQu0P9ux11DBmze2HfeQd72cpcjKqD2zVFImNFJarQWvToykiKGyMx5gVgpwWT-pDgaAAwPSZXbHQyN-E3TbCFRtrTvTgC994r6xah36zj9bbCyPvxU6dy2tWkBbkhYfwOTW5-qntiIg-_R91_dLQpGoKZV-T7W48yJ6kgFElq1FDjOLzvgSI_YdnygWm6asjrucxM-rbv07_ObiTqC9GK1eieel07yHvUrpIwvfm0MnTQK-ICijtiOSPA
+X-Notifications-Version: 2
+```
+#### Response 200 OK
+##### Headers
+```
+Content-Length: 405
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 06 Oct 2015 21:22:19 GMT
+```
+##### Body
+```
+{
+  "_links": {
+    "self": {
+      "href": "/senders/679de949-023a-abf9-bad0-32dd1f531bb9/campaign_types"
     },
+    "sender": {
+      "href": "/senders/679de949-023a-abf9-bad0-32dd1f531bb9"
+    }
+  },
+  "campaign_types": [
     {
-      "html":"Template HTML",
-      "id":"a75e8837-daeb-419b-500a-442f64657de4",
-      "metadata":{},
-      "name":"another-template",
-      "subject":"HTML Subject",
-      "text":""
+      "_links": {
+        "self": {
+          "href": "/campaign_types/906104fe-4208-5c46-6894-1fa0e65c3d73"
+        }
+      },
+      "critical": false,
+      "description": "a great campaign type",
+      "id": "906104fe-4208-5c46-6894-1fa0e65c3d73",
+      "name": "some-campaign-type",
+      "template_id": ""
     }
   ]
 }
 ```
 
-##### Response
-
-###### Status
+<a name="campaign-type-get"></a>
+### Retrieve a campaign type
+#### Request **GET** /senders/{id}/campaign_types/{id}
+##### Required Scopes
 ```
-200 OK
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
 ```
-
-###### Body
-| Fields   | Description |
-| -------- | ----------- |
-| id       | Template ID   |
-| name     | Template name |
-| html     | Template html body               |
-| text     | Template text body               |
-| subject  | Template subject                 |
-| metadata | Template metadata in JSON format |
-
-<a name="retrieve-template"></a>
-#### Retrieving a Template
-
-##### Request
-
-###### Headers
+##### Headers
 ```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3MzksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.eo13IleXhSxNJItX4qa8G-zq5JkZI5bu-aRg9hAwGE-5OpJS2h4rTFksWmCUsqjDk3xVHpJZoIjC2wqO8mO1VokzAMosDQu0P9ux11DBmze2HfeQd72cpcjKqD2zVFImNFJarQWvToykiKGyMx5gVgpwWT-pDgaAAwPSZXbHQyN-E3TbCFRtrTvTgC994r6xah36zj9bbCyPvxU6dy2tWkBbkhYfwOTW5-qntiIg-_R91_dLQpGoKZV-T7W48yJ6kgFElq1FDjOLzvgSI_YdnygWm6asjrucxM-rbv07_ObiTqC9GK1eieel07yHvUrpIwvfm0MnTQK-ICijtiOSPA
+X-Notifications-Version: 2
 ```
-\* The token requires `notifications.write` scope.
-
-###### Route
+#### Response 200 OK
+##### Headers
 ```
-GET /templates/{templateID}
-```
-###### Params
-
-| Key          | Description                                |
-| ------------ | ------------------------------------------ |
-| templateID\* | the "id" returned when creating a template |
-
-\* required
-
-###### CURL example
-```
-$ curl -i -X GET \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  http://notifications.example.com/templates/54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5
-
-HTTP/1.1 200 OK
-Content-Length: 138
+Content-Length: 228
 Content-Type: text/plain; charset=utf-8
-Date: Fri, 17 Jul 2015 19:30:32 GMT
-X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
-
+Date: Tue, 06 Oct 2015 21:22:19 GMT
+```
+##### Body
+```
 {
-  "html":"",
-  "id":"54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5",
-  "metadata":{},
-  "name":"my-template",
-  "subject":"{{.Subject}}",
-  "text":"template text"
-}
-```
-
-##### Response
-
-###### Status
-```
-200 OK
-```
-
-###### Body
-| Fields   | Description                      |
-| -------- | -------------------------------- |
-| id       | System-generated template ID     |
-| name     | Template name                    |
-| html     | Template html body               |
-| text     | Template text body               |
-| subject  | Template subject                 |
-| metadata | Template metadata in JSON format |
-
-<a name="update-template"></a>
-#### Updating a Template
-
-##### Request
-
-###### Headers
-```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
-```
-\* The token requires `notifications.write` scope.
-
-###### Route
-```
-PUT /templates/{template_id}
-```
-
-###### Params
-| Key          | Description                                |
-| -------------| ------------------------------------------ |
-| templateID\* | The "id" returned when creating a template |
-
-###### Fields
-
-| Key      | Description                                 |
-| -------- | ------------------------------------------- |
-| name     | the human-readable name given to a template |
-| html     | Template html body                          |
-| text     | Template text body                          |
-| subject  | Template subject                            |
-| metadata | Template metadata in JSON format            |
-
-###### CURL example
-```
-$ curl -i -X PUT \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"text": "updated text"}'
-  http://notifications.example.com/templates/54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5
-
-HTTP/1.1 200 OK
-Content-Length: 163
-Content-Type: text/plain; charset=utf-8
-Date: Fri, 17 Jul 2015 19:30:32 GMT
-X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
-
-{
-  "html":"",
-  "id":"54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5",
-  "metadata":{},
-  "name":"my-template",
-  "subject":"{{.Subject}}",
-  "text":"updated text"
-}
-```
-
-##### Response
-
-###### Status
-```
-200 OK
-```
-
-###### Body
-| Fields   | Description                      |
-| -------- | -------------------------------- |
-| id       | System-generated template ID     |
-| name     | Template name                    |
-| html     | Template html body               |
-| text     | Template text body               |
-| subject  | Template subject                 |
-| metadata | Template metadata in JSON format |
-
-<a name="delete-template"></a>
-#### Deleting a Template
-
-##### Request
-
-###### Headers
-```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
-```
-\* The token requires `notifications.write` scope.
-
-###### Route
-```
-DELETE /templates/{templateID}
-```
-###### Params
-
-| Key          | Description                                |
-| ------------ | ------------------------------------------ |
-| templateID\* | the "id" returned when creating a template |
-
-\* required
-
-###### CURL example
-```
-$ curl -i -X DELETE \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  http://notifications.example.com/templates/54b39e0a-3c90-11e5-b0b3-10ddb1cec8d5
-
-HTTP/1.1 204 No Content
-Content-Length: 0
-Content-Type: text/plain; charset=utf-8
-Date: Fri, 17 Jul 2015 19:30:32 GMT
-X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
-```
-
-##### Response
-
-###### Status
-```
-200 OK
-```
-
-## Campaign types
-
-<a name="create-campaign-type"></a>
-#### Creating a Campaign Type
-
-##### Request
-
-###### Headers
-```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
-```
-\* The token requires `notifications.write` scope.
-\*\* Creation of a critical campaign type requires `critical_notifications.write` scope.
-
-###### Route
-```
-POST /senders/<sender-id>/campaign-types
-```
-###### Params
-
-| Key                       | Description                                                         |
-| ------------------------- | ------------------------------------------------------------------- |
-| name\*                    | the human-readable name given to a campaign type                |
-| description\*             | the human-readable description given to a campaign type         |
-| critical (default: false) | a flag to indicate whether the campaign type is critical or not |
-| template_id               | the ID of a template to use for this campaign type              |
-
-\* required
-
-###### CURL example
-```
-$ curl -i -X POST \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{"name":"my-campaign-type","description":"campaign type description","critical":false,"template_id":""}'
-  http://notifications.mrorange.cfla.cf-app.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types
-
-HTTP/1.1 201 Created
-Content-Length: 155
-Content-Type: text/plain; charset=utf-8
-Date: Wed, 22 Jul 2015 16:00:37 GMT
-X-Cf-Requestid: 6106873b-14ea-4fd9-6418-946c1651e4ac
-
-{
-  "critical":false,
-  "description":"campaign type description",
-  "id":"3d9aa963-97bb-4b48-4c3c-ecccad6314f8",
-  "name":"my-campaign-type",
-  "template_id":""
-}
-```
-
-##### Response
-
-###### Status
-```
-201 Created
-```
-
-###### Body
-| Fields        | Description                           |
-| ------------- | ------------------------------------- |
-| id            | System-generated campaign type ID |
-| name          | Campaign type name                |
-| description   | Campaign type description         |
-| critical      | Critical campaign type flag       |
-| template_id   | Template ID                           |
-
-<a name="list-campaign-types"></a>
-#### Listing your Campaign Types
-
-##### Request
-
-###### Headers
-```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
-```
-\* The token requires `notifications.write` scope.
-\*\* Creation of a critical campaign type requires `critical_notifications.write` scope.
-
-###### Route
-```
-GET /senders/<sender-id>/campaign-types
-```
-###### CURL example
-```
-$ curl -i -X GET \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types
-
-HTTP/1.1 200 OK
-Date: Thu, 23 Jul 2015 19:22:46 GMT
-Content-Length: 180
-Content-Type: text/plain; charset=utf-8
-
-{
-  "campaign_types":[
-    {
-      "critical":false,
-      "description":"campaign type description",
-      "id":"702ce4c7-93a0-42b5-4fd5-4d0ed68e2cd7",
-      "name":"my-campaign-type",
-      "template_id":""
+  "_links": {
+    "self": {
+      "href": "/campaign_types/906104fe-4208-5c46-6894-1fa0e65c3d73"
     }
-  ]
+  },
+  "critical": false,
+  "description": "a great campaign type",
+  "id": "906104fe-4208-5c46-6894-1fa0e65c3d73",
+  "name": "some-campaign-type",
+  "template_id": ""
 }
 ```
 
-##### Response
-
-###### Status
+<a name="campaign-type-update"></a>
+### Update a campaign type
+#### Request **PUT** /senders/{id}/campaign_types/{id}
+##### Required Scopes
 ```
-200 OK
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
 ```
-
-###### Body
-| Fields             | Description                           |
-| ------------------ | ------------------------------------- |
-| campaign_types | The array of campaign types       |
-| id                 | System-generated campaign type ID |
-| name               | Campaign type name                |
-| description        | Campaign type description         |
-| critical           | Critical campaign type flag       |
-| template_id        | Template ID                          |
-
-<a name="retrieve-campaign-type"></a>
-#### Retrieving a Campaign Type
-
-##### Request
-
-###### Headers
+##### Headers
 ```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3MzksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.eo13IleXhSxNJItX4qa8G-zq5JkZI5bu-aRg9hAwGE-5OpJS2h4rTFksWmCUsqjDk3xVHpJZoIjC2wqO8mO1VokzAMosDQu0P9ux11DBmze2HfeQd72cpcjKqD2zVFImNFJarQWvToykiKGyMx5gVgpwWT-pDgaAAwPSZXbHQyN-E3TbCFRtrTvTgC994r6xah36zj9bbCyPvxU6dy2tWkBbkhYfwOTW5-qntiIg-_R91_dLQpGoKZV-T7W48yJ6kgFElq1FDjOLzvgSI_YdnygWm6asjrucxM-rbv07_ObiTqC9GK1eieel07yHvUrpIwvfm0MnTQK-ICijtiOSPA
+X-Notifications-Version: 2
 ```
-\* The token requires `notifications.write` scope.
-
-###### Route
+##### Body
 ```
-GET /senders/<sender-id>/campaign-types/<campaign-type-id>
-```
-###### CURL example
-```
-$ curl -i -X GET \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  http://notifications.example.com/senders/4bbd0431-9f5b-49bb-701d-8c2caa755ed0/campaign_types/3369a6ae-22c5-4da9-7081-b35350c79c4c
-
-HTTP/1.1 200 OK
-Date: Tue, 28 Jul 2015 00:54:54 GMT
-Content-Length: 155
-Content-Type: text/plain; charset=utf-8
-
 {
-  "critical":false,
-  "description":"campaign type description",
-  "id":"3369a6ae-22c5-4da9-7081-b35350c79c4c",
-  "name":"my-campaign-type",
-  "template_id":""
+  "critical": true,
+  "description": "still the same great campaign type",
+  "name": "updated-campaign-type",
+  "template_id": "0a12e553-d83d-07d0-5e72-e2a3f43399f6"
 }
 ```
-
-##### Response
-
-###### Status
+#### Response 200 OK
+##### Headers
 ```
-200 OK
-```
-
-###### Body
-| Fields             | Description                           |
-| ------------------ | ------------------------------------- |
-| id                 | System-generated campaign type ID |
-| name               | Campaign type name                |
-| description        | Campaign type description         |
-| critical           | Critical campaign type flag       |
-| template_id        | Template ID                           |
-
-<a name="update-campaign-type"></a>
-#### Update a Campaign Type
-
-##### Request
-
-###### Headers
-```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
-```
-
-\* The token requires `notifications.write` scope.
-\*\* Updating a critical campaign type requires `critical_notifications.write` scope.
-
-###### Route
-```
-PUT /senders/<sender-id>/campaign_types/<campaign-type-id>
-```
-
-###### CURL example
-```
-$ curl -i -X PUT \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  --data '{"name": "new campaign type", "description": "new campaign description", "critical": true}' \
-  http://notifications.example.com/senders/a6c38f92-8fa9-488b-4f4c-7f4d4e0c0fd2/campaign_types/5cbc4458-3dba-481b-74c3-4548114b830b
-
-HTTP/1.1 200 OK
-Content-Length: 146
+Content-Length: 279
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 04 Aug 2015 20:47:35 GMT
-
+Date: Tue, 06 Oct 2015 21:22:19 GMT
+```
+##### Body
+```
 {
-  "critical":true,
-  "description":"new campaign description",
-  "id":"5cbc4458-3dba-481b-74c3-4548114b830b",
-  "name":"new campaign type",
-  "template_id":""
+  "_links": {
+    "self": {
+      "href": "/campaign_types/906104fe-4208-5c46-6894-1fa0e65c3d73"
+    }
+  },
+  "critical": true,
+  "description": "still the same great campaign type",
+  "id": "906104fe-4208-5c46-6894-1fa0e65c3d73",
+  "name": "updated-campaign-type",
+  "template_id": "0a12e553-d83d-07d0-5e72-e2a3f43399f6"
 }
 ```
 
-##### Response
-
-###### Status
+<a name="campaign-type-delete"></a>
+### Delete a campaign type
+#### Request **DELETE** /senders/{id}/campaign_types/{id}
+##### Required Scopes
 ```
-200 OK
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
 ```
-
-###### Body
-| Fields             | Description                           |
-| ------------------ | ------------------------------------- |
-| id                 | System-generated campaign type ID |
-| name               | Campaign type name                |
-| description        | Campaign type description         |
-| critical           | Critical campaign type flag       |
-| template_id        | Template ID                           |
-
-<a name="delete-campaign-type"></a>
-#### Deleting a Campaign Type
-
-##### Request
-
-###### Headers
+##### Headers
 ```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3MzksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.eo13IleXhSxNJItX4qa8G-zq5JkZI5bu-aRg9hAwGE-5OpJS2h4rTFksWmCUsqjDk3xVHpJZoIjC2wqO8mO1VokzAMosDQu0P9ux11DBmze2HfeQd72cpcjKqD2zVFImNFJarQWvToykiKGyMx5gVgpwWT-pDgaAAwPSZXbHQyN-E3TbCFRtrTvTgC994r6xah36zj9bbCyPvxU6dy2tWkBbkhYfwOTW5-qntiIg-_R91_dLQpGoKZV-T7W48yJ6kgFElq1FDjOLzvgSI_YdnygWm6asjrucxM-rbv07_ObiTqC9GK1eieel07yHvUrpIwvfm0MnTQK-ICijtiOSPA
+X-Notifications-Version: 2
+```
+#### Response 204 No Content
+##### Headers
+```
+Date: Tue, 06 Oct 2015 21:22:19 GMT
 ```
 
-\* The token requires `notifications.write` scope.
-
-###### Route
-```
-DELETE /senders/<sender-id>/campaign_types/<campaign-type-id>
-```
-
-###### CURL example
-```
-$ curl -i -X DELETE \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  http://notifications.example.com/senders/a6c38f92-8fa9-488b-4f4c-7f4d4e0c0fd2/campaign_types/5cbc4458-3dba-481b-74c3-4548114b830b
-
-204 No Content
-RESPONSE HEADERS:
-  Date: Wed, 05 Aug 2015 22:24:15 GMT
-  Connection: close
-RESPONSE BODY:
-```
-
-##### Response
-
-###### Status
-```
-204 No Content
-```
 
 ## Campaigns
-
-<a name="send-campaign"></a>
-#### Sending a Campaign
-
-##### Request
-
-###### Headers
+EVAN WILL EDIT THIS
+<a name="campaign-create"></a>
+### Create a new campaign
+#### Request **POST** /senders/{id}/campaigns
+##### Required Scopes
 ```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
 ```
-\* The token requires `notifications.write` scope.
-\*\* Sending a critical campaign type requires `critical_notifications.write` scope.
-
-###### Route
+##### Headers
 ```
-POST /sender/{sender-id}/campaigns
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3MzksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.eo13IleXhSxNJItX4qa8G-zq5JkZI5bu-aRg9hAwGE-5OpJS2h4rTFksWmCUsqjDk3xVHpJZoIjC2wqO8mO1VokzAMosDQu0P9ux11DBmze2HfeQd72cpcjKqD2zVFImNFJarQWvToykiKGyMx5gVgpwWT-pDgaAAwPSZXbHQyN-E3TbCFRtrTvTgC994r6xah36zj9bbCyPvxU6dy2tWkBbkhYfwOTW5-qntiIg-_R91_dLQpGoKZV-T7W48yJ6kgFElq1FDjOLzvgSI_YdnygWm6asjrucxM-rbv07_ObiTqC9GK1eieel07yHvUrpIwvfm0MnTQK-ICijtiOSPA
+X-Notifications-Version: 2
 ```
-###### Params
-
-| Key                | Description                               |
-| ------------------ | ----------------------------------------- |
-| send_to\*          | audience to deliver to |
-| campaign_type_id\* | id of the previously created campaign |
-| text\*\*		     | the text of your email |
-| html\*\*		     | the html of your email |
-| subject\*		     | subject of the email |
-| template_id	     | the id of the template you would like to use |
-| reply_to		     | email address used for replies |
-
-\* required
-\*\* either text or html have to be set, not both
-
-###### Supported Audience Types
-- user (provide a user GUID)
-- space (provide a space GUID)
-- org (provide an org GUID)
-- email (provide an email address)
-
-###### CURL example
+##### Body
 ```
-$ curl -i -X POST \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  -H "Authorization: Bearer <CLIENT-TOKEN>" \
-  -d '{
-  	"send_to": {
-      "user": "c033fc5a-5878-45ca-8f7b-66f1857cfabc"
-    },
-    "campaign_type_id":"49b3bad1-a897-44eb-ab38-05c5725dfcb8",
-    "text":"this is an email",
-    "subject":"this is a subject",
-    "template_id":"8a947854-68d0-4914-9740-12e60743b0b9"
-  }'
-  http://notifications.example.com/senders/555a8e36-89da-48a2-8091-01881acd5051/campaigns
-
-HTTP/1.1 202 Accepted
-Content-Length: 57
-Content-Type: text/plain; charset=utf-8
-Date: Fri, 17 Jul 2015 19:30:32 GMT
-X-Cf-Requestid: ce9f6b5a-317d-4d0f-7197-df63540c7f22
-
 {
-  "campaign_id": "7e45da15-acac-441d-912f-e18d306eae83"
-}
-```
-
-##### Response
-
-###### Status
-```
-202 Accepted
-```
-
-###### Body
-| Fields      | Description                  |
-| ----------- | ---------------------------- |
-| campaign_id | System-generated campaign ID |
-
-<a name="retrieve-campaign"></a>
-#### Retrieving a Campaign
-
-##### Request
-
-###### Headers
-```
-X-NOTIFICATIONS-VERSION: 2
-Authorization: Bearer <CLIENT-TOKEN>
-```
-\* The token requires `notifications.write` scope.
-
-###### Route
-```
-GET /sender/{sender-id}/campaigns/{campaign-id}
-```
-
-###### Params
-| Key          | Description                                |
-| ------------ | ------------------------------------------ |
-| senderID\*   | The "id" of the sender of the campaign     |
-| campaignID\* | The "id" returned when creating a campaign |
-
-\* required
-
-###### CURL example
-```
-$ curl -i -X GET \
-  -H "Authorization: bearer <CLIENT-TOKEN>" \
-  -H "X-NOTIFICATIONS-VERSION: 2" \
-  http://notifications.example.com/senders/6b0f094b-1b46-43d2-6dc7-a2529f7f608c/campaigns/f3ffab6a-3ec0-4934-4776-e068d6292bbd
-
-HTTP/1.1 200 OK
-Date: Wed, 02 Sep 2015 22:09:33 GMT
-Content-Length: 348
-Content-Type: text/plain; charset=utf-8
-
-{
-  "campaign_type_id":"c8c79a1c-d805-4ab5-733e-d20368cf8b7c",
-  "html":"<h1>{{.HTML}}</h1>",
-  "reply_to":"reply@example.com",
-  "send_to":{
-    "email":"me@example.com"
+  "campaign_type_id": "a18abeb5-3550-a383-ef35-9d8f14ae5476",
+  "reply_to": "no-reply@example.com",
+  "send_to": {
+    "email": "test@example.com"
   },
-  "subject":"Campaign Subject",
-  "template_id":"302540ac-31f1-477f-4d7b-11213ebc35e0",
-  "text":"campaign text",
-  "id":"f3ffab6a-3ec0-4934-4776-e068d6292bbd"
+  "subject": "campaign subject",
+  "template_id": "505ba60f-38e6-2efd-42b3-24dae6362acd",
+  "text": "campaign body"
+}
+```
+#### Response 202 Accepted
+##### Headers
+```
+Content-Length: 593
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 06 Oct 2015 21:22:19 GMT
+```
+##### Body
+```
+{
+  "_links": {
+    "campaign_type": {
+      "href": "/campaign_types/a18abeb5-3550-a383-ef35-9d8f14ae5476"
+    },
+    "self": {
+      "href": "/campaigns/b3a56525-a8c3-c357-a7f2-662afda384f4"
+    },
+    "status": {
+      "href": "/campaigns/b3a56525-a8c3-c357-a7f2-662afda384f4/status"
+    },
+    "template": {
+      "href": "/templates/505ba60f-38e6-2efd-42b3-24dae6362acd"
+    }
+  },
+  "campaign_type_id": "a18abeb5-3550-a383-ef35-9d8f14ae5476",
+  "html": "",
+  "id": "b3a56525-a8c3-c357-a7f2-662afda384f4",
+  "reply_to": "no-reply@example.com",
+  "send_to": {
+    "email": "test@example.com"
+  },
+  "subject": "campaign subject",
+  "template_id": "505ba60f-38e6-2efd-42b3-24dae6362acd",
+  "text": "campaign body"
 }
 ```
 
-##### Response
-
-###### Status
+<a name="campaign-get"></a>
+### Retrieve a campaign
+#### Request **GET** /campaigns/{id}
+##### Required Scopes
 ```
-200 OK
+notifications.manage notifications.write emails.write notification_preferences.admin critical_notifications.write notification_templates.admin notification_templates.write notification_templates.read
+```
+##### Headers
+```
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJteS1jbGllbnQiLCJleHAiOjE0NDQ0MjU3MzksImlzcyI6Imh0dHA6Ly8xMjcuMC4wLjE6NTY2NTMvb2F1dGgvdG9rZW4iLCJzY29wZSI6WyJub3RpZmljYXRpb25zLm1hbmFnZSIsIm5vdGlmaWNhdGlvbnMud3JpdGUiLCJlbWFpbHMud3JpdGUiLCJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMuYWRtaW4iLCJjcml0aWNhbF9ub3RpZmljYXRpb25zLndyaXRlIiwibm90aWZpY2F0aW9uX3RlbXBsYXRlcy5hZG1pbiIsIm5vdGlmaWNhdGlvbl90ZW1wbGF0ZXMud3JpdGUiLCJub3RpZmljYXRpb25fdGVtcGxhdGVzLnJlYWQiXX0.eo13IleXhSxNJItX4qa8G-zq5JkZI5bu-aRg9hAwGE-5OpJS2h4rTFksWmCUsqjDk3xVHpJZoIjC2wqO8mO1VokzAMosDQu0P9ux11DBmze2HfeQd72cpcjKqD2zVFImNFJarQWvToykiKGyMx5gVgpwWT-pDgaAAwPSZXbHQyN-E3TbCFRtrTvTgC994r6xah36zj9bbCyPvxU6dy2tWkBbkhYfwOTW5-qntiIg-_R91_dLQpGoKZV-T7W48yJ6kgFElq1FDjOLzvgSI_YdnygWm6asjrucxM-rbv07_ObiTqC9GK1eieel07yHvUrpIwvfm0MnTQK-ICijtiOSPA
+X-Notifications-Version: 2
+```
+#### Response 200 OK
+##### Headers
+```
+Content-Length: 593
+Content-Type: text/plain; charset=utf-8
+Date: Tue, 06 Oct 2015 21:22:19 GMT
+```
+##### Body
+```
+{
+  "_links": {
+    "campaign_type": {
+      "href": "/campaign_types/a18abeb5-3550-a383-ef35-9d8f14ae5476"
+    },
+    "self": {
+      "href": "/campaigns/b3a56525-a8c3-c357-a7f2-662afda384f4"
+    },
+    "status": {
+      "href": "/campaigns/b3a56525-a8c3-c357-a7f2-662afda384f4/status"
+    },
+    "template": {
+      "href": "/templates/505ba60f-38e6-2efd-42b3-24dae6362acd"
+    }
+  },
+  "campaign_type_id": "a18abeb5-3550-a383-ef35-9d8f14ae5476",
+  "html": "",
+  "id": "b3a56525-a8c3-c357-a7f2-662afda384f4",
+  "reply_to": "no-reply@example.com",
+  "send_to": {
+    "email": "test@example.com"
+  },
+  "subject": "campaign subject",
+  "template_id": "505ba60f-38e6-2efd-42b3-24dae6362acd",
+  "text": "campaign body"
+}
 ```
 
-###### Body
-| Fields           | Description                                  |
-| ---------------- | -------------------------------------------- |
-| id               | the id of the campaign                       |
-| send_to          | audience to deliver to                       |
-| campaign_type_id | id of the previously created campaign        |
-| text		         | the text of your email                       |
-| html		         | the html of your email                       |
-| subject		       | subject of the email                         |
-| template_id	     | the id of the template you would like to use |
-| reply_to		     | email address used for replies               |
+

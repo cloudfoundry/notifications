@@ -42,9 +42,9 @@ var _ = Describe("Template lifecycle", func() {
 
 	BeforeEach(func() {
 		client = support.NewClient(support.Config{
-			Host:          Servers.Notifications.URL(),
-			Trace:         Trace,
-			DocCollection: docCollection,
+			Host:              Servers.Notifications.URL(),
+			Trace:             Trace,
+			RoundTripRecorder: roundtripRecorder,
 		})
 		token = GetClientTokenFor("my-client")
 	})
@@ -53,7 +53,7 @@ var _ = Describe("Template lifecycle", func() {
 		By("creating a template", func() {
 			var response templateResponse
 
-			client.Document()
+			client.Document("template-create")
 			status, err := client.DoTyped("POST", "/templates", map[string]interface{}{
 				"name":    "An interesting template",
 				"text":    "template text",
@@ -80,7 +80,7 @@ var _ = Describe("Template lifecycle", func() {
 		By("getting the template", func() {
 			var response templateResponse
 
-			client.Document()
+			client.Document("template-get")
 			status, err := client.DoTyped("GET", fmt.Sprintf("/templates/%s", templateID), nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
@@ -97,7 +97,7 @@ var _ = Describe("Template lifecycle", func() {
 		By("updating the template", func() {
 			var response templateResponse
 			url := fmt.Sprintf("/templates/%s", templateID)
-			client.Document()
+			client.Document("template-update")
 			status, err := client.DoTyped("PUT", url, map[string]interface{}{
 				"name":    "A more interesting template",
 				"text":    "text",
@@ -152,7 +152,7 @@ var _ = Describe("Template lifecycle", func() {
 		By("listing all templates", func() {
 			var response templatesListResponse
 
-			client.Document()
+			client.Document("template-list")
 			status, err := client.DoTyped("GET", "/templates", nil, token.Access, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
@@ -165,7 +165,7 @@ var _ = Describe("Template lifecycle", func() {
 		})
 
 		By("deleting the template", func() {
-			client.Document()
+			client.Document("template-delete")
 			status, _, err := client.Do("DELETE", fmt.Sprintf("/templates/%s", templateID), nil, token.Access)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNoContent))
