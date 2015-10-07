@@ -14,12 +14,20 @@ const (
 	RequestReceivedTime = "request_received_time"
 )
 
-type RequestLogging struct {
-	logger lager.Logger
+type clock interface {
+	Now() time.Time
 }
 
-func NewRequestLogging(logger lager.Logger) RequestLogging {
-	return RequestLogging{logger}
+type RequestLogging struct {
+	logger lager.Logger
+	clock  clock
+}
+
+func NewRequestLogging(logger lager.Logger, clock clock) RequestLogging {
+	return RequestLogging{
+		logger: logger,
+		clock:  clock,
+	}
 }
 
 func (r RequestLogging) ServeHTTP(response http.ResponseWriter, request *http.Request, context stack.Context) bool {
@@ -42,7 +50,7 @@ func (r RequestLogging) ServeHTTP(response http.ResponseWriter, request *http.Re
 
 	context.Set("logger", logSession)
 	context.Set(VCAPRequestIDKey, requestID)
-	context.Set(RequestReceivedTime, time.Now().UTC())
+	context.Set(RequestReceivedTime, r.clock.Now().UTC())
 
 	return true
 }

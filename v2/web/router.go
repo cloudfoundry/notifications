@@ -52,8 +52,11 @@ type Config struct {
 }
 
 func NewRouter(mx muxer, config Config) http.Handler {
+	clock := util.NewClock()
+	guidGenerator := util.NewIDGenerator(rand.Reader)
+
 	requestCounter := middleware.NewRequestCounter(mx.GetRouter(), metrics.DefaultLogger)
-	logging := middleware.NewRequestLogging(config.Logger)
+	requestLogging := middleware.NewRequestLogging(config.Logger, clock)
 	notificationsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.write")
 	notificationsAdminAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.admin")
 	unsubscribesAuthenticator := middleware.NewUnsubscribesAuthenticator(config.UAAPublicKey)
@@ -79,12 +82,11 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	campaignEnqueuer := queue.NewCampaignEnqueuer(config.Queue)
 
-	guidGenerator := util.NewIDGenerator(rand.Reader)
 	sendersRepository := models.NewSendersRepository(guidGenerator.Generate)
 	campaignTypesRepository := models.NewCampaignTypesRepository(guidGenerator.Generate)
 	templatesRepository := models.NewTemplatesRepository(guidGenerator.Generate)
 	campaignsRepository := models.NewCampaignsRepository(guidGenerator.Generate)
-	messagesRepository := models.NewMessagesRepository(util.NewClock(), guidGenerator.Generate)
+	messagesRepository := models.NewMessagesRepository(clock, guidGenerator.Generate)
 	unsubscribersRepository := models.NewUnsubscribersRepository(guidGenerator.Generate)
 
 	sendersCollection := collections.NewSendersCollection(sendersRepository, campaignTypesRepository)
@@ -95,30 +97,30 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	unsubscribersCollection := collections.NewUnsubscribersCollection(unsubscribersRepository, campaignTypesRepository, userFinder)
 
 	root.Routes{
-		RequestLogging: logging,
+		RequestLogging: requestLogging,
 	}.Register(mx)
 
 	info.Routes{
 		RequestCounter: requestCounter,
-		RequestLogging: logging,
+		RequestLogging: requestLogging,
 	}.Register(mx)
 
 	senders.Routes{
-		RequestLogging:    logging,
+		RequestLogging:    requestLogging,
 		Authenticator:     notificationsWriteAuthenticator,
 		DatabaseAllocator: databaseAllocator,
 		SendersCollection: sendersCollection,
 	}.Register(mx)
 
 	campaigntypes.Routes{
-		RequestLogging:          logging,
+		RequestLogging:          requestLogging,
 		Authenticator:           notificationsWriteAuthenticator,
 		DatabaseAllocator:       databaseAllocator,
 		CampaignTypesCollection: campaignTypesCollection,
 	}.Register(mx)
 
 	templates.Routes{
-		RequestLogging:      logging,
+		RequestLogging:      requestLogging,
 		WriteAuthenticator:  notificationsWriteAuthenticator,
 		AdminAuthenticator:  notificationsAdminAuthenticator,
 		DatabaseAllocator:   databaseAllocator,
@@ -126,8 +128,8 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	}.Register(mx)
 
 	campaigns.Routes{
-		Clock:                      util.NewClock(),
-		RequestLogging:             logging,
+		Clock:                      clock,
+		RequestLogging:             requestLogging,
 		Authenticator:              notificationsWriteAuthenticator,
 		DatabaseAllocator:          databaseAllocator,
 		CampaignsCollection:        campaignsCollection,
@@ -135,7 +137,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	}.Register(mx)
 
 	unsubscribers.Routes{
-		RequestLogging:          logging,
+		RequestLogging:          requestLogging,
 		Authenticator:           unsubscribesAuthenticator,
 		DatabaseAllocator:       databaseAllocator,
 		UnsubscribersCollection: unsubscribersCollection,

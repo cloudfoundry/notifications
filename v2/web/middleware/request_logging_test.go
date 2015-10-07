@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/middleware"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
@@ -30,12 +31,14 @@ var _ = Describe("RequestLogging", func() {
 		context   stack.Context
 		logger    lager.Logger
 		logWriter *bytes.Buffer
+		clock     *mocks.Clock
 	)
 
 	BeforeEach(func() {
 		var err error
 		request, err = http.NewRequest("GET", "/some/path", nil)
 		Expect(err).NotTo(HaveOccurred())
+
 		request.Header.Set("X-Vcap-Request-Id", "some-request-id")
 		request.Header.Set("X-NOTIFICATIONS-VERSION", "2")
 
@@ -44,8 +47,11 @@ var _ = Describe("RequestLogging", func() {
 		logger.RegisterSink(lager.NewWriterSink(logWriter, lager.DEBUG))
 
 		writer = httptest.NewRecorder()
-		ware = middleware.NewRequestLogging(logger)
 		context = stack.NewContext()
+		clock = mocks.NewClock()
+		clock.NowCall.Returns.Time = time.Now()
+
+		ware = middleware.NewRequestLogging(logger, clock)
 	})
 
 	It("logs the request", func() {
@@ -93,12 +99,15 @@ var _ = Describe("RequestLogging", func() {
 	})
 
 	It("adds the current time to the context", func() {
+		now := time.Now()
+		clock.NowCall.Returns.Time = now
+
 		result := ware.ServeHTTP(writer, request, context)
 		Expect(result).To(BeTrue())
 
 		requestReceivedTime, ok := context.Get(middleware.RequestReceivedTime).(time.Time)
 		Expect(ok).To(BeTrue())
-		Expect(requestReceivedTime).To(BeTemporally("~", time.Now()))
+		Expect(requestReceivedTime).To(Equal(now.UTC()))
 	})
 
 	Context("when the request id is unknown", func() {

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/middleware"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/templates"
@@ -25,7 +26,7 @@ var _ = Describe("Routes", func() {
 	)
 
 	BeforeEach(func() {
-		logging = middleware.NewRequestLogging(lager.NewLogger("log-prefix"))
+		logging = middleware.NewRequestLogging(lager.NewLogger("log-prefix"), mocks.NewClock())
 		writeAuth = middleware.NewAuthenticator("some-public-key", "notifications.write")
 		adminAuth = middleware.NewAuthenticator("some-public-key", "notifications.admin")
 		dbAllocator = middleware.NewDatabaseAllocator(&sql.DB{}, false)

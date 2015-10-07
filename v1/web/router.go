@@ -52,6 +52,7 @@ type Config struct {
 
 func NewRouter(mx muxer, config Config) http.Handler {
 	guidGenerator := util.NewIDGenerator(rand.Reader)
+	clock := util.NewClock()
 
 	clientsRepo := models.NewClientsRepo()
 	kindsRepo := models.NewKindsRepo()
@@ -82,7 +83,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 		WaitMaxDuration: time.Duration(config.QueueWaitMaxDuration) * time.Millisecond,
 	})
 	v1enqueuer := services.NewEnqueuer(gobbleQueue, messagesRepo)
-	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, v2models.NewMessagesRepository(util.NewClock(), guidGenerator.Generate))
+	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, v2models.NewMessagesRepository(clock, guidGenerator.Generate))
 
 	uaaClient := uaa.NewZonedUAAClient(config.UAAClientID, config.UAAClientSecret, config.VerifySSL, config.UAAPublicKey)
 	cloudController := cf.NewCloudController(config.CCHost, !config.VerifySSL)
@@ -102,7 +103,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	errorWriter := webutil.NewErrorWriter()
 
 	requestCounter := middleware.NewRequestCounter(mx.GetRouter(), metrics.DefaultLogger)
-	logging := middleware.NewRequestLogging(config.Logger)
+	requestLogging := middleware.NewRequestLogging(config.Logger, clock)
 	databaseAllocator := middleware.NewDatabaseAllocator(config.SQLDB, config.DBLoggingEnabled)
 	cors := middleware.NewCORS(config.CORSOrigin)
 	auth := func(scope ...string) middleware.Authenticator {
@@ -111,13 +112,13 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	info.Routes{
 		RequestCounter: requestCounter,
-		RequestLogging: logging,
+		RequestLogging: requestLogging,
 	}.Register(mx)
 
 	preferences.Routes{
 		CORS:                                      cors,
 		RequestCounter:                            requestCounter,
-		RequestLogging:                            logging,
+		RequestLogging:                            requestLogging,
 		DatabaseAllocator:                         databaseAllocator,
 		NotificationPreferencesReadAuthenticator:  auth("notification_preferences.read"),
 		NotificationPreferencesWriteAuthenticator: auth("notification_preferences.write"),
@@ -130,7 +131,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	clients.Routes{
 		RequestCounter:                   requestCounter,
-		RequestLogging:                   logging,
+		RequestLogging:                   requestLogging,
 		DatabaseAllocator:                databaseAllocator,
 		NotificationsManageAuthenticator: auth("notifications.manage"),
 
@@ -140,7 +141,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	messages.Routes{
 		RequestCounter:                               requestCounter,
-		RequestLogging:                               logging,
+		RequestLogging:                               requestLogging,
 		DatabaseAllocator:                            databaseAllocator,
 		NotificationsWriteOrEmailsWriteAuthenticator: auth("notifications.write", "emails.write"),
 
@@ -150,7 +151,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	templates.Routes{
 		RequestCounter:                          requestCounter,
-		RequestLogging:                          logging,
+		RequestLogging:                          requestLogging,
 		DatabaseAllocator:                       databaseAllocator,
 		NotificationTemplatesReadAuthenticator:  auth("notification_templates.read"),
 		NotificationTemplatesWriteAuthenticator: auth("notification_templates.write"),
@@ -167,7 +168,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	notifications.Routes{
 		RequestCounter:                   requestCounter,
-		RequestLogging:                   logging,
+		RequestLogging:                   requestLogging,
 		DatabaseAllocator:                databaseAllocator,
 		NotificationsWriteAuthenticator:  auth("notifications.write"),
 		NotificationsManageAuthenticator: auth("notifications.manage"),
@@ -181,7 +182,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	notify.Routes{
 		RequestCounter:                  requestCounter,
-		RequestLogging:                  logging,
+		RequestLogging:                  requestLogging,
 		DatabaseAllocator:               databaseAllocator,
 		NotificationsWriteAuthenticator: auth("notifications.write"),
 		EmailsWriteAuthenticator:        auth("emails.write"),
