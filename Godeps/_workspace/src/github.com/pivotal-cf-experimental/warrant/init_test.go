@@ -5,14 +5,14 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pivotal-cf-experimental/warrant/internal/server"
+	"github.com/pivotal-cf-experimental/warrant/testserver"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var (
-	fakeUAA          *server.UAA
+	fakeUAA          *testserver.UAA
 	fakeUAAPublicKey string
 	TraceWriter      io.Writer
 )
@@ -37,7 +37,7 @@ jfj9Cw2QICsc5+Pwf21fP+hzf+1WSRHbnYv8uanRO0gZ8ekGaghM/2H6gqJbo2nI
 JwIDAQAB
 -----END PUBLIC KEY-----`
 
-	fakeUAA = server.NewUAA(server.Config{
+	fakeUAA = testserver.NewUAA(testserver.Config{
 		PublicKey: fakeUAAPublicKey,
 	})
 	fakeUAA.Start()

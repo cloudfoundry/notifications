@@ -1,7 +1,6 @@
 package network_test
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -17,35 +16,33 @@ import (
 
 var unsupportedJSONType = func() {}
 
+type Request struct {
+	Body   string
+	Header http.Header
+}
+
 var _ = Describe("Client", func() {
 	var (
-		token      string
-		fakeServer *httptest.Server
-		client     network.Client
+		token           string
+		fakeServer      *httptest.Server
+		client          network.Client
+		receivedRequest *Request
 	)
 
 	BeforeEach(func() {
 		token = "TOKEN"
+		receivedRequest = &Request{}
 		fakeServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			requestBody, err := ioutil.ReadAll(req.Body)
-			if err != nil {
-				panic(err)
+			if req.Body != nil {
+				body, err := ioutil.ReadAll(req.Body)
+				if err != nil {
+					panic(err)
+				}
+
+				receivedRequest.Body = string(body)
 			}
 
-			var responseBody struct {
-				Body    string      `json:"body"`
-				Headers http.Header `json:"headers"`
-			}
-			responseBody.Body = string(requestBody)
-			responseBody.Headers = req.Header
-
-			response, err := json.Marshal(responseBody)
-			if err != nil {
-				panic(err)
-			}
-
-			w.WriteHeader(http.StatusOK)
-			w.Write(response)
+			receivedRequest.Header = req.Header
 		}))
 
 		client = network.NewClient(network.Config{
@@ -65,7 +62,7 @@ var _ = Describe("Client", func() {
 				"hello": "goodbye",
 			}
 
-			resp, err := client.MakeRequest(network.Request{
+			_, err := client.MakeRequest(network.Request{
 				Method:        "GET",
 				Path:          "/path",
 				Authorization: network.NewTokenAuthorization(token),
@@ -73,18 +70,13 @@ var _ = Describe("Client", func() {
 				AcceptableStatusCodes: []int{http.StatusOK},
 			})
 			Expect(err).NotTo(HaveOccurred())
-			Expect(resp.Code).To(Equal(http.StatusOK))
-			Expect(resp.Body).To(MatchJSON(`{
-				"body": "{\"hello\":\"goodbye\"}",
-				"headers": {
-					"Accept":          ["application/json"],
-					"Accept-Encoding": ["gzip"],
-					"Authorization":   ["Bearer TOKEN"],
-					"Content-Length":  ["19"],
-					"Content-Type":    ["application/json"],
-					"User-Agent":      ["Go 1.1 package http"]
-				}
-			}`))
+
+			Expect(receivedRequest.Body).To(MatchJSON(`{"hello": "goodbye"}`))
+			Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept", []string{"application/json"}))
+			Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept-Encoding", []string{"gzip"}))
+			Expect(receivedRequest.Header).To(HaveKeyWithValue("Authorization", []string{"Bearer TOKEN"}))
+			Expect(receivedRequest.Header).To(HaveKeyWithValue("Content-Length", []string{"19"}))
+			Expect(receivedRequest.Header).To(HaveKeyWithValue("Content-Type", []string{"application/json"}))
 		})
 
 		It("can make more requests than the total allowed number of open files", func() {
@@ -173,19 +165,14 @@ var _ = Describe("Client", func() {
 						Body:   network.NewJSONRequestBody(map[string]string{"hello": "world"}),
 						AcceptableStatusCodes: []int{http.StatusOK},
 					}
-					resp, err := client.MakeRequest(requestArgs)
+
+					_, err := client.MakeRequest(requestArgs)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(resp.Code).To(Equal(http.StatusOK))
-					Expect(resp.Body).To(MatchJSON(`{
-						"body": "{\"hello\":\"world\"}",
-						"headers":{
-							"Accept":          ["application/json"],
-							"Accept-Encoding": ["gzip"],
-							"Content-Length":  ["17"],
-							"Content-Type":    ["application/json"],
-							"User-Agent":      ["Go 1.1 package http"]
-						}
-					}`))
+					Expect(receivedRequest.Body).To(MatchJSON(`{"hello": "world"}`))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept", []string{"application/json"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept-Encoding", []string{"gzip"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Content-Length", []string{"17"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Content-Type", []string{"application/json"}))
 				})
 
 				It("includes a bearer Authorization header when there is token authorization", func() {
@@ -196,20 +183,15 @@ var _ = Describe("Client", func() {
 						Body:          network.NewJSONRequestBody(map[string]string{"hello": "world"}),
 						AcceptableStatusCodes: []int{http.StatusOK},
 					}
-					resp, err := client.MakeRequest(requestArgs)
+
+					_, err := client.MakeRequest(requestArgs)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(resp.Code).To(Equal(http.StatusOK))
-					Expect(resp.Body).To(MatchJSON(`{
-						"body": "{\"hello\":\"world\"}",
-						"headers":{
-							"Accept":          ["application/json"],
-							"Accept-Encoding": ["gzip"],
-							"Authorization":   ["Bearer TOKEN"],
-							"Content-Length":  ["17"],
-							"Content-Type":    ["application/json"],
-							"User-Agent":      ["Go 1.1 package http"]
-						}
-					}`))
+					Expect(receivedRequest.Body).To(MatchJSON(`{"hello": "world"}`))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept", []string{"application/json"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept-Encoding", []string{"gzip"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Authorization", []string{"Bearer TOKEN"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Content-Length", []string{"17"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Content-Type", []string{"application/json"}))
 				})
 
 				It("includes a basic Authorization header when there is basic authorization", func() {
@@ -220,20 +202,14 @@ var _ = Describe("Client", func() {
 						Body:          network.NewJSONRequestBody(map[string]string{"hello": "world"}),
 						AcceptableStatusCodes: []int{http.StatusOK},
 					}
-					resp, err := client.MakeRequest(requestArgs)
+					_, err := client.MakeRequest(requestArgs)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(resp.Code).To(Equal(http.StatusOK))
-					Expect(resp.Body).To(MatchJSON(`{
-						"body": "{\"hello\":\"world\"}",
-						"headers":{
-							"Accept":          ["application/json"],
-							"Accept-Encoding": ["gzip"],
-							"Authorization":   ["Basic dXNlcm5hbWU6cGFzc3dvcmQ="],
-							"Content-Length":  ["17"],
-							"Content-Type":    ["application/json"],
-							"User-Agent":      ["Go 1.1 package http"]
-						}
-					}`))
+					Expect(receivedRequest.Body).To(MatchJSON(`{"hello": "world"}`))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept", []string{"application/json"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept-Encoding", []string{"gzip"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Authorization", []string{"Basic dXNlcm5hbWU6cGFzc3dvcmQ="}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Content-Length", []string{"17"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Content-Type", []string{"application/json"}))
 				})
 			})
 
@@ -246,25 +222,19 @@ var _ = Describe("Client", func() {
 						Body:          network.NewJSONRequestBody(map[string]string{"hello": "world"}),
 						AcceptableStatusCodes: []int{http.StatusOK},
 					}
-					resp, err := client.MakeRequest(requestArgs)
+					_, err := client.MakeRequest(requestArgs)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(resp.Code).To(Equal(http.StatusOK))
-					Expect(resp.Body).To(MatchJSON(`{
-						"body": "{\"hello\":\"world\"}",
-						"headers":{
-							"Accept":          ["application/json"],
-							"Accept-Encoding": ["gzip"],
-							"Authorization":   ["Bearer TOKEN"],
-							"Content-Length":  ["17"],
-							"Content-Type":    ["application/json"],
-							"User-Agent":      ["Go 1.1 package http"]
-						}
-					}`))
+					Expect(receivedRequest.Body).To(MatchJSON(`{"hello": "world"}`))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept", []string{"application/json"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept-Encoding", []string{"gzip"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Authorization", []string{"Bearer TOKEN"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Content-Length", []string{"17"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Content-Type", []string{"application/json"}))
 				})
 			})
 
 			Context("when there is no JSON body", func() {
-				It("does not include the Content-Type header in the request", func() {
+				It("does not include the Content-Type or Content-Length headers in the request", func() {
 					requestArgs := network.Request{
 						Method:        "GET",
 						Path:          "/path",
@@ -272,18 +242,14 @@ var _ = Describe("Client", func() {
 						Body:          nil,
 						AcceptableStatusCodes: []int{http.StatusOK},
 					}
-					resp, err := client.MakeRequest(requestArgs)
+
+					_, err := client.MakeRequest(requestArgs)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(resp.Code).To(Equal(http.StatusOK))
-					Expect(resp.Body).To(MatchJSON(`{
-						"body": "",
-						"headers": {
-							"Accept":          ["application/json"],
-							"Accept-Encoding": ["gzip"],
-							"Authorization":   ["Bearer TOKEN"],
-							"User-Agent":      ["Go 1.1 package http"]
-						}
-					}`))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept", []string{"application/json"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept-Encoding", []string{"gzip"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Authorization", []string{"Bearer TOKEN"}))
+					Expect(receivedRequest.Header).NotTo(HaveKey("Content-Type"))
+					Expect(receivedRequest.Header).NotTo(HaveKey("Content-Length"))
 				})
 			})
 
@@ -297,19 +263,13 @@ var _ = Describe("Client", func() {
 						Body:          nil,
 						AcceptableStatusCodes: []int{http.StatusOK},
 					}
-					resp, err := client.MakeRequest(requestArgs)
+
+					_, err := client.MakeRequest(requestArgs)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(resp.Code).To(Equal(http.StatusOK))
-					Expect(resp.Body).To(MatchJSON(`{
-						"body": "",
-						"headers": {
-							"Accept":          ["application/json"],
-							"Accept-Encoding": ["gzip"],
-							"Authorization":   ["Bearer TOKEN"],
-							"If-Match":        ["45"],
-							"User-Agent":      ["Go 1.1 package http"]
-						}
-					}`))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept", []string{"application/json"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept-Encoding", []string{"gzip"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Authorization", []string{"Bearer TOKEN"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("If-Match", []string{"45"}))
 				})
 			})
 
@@ -322,18 +282,13 @@ var _ = Describe("Client", func() {
 						Body:          nil,
 						AcceptableStatusCodes: []int{http.StatusOK},
 					}
-					resp, err := client.MakeRequest(requestArgs)
+
+					_, err := client.MakeRequest(requestArgs)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(resp.Code).To(Equal(http.StatusOK))
-					Expect(resp.Body).To(MatchJSON(`{
-						"body": "",
-						"headers": {
-							"Accept":          ["application/json"],
-							"Accept-Encoding": ["gzip"],
-							"Authorization":   ["Bearer TOKEN"],
-							"User-Agent":      ["Go 1.1 package http"]
-						}
-					}`))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept", []string{"application/json"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Accept-Encoding", []string{"gzip"}))
+					Expect(receivedRequest.Header).To(HaveKeyWithValue("Authorization", []string{"Bearer TOKEN"}))
+					Expect(receivedRequest.Header).NotTo(HaveKey("If-Match"))
 				})
 			})
 		})

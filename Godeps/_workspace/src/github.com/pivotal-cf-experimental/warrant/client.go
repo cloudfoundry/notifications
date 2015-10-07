@@ -42,10 +42,10 @@ type Client struct {
 func newClientFromDocument(document documents.ClientResponse) Client {
 	return Client{
 		ID:                   document.ClientID,
-		Scope:                document.Scope,
-		ResourceIDs:          document.ResourceIDs,
-		Authorities:          document.Authorities,
-		AuthorizedGrantTypes: document.AuthorizedGrantTypes,
+		Scope:                sort(document.Scope),
+		ResourceIDs:          sort(document.ResourceIDs),
+		Authorities:          sort(document.Authorities),
+		AuthorizedGrantTypes: sort(document.AuthorizedGrantTypes),
 		AccessTokenValidity:  time.Duration(document.AccessTokenValidity) * time.Second,
 	}
 }

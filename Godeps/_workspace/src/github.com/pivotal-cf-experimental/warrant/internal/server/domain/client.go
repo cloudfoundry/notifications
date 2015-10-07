@@ -34,10 +34,10 @@ func NewClientFromDocument(document documents.CreateClientRequest) client {
 func (c client) ToDocument() documents.ClientResponse {
 	return documents.ClientResponse{
 		ClientID:             c.ID,
-		Scope:                c.Scope,
-		ResourceIDs:          c.ResourceIDs,
-		Authorities:          c.Authorities,
-		AuthorizedGrantTypes: c.AuthorizedGrantTypes,
+		Scope:                shuffle(c.Scope),
+		ResourceIDs:          shuffle(c.ResourceIDs),
+		Authorities:          shuffle(c.Authorities),
+		AuthorizedGrantTypes: shuffle(c.AuthorizedGrantTypes),
 		AccessTokenValidity:  c.AccessTokenValidity,
 	}
 }
