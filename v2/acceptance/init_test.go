@@ -1,6 +1,7 @@
 package acceptance
 
 import (
+	"crypto/rand"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,8 +11,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/docs"
 	"github.com/cloudfoundry-incubator/notifications/testing/servers"
+	"github.com/cloudfoundry-incubator/notifications/util"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/nu7hatch/gouuid"
 	"github.com/pivotal-cf-experimental/warrant"
 	"github.com/pivotal-cf-experimental/warrant/testserver"
 
@@ -126,20 +127,20 @@ var _ = AfterEach(func() {
 })
 
 func GetClientTokenWithScopes(scopes ...string) (string, error) {
-	id, err := uuid.NewV4()
+	id, err := util.NewIDGenerator(rand.Reader).Generate()
 	if err != nil {
 		return "", err
 	}
 
 	err = warrantClient.Clients.Create(warrant.Client{
-		ID:    id.String(),
+		ID:    id,
 		Scope: scopes,
 	}, "secret", adminToken)
 	if err != nil {
 		return "", err
 	}
 
-	token, err := warrantClient.Clients.GetToken(id.String(), "secret")
+	token, err := warrantClient.Clients.GetToken(id, "secret")
 	if err != nil {
 		return "", err
 	}
