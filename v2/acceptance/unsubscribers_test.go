@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/acceptance/support"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,8 +13,8 @@ import (
 var _ = Describe("Unsubscribers", func() {
 	var (
 		client      *support.Client
-		clientToken uaa.Token
-		userToken   uaa.Token
+		clientToken string
+		userToken   string
 
 		senderID, userGUID, campaignTypeID, templateID, campaignID string
 	)
@@ -25,16 +24,17 @@ var _ = Describe("Unsubscribers", func() {
 			Host:  Servers.Notifications.URL(),
 			Trace: Trace,
 		})
-		clientToken = GetClientTokenFor("my-client")
+		var err error
+		clientToken, err = GetClientTokenWithScopes("notifications.write")
+		Expect(err).NotTo(HaveOccurred())
 
 		status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 			"name": "my-sender",
-		}, clientToken.Access)
+		}, clientToken)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(status).To(Equal(http.StatusCreated))
 
-		userGUID = "user-123"
-		userToken = GetUserTokenFor(userGUID)
+		userToken, userGUID, err = GetUserTokenAndIdFor("user-123")
 		senderID = response["id"].(string)
 
 		By("creating a template", func() {
@@ -43,7 +43,7 @@ var _ = Describe("Unsubscribers", func() {
 				"text":    "campaign template {{.Text}}",
 				"html":    "{{.HTML}}",
 				"subject": "{{.Subject}}",
-			}, clientToken.Access)
+			}, clientToken)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -58,18 +58,30 @@ var _ = Describe("Unsubscribers", func() {
 					"name":        "some-campaign-type-name",
 					"description": "acceptance campaign type",
 					"template_id": templateID,
-				}, clientToken.Access)
+				}, clientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
 				campaignTypeID = response["id"].(string)
 			})
 
+			By("updating the client to have the notification_preferences.admin scope", func() {
+				var err error
+				clientToken, err = UpdateClientTokenWithDifferentScopes(clientToken, "notification_preferences.admin")
+				Expect(err).NotTo(HaveOccurred())
+			})
+
 			By("unsubscribing from the campaign type", func() {
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
-				status, _, err := client.Do("PUT", path, nil, clientToken.Access)
+				status, _, err := client.Do("PUT", path, nil, clientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNoContent))
+			})
+
+			By("resetting the client to have the notifications.write scope", func() {
+				var err error
+				clientToken, err = UpdateClientTokenWithDifferentScopes(clientToken, "notifications.write")
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			By("sending the campaign", func() {
@@ -81,7 +93,7 @@ var _ = Describe("Unsubscribers", func() {
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      templateID,
-				}, clientToken.Access)
+				}, clientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
 				Expect(response["id"]).NotTo(BeEmpty())
@@ -91,18 +103,30 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("waiting for the email to arrive", func() {
 				Eventually(func() (interface{}, error) {
-					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", campaignID), nil, clientToken.Access)
+					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", campaignID), nil, clientToken)
 					return response["status"], err
 				}).Should(Equal("completed"))
 
 				Expect(Servers.SMTP.Deliveries).To(HaveLen(0))
 			})
 
+			By("updating the client to have the notification_preferences.admin scope", func() {
+				var err error
+				clientToken, err = UpdateClientTokenWithDifferentScopes(clientToken, "notification_preferences.admin")
+				Expect(err).NotTo(HaveOccurred())
+			})
+
 			By("deleting the unsubscribe", func() {
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
-				status, _, err := client.Do("DELETE", path, nil, clientToken.Access)
+				status, _, err := client.Do("DELETE", path, nil, clientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNoContent))
+			})
+
+			By("resetting the client to have the notifications.write scope", func() {
+				var err error
+				clientToken, err = UpdateClientTokenWithDifferentScopes(clientToken, "notifications.write")
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			var secondCampaignID string
@@ -116,7 +140,7 @@ var _ = Describe("Unsubscribers", func() {
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      templateID,
-				}, clientToken.Access)
+				}, clientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
 				Expect(response["id"]).NotTo(BeEmpty())
@@ -126,7 +150,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("confirming that the email is received", func() {
 				Eventually(func() (interface{}, error) {
-					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", secondCampaignID), nil, clientToken.Access)
+					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", secondCampaignID), nil, clientToken)
 					return response["status"], err
 				}).Should(Equal("completed"))
 
@@ -140,22 +164,34 @@ var _ = Describe("Unsubscribers", func() {
 
 		Context("when attempting to unsubscribe from a critical notification", func() {
 			It("returns a 403 status code and reports an error message as JSON", func() {
+				By("updating the client to have the critical_notifications.write scope", func() {
+					var err error
+					clientToken, err = UpdateClientTokenWithDifferentScopes(clientToken, "notifications.write", "critical_notifications.write")
+					Expect(err).NotTo(HaveOccurred())
+				})
+
 				By("creating a campaign type", func() {
 					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 						"name":        "some-campaign-type-name",
 						"description": "acceptance campaign type",
 						"template_id": templateID,
 						"critical":    true,
-					}, clientToken.Access)
+					}, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 
 					campaignTypeID = response["id"].(string)
 				})
 
+				By("updating the client to have the notification_preferences.admin scope", func() {
+					var err error
+					clientToken, err = UpdateClientTokenWithDifferentScopes(clientToken, "notification_preferences.admin")
+					Expect(err).NotTo(HaveOccurred())
+				})
+
 				By("unsubscribing from the campaign type", func() {
 					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
-					status, response, err := client.Do("PUT", path, nil, clientToken.Access)
+					status, response, err := client.Do("PUT", path, nil, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusForbidden))
 					Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Campaign type %q cannot be unsubscribed from", campaignTypeID)))
@@ -165,20 +201,22 @@ var _ = Describe("Unsubscribers", func() {
 
 		Context("when the API client lacks the required scopes", func() {
 			It("returns a 403 status code for PUTting an unsubscribe", func() {
-				clientToken = GetClientTokenFor("non-admin-client")
+				otherClientToken, err := GetClientTokenWithScopes()
+				Expect(err).NotTo(HaveOccurred())
 
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "some-campaign-type-id", userGUID)
-				status, response, err := client.Do("PUT", path, nil, clientToken.Access)
+				status, response, err := client.Do("PUT", path, nil, otherClientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusForbidden))
 				Expect(response["errors"]).To(ContainElement("You are not authorized to perform the requested action"))
 			})
 
 			It("returns a 403 status code for DELETEing an unsubscribe", func() {
-				clientToken = GetClientTokenFor("non-admin-client")
+				otherClientToken, err := GetClientTokenWithScopes()
+				Expect(err).NotTo(HaveOccurred())
 
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "some-campaign-type-id", userGUID)
-				status, response, err := client.Do("DELETE", path, nil, clientToken.Access)
+				status, response, err := client.Do("DELETE", path, nil, otherClientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusForbidden))
 				Expect(response["errors"]).To(ContainElement("You are not authorized to perform the requested action"))
@@ -193,16 +231,22 @@ var _ = Describe("Unsubscribers", func() {
 						"name":        "some-campaign-type-name",
 						"description": "acceptance campaign type",
 						"template_id": templateID,
-					}, clientToken.Access)
+					}, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 
 					campaignTypeID = response["id"].(string)
 				})
 
+				By("updating the client to have the notification_preferences.admin scope", func() {
+					var err error
+					clientToken, err = UpdateClientTokenWithDifferentScopes(clientToken, "notification_preferences.admin")
+					Expect(err).NotTo(HaveOccurred())
+				})
+
 				By("unsubscribing from the campaign type", func() {
 					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, "not-a-user")
-					status, response, err := client.Do("PUT", path, nil, clientToken.Access)
+					status, response, err := client.Do("PUT", path, nil, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
 					Expect(response["errors"]).To(ContainElement("User \"not-a-user\" not found"))
@@ -210,7 +254,7 @@ var _ = Describe("Unsubscribers", func() {
 
 				By("removing an unsubscribe from the campaign type", func() {
 					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, "not-a-user")
-					status, response, err := client.Do("DELETE", path, nil, clientToken.Access)
+					status, response, err := client.Do("DELETE", path, nil, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
 					Expect(response["errors"]).To(ContainElement("User \"not-a-user\" not found"))
@@ -220,18 +264,35 @@ var _ = Describe("Unsubscribers", func() {
 
 		Context("when attempting to manage subscriptions for a non-existent campaign type", func() {
 			It("returns a 404 status code and reports the error message as JSON for PUTs", func() {
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "not-a-campaign-type", userGUID)
-				status, response, err := client.Do("PUT", path, nil, clientToken.Access)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(status).To(Equal(http.StatusNotFound))
-				Expect(response["errors"]).To(ContainElement("Campaign type with id \"not-a-campaign-type\" could not be found"))
+				By("updating the client to have the notification_preferences.admin scope", func() {
+					var err error
+					clientToken, err = UpdateClientTokenWithDifferentScopes(clientToken, "notification_preferences.admin")
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				By("attempting to unsubscribe the user from the campaign", func() {
+					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "not-a-campaign-type", userGUID)
+					status, response, err := client.Do("PUT", path, nil, clientToken)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(status).To(Equal(http.StatusNotFound))
+					Expect(response["errors"]).To(ContainElement("Campaign type with id \"not-a-campaign-type\" could not be found"))
+				})
 			})
+
 			It("returns a 404 status code and reports the error message as JSON for DELETEs", func() {
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "not-a-campaign-type", userGUID)
-				status, response, err := client.Do("DELETE", path, nil, clientToken.Access)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(status).To(Equal(http.StatusNotFound))
-				Expect(response["errors"]).To(ContainElement("Campaign type with id \"not-a-campaign-type\" could not be found"))
+				By("updating the client to have the notification_preferences.admin scope", func() {
+					var err error
+					clientToken, err = UpdateClientTokenWithDifferentScopes(clientToken, "notification_preferences.admin")
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				By("attempting to resubscribe the user to the campaign", func() {
+					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "not-a-campaign-type", userGUID)
+					status, response, err := client.Do("DELETE", path, nil, clientToken)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(status).To(Equal(http.StatusNotFound))
+					Expect(response["errors"]).To(ContainElement("Campaign type with id \"not-a-campaign-type\" could not be found"))
+				})
 			})
 		})
 	})
@@ -243,7 +304,7 @@ var _ = Describe("Unsubscribers", func() {
 					"name":        "some-campaign-type-name",
 					"description": "acceptance campaign type",
 					"template_id": templateID,
-				}, clientToken.Access)
+				}, clientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -252,7 +313,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("unsubscribing from the campaign type using the user token", func() {
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
-				status, _, err := client.Do("PUT", path, nil, userToken.Access)
+				status, _, err := client.Do("PUT", path, nil, userToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNoContent))
 			})
@@ -266,7 +327,7 @@ var _ = Describe("Unsubscribers", func() {
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      templateID,
-				}, clientToken.Access)
+				}, clientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
 				Expect(response["id"]).NotTo(BeEmpty())
@@ -276,7 +337,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("waiting for the email to arrive", func() {
 				Eventually(func() (interface{}, error) {
-					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", campaignID), nil, clientToken.Access)
+					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", campaignID), nil, clientToken)
 					return response["status"], err
 				}).Should(Equal("completed"))
 
@@ -285,7 +346,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("deleting the unsubscribe with the user token", func() {
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
-				status, _, err := client.Do("DELETE", path, nil, userToken.Access)
+				status, _, err := client.Do("DELETE", path, nil, userToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNoContent))
 			})
@@ -301,7 +362,7 @@ var _ = Describe("Unsubscribers", func() {
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      templateID,
-				}, clientToken.Access)
+				}, clientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
 				Expect(response["id"]).NotTo(BeEmpty())
@@ -311,7 +372,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("confirming that the email is received", func() {
 				Eventually(func() (interface{}, error) {
-					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", secondCampaignID), nil, clientToken.Access)
+					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", secondCampaignID), nil, clientToken)
 					return response["status"], err
 				}).Should(Equal("completed"))
 
@@ -330,7 +391,7 @@ var _ = Describe("Unsubscribers", func() {
 						"name":        "some-campaign-type-name",
 						"description": "acceptance campaign type",
 						"template_id": templateID,
-					}, clientToken.Access)
+					}, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 
@@ -339,7 +400,7 @@ var _ = Describe("Unsubscribers", func() {
 
 				By("attempting to unsubscribe from the campaign type using the user token", func() {
 					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, "some-other-user")
-					status, response, err := client.Do("PUT", path, nil, userToken.Access)
+					status, response, err := client.Do("PUT", path, nil, userToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusForbidden))
 					Expect(response["errors"]).To(ContainElement("You are not authorized to perform the requested action"))
@@ -352,7 +413,7 @@ var _ = Describe("Unsubscribers", func() {
 						"name":        "some-campaign-type-name",
 						"description": "acceptance campaign type",
 						"template_id": templateID,
-					}, clientToken.Access)
+					}, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 
@@ -361,7 +422,7 @@ var _ = Describe("Unsubscribers", func() {
 
 				By("attempting to unsubscribe from the campaign type using the user token", func() {
 					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, "some-other-user")
-					status, response, err := client.Do("DELETE", path, nil, userToken.Access)
+					status, response, err := client.Do("DELETE", path, nil, userToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusForbidden))
 					Expect(response["errors"]).To(ContainElement("You are not authorized to perform the requested action"))
@@ -376,7 +437,7 @@ var _ = Describe("Unsubscribers", func() {
 						"name":        "some-campaign-type-name",
 						"description": "acceptance campaign type",
 						"template_id": templateID,
-					}, clientToken.Access)
+					}, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 
@@ -398,7 +459,7 @@ var _ = Describe("Unsubscribers", func() {
 						"name":        "some-campaign-type-name",
 						"description": "acceptance campaign type",
 						"template_id": templateID,
-					}, clientToken.Access)
+					}, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 
@@ -416,21 +477,31 @@ var _ = Describe("Unsubscribers", func() {
 		})
 
 		Context("when the user token lacks the required scopes", func() {
-			It("returns a 403 status code for PUTting an unsubscribe", func() {
-				unauthorizedUserToken := GetUserTokenFor("unauthorized-user")
+			BeforeEach(func() {
+				Servers.UAA.SetDefaultScopes([]string{})
+			})
 
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "some-campaign-type-id", userGUID)
-				status, response, err := client.Do("PUT", path, nil, unauthorizedUserToken.Access)
+			AfterEach(func() {
+				Servers.UAA.ResetDefaultScopes()
+			})
+
+			It("returns a 403 status code for PUTting an unsubscribe", func() {
+				unauthorizedUserToken, unauthorizedUserGUID, err := GetUserTokenAndIdFor("unauthorized-user")
+				Expect(err).NotTo(HaveOccurred())
+
+				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "some-campaign-type-id", unauthorizedUserGUID)
+				status, response, err := client.Do("PUT", path, nil, unauthorizedUserToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusForbidden))
 				Expect(response["errors"]).To(ContainElement("You are not authorized to perform the requested action"))
 			})
 
 			It("returns a 403 status code for DELETEing an unsubscribe", func() {
-				unauthorizedUserToken := GetUserTokenFor("unauthorized-user")
+				unauthorizedUserToken, unauthorizedUserGUID, err := GetUserTokenAndIdFor("unauthorized-user")
+				Expect(err).NotTo(HaveOccurred())
 
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "some-campaign-type-id", userGUID)
-				status, response, err := client.Do("DELETE", path, nil, unauthorizedUserToken.Access)
+				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "some-campaign-type-id", unauthorizedUserGUID)
+				status, response, err := client.Do("DELETE", path, nil, unauthorizedUserToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusForbidden))
 				Expect(response["errors"]).To(ContainElement("You are not authorized to perform the requested action"))
@@ -440,7 +511,7 @@ var _ = Describe("Unsubscribers", func() {
 		Context("when attempting to manage subscriptions for a non-existent campaign type", func() {
 			It("returns a 404 status code and reports the error message as JSON for PUTs", func() {
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "not-a-campaign-type", userGUID)
-				status, response, err := client.Do("PUT", path, nil, userToken.Access)
+				status, response, err := client.Do("PUT", path, nil, userToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement("Campaign type with id \"not-a-campaign-type\" could not be found"))
@@ -448,7 +519,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			It("returns a 404 status code and reports the error message as JSON for DELETEs", func() {
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "not-a-campaign-type", userGUID)
-				status, response, err := client.Do("DELETE", path, nil, userToken.Access)
+				status, response, err := client.Do("DELETE", path, nil, userToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement("Campaign type with id \"not-a-campaign-type\" could not be found"))
@@ -457,22 +528,34 @@ var _ = Describe("Unsubscribers", func() {
 
 		Context("when attempting to unsubscribe from a critical notification", func() {
 			It("returns a 403 status code and reports an error message as JSON", func() {
+				By("updating the client to have the critical_notifications.write scope", func() {
+					var err error
+					clientToken, err = UpdateClientTokenWithDifferentScopes(clientToken, "notifications.write", "critical_notifications.write")
+					Expect(err).NotTo(HaveOccurred())
+				})
+
 				By("creating a campaign type", func() {
 					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 						"name":        "some-campaign-type-name",
 						"description": "acceptance campaign type",
 						"template_id": templateID,
 						"critical":    true,
-					}, clientToken.Access)
+					}, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 
 					campaignTypeID = response["id"].(string)
 				})
 
+				By("resetting the client to have the notifications.write scope", func() {
+					var err error
+					clientToken, err = UpdateClientTokenWithDifferentScopes(clientToken, "notifications.write")
+					Expect(err).NotTo(HaveOccurred())
+				})
+
 				By("unsubscribing from the campaign type", func() {
 					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
-					status, response, err := client.Do("PUT", path, nil, userToken.Access)
+					status, response, err := client.Do("PUT", path, nil, userToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusForbidden))
 					Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Campaign type %q cannot be unsubscribed from", campaignTypeID)))

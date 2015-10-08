@@ -8,7 +8,7 @@ import (
 	"bitbucket.org/chrj/smtpd"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/acceptance/support"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
+	"github.com/pivotal-cf-experimental/warrant"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,8 +17,9 @@ import (
 var _ = Describe("User Campaigns", func() {
 	var (
 		client   *support.Client
-		token    uaa.Token
+		token    string
 		senderID string
+		user     warrant.User
 	)
 
 	BeforeEach(func() {
@@ -26,15 +27,25 @@ var _ = Describe("User Campaigns", func() {
 			Host:  Servers.Notifications.URL(),
 			Trace: Trace,
 		})
-		token = GetClientTokenFor("my-client")
+		var err error
+		token, err = GetClientTokenWithScopes("notifications.write")
+		Expect(err).NotTo(HaveOccurred())
 
 		status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 			"name": "my-sender",
-		}, token.Access)
+		}, token)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(status).To(Equal(http.StatusCreated))
 
 		senderID = response["id"].(string)
+
+		user, err = warrantClient.Users.Create("user-111", "user-111@example.com", adminToken)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	AfterEach(func() {
+		err := warrantClient.Users.Delete(user.ID, adminToken)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("sends a campaign to a user", func() {
@@ -46,7 +57,7 @@ var _ = Describe("User Campaigns", func() {
 				"text":    "campaign template {{.Text}}",
 				"html":    "{{.HTML}}",
 				"subject": "{{.Subject}}",
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -59,7 +70,7 @@ var _ = Describe("User Campaigns", func() {
 				"text":    "campaign type template {{.Text}}",
 				"html":    "{{.HTML}}",
 				"subject": "{{.Subject}}",
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -71,7 +82,7 @@ var _ = Describe("User Campaigns", func() {
 				"name":        "some-campaign-type-name",
 				"description": "acceptance campaign type",
 				"template_id": campaignTypeTemplateID,
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -81,13 +92,13 @@ var _ = Describe("User Campaigns", func() {
 		By("sending the campaign", func() {
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 				"send_to": map[string]interface{}{
-					"user": "user-111",
+					"user": user.ID,
 				},
 				"campaign_type_id": campaignTypeID,
 				"text":             "campaign body",
 				"subject":          "campaign subject",
 				"template_id":      templateID,
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusAccepted))
 			Expect(response["id"]).NotTo(BeEmpty())
@@ -118,7 +129,7 @@ var _ = Describe("User Campaigns", func() {
 					"text":    "campaign template {{.Text}}",
 					"html":    "{{.HTML}}",
 					"subject": "{{.Subject}}",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -131,11 +142,17 @@ var _ = Describe("User Campaigns", func() {
 					"text":    "campaign type template {{.Text}}",
 					"html":    "{{.HTML}}",
 					"subject": "{{.Subject}}",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
 				campaignTypeTemplateID = response["id"].(string)
+			})
+
+			By("adding critical_notifications.write scope to client", func() {
+				var err error
+				token, err = UpdateClientTokenWithDifferentScopes(token, "notifications.write", "critical_notifications.write")
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			By("creating a campaign type", func() {
@@ -144,19 +161,23 @@ var _ = Describe("User Campaigns", func() {
 					"description": "acceptance campaign type",
 					"template_id": campaignTypeTemplateID,
 					"critical":    true,
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
 				campaignTypeID = response["id"].(string)
 			})
 
-			By("sending the campaign", func() {
-				token = GetClientTokenFor("non-critical-client")
+			By("removing critical_notifications.write scope from the client", func() {
+				var err error
+				token, err = UpdateClientTokenWithDifferentScopes(token, "notifications.write")
+				Expect(err).NotTo(HaveOccurred())
+			})
 
+			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 					"name": "my-sender",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -164,13 +185,13 @@ var _ = Describe("User Campaigns", func() {
 
 				status, response, err = client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
-						"user": "user-111",
+						"user": user.ID,
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      templateID,
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusForbidden))
 				Expect(response["errors"]).To(Equal([]interface{}{"Scope critical_notifications.write is required"}))
@@ -188,7 +209,7 @@ var _ = Describe("User Campaigns", func() {
 					"text":    "{{.Text}}",
 					"html":    "{{.HTML}}",
 					"subject": "{{.Subject}}",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -199,7 +220,7 @@ var _ = Describe("User Campaigns", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type-name",
 					"description": "acceptance campaign type",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -209,13 +230,13 @@ var _ = Describe("User Campaigns", func() {
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
-						"bananas": "user-111",
+						"bananas": user.ID,
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      templateID,
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(422))
 				Expect(response["errors"]).To(Equal([]interface{}{"\"bananas\" is not a valid audience"}))
@@ -233,7 +254,7 @@ var _ = Describe("User Campaigns", func() {
 					"text":    "{{.Text}}",
 					"html":    "{{.HTML}}",
 					"subject": "{{.Subject}}",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -244,7 +265,7 @@ var _ = Describe("User Campaigns", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type-name",
 					"description": "acceptance campaign type",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -260,7 +281,7 @@ var _ = Describe("User Campaigns", func() {
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      templateID,
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(404))
 				Expect(response["errors"]).To(Equal([]interface{}{"The user \"missing-user\" cannot be found"}))
@@ -276,7 +297,7 @@ var _ = Describe("User Campaigns", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type-name",
 					"description": "acceptance campaign type",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -286,13 +307,13 @@ var _ = Describe("User Campaigns", func() {
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", "/senders/missing-sender-id/campaigns", map[string]interface{}{
 					"send_to": map[string]interface{}{
-						"user": "user-111",
+						"user": user.ID,
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      "missing-template-id",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement("Sender with id \"missing-sender-id\" could not be found"))
@@ -305,11 +326,12 @@ var _ = Describe("User Campaigns", func() {
 			var campaignTypeID, differentSenderID string
 
 			By("creating a sender belonging to a different client", func() {
-				token := GetClientTokenFor("non-critical-client")
+				otherClientToken, err := GetClientTokenWithScopes("notifications.write")
+				Expect(err).NotTo(HaveOccurred())
 
 				status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 					"name": "my-sender",
-				}, token.Access)
+				}, otherClientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -320,7 +342,7 @@ var _ = Describe("User Campaigns", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type-name",
 					"description": "acceptance campaign type",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -330,13 +352,13 @@ var _ = Describe("User Campaigns", func() {
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", differentSenderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
-						"user": "user-111",
+						"user": user.ID,
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      "missing-template-id",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Sender with id %q could not be found", differentSenderID)))
@@ -352,7 +374,7 @@ var _ = Describe("User Campaigns", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type-name",
 					"description": "acceptance campaign type",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -362,13 +384,13 @@ var _ = Describe("User Campaigns", func() {
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
-						"user": "user-111",
+						"user": user.ID,
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      "missing-template-id",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement("Template with id \"missing-template-id\" could not be found"))
@@ -386,7 +408,7 @@ var _ = Describe("User Campaigns", func() {
 					"text":    "{{.Text}} campaign type template",
 					"html":    "{{.HTML}}",
 					"subject": "{{.Subject}}",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -396,13 +418,13 @@ var _ = Describe("User Campaigns", func() {
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
-						"user": "user-111",
+						"user": user.ID,
 					},
 					"campaign_type_id": "missing-campaign-type-id",
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      templateID,
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement("Campaign type with id \"missing-campaign-type-id\" could not be found"))
@@ -420,7 +442,7 @@ var _ = Describe("User Campaigns", func() {
 					"text":    "{{.Text}} campaign type template",
 					"html":    "{{.HTML}}",
 					"subject": "{{.Subject}}",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -432,7 +454,7 @@ var _ = Describe("User Campaigns", func() {
 					"name":        "some-campaign-type-name",
 					"description": "acceptance campaign type",
 					"template_id": templateID,
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -442,12 +464,12 @@ var _ = Describe("User Campaigns", func() {
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
-						"user": "user-111",
+						"user": user.ID,
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
 					"subject":          "campaign subject",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
 				Expect(response["id"]).NotTo(BeEmpty())

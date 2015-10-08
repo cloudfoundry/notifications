@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/acceptance/support"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -41,7 +40,7 @@ type sendersListResponse struct {
 var _ = Describe("Sender lifecycle", func() {
 	var (
 		client *support.Client
-		token  uaa.Token
+		token  string
 	)
 
 	BeforeEach(func() {
@@ -50,8 +49,9 @@ var _ = Describe("Sender lifecycle", func() {
 			Trace:             Trace,
 			RoundTripRecorder: roundtripRecorder,
 		})
-		token = GetClientTokenFor("my-client")
-
+		var err error
+		token, err = GetClientTokenWithScopes("notifications.write")
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("can create, list, update and read a new sender", func() {
@@ -62,7 +62,7 @@ var _ = Describe("Sender lifecycle", func() {
 			client.Document("sender-create")
 			status, err := client.DoTyped("POST", "/senders", map[string]interface{}{
 				"name": "My Cool App",
-			}, token.Access, &response)
+			}, token, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -77,7 +77,7 @@ var _ = Describe("Sender lifecycle", func() {
 		By("listing all senders", func() {
 			var response sendersListResponse
 			client.Document("sender-list")
-			status, err := client.DoTyped("GET", "/senders", nil, token.Access, &response)
+			status, err := client.DoTyped("GET", "/senders", nil, token, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -94,7 +94,7 @@ var _ = Describe("Sender lifecycle", func() {
 		By("getting the sender", func() {
 			var response senderResponse
 			client.Document("sender-get")
-			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, &response)
+			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s", senderID), nil, token, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -111,7 +111,7 @@ var _ = Describe("Sender lifecycle", func() {
 			status, err := client.DoTyped("PUT", fmt.Sprintf("/senders/%s", senderID),
 				map[string]interface{}{
 					"name": "My Not Cool App",
-				}, token.Access, &response)
+				}, token, &response)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
@@ -124,7 +124,7 @@ var _ = Describe("Sender lifecycle", func() {
 		})
 
 		By("getting the updated sender", func() {
-			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access)
+			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s", senderID), nil, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 			Expect(response["id"]).To(Equal(senderID))
@@ -137,7 +137,7 @@ var _ = Describe("Sender lifecycle", func() {
 		By("creating a sender", func() {
 			status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 				"name": "My Cool App",
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -150,7 +150,7 @@ var _ = Describe("Sender lifecycle", func() {
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 				"name":        "some-campaign-type",
 				"description": "a great campaign type",
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -159,19 +159,19 @@ var _ = Describe("Sender lifecycle", func() {
 
 		By("deleting the sender", func() {
 			client.Document("sender-delete")
-			status, err := client.DoTyped("DELETE", fmt.Sprintf("/senders/%s", senderID), nil, token.Access, nil)
+			status, err := client.DoTyped("DELETE", fmt.Sprintf("/senders/%s", senderID), nil, token, nil)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNoContent))
 		})
 
 		By("getting the deleted sender", func() {
-			status, _, err := client.Do("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access)
+			status, _, err := client.Do("GET", fmt.Sprintf("/senders/%s", senderID), nil, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNotFound))
 		})
 
 		By("getting the deleted campaign type", func() {
-			status, _, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)
+			status, _, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNotFound))
 		})
@@ -183,7 +183,7 @@ var _ = Describe("Sender lifecycle", func() {
 		By("creating a sender", func() {
 			status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 				"name": "My Cool App",
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -193,7 +193,7 @@ var _ = Describe("Sender lifecycle", func() {
 		By("creating another sender with the same name", func() {
 			status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 				"name": "My Cool App",
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 			Expect(response["id"]).To(Equal(senderID))
@@ -203,7 +203,7 @@ var _ = Describe("Sender lifecycle", func() {
 	Context("failure states", func() {
 		Context("when getting a sender", func() {
 			It("returns a 404 when the sender cannot be retrieved", func() {
-				status, response, err := client.Do("GET", "/senders/missing-sender-id", nil, token.Access)
+				status, response, err := client.Do("GET", "/senders/missing-sender-id", nil, token)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(status).To(Equal(http.StatusNotFound))
@@ -216,7 +216,7 @@ var _ = Describe("Sender lifecycle", func() {
 				By("creating a sender for one client", func() {
 					status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 						"name": "My Cool App",
-					}, token.Access)
+					}, token)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 
@@ -224,8 +224,10 @@ var _ = Describe("Sender lifecycle", func() {
 				})
 
 				By("attempting to access the created sender as another client", func() {
-					token := GetClientTokenFor("other-client")
-					status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s", senderID), nil, token.Access)
+					otherClientToken, err := GetClientTokenWithScopes("notifications.write")
+					Expect(err).NotTo(HaveOccurred())
+
+					status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s", senderID), nil, otherClientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
 					Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Sender with id %q could not be found", senderID)))
@@ -238,7 +240,7 @@ var _ = Describe("Sender lifecycle", func() {
 			It("returns a 404 when the sender cannot be retrieved", func() {
 				status, response, err := client.Do("PUT", "/senders/missing-sender-id", map[string]interface{}{
 					"name": "My Not Cool App",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(status).To(Equal(http.StatusNotFound))
@@ -251,7 +253,7 @@ var _ = Describe("Sender lifecycle", func() {
 				By("creating a sender with a different token", func() {
 					status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 						"name": "My Cool App",
-					}, token.Access)
+					}, token)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 
@@ -259,11 +261,12 @@ var _ = Describe("Sender lifecycle", func() {
 				})
 
 				By("attempting to get the sender with a different token", func() {
-					otherToken := GetClientTokenFor("otherclient")
+					otherClientToken, err := GetClientTokenWithScopes("notifications.write")
+					Expect(err).NotTo(HaveOccurred())
 
 					status, response, err := client.Do("PUT", fmt.Sprintf("/senders/%s", senderID), map[string]interface{}{
 						"name": "My Cool App",
-					}, otherToken.Access)
+					}, otherClientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
 					Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Sender with id %q could not be found", senderID)))
@@ -275,7 +278,7 @@ var _ = Describe("Sender lifecycle", func() {
 				By("creating a sender named foo", func() {
 					status, _, err := client.Do("POST", "/senders", map[string]interface{}{
 						"name": "foo",
-					}, token.Access)
+					}, token)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 				})
@@ -283,7 +286,7 @@ var _ = Describe("Sender lifecycle", func() {
 				By("creating a sender named bar", func() {
 					status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 						"name": "bar",
-					}, token.Access)
+					}, token)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 					senderID = response["id"].(string)
@@ -292,7 +295,7 @@ var _ = Describe("Sender lifecycle", func() {
 				By("updating bar to foo", func() {
 					status, response, err := client.Do("PUT", fmt.Sprintf("/senders/%s", senderID), map[string]interface{}{
 						"name": "foo",
-					}, token.Access)
+					}, token)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(422))
 					Expect(response["errors"]).To(ContainElement("Sender with name \"foo\" already exists"))
@@ -302,7 +305,7 @@ var _ = Describe("Sender lifecycle", func() {
 
 		Context("when deleting a sender", func() {
 			It("returns a 404 when the sender cannot be retrieved", func() {
-				status, response, err := client.Do("DELETE", "/senders/missing-sender-id", nil, token.Access)
+				status, response, err := client.Do("DELETE", "/senders/missing-sender-id", nil, token)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(status).To(Equal(http.StatusNotFound))
@@ -315,7 +318,7 @@ var _ = Describe("Sender lifecycle", func() {
 				By("creating a sender with a different token", func() {
 					status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 						"name": "My Cool App",
-					}, token.Access)
+					}, token)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 
@@ -323,9 +326,10 @@ var _ = Describe("Sender lifecycle", func() {
 				})
 
 				By("attempting to deletd the sender with a different token", func() {
-					otherToken := GetClientTokenFor("otherclient")
+					otherClientToken, err := GetClientTokenWithScopes("notifications.write")
+					Expect(err).NotTo(HaveOccurred())
 
-					status, response, err := client.Do("DELETE", fmt.Sprintf("/senders/%s", senderID), nil, otherToken.Access)
+					status, response, err := client.Do("DELETE", fmt.Sprintf("/senders/%s", senderID), nil, otherClientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
 					Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Sender with id %q could not be found", senderID)))

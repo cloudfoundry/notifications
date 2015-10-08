@@ -15,26 +15,30 @@ import (
 )
 
 type CC struct {
-	server *httptest.Server
+	server          *httptest.Server
+	userNameToIdMap map[string]string
 }
 
-func NewCC() CC {
+func NewCC(userNameToIdMap map[string]string) CC {
 	router := mux.NewRouter()
-	router.HandleFunc("/v2/spaces/{guid}", CCGetSpace).Methods("GET")
-	router.HandleFunc("/v2/organizations/{guid}/users", CCGetOrgUsers).Methods("GET")
-	router.HandleFunc("/v2/organizations/{guid}/managers", CCGetOrgManagers).Methods("GET")
-	router.HandleFunc("/v2/organizations/{guid}/auditors", CCGetOrgAuditors).Methods("GET")
-	router.HandleFunc("/v2/organizations/{guid}/billing_managers", CCGetOrgBillingManagers).Methods("GET")
-	router.HandleFunc("/v2/organizations/{guid}", CCGetOrg).Methods("GET")
-	router.HandleFunc("/v2/users", CCGetSpaceUsers).Methods("GET")
+	cc := CC{
+		server:          httptest.NewUnstartedServer(router),
+		userNameToIdMap: userNameToIdMap,
+	}
+
+	router.HandleFunc("/v2/spaces/{guid}", cc.GetSpace).Methods("GET")
+	router.HandleFunc("/v2/organizations/{guid}/users", cc.GetOrgUsers).Methods("GET")
+	router.HandleFunc("/v2/organizations/{guid}/managers", cc.GetOrgManagers).Methods("GET")
+	router.HandleFunc("/v2/organizations/{guid}/auditors", cc.GetOrgAuditors).Methods("GET")
+	router.HandleFunc("/v2/organizations/{guid}/billing_managers", cc.GetOrgBillingManagers).Methods("GET")
+	router.HandleFunc("/v2/organizations/{guid}", cc.GetOrg).Methods("GET")
+	router.HandleFunc("/v2/users", cc.GetSpaceUsers).Methods("GET")
 	router.HandleFunc("/{anything:.*}", http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		fmt.Printf("CC ROUTE REQUEST ---> %+v\n", req)
 		w.WriteHeader(http.StatusTeapot)
 	}))
 
-	return CC{
-		server: httptest.NewUnstartedServer(router),
-	}
+	return cc
 }
 
 func (s CC) Boot() {
@@ -46,7 +50,7 @@ func (s CC) Close() {
 	s.server.Close()
 }
 
-var CCGetSpace = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+func (cc CC) GetSpace(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	guid := vars["guid"]
 	if guid == "space-123" || guid == "large-space" {
@@ -84,9 +88,9 @@ var CCGetSpace = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request)
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"code":40004,"description":"The app space could not be found","error_code":"CF-SpaceNotFound"}`))
 	}
-})
+}
 
-var CCGetOrg = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+func (cc CC) GetOrg(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	guid := vars["guid"]
 	if guid == "org-123" {
@@ -119,120 +123,74 @@ var CCGetOrg = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"code":40004,"description":"The org could not be found","error_code":"CF-OrgNotFound"}`))
 	}
-})
+}
 
-var CCGetOrgUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+func (cc CC) GetOrgUsers(w http.ResponseWriter, req *http.Request) {
 	token := strings.Split(req.Header.Get("Authorization"), " ")[1]
 	jwtToken, _ := jwt.Parse(token, func(*jwt.Token) (interface{}, error) {
 		return []byte(helpers.UAAPublicKey), nil
 	})
 
-	var json string
+	var desiredUsers []string
 	if regexp.MustCompile(string(os.Getenv("UAA_HOST"))).MatchString(jwtToken.Claims["iss"].(string)) {
-		json = `{
-		   "total_results": 2,
-		   "total_pages": 1,
-		   "prev_url": null,
-		   "next_url": null,
-		   "resources": [
-			  {
-				 "metadata": {
-					"guid": "user-456",
-					"url": "/v2/users/user-456",
-					"created_at": "2014-07-16T21:58:29+00:00",
-					"updated_at": null
-				 },
-				 "entity": {
-					"admin": false,
-					"active": true,
-					"default_space_guid": null,
-					"spaces_url": "/v2/users/user-456/spaces",
-					"organizations_url": "/v2/users/user-456/organizations",
-					"managed_organizations_url": "/v2/users/user-456/managed_organizations",
-					"billing_managed_organizations_url": "/v2/users/user-456/billing_managed_organizations",
-					"audited_organizations_url": "/v2/users/user-456/audited_organizations",
-					"managed_spaces_url": "/v2/users/user-456/managed_spaces",
-					"audited_spaces_url": "/v2/users/user-456/audited_spaces"
-				 }
-			  },
-			  {
-				 "metadata": {
-					"guid": "user-789",
-					"url": "/v2/users/user-789",
-					"created_at": "2014-07-18T22:08:18+00:00",
-					"updated_at": null
-				 },
-				 "entity": {
-					"admin": false,
-					"active": false,
-					"default_space_guid": null,
-					"spaces_url": "/v2/users/user-789/spaces",
-					"organizations_url": "/v2/users/user-789/organizations",
-					"managed_organizations_url": "/v2/users/user-789/managed_organizations",
-					"billing_managed_organizations_url": "/v2/users/user-789/billing_managed_organizations",
-					"audited_organizations_url": "/v2/users/user-789/audited_organizations",
-					"managed_spaces_url": "/v2/users/user-789/managed_spaces",
-					"audited_spaces_url": "/v2/users/user-789/audited_spaces"
-				 }
-			  },
-			  {
-				 "metadata": {
-					"guid": "user-000",
-					"url": "/v2/users/user-000",
-					"created_at": "2014-07-16T21:58:29+00:00",
-					"updated_at": null
-				 },
-				 "entity": {
-					"admin": false,
-					"active": true,
-					"default_space_guid": null,
-					"spaces_url": "/v2/users/user-000/spaces",
-					"organizations_url": "/v2/users/user-000/organizations",
-					"managed_organizations_url": "/v2/users/user-000/managed_organizations",
-					"billing_managed_organizations_url": "/v2/users/user-000/billing_managed_organizations",
-					"audited_organizations_url": "/v2/users/user-000/audited_organizations",
-					"managed_spaces_url": "/v2/users/user-000/managed_spaces",
-					"audited_spaces_url": "/v2/users/user-000/audited_spaces"
-				 }
-			  }
-		   ]
-		}`
+		desiredUsers = []string{
+			"user-456",
+			"user-789",
+			"user-000",
+		}
 	} else {
-		json = `{
-		   "total_results": 1,
-		   "total_pages": 1,
-		   "prev_url": null,
-		   "next_url": null,
-		   "resources": [
-			  {
-				 "metadata": {
-					"guid": "another-user-in-zone",
-					"url": "/v2/users/another-user-in-zone",
-					"created_at": "2014-07-16T21:58:29+00:00",
-					"updated_at": null
-				 },
-				 "entity": {
-					"admin": false,
-					"active": true,
-					"default_space_guid": null,
-					"spaces_url": "/v2/users/another-user-in-zone/spaces",
-					"organizations_url": "/v2/users/another-user-in-zone/organizations",
-					"managed_organizations_url": "/v2/users/another-user-in-zone/managed_organizations",
-					"billing_managed_organizations_url": "/v2/users/another-user-in-zone/billing_managed_organizations",
-					"audited_organizations_url": "/v2/users/another-user-in-zone/audited_organizations",
-					"managed_spaces_url": "/v2/users/another-user-in-zone/managed_spaces",
-					"audited_spaces_url": "/v2/users/another-user-in-zone/audited_spaces"
-				 }
-			  }
-			]
-		}`
+		desiredUsers = []string{
+			"another-user-in-zone",
+		}
+	}
+
+	users := []map[string]interface{}{}
+	for _, userName := range desiredUsers {
+		guid, ok := cc.userNameToIdMap[userName]
+		if !ok {
+			guid = userName
+		}
+
+		users = append(users, map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"guid":       guid,
+				"url":        fmt.Sprintf("/v2/users/%s", guid),
+				"created_at": "2014-07-16T21:58:29+00:00",
+				"updated_at": nil,
+			},
+			"entity": map[string]interface{}{
+				"admin":                             false,
+				"active":                            true,
+				"default_space_guid":                nil,
+				"spaces_url":                        fmt.Sprintf("/v2/users/%s/spaces", guid),
+				"organizations_url":                 fmt.Sprintf("/v2/users/%s/organizations", guid),
+				"managed_organizations_url":         fmt.Sprintf("/v2/users/%s/managed_organizations", guid),
+				"billing_managed_organizations_url": fmt.Sprintf("/v2/users/%s/billing_managed_organizations", guid),
+				"audited_organizations_url":         fmt.Sprintf("/v2/users/%s/audited_organizations", guid),
+				"managed_spaces_url":                fmt.Sprintf("/v2/users/%s/managed_spaces", guid),
+				"audited_spaces_url":                fmt.Sprintf("/v2/users/%s/audited_spaces", guid),
+			},
+		})
+	}
+
+	output := map[string]interface{}{
+		"total_results": len(users),
+		"total_pages":   1,
+		"prev_url":      nil,
+		"next_url":      nil,
+		"resources":     users,
+	}
+
+	json, err := json.Marshal(output)
+	if err != nil {
+		panic(err)
 	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(json))
-})
+}
 
-var CCGetOrgManagers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+func (cc CC) GetOrgManagers(w http.ResponseWriter, req *http.Request) {
 	json := `{
        "total_results": 1,
        "total_pages": 1,
@@ -264,9 +222,9 @@ var CCGetOrgManagers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Re
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(json))
-})
+}
 
-var CCGetOrgAuditors = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+func (cc CC) GetOrgAuditors(w http.ResponseWriter, req *http.Request) {
 	json := `{
        "total_results": 1,
        "total_pages": 1,
@@ -298,9 +256,9 @@ var CCGetOrgAuditors = http.HandlerFunc(func(w http.ResponseWriter, req *http.Re
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(json))
-})
+}
 
-var CCGetOrgBillingManagers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+func (cc CC) GetOrgBillingManagers(w http.ResponseWriter, req *http.Request) {
 	json := `{
        "total_results": 1,
        "total_pages": 1,
@@ -332,13 +290,13 @@ var CCGetOrgBillingManagers = http.HandlerFunc(func(w http.ResponseWriter, req *
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(json))
-})
+}
 
-var CCGetSpaceUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	var userGUIDs []string
+func (cc CC) GetSpaceUsers(w http.ResponseWriter, req *http.Request) {
+	var desiredUsers []string
 	fields := strings.Split(":", req.URL.Query().Get("q"))
 	if len(fields) == 2 && fields[1] == "large-space" {
-		userGUIDs = []string{
+		desiredUsers = []string{
 			"user-001",
 			"user-002",
 			"user-003",
@@ -351,7 +309,7 @@ var CCGetSpaceUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Req
 			"user-010",
 		}
 	} else {
-		userGUIDs = []string{
+		desiredUsers = []string{
 			"user-456",
 			"user-789",
 			"user-000",
@@ -359,7 +317,12 @@ var CCGetSpaceUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Req
 	}
 
 	users := []map[string]interface{}{}
-	for _, guid := range userGUIDs {
+	for _, userName := range desiredUsers {
+		guid, ok := cc.userNameToIdMap[userName]
+		if !ok {
+			guid = userName
+		}
+
 		users = append(users, map[string]interface{}{
 			"metadata": map[string]interface{}{
 				"guid":       guid,
@@ -397,4 +360,4 @@ var CCGetSpaceUsers = http.HandlerFunc(func(w http.ResponseWriter, req *http.Req
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(uaaJSON))
-})
+}

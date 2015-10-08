@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/acceptance/support"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -36,7 +35,7 @@ type templatesListResponse struct {
 var _ = Describe("Template lifecycle", func() {
 	var (
 		client     *support.Client
-		token      uaa.Token
+		token      string
 		templateID string
 	)
 
@@ -46,7 +45,9 @@ var _ = Describe("Template lifecycle", func() {
 			Trace:             Trace,
 			RoundTripRecorder: roundtripRecorder,
 		})
-		token = GetClientTokenFor("my-client")
+		var err error
+		token, err = GetClientTokenWithScopes("notifications.write")
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("can create a new template, retrieve, list and delete", func() {
@@ -62,7 +63,7 @@ var _ = Describe("Template lifecycle", func() {
 				"metadata": map[string]interface{}{
 					"template": "metadata",
 				},
-			}, token.Access, &response)
+			}, token, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -81,7 +82,7 @@ var _ = Describe("Template lifecycle", func() {
 			var response templateResponse
 
 			client.Document("template-get")
-			status, err := client.DoTyped("GET", fmt.Sprintf("/templates/%s", templateID), nil, token.Access, &response)
+			status, err := client.DoTyped("GET", fmt.Sprintf("/templates/%s", templateID), nil, token, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -106,7 +107,7 @@ var _ = Describe("Template lifecycle", func() {
 				"metadata": map[string]interface{}{
 					"banana": "something",
 				},
-			}, token.Access, &response)
+			}, token, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -120,7 +121,7 @@ var _ = Describe("Template lifecycle", func() {
 		})
 
 		By("getting the template", func() {
-			status, response, err := client.Do("GET", fmt.Sprintf("/templates/%s", templateID), nil, token.Access)
+			status, response, err := client.Do("GET", fmt.Sprintf("/templates/%s", templateID), nil, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -135,7 +136,9 @@ var _ = Describe("Template lifecycle", func() {
 		})
 
 		By("creating a template for another client", func() {
-			otherClientToken := GetClientTokenFor("other-client")
+			otherClientToken, err := GetClientTokenWithScopes("notifications.write")
+			Expect(err).NotTo(HaveOccurred())
+
 			status, _, err := client.Do("POST", "/templates", map[string]interface{}{
 				"name":    "An invisible template",
 				"text":    "template text",
@@ -144,7 +147,7 @@ var _ = Describe("Template lifecycle", func() {
 				"metadata": map[string]interface{}{
 					"template": "metadata",
 				},
-			}, otherClientToken.Access)
+			}, otherClientToken)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 		})
@@ -153,7 +156,7 @@ var _ = Describe("Template lifecycle", func() {
 			var response templatesListResponse
 
 			client.Document("template-list")
-			status, err := client.DoTyped("GET", "/templates", nil, token.Access, &response)
+			status, err := client.DoTyped("GET", "/templates", nil, token, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -166,13 +169,13 @@ var _ = Describe("Template lifecycle", func() {
 
 		By("deleting the template", func() {
 			client.Document("template-delete")
-			status, _, err := client.Do("DELETE", fmt.Sprintf("/templates/%s", templateID), nil, token.Access)
+			status, _, err := client.Do("DELETE", fmt.Sprintf("/templates/%s", templateID), nil, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNoContent))
 		})
 
 		By("failing to get the deleted template", func() {
-			status, _, err := client.Do("GET", fmt.Sprintf("/templates/%s", templateID), nil, token.Access)
+			status, _, err := client.Do("GET", fmt.Sprintf("/templates/%s", templateID), nil, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNotFound))
 		})
@@ -189,7 +192,7 @@ var _ = Describe("Template lifecycle", func() {
 					"metadata": map[string]interface{}{
 						"template": "metadata",
 					},
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -206,7 +209,7 @@ var _ = Describe("Template lifecycle", func() {
 			})
 
 			By("updating the template", func() {
-				status, response, err := client.Do("PUT", fmt.Sprintf("/templates/%s", templateID), map[string]interface{}{}, token.Access)
+				status, response, err := client.Do("PUT", fmt.Sprintf("/templates/%s", templateID), map[string]interface{}{}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusOK))
 
@@ -232,7 +235,7 @@ var _ = Describe("Template lifecycle", func() {
 					"metadata": map[string]interface{}{
 						"template": "metadata",
 					},
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -257,7 +260,7 @@ var _ = Describe("Template lifecycle", func() {
 					"metadata": map[string]interface{}{
 						"banana": "something",
 					},
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusOK))
 
@@ -284,7 +287,7 @@ var _ = Describe("Template lifecycle", func() {
 					"metadata": map[string]interface{}{
 						"template": "metadata",
 					},
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(422))
 				Expect(response["errors"]).To(ContainElement("Template \"name\" field cannot be empty"))
@@ -301,7 +304,7 @@ var _ = Describe("Template lifecycle", func() {
 					"metadata": map[string]interface{}{
 						"template": "metadata",
 					},
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement("Template with id \"bogus\" could not be found"))
@@ -316,7 +319,7 @@ var _ = Describe("Template lifecycle", func() {
 					"metadata": map[string]interface{}{
 						"template": "metadata",
 					},
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -328,7 +331,7 @@ var _ = Describe("Template lifecycle", func() {
 					"metadata": map[string]interface{}{
 						"template": "metadata",
 					},
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(422))
 				Expect(response["errors"]).To(ContainElement("Template \"name\" field cannot be empty"))
@@ -343,7 +346,7 @@ var _ = Describe("Template lifecycle", func() {
 						"metadata": map[string]interface{}{
 							"template": "metadata",
 						},
-					}, token.Access)
+					}, token)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 
@@ -353,7 +356,7 @@ var _ = Describe("Template lifecycle", func() {
 				By("updating the template", func() {
 					status, response, err := client.Do("PUT", fmt.Sprintf("/templates/%s", templateID), map[string]interface{}{
 						"html": "",
-					}, token.Access)
+					}, token)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(422))
 					Expect(response["errors"]).To(ContainElement("missing either template text or html"))
@@ -363,7 +366,7 @@ var _ = Describe("Template lifecycle", func() {
 
 		Context("getting", func() {
 			It("returns a 404 when the template cannot be retrieved", func() {
-				status, response, err := client.Do("GET", "/templates/missing-template-id", nil, token.Access)
+				status, response, err := client.Do("GET", "/templates/missing-template-id", nil, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement("Template with id \"missing-template-id\" could not be found"))
@@ -381,7 +384,7 @@ var _ = Describe("Template lifecycle", func() {
 						"metadata": map[string]interface{}{
 							"template": "metadata",
 						},
-					}, token.Access)
+					}, token)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusCreated))
 
@@ -389,8 +392,10 @@ var _ = Describe("Template lifecycle", func() {
 				})
 
 				By("attempting to access the created template as another client", func() {
-					token := GetClientTokenFor("other-client")
-					status, response, err := client.Do("GET", fmt.Sprintf("/templates/%s", templateID), nil, token.Access)
+					otherClientToken, err := GetClientTokenWithScopes("notifications.write")
+					Expect(err).NotTo(HaveOccurred())
+
+					status, response, err := client.Do("GET", fmt.Sprintf("/templates/%s", templateID), nil, otherClientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
 					Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Template with id %q could not be found", templateID)))
@@ -400,7 +405,7 @@ var _ = Describe("Template lifecycle", func() {
 
 		Context("deleting", func() {
 			It("returns a 404 when the template to delete does not exist", func() {
-				status, response, err := client.Do("DELETE", "/templates/missing-template-id", nil, token.Access)
+				status, response, err := client.Do("DELETE", "/templates/missing-template-id", nil, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement("Template with id \"missing-template-id\" could not be found"))
@@ -425,7 +430,7 @@ var _ = Describe("Template lifecycle", func() {
 						}
 					} `json:"_links"`
 				}
-				status, err := client.DoTyped("GET", "/templates/default", nil, token.Access, &response)
+				status, err := client.DoTyped("GET", "/templates/default", nil, token, &response)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusOK))
 
@@ -439,10 +444,12 @@ var _ = Describe("Template lifecycle", func() {
 		})
 
 		Context("updating", func() {
-			var adminToken uaa.Token
+			var adminToken string
 
 			BeforeEach(func() {
-				adminToken = GetClientTokenFor("admin-client")
+				var err error
+				adminToken, err = GetClientTokenWithScopes("notifications.admin")
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			It("persists the updated default template", func() {
@@ -468,7 +475,7 @@ var _ = Describe("Template lifecycle", func() {
 						"html":     "massively defaulting",
 						"subject":  "time to default",
 						"metadata": map[string]interface{}{},
-					}, adminToken.Access, &response)
+					}, adminToken, &response)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusOK))
 
@@ -482,7 +489,7 @@ var _ = Describe("Template lifecycle", func() {
 				})
 
 				By("retrieving the newly updated default template", func() {
-					status, response, err := client.Do("GET", "/templates/default", nil, token.Access)
+					status, response, err := client.Do("GET", "/templates/default", nil, token)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusOK))
 

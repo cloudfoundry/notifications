@@ -26,9 +26,17 @@ func NewZonedUAAClient(clientID, clientSecret string, verifySSL bool, uaaPublicK
 }
 
 func (z ZonedUAAClient) GetTokenKey(uaaHost string) (string, error) {
-	uaaSSOGolangClient := uaaSSOGolang.NewUAA("", uaaHost, z.clientID, z.clientSecret, "")
-	uaaSSOGolangClient.VerifySSL = z.verifySSL
-	return uaaSSOGolangClient.GetTokenKey()
+	uaaClient := warrant.New(warrant.Config{
+		Host:          uaaHost,
+		SkipVerifySSL: !z.verifySSL,
+	})
+
+	signingKey, err := uaaClient.Tokens.GetSigningKey()
+	if err != nil {
+		return "", err
+	}
+
+	return signingKey.Value, nil
 }
 
 func (z ZonedUAAClient) GetClientToken(host string) (string, error) {

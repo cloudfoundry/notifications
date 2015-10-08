@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/acceptance/support"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -39,7 +38,7 @@ type campaignTypesListResponse struct {
 var _ = Describe("Campaign types lifecycle", func() {
 	var (
 		client   *support.Client
-		token    uaa.Token
+		token    string
 		senderID string
 	)
 
@@ -49,11 +48,13 @@ var _ = Describe("Campaign types lifecycle", func() {
 			Trace:             Trace,
 			RoundTripRecorder: roundtripRecorder,
 		})
-		token = GetClientTokenFor("my-client")
+		var err error
+		token, err = GetClientTokenWithScopes("notifications.write")
+		Expect(err).NotTo(HaveOccurred())
 
 		status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 			"name": "my-sender",
-		}, token.Access)
+		}, token)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(status).To(Equal(http.StatusCreated))
 
@@ -67,7 +68,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			status, response, err := client.Do("POST", "/templates", map[string]interface{}{
 				"name": "some-template-name",
 				"text": "email body",
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -81,7 +82,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			status, err := client.DoTyped("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 				"name":        "some-campaign-type",
 				"description": "a great campaign type",
-			}, token.Access, &response)
+			}, token, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -98,7 +99,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			var list campaignTypesListResponse
 
 			client.Document("campaign-type-list")
-			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s/campaign_types", senderID), nil, token.Access, &list)
+			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s/campaign_types", senderID), nil, token, &list)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -111,7 +112,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			var response campaignTypeResponse
 
 			client.Document("campaign-type-get")
-			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access, &response)
+			status, err := client.DoTyped("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -127,7 +128,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 				"name":        "some-campaign-type",
 				"description": "another great campaign type",
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -145,9 +146,30 @@ var _ = Describe("Campaign types lifecycle", func() {
 			status, err := client.DoTyped("PUT", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), map[string]interface{}{
 				"name":        "updated-campaign-type",
 				"description": "still the same great campaign type",
-				"critical":    true,
 				"template_id": templateID,
-			}, token.Access, &response)
+			}, token, &response)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusOK))
+
+			Expect(response.Name).To(Equal("updated-campaign-type"))
+			Expect(response.Description).To(Equal("still the same great campaign type"))
+			Expect(response.Critical).To(BeFalse())
+			Expect(response.TemplateID).To(Equal(templateID))
+			Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/campaign_types/%s", response.ID)))
+		})
+
+		By("resetting the client to have the critical_notifications.write scope", func() {
+			var err error
+			token, err = UpdateClientTokenWithDifferentScopes(token, "notifications.write", "critical_notifications.write")
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		By("updating it to be critical", func() {
+			var response campaignTypeResponse
+
+			status, err := client.DoTyped("PUT", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), map[string]interface{}{
+				"critical": true,
+			}, token, &response)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -158,8 +180,14 @@ var _ = Describe("Campaign types lifecycle", func() {
 			Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/campaign_types/%s", response.ID)))
 		})
 
+		By("resetting the client to have the notifications.write scope", func() {
+			var err error
+			token, err = UpdateClientTokenWithDifferentScopes(token, "notifications.write")
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		By("showing the updated campaign type", func() {
-			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)
+			status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusOK))
 
@@ -172,11 +200,11 @@ var _ = Describe("Campaign types lifecycle", func() {
 
 		By("deleting the campaign type", func() {
 			client.Document("campaign-type-delete")
-			status, _, err := client.Do("DELETE", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)
+			status, _, err := client.Do("DELETE", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNoContent))
 
-			status, _, err = client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)
+			status, _, err = client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNotFound))
 		})
@@ -184,12 +212,11 @@ var _ = Describe("Campaign types lifecycle", func() {
 
 	Context("failure cases", func() {
 		It("returns a 403 when the client does not have access to create a critical campaign type", func() {
-			token = GetClientTokenFor("non-critical-client")
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 				"name":        "some-campaign-type",
 				"description": "a great campaign type",
 				"critical":    true,
-			}, token.Access)
+			}, token)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusForbidden))
@@ -202,7 +229,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			By("creating a sender", func() {
 				status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 					"name": "My Sender",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -210,7 +237,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			})
 
 			By("attempting to retrieve a non-existent campaign type", func() {
-				status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/missing-campaign-type-id", senderID), nil, token.Access)
+				status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/missing-campaign-type-id", senderID), nil, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement(`Campaign type with id "missing-campaign-type-id" could not be found`))
@@ -227,7 +254,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type",
 					"description": "a great campaign type",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -237,7 +264,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			By("creating a sender that is not 'my-sender'", func() {
 				status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 					"name": "some-other-sender",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -245,7 +272,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			})
 
 			By("verifying that you cannot get a campaign type belonging to a different sender", func() {
-				status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", otherSenderID, campaignTypeID), nil, token.Access)
+				status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", otherSenderID, campaignTypeID), nil, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Campaign type with id %q could not be found", campaignTypeID)))
@@ -253,7 +280,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 		})
 
 		It("returns a 404 when the sender cannot be retrieved", func() {
-			status, response, err := client.Do("GET", "/senders/missing-sender-id/campaign_types/missing-campaign-type-id", nil, token.Access)
+			status, response, err := client.Do("GET", "/senders/missing-sender-id/campaign_types/missing-campaign-type-id", nil, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusNotFound))
 			Expect(response["errors"]).To(ContainElement(`Sender with id "missing-sender-id" could not be found`))
@@ -265,7 +292,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			By("creating a sender as one client", func() {
 				status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 					"name": "My Sender",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -273,11 +300,13 @@ var _ = Describe("Campaign types lifecycle", func() {
 			})
 
 			By("attempting to create a campaign type as a different client", func() {
-				token := GetClientTokenFor("other-client")
+				otherClientToken, err := GetClientTokenWithScopes("notifications.write")
+				Expect(err).NotTo(HaveOccurred())
+
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type",
 					"description": "a great campaign type",
-				}, token.Access)
+				}, otherClientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Sender with id %q could not be found", senderID)))
@@ -293,7 +322,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 			By("creating a sender as one client", func() {
 				status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 					"name": "My Sender",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -304,7 +333,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type",
 					"description": "a great campaign type",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -312,8 +341,10 @@ var _ = Describe("Campaign types lifecycle", func() {
 			})
 
 			By("attempting to retrieve the campaign type as a different client", func() {
-				token := GetClientTokenFor("other-client")
-				status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, token.Access)
+				otherClientToken, err := GetClientTokenWithScopes("notifications.write")
+				Expect(err).NotTo(HaveOccurred())
+
+				status, response, err := client.Do("GET", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), nil, otherClientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Sender with id %q could not be found", senderID)))
@@ -326,7 +357,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 					"name":        "some-campaign-type",
 					"description": "a great campaign type",
 					"template_id": "missing-template-id",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement(`Template with id "missing-template-id" could not be found`))
@@ -340,7 +371,7 @@ var _ = Describe("Campaign types lifecycle", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type",
 					"description": "a great campaign type",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -353,11 +384,13 @@ var _ = Describe("Campaign types lifecycle", func() {
 			})
 
 			By("creating a template for another client", func() {
-				token := GetClientTokenFor("other-client")
+				otherClientToken, err := GetClientTokenWithScopes("notifications.write")
+				Expect(err).NotTo(HaveOccurred())
+
 				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
 					"name": "some-template-name",
 					"text": "email body",
-				}, token.Access)
+				}, otherClientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -365,10 +398,9 @@ var _ = Describe("Campaign types lifecycle", func() {
 			})
 
 			By("attempting to update the campaign type with that template", func() {
-				token := GetClientTokenFor("my-client")
 				status, response, err := client.Do("PUT", fmt.Sprintf("/senders/%s/campaign_types/%s", senderID, campaignTypeID), map[string]interface{}{
 					"template_id": templateID,
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement(fmt.Sprintf("Template with id %q could not be found", templateID)))

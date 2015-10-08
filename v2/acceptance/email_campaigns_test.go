@@ -8,7 +8,6 @@ import (
 	"bitbucket.org/chrj/smtpd"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/acceptance/support"
-	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,7 +16,7 @@ import (
 var _ = Describe("Email Campaigns", func() {
 	var (
 		client   *support.Client
-		token    uaa.Token
+		token    string
 		senderID string
 	)
 
@@ -26,11 +25,13 @@ var _ = Describe("Email Campaigns", func() {
 			Host:  Servers.Notifications.URL(),
 			Trace: Trace,
 		})
-		token = GetClientTokenFor("my-client")
+		var err error
+		token, err = GetClientTokenWithScopes("notifications.write")
+		Expect(err).NotTo(HaveOccurred())
 
 		status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 			"name": "my-sender",
-		}, token.Access)
+		}, token)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(status).To(Equal(http.StatusCreated))
 
@@ -46,7 +47,7 @@ var _ = Describe("Email Campaigns", func() {
 				"text":    "campaign template {{.Text}}",
 				"html":    "{{.HTML}}",
 				"subject": "{{.Subject}}",
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -59,7 +60,7 @@ var _ = Describe("Email Campaigns", func() {
 				"text":    "campaign type template {{.Text}}",
 				"html":    "{{.HTML}}",
 				"subject": "{{.Subject}}",
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -71,7 +72,7 @@ var _ = Describe("Email Campaigns", func() {
 				"name":        "some-campaign-type-name",
 				"description": "acceptance campaign type",
 				"template_id": campaignTypeTemplateID,
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusCreated))
 
@@ -87,7 +88,7 @@ var _ = Describe("Email Campaigns", func() {
 				"text":             "campaign body",
 				"subject":          "campaign subject",
 				"template_id":      templateID,
-			}, token.Access)
+			}, token)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal(http.StatusAccepted))
 			Expect(response["id"]).NotTo(BeEmpty())
@@ -122,7 +123,7 @@ var _ = Describe("Email Campaigns", func() {
 					"text":    "campaign template {{.Text}}",
 					"html":    "{{.HTML}}",
 					"subject": "{{.Subject}}",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -135,11 +136,17 @@ var _ = Describe("Email Campaigns", func() {
 					"text":    "campaign type template {{.Text}}",
 					"html":    "{{.HTML}}",
 					"subject": "{{.Subject}}",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
 				campaignTypeTemplateID = response["id"].(string)
+			})
+
+			By("adding critical_notifications.write scope to client", func() {
+				var err error
+				token, err = UpdateClientTokenWithDifferentScopes(token, "notifications.write", "critical_notifications.write")
+				Expect(err).NotTo(HaveOccurred())
 			})
 
 			By("creating a campaign type", func() {
@@ -148,19 +155,23 @@ var _ = Describe("Email Campaigns", func() {
 					"description": "acceptance campaign type",
 					"template_id": campaignTypeTemplateID,
 					"critical":    true,
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
 				campaignTypeID = response["id"].(string)
 			})
 
-			By("sending the campaign", func() {
-				token = GetClientTokenFor("non-critical-client")
+			By("removing critical_notifications.write scope from the client", func() {
+				var err error
+				token, err = UpdateClientTokenWithDifferentScopes(token, "notifications.write")
+				Expect(err).NotTo(HaveOccurred())
+			})
 
+			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", "/senders", map[string]interface{}{
 					"name": "my-sender",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -174,7 +185,7 @@ var _ = Describe("Email Campaigns", func() {
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      templateID,
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusForbidden))
 				Expect(response["errors"]).To(Equal([]interface{}{"Scope critical_notifications.write is required"}))
@@ -192,7 +203,7 @@ var _ = Describe("Email Campaigns", func() {
 					"text":    "{{.Text}}",
 					"html":    "{{.HTML}}",
 					"subject": "{{.Subject}}",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -203,7 +214,7 @@ var _ = Describe("Email Campaigns", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type-name",
 					"description": "acceptance campaign type",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -219,7 +230,7 @@ var _ = Describe("Email Campaigns", func() {
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      templateID,
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(422))
 				Expect(response["errors"]).To(Equal([]interface{}{"\"bad-email\" is not a valid email address"}))
@@ -235,7 +246,7 @@ var _ = Describe("Email Campaigns", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
 					"name":        "some-campaign-type-name",
 					"description": "acceptance campaign type",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -251,7 +262,7 @@ var _ = Describe("Email Campaigns", func() {
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      "missing-template-id",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement("Template with id \"missing-template-id\" could not be found"))
@@ -269,7 +280,7 @@ var _ = Describe("Email Campaigns", func() {
 					"text":    "{{.Text}} campaign type template",
 					"html":    "{{.HTML}}",
 					"subject": "{{.Subject}}",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -285,7 +296,7 @@ var _ = Describe("Email Campaigns", func() {
 					"text":             "campaign body",
 					"subject":          "campaign subject",
 					"template_id":      templateID,
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
 				Expect(response["errors"]).To(ContainElement("Campaign type with id \"missing-campaign-type-id\" could not be found"))
@@ -303,7 +314,7 @@ var _ = Describe("Email Campaigns", func() {
 					"text":    "{{.Text}} campaign type template",
 					"html":    "{{.HTML}}",
 					"subject": "{{.Subject}}",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -315,7 +326,7 @@ var _ = Describe("Email Campaigns", func() {
 					"name":        "some-campaign-type-name",
 					"description": "acceptance campaign type",
 					"template_id": templateID,
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusCreated))
 
@@ -330,7 +341,7 @@ var _ = Describe("Email Campaigns", func() {
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
 					"subject":          "campaign subject",
-				}, token.Access)
+				}, token)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusAccepted))
 				Expect(response["id"]).NotTo(BeEmpty())

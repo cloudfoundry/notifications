@@ -38,7 +38,14 @@ var _ = BeforeSuite(func() {
 	Servers.UAA = servers.NewUAA()
 	Servers.UAA.Boot()
 
-	Servers.CC = servers.NewCC()
+	users := map[string]string{
+		"user-123":          "user-123",
+		"user-456":          "user-456",
+		"user-789":          "user-789",
+		"unauthorized-user": "unauthorized-user",
+	}
+
+	Servers.CC = servers.NewCC(users)
 	Servers.CC.Boot()
 
 	Servers.Notifications = servers.NewNotifications()
