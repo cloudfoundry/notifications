@@ -17,10 +17,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Workflow", func() {
+var _ = Describe("DeliveryJobProcessor", func() {
 	var (
 		buffer                  *bytes.Buffer
-		workflow                v2.Workflow
+		processor               v2.DeliveryJobProcessor
 		logger                  lager.Logger
 		mailClient              *mocks.MailClient
 		userLoader              *mocks.UserLoader
@@ -134,11 +134,11 @@ var _ = Describe("Workflow", func() {
 			CampaignID:    "some-campaign-id",
 		}
 
-		workflow = v2.NewWorkflow(mailClient, packager, userLoader, tokenLoader, messageStatusUpdater, database, unsubscribersRepository, campaignsRepository, "from@example.com", "example.com", "uaa-host")
+		processor = v2.NewDeliveryJobProcessor(mailClient, packager, userLoader, tokenLoader, messageStatusUpdater, database, unsubscribersRepository, campaignsRepository, "from@example.com", "example.com", "uaa-host")
 	})
 
 	It("ensures message delivery", func() {
-		err := workflow.Deliver(delivery, logger)
+		err := processor.Process(delivery, logger)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(tokenLoader.LoadCall.Receives.UAAHost).To(Equal("uaa-host"))
@@ -167,7 +167,7 @@ var _ = Describe("Workflow", func() {
 	})
 
 	It("updates the message status as delivered", func() {
-		err := workflow.Deliver(delivery, logger)
+		err := processor.Process(delivery, logger)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
@@ -185,7 +185,7 @@ var _ = Describe("Workflow", func() {
 				},
 			}
 
-			err := workflow.Deliver(delivery, logger)
+			err := processor.Process(delivery, logger)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusUndeliverable))
@@ -203,7 +203,7 @@ var _ = Describe("Workflow", func() {
 				CampaignTypeID: "some-campaign-type-id",
 			}
 
-			err := workflow.Deliver(delivery, logger)
+			err := processor.Process(delivery, logger)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -232,7 +232,7 @@ var _ = Describe("Workflow", func() {
 			It("returns the error", func() {
 				campaignsRepository.GetCall.Returns.Error = errors.New("some-campaigns-repository-error")
 
-				err := workflow.Deliver(delivery, logger)
+				err := processor.Process(delivery, logger)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(errors.New("some-campaigns-repository-error")))
 			})
@@ -242,7 +242,7 @@ var _ = Describe("Workflow", func() {
 			It("returns the error", func() {
 				unsubscribersRepository.GetCall.Returns.Error = errors.New("some-unsubscriber-error")
 
-				err := workflow.Deliver(delivery, logger)
+				err := processor.Process(delivery, logger)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(errors.New("some-unsubscriber-error")))
 			})
@@ -252,7 +252,7 @@ var _ = Describe("Workflow", func() {
 			It("returns the error", func() {
 				tokenLoader.LoadCall.Returns.Error = errors.New("some-token-error")
 
-				err := workflow.Deliver(delivery, logger)
+				err := processor.Process(delivery, logger)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(errors.New("some-token-error")))
 			})
@@ -262,7 +262,7 @@ var _ = Describe("Workflow", func() {
 			It("returns the error", func() {
 				userLoader.LoadCall.Returns.Error = errors.New("something happened")
 
-				err := workflow.Deliver(delivery, logger)
+				err := processor.Process(delivery, logger)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(errors.New("something happened")))
 			})
@@ -272,7 +272,7 @@ var _ = Describe("Workflow", func() {
 			It("returns the error", func() {
 				packager.PrepareContextCall.Returns.Error = errors.New("some-packaging-error")
 
-				err := workflow.Deliver(delivery, logger)
+				err := processor.Process(delivery, logger)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(errors.New("some-packaging-error")))
 			})
@@ -282,7 +282,7 @@ var _ = Describe("Workflow", func() {
 			It("returns the error", func() {
 				packager.PackCall.Returns.Error = errors.New("some-packaging-error")
 
-				err := workflow.Deliver(delivery, logger)
+				err := processor.Process(delivery, logger)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(errors.New("some-packaging-error")))
 			})
@@ -292,7 +292,7 @@ var _ = Describe("Workflow", func() {
 			It("returns the error", func() {
 				mailClient.SendCall.Returns.Error = errors.New("smtp error")
 
-				err := workflow.Deliver(delivery, logger)
+				err := processor.Process(delivery, logger)
 				Expect(err).To(HaveOccurred())
 				Expect(err).To(MatchError(errors.New("smtp error")))
 			})

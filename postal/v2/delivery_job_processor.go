@@ -41,7 +41,7 @@ type campaignsRepositoryInterface interface {
 	Get(connection models.ConnectionInterface, campaignID string) (models.Campaign, error)
 }
 
-type Workflow struct {
+type DeliveryJobProcessor struct {
 	mailClient              mailSender
 	packager                messagePackager
 	userLoader              userLoader
@@ -55,10 +55,11 @@ type Workflow struct {
 	uaaHost                 string
 }
 
-func NewWorkflow(mailClient mailSender, packager messagePackager, userLoader userLoader, tokenLoader tokenLoader,
+func NewDeliveryJobProcessor(mailClient mailSender, packager messagePackager, userLoader userLoader, tokenLoader tokenLoader,
 	messageStatusUpdater messageStatusUpdater, database db.DatabaseInterface, unsubscribersRepository unsubscribersRepositoryInterface,
-	campaignsRepository campaignsRepositoryInterface, sender, domain, uaaHost string) Workflow {
-	return Workflow{
+	campaignsRepository campaignsRepositoryInterface, sender, domain, uaaHost string) DeliveryJobProcessor {
+
+	return DeliveryJobProcessor{
 		mailClient:              mailClient,
 		packager:                packager,
 		userLoader:              userLoader,
@@ -73,15 +74,15 @@ func NewWorkflow(mailClient mailSender, packager messagePackager, userLoader use
 	}
 }
 
-func (w Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error {
-	conn := w.database.Connection()
+func (p DeliveryJobProcessor) Process(delivery common.Delivery, logger lager.Logger) error {
+	conn := p.database.Connection()
 
-	campaign, err := w.campaignsRepository.Get(conn, delivery.CampaignID)
+	campaign, err := p.campaignsRepository.Get(conn, delivery.CampaignID)
 	if err != nil {
 		return err
 	}
 
-	unsubscriber, err := w.unsubscribersRepository.Get(conn, delivery.UserGUID, campaign.CampaignTypeID)
+	unsubscriber, err := p.unsubscribersRepository.Get(conn, delivery.UserGUID, campaign.CampaignTypeID)
 	if err != nil {
 		if _, ok := err.(models.RecordNotFoundError); !ok {
 			return err
@@ -89,16 +90,16 @@ func (w Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error {
 	}
 
 	if unsubscriber.ID != "" {
-		w.messageStatusUpdater.Update(conn, delivery.MessageID, common.StatusDelivered, delivery.CampaignID, logger)
+		p.messageStatusUpdater.Update(conn, delivery.MessageID, common.StatusDelivered, delivery.CampaignID, logger)
 		return nil
 	}
 
-	token, err := w.tokenLoader.Load(w.uaaHost)
+	token, err := p.tokenLoader.Load(p.uaaHost)
 	if err != nil {
 		return err
 	}
 
-	users, err := w.userLoader.Load([]string{delivery.UserGUID}, token)
+	users, err := p.userLoader.Load([]string{delivery.UserGUID}, token)
 	if err != nil {
 		return err
 	}
@@ -109,26 +110,26 @@ func (w Workflow) Deliver(delivery common.Delivery, logger lager.Logger) error {
 	}
 
 	if !strings.Contains(delivery.Email, "@") {
-		w.messageStatusUpdater.Update(conn, delivery.MessageID, common.StatusUndeliverable, delivery.CampaignID, logger)
+		p.messageStatusUpdater.Update(conn, delivery.MessageID, common.StatusUndeliverable, delivery.CampaignID, logger)
 		return nil
 	}
 
-	context, err := w.packager.PrepareContext(delivery, w.sender, w.domain)
+	context, err := p.packager.PrepareContext(delivery, p.sender, p.domain)
 	if err != nil {
 		return err
 	}
 
-	message, err := w.packager.Pack(context)
+	message, err := p.packager.Pack(context)
 	if err != nil {
 		return err
 	}
 
-	err = w.mailClient.Send(message, logger)
+	err = p.mailClient.Send(message, logger)
 	if err != nil {
 		return err
 	}
 
-	w.messageStatusUpdater.Update(conn, delivery.MessageID, common.StatusDelivered, delivery.CampaignID, logger)
+	p.messageStatusUpdater.Update(conn, delivery.MessageID, common.StatusDelivered, delivery.CampaignID, logger)
 
 	return nil
 }

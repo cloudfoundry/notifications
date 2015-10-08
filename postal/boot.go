@@ -115,7 +115,7 @@ func Boot(mom mother, config Config) {
 
 		mailClient := mom.MailClient()
 
-		v1Workflow := v1.NewProcess(v1.ProcessConfig{
+		v1Process := v1.NewProcess(v1.ProcessConfig{
 			DBTrace: config.DBLoggingEnabled,
 			UAAHost: config.UAAHost,
 			Sender:  config.Sender,
@@ -137,11 +137,11 @@ func Boot(mom mother, config Config) {
 
 		v2mailClient := mom.MailClient()
 
-		v2Workflow := v2.NewWorkflow(v2mailClient, common.NewPackager(v2TemplateLoader, cloak),
+		v2DeliveryJobProcessor := v2.NewDeliveryJobProcessor(v2mailClient, common.NewPackager(v2TemplateLoader, cloak),
 			common.NewUserLoader(uaaClient), uaa.NewTokenLoader(uaaClient), v2messageStatusUpdater, v2database,
 			unsubscribersRepository, campaignsRepository, config.Sender, config.Domain, config.UAAHost)
 
-		worker := NewDeliveryWorker(v1Workflow, v2Workflow, DeliveryWorkerConfig{
+		worker := NewDeliveryWorker(v1Process, v2DeliveryJobProcessor, DeliveryWorkerConfig{
 			ID:      index,
 			UAAHost: config.UAAHost,
 			DBTrace: config.DBLoggingEnabled,

@@ -23,8 +23,8 @@ var _ = Describe("DeliveryWorker", func() {
 		delivery               common.Delivery
 		queue                  *mocks.Queue
 		deliveryFailureHandler *mocks.DeliveryFailureHandler
-		v1Workflow             *mocks.Process
-		v2Workflow             *mocks.Workflow
+		v1Process              *mocks.Process
+		v2DeliveryJobProcessor *mocks.V2DeliveryJobProcessor
 		campaignJobProcessor   *mocks.CampaignJobProcessor
 		connection             *mocks.Connection
 		messageStatusUpdater   *mocks.MessageStatusUpdater
@@ -52,9 +52,9 @@ var _ = Describe("DeliveryWorker", func() {
 			MessageStatusUpdater:   messageStatusUpdater,
 		}
 
-		v1Workflow = mocks.NewProcess()
-		v2Workflow = mocks.NewWorkflow()
-		worker = postal.NewDeliveryWorker(v1Workflow, v2Workflow, config)
+		v1Process = mocks.NewProcess()
+		v2DeliveryJobProcessor = mocks.NewV2DeliveryJobProcessor()
+		worker = postal.NewDeliveryWorker(v1Process, v2DeliveryJobProcessor, config)
 	})
 
 	Describe("Work", func() {
@@ -70,7 +70,7 @@ var _ = Describe("DeliveryWorker", func() {
 			<-time.After(10 * time.Millisecond)
 			worker.Halt()
 
-			Expect(v1Workflow.DeliverCall.CallCount).To(Equal(1))
+			Expect(v1Process.DeliverCall.CallCount).To(Equal(1))
 		})
 
 		It("can be halted", func() {
@@ -96,8 +96,8 @@ var _ = Describe("DeliveryWorker", func() {
 			It("should hand the job to the v1 workflow", func() {
 				worker.Deliver(job)
 
-				Expect(v1Workflow.DeliverCall.Receives.Job).To(Equal(job))
-				Expect(v1Workflow.DeliverCall.Receives.Logger).ToNot(BeNil())
+				Expect(v1Process.DeliverCall.Receives.Job).To(Equal(job))
+				Expect(v1Process.DeliverCall.Receives.Logger).ToNot(BeNil())
 			})
 		})
 
@@ -149,17 +149,17 @@ var _ = Describe("DeliveryWorker", func() {
 			It("should hand the job to the v2 workflow", func() {
 				worker.Deliver(job)
 
-				Expect(v2Workflow.DeliverCall.Receives.Delivery).To(Equal(common.Delivery{
+				Expect(v2DeliveryJobProcessor.ProcessCall.Receives.Delivery).To(Equal(common.Delivery{
 					MessageID:  "some-message-id",
 					CampaignID: "some-campaign-id",
 				}))
-				Expect(v2Workflow.DeliverCall.Receives.Logger).NotTo(BeNil())
-				Expect(v1Workflow.DeliverCall.CallCount).To(Equal(0))
+				Expect(v2DeliveryJobProcessor.ProcessCall.Receives.Logger).NotTo(BeNil())
+				Expect(v1Process.DeliverCall.CallCount).To(Equal(0))
 			})
 
 			Context("when the workflow encounters an error", func() {
 				It("updates the message status to retry if the job should be retried", func() {
-					v2Workflow.DeliverCall.Returns.Error = errors.New("delivery failure")
+					v2DeliveryJobProcessor.ProcessCall.Returns.Error = errors.New("delivery failure")
 					job.ShouldRetry = true
 
 					worker.Deliver(job)
@@ -173,7 +173,7 @@ var _ = Describe("DeliveryWorker", func() {
 				})
 
 				It("updates the message status to failed if the job should not be retried", func() {
-					v2Workflow.DeliverCall.Returns.Error = errors.New("delivery failure")
+					v2DeliveryJobProcessor.ProcessCall.Returns.Error = errors.New("delivery failure")
 					job.ShouldRetry = false
 
 					worker.Deliver(job)

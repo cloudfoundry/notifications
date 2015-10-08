@@ -13,8 +13,8 @@ type process interface {
 	Deliver(job *gobble.Job, logger lager.Logger) error
 }
 
-type workflow interface {
-	Deliver(delivery common.Delivery, logger lager.Logger) error
+type v2DeliveryJobProcessor interface {
+	Process(delivery common.Delivery, logger lager.Logger) error
 }
 
 type campaignJobProcessor interface {
@@ -46,7 +46,7 @@ type DeliveryWorker struct {
 
 	uaaHost                string
 	V1Process              process
-	V2Workflow             workflow
+	V2DeliveryJobProcessor v2DeliveryJobProcessor
 	logger                 lager.Logger
 	database               db.DatabaseInterface
 	campaignJobProcessor   campaignJobProcessor
@@ -54,12 +54,12 @@ type DeliveryWorker struct {
 	messageStatusUpdater   messageStatusUpdater
 }
 
-func NewDeliveryWorker(v1process process, v2workflow workflow, config DeliveryWorkerConfig) DeliveryWorker {
+func NewDeliveryWorker(v1process process, v2DeliveryJobProcessor v2DeliveryJobProcessor, config DeliveryWorkerConfig) DeliveryWorker {
 	logger := config.Logger.Session("worker", lager.Data{"worker_id": config.ID})
 
 	worker := DeliveryWorker{
 		V1Process:              v1process,
-		V2Workflow:             v2workflow,
+		V2DeliveryJobProcessor: v2DeliveryJobProcessor,
 		uaaHost:                config.UAAHost,
 		logger:                 logger,
 		database:               config.Database,
@@ -97,7 +97,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 		var delivery common.Delivery
 		job.Unmarshal(&delivery)
 
-		err = worker.V2Workflow.Deliver(delivery, worker.logger)
+		err = worker.V2DeliveryJobProcessor.Process(delivery, worker.logger)
 		if err != nil {
 			worker.deliveryFailureHandler.Handle(job, worker.logger)
 			status := common.StatusFailed
