@@ -2,13 +2,22 @@ package tokens
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/pivotal-cf-experimental/warrant/internal/server/common"
 	"github.com/pivotal-cf-experimental/warrant/internal/server/domain"
 )
 
-type tokenHandler struct{}
+type urlFinder interface {
+	URL() string
+}
+
+type tokenHandler struct {
+	clients   *domain.Clients
+	urlFinder urlFinder
+	publicKey string
+}
 
 func (h tokenHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// TODO: actually check the basic auth values
@@ -24,14 +33,19 @@ func (h tokenHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	clientID := req.Form.Get("client_id")
 
-	scopes := []string{"scim.write", "scim.read", "password.write"}
-	t := domain.Token{
-		ClientID:  clientID,
-		Scopes:    scopes,
-		Audiences: []string{"scim", "password"},
+	client, ok := h.clients.Get(clientID)
+	if !ok {
+		panic("client could not be found")
 	}
 
-	response, err := json.Marshal(t.ToDocument())
+	t := domain.Token{
+		ClientID:  clientID,
+		Scopes:    client.Scope,
+		Audiences: []string{"scim", "password"},
+		Issuer:    fmt.Sprintf("%s/oauth/token", h.urlFinder.URL()),
+	}
+
+	response, err := json.Marshal(t.ToDocument(h.publicKey))
 	if err != nil {
 		panic(err)
 	}

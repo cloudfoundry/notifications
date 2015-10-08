@@ -47,7 +47,11 @@ func (h passwordHandler) canUpdateUserPassword(userID, tokenHeader, existingPass
 		return true
 	}
 
-	t := h.tokens.Decrypt(tokenHeader)
+	t, err := h.tokens.Decrypt(tokenHeader)
+	if err != nil {
+		return false
+	}
+
 	if t.UserID == userID && existingPassword == givenPassword {
 		return true
 	}

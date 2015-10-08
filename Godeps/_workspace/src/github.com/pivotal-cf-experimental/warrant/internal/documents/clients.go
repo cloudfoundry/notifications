@@ -1,8 +1,8 @@
 package documents
 
-// CreateClientRequest represents the JSON transport data structure
-// for a request to create a Client.
-type CreateClientRequest struct {
+// CreateUpdateClientRequest represents the JSON transport data structure
+// for a request to create or update a Client.
+type CreateUpdateClientRequest struct {
 	// ClientID is the unique identifier specifying the client.
 	ClientID string `json:"client_id"`
 

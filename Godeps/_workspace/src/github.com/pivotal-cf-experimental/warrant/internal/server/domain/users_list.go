@@ -10,6 +10,7 @@ func (ul UsersList) ToDocument() documents.UserListResponse {
 		StartIndex:   1,
 		TotalResults: len(ul),
 		Schemas:      schemas,
+		Resources:    []documents.UserResponse{},
 	}
 
 	for _, user := range ul {

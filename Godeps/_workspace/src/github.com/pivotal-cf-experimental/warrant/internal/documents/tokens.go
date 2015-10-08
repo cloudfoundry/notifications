@@ -21,6 +21,9 @@ type TokenResponse struct {
 
 	// JTI is the unique identifier for this JWT token.
 	JTI string `json:"jti"`
+
+	// Issuer is the URL to the issuer of the token.
+	Issuer string `json:"iss"`
 }
 
 // TokenKeyResponse represents the JSON transport data structure

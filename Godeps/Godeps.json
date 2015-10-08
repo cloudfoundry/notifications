@@ -80,7 +80,7 @@
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/warrant",
-			"Rev": "cc7cc3f2934ba665386dec2a6db87a9c897a16f7"
+			"Rev": "d7b726ec8b2ee867e6da787810157b3c836392e4"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",

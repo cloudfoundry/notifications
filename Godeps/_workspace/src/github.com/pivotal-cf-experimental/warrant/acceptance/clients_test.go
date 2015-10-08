@@ -48,6 +48,21 @@ var _ = Describe("Client Lifecycle", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fetchedClient).To(Equal(client))
 		})
+
+		By("updating the client", func() {
+			client.Scope = []string{"bananas.eat", "openid"}
+			client.Authorities = []string{"scim.read"}
+			client.AuthorizedGrantTypes = []string{"client_credentials", "implicit"}
+
+			err := warrantClient.Clients.Update(client, UAAToken)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		By("retrieving the updated client", func() {
+			fetchedClient, err := warrantClient.Clients.Get(client.ID, UAAToken)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fetchedClient).To(Equal(client))
+		})
 	})
 
 	It("rejects requests from clients that do not have clients.write scope", func() {

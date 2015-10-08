@@ -50,8 +50,8 @@ func newClientFromDocument(document documents.ClientResponse) Client {
 	}
 }
 
-func (c Client) toDocument(secret string) documents.CreateClientRequest {
-	client := documents.CreateClientRequest{
+func (c Client) toDocument(secret string) documents.CreateUpdateClientRequest {
+	client := documents.CreateUpdateClientRequest{
 		ClientID:             c.ID,
 		ClientSecret:         secret,
 		AccessTokenValidity:  int(c.AccessTokenValidity.Seconds()),

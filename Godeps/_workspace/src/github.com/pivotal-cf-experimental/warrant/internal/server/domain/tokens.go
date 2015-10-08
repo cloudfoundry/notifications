@@ -25,19 +25,22 @@ func (t Tokens) Encrypt(token Token) string {
 	return encrypted
 }
 
-func (t Tokens) Decrypt(encryptedToken string) Token {
+func (t Tokens) Decrypt(encryptedToken string) (Token, error) {
 	tok, err := jwt.Parse(encryptedToken, jwt.Keyfunc(func(*jwt.Token) (interface{}, error) {
 		return []byte(t.PublicKey), nil
 	}))
 	if err != nil {
-		panic(err)
+		return Token{}, err
 	}
 
-	return newTokenFromClaims(tok.Claims)
+	return newTokenFromClaims(tok.Claims), nil
 }
 
 func (t Tokens) Validate(encryptedToken string, audiences, scopes []string) bool {
-	decryptedToken := t.Decrypt(encryptedToken)
+	decryptedToken, err := t.Decrypt(encryptedToken)
+	if err != nil {
+		return false
+	}
 
 	return t.validate(decryptedToken, Token{
 		Audiences: audiences,

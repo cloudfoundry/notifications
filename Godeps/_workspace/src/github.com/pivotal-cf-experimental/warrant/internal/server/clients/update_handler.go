@@ -10,12 +10,12 @@ import (
 	"github.com/pivotal-cf-experimental/warrant/internal/server/domain"
 )
 
-type createHandler struct {
+type updateHandler struct {
 	clients *domain.Clients
 	tokens  *domain.Tokens
 }
 
-func (h createHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h updateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
 	if ok := h.tokens.Validate(token, []string{"clients"}, []string{"clients.write"}); !ok {
 		common.Error(w, http.StatusUnauthorized, "Full authentication is required to access this resource", "unauthorized")
@@ -41,6 +41,6 @@ func (h createHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 }

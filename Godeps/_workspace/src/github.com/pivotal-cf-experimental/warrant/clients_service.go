@@ -62,6 +62,21 @@ func (cs ClientsService) Get(id, token string) (Client, error) {
 	return newClientFromDocument(document), nil
 }
 
+func (cs ClientsService) Update(client Client, token string) error {
+	_, err := newNetworkClient(cs.config).MakeRequest(network.Request{
+		Method:        "PUT",
+		Path:          fmt.Sprintf("/oauth/clients/%s", client.ID),
+		Authorization: network.NewTokenAuthorization(token),
+		Body:          network.NewJSONRequestBody(client.toDocument("")),
+		AcceptableStatusCodes: []int{http.StatusOK},
+	})
+	if err != nil {
+		return translateError(err)
+	}
+
+	return nil
+}
+
 // Delete will make a request to UAA to delete the client matching the given id.
 // A token with the "clients.write" scope is required.
 func (cs ClientsService) Delete(id, token string) error {

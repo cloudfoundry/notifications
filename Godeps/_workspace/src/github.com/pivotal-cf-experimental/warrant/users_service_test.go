@@ -410,6 +410,35 @@ var _ = Describe("UsersService", func() {
 			Expect(users[0].ID).To(Equal(user.ID))
 		})
 
+		It("returns an empty list of users if nothing matches the filter", func() {
+			users, err := service.List(warrant.Query{
+				Filter: "id eq ''",
+			}, token)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(users).To(HaveLen(0))
+		})
+
+		It("ignores the case of the parameter in the filter", func() {
+			users, err := service.List(warrant.Query{
+				Filter: fmt.Sprintf("ID eq '%s'", user.ID),
+			}, token)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(users).To(HaveLen(1))
+			Expect(users[0].ID).To(Equal(user.ID))
+		})
+
+		It("ignores the case of the operator in the filter", func() {
+			users, err := service.List(warrant.Query{
+				Filter: fmt.Sprintf("id EQ '%s'", user.ID),
+			}, token)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(users).To(HaveLen(1))
+			Expect(users[0].ID).To(Equal(user.ID))
+		})
+
 		Context("failure cases", func() {
 			It("returns an error when the query is malformed", func() {
 				_, err := service.List(warrant.Query{

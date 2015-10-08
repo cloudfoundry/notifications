@@ -13,4 +13,7 @@ type Token struct {
 	// Scopes are the values given in the "scope" field of the token claims.
 	// These values indicate the level of access granted by the user to this token.
 	Scopes []string `json:"scope"`
+
+	// Issuer is the UAA endpoint that generated the token.
+	Issuer string `json:"iss"`
 }

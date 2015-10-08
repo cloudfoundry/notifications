@@ -19,7 +19,7 @@ type client struct {
 	AccessTokenValidity  int
 }
 
-func NewClientFromDocument(document documents.CreateClientRequest) client {
+func NewClientFromDocument(document documents.CreateUpdateClientRequest) client {
 	return client{
 		ID:                   document.ClientID,
 		Secret:               document.ClientSecret,

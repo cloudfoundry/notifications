@@ -11,6 +11,19 @@ import (
 	"github.com/pivotal-cf-experimental/warrant/internal/server/users"
 )
 
+var defaultScopes = []string{
+	"scim.read",
+	"cloudcontroller.admin",
+	"password.write",
+	"scim.write",
+	"openid",
+	"cloud_controller.write",
+	"cloud_controller.read",
+	"doppler.firehose",
+	"notification_preferences.write",
+	"notification_preferences.read",
+}
+
 // Config is the set of configuration values to provide
 // to the fake server.
 type Config struct {
@@ -30,28 +43,13 @@ type UAA struct {
 
 // NewUAA returns a new UAA initialized with the given Config.
 func NewUAA(config Config) *UAA {
-	tokensCollection := domain.NewTokens(config.PublicKey, []string{
-		"scim.read",
-		"cloudcontroller.admin",
-		"password.write",
-		"scim.write",
-		"openid",
-		"cloud_controller.write",
-		"cloud_controller.read",
-		"doppler.firehose",
-	}) // TODO: use a real RSA key
+	tokensCollection := domain.NewTokens(config.PublicKey, defaultScopes) // TODO: use a real RSA key
 	usersCollection := domain.NewUsers()
 	clientsCollection := domain.NewClients()
 	groupsCollection := domain.NewGroups()
 
 	router := mux.NewRouter()
-	router.Handle("/Users{a:.*}", users.NewRouter(usersCollection, tokensCollection))
-	router.Handle("/Groups{a:.*}", groups.NewRouter(groupsCollection, tokensCollection))
-	router.Handle("/oauth/clients{a:.*}", clients.NewRouter(clientsCollection, tokensCollection))
-	router.Handle("/oauth{a:.*}", tokens.NewRouter(tokensCollection, usersCollection))
-	router.Handle("/token_key", tokens.NewRouter(tokensCollection, usersCollection))
-
-	return &UAA{
+	uaa := &UAA{
 		server:    httptest.NewUnstartedServer(router),
 		tokens:    tokensCollection,
 		users:     usersCollection,
@@ -60,6 +58,13 @@ func NewUAA(config Config) *UAA {
 		publicKey: config.PublicKey,
 	}
 
+	router.Handle("/Users{a:.*}", users.NewRouter(usersCollection, tokensCollection))
+	router.Handle("/Groups{a:.*}", groups.NewRouter(groupsCollection, tokensCollection))
+	router.Handle("/oauth/clients{a:.*}", clients.NewRouter(clientsCollection, tokensCollection))
+	router.Handle("/oauth{a:.*}", tokens.NewRouter(tokensCollection, usersCollection, clientsCollection, config.PublicKey, uaa))
+	router.Handle("/token_key", tokens.NewRouter(tokensCollection, usersCollection, clientsCollection, config.PublicKey, uaa))
+
+	return uaa
 }
 
 // Start will cause the HTTP server to bind to a port
@@ -93,6 +98,12 @@ func (s *UAA) URL() string {
 func (s *UAA) SetDefaultScopes(scopes []string) {
 	s.tokens.DefaultScopes = scopes
 } // TODO: move this configuration onto the Config
+
+// ResetDefaultScopes resets the default scopes back to their
+// original values.
+func (s *UAA) ResetDefaultScopes() {
+	s.tokens.DefaultScopes = defaultScopes
+}
 
 // ClientTokenFor returns a client token with the given id,
 // scopes, and audiences.

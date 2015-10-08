@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/pivotal-cf-experimental/warrant/internal/server/common"
 	"github.com/pivotal-cf-experimental/warrant/internal/server/domain"
@@ -22,7 +23,7 @@ func (h listHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	filter := query.Get("filter")
-	matches := regexp.MustCompile(`(.*) (.*) '(.*)'$`).FindStringSubmatch(filter)
+	matches := regexp.MustCompile(`(.*) (.*) ['"](.*)['"]$`).FindStringSubmatch(filter)
 	parameter := matches[1]
 	operator := matches[2]
 	value := matches[3]
@@ -37,9 +38,12 @@ func (h listHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	user, _ := h.users.Get(value)
+	list := domain.UsersList{}
 
-	list := domain.UsersList{user}
+	user, found := h.users.Get(value)
+	if found {
+		list = append(list, user)
+	}
 
 	response, err := json.Marshal(list.ToDocument())
 	if err != nil {
@@ -52,7 +56,7 @@ func (h listHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func validParameter(parameter string) bool {
 	for _, p := range []string{"id"} {
-		if parameter == p {
+		if strings.ToLower(parameter) == p {
 			return true
 		}
 	}
@@ -62,7 +66,7 @@ func validParameter(parameter string) bool {
 
 func validOperator(operator string) bool {
 	for _, o := range []string{"eq"} {
-		if operator == o {
+		if strings.ToLower(operator) == o {
 			return true
 		}
 	}

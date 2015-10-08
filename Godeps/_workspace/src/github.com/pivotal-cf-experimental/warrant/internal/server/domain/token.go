@@ -11,6 +11,7 @@ type Token struct {
 	ClientID  string
 	Scopes    []string
 	Audiences []string
+	Issuer    string
 }
 
 func newTokenFromClaims(claims map[string]interface{}) Token {
@@ -40,13 +41,16 @@ func newTokenFromClaims(claims map[string]interface{}) Token {
 	return t
 }
 
-func (t Token) ToDocument() documents.TokenResponse {
+func (t Token) ToDocument(publicKey string) documents.TokenResponse {
 	return documents.TokenResponse{
-		AccessToken: Tokens{}.Encrypt(t),
-		TokenType:   "bearer",
-		ExpiresIn:   5000,
-		Scope:       strings.Join(t.Scopes, " "),
-		JTI:         generateID(),
+		AccessToken: Tokens{
+			PublicKey: publicKey,
+		}.Encrypt(t),
+		TokenType: "bearer",
+		ExpiresIn: 5000,
+		Scope:     strings.Join(t.Scopes, " "),
+		JTI:       generateID(),
+		Issuer:    t.Issuer,
 	}
 }
 
@@ -63,6 +67,7 @@ func (t Token) toClaims() map[string]interface{} {
 
 	claims["scope"] = t.Scopes
 	claims["aud"] = strings.Join(t.Audiences, " ")
+	claims["iss"] = t.Issuer
 
 	return claims
 }
