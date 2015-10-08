@@ -17,8 +17,8 @@ type workflow interface {
 	Deliver(delivery common.Delivery, logger lager.Logger) error
 }
 
-type strategyDeterminer interface {
-	Determine(conn services.ConnectionInterface, uaaHost string, job gobble.Job) error
+type campaignJobProcessor interface {
+	Process(conn services.ConnectionInterface, uaaHost string, job gobble.Job) error
 }
 
 type messageStatusUpdater interface {
@@ -36,7 +36,7 @@ type DeliveryWorkerConfig struct {
 	Queue                  gobble.QueueInterface
 	DBTrace                bool
 	Database               db.DatabaseInterface
-	StrategyDeterminer     strategyDeterminer
+	CampaignJobProcessor   campaignJobProcessor
 	DeliveryFailureHandler deliveryFailureHandler
 	MessageStatusUpdater   messageStatusUpdater
 }
@@ -49,7 +49,7 @@ type DeliveryWorker struct {
 	V2Workflow             workflow
 	logger                 lager.Logger
 	database               db.DatabaseInterface
-	strategyDeterminer     strategyDeterminer
+	campaignJobProcessor   campaignJobProcessor
 	deliveryFailureHandler deliveryFailureHandler
 	messageStatusUpdater   messageStatusUpdater
 }
@@ -63,7 +63,7 @@ func NewDeliveryWorker(v1process process, v2workflow workflow, config DeliveryWo
 		uaaHost:                config.UAAHost,
 		logger:                 logger,
 		database:               config.Database,
-		strategyDeterminer:     config.StrategyDeterminer,
+		campaignJobProcessor:   config.CampaignJobProcessor,
 		deliveryFailureHandler: config.DeliveryFailureHandler,
 		messageStatusUpdater:   config.MessageStatusUpdater,
 	}
@@ -89,7 +89,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 
 	switch typedJob.JobType {
 	case "campaign":
-		err := worker.strategyDeterminer.Determine(worker.database.Connection(), worker.uaaHost, *job)
+		err := worker.campaignJobProcessor.Process(worker.database.Connection(), worker.uaaHost, *job)
 		if err != nil {
 			worker.deliveryFailureHandler.Handle(job, worker.logger)
 		}

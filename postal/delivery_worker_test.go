@@ -25,7 +25,7 @@ var _ = Describe("DeliveryWorker", func() {
 		deliveryFailureHandler *mocks.DeliveryFailureHandler
 		v1Workflow             *mocks.Process
 		v2Workflow             *mocks.Workflow
-		strategyDeterminer     *mocks.StrategyDeterminer
+		campaignJobProcessor   *mocks.CampaignJobProcessor
 		connection             *mocks.Connection
 		messageStatusUpdater   *mocks.MessageStatusUpdater
 	)
@@ -36,7 +36,7 @@ var _ = Describe("DeliveryWorker", func() {
 		logger.RegisterSink(lager.NewWriterSink(buffer, lager.DEBUG))
 		queue = mocks.NewQueue()
 		deliveryFailureHandler = mocks.NewDeliveryFailureHandler()
-		strategyDeterminer = mocks.NewStrategyDeterminer()
+		campaignJobProcessor = mocks.NewCampaignJobProcessor()
 		connection = mocks.NewConnection()
 		database := mocks.NewDatabase()
 		database.ConnectionCall.Returns.Connection = connection
@@ -46,7 +46,7 @@ var _ = Describe("DeliveryWorker", func() {
 			Logger: logger,
 			Queue:  queue,
 			DeliveryFailureHandler: deliveryFailureHandler,
-			StrategyDeterminer:     strategyDeterminer,
+			CampaignJobProcessor:   campaignJobProcessor,
 			Database:               database,
 			UAAHost:                "my-uaa-host",
 			MessageStatusUpdater:   messageStatusUpdater,
@@ -111,17 +111,17 @@ var _ = Describe("DeliveryWorker", func() {
 				job = &j
 			})
 
-			It("uses the strategy determiner", func() {
+			It("uses the campaign job processor", func() {
 				worker.Deliver(job)
 
-				Expect(strategyDeterminer.DetermineCall.Receives.Job).To(Equal(*job))
-				Expect(strategyDeterminer.DetermineCall.Receives.UAAHost).To(Equal("my-uaa-host"))
-				Expect(strategyDeterminer.DetermineCall.Receives.Connection).To(Equal(connection))
+				Expect(campaignJobProcessor.ProcessCall.Receives.Job).To(Equal(*job))
+				Expect(campaignJobProcessor.ProcessCall.Receives.UAAHost).To(Equal("my-uaa-host"))
+				Expect(campaignJobProcessor.ProcessCall.Receives.Connection).To(Equal(connection))
 			})
 
 			Context("when the strategy fails to determine", func() {
 				It("uses the deliveryFailureHandler", func() {
-					strategyDeterminer.DetermineCall.Returns.Error = errors.New("some error")
+					campaignJobProcessor.ProcessCall.Returns.Error = errors.New("some error")
 
 					worker.Deliver(job)
 

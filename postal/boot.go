@@ -106,7 +106,7 @@ func Boot(mom mother, config Config) {
 	templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
 	v2TemplateLoader := v2.NewTemplatesLoader(v2database, templatesCollection)
 	v2deliveryFailureHandler := common.NewDeliveryFailureHandler()
-	strategyDeterminer := v2.NewStrategyDeterminer(notify.EmailFormatter{}, notify.HTMLExtractor{}, userStrategy, spaceStrategy, orgStrategy, emailStrategy)
+	campaignJobProcessor := v2.NewCampaignJobProcessor(notify.EmailFormatter{}, notify.HTMLExtractor{}, userStrategy, spaceStrategy, orgStrategy, emailStrategy)
 
 	WorkerGenerator{
 		InstanceIndex: config.InstanceIndex,
@@ -150,7 +150,7 @@ func Boot(mom mother, config Config) {
 			Queue:  gobbleQueue,
 
 			Database:               v2database,
-			StrategyDeterminer:     strategyDeterminer,
+			CampaignJobProcessor:   campaignJobProcessor,
 			DeliveryFailureHandler: v2deliveryFailureHandler,
 			MessageStatusUpdater:   v2messageStatusUpdater,
 		})

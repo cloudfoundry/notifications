@@ -24,7 +24,7 @@ type htmlPartsExtractor interface {
 	Extract(html string) (doctype, head, bodyContent, bodyAttributes string, err error)
 }
 
-type Determiner struct {
+type CampaignJobProcessor struct {
 	emailFormatter emailAddressFormatter
 	htmlExtractor  htmlPartsExtractor
 
@@ -38,8 +38,8 @@ type dispatcher interface {
 	Dispatch(dispatch services.Dispatch) ([]services.Response, error)
 }
 
-func NewStrategyDeterminer(emailFormatter emailAddressFormatter, htmlExtractor htmlPartsExtractor, userStrategy, spaceStrategy, orgStrategy, emailStrategy dispatcher) Determiner {
-	return Determiner{
+func NewCampaignJobProcessor(emailFormatter emailAddressFormatter, htmlExtractor htmlPartsExtractor, userStrategy, spaceStrategy, orgStrategy, emailStrategy dispatcher) CampaignJobProcessor {
+	return CampaignJobProcessor{
 		emailFormatter: emailFormatter,
 		htmlExtractor:  htmlExtractor,
 		userStrategy:   userStrategy,
@@ -49,7 +49,7 @@ func NewStrategyDeterminer(emailFormatter emailAddressFormatter, htmlExtractor h
 	}
 }
 
-func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string, job gobble.Job) error {
+func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost string, job gobble.Job) error {
 	var campaignJob queue.CampaignJob
 
 	err := job.Unmarshal(&campaignJob)
@@ -62,7 +62,7 @@ func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string,
 		audience = key
 	}
 
-	doctype, head, bodyContent, bodyAttributes, err := d.htmlExtractor.Extract(campaignJob.Campaign.HTML)
+	doctype, head, bodyContent, bodyAttributes, err := p.htmlExtractor.Extract(campaignJob.Campaign.HTML)
 	if err != nil {
 		panic(err)
 	}
@@ -71,14 +71,14 @@ func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string,
 	var guid string
 	if audience == "emails" {
 		for _, audienceMember := range campaignJob.Campaign.SendTo[audience].([]interface{}) {
-			recipients = append(recipients, d.emailFormatter.Format(audienceMember.(string)))
+			recipients = append(recipients, p.emailFormatter.Format(audienceMember.(string)))
 		}
 	} else {
 		recipients = []string{""}
 		guid = campaignJob.Campaign.SendTo[audience].(string)
 	}
 
-	strategy, err := d.findStrategy(audience)
+	strategy, err := p.findStrategy(audience)
 	if err != nil {
 		return err
 	}
@@ -115,16 +115,16 @@ func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string,
 	return nil
 }
 
-func (d Determiner) findStrategy(audience string) (dispatcher, error) {
+func (p CampaignJobProcessor) findStrategy(audience string) (dispatcher, error) {
 	switch audience {
 	case "users":
-		return d.userStrategy, nil
+		return p.userStrategy, nil
 	case "spaces":
-		return d.spaceStrategy, nil
+		return p.spaceStrategy, nil
 	case "orgs":
-		return d.orgStrategy, nil
+		return p.orgStrategy, nil
 	case "emails":
-		return d.emailStrategy, nil
+		return p.emailStrategy, nil
 	default:
 		return nil, NoStrategyError{fmt.Errorf("Strategy for the %q audience could not be found", audience)}
 	}

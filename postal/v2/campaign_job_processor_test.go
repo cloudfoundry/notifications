@@ -15,9 +15,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Determiner", func() {
+var _ = Describe("CampaignJobProcessor", func() {
 	var (
-		determiner    v2.Determiner
+		processor     v2.CampaignJobProcessor
 		userStrategy  *mocks.Strategy
 		spaceStrategy *mocks.Strategy
 		orgStrategy   *mocks.Strategy
@@ -30,12 +30,12 @@ var _ = Describe("Determiner", func() {
 		orgStrategy = mocks.NewStrategy()
 		emailStrategy = mocks.NewStrategy()
 		database = mocks.NewDatabase()
-		determiner = v2.NewStrategyDeterminer(notify.EmailFormatter{}, notify.HTMLExtractor{}, userStrategy, spaceStrategy, orgStrategy, emailStrategy)
+		processor = v2.NewCampaignJobProcessor(notify.EmailFormatter{}, notify.HTMLExtractor{}, userStrategy, spaceStrategy, orgStrategy, emailStrategy)
 	})
 
 	Context("when dispatching to a user", func() {
 		It("determines the strategy and calls it", func() {
-			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
 					SendTo:         map[string]interface{}{"users": "some-user-guid"},
@@ -80,7 +80,7 @@ var _ = Describe("Determiner", func() {
 
 	Context("when dispatching to an email", func() {
 		It("determines the strategy and calls it", func() {
-			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
 					SendTo:         map[string]interface{}{"emails": []string{"test1@example.com", "test2@example.com"}},
@@ -147,7 +147,7 @@ var _ = Describe("Determiner", func() {
 
 	Context("when dispatching to a space", func() {
 		It("determines the strategy and calls it", func() {
-			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
 					SendTo:         map[string]interface{}{"spaces": "some-space-guid"},
@@ -192,7 +192,7 @@ var _ = Describe("Determiner", func() {
 
 	Context("when dispatching to an org", func() {
 		It("determines the strategy and calls it", func() {
-			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
 					SendTo:         map[string]interface{}{"orgs": "some-org-guid"},
@@ -238,7 +238,7 @@ var _ = Describe("Determiner", func() {
 	Context("when an error occurs", func() {
 		Context("when the campaign cannot be unmarshalled", func() {
 			It("returns the error", func() {
-				err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob("%%"))
+				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob("%%"))
 				Expect(err).To(MatchError("json: cannot unmarshal string into Go value of type queue.CampaignJob"))
 			})
 		})
@@ -247,7 +247,7 @@ var _ = Describe("Determiner", func() {
 			It("returns the error", func() {
 				spaceStrategy.DispatchCalls = append(spaceStrategy.DispatchCalls, mocks.NewStrategyDispatchCall([]services.Response{}, errors.New("some error")))
 
-				err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 					Campaign: collections.Campaign{
 						SendTo: map[string]interface{}{"spaces": "some-space-guid"},
 					},
@@ -258,7 +258,7 @@ var _ = Describe("Determiner", func() {
 
 		Context("when the audience is not found", func() {
 			It("returns an error", func() {
-				err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 					Campaign: collections.Campaign{
 						SendTo: map[string]interface{}{"some-audience": "wut"},
 					},
