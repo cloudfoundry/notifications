@@ -54,7 +54,7 @@ var _ = Describe("GetHandler", func() {
 		campaignsCollection = mocks.NewCampaignsCollection()
 		campaignsCollection.GetCall.Returns.Campaign = collections.Campaign{
 			ID:             "some-campaign-id",
-			SendTo:         map[string]string{"user": "user-123"},
+			SendTo:         map[string]string{"users": "user-123"},
 			CampaignTypeID: "some-campaign-type-id",
 			Text:           "come see our new stuff",
 			HTML:           "<h1>New stuff</h1>",
@@ -80,7 +80,9 @@ var _ = Describe("GetHandler", func() {
 		Expect(writer.Body).To(MatchJSON(`{
 			"id":               "some-campaign-id",
 			"send_to": {
-				"user": "user-123"
+				"users": [
+					"user-123"
+				]
 			},
 			"campaign_type_id": "some-campaign-type-id",
 			"text":             "come see our new stuff",

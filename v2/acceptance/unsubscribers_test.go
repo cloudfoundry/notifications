@@ -86,8 +86,8 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"user": userGUID,
+					"send_to": map[string][]string{
+						"users": {userGUID},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -133,8 +133,8 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("sending another campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"user": userGUID,
+					"send_to": map[string][]string{
+						"users": {userGUID},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -320,8 +320,8 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("sending the campaign with the client token", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"user": userGUID,
+					"send_to": map[string][]string{
+						"users": {userGUID},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -355,8 +355,8 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("sending another campaign with the client token", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"user": userGUID,
+					"send_to": map[string][]string{
+						"users": {userGUID},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",

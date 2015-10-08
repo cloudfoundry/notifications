@@ -64,7 +64,7 @@ var _ = Describe("CreateHandler", func() {
 		campaignsCollection.CreateCall.Returns.Campaign = collections.Campaign{
 			ID: "my-campaign-id",
 			SendTo: map[string]string{
-				"user": "user-123",
+				"users": "user-123",
 			},
 			CampaignTypeID: "some-campaign-type-id",
 			Text:           "come see our new stuff",
@@ -81,8 +81,8 @@ var _ = Describe("CreateHandler", func() {
 
 	It("sends a campaign to a user", func() {
 		requestBody, err := json.Marshal(map[string]interface{}{
-			"send_to": map[string]string{
-				"user": "user-123",
+			"send_to": map[string][]string{
+				"users": {"user-123"},
 			},
 			"campaign_type_id": "some-campaign-type-id",
 			"text":             "come see our new stuff",
@@ -102,7 +102,9 @@ var _ = Describe("CreateHandler", func() {
 		Expect(writer.Body.String()).To(MatchJSON(`{
 			"id": "my-campaign-id",
 		    "send_to": {
-				"user": "user-123"
+				"users": [
+					"user-123"
+				]
 			},
 			"campaign_type_id": "some-campaign-type-id",
 			"text":             "come see our new stuff",
@@ -121,7 +123,7 @@ var _ = Describe("CreateHandler", func() {
 		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(conn))
 		Expect(campaignsCollection.CreateCall.Receives.ClientID).To(Equal("my-client"))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
-			SendTo:         map[string]string{"user": "user-123"},
+			SendTo:         map[string]string{"users": "user-123"},
 			CampaignTypeID: "some-campaign-type-id",
 			Text:           "come see our new stuff",
 			HTML:           "<h1>New stuff</h1>",
@@ -134,10 +136,10 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	It("sends a campaign to a space", func() {
-		campaignsCollection.CreateCall.Returns.Campaign.SendTo = map[string]string{"space": "space-123"}
+		campaignsCollection.CreateCall.Returns.Campaign.SendTo = map[string]string{"spaces": "space-123"}
 		requestBody, err := json.Marshal(map[string]interface{}{
-			"send_to": map[string]string{
-				"space": "space-123",
+			"send_to": map[string][]string{
+				"spaces": {"space-123"},
 			},
 			"campaign_type_id": "some-campaign-type-id",
 			"text":             "come see our new stuff",
@@ -157,7 +159,9 @@ var _ = Describe("CreateHandler", func() {
 		Expect(writer.Body.String()).To(MatchJSON(`{
 			"id": "my-campaign-id",
 		    "send_to": {
-				"space": "space-123"
+				"spaces": [
+					"space-123"
+				]
 			},
 			"campaign_type_id": "some-campaign-type-id",
 			"text":             "come see our new stuff",
@@ -175,7 +179,7 @@ var _ = Describe("CreateHandler", func() {
 
 		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(database.Connection()))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
-			SendTo:         map[string]string{"space": "space-123"},
+			SendTo:         map[string]string{"spaces": "space-123"},
 			CampaignTypeID: "some-campaign-type-id",
 			Text:           "come see our new stuff",
 			HTML:           "<h1>New stuff</h1>",
@@ -188,10 +192,10 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	It("sends a campaign to an org", func() {
-		campaignsCollection.CreateCall.Returns.Campaign.SendTo = map[string]string{"org": "org-123"}
+		campaignsCollection.CreateCall.Returns.Campaign.SendTo = map[string]string{"orgs": "org-123"}
 		requestBody, err := json.Marshal(map[string]interface{}{
-			"send_to": map[string]string{
-				"org": "org-123",
+			"send_to": map[string][]string{
+				"orgs": {"org-123"},
 			},
 			"campaign_type_id": "some-campaign-type-id",
 			"text":             "come see our new stuff",
@@ -211,7 +215,9 @@ var _ = Describe("CreateHandler", func() {
 		Expect(writer.Body.String()).To(MatchJSON(`{
 			"id": "my-campaign-id",
 		    "send_to": {
-				"org": "org-123"
+				"orgs": [
+					"org-123"
+				]
 			},
 			"campaign_type_id": "some-campaign-type-id",
 			"text":             "come see our new stuff",
@@ -229,7 +235,7 @@ var _ = Describe("CreateHandler", func() {
 
 		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(database.Connection()))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
-			SendTo:         map[string]string{"org": "org-123"},
+			SendTo:         map[string]string{"orgs": "org-123"},
 			CampaignTypeID: "some-campaign-type-id",
 			Text:           "come see our new stuff",
 			HTML:           "<h1>New stuff</h1>",
@@ -242,10 +248,10 @@ var _ = Describe("CreateHandler", func() {
 	})
 
 	It("sends a campaign to an email", func() {
-		campaignsCollection.CreateCall.Returns.Campaign.SendTo = map[string]string{"email": "test@example.com"}
+		campaignsCollection.CreateCall.Returns.Campaign.SendTo = map[string]string{"emails": "test@example.com"}
 		requestBody, err := json.Marshal(map[string]interface{}{
-			"send_to": map[string]string{
-				"email": "test@example.com",
+			"send_to": map[string][]string{
+				"emails": {"test@example.com"},
 			},
 			"campaign_type_id": "some-campaign-type-id",
 			"text":             "come see our new stuff",
@@ -265,7 +271,9 @@ var _ = Describe("CreateHandler", func() {
 		Expect(writer.Body.String()).To(MatchJSON(`{
 			"id": "my-campaign-id",
 		    "send_to": {
-				"email": "test@example.com"
+				"emails": [
+					"test@example.com"
+				]
 			},
 			"campaign_type_id": "some-campaign-type-id",
 			"text":             "come see our new stuff",
@@ -283,7 +291,7 @@ var _ = Describe("CreateHandler", func() {
 
 		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(database.Connection()))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
-			SendTo:         map[string]string{"email": "test@example.com"},
+			SendTo:         map[string]string{"emails": "test@example.com"},
 			CampaignTypeID: "some-campaign-type-id",
 			Text:           "come see our new stuff",
 			HTML:           "<h1>New stuff</h1>",
@@ -299,8 +307,8 @@ var _ = Describe("CreateHandler", func() {
 		Context("when the campaign_type_id is missing", func() {
 			BeforeEach(func() {
 				requestBody, err := json.Marshal(map[string]interface{}{
-					"send_to": map[string]string{
-						"user": "user-123",
+					"send_to": map[string][]string{
+						"users": {"user-123"},
 					},
 					"campaign_type_id": "",
 					"text":             "come see our new stuff",
@@ -324,8 +332,8 @@ var _ = Describe("CreateHandler", func() {
 		Context("when both the text and html bodies are missing", func() {
 			BeforeEach(func() {
 				requestBody, err := json.Marshal(map[string]interface{}{
-					"send_to": map[string]string{
-						"user": "user-123",
+					"send_to": map[string][]string{
+						"users": {"user-123"},
 					},
 					"campaign_type_id": "some-campaign-type-id",
 					"text":             "",
@@ -350,8 +358,8 @@ var _ = Describe("CreateHandler", func() {
 		Context("when the subject is missing", func() {
 			BeforeEach(func() {
 				requestBody, err := json.Marshal(map[string]interface{}{
-					"send_to": map[string]string{
-						"user": "user-123",
+					"send_to": map[string][]string{
+						"users": {"user-123"},
 					},
 					"campaign_type_id": "some-campaign-type-id",
 					"text":             "come see our new stuff",
@@ -375,8 +383,8 @@ var _ = Describe("CreateHandler", func() {
 		Context("when the audience specific key is invalid", func() {
 			BeforeEach(func() {
 				requestBody, err := json.Marshal(map[string]interface{}{
-					"send_to": map[string]string{
-						"userZ": "something-obviously-wrong",
+					"send_to": map[string][]string{
+						"userZ": {"something-obviously-wrong"},
 					},
 					"campaign_type_id": "some-campaign-type-id",
 					"text":             "come see our new stuff",
@@ -398,8 +406,8 @@ var _ = Describe("CreateHandler", func() {
 		Context("when the email address is invalid", func() {
 			BeforeEach(func() {
 				requestBody, err := json.Marshal(map[string]interface{}{
-					"send_to": map[string]string{
-						"email": "malformed-email",
+					"send_to": map[string][]string{
+						"emails": {"malformed-email"},
 					},
 					"campaign_type_id": "some-campaign-type-id",
 					"text":             "come see our new stuff",
@@ -422,8 +430,8 @@ var _ = Describe("CreateHandler", func() {
 	Context("when the token does not have the critical scope", func() {
 		BeforeEach(func() {
 			requestBody, err := json.Marshal(map[string]interface{}{
-				"send_to": map[string]string{
-					"user": "some-user-guid",
+				"send_to": map[string][]string{
+					"users": {"some-user-guid"},
 				},
 				"campaign_type_id": "some-campaign-type-id",
 				"text":             "come see our new stuff",
@@ -450,8 +458,8 @@ var _ = Describe("CreateHandler", func() {
 	Context("when the token does have the critical scope", func() {
 		BeforeEach(func() {
 			requestBody, err := json.Marshal(map[string]interface{}{
-				"send_to": map[string]string{
-					"user": "some-user-guid",
+				"send_to": map[string][]string{
+					"users": {"some-user-guid"},
 				},
 				"campaign_type_id": "some-campaign-type-id",
 				"text":             "come see our new stuff",
@@ -487,8 +495,8 @@ var _ = Describe("CreateHandler", func() {
 	Context("when an error occurs", func() {
 		BeforeEach(func() {
 			requestBody, err := json.Marshal(map[string]interface{}{
-				"send_to": map[string]string{
-					"user": "user-123",
+				"send_to": map[string][]string{
+					"users": {"user-123"},
 				},
 				"campaign_type_id": "some-campaign-type-id",
 				"text":             "come see our new stuff",

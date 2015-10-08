@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
@@ -84,7 +85,7 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 	}
 
 	if !exists {
-		return Campaign{}, NotFoundError{fmt.Errorf("The %s %q cannot be found", audience, campaign.SendTo[audience])}
+		return Campaign{}, NotFoundError{fmt.Errorf("The %s %q cannot be found", strings.TrimSuffix(audience, "s"), campaign.SendTo[audience])}
 	}
 
 	sender, err := c.sendersRepo.Get(conn, campaign.SenderID)
@@ -166,13 +167,13 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 
 func (c CampaignsCollection) checkForExistence(audience, guid string) (bool, error) {
 	switch audience {
-	case "user":
+	case "users":
 		return c.userFinder.Exists(guid)
-	case "space":
+	case "spaces":
 		return c.spaceFinder.Exists(guid)
-	case "org":
+	case "orgs":
 		return c.orgFinder.Exists(guid)
-	case "email":
+	case "emails":
 		return true, nil
 	default:
 		return false, fmt.Errorf("The %q audience is not valid", audience)

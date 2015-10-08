@@ -34,13 +34,13 @@ func NewCreateHandler(collection collectionCreator, clock clock) CreateHandler {
 }
 
 type createRequest struct {
-	SendTo         map[string]string `json:"send_to"`
-	CampaignTypeID string            `json:"campaign_type_id"`
-	Text           string            `json:"text"`
-	HTML           string            `json:"html"`
-	Subject        string            `json:"subject"`
-	TemplateID     string            `json:"template_id"`
-	ReplyTo        string            `json:"reply_to"`
+	SendTo         map[string][]string `json:"send_to"`
+	CampaignTypeID string              `json:"campaign_type_id"`
+	Text           string              `json:"text"`
+	HTML           string              `json:"html"`
+	Subject        string              `json:"subject"`
+	TemplateID     string              `json:"template_id"`
+	ReplyTo        string              `json:"reply_to"`
 }
 
 func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
@@ -70,8 +70,13 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	database := context.Get("database").(DatabaseInterface)
 
+	sendTo := map[string]string{}
+	for audienceKey, audiences := range request.SendTo {
+		sendTo[audienceKey] = audiences[0]
+	}
+
 	campaign, err := h.collection.Create(database.Connection(), collections.Campaign{
-		SendTo:         request.SendTo,
+		SendTo:         sendTo,
 		CampaignTypeID: request.CampaignTypeID,
 		Text:           request.Text,
 		HTML:           request.HTML,
@@ -95,10 +100,15 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
+	returnSendTo := map[string][]string{}
+	for audienceKey, audience := range campaign.SendTo {
+		returnSendTo[audienceKey] = []string{audience}
+	}
+
 	w.WriteHeader(http.StatusAccepted)
 	createResponse, _ := json.Marshal(map[string]interface{}{
 		"id":               campaign.ID,
-		"send_to":          campaign.SendTo,
+		"send_to":          returnSendTo,
 		"campaign_type_id": campaign.CampaignTypeID,
 		"text":             campaign.Text,
 		"html":             campaign.HTML,
@@ -125,13 +135,13 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 func isValid(request createRequest, w http.ResponseWriter, req *http.Request) bool {
 	for audienceKey, _ := range request.SendTo {
-		if !contains([]string{"user", "space", "org", "email"}, audienceKey) {
+		if !contains([]string{"users", "spaces", "orgs", "emails"}, audienceKey) {
 			return invalidResponse(w, fmt.Sprintf(`%q is not a valid audience`, audienceKey))
 		}
 
-		if audienceKey == "email" {
-			if matches := regexp.MustCompile(`[^@]*@{1}[^@]*`).MatchString(request.SendTo[audienceKey]); !matches {
-				return invalidResponse(w, fmt.Sprintf(`%q is not a valid email address`, request.SendTo[audienceKey]))
+		if audienceKey == "emails" {
+			if matches := regexp.MustCompile(`[^@]*@{1}[^@]*`).MatchString(request.SendTo[audienceKey][0]); !matches { // TODO: loop over audiences
+				return invalidResponse(w, fmt.Sprintf(`%q is not a valid email address`, request.SendTo[audienceKey][0]))
 			}
 		}
 	}

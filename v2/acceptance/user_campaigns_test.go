@@ -91,8 +91,8 @@ var _ = Describe("User Campaigns", func() {
 
 		By("sending the campaign", func() {
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-				"send_to": map[string]interface{}{
-					"user": user.ID,
+				"send_to": map[string][]string{
+					"users": {user.ID},
 				},
 				"campaign_type_id": campaignTypeID,
 				"text":             "campaign body",
@@ -184,8 +184,8 @@ var _ = Describe("User Campaigns", func() {
 				senderID = response["id"].(string)
 
 				status, response, err = client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"user": user.ID,
+					"send_to": map[string][]string{
+						"users": {user.ID},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -229,8 +229,8 @@ var _ = Describe("User Campaigns", func() {
 
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"bananas": user.ID,
+					"send_to": map[string][]string{
+						"bananas": {user.ID},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -274,8 +274,8 @@ var _ = Describe("User Campaigns", func() {
 
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"user": "missing-user",
+					"send_to": map[string][]string{
+						"users": {"missing-user"},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -306,8 +306,8 @@ var _ = Describe("User Campaigns", func() {
 
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", "/senders/missing-sender-id/campaigns", map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"user": user.ID,
+					"send_to": map[string][]string{
+						"users": {user.ID},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -351,8 +351,8 @@ var _ = Describe("User Campaigns", func() {
 
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", differentSenderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"user": user.ID,
+					"send_to": map[string][]string{
+						"users": {user.ID},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -383,8 +383,8 @@ var _ = Describe("User Campaigns", func() {
 
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"user": user.ID,
+					"send_to": map[string][]string{
+						"users": {user.ID},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -417,8 +417,8 @@ var _ = Describe("User Campaigns", func() {
 
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"user": user.ID,
+					"send_to": map[string][]string{
+						"users": {user.ID},
 					},
 					"campaign_type_id": "missing-campaign-type-id",
 					"text":             "campaign body",
@@ -463,8 +463,8 @@ var _ = Describe("User Campaigns", func() {
 
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"user": user.ID,
+					"send_to": map[string][]string{
+						"users": {user.ID},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",

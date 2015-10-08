@@ -68,7 +68,7 @@ func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string,
 	}
 
 	var recipient string
-	if audience == "email" {
+	if audience == "emails" {
 		recipient = d.emailFormatter.Format(campaignJob.Campaign.SendTo[audience])
 	}
 
@@ -78,7 +78,7 @@ func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string,
 	}
 
 	var guid string
-	if audience != "email" {
+	if audience != "emails" {
 		guid = campaignJob.Campaign.SendTo[audience]
 	}
 
@@ -114,13 +114,13 @@ func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string,
 
 func (d Determiner) findStrategy(audience string) (dispatcher, error) {
 	switch audience {
-	case "user":
+	case "users":
 		return d.userStrategy, nil
-	case "space":
+	case "spaces":
 		return d.spaceStrategy, nil
-	case "org":
+	case "orgs":
 		return d.orgStrategy, nil
-	case "email":
+	case "emails":
 		return d.emailStrategy, nil
 	default:
 		return nil, NoStrategyError{fmt.Errorf("Strategy for the %q audience could not be found", audience)}

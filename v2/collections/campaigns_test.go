@@ -77,7 +77,7 @@ var _ = Describe("CampaignsCollection", func() {
 				BeforeEach(func() {
 					campaignsRepo.InsertCall.Returns.Campaign = models.Campaign{
 						ID:             "a-new-id",
-						SendTo:         `{"email":"test@example.com"}`,
+						SendTo:         `{"emails":"test@example.com"}`,
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -89,7 +89,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 				It("returns a campaignID after enqueuing the campaign with its type", func() {
 					campaign := collections.Campaign{
-						SendTo:         map[string]string{"email": "test@example.com"},
+						SendTo:         map[string]string{"emails": "test@example.com"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -105,7 +105,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 					Expect(campaignsRepo.InsertCall.Receives.Connection).To(Equal(conn))
 					Expect(campaignsRepo.InsertCall.Receives.Campaign).To(Equal(models.Campaign{
-						SendTo:         `{"email":"test@example.com"}`,
+						SendTo:         `{"emails":"test@example.com"}`,
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -118,7 +118,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
 						ID:             "a-new-id",
-						SendTo:         map[string]string{"email": "test@example.com"},
+						SendTo:         map[string]string{"emails": "test@example.com"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -142,7 +142,7 @@ var _ = Describe("CampaignsCollection", func() {
 				spaceFinder.ExistsCall.Returns.Exists = true
 				campaignsRepo.InsertCall.Returns.Campaign = models.Campaign{
 					ID:             "a-new-id",
-					SendTo:         `{"space":"some-space-guid"}`,
+					SendTo:         `{"spaces":"some-space-guid"}`,
 					CampaignTypeID: "some-id",
 					Text:           "some-test",
 					HTML:           "no-html",
@@ -155,7 +155,7 @@ var _ = Describe("CampaignsCollection", func() {
 			Context("enqueuing a campaignJob", func() {
 				It("returns a campaignID after enqueuing the campaign with its type", func() {
 					campaign := collections.Campaign{
-						SendTo:         map[string]string{"space": "some-space-guid"},
+						SendTo:         map[string]string{"spaces": "some-space-guid"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -171,7 +171,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
 						ID:             "a-new-id",
-						SendTo:         map[string]string{"space": "some-space-guid"},
+						SendTo:         map[string]string{"spaces": "some-space-guid"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -196,7 +196,7 @@ var _ = Describe("CampaignsCollection", func() {
 					spaceFinder.ExistsCall.Returns.Error = errors.New("something bad happened")
 
 					campaign := collections.Campaign{
-						SendTo:         map[string]string{"space": "some-space-guid"},
+						SendTo:         map[string]string{"spaces": "some-space-guid"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -217,7 +217,7 @@ var _ = Describe("CampaignsCollection", func() {
 				orgFinder.ExistsCall.Returns.Exists = true
 				campaignsRepo.InsertCall.Returns.Campaign = models.Campaign{
 					ID:             "a-new-id",
-					SendTo:         `{"org":"some-org-guid"}`,
+					SendTo:         `{"orgs":"some-org-guid"}`,
 					CampaignTypeID: "some-id",
 					Text:           "some-test",
 					HTML:           "no-html",
@@ -230,7 +230,7 @@ var _ = Describe("CampaignsCollection", func() {
 			Context("enqueuing a campaignJob", func() {
 				It("returns a campaignID after enqueuing the campaign with its type", func() {
 					campaign := collections.Campaign{
-						SendTo:         map[string]string{"org": "some-org-guid"},
+						SendTo:         map[string]string{"orgs": "some-org-guid"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -246,7 +246,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
 						ID:             "a-new-id",
-						SendTo:         map[string]string{"org": "some-org-guid"},
+						SendTo:         map[string]string{"orgs": "some-org-guid"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -271,7 +271,7 @@ var _ = Describe("CampaignsCollection", func() {
 					orgFinder.ExistsCall.Returns.Error = errors.New("something bad happened")
 
 					campaign := collections.Campaign{
-						SendTo:         map[string]string{"org": "some-org-guid"},
+						SendTo:         map[string]string{"orgs": "some-org-guid"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -292,7 +292,7 @@ var _ = Describe("CampaignsCollection", func() {
 				userFinder.ExistsCall.Returns.Exists = true
 				campaignsRepo.InsertCall.Returns.Campaign = models.Campaign{
 					ID:             "a-new-id",
-					SendTo:         `{"user":"some-user-guid"}`,
+					SendTo:         `{"users":"some-user-guid"}`,
 					CampaignTypeID: "some-id",
 					Text:           "some-test",
 					HTML:           "no-html",
@@ -305,7 +305,7 @@ var _ = Describe("CampaignsCollection", func() {
 			Context("enqueuing a campaignJob", func() {
 				It("returns a campaignID after enqueuing the campaign with its type", func() {
 					campaign := collections.Campaign{
-						SendTo:         map[string]string{"user": "some-user-guid"},
+						SendTo:         map[string]string{"users": "some-user-guid"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -321,7 +321,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 					Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
 						ID:             "a-new-id",
-						SendTo:         map[string]string{"user": "some-user-guid"},
+						SendTo:         map[string]string{"users": "some-user-guid"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -350,7 +350,7 @@ var _ = Describe("CampaignsCollection", func() {
 				}
 
 				campaign := collections.Campaign{
-					SendTo:         map[string]string{"user": "some-guid"},
+					SendTo:         map[string]string{"users": "some-guid"},
 					CampaignTypeID: "some-id",
 					Text:           "some-test",
 					HTML:           "no-html",
@@ -369,7 +369,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 				Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
 					ID:             "a-new-id",
-					SendTo:         map[string]string{"user": "some-guid"},
+					SendTo:         map[string]string{"users": "some-guid"},
 					CampaignTypeID: "some-id",
 					Text:           "some-test",
 					HTML:           "no-html",
@@ -384,7 +384,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 			It("uses the default template if neither the campaign nor the campaign type has one", func() {
 				campaign := collections.Campaign{
-					SendTo:         map[string]string{"user": "some-guid"},
+					SendTo:         map[string]string{"users": "some-guid"},
 					CampaignTypeID: "some-id",
 					Text:           "some-test",
 					HTML:           "no-html",
@@ -399,7 +399,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 				Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
 					ID:             "a-new-id",
-					SendTo:         map[string]string{"user": "some-guid"},
+					SendTo:         map[string]string{"users": "some-guid"},
 					CampaignTypeID: "some-id",
 					Text:           "some-test",
 					HTML:           "no-html",
@@ -418,7 +418,7 @@ var _ = Describe("CampaignsCollection", func() {
 				}
 
 				campaign := collections.Campaign{
-					SendTo:         map[string]string{"user": "some-guid"},
+					SendTo:         map[string]string{"users": "some-guid"},
 					CampaignTypeID: "some-id",
 					Text:           "some-test",
 					HTML:           "no-html",
@@ -437,7 +437,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 				Expect(enqueuer.EnqueueCall.Receives.Campaign).To(Equal(collections.Campaign{
 					ID:             "a-new-id",
-					SendTo:         map[string]string{"user": "some-guid"},
+					SendTo:         map[string]string{"users": "some-guid"},
 					CampaignTypeID: "some-id",
 					Text:           "some-test",
 					HTML:           "no-html",
@@ -453,7 +453,7 @@ var _ = Describe("CampaignsCollection", func() {
 			Context("when the user does not exist", func() {
 				It("returns a not found error", func() {
 					campaign := collections.Campaign{
-						SendTo:         map[string]string{"user": "missing-user"},
+						SendTo:         map[string]string{"users": "missing-user"},
 						CampaignTypeID: "some-id",
 						Text:           "some-test",
 						HTML:           "no-html",
@@ -474,7 +474,7 @@ var _ = Describe("CampaignsCollection", func() {
 				Context("when enqueue fails", func() {
 					It("returns the error to the caller", func() {
 						campaign := collections.Campaign{
-							SendTo:         map[string]string{"user": "some-guid"},
+							SendTo:         map[string]string{"users": "some-guid"},
 							CampaignTypeID: "some-id",
 							Text:           "some-test",
 							HTML:           "no-html",
@@ -494,7 +494,7 @@ var _ = Describe("CampaignsCollection", func() {
 				Context("when inserting the campaign record fails", func() {
 					It("returns the error", func() {
 						campaign := collections.Campaign{
-							SendTo:         map[string]string{"user": "some-guid"},
+							SendTo:         map[string]string{"users": "some-guid"},
 							CampaignTypeID: "some-id",
 							Text:           "some-test",
 							HTML:           "no-html",
@@ -515,7 +515,7 @@ var _ = Describe("CampaignsCollection", func() {
 					var campaign collections.Campaign
 					BeforeEach(func() {
 						campaign = collections.Campaign{
-							SendTo:         map[string]string{"user": "some-guid"},
+							SendTo:         map[string]string{"users": "some-guid"},
 							CampaignTypeID: "some-id",
 							Text:           "some-test",
 							HTML:           "no-html",
@@ -547,7 +547,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 					BeforeEach(func() {
 						campaign = collections.Campaign{
-							SendTo:         map[string]string{"user": "some-user-guid"},
+							SendTo:         map[string]string{"users": "some-user-guid"},
 							CampaignTypeID: "some-id",
 							Text:           "some-test",
 							HTML:           "no-html",
@@ -584,7 +584,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 					BeforeEach(func() {
 						campaign = collections.Campaign{
-							SendTo:         map[string]string{"user": "some-guid"},
+							SendTo:         map[string]string{"users": "some-guid"},
 							CampaignTypeID: "some-id",
 							Text:           "some-test",
 							HTML:           "no-html",
@@ -616,7 +616,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 					BeforeEach(func() {
 						campaign = collections.Campaign{
-							SendTo:         map[string]string{"user": "some-nonexistant-user"},
+							SendTo:         map[string]string{"users": "some-nonexistant-user"},
 							CampaignTypeID: "some-id",
 							Text:           "some-test",
 							HTML:           "no-html",
@@ -640,7 +640,7 @@ var _ = Describe("CampaignsCollection", func() {
 
 					BeforeEach(func() {
 						campaign = collections.Campaign{
-							SendTo:         map[string]string{"user": "some-guid"},
+							SendTo:         map[string]string{"users": "some-guid"},
 							CampaignTypeID: "some-id",
 							Text:           "some-test",
 							HTML:           "no-html",
@@ -668,7 +668,7 @@ var _ = Describe("CampaignsCollection", func() {
 		BeforeEach(func() {
 			campaignsRepo.GetCall.Returns.Campaign = models.Campaign{
 				ID:             "my-campaign-id",
-				SendTo:         `{"user": "some-guid"}`,
+				SendTo:         `{"users": "some-guid"}`,
 				CampaignTypeID: "some-id",
 				Text:           "some-text",
 				HTML:           "no-html",

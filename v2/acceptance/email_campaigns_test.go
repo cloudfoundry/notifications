@@ -82,7 +82,7 @@ var _ = Describe("Email Campaigns", func() {
 		By("sending the campaign", func() {
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 				"send_to": map[string]interface{}{
-					"email": "test@example.com",
+					"emails": []string{"test@example.com"},
 				},
 				"campaign_type_id": campaignTypeID,
 				"text":             "campaign body",
@@ -179,7 +179,7 @@ var _ = Describe("Email Campaigns", func() {
 
 				status, response, err = client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
-						"email": "test@example.com",
+						"emails": []string{"test@example.com"},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -224,7 +224,7 @@ var _ = Describe("Email Campaigns", func() {
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
-						"email": "bad-email",
+						"emails": []string{"bad-email"},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -256,7 +256,7 @@ var _ = Describe("Email Campaigns", func() {
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
-						"email": "test@example.com",
+						"emails": []string{"test@example.com"},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -290,7 +290,7 @@ var _ = Describe("Email Campaigns", func() {
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
-						"email": "test@example.com",
+						"emails": []string{"test@example.com"},
 					},
 					"campaign_type_id": "missing-campaign-type-id",
 					"text":             "campaign body",
@@ -336,7 +336,7 @@ var _ = Describe("Email Campaigns", func() {
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string]interface{}{
-						"email": "test@example.com",
+						"emails": []string{"test@example.com"},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",

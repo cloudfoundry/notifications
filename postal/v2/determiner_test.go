@@ -38,7 +38,7 @@ var _ = Describe("Determiner", func() {
 			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]string{"user": "some-user-guid"},
+					SendTo:         map[string]string{"users": "some-user-guid"},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -78,7 +78,7 @@ var _ = Describe("Determiner", func() {
 			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]string{"email": "test@example.com"},
+					SendTo:         map[string]string{"emails": "test@example.com"},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -118,7 +118,7 @@ var _ = Describe("Determiner", func() {
 			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]string{"space": "some-space-guid"},
+					SendTo:         map[string]string{"spaces": "some-space-guid"},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -158,7 +158,7 @@ var _ = Describe("Determiner", func() {
 			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]string{"org": "some-org-guid"},
+					SendTo:         map[string]string{"orgs": "some-org-guid"},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -206,7 +206,7 @@ var _ = Describe("Determiner", func() {
 				spaceStrategy.DispatchCall.Returns.Error = errors.New("some error")
 				err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 					Campaign: collections.Campaign{
-						SendTo: map[string]string{"space": "some-space-guid"},
+						SendTo: map[string]string{"spaces": "some-space-guid"},
 					},
 				}))
 				Expect(err).To(MatchError(errors.New("some error")))

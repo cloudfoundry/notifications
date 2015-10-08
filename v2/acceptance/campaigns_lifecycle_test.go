@@ -14,8 +14,8 @@ import (
 
 type campaignResponse struct {
 	ID             string
-	CampaignTypeID string            `json:"campaign_type_id"`
-	SendTo         map[string]string `json:"send_to"`
+	CampaignTypeID string              `json:"campaign_type_id"`
+	SendTo         map[string][]string `json:"send_to"`
 	Text           string
 	Subject        string
 	TemplateID     string `json:"template_id"`
@@ -99,8 +99,8 @@ var _ = Describe("Campaign Lifecycle", func() {
 				var response campaignResponse
 				client.Document("campaign-create")
 				status, err := client.DoTyped("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"email": "test@example.com",
+					"send_to": map[string][]string{
+						"emails": {"test@example.com"},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -114,7 +114,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 				campaignID = response.ID
 
 				Expect(response.ID).To(Equal(campaignID))
-				Expect(response.SendTo).To(HaveKeyWithValue("email", "test@example.com"))
+				Expect(response.SendTo).To(HaveKeyWithValue("emails", []string{"test@example.com"}))
 				Expect(response.CampaignTypeID).To(Equal(campaignTypeID))
 				Expect(response.Text).To(Equal("campaign body"))
 				Expect(response.Subject).To(Equal("campaign subject"))
@@ -132,7 +132,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusOK))
 				Expect(response.ID).To(Equal(campaignID))
-				Expect(response.SendTo).To(HaveKeyWithValue("email", "test@example.com"))
+				Expect(response.SendTo).To(HaveKeyWithValue("emails", []string{"test@example.com"}))
 				Expect(response.CampaignTypeID).To(Equal(campaignTypeID))
 				Expect(response.Text).To(Equal("campaign body"))
 				Expect(response.Subject).To(Equal("campaign subject"))
@@ -162,8 +162,8 @@ var _ = Describe("Campaign Lifecycle", func() {
 
 				By("sending the campaign", func() {
 					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-						"send_to": map[string]interface{}{
-							"email": "test@example.com",
+						"send_to": map[string][]string{
+							"emails": {"test@example.com"},
 						},
 						"campaign_type_id": campaignTypeID,
 						"text":             "campaign body",
@@ -181,7 +181,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusOK))
 					Expect(response["id"]).To(Equal(campaignID))
-					Expect(response["send_to"]).To(HaveKeyWithValue("email", "test@example.com"))
+					Expect(response["send_to"]).To(HaveKeyWithValue("emails", []interface{}{"test@example.com"}))
 					Expect(response["campaign_type_id"]).To(Equal(campaignTypeID))
 					Expect(response["text"]).To(Equal("campaign body"))
 					Expect(response["subject"]).To(Equal("campaign subject"))
@@ -220,8 +220,8 @@ var _ = Describe("Campaign Lifecycle", func() {
 
 				By("sending a campaign", func() {
 					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-						"send_to": map[string]interface{}{
-							"email": "test@example.com",
+						"send_to": map[string][]string{
+							"emails": {"test@example.com"},
 						},
 						"campaign_type_id": campaignTypeID,
 						"text":             "campaign body",
@@ -320,8 +320,8 @@ var _ = Describe("Campaign Lifecycle", func() {
 		It("sends a campaign to an email and retrieves the campaign status once the campaign is complete", func() {
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-					"send_to": map[string]interface{}{
-						"email": "test@example.com",
+					"send_to": map[string][]string{
+						"emails": {"test@example.com"},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -399,8 +399,8 @@ var _ = Describe("Campaign Lifecycle", func() {
 			It("sends a campaign to an email and retrieves the campaign status before the campaign completes", func() {
 				By("sending the campaign", func() {
 					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-						"send_to": map[string]interface{}{
-							"email": "test@example.com",
+						"send_to": map[string][]string{
+							"emails": {"test@example.com"},
 						},
 						"campaign_type_id": campaignTypeID,
 						"text":             "campaign body",
@@ -452,8 +452,8 @@ var _ = Describe("Campaign Lifecycle", func() {
 			It("sends a campaign to an email and retrieves the campaign status before the campaign completes", func() {
 				By("sending the campaign", func() {
 					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
-						"send_to": map[string]interface{}{
-							"space": "large-space",
+						"send_to": map[string][]string{
+							"spaces": {"large-space"},
 						},
 						"campaign_type_id": campaignTypeID,
 						"text":             "campaign body",
