@@ -38,7 +38,7 @@ var _ = Describe("Determiner", func() {
 			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]string{"users": "some-user-guid"},
+					SendTo:         map[string]interface{}{"users": "some-user-guid"},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -48,9 +48,14 @@ var _ = Describe("Determiner", func() {
 					ClientID:       "some-client-id",
 				},
 			}))
-
 			Expect(err).NotTo(HaveOccurred())
-			Expect(userStrategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
+
+			var dispatches []services.Dispatch
+			for _, dispatchCall := range userStrategy.DispatchCalls {
+				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
+			}
+
+			Expect(dispatches).To(ConsistOf(services.Dispatch{
 				JobType:    "v2",
 				GUID:       "some-user-guid",
 				UAAHost:    "some-uaa-host",
@@ -78,7 +83,7 @@ var _ = Describe("Determiner", func() {
 			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]string{"emails": "test@example.com"},
+					SendTo:         map[string]interface{}{"emails": []string{"test1@example.com", "test2@example.com"}},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -88,25 +93,52 @@ var _ = Describe("Determiner", func() {
 					ClientID:       "some-client-id",
 				},
 			}))
-
 			Expect(err).NotTo(HaveOccurred())
-			Expect(emailStrategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
-				JobType:    "v2",
-				GUID:       "",
-				UAAHost:    "some-uaa-host",
-				Connection: database.Connection(),
-				TemplateID: "some-template-id",
-				CampaignID: "some-id",
-				Client: services.DispatchClient{
-					ID: "some-client-id",
+
+			var dispatches []services.Dispatch
+			for _, dispatchCall := range emailStrategy.DispatchCalls {
+				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
+			}
+
+			Expect(dispatches).To(ConsistOf([]services.Dispatch{
+				{
+					JobType:    "v2",
+					GUID:       "",
+					UAAHost:    "some-uaa-host",
+					Connection: database.Connection(),
+					TemplateID: "some-template-id",
+					CampaignID: "some-id",
+					Client: services.DispatchClient{
+						ID: "some-client-id",
+					},
+					Message: services.DispatchMessage{
+						To:      "test1@example.com",
+						ReplyTo: "noreply@example.com",
+						Subject: "The Best subject",
+						Text:    "some-text",
+						HTML: services.HTML{
+							BodyContent: "<h1>my-html</h1>",
+						},
+					},
 				},
-				Message: services.DispatchMessage{
-					To:      "test@example.com",
-					ReplyTo: "noreply@example.com",
-					Subject: "The Best subject",
-					Text:    "some-text",
-					HTML: services.HTML{
-						BodyContent: "<h1>my-html</h1>",
+				{
+					JobType:    "v2",
+					GUID:       "",
+					UAAHost:    "some-uaa-host",
+					Connection: database.Connection(),
+					TemplateID: "some-template-id",
+					CampaignID: "some-id",
+					Client: services.DispatchClient{
+						ID: "some-client-id",
+					},
+					Message: services.DispatchMessage{
+						To:      "test2@example.com",
+						ReplyTo: "noreply@example.com",
+						Subject: "The Best subject",
+						Text:    "some-text",
+						HTML: services.HTML{
+							BodyContent: "<h1>my-html</h1>",
+						},
 					},
 				},
 			}))
@@ -118,7 +150,7 @@ var _ = Describe("Determiner", func() {
 			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]string{"spaces": "some-space-guid"},
+					SendTo:         map[string]interface{}{"spaces": "some-space-guid"},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -128,9 +160,14 @@ var _ = Describe("Determiner", func() {
 					ClientID:       "some-client-id",
 				},
 			}))
-
 			Expect(err).NotTo(HaveOccurred())
-			Expect(spaceStrategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
+
+			var dispatches []services.Dispatch
+			for _, dispatchCall := range spaceStrategy.DispatchCalls {
+				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
+			}
+
+			Expect(dispatches).To(ConsistOf(services.Dispatch{
 				JobType:    "v2",
 				GUID:       "some-space-guid",
 				UAAHost:    "some-uaa-host",
@@ -158,7 +195,7 @@ var _ = Describe("Determiner", func() {
 			err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]string{"orgs": "some-org-guid"},
+					SendTo:         map[string]interface{}{"orgs": "some-org-guid"},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -168,9 +205,14 @@ var _ = Describe("Determiner", func() {
 					ClientID:       "some-client-id",
 				},
 			}))
-
 			Expect(err).NotTo(HaveOccurred())
-			Expect(orgStrategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
+
+			var dispatches []services.Dispatch
+			for _, dispatchCall := range orgStrategy.DispatchCalls {
+				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
+			}
+
+			Expect(dispatches).To(ConsistOf(services.Dispatch{
 				JobType:    "v2",
 				GUID:       "some-org-guid",
 				UAAHost:    "some-uaa-host",
@@ -203,10 +245,11 @@ var _ = Describe("Determiner", func() {
 
 		Context("when dispatch errors", func() {
 			It("returns the error", func() {
-				spaceStrategy.DispatchCall.Returns.Error = errors.New("some error")
+				spaceStrategy.DispatchCalls = append(spaceStrategy.DispatchCalls, mocks.NewStrategyDispatchCall([]services.Response{}, errors.New("some error")))
+
 				err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 					Campaign: collections.Campaign{
-						SendTo: map[string]string{"spaces": "some-space-guid"},
+						SendTo: map[string]interface{}{"spaces": "some-space-guid"},
 					},
 				}))
 				Expect(err).To(MatchError(errors.New("some error")))
@@ -217,7 +260,7 @@ var _ = Describe("Determiner", func() {
 			It("returns an error", func() {
 				err := determiner.Determine(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 					Campaign: collections.Campaign{
-						SendTo: map[string]string{"some-audience": "wut"},
+						SendTo: map[string]interface{}{"some-audience": "wut"},
 					},
 				}))
 				Expect(err).To(MatchError(v2.NoStrategyError{errors.New("Strategy for the \"some-audience\" audience could not be found")}))

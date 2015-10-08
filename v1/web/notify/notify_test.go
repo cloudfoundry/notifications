@@ -116,7 +116,8 @@ var _ = Describe("Notify", func() {
 				_, err := handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(strategy.DispatchCall.Receives.Dispatch).To(Equal(services.Dispatch{
+				Expect(strategy.DispatchCallsCount).To(Equal(1))
+				Expect(strategy.DispatchCalls[0].Receives.Dispatch).To(Equal(services.Dispatch{
 					GUID:       "space-001",
 					Connection: conn,
 					Client: services.DispatchClient{
@@ -194,7 +195,7 @@ var _ = Describe("Notify", func() {
 
 				Context("when the strategy dispatch method returns errors", func() {
 					It("returns the error", func() {
-						strategy.DispatchCall.Returns.Error = errors.New("BOOM!")
+						strategy.DispatchCalls = append(strategy.DispatchCalls, mocks.NewStrategyDispatchCall([]services.Response{}, errors.New("BOOM!")))
 
 						_, err := handler.Execute(conn, request, context, "user-123", strategy, validator, vcapRequestID)
 						Expect(err).To(Equal(errors.New("BOOM!")))

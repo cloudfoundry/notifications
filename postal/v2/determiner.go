@@ -67,9 +67,15 @@ func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string,
 		panic(err)
 	}
 
-	var recipient string
+	var recipients []string
+	var guid string
 	if audience == "emails" {
-		recipient = d.emailFormatter.Format(campaignJob.Campaign.SendTo[audience])
+		for _, audienceMember := range campaignJob.Campaign.SendTo[audience].([]interface{}) {
+			recipients = append(recipients, d.emailFormatter.Format(audienceMember.(string)))
+		}
+	} else {
+		recipients = []string{""}
+		guid = campaignJob.Campaign.SendTo[audience].(string)
 	}
 
 	strategy, err := d.findStrategy(audience)
@@ -77,36 +83,33 @@ func (d Determiner) Determine(conn services.ConnectionInterface, uaaHost string,
 		return err
 	}
 
-	var guid string
-	if audience != "emails" {
-		guid = campaignJob.Campaign.SendTo[audience]
-	}
-
-	_, err = strategy.Dispatch(services.Dispatch{
-		JobType:    "v2",
-		UAAHost:    uaaHost,
-		GUID:       guid,
-		Connection: conn,
-		TemplateID: campaignJob.Campaign.TemplateID,
-		CampaignID: campaignJob.Campaign.ID,
-		Client: services.DispatchClient{
-			ID: campaignJob.Campaign.ClientID,
-		},
-		Message: services.DispatchMessage{
-			To:      recipient,
-			ReplyTo: campaignJob.Campaign.ReplyTo,
-			Subject: campaignJob.Campaign.Subject,
-			Text:    campaignJob.Campaign.Text,
-			HTML: services.HTML{
-				Doctype:        doctype,
-				Head:           head,
-				BodyContent:    bodyContent,
-				BodyAttributes: bodyAttributes,
+	for _, recipient := range recipients {
+		_, err = strategy.Dispatch(services.Dispatch{
+			JobType:    "v2",
+			UAAHost:    uaaHost,
+			GUID:       guid,
+			Connection: conn,
+			TemplateID: campaignJob.Campaign.TemplateID,
+			CampaignID: campaignJob.Campaign.ID,
+			Client: services.DispatchClient{
+				ID: campaignJob.Campaign.ClientID,
 			},
-		},
-	})
-	if err != nil {
-		return err
+			Message: services.DispatchMessage{
+				To:      recipient,
+				ReplyTo: campaignJob.Campaign.ReplyTo,
+				Subject: campaignJob.Campaign.Subject,
+				Text:    campaignJob.Campaign.Text,
+				HTML: services.HTML{
+					Doctype:        doctype,
+					Head:           head,
+					BodyContent:    bodyContent,
+					BodyAttributes: bodyAttributes,
+				},
+			},
+		})
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

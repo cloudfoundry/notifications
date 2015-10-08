@@ -45,7 +45,14 @@ func (h GetHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 
 	returnSendTo := map[string][]string{}
 	for audienceKey, audience := range campaign.SendTo {
-		returnSendTo[audienceKey] = []string{audience}
+		switch audience.(type) {
+		case []interface{}:
+			for _, audienceMember := range audience.([]interface{}) {
+				returnSendTo[audienceKey] = append(returnSendTo[audienceKey], audienceMember.(string))
+			}
+		default:
+			returnSendTo[audienceKey] = []string{audience.(string)}
+		}
 	}
 
 	getResponse, _ := json.Marshal(map[string]interface{}{

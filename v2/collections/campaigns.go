@@ -37,7 +37,7 @@ type existenceChecker interface {
 
 type Campaign struct {
 	ID             string
-	SendTo         map[string]string
+	SendTo         map[string]interface{}
 	CampaignTypeID string
 	Text           string
 	HTML           string
@@ -79,13 +79,23 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 		audience = key
 	}
 
-	exists, err := c.checkForExistence(audience, campaign.SendTo[audience])
-	if err != nil {
-		return Campaign{}, UnknownError{err}
+	var audienceMembers []string
+	switch campaign.SendTo[audience].(type) {
+	case string:
+		audienceMembers = append(audienceMembers, campaign.SendTo[audience].(string))
+	case []string:
+		audienceMembers = campaign.SendTo[audience].([]string)
 	}
 
-	if !exists {
-		return Campaign{}, NotFoundError{fmt.Errorf("The %s %q cannot be found", strings.TrimSuffix(audience, "s"), campaign.SendTo[audience])}
+	for _, audienceMember := range audienceMembers {
+		exists, err := c.checkForExistence(audience, audienceMember)
+		if err != nil {
+			return Campaign{}, UnknownError{err}
+		}
+
+		if !exists {
+			return Campaign{}, NotFoundError{fmt.Errorf("The %s %q cannot be found", strings.TrimSuffix(audience, "s"), audienceMember)}
+		}
 	}
 
 	sender, err := c.sendersRepo.Get(conn, campaign.SenderID)
@@ -205,7 +215,7 @@ func (c CampaignsCollection) Get(connection ConnectionInterface, campaignID, cli
 		return Campaign{}, NotFoundError{fmt.Errorf("Campaign with id %q could not be found", campaignID)}
 	}
 
-	var sendTo map[string]string
+	var sendTo map[string]interface{}
 	err = json.Unmarshal([]byte(campaign.SendTo), &sendTo)
 	if err != nil {
 		panic(err)

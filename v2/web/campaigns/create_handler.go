@@ -70,9 +70,14 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	database := context.Get("database").(DatabaseInterface)
 
-	sendTo := map[string]string{}
+	sendTo := map[string]interface{}{}
 	for audienceKey, audiences := range request.SendTo {
-		sendTo[audienceKey] = audiences[0]
+		switch audienceKey {
+		case "emails":
+			sendTo[audienceKey] = audiences
+		default:
+			sendTo[audienceKey] = audiences[0]
+		}
 	}
 
 	campaign, err := h.collection.Create(database.Connection(), collections.Campaign{
@@ -102,7 +107,12 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	returnSendTo := map[string][]string{}
 	for audienceKey, audience := range campaign.SendTo {
-		returnSendTo[audienceKey] = []string{audience}
+		switch audience.(type) {
+		case string:
+			returnSendTo[audienceKey] = []string{audience.(string)}
+		case []string:
+			returnSendTo[audienceKey] = audience.([]string)
+		}
 	}
 
 	w.WriteHeader(http.StatusAccepted)

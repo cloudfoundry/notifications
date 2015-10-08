@@ -3,15 +3,26 @@ package mocks
 import "github.com/cloudfoundry-incubator/notifications/v1/services"
 
 type Strategy struct {
-	DispatchCall struct {
-		Receives struct {
-			Dispatch services.Dispatch
-		}
-		Returns struct {
-			Responses []services.Response
-			Error     error
-		}
+	DispatchCalls      []StrategyDispatchCall
+	DispatchCallsCount int
+}
+
+type StrategyDispatchCall struct {
+	Receives struct {
+		Dispatch services.Dispatch
 	}
+	Returns struct {
+		Responses []services.Response
+		Error     error
+	}
+}
+
+func NewStrategyDispatchCall(responses []services.Response, err error) StrategyDispatchCall {
+	call := StrategyDispatchCall{}
+	call.Returns.Responses = responses
+	call.Returns.Error = err
+
+	return call
 }
 
 func NewStrategy() *Strategy {
@@ -19,7 +30,13 @@ func NewStrategy() *Strategy {
 }
 
 func (s *Strategy) Dispatch(dispatch services.Dispatch) ([]services.Response, error) {
-	s.DispatchCall.Receives.Dispatch = dispatch
+	if len(s.DispatchCalls) <= s.DispatchCallsCount {
+		s.DispatchCalls = append(s.DispatchCalls, StrategyDispatchCall{})
+	}
 
-	return s.DispatchCall.Returns.Responses, s.DispatchCall.Returns.Error
+	call := s.DispatchCalls[s.DispatchCallsCount]
+	s.DispatchCalls[s.DispatchCallsCount].Receives.Dispatch = dispatch
+	s.DispatchCallsCount++
+
+	return call.Returns.Responses, call.Returns.Error
 }
