@@ -37,7 +37,7 @@ var Structure = []Resource{
 			},
 			{
 				Key:         "sender-get",
-				Description: "Retrieve a senders",
+				Description: "Retrieve a sender",
 			},
 			{
 				Key:         "sender-update",
