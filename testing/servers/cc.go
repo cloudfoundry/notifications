@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -53,7 +54,7 @@ func (s CC) Close() {
 func (cc CC) GetSpace(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	guid := vars["guid"]
-	if guid == "space-123" || guid == "large-space" {
+	if guid == "space-123" || guid == "space-456" {
 		output := map[string]interface{}{
 			"metadata": map[string]interface{}{
 				"guid":       guid,
@@ -293,27 +294,27 @@ func (cc CC) GetOrgBillingManagers(w http.ResponseWriter, req *http.Request) {
 }
 
 func (cc CC) GetSpaceUsers(w http.ResponseWriter, req *http.Request) {
+	query, err := url.ParseQuery(req.URL.RawQuery)
+	if err != nil {
+		panic(err)
+	}
+	filter := query.Get("q")
+	spaceGUID := strings.TrimPrefix(filter, "space_guid:")
+
 	var desiredUsers []string
-	fields := strings.Split(":", req.URL.Query().Get("q"))
-	if len(fields) == 2 && fields[1] == "large-space" {
-		desiredUsers = []string{
-			"user-001",
-			"user-002",
-			"user-003",
-			"user-004",
-			"user-005",
-			"user-006",
-			"user-007",
-			"user-008",
-			"user-009",
-			"user-010",
-		}
-	} else {
+	switch spaceGUID {
+	case "space-123":
 		desiredUsers = []string{
 			"user-456",
 			"user-789",
 			"user-000",
 		}
+	case "space-456":
+		desiredUsers = []string{
+			"user-123",
+		}
+	default:
+		desiredUsers = []string{}
 	}
 
 	users := []map[string]interface{}{}

@@ -80,7 +80,7 @@ func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost
 				Email: p.emailFormatter.Format(audienceMember.(string)),
 			})
 		}
-	case "users":
+	case "users", "spaces":
 		for _, audienceMember := range campaignJob.Campaign.SendTo[audience].([]interface{}) {
 			recipients = append(recipients, recipient{
 				GUID: audienceMember.(string),

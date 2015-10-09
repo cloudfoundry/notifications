@@ -453,7 +453,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 				By("sending the campaign", func() {
 					status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 						"send_to": map[string][]string{
-							"spaces": {"large-space"},
+							"spaces": {"space-123"},
 						},
 						"campaign_type_id": campaignTypeID,
 						"text":             "campaign body",
