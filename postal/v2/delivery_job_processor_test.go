@@ -146,6 +146,13 @@ var _ = Describe("DeliveryJobProcessor", func() {
 		Expect(userLoader.LoadCall.Receives.UserGUIDs).To(Equal([]string{"user-123"}))
 		Expect(userLoader.LoadCall.Receives.Token).To(Equal("some-token"))
 
+		delivery.Email = "user-123@example.com"
+		Expect(packager.PrepareContextCall.Receives.Delivery).To(Equal(delivery))
+		Expect(packager.PrepareContextCall.Receives.Sender).To(Equal("from@example.com"))
+		Expect(packager.PrepareContextCall.Receives.Domain).To(Equal("example.com"))
+
+		Expect(packager.PackCall.Receives.MessageContext).To(Equal(packager.PrepareContextCall.Returns.MessageContext))
+
 		Expect(mailClient.SendCall.CallCount).To(Equal(1))
 		msg := mailClient.SendCall.Receives.Message
 		Expect(msg.From).To(Equal("from@example.com"))
@@ -191,6 +198,22 @@ var _ = Describe("DeliveryJobProcessor", func() {
 
 			Expect(userLoader.LoadCall.Receives.UserGUIDs).To(BeNil())
 			Expect(userLoader.LoadCall.Receives.Token).To(Equal(""))
+		})
+
+		It("should call PrepareContext with the correct arguments", func() {
+			err := processor.Process(delivery, logger)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(packager.PrepareContextCall.Receives.Delivery).To(Equal(delivery))
+			Expect(packager.PrepareContextCall.Receives.Sender).To(Equal("from@example.com"))
+			Expect(packager.PrepareContextCall.Receives.Domain).To(Equal("example.com"))
+		})
+
+		It("should call Pack with the correct arguments", func() {
+			err := processor.Process(delivery, logger)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(packager.PackCall.Receives.MessageContext).To(Equal(packager.PrepareContextCall.Returns.MessageContext))
 		})
 
 		It("should still deliver the email (assuming there is an email address)", func() {
