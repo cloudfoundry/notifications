@@ -111,8 +111,14 @@ var _ = AfterSuite(func() {
 		markdown, err := docs.GenerateMarkdown(context)
 		Expect(err).NotTo(HaveOccurred())
 
-		err = ioutil.WriteFile(fmt.Sprintf("%s/V2_API.md", os.Getenv("ROOT_PATH")), []byte(markdown), 0644)
+		docsFilePath := fmt.Sprintf("%s/V2_API.md", os.Getenv("ROOT_PATH"))
+		existingAPIDocs, err := ioutil.ReadFile(docsFilePath)
 		Expect(err).NotTo(HaveOccurred())
+
+		if docs.Diff(markdown, string(existingAPIDocs)) {
+			err = ioutil.WriteFile(docsFilePath, []byte(markdown), 0644)
+			Expect(err).NotTo(HaveOccurred())
+		}
 	}
 })
 
