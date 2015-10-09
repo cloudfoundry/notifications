@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"time"
 
+	"bitbucket.org/chrj/smtpd"
+
 	"github.com/cloudfoundry-incubator/notifications/v2/acceptance/support"
+	"github.com/pivotal-cf-experimental/warrant"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -63,13 +66,20 @@ var _ = Describe("Campaign Lifecycle", func() {
 	})
 
 	Context("retrieving a campaign", func() {
-		It("sends a campaign to an email and retrieves the campaign details", func() {
+		It("sends a campaign to many audiences and retrieves the campaign details", func() {
 			var (
 				response       campaignResponse
 				campaignTypeID string
 				templateID     string
 				campaignID     string
+				user           warrant.User
 			)
+
+			By("creating a user to send an email to", func() {
+				var err error
+				user, err = warrantClient.Users.Create("user-111", "user-111@example.com", adminToken)
+				Expect(err).NotTo(HaveOccurred())
+			})
 
 			By("creating a template", func() {
 				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
@@ -101,6 +111,9 @@ var _ = Describe("Campaign Lifecycle", func() {
 				status, err := client.DoTyped("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string][]string{
 						"emails": {"test@example.com"},
+						"spaces": {"space-123"},
+						"orgs":   {"org-123"},
+						"users":  {user.ID},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -115,6 +128,9 @@ var _ = Describe("Campaign Lifecycle", func() {
 
 				Expect(response.ID).To(Equal(campaignID))
 				Expect(response.SendTo).To(HaveKeyWithValue("emails", []string{"test@example.com"}))
+				Expect(response.SendTo).To(HaveKeyWithValue("spaces", []string{"space-123"}))
+				Expect(response.SendTo).To(HaveKeyWithValue("orgs", []string{"org-123"}))
+				Expect(response.SendTo).To(HaveKeyWithValue("users", []string{user.ID}))
 				Expect(response.CampaignTypeID).To(Equal(campaignTypeID))
 				Expect(response.Text).To(Equal("campaign body"))
 				Expect(response.Subject).To(Equal("campaign subject"))
@@ -133,6 +149,9 @@ var _ = Describe("Campaign Lifecycle", func() {
 				Expect(status).To(Equal(http.StatusOK))
 				Expect(response.ID).To(Equal(campaignID))
 				Expect(response.SendTo).To(HaveKeyWithValue("emails", []string{"test@example.com"}))
+				Expect(response.SendTo).To(HaveKeyWithValue("spaces", []string{"space-123"}))
+				Expect(response.SendTo).To(HaveKeyWithValue("orgs", []string{"org-123"}))
+				Expect(response.SendTo).To(HaveKeyWithValue("users", []string{user.ID}))
 				Expect(response.CampaignTypeID).To(Equal(campaignTypeID))
 				Expect(response.Text).To(Equal("campaign body"))
 				Expect(response.Subject).To(Equal("campaign subject"))
@@ -142,6 +161,30 @@ var _ = Describe("Campaign Lifecycle", func() {
 				Expect(response.Links.Template.Href).To(Equal(fmt.Sprintf("/templates/%s", templateID)))
 				Expect(response.Links.CampaignType.Href).To(Equal(fmt.Sprintf("/campaign_types/%s", campaignTypeID)))
 				Expect(response.Links.Status.Href).To(Equal(fmt.Sprintf("/campaigns/%s/status", campaignID)))
+			})
+
+			By("seeing that the mail was delivered", func() {
+				Eventually(func() []smtpd.Envelope {
+					return Servers.SMTP.Deliveries
+				}, "10s").Should(HaveLen(4))
+
+				var recipients []string
+				for _, delivery := range Servers.SMTP.Deliveries {
+					Expect(delivery.Recipients).To(HaveLen(1))
+					recipients = append(recipients, delivery.Recipients[0])
+				}
+
+				Expect(recipients).To(ConsistOf([]string{
+					"test@example.com",
+					"user-456@example.com",
+					"user-456@example.com",
+					"user-111@example.com",
+				}))
+			})
+
+			By("deleting the user that was sent an email", func() {
+				err := warrantClient.Users.Delete(user.ID, adminToken)
+				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 

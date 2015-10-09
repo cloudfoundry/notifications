@@ -62,63 +62,60 @@ func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost
 		return err
 	}
 
-	var audience string
-	for key, _ := range campaignJob.Campaign.SendTo {
-		audience = key
-	}
-
 	doctype, head, bodyContent, bodyAttributes, err := p.htmlExtractor.Extract(campaignJob.Campaign.HTML)
 	if err != nil {
 		panic(err)
 	}
 
-	var recipients []recipient
-	switch audience {
-	case "emails":
-		for _, audienceMember := range campaignJob.Campaign.SendTo[audience] {
-			recipients = append(recipients, recipient{
-				Email: p.emailFormatter.Format(audienceMember),
-			})
+	for audience, audienceMembers := range campaignJob.Campaign.SendTo {
+		var recipients []recipient
+		switch audience {
+		case "emails":
+			for _, audienceMember := range audienceMembers {
+				recipients = append(recipients, recipient{
+					Email: p.emailFormatter.Format(audienceMember),
+				})
+			}
+		default:
+			for _, audienceMember := range audienceMembers {
+				recipients = append(recipients, recipient{
+					GUID: audienceMember,
+				})
+			}
 		}
-	default:
-		for _, audienceMember := range campaignJob.Campaign.SendTo[audience] {
-			recipients = append(recipients, recipient{
-				GUID: audienceMember,
-			})
-		}
-	}
 
-	strategy, err := p.findStrategy(audience)
-	if err != nil {
-		return err
-	}
-
-	for _, recipient := range recipients {
-		_, err = strategy.Dispatch(services.Dispatch{
-			JobType:    "v2",
-			UAAHost:    uaaHost,
-			GUID:       recipient.GUID,
-			Connection: conn,
-			TemplateID: campaignJob.Campaign.TemplateID,
-			CampaignID: campaignJob.Campaign.ID,
-			Client: services.DispatchClient{
-				ID: campaignJob.Campaign.ClientID,
-			},
-			Message: services.DispatchMessage{
-				To:      recipient.Email,
-				ReplyTo: campaignJob.Campaign.ReplyTo,
-				Subject: campaignJob.Campaign.Subject,
-				Text:    campaignJob.Campaign.Text,
-				HTML: services.HTML{
-					Doctype:        doctype,
-					Head:           head,
-					BodyContent:    bodyContent,
-					BodyAttributes: bodyAttributes,
-				},
-			},
-		})
+		strategy, err := p.findStrategy(audience)
 		if err != nil {
 			return err
+		}
+
+		for _, recipient := range recipients {
+			_, err = strategy.Dispatch(services.Dispatch{
+				JobType:    "v2",
+				UAAHost:    uaaHost,
+				GUID:       recipient.GUID,
+				Connection: conn,
+				TemplateID: campaignJob.Campaign.TemplateID,
+				CampaignID: campaignJob.Campaign.ID,
+				Client: services.DispatchClient{
+					ID: campaignJob.Campaign.ClientID,
+				},
+				Message: services.DispatchMessage{
+					To:      recipient.Email,
+					ReplyTo: campaignJob.Campaign.ReplyTo,
+					Subject: campaignJob.Campaign.Subject,
+					Text:    campaignJob.Campaign.Text,
+					HTML: services.HTML{
+						Doctype:        doctype,
+						Head:           head,
+						BodyContent:    bodyContent,
+						BodyAttributes: bodyAttributes,
+					},
+				},
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 

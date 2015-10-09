@@ -611,30 +611,6 @@ var _ = Describe("CampaignsCollection", func() {
 					})
 				})
 
-				Context("when checking the user exists", func() {
-					var campaign collections.Campaign
-
-					BeforeEach(func() {
-						campaign = collections.Campaign{
-							SendTo:         map[string][]string{"users": {"some-nonexistant-user"}},
-							CampaignTypeID: "some-id",
-							Text:           "some-test",
-							HTML:           "no-html",
-							Subject:        "some-subject",
-							TemplateID:     "error",
-							ReplyTo:        "nothing@example.com",
-							SenderID:       "some-sender-id",
-						}
-					})
-
-					It("returns an error", func() {
-						userFinder.ExistsCall.Returns.Error = errors.New("some error")
-
-						_, err := collection.Create(conn, campaign, "some-client-id", false)
-						Expect(err).To(MatchError(collections.UnknownError{errors.New("some error")}))
-					})
-				})
-
 				Context("when sending critical notifications is not allowed", func() {
 					var campaign collections.Campaign
 
@@ -660,6 +636,48 @@ var _ = Describe("CampaignsCollection", func() {
 						Expect(err).To(MatchError(collections.PermissionsError{errors.New("Scope critical_notifications.write is required")}))
 					})
 				})
+			})
+		})
+	})
+
+	Context("Checking existence", func() {
+		Context("when multiple audience types are provided", func() {
+			var campaign collections.Campaign
+
+			BeforeEach(func() {
+				campaign = collections.Campaign{
+					SendTo: map[string][]string{
+						"users":  {"some-user-guid"},
+						"spaces": {"some-space"},
+						"orgs":   {"some-org"},
+					},
+					CampaignTypeID: "some-id",
+					Text:           "some-test",
+					HTML:           "no-html",
+					Subject:        "some-subject",
+					TemplateID:     "error",
+					ReplyTo:        "nothing@example.com",
+					SenderID:       "some-sender-id",
+				}
+
+				sendersRepo.GetCall.Returns.Sender = models.Sender{
+					ID:       "some-sender-id",
+					Name:     "some-sender",
+					ClientID: "some-client-id",
+				}
+
+				userFinder.ExistsCall.Returns.Exists = true
+				spaceFinder.ExistsCall.Returns.Exists = true
+				orgFinder.ExistsCall.Returns.Exists = true
+			})
+
+			It("checks existence on all of them", func() {
+				_, err := collection.Create(conn, campaign, "some-client-id", false)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(userFinder.ExistsCall.Receives.GUID).To(Equal("some-user-guid"))
+				Expect(spaceFinder.ExistsCall.Receives.GUID).To(Equal("some-space"))
+				Expect(orgFinder.ExistsCall.Receives.GUID).To(Equal("some-org"))
 			})
 		})
 	})

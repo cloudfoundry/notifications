@@ -104,8 +104,10 @@ var _ = Describe("CampaignJobProcessor", func() {
 		It("determines the strategy and calls it", func() {
 			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
-					ID:             "some-id",
-					SendTo:         map[string][]string{"emails": {"test1@example.com", "test2@example.com"}},
+					ID: "some-id",
+					SendTo: map[string][]string{
+						"emails": {"test1@example.com", "test2@example.com"},
+					},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -171,8 +173,10 @@ var _ = Describe("CampaignJobProcessor", func() {
 		It("determines the strategy and calls it", func() {
 			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
-					ID:             "some-id",
-					SendTo:         map[string][]string{"spaces": {"some-space-guid", "some-other-space-guid"}},
+					ID: "some-id",
+					SendTo: map[string][]string{
+						"spaces": {"some-space-guid", "some-other-space-guid"},
+					},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -238,8 +242,10 @@ var _ = Describe("CampaignJobProcessor", func() {
 		It("determines the strategy and calls it", func() {
 			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
-					ID:             "some-id",
-					SendTo:         map[string][]string{"orgs": {"some-org-guid", "some-other-org-guid"}},
+					ID: "some-id",
+					SendTo: map[string][]string{
+						"orgs": {"some-org-guid", "some-other-org-guid"},
+					},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -289,6 +295,207 @@ var _ = Describe("CampaignJobProcessor", func() {
 					},
 					Message: services.DispatchMessage{
 						To:      "",
+						ReplyTo: "noreply@example.com",
+						Subject: "The Best subject",
+						Text:    "some-text",
+						HTML: services.HTML{
+							BodyContent: "<h1>my-html</h1>",
+						},
+					},
+				},
+			}))
+		})
+	})
+
+	Context("when dispatching to many audiences", func() {
+		It("determines each strategy and calls it", func() {
+			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+				Campaign: collections.Campaign{
+					ID: "some-id",
+					SendTo: map[string][]string{
+						"users":  {"some-user-guid", "some-other-user-guid"},
+						"orgs":   {"some-org-guid", "some-other-org-guid"},
+						"spaces": {"some-space-guid", "some-other-space-guid"},
+						"emails": {"test1@example.com", "test2@example.com"},
+					},
+					CampaignTypeID: "some-campaign-type-id",
+					Text:           "some-text",
+					HTML:           "<h1>my-html</h1>",
+					Subject:        "The Best subject",
+					TemplateID:     "some-template-id",
+					ReplyTo:        "noreply@example.com",
+					ClientID:       "some-client-id",
+				},
+			}))
+			Expect(err).NotTo(HaveOccurred())
+
+			var dispatches []services.Dispatch
+			for _, dispatchCall := range userStrategy.DispatchCalls {
+				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
+			}
+			for _, dispatchCall := range emailStrategy.DispatchCalls {
+				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
+			}
+			for _, dispatchCall := range orgStrategy.DispatchCalls {
+				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
+			}
+			for _, dispatchCall := range spaceStrategy.DispatchCalls {
+				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
+			}
+
+			Expect(dispatches).To(ConsistOf([]services.Dispatch{
+				{
+					JobType:    "v2",
+					GUID:       "some-user-guid",
+					UAAHost:    "some-uaa-host",
+					Connection: database.Connection(),
+					TemplateID: "some-template-id",
+					CampaignID: "some-id",
+					Client: services.DispatchClient{
+						ID: "some-client-id",
+					},
+					Message: services.DispatchMessage{
+						To:      "",
+						ReplyTo: "noreply@example.com",
+						Subject: "The Best subject",
+						Text:    "some-text",
+						HTML: services.HTML{
+							BodyContent: "<h1>my-html</h1>",
+						},
+					},
+				},
+				{
+					JobType:    "v2",
+					GUID:       "some-other-user-guid",
+					UAAHost:    "some-uaa-host",
+					Connection: database.Connection(),
+					TemplateID: "some-template-id",
+					CampaignID: "some-id",
+					Client: services.DispatchClient{
+						ID: "some-client-id",
+					},
+					Message: services.DispatchMessage{
+						To:      "",
+						ReplyTo: "noreply@example.com",
+						Subject: "The Best subject",
+						Text:    "some-text",
+						HTML: services.HTML{
+							BodyContent: "<h1>my-html</h1>",
+						},
+					},
+				},
+				{
+					JobType:    "v2",
+					GUID:       "some-org-guid",
+					UAAHost:    "some-uaa-host",
+					Connection: database.Connection(),
+					TemplateID: "some-template-id",
+					CampaignID: "some-id",
+					Client: services.DispatchClient{
+						ID: "some-client-id",
+					},
+					Message: services.DispatchMessage{
+						To:      "",
+						ReplyTo: "noreply@example.com",
+						Subject: "The Best subject",
+						Text:    "some-text",
+						HTML: services.HTML{
+							BodyContent: "<h1>my-html</h1>",
+						},
+					},
+				},
+				{
+					JobType:    "v2",
+					GUID:       "some-other-org-guid",
+					UAAHost:    "some-uaa-host",
+					Connection: database.Connection(),
+					TemplateID: "some-template-id",
+					CampaignID: "some-id",
+					Client: services.DispatchClient{
+						ID: "some-client-id",
+					},
+					Message: services.DispatchMessage{
+						To:      "",
+						ReplyTo: "noreply@example.com",
+						Subject: "The Best subject",
+						Text:    "some-text",
+						HTML: services.HTML{
+							BodyContent: "<h1>my-html</h1>",
+						},
+					},
+				},
+				{
+					JobType:    "v2",
+					GUID:       "some-space-guid",
+					UAAHost:    "some-uaa-host",
+					Connection: database.Connection(),
+					TemplateID: "some-template-id",
+					CampaignID: "some-id",
+					Client: services.DispatchClient{
+						ID: "some-client-id",
+					},
+					Message: services.DispatchMessage{
+						To:      "",
+						ReplyTo: "noreply@example.com",
+						Subject: "The Best subject",
+						Text:    "some-text",
+						HTML: services.HTML{
+							BodyContent: "<h1>my-html</h1>",
+						},
+					},
+				},
+				{
+					JobType:    "v2",
+					GUID:       "some-other-space-guid",
+					UAAHost:    "some-uaa-host",
+					Connection: database.Connection(),
+					TemplateID: "some-template-id",
+					CampaignID: "some-id",
+					Client: services.DispatchClient{
+						ID: "some-client-id",
+					},
+					Message: services.DispatchMessage{
+						To:      "",
+						ReplyTo: "noreply@example.com",
+						Subject: "The Best subject",
+						Text:    "some-text",
+						HTML: services.HTML{
+							BodyContent: "<h1>my-html</h1>",
+						},
+					},
+				},
+				{
+					JobType:    "v2",
+					GUID:       "",
+					UAAHost:    "some-uaa-host",
+					Connection: database.Connection(),
+					TemplateID: "some-template-id",
+					CampaignID: "some-id",
+					Client: services.DispatchClient{
+						ID: "some-client-id",
+					},
+					Message: services.DispatchMessage{
+						To:      "test1@example.com",
+						ReplyTo: "noreply@example.com",
+						Subject: "The Best subject",
+						Text:    "some-text",
+						HTML: services.HTML{
+							BodyContent: "<h1>my-html</h1>",
+						},
+					},
+				},
+				{
+					JobType:    "v2",
+					GUID:       "",
+					UAAHost:    "some-uaa-host",
+					Connection: database.Connection(),
+					TemplateID: "some-template-id",
+					CampaignID: "some-id",
+					Client: services.DispatchClient{
+						ID: "some-client-id",
+					},
+					Message: services.DispatchMessage{
+						To:      "test2@example.com",
 						ReplyTo: "noreply@example.com",
 						Subject: "The Best subject",
 						Text:    "some-text",

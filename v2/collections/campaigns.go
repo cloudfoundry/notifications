@@ -74,19 +74,16 @@ func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignsRepo campaignsPe
 }
 
 func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign, clientID string, canSendCritical bool) (Campaign, error) {
-	var audience string
-	for key, _ := range campaign.SendTo {
-		audience = key
-	}
+	for audience, audienceMembers := range campaign.SendTo {
+		for _, audienceMember := range audienceMembers {
+			exists, err := c.checkForExistence(audience, audienceMember)
+			if err != nil {
+				return Campaign{}, UnknownError{err}
+			}
 
-	for _, audienceMember := range campaign.SendTo[audience] {
-		exists, err := c.checkForExistence(audience, audienceMember)
-		if err != nil {
-			return Campaign{}, UnknownError{err}
-		}
-
-		if !exists {
-			return Campaign{}, NotFoundError{fmt.Errorf("The %s %q cannot be found", strings.TrimSuffix(audience, "s"), audienceMember)}
+			if !exists {
+				return Campaign{}, NotFoundError{fmt.Errorf("The %s %q cannot be found", strings.TrimSuffix(audience, "s"), audienceMember)}
+			}
 		}
 	}
 
