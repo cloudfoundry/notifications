@@ -50,7 +50,7 @@ type globalUnsubscribesGetter interface {
 	Get(connection models.ConnectionInterface, userGUID string) (bool, error)
 }
 
-type ProcessConfig struct {
+type DeliveryJobProcessorConfig struct {
 	DBTrace bool
 	UAAHost string
 	Sender  string
@@ -70,7 +70,7 @@ type ProcessConfig struct {
 	DeliveryFailureHandler deliveryFailureHandler
 }
 
-type Process struct {
+type DeliveryJobProcessor struct {
 	dbTrace bool
 	uaaHost string
 	sender  string
@@ -90,8 +90,8 @@ type Process struct {
 	deliveryFailureHandler deliveryFailureHandler
 }
 
-func NewProcess(config ProcessConfig) Process {
-	return Process{
+func NewDeliveryJobProcessor(config DeliveryJobProcessorConfig) DeliveryJobProcessor {
+	return DeliveryJobProcessor{
 		dbTrace: config.DBTrace,
 		uaaHost: config.UAAHost,
 		sender:  config.Sender,
@@ -112,7 +112,7 @@ func NewProcess(config ProcessConfig) Process {
 	}
 }
 
-func (p Process) Deliver(job *gobble.Job, logger lager.Logger) error {
+func (p DeliveryJobProcessor) Process(job *gobble.Job, logger lager.Logger) error {
 	var delivery common.Delivery
 	err := job.Unmarshal(&delivery)
 	if err != nil {
@@ -165,7 +165,7 @@ func (p Process) Deliver(job *gobble.Job, logger lager.Logger) error {
 	})
 
 	if p.shouldDeliver(delivery, logger) {
-		status := p.deliver(delivery, logger)
+		status := p.process(delivery, logger)
 
 		if status != common.StatusDelivered {
 			p.deliveryFailureHandler.Handle(job, logger)
@@ -184,7 +184,7 @@ func (p Process) Deliver(job *gobble.Job, logger lager.Logger) error {
 	return nil
 }
 
-func (p Process) deliver(delivery common.Delivery, logger lager.Logger) string {
+func (p DeliveryJobProcessor) process(delivery common.Delivery, logger lager.Logger) string {
 	context, err := p.packager.PrepareContext(delivery, p.sender, p.domain)
 	if err != nil {
 		panic(err)
@@ -203,7 +203,7 @@ func (p Process) deliver(delivery common.Delivery, logger lager.Logger) string {
 	return status
 }
 
-func (p Process) shouldDeliver(delivery common.Delivery, logger lager.Logger) bool {
+func (p DeliveryJobProcessor) shouldDeliver(delivery common.Delivery, logger lager.Logger) bool {
 	conn := p.database.Connection()
 	if p.isCritical(conn, delivery.Options.KindID, delivery.ClientID) {
 		return true
@@ -238,7 +238,7 @@ func (p Process) shouldDeliver(delivery common.Delivery, logger lager.Logger) bo
 	return true
 }
 
-func (p Process) sendMail(messageID string, message mail.Message, logger lager.Logger) string {
+func (p DeliveryJobProcessor) sendMail(messageID string, message mail.Message, logger lager.Logger) string {
 	err := p.mailClient.Connect(logger)
 	if err != nil {
 		logger.Error("smtp-connection-error", err)
@@ -258,7 +258,7 @@ func (p Process) sendMail(messageID string, message mail.Message, logger lager.L
 	return common.StatusDelivered
 }
 
-func (p Process) isCritical(conn db.ConnectionInterface, kindID, clientID string) bool {
+func (p DeliveryJobProcessor) isCritical(conn db.ConnectionInterface, kindID, clientID string) bool {
 	kind, err := p.kindsRepo.Find(conn, kindID, clientID)
 	if _, ok := err.(models.NotFoundError); ok {
 		return false

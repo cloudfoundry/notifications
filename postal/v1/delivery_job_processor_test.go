@@ -21,10 +21,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Process", func() {
+var _ = Describe("DeliveryJobProcessor", func() {
 	var (
 		mailClient             *mocks.MailClient
-		v1Process              v1.Process
+		processor              v1.DeliveryJobProcessor
 		logger                 lager.Logger
 		buffer                 *bytes.Buffer
 		delivery               common.Delivery
@@ -95,7 +95,7 @@ var _ = Describe("Process", func() {
 		cloak, err := conceal.NewCloak(encryptionKey)
 		Expect(err).NotTo(HaveOccurred())
 
-		v1Process = v1.NewProcess(v1.ProcessConfig{
+		processor = v1.NewDeliveryJobProcessor(v1.DeliveryJobProcessorConfig{
 			DBTrace: false,
 			UAAHost: "https://uaa.example.com",
 			Sender:  "from@example.com",
@@ -140,7 +140,7 @@ var _ = Describe("Process", func() {
 		})
 
 		It("logs the email address of the recipient", func() {
-			v1Process.Deliver(job, logger)
+			processor.Process(job, logger)
 
 			lines, err := parseLogLines(buffer.Bytes())
 			Expect(err).NotTo(HaveOccurred())
@@ -160,7 +160,7 @@ var _ = Describe("Process", func() {
 		})
 
 		It("loads the correct template", func() {
-			v1Process.Deliver(job, logger)
+			processor.Process(job, logger)
 
 			Expect(templateLoader.LoadTemplatesCall.Receives.ClientID).To(Equal("some-client"))
 			Expect(templateLoader.LoadTemplatesCall.Receives.KindID).To(Equal("some-kind"))
@@ -168,7 +168,7 @@ var _ = Describe("Process", func() {
 		})
 
 		It("logs successful delivery", func() {
-			v1Process.Deliver(job, logger)
+			processor.Process(job, logger)
 
 			lines, err := parseLogLines(buffer.Bytes())
 			Expect(err).NotTo(HaveOccurred())
@@ -192,7 +192,7 @@ var _ = Describe("Process", func() {
 			encryptionKey := sum[:]
 			cloak, err := conceal.NewCloak(encryptionKey)
 			Expect(err).NotTo(HaveOccurred())
-			v1Process = v1.NewProcess(v1.ProcessConfig{
+			processor = v1.NewDeliveryJobProcessor(v1.DeliveryJobProcessorConfig{
 				DBTrace: true,
 				UAAHost: "https://uaa.example.com",
 				Sender:  "from@example.com",
@@ -211,20 +211,20 @@ var _ = Describe("Process", func() {
 				MessageStatusUpdater:   messageStatusUpdater,
 				DeliveryFailureHandler: deliveryFailureHandler,
 			})
-			v1Process.Deliver(job, logger)
+			processor.Process(job, logger)
 
 			Expect(database.TraceOnCall.Receives.Prefix).To(BeEmpty())
 			Expect(database.TraceOnCall.Receives.Logger).NotTo(BeNil())
 		})
 
 		It("does not log database operations when database traces are disabled", func() {
-			v1Process.Deliver(job, logger)
+			processor.Process(job, logger)
 			Expect(database.TraceOnCall.Receives.Prefix).To(BeEmpty())
 			Expect(database.TraceOnCall.Receives.Logger).To(BeNil())
 		})
 
 		It("updates the message status as delivered", func() {
-			v1Process.Deliver(job, logger)
+			processor.Process(job, logger)
 
 			Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 			Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
@@ -233,7 +233,7 @@ var _ = Describe("Process", func() {
 		})
 
 		It("creates a reciept for the delivery", func() {
-			v1Process.Deliver(job, logger)
+			processor.Process(job, logger)
 
 			Expect(receiptsRepo.CreateReceiptsCall.Receives.Connection).To(Equal(conn))
 			Expect(receiptsRepo.CreateReceiptsCall.Receives.ClientID).To(Equal("some-client"))
@@ -244,7 +244,7 @@ var _ = Describe("Process", func() {
 		Context("when the receipt fails to be created", func() {
 			It("retries the job", func() {
 				receiptsRepo.CreateReceiptsCall.Returns.Error = errors.New("something happened")
-				v1Process.Deliver(job, logger)
+				processor.Process(job, logger)
 
 				Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
 				Expect(deliveryFailureHandler.HandleCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
@@ -257,7 +257,7 @@ var _ = Describe("Process", func() {
 				job = &j
 
 				tokenLoader.LoadCall.Returns.Error = errors.New("failed to load a zoned UAA token")
-				v1Process.Deliver(job, logger)
+				processor.Process(job, logger)
 
 				Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
 				Expect(deliveryFailureHandler.HandleCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
@@ -265,7 +265,7 @@ var _ = Describe("Process", func() {
 		})
 
 		It("ensures message delivery", func() {
-			v1Process.Deliver(job, logger)
+			processor.Process(job, logger)
 
 			Expect(mailClient.SendCall.CallCount).To(Equal(1))
 			msg := mailClient.SendCall.Receives.Message
@@ -298,7 +298,7 @@ var _ = Describe("Process", func() {
 		})
 
 		It("should connect and send the message with the worker's logger session", func() {
-			v1Process.Deliver(job, logger)
+			processor.Process(job, logger)
 			Expect(mailClient.ConnectCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 			Expect(mailClient.SendCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 		})
@@ -310,14 +310,14 @@ var _ = Describe("Process", func() {
 				})
 
 				It("marks the job for retry", func() {
-					v1Process.Deliver(job, logger)
+					processor.Process(job, logger)
 
 					Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
 					Expect(deliveryFailureHandler.HandleCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 				})
 
 				It("logs an SMTP send error", func() {
-					v1Process.Deliver(job, logger)
+					processor.Process(job, logger)
 
 					lines, err := parseLogLines(buffer.Bytes())
 					Expect(err).NotTo(HaveOccurred())
@@ -338,7 +338,7 @@ var _ = Describe("Process", func() {
 				})
 
 				It("updates the message status as failed", func() {
-					v1Process.Deliver(job, logger)
+					processor.Process(job, logger)
 
 					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
@@ -350,7 +350,7 @@ var _ = Describe("Process", func() {
 			Context("and the error is a connect error", func() {
 				It("logs an SMTP connection error", func() {
 					mailClient.ConnectCall.Returns.Error = errors.New("server timeout")
-					v1Process.Deliver(job, logger)
+					processor.Process(job, logger)
 
 					lines, err := parseLogLines(buffer.Bytes())
 					Expect(err).NotTo(HaveOccurred())
@@ -379,7 +379,7 @@ var _ = Describe("Process", func() {
 
 					mailClient.ConnectCall.Returns.Error = errors.New("BOOM!")
 					messageID := jobDelivery.MessageID
-					v1Process.Deliver(job, logger)
+					processor.Process(job, logger)
 
 					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
@@ -393,7 +393,7 @@ var _ = Describe("Process", func() {
 			BeforeEach(func() {
 				globalUnsubscribesRepo.GetCall.Returns.Unsubscribed = true
 
-				v1Process.Deliver(job, logger)
+				processor.Process(job, logger)
 			})
 
 			It("logs that the user has unsubscribed from this notification", func() {
@@ -436,7 +436,7 @@ var _ = Describe("Process", func() {
 					j := gobble.NewJob(delivery)
 					job = &j
 
-					v1Process.Deliver(job, logger)
+					processor.Process(job, logger)
 				})
 
 				It("logs the info", func() {
@@ -471,7 +471,7 @@ var _ = Describe("Process", func() {
 					j := gobble.NewJob(delivery)
 					job = &j
 
-					v1Process.Deliver(job, logger)
+					processor.Process(job, logger)
 				})
 
 				It("logs the info", func() {
@@ -507,7 +507,7 @@ var _ = Describe("Process", func() {
 			})
 
 			It("logs that the user has unsubscribed from this notification", func() {
-				v1Process.Deliver(job, logger)
+				processor.Process(job, logger)
 
 				lines, err := parseLogLines(buffer.Bytes())
 				Expect(err).NotTo(HaveOccurred())
@@ -527,7 +527,7 @@ var _ = Describe("Process", func() {
 			})
 
 			It("updates the message status as undeliverable", func() {
-				v1Process.Deliver(job, logger)
+				processor.Process(job, logger)
 
 				Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 				Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
@@ -537,7 +537,7 @@ var _ = Describe("Process", func() {
 
 			Context("and the notification is not registered", func() {
 				It("does not send the email", func() {
-					v1Process.Deliver(job, logger)
+					processor.Process(job, logger)
 
 					Expect(mailClient.SendCall.CallCount).To(Equal(0))
 				})
@@ -555,7 +555,7 @@ var _ = Describe("Process", func() {
 				})
 
 				It("does not send the email", func() {
-					v1Process.Deliver(job, logger)
+					processor.Process(job, logger)
 
 					Expect(mailClient.SendCall.CallCount).To(Equal(0))
 				})
@@ -573,7 +573,7 @@ var _ = Describe("Process", func() {
 				})
 
 				It("does send the email", func() {
-					v1Process.Deliver(job, logger)
+					processor.Process(job, logger)
 
 					Expect(mailClient.SendCall.CallCount).To(Equal(1))
 				})
@@ -593,19 +593,19 @@ var _ = Describe("Process", func() {
 
 			It("does not panic", func() {
 				Expect(func() {
-					v1Process.Deliver(job, logger)
+					processor.Process(job, logger)
 				}).ToNot(Panic())
 			})
 
 			It("marks the job for retry later", func() {
-				v1Process.Deliver(job, logger)
+				processor.Process(job, logger)
 
 				Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
 				Expect(deliveryFailureHandler.HandleCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 			})
 
 			It("logs that the packer errored", func() {
-				v1Process.Deliver(job, logger)
+				processor.Process(job, logger)
 
 				lines, err := parseLogLines(buffer.Bytes())
 				Expect(err).NotTo(HaveOccurred())
@@ -625,7 +625,7 @@ var _ = Describe("Process", func() {
 			})
 
 			It("updates the message status as failed", func() {
-				v1Process.Deliver(job, logger)
+				processor.Process(job, logger)
 
 				Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 				Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
@@ -641,12 +641,12 @@ var _ = Describe("Process", func() {
 
 			It("does not crash the process", func() {
 				Expect(func() {
-					v1Process.Deliver(job, logger)
+					processor.Process(job, logger)
 				}).ToNot(Panic())
 			})
 
 			It("marks the job for retry later", func() {
-				v1Process.Deliver(job, logger)
+				processor.Process(job, logger)
 
 				Expect(deliveryFailureHandler.HandleCall.Receives.Job).To(Equal(job))
 				Expect(deliveryFailureHandler.HandleCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))

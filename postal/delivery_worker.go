@@ -9,8 +9,8 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-type process interface {
-	Deliver(job *gobble.Job, logger lager.Logger) error
+type v1DeliveryJobProcessor interface {
+	Process(job *gobble.Job, logger lager.Logger) error
 }
 
 type v2DeliveryJobProcessor interface {
@@ -45,7 +45,7 @@ type DeliveryWorker struct {
 	gobble.Worker
 
 	uaaHost                string
-	V1Process              process
+	V1DeliveryJobProcessor v1DeliveryJobProcessor
 	V2DeliveryJobProcessor v2DeliveryJobProcessor
 	logger                 lager.Logger
 	database               db.DatabaseInterface
@@ -54,11 +54,11 @@ type DeliveryWorker struct {
 	messageStatusUpdater   messageStatusUpdater
 }
 
-func NewDeliveryWorker(v1process process, v2DeliveryJobProcessor v2DeliveryJobProcessor, config DeliveryWorkerConfig) DeliveryWorker {
+func NewDeliveryWorker(v1DeliveryJobProcessor v1DeliveryJobProcessor, v2DeliveryJobProcessor v2DeliveryJobProcessor, config DeliveryWorkerConfig) DeliveryWorker {
 	logger := config.Logger.Session("worker", lager.Data{"worker_id": config.ID})
 
 	worker := DeliveryWorker{
-		V1Process:              v1process,
+		V1DeliveryJobProcessor: v1DeliveryJobProcessor,
 		V2DeliveryJobProcessor: v2DeliveryJobProcessor,
 		uaaHost:                config.UAAHost,
 		logger:                 logger,
@@ -108,6 +108,6 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 			worker.messageStatusUpdater.Update(worker.database.Connection(), delivery.MessageID, status, delivery.CampaignID, worker.logger)
 		}
 	default:
-		worker.V1Process.Deliver(job, worker.logger)
+		worker.V1DeliveryJobProcessor.Process(job, worker.logger)
 	}
 }
