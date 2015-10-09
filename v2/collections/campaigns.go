@@ -37,7 +37,7 @@ type existenceChecker interface {
 
 type Campaign struct {
 	ID             string
-	SendTo         map[string]interface{}
+	SendTo         map[string][]string
 	CampaignTypeID string
 	Text           string
 	HTML           string
@@ -79,15 +79,7 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 		audience = key
 	}
 
-	var audienceMembers []string
-	switch campaign.SendTo[audience].(type) {
-	case string:
-		audienceMembers = append(audienceMembers, campaign.SendTo[audience].(string))
-	case []string:
-		audienceMembers = campaign.SendTo[audience].([]string)
-	}
-
-	for _, audienceMember := range audienceMembers {
+	for _, audienceMember := range campaign.SendTo[audience] {
 		exists, err := c.checkForExistence(audience, audienceMember)
 		if err != nil {
 			return Campaign{}, UnknownError{err}
@@ -215,7 +207,7 @@ func (c CampaignsCollection) Get(connection ConnectionInterface, campaignID, cli
 		return Campaign{}, NotFoundError{fmt.Errorf("Campaign with id %q could not be found", campaignID)}
 	}
 
-	var sendTo map[string]interface{}
+	var sendTo map[string][]string
 	err = json.Unmarshal([]byte(campaign.SendTo), &sendTo)
 	if err != nil {
 		panic(err)

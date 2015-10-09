@@ -38,7 +38,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]interface{}{"users": []string{"some-user-guid", "some-other-user-guid"}},
+					SendTo:         map[string][]string{"users": {"some-user-guid", "some-other-user-guid"}},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -105,7 +105,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]interface{}{"emails": []string{"test1@example.com", "test2@example.com"}},
+					SendTo:         map[string][]string{"emails": {"test1@example.com", "test2@example.com"}},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -172,7 +172,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]interface{}{"spaces": []string{"some-space-guid", "some-other-space-guid"}},
+					SendTo:         map[string][]string{"spaces": {"some-space-guid", "some-other-space-guid"}},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -239,7 +239,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]interface{}{"orgs": []string{"some-org-guid", "some-other-org-guid"}},
+					SendTo:         map[string][]string{"orgs": {"some-org-guid", "some-other-org-guid"}},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -315,7 +315,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 
 				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 					Campaign: collections.Campaign{
-						SendTo: map[string]interface{}{"spaces": []string{"some-space-guid"}},
+						SendTo: map[string][]string{"spaces": {"some-space-guid"}},
 					},
 				}))
 				Expect(err).To(MatchError(errors.New("some error")))
@@ -326,7 +326,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 			It("returns an error", func() {
 				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 					Campaign: collections.Campaign{
-						SendTo: map[string]interface{}{"some-audience": "wut"},
+						SendTo: map[string][]string{"some-audience": {"wut"}},
 					},
 				}))
 				Expect(err).To(MatchError(v2.NoStrategyError{errors.New("Strategy for the \"some-audience\" audience could not be found")}))

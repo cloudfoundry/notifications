@@ -54,7 +54,7 @@ var _ = Describe("GetHandler", func() {
 		campaignsCollection = mocks.NewCampaignsCollection()
 		campaignsCollection.GetCall.Returns.Campaign = collections.Campaign{
 			ID:             "some-campaign-id",
-			SendTo:         map[string]interface{}{"users": "user-123"},
+			SendTo:         map[string][]string{"users": {"user-123"}},
 			CampaignTypeID: "some-campaign-type-id",
 			Text:           "come see our new stuff",
 			HTML:           "<h1>New stuff</h1>",

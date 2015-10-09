@@ -75,21 +75,17 @@ func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost
 	var recipients []recipient
 	switch audience {
 	case "emails":
-		for _, audienceMember := range campaignJob.Campaign.SendTo[audience].([]interface{}) {
+		for _, audienceMember := range campaignJob.Campaign.SendTo[audience] {
 			recipients = append(recipients, recipient{
-				Email: p.emailFormatter.Format(audienceMember.(string)),
-			})
-		}
-	case "users", "spaces", "orgs":
-		for _, audienceMember := range campaignJob.Campaign.SendTo[audience].([]interface{}) {
-			recipients = append(recipients, recipient{
-				GUID: audienceMember.(string),
+				Email: p.emailFormatter.Format(audienceMember),
 			})
 		}
 	default:
-		recipients = append(recipients, recipient{
-			GUID: campaignJob.Campaign.SendTo[audience].(string),
-		})
+		for _, audienceMember := range campaignJob.Campaign.SendTo[audience] {
+			recipients = append(recipients, recipient{
+				GUID: audienceMember,
+			})
+		}
 	}
 
 	strategy, err := p.findStrategy(audience)

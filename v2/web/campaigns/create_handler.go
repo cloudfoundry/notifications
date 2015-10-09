@@ -70,18 +70,8 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 
 	database := context.Get("database").(DatabaseInterface)
 
-	sendTo := map[string]interface{}{}
-	for audienceKey, audiences := range request.SendTo {
-		switch audienceKey {
-		case "emails", "users", "spaces", "orgs":
-			sendTo[audienceKey] = audiences
-		default:
-			sendTo[audienceKey] = audiences[0]
-		}
-	}
-
 	campaign, err := h.collection.Create(database.Connection(), collections.Campaign{
-		SendTo:         sendTo,
+		SendTo:         request.SendTo,
 		CampaignTypeID: request.CampaignTypeID,
 		Text:           request.Text,
 		HTML:           request.HTML,
@@ -105,20 +95,10 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
-	returnSendTo := map[string][]string{}
-	for audienceKey, audience := range campaign.SendTo {
-		switch audience.(type) {
-		case string:
-			returnSendTo[audienceKey] = []string{audience.(string)}
-		case []string:
-			returnSendTo[audienceKey] = audience.([]string)
-		}
-	}
-
 	w.WriteHeader(http.StatusAccepted)
 	createResponse, _ := json.Marshal(map[string]interface{}{
 		"id":               campaign.ID,
-		"send_to":          returnSendTo,
+		"send_to":          campaign.SendTo,
 		"campaign_type_id": campaign.CampaignTypeID,
 		"text":             campaign.Text,
 		"html":             campaign.HTML,
