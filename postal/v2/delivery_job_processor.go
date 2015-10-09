@@ -94,19 +94,26 @@ func (p DeliveryJobProcessor) Process(delivery common.Delivery, logger lager.Log
 		return nil
 	}
 
-	token, err := p.tokenLoader.Load(p.uaaHost)
-	if err != nil {
-		return err
-	}
+	if delivery.UserGUID != "" {
+		if delivery.Email != "" {
+			p.messageStatusUpdater.Update(conn, delivery.MessageID, common.StatusUndeliverable, delivery.CampaignID, logger)
+			return nil
+		}
 
-	users, err := p.userLoader.Load([]string{delivery.UserGUID}, token)
-	if err != nil {
-		return err
-	}
+		token, err := p.tokenLoader.Load(p.uaaHost)
+		if err != nil {
+			return err
+		}
 
-	emails := users[delivery.UserGUID].Emails
-	if len(emails) > 0 {
-		delivery.Email = emails[0]
+		users, err := p.userLoader.Load([]string{delivery.UserGUID}, token)
+		if err != nil {
+			return err
+		}
+
+		emails := users[delivery.UserGUID].Emails
+		if len(emails) > 0 {
+			delivery.Email = emails[0]
+		}
 	}
 
 	if !strings.Contains(delivery.Email, "@") {

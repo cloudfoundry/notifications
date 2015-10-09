@@ -177,6 +177,82 @@ var _ = Describe("DeliveryJobProcessor", func() {
 		Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 	})
 
+	Context("when the delivery does not have a user GUID", func() {
+		BeforeEach(func() {
+			delivery.Email = "user-123@example.com"
+			delivery.UserGUID = ""
+		})
+
+		It("should not call the userLoader", func() {
+			err := processor.Process(delivery, logger)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(tokenLoader.LoadCall.Receives.UAAHost).To(BeEmpty())
+
+			Expect(userLoader.LoadCall.Receives.UserGUIDs).To(BeNil())
+			Expect(userLoader.LoadCall.Receives.Token).To(Equal(""))
+		})
+
+		It("should still deliver the email (assuming there is an email address)", func() {
+			err := processor.Process(delivery, logger)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(mailClient.SendCall.CallCount).To(Equal(1))
+			msg := mailClient.SendCall.Receives.Message
+			Expect(msg.From).To(Equal("from@example.com"))
+			Expect(msg.ReplyTo).To(Equal("thesender@example.com"))
+			Expect(msg.To).To(Equal("user-123@example.com"))
+			Expect(msg.Subject).To(Equal("the subject"))
+			Expect(msg.Body).To(ConsistOf([]mail.Part{
+				{
+					ContentType: "text/plain",
+					Content:     "body content example.com",
+				},
+			}))
+			Expect(msg.Headers).To(Equal([]string{
+				"X-CF-Client-ID: some-client",
+				"X-CF-Notification-ID: randomly-generated-guid",
+				"X-CF-Notification-Timestamp: 2015-09-10T12:27:11.675885866-07:00",
+				"X-CF-Notification-Request-Received: 0001-01-01T00:00:00Z",
+			}))
+		})
+
+		Context("when the delivery does not have an email address", func() {
+			BeforeEach(func() {
+				delivery.Email = ""
+			})
+
+			It("should not call the userLoader", func() {
+				err := processor.Process(delivery, logger)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(tokenLoader.LoadCall.Receives.UAAHost).To(BeEmpty())
+
+				Expect(userLoader.LoadCall.Receives.UserGUIDs).To(BeNil())
+				Expect(userLoader.LoadCall.Receives.Token).To(Equal(""))
+			})
+
+			It("should mark the status as undeliverable", func() {
+				err := processor.Process(delivery, logger)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusUndeliverable))
+			})
+		})
+	})
+
+	Context("when the delivery has both an email and a userGUID", func() {
+		It("should be marked as undeliverable", func() {
+			delivery.Email = "some-email@example.com"
+			delivery.UserGUID = "some-user-guid"
+
+			err := processor.Process(delivery, logger)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusUndeliverable))
+		})
+	})
+
 	Context("when the user email address is malformed", func() {
 		It("marks the message status as undeliverable", func() {
 			userLoader.LoadCall.Returns.Users = map[string]uaa.User{
