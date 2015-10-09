@@ -38,7 +38,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID:             "some-id",
-					SendTo:         map[string]interface{}{"users": "some-user-guid"},
+					SendTo:         map[string]interface{}{"users": []string{"some-user-guid", "some-other-user-guid"}},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
 					HTML:           "<h1>my-html</h1>",
@@ -55,23 +55,45 @@ var _ = Describe("CampaignJobProcessor", func() {
 				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
 			}
 
-			Expect(dispatches).To(ConsistOf(services.Dispatch{
-				JobType:    "v2",
-				GUID:       "some-user-guid",
-				UAAHost:    "some-uaa-host",
-				Connection: database.Connection(),
-				TemplateID: "some-template-id",
-				CampaignID: "some-id",
-				Client: services.DispatchClient{
-					ID: "some-client-id",
+			Expect(dispatches).To(ConsistOf([]services.Dispatch{
+				{
+					JobType:    "v2",
+					GUID:       "some-user-guid",
+					UAAHost:    "some-uaa-host",
+					Connection: database.Connection(),
+					TemplateID: "some-template-id",
+					CampaignID: "some-id",
+					Client: services.DispatchClient{
+						ID: "some-client-id",
+					},
+					Message: services.DispatchMessage{
+						To:      "",
+						ReplyTo: "noreply@example.com",
+						Subject: "The Best subject",
+						Text:    "some-text",
+						HTML: services.HTML{
+							BodyContent: "<h1>my-html</h1>",
+						},
+					},
 				},
-				Message: services.DispatchMessage{
-					To:      "",
-					ReplyTo: "noreply@example.com",
-					Subject: "The Best subject",
-					Text:    "some-text",
-					HTML: services.HTML{
-						BodyContent: "<h1>my-html</h1>",
+				{
+					JobType:    "v2",
+					GUID:       "some-other-user-guid",
+					UAAHost:    "some-uaa-host",
+					Connection: database.Connection(),
+					TemplateID: "some-template-id",
+					CampaignID: "some-id",
+					Client: services.DispatchClient{
+						ID: "some-client-id",
+					},
+					Message: services.DispatchMessage{
+						To:      "",
+						ReplyTo: "noreply@example.com",
+						Subject: "The Best subject",
+						Text:    "some-text",
+						HTML: services.HTML{
+							BodyContent: "<h1>my-html</h1>",
+						},
 					},
 				},
 			}))

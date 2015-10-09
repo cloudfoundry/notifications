@@ -16,6 +16,11 @@ func (e NoStrategyError) Error() string {
 	return e.Err.Error()
 }
 
+type recipient struct {
+	Email string
+	GUID  string
+}
+
 type emailAddressFormatter interface {
 	Format(email string) (formattedEmail string)
 }
@@ -67,15 +72,24 @@ func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost
 		panic(err)
 	}
 
-	var recipients []string
-	var guid string
-	if audience == "emails" {
+	var recipients []recipient
+	switch audience {
+	case "emails":
 		for _, audienceMember := range campaignJob.Campaign.SendTo[audience].([]interface{}) {
-			recipients = append(recipients, p.emailFormatter.Format(audienceMember.(string)))
+			recipients = append(recipients, recipient{
+				Email: p.emailFormatter.Format(audienceMember.(string)),
+			})
 		}
-	} else {
-		recipients = []string{""}
-		guid = campaignJob.Campaign.SendTo[audience].(string)
+	case "users":
+		for _, audienceMember := range campaignJob.Campaign.SendTo[audience].([]interface{}) {
+			recipients = append(recipients, recipient{
+				GUID: audienceMember.(string),
+			})
+		}
+	default:
+		recipients = append(recipients, recipient{
+			GUID: campaignJob.Campaign.SendTo[audience].(string),
+		})
 	}
 
 	strategy, err := p.findStrategy(audience)
@@ -87,7 +101,7 @@ func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost
 		_, err = strategy.Dispatch(services.Dispatch{
 			JobType:    "v2",
 			UAAHost:    uaaHost,
-			GUID:       guid,
+			GUID:       recipient.GUID,
 			Connection: conn,
 			TemplateID: campaignJob.Campaign.TemplateID,
 			CampaignID: campaignJob.Campaign.ID,
@@ -95,7 +109,7 @@ func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost
 				ID: campaignJob.Campaign.ClientID,
 			},
 			Message: services.DispatchMessage{
-				To:      recipient,
+				To:      recipient.Email,
 				ReplyTo: campaignJob.Campaign.ReplyTo,
 				Subject: campaignJob.Campaign.Subject,
 				Text:    campaignJob.Campaign.Text,

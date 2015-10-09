@@ -119,6 +119,91 @@ var _ = Describe("User Campaigns", func() {
 		})
 	})
 
+	It("sends a campaign to multiple users", func() {
+		var (
+			campaignTypeID         string
+			templateID             string
+			campaignTypeTemplateID string
+			anotherUser            warrant.User
+		)
+
+		By("creating another user", func() {
+			var err error
+			anotherUser, err = warrantClient.Users.Create("user-abc", "user-abc@example.com", adminToken)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		By("creating a template", func() {
+			status, response, err := client.Do("POST", "/templates", map[string]interface{}{
+				"name":    "Acceptance Template",
+				"text":    "campaign template {{.Text}}",
+				"html":    "{{.HTML}}",
+				"subject": "{{.Subject}}",
+			}, token)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+
+			templateID = response["id"].(string)
+		})
+
+		By("creating a campaign type template", func() {
+			status, response, err := client.Do("POST", "/templates", map[string]interface{}{
+				"name":    "CampaignType Template",
+				"text":    "campaign type template {{.Text}}",
+				"html":    "{{.HTML}}",
+				"subject": "{{.Subject}}",
+			}, token)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+
+			campaignTypeTemplateID = response["id"].(string)
+		})
+
+		By("creating a campaign type", func() {
+			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaign_types", senderID), map[string]interface{}{
+				"name":        "some-campaign-type-name",
+				"description": "acceptance campaign type",
+				"template_id": campaignTypeTemplateID,
+			}, token)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusCreated))
+
+			campaignTypeID = response["id"].(string)
+		})
+
+		By("sending the campaign", func() {
+			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
+				"send_to": map[string][]string{
+					"users": {user.ID, anotherUser.ID},
+				},
+				"campaign_type_id": campaignTypeID,
+				"text":             "campaign body",
+				"subject":          "campaign subject",
+				"template_id":      templateID,
+			}, token)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal(http.StatusAccepted))
+			Expect(response["id"]).NotTo(BeEmpty())
+		})
+
+		By("seeing that the mail was delivered", func() {
+			Eventually(func() []smtpd.Envelope {
+				return Servers.SMTP.Deliveries
+			}, "10s").Should(HaveLen(2))
+
+			var recipients []string
+			for _, delivery := range Servers.SMTP.Deliveries {
+				Expect(delivery.Recipients).To(HaveLen(1))
+				recipients = append(recipients, delivery.Recipients[0])
+			}
+
+			Expect(recipients).To(ConsistOf([]string{
+				"user-111@example.com",
+				"user-abc@example.com",
+			}))
+		})
+	})
+
 	Context("when lacking the critical scope", func() {
 		It("returns a 403 forbidden", func() {
 			var campaignTypeID, templateID, campaignTypeTemplateID string

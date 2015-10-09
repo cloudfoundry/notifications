@@ -64,7 +64,7 @@ var _ = Describe("CreateHandler", func() {
 		campaignsCollection.CreateCall.Returns.Campaign = collections.Campaign{
 			ID: "my-campaign-id",
 			SendTo: map[string]interface{}{
-				"users": "user-123",
+				"users": []string{"user-123", "user-456"},
 			},
 			CampaignTypeID: "some-campaign-type-id",
 			Text:           "come see our new stuff",
@@ -79,10 +79,10 @@ var _ = Describe("CreateHandler", func() {
 		handler = campaigns.NewCreateHandler(campaignsCollection, clock)
 	})
 
-	It("sends a campaign to a user", func() {
+	It("sends a campaign to a list of users", func() {
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"send_to": map[string][]string{
-				"users": {"user-123"},
+				"users": {"user-123", "user-456"},
 			},
 			"campaign_type_id": "some-campaign-type-id",
 			"text":             "come see our new stuff",
@@ -103,7 +103,8 @@ var _ = Describe("CreateHandler", func() {
 			"id": "my-campaign-id",
 			"send_to": {
 				"users": [
-					"user-123"
+					"user-123",
+					"user-456"
 				]
 			},
 			"campaign_type_id": "some-campaign-type-id",
@@ -123,7 +124,7 @@ var _ = Describe("CreateHandler", func() {
 		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(conn))
 		Expect(campaignsCollection.CreateCall.Receives.ClientID).To(Equal("my-client"))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
-			SendTo:         map[string]interface{}{"users": "user-123"},
+			SendTo:         map[string]interface{}{"users": []string{"user-123", "user-456"}},
 			CampaignTypeID: "some-campaign-type-id",
 			Text:           "come see our new stuff",
 			HTML:           "<h1>New stuff</h1>",
@@ -236,62 +237,6 @@ var _ = Describe("CreateHandler", func() {
 		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(database.Connection()))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
 			SendTo:         map[string]interface{}{"orgs": "org-123"},
-			CampaignTypeID: "some-campaign-type-id",
-			Text:           "come see our new stuff",
-			HTML:           "<h1>New stuff</h1>",
-			Subject:        "Cool New Stuff",
-			TemplateID:     "random-template-id",
-			ReplyTo:        "reply-to-address",
-			SenderID:       "some-sender-id",
-			StartTime:      startTime,
-		}))
-	})
-
-	It("sends a campaign to an email", func() {
-		campaignsCollection.CreateCall.Returns.Campaign.SendTo = map[string]interface{}{"emails": "test@example.com"}
-		requestBody, err := json.Marshal(map[string]interface{}{
-			"send_to": map[string][]string{
-				"emails": {"test@example.com"},
-			},
-			"campaign_type_id": "some-campaign-type-id",
-			"text":             "come see our new stuff",
-			"html":             "<h1>New stuff</h1>",
-			"subject":          "Cool New Stuff",
-			"template_id":      "random-template-id",
-			"reply_to":         "reply-to-address",
-		})
-		Expect(err).NotTo(HaveOccurred())
-
-		request, err = http.NewRequest("POST", "/senders/some-sender-id/campaigns", bytes.NewBuffer(requestBody))
-		Expect(err).NotTo(HaveOccurred())
-
-		handler.ServeHTTP(writer, request, context)
-
-		Expect(writer.Code).To(Equal(http.StatusAccepted))
-		Expect(writer.Body.String()).To(MatchJSON(`{
-			"id": "my-campaign-id",
-			"send_to": {
-				"emails": [
-					"test@example.com"
-				]
-			},
-			"campaign_type_id": "some-campaign-type-id",
-			"text":             "come see our new stuff",
-			"html":             "<h1>New stuff</h1>",
-			"subject":          "Cool New Stuff",
-			"template_id":      "random-template-id",
-			"reply_to":         "reply-to-address",
-			"_links": {
-				"self": {"href":"/campaigns/my-campaign-id"},
-				"template": {"href":"/templates/random-template-id"},
-				"campaign_type": {"href":"/campaign_types/some-campaign-type-id"},
-				"status": {"href":"/campaigns/my-campaign-id/status"}
-			}
-		}`))
-
-		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(database.Connection()))
-		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
-			SendTo:         map[string]interface{}{"emails": []string{"test@example.com"}},
 			CampaignTypeID: "some-campaign-type-id",
 			Text:           "come see our new stuff",
 			HTML:           "<h1>New stuff</h1>",

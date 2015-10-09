@@ -73,7 +73,7 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	sendTo := map[string]interface{}{}
 	for audienceKey, audiences := range request.SendTo {
 		switch audienceKey {
-		case "emails":
+		case "emails", "users":
 			sendTo[audienceKey] = audiences
 		default:
 			sendTo[audienceKey] = audiences[0]
