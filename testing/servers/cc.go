@@ -7,11 +7,8 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"regexp"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 )
 
@@ -94,32 +91,36 @@ func (cc CC) GetSpace(w http.ResponseWriter, req *http.Request) {
 func (cc CC) GetOrg(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	guid := vars["guid"]
-	if guid == "org-123" {
-		json := `{
-       "metadata": {
-          "guid": "org-123",
-          "url": "/v2/organizations/org-123",
-          "created_at": "2014-08-01T17:36:17+00:00",
-          "updated_at": "2014-08-01T17:36:20+00:00"
-       },
-       "entity": {
-          "name": "notifications-service",
-          "billing_enabled": false,
-          "quota_definition_guid": "73530fc0-17a3-42f1-9692-838860d30ec2",
-          "status": "active",
-          "quota_definition_url": "/v2/quota_definitions/73530fc0-17a3-42f1-9692-838860d30ec2",
-          "spaces_url": "/v2/organizations/org-123/spaces",
-          "domains_url": "/v2/organizations/org-123/domains",
-          "private_domains_url": "/v2/organizations/org-123/private_domains",
-          "users_url": "/v2/organizations/org-123/users",
-          "managers_url": "/v2/organizations/org-123/managers",
-          "billing_managers_url": "/v2/organizations/org-123/billing_managers",
-          "auditors_url": "/v2/organizations/org-123/auditors",
-          "app_events_url": "/v2/organizations/org-123/app_events"
-       }
-    }`
+	if guid == "org-123" || guid == "org-456" {
+		json, err := json.Marshal(map[string]interface{}{
+			"metadata": map[string]string{
+				"guid":       guid,
+				"url":        fmt.Sprintf("/v2/organizations/%s", guid),
+				"created_at": "2014-08-01T17:36:17+00:00",
+				"updated_at": "2014-08-01T17:36:20+00:00",
+			},
+			"entity": map[string]interface{}{
+				"name":                  "notifications-service",
+				"billing_enabled":       false,
+				"quota_definition_guid": "73530fc0-17a3-42f1-9692-838860d30ec2",
+				"status":                "active",
+				"quota_definition_url":  "/v2/quota_definitions/73530fc0-17a3-42f1-9692-838860d30ec2",
+				"spaces_url":            fmt.Sprintf("/v2/organizations/%s/spaces", guid),
+				"domains_url":           fmt.Sprintf("/v2/organizations/%s/domains", guid),
+				"private_domains_url":   fmt.Sprintf("/v2/organizations/%s/private_domains", guid),
+				"users_url":             fmt.Sprintf("/v2/organizations/%s/users", guid),
+				"managers_url":          fmt.Sprintf("/v2/organizations/%s/managers", guid),
+				"billing_managers_url":  fmt.Sprintf("/v2/organizations/%s/billing_managers", guid),
+				"auditors_url":          fmt.Sprintf("/v2/organizations/%s/auditors", guid),
+				"app_events_url":        fmt.Sprintf("/v2/organizations/%s/app_events", guid),
+			},
+		})
+		if err != nil {
+			panic(err)
+		}
+
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(json))
+		w.Write(json)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"code":40004,"description":"The org could not be found","error_code":"CF-OrgNotFound"}`))
@@ -127,22 +128,22 @@ func (cc CC) GetOrg(w http.ResponseWriter, req *http.Request) {
 }
 
 func (cc CC) GetOrgUsers(w http.ResponseWriter, req *http.Request) {
-	token := strings.Split(req.Header.Get("Authorization"), " ")[1]
-	jwtToken, _ := jwt.Parse(token, func(*jwt.Token) (interface{}, error) {
-		return []byte(helpers.UAAPublicKey), nil
-	})
+	orgGUID := strings.Split(req.URL.Path, "/")[3]
 
 	var desiredUsers []string
-	if regexp.MustCompile(string(os.Getenv("UAA_HOST"))).MatchString(jwtToken.Claims["iss"].(string)) {
+	switch orgGUID {
+	case "org-123":
 		desiredUsers = []string{
 			"user-456",
 			"user-789",
 			"user-000",
 		}
-	} else {
+	case "org-456":
 		desiredUsers = []string{
-			"another-user-in-zone",
+			"user-123",
 		}
+	default:
+		desiredUsers = []string{}
 	}
 
 	users := []map[string]interface{}{}

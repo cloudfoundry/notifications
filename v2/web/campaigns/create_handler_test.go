@@ -193,11 +193,11 @@ var _ = Describe("CreateHandler", func() {
 		}))
 	})
 
-	It("sends a campaign to an org", func() {
-		campaignsCollection.CreateCall.Returns.Campaign.SendTo = map[string]interface{}{"orgs": "org-123"}
+	It("sends a campaign to a list of orgs", func() {
+		campaignsCollection.CreateCall.Returns.Campaign.SendTo = map[string]interface{}{"orgs": []string{"org-123", "org-456"}}
 		requestBody, err := json.Marshal(map[string]interface{}{
 			"send_to": map[string][]string{
-				"orgs": {"org-123"},
+				"orgs": {"org-123", "org-456"},
 			},
 			"campaign_type_id": "some-campaign-type-id",
 			"text":             "come see our new stuff",
@@ -218,7 +218,8 @@ var _ = Describe("CreateHandler", func() {
 			"id": "my-campaign-id",
 			"send_to": {
 				"orgs": [
-					"org-123"
+					"org-123",
+					"org-456"
 				]
 			},
 			"campaign_type_id": "some-campaign-type-id",
@@ -237,7 +238,7 @@ var _ = Describe("CreateHandler", func() {
 
 		Expect(campaignsCollection.CreateCall.Receives.Connection).To(Equal(database.Connection()))
 		Expect(campaignsCollection.CreateCall.Receives.Campaign).To(Equal(collections.Campaign{
-			SendTo:         map[string]interface{}{"orgs": "org-123"},
+			SendTo:         map[string]interface{}{"orgs": []string{"org-123", "org-456"}},
 			CampaignTypeID: "some-campaign-type-id",
 			Text:           "come see our new stuff",
 			HTML:           "<h1>New stuff</h1>",
