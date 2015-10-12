@@ -64,7 +64,7 @@ func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost
 
 	doctype, head, bodyContent, bodyAttributes, err := p.htmlExtractor.Extract(campaignJob.Campaign.HTML)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	for audience, audienceMembers := range campaignJob.Campaign.SendTo {

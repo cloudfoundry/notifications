@@ -539,5 +539,20 @@ var _ = Describe("CampaignJobProcessor", func() {
 				Expect(err).To(MatchError(v2.NoStrategyError{errors.New("Strategy for the \"some-audience\" audience could not be found")}))
 			})
 		})
+
+		Context("when the HTML extractor fails", func() {
+			It("returns an error", func() {
+				htmlExtractor := mocks.NewHTMLExtractor()
+				htmlExtractor.ExtractCall.Returns.Error = errors.New("some extraction error")
+				processor = v2.NewCampaignJobProcessor(notify.EmailFormatter{}, htmlExtractor, userStrategy, spaceStrategy, orgStrategy, emailStrategy)
+
+				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+					Campaign: collections.Campaign{
+						SendTo: map[string][]string{"spaces": {"some-space-guid"}},
+					},
+				}))
+				Expect(err).To(MatchError(errors.New("some extraction error")))
+			})
+		})
 	})
 })
