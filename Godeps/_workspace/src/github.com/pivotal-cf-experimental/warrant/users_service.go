@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/pivotal-cf-experimental/warrant/internal/documents"
 	"github.com/pivotal-cf-experimental/warrant/internal/network"
@@ -168,10 +169,11 @@ func (us UsersService) ChangePassword(id, oldPassword, password, token string) e
 
 // GetToken will make a request to UAA to retrieve the token for the user matching the given username.
 // The user's password is required.
-func (us UsersService) GetToken(username, password string) (string, error) {
+func (us UsersService) GetToken(username, password string, client Client) (string, error) {
 	query := url.Values{
-		"client_id":     []string{"cf"},
-		"redirect_uri":  []string{"https://uaa.cloudfoundry.com/redirect/cf"},
+		"client_id":     []string{client.ID},
+		"redirect_uri":  client.RedirectURI,
+		"scope":         []string{strings.Join(client.Scope, " ")},
 		"response_type": []string{"token"},
 	}
 

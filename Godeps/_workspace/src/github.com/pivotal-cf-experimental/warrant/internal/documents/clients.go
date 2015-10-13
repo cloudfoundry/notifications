@@ -28,6 +28,14 @@ type CreateUpdateClientRequest struct {
 	// AccessTokenValidity is the number of seconds before a token granted
 	// to this client will expire.
 	AccessTokenValidity int `json:"access_token_validity"`
+
+	// RedirectURI is the location address to redirect the resource owner's user-agent
+	// back to after completing its interaction with the resource owner.
+	RedirectURI []string `json:"redirect_uri"`
+
+	// Autoapprove is a list of scopes used to auto-approve a request
+	// to fetch a user token.
+	Autoapprove []string `json:"autoapprove"`
 }
 
 // ClientResponse represents the JSON transport data structure for
@@ -54,4 +62,12 @@ type ClientResponse struct {
 	// AccessTokenValidity is the number of seconds before a token granted
 	// to this client will expire.
 	AccessTokenValidity int `json:"access_token_validity"`
+
+	// RedirectURI is the location address to redirect the resource owner's user-agent
+	// back to after completing its interaction with the resource owner.
+	RedirectURI []string `json:"redirect_uri"`
+
+	// Autoapprove is a list of scopes used to auto-approve a request
+	// to fetch a user token.
+	Autoapprove []string `json:"autoapprove"`
 }

@@ -37,6 +37,14 @@ type Client struct {
 	// AccessTokenValidity is the number of seconds before a token granted to this client
 	// will expire.
 	AccessTokenValidity time.Duration
+
+	// RedirectURI is the location address to redirect the resource owner's user-agent
+	// back to after completing its interaction with the resource owner.
+	RedirectURI []string
+
+	// Autoapprove is a list of scopes to automatically approve when making an implicit
+	// grant for a user token.
+	Autoapprove []string
 }
 
 func newClientFromDocument(document documents.ClientResponse) Client {
@@ -46,7 +54,9 @@ func newClientFromDocument(document documents.ClientResponse) Client {
 		ResourceIDs:          sort(document.ResourceIDs),
 		Authorities:          sort(document.Authorities),
 		AuthorizedGrantTypes: sort(document.AuthorizedGrantTypes),
+		Autoapprove:          sort(document.Autoapprove),
 		AccessTokenValidity:  time.Duration(document.AccessTokenValidity) * time.Second,
+		RedirectURI:          document.RedirectURI,
 	}
 }
 
@@ -59,11 +69,15 @@ func (c Client) toDocument(secret string) documents.CreateUpdateClientRequest {
 		ResourceIDs:          make([]string, 0),
 		Authorities:          make([]string, 0),
 		AuthorizedGrantTypes: make([]string, 0),
+		RedirectURI:          make([]string, 0),
+		Autoapprove:          make([]string, 0),
 	}
 	client.Scope = append(client.Scope, c.Scope...)
 	client.ResourceIDs = append(client.ResourceIDs, c.ResourceIDs...)
 	client.Authorities = append(client.Authorities, c.Authorities...)
 	client.AuthorizedGrantTypes = append(client.AuthorizedGrantTypes, c.AuthorizedGrantTypes...)
+	client.RedirectURI = append(client.RedirectURI, c.RedirectURI...)
+	client.Autoapprove = append(client.Autoapprove, c.Autoapprove...)
 
 	return client
 }

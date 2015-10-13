@@ -26,7 +26,7 @@ func newTokenFromClaims(claims map[string]interface{}) Token {
 	}
 
 	if scopes, ok := claims["scope"].([]interface{}); ok {
-		var s []string
+		s := []string{}
 		for _, scope := range scopes {
 			s = append(s, scope.(string))
 		}

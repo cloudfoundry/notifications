@@ -17,6 +17,8 @@ type client struct {
 	Authorities          []string
 	AuthorizedGrantTypes []string
 	AccessTokenValidity  int
+	RedirectURI          []string
+	Autoapprove          []string
 }
 
 func NewClientFromDocument(document documents.CreateUpdateClientRequest) client {
@@ -28,6 +30,8 @@ func NewClientFromDocument(document documents.CreateUpdateClientRequest) client 
 		Authorities:          document.Authorities,
 		AuthorizedGrantTypes: document.AuthorizedGrantTypes,
 		AccessTokenValidity:  document.AccessTokenValidity,
+		RedirectURI:          document.RedirectURI,
+		Autoapprove:          document.Autoapprove,
 	}
 }
 
@@ -38,7 +42,9 @@ func (c client) ToDocument() documents.ClientResponse {
 		ResourceIDs:          shuffle(c.ResourceIDs),
 		Authorities:          shuffle(c.Authorities),
 		AuthorizedGrantTypes: shuffle(c.AuthorizedGrantTypes),
+		Autoapprove:          shuffle(c.Autoapprove),
 		AccessTokenValidity:  c.AccessTokenValidity,
+		RedirectURI:          c.RedirectURI,
 	}
 }
 
@@ -48,6 +54,18 @@ func (c client) Validate() error {
 			msg := fmt.Sprintf("%s is not an allowed grant type. Must be one of: %v", grantType, validGrantTypes)
 			return errors.New(msg)
 		}
+	}
+
+	if len(c.RedirectURI) > 0 {
+		if !contains(c.AuthorizedGrantTypes, "implicit") && !contains(c.AuthorizedGrantTypes, "authorization_code") {
+			msg := "A redirect_uri can only be used by implicit or authorization_code grant types."
+			return errors.New(msg)
+		}
+	}
+
+	if contains(c.AuthorizedGrantTypes, "implicit") && c.Secret != "" {
+		msg := "Implicit grant should not have a client_secret"
+		return errors.New(msg)
 	}
 
 	return nil

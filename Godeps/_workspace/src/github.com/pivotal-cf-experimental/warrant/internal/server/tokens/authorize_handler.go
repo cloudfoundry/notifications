@@ -11,8 +11,9 @@ import (
 )
 
 type authorizeHandler struct {
-	tokens *domain.Tokens
-	users  *domain.Users
+	tokens  *domain.Tokens
+	users   *domain.Users
+	clients *domain.Clients
 }
 
 func (h authorizeHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -25,13 +26,14 @@ func (h authorizeHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	clientID := requestQuery.Get("client_id")
 	responseType := requestQuery.Get("response_type")
 
-	if clientID != "cf" {
+	if responseType != "token" {
 		h.redirectToLogin(w)
 		return
 	}
 
-	if responseType != "token" {
-		h.redirectToLogin(w)
+	client, ok := h.clients.Get(clientID)
+	if !ok {
+		common.Error(w, http.StatusUnauthorized, fmt.Sprintf("No client with requested id: %s", clientID), "invalid_client")
 		return
 	}
 
@@ -54,11 +56,30 @@ func (h authorizeHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	scopes := strings.Join(h.tokens.DefaultScopes, " ")
+	scopes := []string{}
+	requestedScopes := strings.Split(req.Form.Get("scope"), " ")
+	for _, requestedScope := range requestedScopes {
+		if contains(h.tokens.DefaultScopes, requestedScope) {
+			scopes = append(scopes, requestedScope)
+		}
+	}
+
+	for _, approvedScope := range scopes {
+		if !contains(client.Autoapprove, approvedScope) {
+			// TODO: when the scopes requested are not contained
+			// in the autoapprove list, the correct behavior is
+			// to return a 200 with some JSON explaining to the
+			// requestor that the scopes need to be approved by
+			// the user. We are obviously not doing this. This
+			// needs to be implemented.
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+	}
 
 	t := h.tokens.Encrypt(domain.Token{
 		UserID:    user.ID,
-		Scopes:    h.tokens.DefaultScopes,
+		Scopes:    scopes,
 		Audiences: []string{},
 	})
 
@@ -68,13 +89,23 @@ func (h authorizeHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		"token_type":   []string{"bearer"},
 		"access_token": []string{t},
 		"expires_in":   []string{"599"},
-		"scope":        []string{scopes},
+		"scope":        []string{strings.Join(scopes, " ")},
 		"jti":          []string{"ad0efc96-ed29-43ef-be75-85a4b4f105b5"},
 	}
 	location := fmt.Sprintf("%s#%s", redirectURI, query.Encode())
 
 	w.Header().Set("Location", location)
 	w.WriteHeader(http.StatusFound)
+}
+
+func contains(scopeList []string, requestedScope string) bool {
+	for _, scope := range scopeList {
+		if scope == requestedScope {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (h authorizeHandler) redirectToLogin(w http.ResponseWriter) {
