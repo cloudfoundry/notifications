@@ -21,8 +21,9 @@ var _ = Describe("Unsubscribers", func() {
 
 	BeforeEach(func() {
 		client = support.NewClient(support.Config{
-			Host:  Servers.Notifications.URL(),
-			Trace: Trace,
+			Host:              Servers.Notifications.URL(),
+			Trace:             Trace,
+			RoundTripRecorder: roundtripRecorder,
 		})
 		var err error
 		clientToken, err = GetClientTokenWithScopes("notifications.write")
@@ -72,6 +73,7 @@ var _ = Describe("Unsubscribers", func() {
 			})
 
 			By("unsubscribing from the campaign type", func() {
+				client.Document("unsubscriber-put")
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
 				status, _, err := client.Do("PUT", path, nil, clientToken)
 				Expect(err).NotTo(HaveOccurred())
@@ -117,6 +119,7 @@ var _ = Describe("Unsubscribers", func() {
 			})
 
 			By("deleting the unsubscribe", func() {
+				client.Document("unsubscriber-delete")
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
 				status, _, err := client.Do("DELETE", path, nil, clientToken)
 				Expect(err).NotTo(HaveOccurred())

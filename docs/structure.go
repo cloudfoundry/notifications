@@ -119,4 +119,18 @@ var Structure = []Resource{
 			},
 		},
 	},
+	{
+		Name:        "Unsubscribing",
+		Description: "EVAN WILL EDIT THIS",
+		Endpoints: []Endpoint{
+			{
+				Key:         "unsubscriber-put",
+				Description: "Unsubscribe a user",
+			},
+			{
+				Key:         "unsubscriber-delete",
+				Description: "Resubscribe a user",
+			},
+		},
+	},
 }
