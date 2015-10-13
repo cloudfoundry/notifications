@@ -73,7 +73,7 @@ var _ = Describe("Unsubscribers", func() {
 			})
 
 			By("unsubscribing from the campaign type", func() {
-				client.Document("unsubscriber-put")
+				client.Document("unsubscriber-put-client")
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
 				status, _, err := client.Do("PUT", path, nil, clientToken)
 				Expect(err).NotTo(HaveOccurred())
@@ -119,7 +119,7 @@ var _ = Describe("Unsubscribers", func() {
 			})
 
 			By("deleting the unsubscribe", func() {
-				client.Document("unsubscriber-delete")
+				client.Document("unsubscriber-delete-client")
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
 				status, _, err := client.Do("DELETE", path, nil, clientToken)
 				Expect(err).NotTo(HaveOccurred())
@@ -315,6 +315,7 @@ var _ = Describe("Unsubscribers", func() {
 			})
 
 			By("unsubscribing from the campaign type using the user token", func() {
+				client.Document("unsubscriber-put-user")
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
 				status, _, err := client.Do("PUT", path, nil, userToken)
 				Expect(err).NotTo(HaveOccurred())
@@ -348,6 +349,7 @@ var _ = Describe("Unsubscribers", func() {
 			})
 
 			By("deleting the unsubscribe with the user token", func() {
+				client.Document("unsubscriber-delete-user")
 				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
 				status, _, err := client.Do("DELETE", path, nil, userToken)
 				Expect(err).NotTo(HaveOccurred())

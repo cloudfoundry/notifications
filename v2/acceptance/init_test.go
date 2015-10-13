@@ -35,6 +35,7 @@ var (
 	warrantClient     warrant.Warrant
 	roundtripRecorder *docs.RoundTripRecorder
 	users             map[string]string
+	userTokenClient   warrant.Client
 )
 
 func TestAcceptanceSuite(t *testing.T) {
@@ -67,6 +68,15 @@ var _ = BeforeSuite(func() {
 		ID:    os.Getenv("UAA_CLIENT_ID"),
 		Scope: []string{"cloud_controller.admin", "scim.read"},
 	}, os.Getenv("UAA_CLIENT_SECRET"), adminToken)
+	Expect(err).NotTo(HaveOccurred())
+
+	userTokenClient = warrant.Client{
+		ID:                   "user-token-client",
+		Scope:                []string{"notification_preferences.read", "notification_preferences.write"},
+		AuthorizedGrantTypes: []string{"implicit"},
+		Autoapprove:          []string{"notification_preferences.read", "notification_preferences.write"},
+	}
+	err = warrantClient.Clients.Create(userTokenClient, "", adminToken)
 	Expect(err).NotTo(HaveOccurred())
 
 	testUsers := map[string]string{
@@ -195,7 +205,7 @@ func UpdateClientTokenWithDifferentScopes(token string, scopes ...string) (strin
 
 func GetUserTokenAndIdFor(userName string) (string, string, error) {
 	userGUID := users[userName]
-	token, err := warrantClient.Users.GetToken(userName, "password")
+	token, err := warrantClient.Users.GetToken(userName, "password", userTokenClient)
 	if err != nil {
 		return "", "", err
 	}
