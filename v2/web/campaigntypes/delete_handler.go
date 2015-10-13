@@ -14,8 +14,7 @@ type DeleteHandler struct {
 }
 
 type collectionDeleter interface {
-	Get(conn collections.ConnectionInterface, senderID, campaignTypeID, clientID string) (collections.CampaignType, error)
-	Delete(conn collections.ConnectionInterface, campaignTypeID, senderID, clientID string) error
+	Delete(conn collections.ConnectionInterface, campaignTypeID, clientID string) error
 }
 
 func NewDeleteHandler(campaignTypesCollection collectionDeleter) DeleteHandler {
@@ -27,10 +26,9 @@ func NewDeleteHandler(campaignTypesCollection collectionDeleter) DeleteHandler {
 func (h DeleteHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	splitURL := strings.Split(req.URL.Path, "/")
 	campaignTypeID := splitURL[len(splitURL)-1]
-	senderID := splitURL[len(splitURL)-3]
 
 	database := context.Get("database").(DatabaseInterface)
-	if err := h.collection.Delete(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string)); err != nil {
+	if err := h.collection.Delete(database.Connection(), campaignTypeID, context.Get("client_id").(string)); err != nil {
 		switch err.(type) {
 		case collections.NotFoundError:
 			w.WriteHeader(http.StatusNotFound)

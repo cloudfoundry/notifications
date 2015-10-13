@@ -37,7 +37,7 @@ var _ = Describe("DeleteHandler", func() {
 		writer = httptest.NewRecorder()
 
 		var err error
-		request, err = http.NewRequest("DELETE", "/senders/some-sender-id/campaign_types/some-campaign-type-id", nil)
+		request, err = http.NewRequest("DELETE", "/campaign_types/some-campaign-type-id", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		campaignTypesCollection = mocks.NewCampaignTypesCollection()
@@ -50,7 +50,6 @@ var _ = Describe("DeleteHandler", func() {
 
 		Expect(writer.Code).To(Equal(http.StatusNoContent))
 		Expect(campaignTypesCollection.DeleteCall.Receives.CampaignTypeID).To(Equal("some-campaign-type-id"))
-		Expect(campaignTypesCollection.DeleteCall.Receives.SenderID).To(Equal("some-sender-id"))
 		Expect(campaignTypesCollection.DeleteCall.Receives.ClientID).To(Equal("some-client-id"))
 		Expect(campaignTypesCollection.DeleteCall.Receives.Conn).To(Equal(conn))
 		Expect(writer.Body.String()).To(BeEmpty())

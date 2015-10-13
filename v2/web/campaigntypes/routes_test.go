@@ -73,8 +73,8 @@ var _ = Describe("Routes", func() {
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 
-	It("routes GET /senders/{sender_id}/campaign_types/{campaign_type_id}", func() {
-		request, err := http.NewRequest("GET", "/senders/some-sender-id/campaign_types/some-campaign-type-id", nil)
+	It("routes GET /campaign_types/{campaign_type_id}", func() {
+		request, err := http.NewRequest("GET", "/campaign_types/some-campaign-type-id", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		s := muxer.Match(request).(stack.Stack)
@@ -91,8 +91,8 @@ var _ = Describe("Routes", func() {
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 
-	It("routes PUT /senders/{sender_id}/campaign_types/{campaign_type}", func() {
-		request, err := http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", nil)
+	It("routes PUT /campaign_types/{campaign_type}", func() {
+		request, err := http.NewRequest("PUT", "/campaign_types/some-campaign-type-id", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		s := muxer.Match(request).(stack.Stack)
@@ -109,8 +109,8 @@ var _ = Describe("Routes", func() {
 		Expect(databaseAllocator).To(Equal(dbAllocator))
 	})
 
-	It("routes DELETE /senders/{sender_id}/campaign_types/{campaign_type}", func() {
-		request, err := http.NewRequest("DELETE", "/senders/some-sender-id/campaign_types/some-campaign-type-id", nil)
+	It("routes DELETE /campaign_types/{campaign_type}", func() {
+		request, err := http.NewRequest("DELETE", "/campaign_types/some-campaign-type-id", nil)
 		Expect(err).NotTo(HaveOccurred())
 
 		s := muxer.Match(request).(stack.Stack)

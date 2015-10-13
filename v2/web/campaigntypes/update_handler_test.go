@@ -80,7 +80,7 @@ var _ = Describe("UpdateHandler", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+		request, err = http.NewRequest("PUT", "/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
 		handler = campaigntypes.NewUpdateHandler(campaignTypesCollection)
@@ -95,7 +95,7 @@ var _ = Describe("UpdateHandler", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+		request, err = http.NewRequest("PUT", "/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
 		campaignTypesCollection.SetCall.Returns.CampaignType = collections.CampaignType{
@@ -148,7 +148,7 @@ var _ = Describe("UpdateHandler", func() {
 			SenderID:    "some-sender-id",
 		}
 
-		request, err := http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+		request, err := http.NewRequest("PUT", "/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
@@ -190,7 +190,7 @@ var _ = Describe("UpdateHandler", func() {
 			SenderID:    "some-sender-id",
 		}
 
-		request, err := http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+		request, err := http.NewRequest("PUT", "/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
@@ -243,7 +243,7 @@ var _ = Describe("UpdateHandler", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+		request, err = http.NewRequest("PUT", "/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 		Expect(err).NotTo(HaveOccurred())
 
 		handler.ServeHTTP(writer, request, context)
@@ -281,7 +281,7 @@ var _ = Describe("UpdateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+			request, err = http.NewRequest("PUT", "/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -297,7 +297,7 @@ var _ = Describe("UpdateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+			request, err = http.NewRequest("PUT", "/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -314,7 +314,7 @@ var _ = Describe("UpdateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+			request, err = http.NewRequest("PUT", "/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)
@@ -358,7 +358,7 @@ var _ = Describe("UpdateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
+			request, err = http.NewRequest("PUT", "/campaign_types/some-campaign-type-id", bytes.NewBuffer(requestBody))
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(writer, request, context)

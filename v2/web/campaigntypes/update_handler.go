@@ -13,7 +13,7 @@ import (
 
 type collectionUpdater interface {
 	Set(conn collections.ConnectionInterface, campaignType collections.CampaignType, clientID string) (collections.CampaignType, error)
-	Get(conn collections.ConnectionInterface, senderID, campaignTypeID, clientID string) (collections.CampaignType, error)
+	Get(conn collections.ConnectionInterface, campaignTypeID, clientID string) (collections.CampaignType, error)
 }
 
 type UpdateHandler struct {
@@ -69,7 +69,6 @@ func (u UpdateRequest) includesTemplateID() bool {
 func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	splitURL := strings.Split(req.URL.Path, "/")
 	campaignTypeID := splitURL[len(splitURL)-1]
-	senderID := splitURL[len(splitURL)-3]
 
 	updateRequest := UpdateRequest{}
 
@@ -88,7 +87,7 @@ func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 	}
 
 	database := context.Get("database").(DatabaseInterface)
-	campaignType, err := h.collection.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
+	campaignType, err := h.collection.Get(database.Connection(), campaignTypeID, context.Get("client_id").(string))
 	if err != nil {
 		switch err.(type) {
 		case collections.NotFoundError:

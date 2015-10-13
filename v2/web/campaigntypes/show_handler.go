@@ -11,7 +11,7 @@ import (
 )
 
 type collectionGetter interface {
-	Get(conn collections.ConnectionInterface, senderID, campaignTypeID, clientID string) (collections.CampaignType, error)
+	Get(conn collections.ConnectionInterface, campaignTypeID, clientID string) (collections.CampaignType, error)
 }
 
 type ShowHandler struct {
@@ -27,20 +27,6 @@ func NewShowHandler(collection collectionGetter) ShowHandler {
 func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request, context stack.Context) {
 	splitURL := strings.Split(request.URL.Path, "/")
 	campaignTypeID := splitURL[len(splitURL)-1]
-	senderID := splitURL[len(splitURL)-3]
-
-	if senderID == "" {
-		writer.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(writer, `{"errors": [%q]}`, "missing sender id")
-		return
-	}
-
-	if campaignTypeID == "" {
-		headers := writer.Header()
-		headers.Set("Location", fmt.Sprintf("/senders/%s/campaign_types", senderID))
-		writer.WriteHeader(http.StatusMovedPermanently)
-		return
-	}
 
 	clientID := context.Get("client_id")
 	if clientID == "" {
@@ -50,7 +36,7 @@ func (h ShowHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request
 	}
 
 	database := context.Get("database").(DatabaseInterface)
-	campaignType, err := h.collection.Get(database.Connection(), campaignTypeID, senderID, context.Get("client_id").(string))
+	campaignType, err := h.collection.Get(database.Connection(), campaignTypeID, context.Get("client_id").(string))
 	if err != nil {
 		switch err.(type) {
 		case collections.NotFoundError:
