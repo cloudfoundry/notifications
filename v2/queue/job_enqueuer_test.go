@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/go-gorp/gorp"
+
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
@@ -17,16 +19,17 @@ import (
 
 var _ = Describe("JobEnqueuer", func() {
 	var (
-		enqueuer     queue.JobEnqueuer
-		logger       *log.Logger
-		buffer       *bytes.Buffer
-		gobbleQueue  *mocks.Queue
-		conn         *mocks.Connection
-		transaction  *mocks.Transaction
-		messagesRepo *mocks.MessagesRepository
-		space        cf.CloudControllerSpace
-		org          cf.CloudControllerOrganization
-		reqReceived  time.Time
+		enqueuer          queue.JobEnqueuer
+		logger            *log.Logger
+		buffer            *bytes.Buffer
+		gobbleQueue       *mocks.Queue
+		gobbleInitializer *mocks.GobbleInitializer
+		conn              *mocks.Connection
+		transaction       *mocks.Transaction
+		messagesRepo      *mocks.MessagesRepository
+		space             cf.CloudControllerSpace
+		org               cf.CloudControllerOrganization
+		reqReceived       time.Time
 	)
 
 	BeforeEach(func() {
@@ -35,8 +38,10 @@ var _ = Describe("JobEnqueuer", func() {
 		gobbleQueue = mocks.NewQueue()
 
 		transaction = mocks.NewTransaction()
+		transaction.GetDbMapCall.Returns.DbMap = &gorp.DbMap{}
 		conn = mocks.NewConnection()
 		conn.TransactionCall.Returns.Transaction = transaction
+		gobbleInitializer = mocks.NewGobbleInitializer()
 
 		messagesRepo = mocks.NewMessagesRepository()
 		messagesRepo.InsertCalls = messagesRepo.InsertCalls.WithMessages([]models.Message{
@@ -58,7 +63,7 @@ var _ = Describe("JobEnqueuer", func() {
 			},
 		})
 
-		enqueuer = queue.NewJobEnqueuer(gobbleQueue, messagesRepo)
+		enqueuer = queue.NewJobEnqueuer(gobbleQueue, messagesRepo, gobbleInitializer)
 		space = cf.CloudControllerSpace{Name: "the-space"}
 		org = cf.CloudControllerOrganization{Name: "the-org"}
 		reqReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:40:12.207187819-07:00")
@@ -103,7 +108,7 @@ var _ = Describe("JobEnqueuer", func() {
 			enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
 			var deliveries []queue.Delivery
-			for _, job := range gobbleQueue.EnqueueCall.Receives.Jobs {
+			for _, job := range gobbleQueue.EnqueueWithTransactionCall.Receives.Jobs {
 				var delivery queue.Delivery
 				err := job.Unmarshal(&delivery)
 				if err != nil {
@@ -204,6 +209,15 @@ var _ = Describe("JobEnqueuer", func() {
 		})
 
 		Context("using a transaction", func() {
+			It("initializes the DbMap", func() {
+				users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
+				enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
+
+				isSamePtr := (gobbleInitializer.InitializeDBMapCall.Receives.DbMap == transaction.GetDbMapCall.Returns.DbMap)
+				Expect(isSamePtr).To(BeTrue())
+				Expect(transaction.GetDbMapCall.WasCalled).To(BeTrue())
+			})
+
 			It("commits the transaction when everything goes well", func() {
 				users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
 				responses := enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
@@ -225,17 +239,54 @@ var _ = Describe("JobEnqueuer", func() {
 				Expect(transaction.RollbackCall.WasCalled).To(BeTrue())
 			})
 
-			It("returns an empty slice of Response if transaction fails", func() {
-				transaction.CommitCall.Returns.Error = errors.New("the commit blew up")
+			It("rolls back the transaction when there is an error in enqueuing", func() {
+				gobbleQueue.EnqueueWithTransactionCall.Returns.Error = errors.New("BOOM!")
+				users := []queue.User{{GUID: "user-1"}}
+				enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
+
+				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				Expect(transaction.RollbackCall.WasCalled).To(BeTrue())
+			})
+
+			Context("when the commit fails", func() {
+				It("does not call Rollback", func() {
+					transaction.CommitCall.Returns.Error = errors.New("the commit blew up")
+					users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
+					enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
+
+					Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+					Expect(transaction.CommitCall.WasCalled).To(BeTrue())
+					Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
+				})
+
+				It("returns an empty slice of Response", func() {
+					transaction.CommitCall.Returns.Error = errors.New("the commit blew up")
+
+					users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
+					responses := enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
+
+					Expect(responses).To(Equal([]queue.Response{}))
+				})
+			})
+
+			It("uses the same transaction for the queue as it did for the messages repo", func() {
+				users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
+				responses := enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
+
+				Expect(responses).ToNot(BeEmpty())
+				Expect(gobbleQueue.EnqueueWithTransactionCall.Receives.Transaction).To(Equal(transaction))
+			})
+
+			It("does not commit the transaction until the jobs have been queued", func() {
+				gobbleQueue.EnqueueWithTransactionCall.Hook = func() {
+					Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				}
 
 				users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
 				responses := enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
-				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
-				Expect(transaction.CommitCall.WasCalled).To(BeTrue())
-				Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
-
-				Expect(responses).To(Equal([]queue.Response{}))
+				Expect(responses).ToNot(BeEmpty())
 			})
 		})
 	})

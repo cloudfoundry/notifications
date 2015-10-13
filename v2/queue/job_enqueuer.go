@@ -3,7 +3,10 @@ package queue
 import (
 	"time"
 
+	"github.com/go-gorp/gorp"
+
 	"github.com/cloudfoundry-incubator/notifications/cf"
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 )
@@ -63,25 +66,35 @@ type messagesRepoInserter interface {
 	Insert(models.ConnectionInterface, models.Message) (models.Message, error)
 }
 
-type JobEnqueuer struct {
-	queue        Enqueuer
-	messagesRepo messagesRepoInserter
+type enqueuerWithTransaction interface {
+	EnqueueWithTransaction(job gobble.Job, transaction db.TransactionInterface) (gobble.Job, error)
 }
 
-func NewJobEnqueuer(queue Enqueuer, messagesRepo messagesRepoInserter) JobEnqueuer {
+type gobbleInitializer interface {
+	InitializeDBMap(*gorp.DbMap)
+}
+
+type JobEnqueuer struct {
+	queue             enqueuerWithTransaction
+	messagesRepo      messagesRepoInserter
+	gobbleInitializer gobbleInitializer
+}
+
+func NewJobEnqueuer(queue enqueuerWithTransaction, messagesRepo messagesRepoInserter, gobbleInitializer gobbleInitializer) JobEnqueuer {
 	return JobEnqueuer{
-		queue:        queue,
-		messagesRepo: messagesRepo,
+		queue:             queue,
+		messagesRepo:      messagesRepo,
+		gobbleInitializer: gobbleInitializer,
 	}
 }
 
 func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time, campaignID string) []Response {
 	var (
 		responses []Response
-		jobs      []gobble.Job
 	)
 
 	transaction := conn.Transaction()
+	enqueuer.gobbleInitializer.InitializeDBMap(transaction.GetDbMap())
 	transaction.Begin()
 
 	for _, user := range users {
@@ -94,7 +107,7 @@ func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, opti
 			return []Response{}
 		}
 
-		jobs = append(jobs, gobble.NewJob(Delivery{
+		job := gobble.NewJob(Delivery{
 			JobType:         "v2",
 			Options:         options,
 			UserGUID:        user.GUID,
@@ -108,7 +121,13 @@ func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, opti
 			VCAPRequestID:   vcapRequestID,
 			RequestReceived: reqReceived,
 			CampaignID:      campaignID,
-		}))
+		})
+
+		_, err = enqueuer.queue.EnqueueWithTransaction(job, transaction)
+		if err != nil {
+			transaction.Rollback()
+			return []Response{}
+		}
 
 		recipient := user.Email
 		if recipient == "" {
@@ -126,13 +145,6 @@ func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, opti
 	err := transaction.Commit()
 	if err != nil {
 		return []Response{}
-	}
-
-	for _, job := range jobs {
-		_, err := enqueuer.queue.Enqueue(job)
-		if err != nil {
-			return []Response{}
-		}
 	}
 
 	return responses

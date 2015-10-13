@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
+	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/util"
@@ -37,12 +39,17 @@ type mother interface {
 	SQLDatabase()
 }
 
+type enqueuer interface {
+	Enqueue(job gobble.Job) (gobble.Job, error)
+	EnqueueWithTransaction(job gobble.Job, transaction db.TransactionInterface) (gobble.Job, error)
+}
+
 type Config struct {
 	DBLoggingEnabled bool
 	SkipVerifySSL    bool
 	SQLDB            *sql.DB
 	Logger           lager.Logger
-	Queue            queue.Enqueuer
+	Queue            enqueuer
 
 	UAAPublicKey    string
 	UAAHost         string

@@ -26,9 +26,15 @@ func NewDatabase(db *sql.DB) *DB {
 		},
 	}
 
-	conn.AddTableWithName(Job{}, "jobs").SetKeys(true, "ID").SetVersionCol("Version")
+	GobbleInitializer{}.InitializeDBMap(conn)
 
 	return &DB{Connection: conn}
+}
+
+type GobbleInitializer struct{}
+
+func (GobbleInitializer) InitializeDBMap(dbMap *gorp.DbMap) {
+	dbMap.AddTableWithName(Job{}, "jobs").SetKeys(true, "ID").SetVersionCol("Version")
 }
 
 func (db DB) Migrate(migrationsDir string) {

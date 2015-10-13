@@ -82,8 +82,9 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	gobbleQueue := gobble.NewQueue(gobble.NewDatabase(config.SQLDB), gobble.Config{
 		WaitMaxDuration: time.Duration(config.QueueWaitMaxDuration) * time.Millisecond,
 	})
+
 	v1enqueuer := services.NewEnqueuer(gobbleQueue, messagesRepo)
-	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, v2models.NewMessagesRepository(clock, guidGenerator.Generate))
+	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, v2models.NewMessagesRepository(clock, guidGenerator.Generate), gobble.GobbleInitializer{})
 
 	uaaClient := uaa.NewZonedUAAClient(config.UAAClientID, config.UAAClientSecret, config.VerifySSL, config.UAAPublicKey)
 	cloudController := cf.NewCloudController(config.CCHost, !config.VerifySSL)

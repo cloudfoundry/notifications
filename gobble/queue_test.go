@@ -3,6 +3,7 @@ package gobble_test
 import (
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 
 	. "github.com/onsi/ginkgo"
@@ -49,6 +50,61 @@ var _ = Describe("Queue", func() {
 
 			Expect(jobs).To(HaveLen(1))
 			Expect(jobs).To(ContainElement(job))
+		})
+	})
+
+	Describe("EnqueueWithTransaction", func() {
+		It("sticks the job in the database table using a transaction", func() {
+			job := gobble.NewJob(map[string]bool{
+				"testing": true,
+			})
+
+			transaction := db.NewTransaction(&db.Connection{database.Connection})
+			transaction.Begin()
+
+			job, err := queue.EnqueueWithTransaction(job, transaction)
+			Expect(err).NotTo(HaveOccurred())
+			transaction.Commit()
+
+			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
+			if err != nil {
+				panic(err)
+			}
+
+			jobs := []gobble.Job{}
+			for _, result := range results {
+				jobs = append(jobs, *(result.(*gobble.Job)))
+			}
+
+			Expect(jobs).To(HaveLen(1))
+			Expect(jobs).To(ContainElement(job))
+		})
+
+		Context("when the transaction is not commited", func() {
+			It("should not put things in the database", func() {
+				job := gobble.NewJob(map[string]bool{
+					"testing": true,
+				})
+
+				transaction := db.NewTransaction(&db.Connection{database.Connection})
+				transaction.Begin()
+
+				job, err := queue.EnqueueWithTransaction(job, transaction)
+				Expect(err).NotTo(HaveOccurred())
+				transaction.Rollback()
+
+				results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
+				if err != nil {
+					panic(err)
+				}
+
+				jobs := []gobble.Job{}
+				for _, result := range results {
+					jobs = append(jobs, *(result.(*gobble.Job)))
+				}
+
+				Expect(jobs).To(HaveLen(0))
+			})
 		})
 	})
 

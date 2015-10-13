@@ -85,9 +85,10 @@ func Boot(mom mother, config Config) {
 
 	// V2
 	messagesRepository := v2models.NewMessagesRepository(util.NewClock(), guidGenerator.Generate)
+	gobbleInitializer := gobble.GobbleInitializer{}
 
 	v1enqueuer := services.NewEnqueuer(gobbleQueue, messagesRepo)
-	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, messagesRepository)
+	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, messagesRepository, gobbleInitializer)
 
 	cloudController := cf.NewCloudController(config.CCHost, !config.VerifySSL)
 	spaceLoader := services.NewSpaceLoader(cloudController)
