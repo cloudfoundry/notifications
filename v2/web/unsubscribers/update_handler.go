@@ -25,8 +25,8 @@ func NewUpdateHandler(collection unsubscribersGetSetter) UpdateHandler {
 
 func (h UpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	splitURL := strings.Split(req.URL.Path, "/")
-	campaignTypeID := splitURL[4]
-	userGUID := splitURL[6]
+	campaignTypeID := splitURL[2]
+	userGUID := splitURL[4]
 
 	database := context.Get("database").(DatabaseInterface)
 	_, err := h.collection.Set(database.Connection(), collections.Unsubscriber{

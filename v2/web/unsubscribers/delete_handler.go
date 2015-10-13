@@ -25,8 +25,8 @@ func NewDeleteHandler(collection unsubscribersDeleter) DeleteHandler {
 
 func (h DeleteHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context stack.Context) {
 	splitURL := strings.Split(req.URL.Path, "/")
-	campaignTypeID := splitURL[4]
-	userGUID := splitURL[6]
+	campaignTypeID := splitURL[2]
+	userGUID := splitURL[4]
 
 	database := context.Get("database").(DatabaseInterface)
 	err := h.collection.Delete(database.Connection(), collections.Unsubscriber{

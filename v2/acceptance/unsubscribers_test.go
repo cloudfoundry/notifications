@@ -74,7 +74,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("unsubscribing from the campaign type", func() {
 				client.Document("unsubscriber-put-client")
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
+				path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", campaignTypeID, userGUID)
 				status, _, err := client.Do("PUT", path, nil, clientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNoContent))
@@ -120,7 +120,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("deleting the unsubscribe", func() {
 				client.Document("unsubscriber-delete-client")
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
+				path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", campaignTypeID, userGUID)
 				status, _, err := client.Do("DELETE", path, nil, clientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNoContent))
@@ -193,7 +193,7 @@ var _ = Describe("Unsubscribers", func() {
 				})
 
 				By("unsubscribing from the campaign type", func() {
-					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
+					path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", campaignTypeID, userGUID)
 					status, response, err := client.Do("PUT", path, nil, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusForbidden))
@@ -207,7 +207,7 @@ var _ = Describe("Unsubscribers", func() {
 				otherClientToken, err := GetClientTokenWithScopes()
 				Expect(err).NotTo(HaveOccurred())
 
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "some-campaign-type-id", userGUID)
+				path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", "some-campaign-type-id", userGUID)
 				status, response, err := client.Do("PUT", path, nil, otherClientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusForbidden))
@@ -218,7 +218,7 @@ var _ = Describe("Unsubscribers", func() {
 				otherClientToken, err := GetClientTokenWithScopes()
 				Expect(err).NotTo(HaveOccurred())
 
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "some-campaign-type-id", userGUID)
+				path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", "some-campaign-type-id", userGUID)
 				status, response, err := client.Do("DELETE", path, nil, otherClientToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusForbidden))
@@ -248,7 +248,7 @@ var _ = Describe("Unsubscribers", func() {
 				})
 
 				By("unsubscribing from the campaign type", func() {
-					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, "not-a-user")
+					path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", campaignTypeID, "not-a-user")
 					status, response, err := client.Do("PUT", path, nil, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
@@ -256,7 +256,7 @@ var _ = Describe("Unsubscribers", func() {
 				})
 
 				By("removing an unsubscribe from the campaign type", func() {
-					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, "not-a-user")
+					path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", campaignTypeID, "not-a-user")
 					status, response, err := client.Do("DELETE", path, nil, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
@@ -274,7 +274,7 @@ var _ = Describe("Unsubscribers", func() {
 				})
 
 				By("attempting to unsubscribe the user from the campaign", func() {
-					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "not-a-campaign-type", userGUID)
+					path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", "not-a-campaign-type", userGUID)
 					status, response, err := client.Do("PUT", path, nil, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
@@ -290,7 +290,7 @@ var _ = Describe("Unsubscribers", func() {
 				})
 
 				By("attempting to resubscribe the user to the campaign", func() {
-					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "not-a-campaign-type", userGUID)
+					path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", "not-a-campaign-type", userGUID)
 					status, response, err := client.Do("DELETE", path, nil, clientToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusNotFound))
@@ -316,7 +316,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("unsubscribing from the campaign type using the user token", func() {
 				client.Document("unsubscriber-put-user")
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
+				path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", campaignTypeID, userGUID)
 				status, _, err := client.Do("PUT", path, nil, userToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNoContent))
@@ -350,7 +350,7 @@ var _ = Describe("Unsubscribers", func() {
 
 			By("deleting the unsubscribe with the user token", func() {
 				client.Document("unsubscriber-delete-user")
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
+				path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", campaignTypeID, userGUID)
 				status, _, err := client.Do("DELETE", path, nil, userToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNoContent))
@@ -404,7 +404,7 @@ var _ = Describe("Unsubscribers", func() {
 				})
 
 				By("attempting to unsubscribe from the campaign type using the user token", func() {
-					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, "some-other-user")
+					path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", campaignTypeID, "some-other-user")
 					status, response, err := client.Do("PUT", path, nil, userToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusForbidden))
@@ -426,7 +426,7 @@ var _ = Describe("Unsubscribers", func() {
 				})
 
 				By("attempting to unsubscribe from the campaign type using the user token", func() {
-					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, "some-other-user")
+					path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", campaignTypeID, "some-other-user")
 					status, response, err := client.Do("DELETE", path, nil, userToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusForbidden))
@@ -450,7 +450,7 @@ var _ = Describe("Unsubscribers", func() {
 				})
 
 				By("attempting to unsubscribe from the campaign type", func() {
-					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
+					path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", campaignTypeID, userGUID)
 					status, response, err := client.Do("PUT", path, nil, "")
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusUnauthorized))
@@ -472,7 +472,7 @@ var _ = Describe("Unsubscribers", func() {
 				})
 
 				By("attempting to delete the unsubscribe from the campaign type", func() {
-					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
+					path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", campaignTypeID, userGUID)
 					status, response, err := client.Do("DELETE", path, nil, "")
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusUnauthorized))
@@ -494,7 +494,7 @@ var _ = Describe("Unsubscribers", func() {
 				unauthorizedUserToken, unauthorizedUserGUID, err := GetUserTokenAndIdFor("unauthorized-user")
 				Expect(err).NotTo(HaveOccurred())
 
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "some-campaign-type-id", unauthorizedUserGUID)
+				path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", "some-campaign-type-id", unauthorizedUserGUID)
 				status, response, err := client.Do("PUT", path, nil, unauthorizedUserToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusForbidden))
@@ -505,7 +505,7 @@ var _ = Describe("Unsubscribers", func() {
 				unauthorizedUserToken, unauthorizedUserGUID, err := GetUserTokenAndIdFor("unauthorized-user")
 				Expect(err).NotTo(HaveOccurred())
 
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "some-campaign-type-id", unauthorizedUserGUID)
+				path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", "some-campaign-type-id", unauthorizedUserGUID)
 				status, response, err := client.Do("DELETE", path, nil, unauthorizedUserToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusForbidden))
@@ -515,7 +515,7 @@ var _ = Describe("Unsubscribers", func() {
 
 		Context("when attempting to manage subscriptions for a non-existent campaign type", func() {
 			It("returns a 404 status code and reports the error message as JSON for PUTs", func() {
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "not-a-campaign-type", userGUID)
+				path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", "not-a-campaign-type", userGUID)
 				status, response, err := client.Do("PUT", path, nil, userToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
@@ -523,7 +523,7 @@ var _ = Describe("Unsubscribers", func() {
 			})
 
 			It("returns a 404 status code and reports the error message as JSON for DELETEs", func() {
-				path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, "not-a-campaign-type", userGUID)
+				path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", "not-a-campaign-type", userGUID)
 				status, response, err := client.Do("DELETE", path, nil, userToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusNotFound))
@@ -559,7 +559,7 @@ var _ = Describe("Unsubscribers", func() {
 				})
 
 				By("unsubscribing from the campaign type", func() {
-					path := fmt.Sprintf("/senders/%s/campaign_types/%s/unsubscribers/%s", senderID, campaignTypeID, userGUID)
+					path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", campaignTypeID, userGUID)
 					status, response, err := client.Do("PUT", path, nil, userToken)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(status).To(Equal(http.StatusForbidden))

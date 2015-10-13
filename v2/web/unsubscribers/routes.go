@@ -17,6 +17,6 @@ type Routes struct {
 }
 
 func (r Routes) Register(m muxer) {
-	m.Handle("PUT", "/senders/{sender_id}/campaign_types/{campaign_type_id}/unsubscribers/{user_guid}", NewUpdateHandler(r.UnsubscribersCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
-	m.Handle("DELETE", "/senders/{sender_id}/campaign_types/{campaign_type_id}/unsubscribers/{user_guid}", NewDeleteHandler(r.UnsubscribersCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
+	m.Handle("PUT", "/campaign_types/{campaign_type_id}/unsubscribers/{user_guid}", NewUpdateHandler(r.UnsubscribersCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
+	m.Handle("DELETE", "/campaign_types/{campaign_type_id}/unsubscribers/{user_guid}", NewDeleteHandler(r.UnsubscribersCollection), r.RequestLogging, r.Authenticator, r.DatabaseAllocator)
 }

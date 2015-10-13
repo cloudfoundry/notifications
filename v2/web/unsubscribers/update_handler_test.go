@@ -40,7 +40,7 @@ var _ = Describe("UpdateHandler", func() {
 
 		writer = httptest.NewRecorder()
 
-		request, err = http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id/unsubscribers/some-user-guid", nil)
+		request, err = http.NewRequest("PUT", "/campaign_types/some-campaign-type-id/unsubscribers/some-user-guid", nil)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -60,7 +60,7 @@ var _ = Describe("UpdateHandler", func() {
 		Context("when the Set call returns a NotFoundError", func() {
 			It("returns a 404 with the error message in JSON", func() {
 				unsubscribersCollection.SetCall.Returns.Error = collections.NotFoundError{errors.New("some-error")}
-				request, err := http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id/unsubscribers/nonexistent-user", nil)
+				request, err := http.NewRequest("PUT", "/campaign_types/some-campaign-type-id/unsubscribers/nonexistent-user", nil)
 				Expect(err).NotTo(HaveOccurred())
 
 				handler.ServeHTTP(writer, request, context)
@@ -73,7 +73,7 @@ var _ = Describe("UpdateHandler", func() {
 		Context("when the Set call returns a PermissionsError", func() {
 			It("returns a 403 status code and reports the error in JSON", func() {
 				unsubscribersCollection.SetCall.Returns.Error = collections.PermissionsError{errors.New("some-error")}
-				request, err := http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id/unsubscribers/some-user-guid", nil)
+				request, err := http.NewRequest("PUT", "/campaign_types/some-campaign-type-id/unsubscribers/some-user-guid", nil)
 				Expect(err).NotTo(HaveOccurred())
 
 				handler.ServeHTTP(writer, request, context)
@@ -86,7 +86,7 @@ var _ = Describe("UpdateHandler", func() {
 		Context("when the Set call returns any other error", func() {
 			It("returns a 500 status", func() {
 				unsubscribersCollection.SetCall.Returns.Error = errors.New("some-bad-error")
-				request, err := http.NewRequest("PUT", "/senders/some-sender-id/campaign_types/some-campaign-type-id/unsubscribers/nonexistent-user", nil)
+				request, err := http.NewRequest("PUT", "/campaign_types/some-campaign-type-id/unsubscribers/nonexistent-user", nil)
 				Expect(err).NotTo(HaveOccurred())
 
 				handler.ServeHTTP(writer, request, context)
