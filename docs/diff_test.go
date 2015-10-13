@@ -67,7 +67,7 @@ var _ = Describe("Diff", func() {
 		})
 	})
 
-	Context("when there is an unimportant change to a guid", func() {
+	Context("when there is an important change to a guid-relate string", func() {
 		It("returns true", func() {
 			left := "/campaigns/8bba8e63-41e8-3cca-c098-da8c3500deac/status"
 			right := "/senders/8e69a00a-da26-36ed-b4fc-28a2150c6593"
@@ -80,6 +80,15 @@ var _ = Describe("Diff", func() {
 			right := "/campaigns/8bbae63-41e8-3cca-c098-da8c3500deac/status"
 
 			Expect(docs.Diff(left, right)).To(BeTrue())
+		})
+	})
+
+	Context("when there is an unimportant change to a timestamp", func() {
+		It("returns false", func() {
+			left := "2015-10-13T22:19:44Z"
+			right := "2014-11-20T03:24:10Z"
+
+			Expect(docs.Diff(left, right)).To(BeFalse())
 		})
 	})
 })
