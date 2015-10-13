@@ -42,12 +42,16 @@ type messagesRepoUpserter interface {
 	Upsert(models.ConnectionInterface, models.Message) (models.Message, error)
 }
 
+type queueInterface interface {
+	Enqueue(gobble.Job) (gobble.Job, error)
+}
+
 type Enqueuer struct {
-	queue        gobble.QueueInterface
+	queue        queueInterface
 	messagesRepo messagesRepoUpserter
 }
 
-func NewEnqueuer(queue gobble.QueueInterface, messagesRepo messagesRepoUpserter) Enqueuer {
+func NewEnqueuer(queue queueInterface, messagesRepo messagesRepoUpserter) Enqueuer {
 	return Enqueuer{
 		queue:        queue,
 		messagesRepo: messagesRepo,
