@@ -404,6 +404,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 					} `json:"_links"`
 				}
 
+				client.Document("campaign-status")
 				status, err := client.DoTyped("GET", fmt.Sprintf("/campaigns/%s/status", campaignID), nil, token, &response)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(status).To(Equal(http.StatusOK))

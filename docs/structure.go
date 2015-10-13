@@ -113,6 +113,10 @@ var Structure = []Resource{
 				Key:         "campaign-get",
 				Description: "Retrieve a campaign",
 			},
+			{
+				Key:         "campaign-status",
+				Description: "Retrieve the status of a campaign",
+			},
 		},
 	},
 }
