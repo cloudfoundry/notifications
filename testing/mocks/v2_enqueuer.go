@@ -14,7 +14,6 @@ type V2Enqueuer struct {
 
 type V2EnqueuerEnqueueCall struct {
 	Receives V2EnqueuerEnqueueCallReceives
-	Returns  V2EnqueuerEnqueueCallReturns
 }
 
 type V2EnqueuerEnqueueCallReceives struct {
@@ -31,16 +30,12 @@ type V2EnqueuerEnqueueCallReceives struct {
 	CampaignID      string
 }
 
-type V2EnqueuerEnqueueCallReturns struct {
-	Responses []queue.Response
-}
-
 func NewV2Enqueuer() *V2Enqueuer {
 	return &V2Enqueuer{}
 }
 
 func (m *V2Enqueuer) Enqueue(conn queue.ConnectionInterface, users []queue.User, options queue.Options,
-	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, uaaHost, scope, vcapRequestID string, reqReceived time.Time, campaignID string) []queue.Response {
+	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, uaaHost, scope, vcapRequestID string, reqReceived time.Time, campaignID string) {
 
 	if len(m.EnqueueCalls) <= m.EnqueueCallsCount {
 		m.EnqueueCalls = append(m.EnqueueCalls, V2EnqueuerEnqueueCall{})
@@ -61,5 +56,4 @@ func (m *V2Enqueuer) Enqueue(conn queue.ConnectionInterface, users []queue.User,
 	m.EnqueueCalls[m.EnqueueCallsCount] = call
 
 	m.EnqueueCallsCount++
-	return call.Returns.Responses
 }

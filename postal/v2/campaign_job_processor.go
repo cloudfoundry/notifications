@@ -48,7 +48,7 @@ type audienceGenerator interface {
 }
 
 type enqueuer interface {
-	Enqueue(conn queue.ConnectionInterface, users []queue.User, options queue.Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time, campaignID string) []queue.Response
+	Enqueue(conn queue.ConnectionInterface, users []queue.User, options queue.Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time, campaignID string)
 }
 
 func NewCampaignJobProcessor(emailFormatter emailAddressFormatter, htmlExtractor htmlPartsExtractor, emails, spaces, orgs, users audienceGenerator, enqueuer enqueuer) CampaignJobProcessor {

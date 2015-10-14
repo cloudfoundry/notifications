@@ -70,39 +70,6 @@ var _ = Describe("JobEnqueuer", func() {
 	})
 
 	Describe("Enqueue", func() {
-		It("returns the correct types of responses for users", func() {
-			users := []queue.User{{GUID: "user-1"}, {Email: "user-2@example.com"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			responses := enqueuer.Enqueue(conn, users, queue.Options{KindID: "the-kind"}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
-
-			Expect(responses).To(HaveLen(4))
-			Expect(responses).To(ConsistOf([]queue.Response{
-				{
-					Status:         "queued",
-					Recipient:      "user-1",
-					NotificationID: "first-random-guid",
-					VCAPRequestID:  "some-request-id",
-				},
-				{
-					Status:         "queued",
-					Recipient:      "user-2@example.com",
-					NotificationID: "second-random-guid",
-					VCAPRequestID:  "some-request-id",
-				},
-				{
-					Status:         "queued",
-					Recipient:      "user-3",
-					NotificationID: "third-random-guid",
-					VCAPRequestID:  "some-request-id",
-				},
-				{
-					Status:         "queued",
-					Recipient:      "user-4",
-					NotificationID: "fourth-random-guid",
-					VCAPRequestID:  "some-request-id",
-				},
-			}))
-		})
-
 		It("enqueues jobs with the deliveries", func() {
 			users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
 			enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
@@ -220,13 +187,11 @@ var _ = Describe("JobEnqueuer", func() {
 
 			It("commits the transaction when everything goes well", func() {
 				users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-				responses := enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
+				enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeTrue())
 				Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
-
-				Expect(responses).ToNot(BeEmpty())
 			})
 
 			It("rolls back the transaction when there is an error in message repo upserting", func() {
@@ -259,22 +224,12 @@ var _ = Describe("JobEnqueuer", func() {
 					Expect(transaction.CommitCall.WasCalled).To(BeTrue())
 					Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 				})
-
-				It("returns an empty slice of Response", func() {
-					transaction.CommitCall.Returns.Error = errors.New("the commit blew up")
-
-					users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-					responses := enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
-
-					Expect(responses).To(Equal([]queue.Response{}))
-				})
 			})
 
 			It("uses the same transaction for the queue as it did for the messages repo", func() {
 				users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-				responses := enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
+				enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
-				Expect(responses).ToNot(BeEmpty())
 				Expect(gobbleQueue.EnqueueWithTransactionCall.Receives.Transaction).To(Equal(transaction))
 			})
 
@@ -284,9 +239,7 @@ var _ = Describe("JobEnqueuer", func() {
 				}
 
 				users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
-				responses := enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
-
-				Expect(responses).ToNot(BeEmpty())
+				enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 			})
 		})
 	})
