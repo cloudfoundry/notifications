@@ -103,7 +103,7 @@ var Structure = []Resource{
 	},
 	{
 		Name:        "Campaigns",
-		Description: "EVAN WILL EDIT THIS",
+		Description: "Campaigns are an email to a set of users using a template provided directly or via a campaign type or via the default template.",
 		Endpoints: []Endpoint{
 			{
 				Key:         "campaign-create",

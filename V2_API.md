@@ -55,7 +55,7 @@ X-Notifications-Version: 2
 ```
 Content-Length: 13
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:17:04 GMT
+Date: Wed, 14 Oct 2015 15:53:26 GMT
 ```
 ##### Body
 ```
@@ -76,7 +76,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiNDEwYmYzZTctMzU3MS01YzMxLThkODAtYTg0NDllMzQzOTQ4IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.RHDBOHvpOETXHyGMxE76ZzrHxdAdf7XAPfAqGAcp1dQ
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZGU0OTA4YTEtYTViYy0zMGQ3LTcwNDctMTkzMTMzYzljZTM2IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0._TEox4tRaWV5qtJR7N1cPRgKM8CvGBM98jURaIjnTb0
 X-Notifications-Version: 2
 ```
 ##### Body
@@ -90,23 +90,23 @@ X-Notifications-Version: 2
 ```
 Content-Length: 310
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:16:59 GMT
+Date: Wed, 14 Oct 2015 15:53:25 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "campaign_types": {
-      "href": "/senders/02331d50-a1e3-4b86-4e9d-6c757a0d2e1a/campaign_types"
+      "href": "/senders/c0a0f312-e311-21de-a722-7dff44b27bc9/campaign_types"
     },
     "campaigns": {
-      "href": "/senders/02331d50-a1e3-4b86-4e9d-6c757a0d2e1a/campaigns"
+      "href": "/senders/c0a0f312-e311-21de-a722-7dff44b27bc9/campaigns"
     },
     "self": {
-      "href": "/senders/02331d50-a1e3-4b86-4e9d-6c757a0d2e1a"
+      "href": "/senders/c0a0f312-e311-21de-a722-7dff44b27bc9"
     }
   },
-  "id": "02331d50-a1e3-4b86-4e9d-6c757a0d2e1a",
+  "id": "c0a0f312-e311-21de-a722-7dff44b27bc9",
   "name": "My Cool App"
 }
 ```
@@ -120,7 +120,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiNDEwYmYzZTctMzU3MS01YzMxLThkODAtYTg0NDllMzQzOTQ4IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.RHDBOHvpOETXHyGMxE76ZzrHxdAdf7XAPfAqGAcp1dQ
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZGU0OTA4YTEtYTViYy0zMGQ3LTcwNDctMTkzMTMzYzljZTM2IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0._TEox4tRaWV5qtJR7N1cPRgKM8CvGBM98jURaIjnTb0
 X-Notifications-Version: 2
 ```
 #### Response 200 OK
@@ -128,7 +128,7 @@ X-Notifications-Version: 2
 ```
 Content-Length: 362
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:16:59 GMT
+Date: Wed, 14 Oct 2015 15:53:25 GMT
 ```
 ##### Body
 ```
@@ -142,16 +142,16 @@ Date: Tue, 13 Oct 2015 22:16:59 GMT
     {
       "_links": {
         "campaign_types": {
-          "href": "/senders/02331d50-a1e3-4b86-4e9d-6c757a0d2e1a/campaign_types"
+          "href": "/senders/c0a0f312-e311-21de-a722-7dff44b27bc9/campaign_types"
         },
         "campaigns": {
-          "href": "/senders/02331d50-a1e3-4b86-4e9d-6c757a0d2e1a/campaigns"
+          "href": "/senders/c0a0f312-e311-21de-a722-7dff44b27bc9/campaigns"
         },
         "self": {
-          "href": "/senders/02331d50-a1e3-4b86-4e9d-6c757a0d2e1a"
+          "href": "/senders/c0a0f312-e311-21de-a722-7dff44b27bc9"
         }
       },
-      "id": "02331d50-a1e3-4b86-4e9d-6c757a0d2e1a",
+      "id": "c0a0f312-e311-21de-a722-7dff44b27bc9",
       "name": "My Cool App"
     }
   ]
@@ -167,7 +167,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiNDEwYmYzZTctMzU3MS01YzMxLThkODAtYTg0NDllMzQzOTQ4IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.RHDBOHvpOETXHyGMxE76ZzrHxdAdf7XAPfAqGAcp1dQ
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZGU0OTA4YTEtYTViYy0zMGQ3LTcwNDctMTkzMTMzYzljZTM2IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0._TEox4tRaWV5qtJR7N1cPRgKM8CvGBM98jURaIjnTb0
 X-Notifications-Version: 2
 ```
 #### Response 200 OK
@@ -175,23 +175,23 @@ X-Notifications-Version: 2
 ```
 Content-Length: 310
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:16:59 GMT
+Date: Wed, 14 Oct 2015 15:53:25 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "campaign_types": {
-      "href": "/senders/02331d50-a1e3-4b86-4e9d-6c757a0d2e1a/campaign_types"
+      "href": "/senders/c0a0f312-e311-21de-a722-7dff44b27bc9/campaign_types"
     },
     "campaigns": {
-      "href": "/senders/02331d50-a1e3-4b86-4e9d-6c757a0d2e1a/campaigns"
+      "href": "/senders/c0a0f312-e311-21de-a722-7dff44b27bc9/campaigns"
     },
     "self": {
-      "href": "/senders/02331d50-a1e3-4b86-4e9d-6c757a0d2e1a"
+      "href": "/senders/c0a0f312-e311-21de-a722-7dff44b27bc9"
     }
   },
-  "id": "02331d50-a1e3-4b86-4e9d-6c757a0d2e1a",
+  "id": "c0a0f312-e311-21de-a722-7dff44b27bc9",
   "name": "My Cool App"
 }
 ```
@@ -205,7 +205,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiNDEwYmYzZTctMzU3MS01YzMxLThkODAtYTg0NDllMzQzOTQ4IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.RHDBOHvpOETXHyGMxE76ZzrHxdAdf7XAPfAqGAcp1dQ
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZGU0OTA4YTEtYTViYy0zMGQ3LTcwNDctMTkzMTMzYzljZTM2IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0._TEox4tRaWV5qtJR7N1cPRgKM8CvGBM98jURaIjnTb0
 X-Notifications-Version: 2
 ```
 ##### Body
@@ -219,23 +219,23 @@ X-Notifications-Version: 2
 ```
 Content-Length: 314
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:16:59 GMT
+Date: Wed, 14 Oct 2015 15:53:25 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "campaign_types": {
-      "href": "/senders/02331d50-a1e3-4b86-4e9d-6c757a0d2e1a/campaign_types"
+      "href": "/senders/c0a0f312-e311-21de-a722-7dff44b27bc9/campaign_types"
     },
     "campaigns": {
-      "href": "/senders/02331d50-a1e3-4b86-4e9d-6c757a0d2e1a/campaigns"
+      "href": "/senders/c0a0f312-e311-21de-a722-7dff44b27bc9/campaigns"
     },
     "self": {
-      "href": "/senders/02331d50-a1e3-4b86-4e9d-6c757a0d2e1a"
+      "href": "/senders/c0a0f312-e311-21de-a722-7dff44b27bc9"
     }
   },
-  "id": "02331d50-a1e3-4b86-4e9d-6c757a0d2e1a",
+  "id": "c0a0f312-e311-21de-a722-7dff44b27bc9",
   "name": "My Not Cool App"
 }
 ```
@@ -249,13 +249,13 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiY2ExZmIwZDAtMDZkMi1hYjI1LWJlYWMtNTI4MDUzMDgwNThiIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.G3ageTNU4aac0fhdEiB_Gc16ehq5TEL0LZfGHiF0Dyc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMjgzMDI5OTctM2I5Yy1iNzFkLWQ0NDMtYjRmYmExMWY4NWU1IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.shoFaOsSdCJL78HUoFf-85tCP_2qviP5_RepU1qh9EQ
 X-Notifications-Version: 2
 ```
 #### Response 204 No Content
 ##### Headers
 ```
-Date: Tue, 13 Oct 2015 22:17:02 GMT
+Date: Wed, 14 Oct 2015 15:53:24 GMT
 ```
 
 
@@ -270,7 +270,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZDA1OGNjZjYtYjVhMy04MjkyLTZkZGQtNDI5ZWQyMWNmZWNjIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.5IWCxWnFdTVgEhTBFrgCsRC1Z9UR4rSuzsttfLpTL9s
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZjI3NGE0NDItZjNiNC1mNmUxLTg2ZGQtYmIwMDkzMGJjMWIyIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0._rLnl2LZHZkPghKd6OK9400BcmSCGyFeqP0ukeHKo2s
 X-Notifications-Version: 2
 ```
 ##### Body
@@ -290,18 +290,18 @@ X-Notifications-Version: 2
 ```
 Content-Length: 266
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:17:00 GMT
+Date: Wed, 14 Oct 2015 15:53:25 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "self": {
-      "href": "/templates/ea770b0a-05eb-1c38-31f1-8e80b6de7b40"
+      "href": "/templates/e26e2e4c-29d9-05dc-1b32-7043498ca3c5"
     }
   },
   "html": "template html",
-  "id": "ea770b0a-05eb-1c38-31f1-8e80b6de7b40",
+  "id": "e26e2e4c-29d9-05dc-1b32-7043498ca3c5",
   "metadata": {
     "template": "metadata"
   },
@@ -320,7 +320,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZDA1OGNjZjYtYjVhMy04MjkyLTZkZGQtNDI5ZWQyMWNmZWNjIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.5IWCxWnFdTVgEhTBFrgCsRC1Z9UR4rSuzsttfLpTL9s
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZjI3NGE0NDItZjNiNC1mNmUxLTg2ZGQtYmIwMDkzMGJjMWIyIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0._rLnl2LZHZkPghKd6OK9400BcmSCGyFeqP0ukeHKo2s
 X-Notifications-Version: 2
 ```
 #### Response 200 OK
@@ -328,7 +328,7 @@ X-Notifications-Version: 2
 ```
 Content-Length: 298
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:17:00 GMT
+Date: Wed, 14 Oct 2015 15:53:25 GMT
 ```
 ##### Body
 ```
@@ -342,11 +342,11 @@ Date: Tue, 13 Oct 2015 22:17:00 GMT
     {
       "_links": {
         "self": {
-          "href": "/templates/ea770b0a-05eb-1c38-31f1-8e80b6de7b40"
+          "href": "/templates/e26e2e4c-29d9-05dc-1b32-7043498ca3c5"
         }
       },
       "html": "html",
-      "id": "ea770b0a-05eb-1c38-31f1-8e80b6de7b40",
+      "id": "e26e2e4c-29d9-05dc-1b32-7043498ca3c5",
       "metadata": {
         "banana": "something"
       },
@@ -367,7 +367,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZDA1OGNjZjYtYjVhMy04MjkyLTZkZGQtNDI5ZWQyMWNmZWNjIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.5IWCxWnFdTVgEhTBFrgCsRC1Z9UR4rSuzsttfLpTL9s
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZjI3NGE0NDItZjNiNC1mNmUxLTg2ZGQtYmIwMDkzMGJjMWIyIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0._rLnl2LZHZkPghKd6OK9400BcmSCGyFeqP0ukeHKo2s
 X-Notifications-Version: 2
 ```
 #### Response 200 OK
@@ -375,18 +375,18 @@ X-Notifications-Version: 2
 ```
 Content-Length: 266
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:17:00 GMT
+Date: Wed, 14 Oct 2015 15:53:25 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "self": {
-      "href": "/templates/ea770b0a-05eb-1c38-31f1-8e80b6de7b40"
+      "href": "/templates/e26e2e4c-29d9-05dc-1b32-7043498ca3c5"
     }
   },
   "html": "template html",
-  "id": "ea770b0a-05eb-1c38-31f1-8e80b6de7b40",
+  "id": "e26e2e4c-29d9-05dc-1b32-7043498ca3c5",
   "metadata": {
     "template": "metadata"
   },
@@ -405,7 +405,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZDA1OGNjZjYtYjVhMy04MjkyLTZkZGQtNDI5ZWQyMWNmZWNjIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.5IWCxWnFdTVgEhTBFrgCsRC1Z9UR4rSuzsttfLpTL9s
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZjI3NGE0NDItZjNiNC1mNmUxLTg2ZGQtYmIwMDkzMGJjMWIyIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0._rLnl2LZHZkPghKd6OK9400BcmSCGyFeqP0ukeHKo2s
 X-Notifications-Version: 2
 ```
 ##### Body
@@ -425,18 +425,18 @@ X-Notifications-Version: 2
 ```
 Content-Length: 242
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:17:00 GMT
+Date: Wed, 14 Oct 2015 15:53:25 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "self": {
-      "href": "/templates/ea770b0a-05eb-1c38-31f1-8e80b6de7b40"
+      "href": "/templates/e26e2e4c-29d9-05dc-1b32-7043498ca3c5"
     }
   },
   "html": "html",
-  "id": "ea770b0a-05eb-1c38-31f1-8e80b6de7b40",
+  "id": "e26e2e4c-29d9-05dc-1b32-7043498ca3c5",
   "metadata": {
     "banana": "something"
   },
@@ -455,13 +455,13 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZDA1OGNjZjYtYjVhMy04MjkyLTZkZGQtNDI5ZWQyMWNmZWNjIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.5IWCxWnFdTVgEhTBFrgCsRC1Z9UR4rSuzsttfLpTL9s
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZjI3NGE0NDItZjNiNC1mNmUxLTg2ZGQtYmIwMDkzMGJjMWIyIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0._rLnl2LZHZkPghKd6OK9400BcmSCGyFeqP0ukeHKo2s
 X-Notifications-Version: 2
 ```
 #### Response 204 No Content
 ##### Headers
 ```
-Date: Tue, 13 Oct 2015 22:17:00 GMT
+Date: Wed, 14 Oct 2015 15:53:25 GMT
 ```
 
 
@@ -476,7 +476,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMmNhMTkzYmItYTFiOS0yMzU4LWQ5MzItYzM2YWVlNDU3MGY1IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.MNPSe3m46_ogwN95HXfkdIEH3pUcobmgEeYyPI7hgKo
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMzIwZjY2ODEtYjIwYi03MTc0LTg4OGQtMzk0YjQ0MDNmYWU0IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.2xLX_7roHnQvNT76FthAXVqO8F8THgQFDuA1e9tA3Zg
 X-Notifications-Version: 2
 ```
 ##### Body
@@ -491,19 +491,19 @@ X-Notifications-Version: 2
 ```
 Content-Length: 228
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:17:01 GMT
+Date: Wed, 14 Oct 2015 15:53:24 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "self": {
-      "href": "/campaign_types/09f2f769-fd11-0815-2b52-851115a41887"
+      "href": "/campaign_types/a27fdf5a-cb6f-cdeb-0f38-2158f17b32c8"
     }
   },
   "critical": false,
   "description": "a great campaign type",
-  "id": "09f2f769-fd11-0815-2b52-851115a41887",
+  "id": "a27fdf5a-cb6f-cdeb-0f38-2158f17b32c8",
   "name": "some-campaign-type",
   "template_id": ""
 }
@@ -518,7 +518,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMmNhMTkzYmItYTFiOS0yMzU4LWQ5MzItYzM2YWVlNDU3MGY1IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.MNPSe3m46_ogwN95HXfkdIEH3pUcobmgEeYyPI7hgKo
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMzIwZjY2ODEtYjIwYi03MTc0LTg4OGQtMzk0YjQ0MDNmYWU0IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.2xLX_7roHnQvNT76FthAXVqO8F8THgQFDuA1e9tA3Zg
 X-Notifications-Version: 2
 ```
 #### Response 200 OK
@@ -526,29 +526,29 @@ X-Notifications-Version: 2
 ```
 Content-Length: 405
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:17:01 GMT
+Date: Wed, 14 Oct 2015 15:53:24 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "self": {
-      "href": "/senders/99d12ae4-912a-13d6-36d9-61f91d74b91c/campaign_types"
+      "href": "/senders/4a0bfb75-60c2-982e-c37b-38d6cac0969f/campaign_types"
     },
     "sender": {
-      "href": "/senders/99d12ae4-912a-13d6-36d9-61f91d74b91c"
+      "href": "/senders/4a0bfb75-60c2-982e-c37b-38d6cac0969f"
     }
   },
   "campaign_types": [
     {
       "_links": {
         "self": {
-          "href": "/campaign_types/09f2f769-fd11-0815-2b52-851115a41887"
+          "href": "/campaign_types/a27fdf5a-cb6f-cdeb-0f38-2158f17b32c8"
         }
       },
       "critical": false,
       "description": "a great campaign type",
-      "id": "09f2f769-fd11-0815-2b52-851115a41887",
+      "id": "a27fdf5a-cb6f-cdeb-0f38-2158f17b32c8",
       "name": "some-campaign-type",
       "template_id": ""
     }
@@ -565,7 +565,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMmNhMTkzYmItYTFiOS0yMzU4LWQ5MzItYzM2YWVlNDU3MGY1IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.MNPSe3m46_ogwN95HXfkdIEH3pUcobmgEeYyPI7hgKo
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMzIwZjY2ODEtYjIwYi03MTc0LTg4OGQtMzk0YjQ0MDNmYWU0IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.2xLX_7roHnQvNT76FthAXVqO8F8THgQFDuA1e9tA3Zg
 X-Notifications-Version: 2
 ```
 #### Response 200 OK
@@ -573,19 +573,19 @@ X-Notifications-Version: 2
 ```
 Content-Length: 228
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:17:01 GMT
+Date: Wed, 14 Oct 2015 15:53:24 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "self": {
-      "href": "/campaign_types/09f2f769-fd11-0815-2b52-851115a41887"
+      "href": "/campaign_types/a27fdf5a-cb6f-cdeb-0f38-2158f17b32c8"
     }
   },
   "critical": false,
   "description": "a great campaign type",
-  "id": "09f2f769-fd11-0815-2b52-851115a41887",
+  "id": "a27fdf5a-cb6f-cdeb-0f38-2158f17b32c8",
   "name": "some-campaign-type",
   "template_id": ""
 }
@@ -600,7 +600,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMmNhMTkzYmItYTFiOS0yMzU4LWQ5MzItYzM2YWVlNDU3MGY1IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.MNPSe3m46_ogwN95HXfkdIEH3pUcobmgEeYyPI7hgKo
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMzIwZjY2ODEtYjIwYi03MTc0LTg4OGQtMzk0YjQ0MDNmYWU0IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.2xLX_7roHnQvNT76FthAXVqO8F8THgQFDuA1e9tA3Zg
 X-Notifications-Version: 2
 ```
 ##### Body
@@ -608,7 +608,7 @@ X-Notifications-Version: 2
 {
   "description": "still the same great campaign type",
   "name": "updated-campaign-type",
-  "template_id": "dc83a608-9db3-7e30-ea58-73f7b134e293"
+  "template_id": "04a11f3e-3dc6-6ff8-bbae-204661057f11"
 }
 ```
 #### Response 200 OK
@@ -616,21 +616,21 @@ X-Notifications-Version: 2
 ```
 Content-Length: 280
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:17:01 GMT
+Date: Wed, 14 Oct 2015 15:53:24 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "self": {
-      "href": "/campaign_types/09f2f769-fd11-0815-2b52-851115a41887"
+      "href": "/campaign_types/a27fdf5a-cb6f-cdeb-0f38-2158f17b32c8"
     }
   },
   "critical": false,
   "description": "still the same great campaign type",
-  "id": "09f2f769-fd11-0815-2b52-851115a41887",
+  "id": "a27fdf5a-cb6f-cdeb-0f38-2158f17b32c8",
   "name": "updated-campaign-type",
-  "template_id": "dc83a608-9db3-7e30-ea58-73f7b134e293"
+  "template_id": "04a11f3e-3dc6-6ff8-bbae-204661057f11"
 }
 ```
 
@@ -643,18 +643,18 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMmNhMTkzYmItYTFiOS0yMzU4LWQ5MzItYzM2YWVlNDU3MGY1IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.MNPSe3m46_ogwN95HXfkdIEH3pUcobmgEeYyPI7hgKo
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMzIwZjY2ODEtYjIwYi03MTc0LTg4OGQtMzk0YjQ0MDNmYWU0IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.2xLX_7roHnQvNT76FthAXVqO8F8THgQFDuA1e9tA3Zg
 X-Notifications-Version: 2
 ```
 #### Response 204 No Content
 ##### Headers
 ```
-Date: Tue, 13 Oct 2015 22:17:01 GMT
+Date: Wed, 14 Oct 2015 15:53:24 GMT
 ```
 
 
 ## Campaigns
-EVAN WILL EDIT THIS
+Campaigns are an email to a set of users using a template provided directly or via a campaign type or via the default template.
 <a name="campaign-create"></a>
 ### Create a new campaign
 #### Request **POST** /senders/{id}/campaigns
@@ -664,13 +664,13 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZTdhNmU3NWMtZjI3MC1iNTA5LTUxZTEtYmJiZDZhMDhmODAyIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.Ffh5zMWBXR54ZzFnR3RTrunyeMrZZCi4E6lvR5Oq-Vc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZWI1OWE4MGUtZDFlOS0xMzcyLTI5ZTItZGIxNmExZTljNzc0IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.ELE2woEYqZlx1ulcgL0lGNvPMGoqNRlEz4BeWYy3kZ0
 X-Notifications-Version: 2
 ```
 ##### Body
 ```
 {
-  "campaign_type_id": "4f57ac2c-d7e4-a32e-3dc0-12c0690f08a5",
+  "campaign_type_id": "44344860-c779-db79-0325-a9cc46352f5e",
   "reply_to": "no-reply@example.com",
   "send_to": {
     "emails": [
@@ -683,11 +683,11 @@ X-Notifications-Version: 2
       "space-123"
     ],
     "users": [
-      "2f7d2229-565a-47c1-53e8-e9d4c2cade58"
+      "07bfae6e-cc2b-4811-5e84-d38aa92e476e"
     ]
   },
   "subject": "campaign subject",
-  "template_id": "86af93fe-b9df-22b2-3d2a-3a08e8fdf211",
+  "template_id": "25089281-1338-5431-6527-9c1e27aa70a7",
   "text": "campaign body"
 }
 ```
@@ -696,28 +696,28 @@ X-Notifications-Version: 2
 ```
 Content-Length: 687
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:16:59 GMT
+Date: Wed, 14 Oct 2015 15:53:25 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "campaign_type": {
-      "href": "/campaign_types/4f57ac2c-d7e4-a32e-3dc0-12c0690f08a5"
+      "href": "/campaign_types/44344860-c779-db79-0325-a9cc46352f5e"
     },
     "self": {
-      "href": "/campaigns/c14bdda5-2bfc-7158-e6f3-b87c15f7685c"
+      "href": "/campaigns/01ff18fe-34d2-1343-ed62-cd757f374a7f"
     },
     "status": {
-      "href": "/campaigns/c14bdda5-2bfc-7158-e6f3-b87c15f7685c/status"
+      "href": "/campaigns/01ff18fe-34d2-1343-ed62-cd757f374a7f/status"
     },
     "template": {
-      "href": "/templates/86af93fe-b9df-22b2-3d2a-3a08e8fdf211"
+      "href": "/templates/25089281-1338-5431-6527-9c1e27aa70a7"
     }
   },
-  "campaign_type_id": "4f57ac2c-d7e4-a32e-3dc0-12c0690f08a5",
+  "campaign_type_id": "44344860-c779-db79-0325-a9cc46352f5e",
   "html": "",
-  "id": "c14bdda5-2bfc-7158-e6f3-b87c15f7685c",
+  "id": "01ff18fe-34d2-1343-ed62-cd757f374a7f",
   "reply_to": "no-reply@example.com",
   "send_to": {
     "emails": [
@@ -730,11 +730,11 @@ Date: Tue, 13 Oct 2015 22:16:59 GMT
       "space-123"
     ],
     "users": [
-      "2f7d2229-565a-47c1-53e8-e9d4c2cade58"
+      "07bfae6e-cc2b-4811-5e84-d38aa92e476e"
     ]
   },
   "subject": "campaign subject",
-  "template_id": "86af93fe-b9df-22b2-3d2a-3a08e8fdf211",
+  "template_id": "25089281-1338-5431-6527-9c1e27aa70a7",
   "text": "campaign body"
 }
 ```
@@ -748,7 +748,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZTdhNmU3NWMtZjI3MC1iNTA5LTUxZTEtYmJiZDZhMDhmODAyIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.Ffh5zMWBXR54ZzFnR3RTrunyeMrZZCi4E6lvR5Oq-Vc
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiZWI1OWE4MGUtZDFlOS0xMzcyLTI5ZTItZGIxNmExZTljNzc0IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.ELE2woEYqZlx1ulcgL0lGNvPMGoqNRlEz4BeWYy3kZ0
 X-Notifications-Version: 2
 ```
 #### Response 200 OK
@@ -756,28 +756,28 @@ X-Notifications-Version: 2
 ```
 Content-Length: 687
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:16:59 GMT
+Date: Wed, 14 Oct 2015 15:53:25 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "campaign_type": {
-      "href": "/campaign_types/4f57ac2c-d7e4-a32e-3dc0-12c0690f08a5"
+      "href": "/campaign_types/44344860-c779-db79-0325-a9cc46352f5e"
     },
     "self": {
-      "href": "/campaigns/c14bdda5-2bfc-7158-e6f3-b87c15f7685c"
+      "href": "/campaigns/01ff18fe-34d2-1343-ed62-cd757f374a7f"
     },
     "status": {
-      "href": "/campaigns/c14bdda5-2bfc-7158-e6f3-b87c15f7685c/status"
+      "href": "/campaigns/01ff18fe-34d2-1343-ed62-cd757f374a7f/status"
     },
     "template": {
-      "href": "/templates/86af93fe-b9df-22b2-3d2a-3a08e8fdf211"
+      "href": "/templates/25089281-1338-5431-6527-9c1e27aa70a7"
     }
   },
-  "campaign_type_id": "4f57ac2c-d7e4-a32e-3dc0-12c0690f08a5",
+  "campaign_type_id": "44344860-c779-db79-0325-a9cc46352f5e",
   "html": "",
-  "id": "c14bdda5-2bfc-7158-e6f3-b87c15f7685c",
+  "id": "01ff18fe-34d2-1343-ed62-cd757f374a7f",
   "reply_to": "no-reply@example.com",
   "send_to": {
     "emails": [
@@ -790,11 +790,11 @@ Date: Tue, 13 Oct 2015 22:16:59 GMT
       "space-123"
     ],
     "users": [
-      "2f7d2229-565a-47c1-53e8-e9d4c2cade58"
+      "07bfae6e-cc2b-4811-5e84-d38aa92e476e"
     ]
   },
   "subject": "campaign subject",
-  "template_id": "86af93fe-b9df-22b2-3d2a-3a08e8fdf211",
+  "template_id": "25089281-1338-5431-6527-9c1e27aa70a7",
   "text": "campaign body"
 }
 ```
@@ -808,7 +808,7 @@ notifications.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiYjU5OThkMDAtNTM4Yy1hOGEyLWNiNzMtZWY4MDExNDBhYWQwIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.T0BvOdqvz3dRmDrUxmyFvWsxosBRzk4iuoZX2briKpw
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiNGU5ZTg2ODQtNDc4NS04NTNlLWVmYTEtOWEzYWYyNGRlMmE1IiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbnMud3JpdGUiXX0.0G-fNl8QAhCMQdaiviLzf0HOdpVJvXyZChtFQLaMYoM
 X-Notifications-Version: 2
 ```
 #### Response 200 OK
@@ -816,26 +816,26 @@ X-Notifications-Version: 2
 ```
 Content-Length: 393
 Content-Type: text/plain; charset=utf-8
-Date: Tue, 13 Oct 2015 22:17:00 GMT
+Date: Wed, 14 Oct 2015 15:53:24 GMT
 ```
 ##### Body
 ```
 {
   "_links": {
     "campaign": {
-      "href": "/campaigns/5d2497c0-005c-663a-29b0-51943aa5b019"
+      "href": "/campaigns/376acd79-b909-58e7-22c5-00de68c983d7"
     },
     "self": {
-      "href": "/campaigns/5d2497c0-005c-663a-29b0-51943aa5b019/status"
+      "href": "/campaigns/376acd79-b909-58e7-22c5-00de68c983d7/status"
     }
   },
-  "completed_time": "2015-10-13T22:17:00Z",
+  "completed_time": "2015-10-14T15:53:24Z",
   "failed_messages": 0,
-  "id": "5d2497c0-005c-663a-29b0-51943aa5b019",
+  "id": "376acd79-b909-58e7-22c5-00de68c983d7",
   "queued_messages": 0,
   "retry_messages": 0,
   "sent_messages": 1,
-  "start_time": "2015-10-13T22:17:00Z",
+  "start_time": "2015-10-14T15:53:24Z",
   "status": "completed",
   "total_messages": 1
 }
@@ -853,13 +853,13 @@ notification_preferences.admin
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMDY4YWY0MGUtMGIyYi04MDQ4LWJkN2ItMTg1MTUyNmZkNWMzIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbl9wcmVmZXJlbmNlcy5hZG1pbiJdfQ.DD91qsrGWIbGOrc6dA50KjiheNIruawzAojziJQ-BkU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiNmEyODUzMmUtNGNmYi0yNTU0LWFmZjEtYTk5MTg0NWRhMzYyIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbl9wcmVmZXJlbmNlcy5hZG1pbiJdfQ.gEln6doAkd7waLYvOxXo4WKmj-sApuj6kTRTfO2ygQ4
 X-Notifications-Version: 2
 ```
 #### Response 204 No Content
 ##### Headers
 ```
-Date: Tue, 13 Oct 2015 22:16:58 GMT
+Date: Wed, 14 Oct 2015 15:53:22 GMT
 ```
 
 <a name="unsubscriber-put-user"></a>
@@ -871,13 +871,13 @@ notification_preferences.read notification_preferences.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIiLCJpc3MiOiIiLCJzY29wZSI6WyJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMucmVhZCIsIm5vdGlmaWNhdGlvbl9wcmVmZXJlbmNlcy53cml0ZSJdLCJ1c2VyX2lkIjoiMjE1OWY2YjgtODIyOS00ZWIyLTdiODYtMDFkNzQzOTJlYmQ2In0.SRHoUu4QAU_54RtzrivEq3ymWABxR8fOruWRsIUWKek
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIiLCJpc3MiOiIiLCJzY29wZSI6WyJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMucmVhZCIsIm5vdGlmaWNhdGlvbl9wcmVmZXJlbmNlcy53cml0ZSJdLCJ1c2VyX2lkIjoiYTU4NDE0NjYtNDdkZC00NDI1LTZjZGEtY2NjMmQyNjJiNTNiIn0.tsm5vtu7qfUD6O1P59y3O1R0HzU1hm9kxUW_cpBH968
 X-Notifications-Version: 2
 ```
 #### Response 204 No Content
 ##### Headers
 ```
-Date: Tue, 13 Oct 2015 22:17:00 GMT
+Date: Wed, 14 Oct 2015 15:53:24 GMT
 ```
 
 <a name="unsubscriber-delete-client"></a>
@@ -889,13 +889,13 @@ notification_preferences.admin
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiMDY4YWY0MGUtMGIyYi04MDQ4LWJkN2ItMTg1MTUyNmZkNWMzIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo1MTEyOC9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbl9wcmVmZXJlbmNlcy5hZG1pbiJdfQ.DD91qsrGWIbGOrc6dA50KjiheNIruawzAojziJQ-BkU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJzY2ltIHBhc3N3b3JkIiwiY2xpZW50X2lkIjoiNmEyODUzMmUtNGNmYi0yNTU0LWFmZjEtYTk5MTg0NWRhMzYyIiwiaXNzIjoiaHR0cDovLzEyNy4wLjAuMTo2MzI2Mi9vYXV0aC90b2tlbiIsInNjb3BlIjpbIm5vdGlmaWNhdGlvbl9wcmVmZXJlbmNlcy5hZG1pbiJdfQ.gEln6doAkd7waLYvOxXo4WKmj-sApuj6kTRTfO2ygQ4
 X-Notifications-Version: 2
 ```
 #### Response 204 No Content
 ##### Headers
 ```
-Date: Tue, 13 Oct 2015 22:16:58 GMT
+Date: Wed, 14 Oct 2015 15:53:22 GMT
 ```
 
 <a name="unsubscriber-delete-user"></a>
@@ -907,13 +907,13 @@ notification_preferences.read notification_preferences.write
 ```
 ##### Headers
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIiLCJpc3MiOiIiLCJzY29wZSI6WyJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMucmVhZCIsIm5vdGlmaWNhdGlvbl9wcmVmZXJlbmNlcy53cml0ZSJdLCJ1c2VyX2lkIjoiMjE1OWY2YjgtODIyOS00ZWIyLTdiODYtMDFkNzQzOTJlYmQ2In0.SRHoUu4QAU_54RtzrivEq3ymWABxR8fOruWRsIUWKek
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIiLCJpc3MiOiIiLCJzY29wZSI6WyJub3RpZmljYXRpb25fcHJlZmVyZW5jZXMucmVhZCIsIm5vdGlmaWNhdGlvbl9wcmVmZXJlbmNlcy53cml0ZSJdLCJ1c2VyX2lkIjoiYTU4NDE0NjYtNDdkZC00NDI1LTZjZGEtY2NjMmQyNjJiNTNiIn0.tsm5vtu7qfUD6O1P59y3O1R0HzU1hm9kxUW_cpBH968
 X-Notifications-Version: 2
 ```
 #### Response 204 No Content
 ##### Headers
 ```
-Date: Tue, 13 Oct 2015 22:17:00 GMT
+Date: Wed, 14 Oct 2015 15:53:24 GMT
 ```
 
 
