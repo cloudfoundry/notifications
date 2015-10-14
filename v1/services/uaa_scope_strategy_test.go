@@ -8,7 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
-	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,8 +17,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 	var (
 		strategy        services.UAAScopeStrategy
 		tokenLoader     *mocks.TokenLoader
-		v1Enqueuer      *mocks.Enqueuer
-		v2Enqueuer      *mocks.V2Enqueuer
+		enqueuer        *mocks.Enqueuer
 		conn            *mocks.Connection
 		findsUserIDs    *mocks.FindsUserIDs
 		requestReceived time.Time
@@ -56,19 +54,18 @@ var _ = Describe("UAA Scope Strategy", func() {
 
 		tokenLoader = mocks.NewTokenLoader()
 		tokenLoader.LoadCall.Returns.Token = token
-		v1Enqueuer = mocks.NewEnqueuer()
-		v2Enqueuer = mocks.NewV2Enqueuer()
+		enqueuer = mocks.NewEnqueuer()
 
 		findsUserIDs = mocks.NewFindsUserIDs()
 		findsUserIDs.UserIDsBelongingToScopeCall.Returns.UserIDs = []string{"user-311"}
 
-		strategy = services.NewUAAScopeStrategy(tokenLoader, findsUserIDs, v1Enqueuer, v2Enqueuer, defaultScopes)
+		strategy = services.NewUAAScopeStrategy(tokenLoader, findsUserIDs, enqueuer, defaultScopes)
 	})
 
 	Describe("Dispatch", func() {
 		Context("when the JobType is unspecified", func() {
 			Context("when the request is valid", func() {
-				It("should call v1Enqueuer.Enqueue with the correct arguments for an UAA Scope", func() {
+				It("should call enqueuer.Enqueue with the correct arguments for an UAA Scope", func() {
 					_, err := strategy.Dispatch(services.Dispatch{
 						GUID:       "great.scope",
 						Connection: conn,
@@ -103,9 +100,9 @@ var _ = Describe("UAA Scope Strategy", func() {
 
 					users := []services.User{{GUID: "user-311"}}
 
-					Expect(v1Enqueuer.EnqueueCall.Receives.Connection).To(Equal(conn))
-					Expect(v1Enqueuer.EnqueueCall.Receives.Users).To(Equal(users))
-					Expect(v1Enqueuer.EnqueueCall.Receives.Options).To(Equal(services.Options{
+					Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(conn))
+					Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal(users))
+					Expect(enqueuer.EnqueueCall.Receives.Options).To(Equal(services.Options{
 						ReplyTo:           "reply-to@example.com",
 						Subject:           "this is the subject",
 						To:                "dr@strangelove.com",
@@ -122,80 +119,16 @@ var _ = Describe("UAA Scope Strategy", func() {
 						},
 						Endorsement: services.ScopeEndorsement,
 					}))
-					Expect(v1Enqueuer.EnqueueCall.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
-					Expect(v1Enqueuer.EnqueueCall.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
-					Expect(v1Enqueuer.EnqueueCall.Receives.Client).To(Equal("mister-client"))
-					Expect(v1Enqueuer.EnqueueCall.Receives.Scope).To(Equal("great.scope"))
-					Expect(v1Enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal("some-vcap-request-id"))
-					Expect(v1Enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceived))
-					Expect(v1Enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("uaa"))
+					Expect(enqueuer.EnqueueCall.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+					Expect(enqueuer.EnqueueCall.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+					Expect(enqueuer.EnqueueCall.Receives.Client).To(Equal("mister-client"))
+					Expect(enqueuer.EnqueueCall.Receives.Scope).To(Equal("great.scope"))
+					Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal("some-vcap-request-id"))
+					Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceived))
+					Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("uaa"))
 
 					Expect(findsUserIDs.UserIDsBelongingToScopeCall.Receives.Scope).To(Equal("great.scope"))
 					Expect(findsUserIDs.UserIDsBelongingToScopeCall.Receives.Token).To(Equal(token))
-				})
-			})
-		})
-
-		Context("when the JobType is v2", func() {
-			Context("when the request is valid", func() {
-				It("should call v2Enqueuer.Enqueue with the correct arguments for an UAA Scope", func() {
-					_, err := strategy.Dispatch(services.Dispatch{
-						JobType:    "v2",
-						GUID:       "great.scope",
-						Connection: conn,
-						Message: services.DispatchMessage{
-							To:      "dr@strangelove.com",
-							ReplyTo: "reply-to@example.com",
-							Subject: "this is the subject",
-							Text:    "Please make sure to leave your bottle in a place that is safe and dry",
-							HTML: services.HTML{
-								BodyContent:    "<p>The water bottle needs to be safe and dry</p>",
-								BodyAttributes: "some-html-body-attributes",
-								Head:           "<head></head>",
-								Doctype:        "<html>",
-							},
-						},
-						TemplateID: "some-template-id",
-						CampaignID: "some-campaign-id",
-						Kind: services.DispatchKind{
-							ID:          "forgot_waterbottle",
-							Description: "Water Bottle Reminder",
-						},
-						Client: services.DispatchClient{
-							ID:          "mister-client",
-							Description: "The Water Bottle System",
-						},
-						VCAPRequest: services.DispatchVCAPRequest{
-							ID:          "some-vcap-request-id",
-							ReceiptTime: requestReceived,
-						},
-						UAAHost: "uaa",
-					})
-					Expect(err).NotTo(HaveOccurred())
-
-					users := []queue.User{{GUID: "user-311"}}
-
-					Expect(v2Enqueuer.EnqueueCall.Receives.Connection).To(Equal(conn))
-					Expect(v2Enqueuer.EnqueueCall.Receives.Users).To(Equal(users))
-					Expect(v2Enqueuer.EnqueueCall.Receives.Options).To(Equal(queue.Options{
-						ReplyTo:           "reply-to@example.com",
-						Subject:           "this is the subject",
-						To:                "dr@strangelove.com",
-						KindID:            "forgot_waterbottle",
-						KindDescription:   "Water Bottle Reminder",
-						SourceDescription: "The Water Bottle System",
-						Text:              "Please make sure to leave your bottle in a place that is safe and dry",
-						TemplateID:        "some-template-id",
-						HTML: queue.HTML{
-							BodyContent:    "<p>The water bottle needs to be safe and dry</p>",
-							BodyAttributes: "some-html-body-attributes",
-							Head:           "<head></head>",
-							Doctype:        "<html>",
-						},
-						Endorsement: services.ScopeEndorsement,
-					}))
-					Expect(v2Enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("uaa"))
-					Expect(v2Enqueuer.EnqueueCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 				})
 			})
 		})

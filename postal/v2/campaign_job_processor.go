@@ -2,17 +2,20 @@ package v2
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
+	"github.com/cloudfoundry-incubator/notifications/v2/horde"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 )
 
-type NoStrategyError struct {
+type NoAudienceError struct {
 	Err error
 }
 
-func (e NoStrategyError) Error() string {
+func (e NoAudienceError) Error() string {
 	return e.Err.Error()
 }
 
@@ -32,25 +35,31 @@ type htmlPartsExtractor interface {
 type CampaignJobProcessor struct {
 	emailFormatter emailAddressFormatter
 	htmlExtractor  htmlPartsExtractor
+	enqueuer       enqueuer
 
-	userStrategy  dispatcher
-	spaceStrategy dispatcher
-	orgStrategy   dispatcher
-	emailStrategy dispatcher
+	emails audienceGenerator
+	spaces audienceGenerator
+	orgs   audienceGenerator
+	users  audienceGenerator
 }
 
-type dispatcher interface {
-	Dispatch(dispatch services.Dispatch) ([]services.Response, error)
+type audienceGenerator interface {
+	GenerateAudiences(inputs []string) ([]horde.Audience, error)
 }
 
-func NewCampaignJobProcessor(emailFormatter emailAddressFormatter, htmlExtractor htmlPartsExtractor, userStrategy, spaceStrategy, orgStrategy, emailStrategy dispatcher) CampaignJobProcessor {
+type enqueuer interface {
+	Enqueue(conn queue.ConnectionInterface, users []queue.User, options queue.Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time, campaignID string) []queue.Response
+}
+
+func NewCampaignJobProcessor(emailFormatter emailAddressFormatter, htmlExtractor htmlPartsExtractor, emails, spaces, orgs, users audienceGenerator, enqueuer enqueuer) CampaignJobProcessor {
 	return CampaignJobProcessor{
 		emailFormatter: emailFormatter,
 		htmlExtractor:  htmlExtractor,
-		userStrategy:   userStrategy,
-		spaceStrategy:  spaceStrategy,
-		orgStrategy:    orgStrategy,
-		emailStrategy:  emailStrategy,
+		enqueuer:       enqueuer,
+		emails:         emails,
+		spaces:         spaces,
+		orgs:           orgs,
+		users:          users,
 	}
 }
 
@@ -67,72 +76,63 @@ func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost
 		return err
 	}
 
-	for audience, audienceMembers := range campaignJob.Campaign.SendTo {
-		var recipients []recipient
-		switch audience {
-		case "emails":
-			for _, audienceMember := range audienceMembers {
-				recipients = append(recipients, recipient{
-					Email: p.emailFormatter.Format(audienceMember),
-				})
-			}
-		default:
-			for _, audienceMember := range audienceMembers {
-				recipients = append(recipients, recipient{
-					GUID: audienceMember,
-				})
-			}
-		}
-
-		strategy, err := p.findStrategy(audience)
+	var audiences []horde.Audience
+	for audienceName, audienceMembers := range campaignJob.Campaign.SendTo {
+		generator, err := p.findAudienceGenerator(audienceName)
 		if err != nil {
 			return err
 		}
 
-		for _, recipient := range recipients {
-			_, err = strategy.Dispatch(services.Dispatch{
-				JobType:    "v2",
-				UAAHost:    uaaHost,
-				GUID:       recipient.GUID,
-				Connection: conn,
-				TemplateID: campaignJob.Campaign.TemplateID,
-				CampaignID: campaignJob.Campaign.ID,
-				Client: services.DispatchClient{
-					ID: campaignJob.Campaign.ClientID,
-				},
-				Message: services.DispatchMessage{
-					To:      recipient.Email,
-					ReplyTo: campaignJob.Campaign.ReplyTo,
-					Subject: campaignJob.Campaign.Subject,
-					Text:    campaignJob.Campaign.Text,
-					HTML: services.HTML{
-						Doctype:        doctype,
-						Head:           head,
-						BodyContent:    bodyContent,
-						BodyAttributes: bodyAttributes,
-					},
-				},
-			})
-			if err != nil {
-				return err
-			}
+		aud, err := generator.GenerateAudiences(audienceMembers)
+		if err != nil {
+			return err
 		}
+
+		audiences = append(audiences, aud...)
+	}
+
+	for _, audience := range audiences {
+		var users []queue.User
+		for _, user := range audience.Users {
+			users = append(users, queue.User{
+				GUID:  user.GUID,
+				Email: user.Email,
+			})
+		}
+
+		options := queue.Options{
+			ReplyTo: campaignJob.Campaign.ReplyTo,
+			Subject: campaignJob.Campaign.Subject,
+			Text:    campaignJob.Campaign.Text,
+			HTML: queue.HTML{
+				Doctype:        doctype,
+				Head:           head,
+				BodyContent:    bodyContent,
+				BodyAttributes: bodyAttributes,
+			},
+			Endorsement: audience.Endorsement,
+			TemplateID:  campaignJob.Campaign.TemplateID,
+		}
+
+		p.enqueuer.Enqueue(conn, users, options, cf.CloudControllerSpace{},
+			cf.CloudControllerOrganization{}, campaignJob.Campaign.ClientID,
+			uaaHost, "", "", time.Time{}, campaignJob.Campaign.ID)
 	}
 
 	return nil
 }
 
-func (p CampaignJobProcessor) findStrategy(audience string) (dispatcher, error) {
+func (p CampaignJobProcessor) findAudienceGenerator(audience string) (audienceGenerator, error) {
 	switch audience {
 	case "users":
-		return p.userStrategy, nil
+		return p.users, nil
 	case "spaces":
-		return p.spaceStrategy, nil
+		return p.spaces, nil
 	case "orgs":
-		return p.orgStrategy, nil
+		return p.orgs, nil
 	case "emails":
-		return p.emailStrategy, nil
+		return p.emails, nil
 	default:
-		return nil, NoStrategyError{fmt.Errorf("Strategy for the %q audience could not be found", audience)}
+		return nil, NoAudienceError{fmt.Errorf("generator for %q audience could not be found", audience)}
 	}
 }

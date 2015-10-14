@@ -23,8 +23,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
-	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
-	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 	"github.com/gorilla/mux"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
@@ -84,7 +82,6 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	})
 
 	v1enqueuer := services.NewEnqueuer(gobbleQueue, messagesRepo)
-	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, v2models.NewMessagesRepository(clock, guidGenerator.Generate), gobble.GobbleInitializer{})
 
 	uaaClient := uaa.NewZonedUAAClient(config.UAAClientID, config.UAAClientSecret, config.VerifySSL, config.UAAPublicKey)
 	cloudController := cf.NewCloudController(config.CCHost, !config.VerifySSL)
@@ -94,12 +91,12 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	findsUserIDs := services.NewFindsUserIDs(cloudController, uaaClient)
 	allUsers := services.NewAllUsers(uaaClient)
 
-	emailStrategy := services.NewEmailStrategy(v1enqueuer, v2enqueuer)
-	userStrategy := services.NewUserStrategy(v1enqueuer, v2enqueuer)
-	spaceStrategy := services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserIDs, v1enqueuer, v2enqueuer)
-	organizationStrategy := services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserIDs, v1enqueuer, v2enqueuer)
-	everyoneStrategy := services.NewEveryoneStrategy(tokenLoader, allUsers, v1enqueuer, v2enqueuer)
-	uaaScopeStrategy := services.NewUAAScopeStrategy(tokenLoader, findsUserIDs, v1enqueuer, v2enqueuer, config.DefaultUAAScopes)
+	emailStrategy := services.NewEmailStrategy(v1enqueuer)
+	userStrategy := services.NewUserStrategy(v1enqueuer)
+	spaceStrategy := services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserIDs, v1enqueuer)
+	organizationStrategy := services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserIDs, v1enqueuer)
+	everyoneStrategy := services.NewEveryoneStrategy(tokenLoader, allUsers, v1enqueuer)
+	uaaScopeStrategy := services.NewUAAScopeStrategy(tokenLoader, findsUserIDs, v1enqueuer, config.DefaultUAAScopes)
 
 	errorWriter := webutil.NewErrorWriter()
 

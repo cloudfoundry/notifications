@@ -17,18 +17,16 @@ type SpaceStrategy struct {
 	spaceLoader        loadsSpaces
 	organizationLoader loadsOrganizations
 	findsUserIDs       spaceUserIDFinder
-	v1Enqueuer         v1Enqueuer
-	v2Enqueuer         v2Enqueuer
+	enqueuer           enqueuer
 }
 
-func NewSpaceStrategy(tokenLoader loadsTokens, spaceLoader loadsSpaces, organizationLoader loadsOrganizations, findsUserIDs spaceUserIDFinder, v1Enqueuer v1Enqueuer, v2Enqueuer v2Enqueuer) SpaceStrategy {
+func NewSpaceStrategy(tokenLoader loadsTokens, spaceLoader loadsSpaces, organizationLoader loadsOrganizations, findsUserIDs spaceUserIDFinder, enqueuer enqueuer) SpaceStrategy {
 	return SpaceStrategy{
 		tokenLoader:        tokenLoader,
 		spaceLoader:        spaceLoader,
 		organizationLoader: organizationLoader,
 		findsUserIDs:       findsUserIDs,
-		v1Enqueuer:         v1Enqueuer,
-		v2Enqueuer:         v2Enqueuer,
+		enqueuer:           enqueuer,
 	}
 }
 
@@ -79,15 +77,7 @@ func (strategy SpaceStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 		return responses, err
 	}
 
-	switch dispatch.JobType {
-	case "v2":
-		v2Users := convertToV2Users(users)
-		v2Options := convertToV2Options(options)
-
-		strategy.v2Enqueuer.Enqueue(dispatch.Connection, v2Users, v2Options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime, dispatch.CampaignID)
-	default:
-		responses = strategy.v1Enqueuer.Enqueue(dispatch.Connection, users, options, space, org, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
-	}
+	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, space, org, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

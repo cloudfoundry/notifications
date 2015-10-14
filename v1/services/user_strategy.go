@@ -5,14 +5,12 @@ import "github.com/cloudfoundry-incubator/notifications/cf"
 const UserEndorsement = "This message was sent directly to you."
 
 type UserStrategy struct {
-	v1Enqueuer v1Enqueuer
-	v2Enqueuer v2Enqueuer
+	enqueuer enqueuer
 }
 
-func NewUserStrategy(v1Enqueuer v1Enqueuer, v2Enqueuer v2Enqueuer) UserStrategy {
+func NewUserStrategy(enqueuer enqueuer) UserStrategy {
 	return UserStrategy{
-		v1Enqueuer: v1Enqueuer,
-		v2Enqueuer: v2Enqueuer,
+		enqueuer: enqueuer,
 	}
 }
 
@@ -38,15 +36,7 @@ func (strategy UserStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 	}
 	users := []User{{GUID: dispatch.GUID}}
 
-	switch dispatch.JobType {
-	case "v2":
-		v2Users := convertToV2Users(users)
-		v2Options := convertToV2Options(options)
-
-		strategy.v2Enqueuer.Enqueue(dispatch.Connection, v2Users, v2Options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime, dispatch.CampaignID)
-	default:
-		responses = strategy.v1Enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
-	}
+	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

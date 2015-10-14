@@ -8,25 +8,31 @@ import (
 )
 
 type V2Enqueuer struct {
-	EnqueueCall struct {
-		WasCalled bool
-		Receives  struct {
-			Connection      queue.ConnectionInterface
-			Users           []queue.User
-			Options         queue.Options
-			Space           cf.CloudControllerSpace
-			Org             cf.CloudControllerOrganization
-			Client          string
-			Scope           string
-			VCAPRequestID   string
-			RequestReceived time.Time
-			UAAHost         string
-			CampaignID      string
-		}
-		Returns struct {
-			Responses []queue.Response
-		}
-	}
+	EnqueueCallsCount int
+	EnqueueCalls      []V2EnqueuerEnqueueCall
+}
+
+type V2EnqueuerEnqueueCall struct {
+	Receives V2EnqueuerEnqueueCallReceives
+	Returns  V2EnqueuerEnqueueCallReturns
+}
+
+type V2EnqueuerEnqueueCallReceives struct {
+	Connection      queue.ConnectionInterface
+	Users           []queue.User
+	Options         queue.Options
+	Space           cf.CloudControllerSpace
+	Org             cf.CloudControllerOrganization
+	Client          string
+	Scope           string
+	VCAPRequestID   string
+	RequestReceived time.Time
+	UAAHost         string
+	CampaignID      string
+}
+
+type V2EnqueuerEnqueueCallReturns struct {
+	Responses []queue.Response
 }
 
 func NewV2Enqueuer() *V2Enqueuer {
@@ -36,18 +42,24 @@ func NewV2Enqueuer() *V2Enqueuer {
 func (m *V2Enqueuer) Enqueue(conn queue.ConnectionInterface, users []queue.User, options queue.Options,
 	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, uaaHost, scope, vcapRequestID string, reqReceived time.Time, campaignID string) []queue.Response {
 
-	m.EnqueueCall.Receives.Connection = conn
-	m.EnqueueCall.Receives.Users = users
-	m.EnqueueCall.Receives.Options = options
-	m.EnqueueCall.Receives.Space = space
-	m.EnqueueCall.Receives.Org = org
-	m.EnqueueCall.Receives.Client = client
-	m.EnqueueCall.Receives.UAAHost = uaaHost
-	m.EnqueueCall.Receives.Scope = scope
-	m.EnqueueCall.Receives.VCAPRequestID = vcapRequestID
-	m.EnqueueCall.Receives.RequestReceived = reqReceived
-	m.EnqueueCall.Receives.CampaignID = campaignID
+	if len(m.EnqueueCalls) <= m.EnqueueCallsCount {
+		m.EnqueueCalls = append(m.EnqueueCalls, V2EnqueuerEnqueueCall{})
+	}
 
-	m.EnqueueCall.WasCalled = true
-	return m.EnqueueCall.Returns.Responses
+	call := m.EnqueueCalls[m.EnqueueCallsCount]
+	call.Receives.Connection = conn
+	call.Receives.Users = users
+	call.Receives.Options = options
+	call.Receives.Space = space
+	call.Receives.Org = org
+	call.Receives.Client = client
+	call.Receives.UAAHost = uaaHost
+	call.Receives.Scope = scope
+	call.Receives.VCAPRequestID = vcapRequestID
+	call.Receives.RequestReceived = reqReceived
+	call.Receives.CampaignID = campaignID
+	m.EnqueueCalls[m.EnqueueCallsCount] = call
+
+	m.EnqueueCallsCount++
+	return call.Returns.Responses
 }

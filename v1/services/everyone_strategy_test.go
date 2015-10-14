@@ -8,7 +8,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
-	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -20,8 +19,7 @@ var _ = Describe("Everyone Strategy", func() {
 		tokenLoader         *mocks.TokenLoader
 		token               string
 		allUsers            *mocks.AllUsers
-		v1Enqueuer          *mocks.Enqueuer
-		v2Enqueuer          *mocks.V2Enqueuer
+		enqueuer            *mocks.Enqueuer
 		conn                *mocks.Connection
 		requestReceivedTime time.Time
 	)
@@ -42,11 +40,10 @@ var _ = Describe("Everyone Strategy", func() {
 
 		token = helpers.BuildToken(tokenHeader, tokenClaims)
 		tokenLoader.LoadCall.Returns.Token = token
-		v1Enqueuer = mocks.NewEnqueuer()
-		v2Enqueuer = mocks.NewV2Enqueuer()
+		enqueuer = mocks.NewEnqueuer()
 		allUsers = mocks.NewAllUsers()
 		allUsers.AllUserGUIDsCall.Returns.GUIDs = []string{"user-380", "user-319"}
-		strategy = services.NewEveryoneStrategy(tokenLoader, allUsers, v1Enqueuer, v2Enqueuer)
+		strategy = services.NewEveryoneStrategy(tokenLoader, allUsers, enqueuer)
 	})
 
 	Describe("Dispatch", func() {
@@ -88,9 +85,9 @@ var _ = Describe("Everyone Strategy", func() {
 					users = append(users, services.User{GUID: guid})
 				}
 
-				Expect(v1Enqueuer.EnqueueCall.Receives.Connection).To(Equal(conn))
-				Expect(v1Enqueuer.EnqueueCall.Receives.Users).To(Equal(users))
-				Expect(v1Enqueuer.EnqueueCall.Receives.Options).To(Equal(services.Options{
+				Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(conn))
+				Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal(users))
+				Expect(enqueuer.EnqueueCall.Receives.Options).To(Equal(services.Options{
 					ReplyTo:           "reply-to@example.com",
 					Subject:           "this is the subject",
 					To:                "dr@strangelove.com",
@@ -107,80 +104,16 @@ var _ = Describe("Everyone Strategy", func() {
 					},
 					Endorsement: services.EveryoneEndorsement,
 				}))
-				Expect(v1Enqueuer.EnqueueCall.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
-				Expect(v1Enqueuer.EnqueueCall.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
-				Expect(v1Enqueuer.EnqueueCall.Receives.Client).To(Equal("my-client"))
-				Expect(v1Enqueuer.EnqueueCall.Receives.Scope).To(Equal(""))
-				Expect(v1Enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal("some-vcap-request-id"))
-				Expect(v1Enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("my-uaa-host"))
-				Expect(v1Enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceivedTime))
+				Expect(enqueuer.EnqueueCall.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+				Expect(enqueuer.EnqueueCall.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+				Expect(enqueuer.EnqueueCall.Receives.Client).To(Equal("my-client"))
+				Expect(enqueuer.EnqueueCall.Receives.Scope).To(Equal(""))
+				Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal("some-vcap-request-id"))
+				Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("my-uaa-host"))
+				Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(requestReceivedTime))
 				Expect(allUsers.AllUserGUIDsCall.Receives.Token).To(Equal(token))
 
 				Expect(tokenLoader.LoadCall.Receives.UAAHost).To(Equal("my-uaa-host"))
-			})
-		})
-
-		Context("when the dispatch JobType is v2", func() {
-			It("call enqueuer.Enqueue with the correct arguments for an organization", func() {
-				_, err := strategy.Dispatch(services.Dispatch{
-					JobType:    "v2",
-					Connection: conn,
-					Kind: services.DispatchKind{
-						ID:          "welcome_user",
-						Description: "Your Official Welcome",
-					},
-					TemplateID: "some-template-id",
-					CampaignID: "some-campaign-id",
-					Client: services.DispatchClient{
-						ID:          "my-client",
-						Description: "Welcome system",
-					},
-					Message: services.DispatchMessage{
-						ReplyTo: "reply-to@example.com",
-						Subject: "this is the subject",
-						To:      "dr@strangelove.com",
-						Text:    "Welcome to the system, now get off my lawn.",
-						HTML: services.HTML{
-							BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
-							BodyAttributes: "some-html-body-attributes",
-							Head:           "<head></head>",
-							Doctype:        "<html>",
-						},
-					},
-					UAAHost: "my-uaa-host",
-					VCAPRequest: services.DispatchVCAPRequest{
-						ID:          "some-vcap-request-id",
-						ReceiptTime: requestReceivedTime,
-					},
-				})
-				Expect(err).NotTo(HaveOccurred())
-
-				var users []queue.User
-				for _, guid := range allUsers.AllUserGUIDsCall.Returns.GUIDs {
-					users = append(users, queue.User{GUID: guid})
-				}
-
-				Expect(v2Enqueuer.EnqueueCall.Receives.Connection).To(Equal(conn))
-				Expect(v2Enqueuer.EnqueueCall.Receives.Users).To(Equal(users))
-				Expect(v2Enqueuer.EnqueueCall.Receives.Options).To(Equal(queue.Options{
-					ReplyTo:           "reply-to@example.com",
-					Subject:           "this is the subject",
-					To:                "dr@strangelove.com",
-					KindID:            "welcome_user",
-					KindDescription:   "Your Official Welcome",
-					SourceDescription: "Welcome system",
-					Text:              "Welcome to the system, now get off my lawn.",
-					TemplateID:        "some-template-id",
-					HTML: queue.HTML{
-						BodyContent:    "<p>Welcome to the system, now get off my lawn.</p>",
-						BodyAttributes: "some-html-body-attributes",
-						Head:           "<head></head>",
-						Doctype:        "<html>",
-					},
-					Endorsement: services.EveryoneEndorsement,
-				}))
-				Expect(v2Enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("my-uaa-host"))
-				Expect(v2Enqueuer.EnqueueCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 			})
 		})
 	})

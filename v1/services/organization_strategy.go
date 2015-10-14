@@ -19,17 +19,15 @@ type OrganizationStrategy struct {
 	tokenLoader        loadsTokens
 	organizationLoader loadsOrganizations
 	findsUserIDs       orgUserIDFinder
-	v1Enqueuer         v1Enqueuer
-	v2Enqueuer         v2Enqueuer
+	enqueuer           enqueuer
 }
 
-func NewOrganizationStrategy(tokenLoader loadsTokens, organizationLoader loadsOrganizations, findsUserIDs orgUserIDFinder, queue v1Enqueuer, v2Enqueuer v2Enqueuer) OrganizationStrategy {
+func NewOrganizationStrategy(tokenLoader loadsTokens, organizationLoader loadsOrganizations, findsUserIDs orgUserIDFinder, queue enqueuer) OrganizationStrategy {
 	return OrganizationStrategy{
 		tokenLoader:        tokenLoader,
 		organizationLoader: organizationLoader,
 		findsUserIDs:       findsUserIDs,
-		v1Enqueuer:         queue,
-		v2Enqueuer:         v2Enqueuer,
+		enqueuer:           queue,
 	}
 }
 
@@ -78,15 +76,7 @@ func (strategy OrganizationStrategy) Dispatch(dispatch Dispatch) ([]Response, er
 		users = append(users, User{GUID: guid})
 	}
 
-	switch dispatch.JobType {
-	case "v2":
-		v2Users := convertToV2Users(users)
-		v2Options := convertToV2Options(options)
-
-		strategy.v2Enqueuer.Enqueue(dispatch.Connection, v2Users, v2Options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime, dispatch.CampaignID)
-	default:
-		responses = strategy.v1Enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, organization, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
-	}
+	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, organization, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }

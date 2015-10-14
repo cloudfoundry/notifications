@@ -19,6 +19,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
+	"github.com/cloudfoundry-incubator/notifications/v2/horde"
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 	"github.com/pivotal-golang/conceal"
@@ -87,7 +88,6 @@ func Boot(mom mother, config Config) {
 	messagesRepository := v2models.NewMessagesRepository(util.NewClock(), guidGenerator.Generate)
 	gobbleInitializer := gobble.GobbleInitializer{}
 
-	v1enqueuer := services.NewEnqueuer(gobbleQueue, messagesRepo)
 	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, messagesRepository, gobbleInitializer)
 
 	cloudController := cf.NewCloudController(config.CCHost, !config.VerifySSL)
@@ -95,10 +95,11 @@ func Boot(mom mother, config Config) {
 	organizationLoader := services.NewOrganizationLoader(cloudController)
 	findsUserIDs := services.NewFindsUserIDs(cloudController, uaaClient)
 
-	orgStrategy := services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserIDs, v1enqueuer, v2enqueuer)
-	spaceStrategy := services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserIDs, v1enqueuer, v2enqueuer)
-	userStrategy := services.NewUserStrategy(v1enqueuer, v2enqueuer)
-	emailStrategy := services.NewEmailStrategy(v1enqueuer, v2enqueuer)
+	usersAudienceGenerator := horde.NewUsers()
+	emailsAudienceGenerator := horde.NewEmails()
+	spacesAudienceGenerator := horde.NewSpaces(findsUserIDs, organizationLoader, spaceLoader, tokenLoader, config.UAAHost)
+	orgsAudienceGenerator := horde.NewOrganizations(findsUserIDs, organizationLoader, tokenLoader, config.UAAHost)
+
 	v2database := v2models.NewDatabase(sqlDatabase, v2models.Config{})
 	v2messageStatusUpdater := v2.NewV2MessageStatusUpdater(messagesRepository)
 	unsubscribersRepository := v2models.NewUnsubscribersRepository(guidGenerator.Generate)
@@ -107,7 +108,8 @@ func Boot(mom mother, config Config) {
 	templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
 	v2TemplateLoader := v2.NewTemplatesLoader(v2database, templatesCollection)
 	v2deliveryFailureHandler := common.NewDeliveryFailureHandler()
-	campaignJobProcessor := v2.NewCampaignJobProcessor(notify.EmailFormatter{}, notify.HTMLExtractor{}, userStrategy, spaceStrategy, orgStrategy, emailStrategy)
+	campaignJobProcessor := v2.NewCampaignJobProcessor(notify.EmailFormatter{}, notify.HTMLExtractor{},
+		emailsAudienceGenerator, spacesAudienceGenerator, orgsAudienceGenerator, usersAudienceGenerator, v2enqueuer)
 
 	WorkerGenerator{
 		InstanceIndex: config.InstanceIndex,

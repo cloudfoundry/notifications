@@ -2,13 +2,15 @@ package v2_test
 
 import (
 	"errors"
+	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/postal/v2"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
+	"github.com/cloudfoundry-incubator/notifications/v2/horde"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 
 	. "github.com/onsi/ginkgo"
@@ -17,96 +19,44 @@ import (
 
 var _ = Describe("CampaignJobProcessor", func() {
 	var (
-		processor     v2.CampaignJobProcessor
-		userStrategy  *mocks.Strategy
-		spaceStrategy *mocks.Strategy
-		orgStrategy   *mocks.Strategy
-		emailStrategy *mocks.Strategy
-		database      *mocks.Database
+		processor                   v2.CampaignJobProcessor
+		database                    *mocks.Database
+		connection                  *mocks.Connection
+		enqueuer                    *mocks.V2Enqueuer
+		users, orgs, emails, spaces *mocks.Audiences
 	)
+
 	BeforeEach(func() {
-		userStrategy = mocks.NewStrategy()
-		spaceStrategy = mocks.NewStrategy()
-		orgStrategy = mocks.NewStrategy()
-		emailStrategy = mocks.NewStrategy()
 		database = mocks.NewDatabase()
-		processor = v2.NewCampaignJobProcessor(notify.EmailFormatter{}, notify.HTMLExtractor{}, userStrategy, spaceStrategy, orgStrategy, emailStrategy)
+		connection = mocks.NewConnection()
+		database.ConnectionCall.Returns.Connection = connection
+
+		enqueuer = mocks.NewV2Enqueuer()
+		emails = mocks.NewAudiences()
+		spaces = mocks.NewAudiences()
+		orgs = mocks.NewAudiences()
+		users = mocks.NewAudiences()
+		processor = v2.NewCampaignJobProcessor(notify.EmailFormatter{},
+			notify.HTMLExtractor{}, emails, spaces, orgs, users, enqueuer)
 	})
 
-	Context("when dispatching to a user", func() {
-		It("determines the strategy and calls it", func() {
-			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
-				Campaign: collections.Campaign{
-					ID:             "some-id",
-					SendTo:         map[string][]string{"users": {"some-user-guid", "some-other-user-guid"}},
-					CampaignTypeID: "some-campaign-type-id",
-					Text:           "some-text",
-					HTML:           "<h1>my-html</h1>",
-					Subject:        "The Best subject",
-					TemplateID:     "some-template-id",
-					ReplyTo:        "noreply@example.com",
-					ClientID:       "some-client-id",
+	Context("when the audience is users", func() {
+		It("enqueues a job based on the users audience", func() {
+			users.GenerateAudiencesCall.Returns.Audiences = []horde.Audience{
+				{
+					Users: []horde.User{
+						{GUID: "some-user-guid"},
+						{GUID: "some-other-user-guid"},
+					},
+					Endorsement: "some endorsement",
 				},
-			}))
-			Expect(err).NotTo(HaveOccurred())
-
-			var dispatches []services.Dispatch
-			for _, dispatchCall := range userStrategy.DispatchCalls {
-				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
 			}
 
-			Expect(dispatches).To(ConsistOf([]services.Dispatch{
-				{
-					JobType:    "v2",
-					GUID:       "some-user-guid",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
-					},
-					Message: services.DispatchMessage{
-						To:      "",
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: services.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-					},
-				},
-				{
-					JobType:    "v2",
-					GUID:       "some-other-user-guid",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
-					},
-					Message: services.DispatchMessage{
-						To:      "",
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: services.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-					},
-				},
-			}))
-		})
-	})
-
-	Context("when dispatching to an email", func() {
-		It("determines the strategy and calls it", func() {
 			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID: "some-id",
 					SendTo: map[string][]string{
-						"emails": {"test1@example.com", "test2@example.com"},
+						"users": {"some-user-guid", "some-other-user-guid"},
 					},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
@@ -119,58 +69,136 @@ var _ = Describe("CampaignJobProcessor", func() {
 			}))
 			Expect(err).NotTo(HaveOccurred())
 
-			var dispatches []services.Dispatch
-			for _, dispatchCall := range emailStrategy.DispatchCalls {
-				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
-			}
-
-			Expect(dispatches).To(ConsistOf([]services.Dispatch{
-				{
-					JobType:    "v2",
-					GUID:       "",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
-					},
-					Message: services.DispatchMessage{
-						To:      "test1@example.com",
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: services.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-					},
-				},
-				{
-					JobType:    "v2",
-					GUID:       "",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
-					},
-					Message: services.DispatchMessage{
-						To:      "test2@example.com",
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: services.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-					},
-				},
+			Expect(users.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
+				"some-user-guid",
+				"some-other-user-guid",
 			}))
+
+			Expect(enqueuer.EnqueueCalls).To(HaveLen(1))
+			call := enqueuer.EnqueueCalls[0]
+
+			Expect(call.Receives.Connection).To(Equal(connection))
+			Expect(call.Receives.Users).To(Equal([]queue.User{
+				{GUID: "some-user-guid"},
+				{GUID: "some-other-user-guid"},
+			}))
+			Expect(call.Receives.Options).To(Equal(queue.Options{
+				ReplyTo:           "noreply@example.com",
+				Subject:           "The Best subject",
+				KindDescription:   "",
+				SourceDescription: "",
+				Text:              "some-text",
+				HTML: queue.HTML{
+					BodyContent:    "<h1>my-html</h1>",
+					BodyAttributes: "",
+					Head:           "",
+					Doctype:        "",
+				},
+				KindID:      "",
+				To:          "",
+				Role:        "",
+				Endorsement: "some endorsement",
+				TemplateID:  "some-template-id",
+			}))
+			Expect(call.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(call.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(call.Receives.Client).To(Equal("some-client-id"))
+			Expect(call.Receives.UAAHost).To(Equal("some-uaa-host"))
+			Expect(call.Receives.Scope).To(Equal(""))
+			Expect(call.Receives.VCAPRequestID).To(Equal(""))
+			Expect(call.Receives.RequestReceived).To(Equal(time.Time{}))
+			Expect(call.Receives.CampaignID).To(Equal("some-id"))
 		})
 	})
 
-	Context("when dispatching to a space", func() {
-		It("determines the strategy and calls it", func() {
+	Context("when the audience is emails", func() {
+		It("enqueues a job based on the emails audience", func() {
+			emails.GenerateAudiencesCall.Returns.Audiences = []horde.Audience{
+				{
+					Users: []horde.User{
+						{Email: "some-user@example.com"},
+						{Email: "some-other-user@example.com"},
+					},
+					Endorsement: "some endorsement",
+				},
+			}
+
+			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+				Campaign: collections.Campaign{
+					ID: "some-id",
+					SendTo: map[string][]string{
+						"emails": {"some-user@example.com", "some-other-user@example.com"},
+					},
+					CampaignTypeID: "some-campaign-type-id",
+					Text:           "some-text",
+					HTML:           "<h1>my-html</h1>",
+					Subject:        "The Best subject",
+					TemplateID:     "some-template-id",
+					ReplyTo:        "noreply@example.com",
+					ClientID:       "some-client-id",
+				},
+			}))
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(emails.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
+				"some-user@example.com",
+				"some-other-user@example.com",
+			}))
+
+			Expect(enqueuer.EnqueueCalls).To(HaveLen(1))
+			call := enqueuer.EnqueueCalls[0]
+
+			Expect(call.Receives.Connection).To(Equal(connection))
+			Expect(call.Receives.Users).To(Equal([]queue.User{
+				{Email: "some-user@example.com"},
+				{Email: "some-other-user@example.com"},
+			}))
+			Expect(call.Receives.Options).To(Equal(queue.Options{
+				ReplyTo:           "noreply@example.com",
+				Subject:           "The Best subject",
+				KindDescription:   "",
+				SourceDescription: "",
+				Text:              "some-text",
+				HTML: queue.HTML{
+					BodyContent:    "<h1>my-html</h1>",
+					BodyAttributes: "",
+					Head:           "",
+					Doctype:        "",
+				},
+				KindID:      "",
+				To:          "",
+				Role:        "",
+				Endorsement: "some endorsement",
+				TemplateID:  "some-template-id",
+			}))
+			Expect(call.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(call.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(call.Receives.Client).To(Equal("some-client-id"))
+			Expect(call.Receives.UAAHost).To(Equal("some-uaa-host"))
+			Expect(call.Receives.Scope).To(Equal(""))
+			Expect(call.Receives.VCAPRequestID).To(Equal(""))
+			Expect(call.Receives.RequestReceived).To(Equal(time.Time{}))
+			Expect(call.Receives.CampaignID).To(Equal("some-id"))
+		})
+	})
+
+	Context("when the audience is spaces", func() {
+		It("enqueues jobs based on the spaces audience", func() {
+			spaces.GenerateAudiencesCall.Returns.Audiences = []horde.Audience{
+				{
+					Users: []horde.User{
+						{GUID: "some-user-guid-for-space"},
+					},
+					Endorsement: "some endorsement",
+				},
+				{
+					Users: []horde.User{
+						{GUID: "some-other-user-guid-for-space"},
+					},
+					Endorsement: "some endorsement",
+				},
+			}
+
 			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID: "some-id",
@@ -188,58 +216,96 @@ var _ = Describe("CampaignJobProcessor", func() {
 			}))
 			Expect(err).NotTo(HaveOccurred())
 
-			var dispatches []services.Dispatch
-			for _, dispatchCall := range spaceStrategy.DispatchCalls {
-				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
-			}
-
-			Expect(dispatches).To(ConsistOf([]services.Dispatch{
-				{
-					JobType:    "v2",
-					GUID:       "some-space-guid",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
-					},
-					Message: services.DispatchMessage{
-						To:      "",
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: services.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-					},
-				},
-				{
-					JobType:    "v2",
-					GUID:       "some-other-space-guid",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
-					},
-					Message: services.DispatchMessage{
-						To:      "",
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: services.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-					},
-				},
+			Expect(spaces.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
+				"some-space-guid",
+				"some-other-space-guid",
 			}))
+
+			Expect(enqueuer.EnqueueCalls).To(HaveLen(2))
+
+			call1 := enqueuer.EnqueueCalls[0]
+			Expect(call1.Receives.Connection).To(Equal(connection))
+			Expect(call1.Receives.Users).To(Equal([]queue.User{
+				{GUID: "some-user-guid-for-space"},
+			}))
+			Expect(call1.Receives.Options).To(Equal(queue.Options{
+				ReplyTo:           "noreply@example.com",
+				Subject:           "The Best subject",
+				KindDescription:   "",
+				SourceDescription: "",
+				Text:              "some-text",
+				HTML: queue.HTML{
+					BodyContent:    "<h1>my-html</h1>",
+					BodyAttributes: "",
+					Head:           "",
+					Doctype:        "",
+				},
+				KindID:      "",
+				To:          "",
+				Role:        "",
+				Endorsement: "some endorsement",
+				TemplateID:  "some-template-id",
+			}))
+			Expect(call1.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(call1.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(call1.Receives.Client).To(Equal("some-client-id"))
+			Expect(call1.Receives.UAAHost).To(Equal("some-uaa-host"))
+			Expect(call1.Receives.Scope).To(Equal(""))
+			Expect(call1.Receives.VCAPRequestID).To(Equal(""))
+			Expect(call1.Receives.RequestReceived).To(Equal(time.Time{}))
+			Expect(call1.Receives.CampaignID).To(Equal("some-id"))
+
+			call2 := enqueuer.EnqueueCalls[1]
+			Expect(call2.Receives.Connection).To(Equal(connection))
+			Expect(call2.Receives.Users).To(Equal([]queue.User{
+				{GUID: "some-other-user-guid-for-space"},
+			}))
+			Expect(call2.Receives.Options).To(Equal(queue.Options{
+				ReplyTo:           "noreply@example.com",
+				Subject:           "The Best subject",
+				KindDescription:   "",
+				SourceDescription: "",
+				Text:              "some-text",
+				HTML: queue.HTML{
+					BodyContent:    "<h1>my-html</h1>",
+					BodyAttributes: "",
+					Head:           "",
+					Doctype:        "",
+				},
+				KindID:      "",
+				To:          "",
+				Role:        "",
+				Endorsement: "some endorsement",
+				TemplateID:  "some-template-id",
+			}))
+			Expect(call2.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(call2.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(call2.Receives.Client).To(Equal("some-client-id"))
+			Expect(call2.Receives.UAAHost).To(Equal("some-uaa-host"))
+			Expect(call2.Receives.Scope).To(Equal(""))
+			Expect(call2.Receives.VCAPRequestID).To(Equal(""))
+			Expect(call2.Receives.RequestReceived).To(Equal(time.Time{}))
+			Expect(call2.Receives.CampaignID).To(Equal("some-id"))
 		})
 	})
 
-	Context("when dispatching to an org", func() {
-		It("determines the strategy and calls it", func() {
+	Context("when the audience is organizations", func() {
+		It("enqueues jobs based on the organizations audience", func() {
+			orgs.GenerateAudiencesCall.Returns.Audiences = []horde.Audience{
+				{
+					Users: []horde.User{
+						{GUID: "some-user-guid-for-org"},
+					},
+					Endorsement: "some endorsement",
+				},
+				{
+					Users: []horde.User{
+						{GUID: "some-other-user-guid-for-org"},
+					},
+					Endorsement: "some endorsement",
+				},
+			}
+
 			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID: "some-id",
@@ -257,66 +323,141 @@ var _ = Describe("CampaignJobProcessor", func() {
 			}))
 			Expect(err).NotTo(HaveOccurred())
 
-			var dispatches []services.Dispatch
-			for _, dispatchCall := range orgStrategy.DispatchCalls {
-				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
-			}
-
-			Expect(dispatches).To(ConsistOf([]services.Dispatch{
-				{
-					JobType:    "v2",
-					GUID:       "some-org-guid",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
-					},
-					Message: services.DispatchMessage{
-						To:      "",
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: services.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-					},
-				},
-				{
-					JobType:    "v2",
-					GUID:       "some-other-org-guid",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
-					},
-					Message: services.DispatchMessage{
-						To:      "",
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: services.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-					},
-				},
+			Expect(orgs.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
+				"some-org-guid",
+				"some-other-org-guid",
 			}))
+
+			Expect(enqueuer.EnqueueCalls).To(HaveLen(2))
+
+			call1 := enqueuer.EnqueueCalls[0]
+			Expect(call1.Receives.Connection).To(Equal(connection))
+			Expect(call1.Receives.Users).To(Equal([]queue.User{
+				{GUID: "some-user-guid-for-org"},
+			}))
+			Expect(call1.Receives.Options).To(Equal(queue.Options{
+				ReplyTo:           "noreply@example.com",
+				Subject:           "The Best subject",
+				KindDescription:   "",
+				SourceDescription: "",
+				Text:              "some-text",
+				HTML: queue.HTML{
+					BodyContent:    "<h1>my-html</h1>",
+					BodyAttributes: "",
+					Head:           "",
+					Doctype:        "",
+				},
+				KindID:      "",
+				To:          "",
+				Role:        "",
+				Endorsement: "some endorsement",
+				TemplateID:  "some-template-id",
+			}))
+			Expect(call1.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(call1.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(call1.Receives.Client).To(Equal("some-client-id"))
+			Expect(call1.Receives.UAAHost).To(Equal("some-uaa-host"))
+			Expect(call1.Receives.Scope).To(Equal(""))
+			Expect(call1.Receives.VCAPRequestID).To(Equal(""))
+			Expect(call1.Receives.RequestReceived).To(Equal(time.Time{}))
+			Expect(call1.Receives.CampaignID).To(Equal("some-id"))
+
+			call2 := enqueuer.EnqueueCalls[1]
+			Expect(call2.Receives.Connection).To(Equal(connection))
+			Expect(call2.Receives.Users).To(Equal([]queue.User{
+				{GUID: "some-other-user-guid-for-org"},
+			}))
+			Expect(call2.Receives.Options).To(Equal(queue.Options{
+				ReplyTo:           "noreply@example.com",
+				Subject:           "The Best subject",
+				KindDescription:   "",
+				SourceDescription: "",
+				Text:              "some-text",
+				HTML: queue.HTML{
+					BodyContent:    "<h1>my-html</h1>",
+					BodyAttributes: "",
+					Head:           "",
+					Doctype:        "",
+				},
+				KindID:      "",
+				To:          "",
+				Role:        "",
+				Endorsement: "some endorsement",
+				TemplateID:  "some-template-id",
+			}))
+			Expect(call2.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(call2.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(call2.Receives.Client).To(Equal("some-client-id"))
+			Expect(call2.Receives.UAAHost).To(Equal("some-uaa-host"))
+			Expect(call2.Receives.Scope).To(Equal(""))
+			Expect(call2.Receives.VCAPRequestID).To(Equal(""))
+			Expect(call2.Receives.RequestReceived).To(Equal(time.Time{}))
+			Expect(call2.Receives.CampaignID).To(Equal("some-id"))
 		})
 	})
 
-	Context("when dispatching to many audiences", func() {
-		It("determines each strategy and calls it", func() {
+	Context("when there are multiple audience types", func() {
+		BeforeEach(func() {
+			orgs.GenerateAudiencesCall.Returns.Audiences = []horde.Audience{
+				{
+					Users: []horde.User{
+						{GUID: "some-user-guid-for-org"},
+					},
+					Endorsement: "some-org endorsement",
+				},
+				{
+					Users: []horde.User{
+						{GUID: "some-other-user-guid-for-org"},
+					},
+					Endorsement: "some-other-org endorsement",
+				},
+			}
+
+			spaces.GenerateAudiencesCall.Returns.Audiences = []horde.Audience{
+				{
+					Users: []horde.User{
+						{GUID: "some-user-guid-for-space"},
+					},
+					Endorsement: "some-space endorsement",
+				},
+				{
+					Users: []horde.User{
+						{GUID: "some-other-user-guid-for-space"},
+					},
+					Endorsement: "some-other-space endorsement",
+				},
+			}
+
+			users.GenerateAudiencesCall.Returns.Audiences = []horde.Audience{
+				{
+					Users: []horde.User{
+						{GUID: "some-user-guid"},
+						{GUID: "some-other-user-guid"},
+					},
+					Endorsement: "some users endorsement",
+				},
+			}
+
+			emails.GenerateAudiencesCall.Returns.Audiences = []horde.Audience{
+				{
+					Users: []horde.User{
+						{Email: "some-user@example.com"},
+						{Email: "some-other-user@example.com"},
+					},
+					Endorsement: "some emails endorsement",
+				},
+			}
+		})
+
+		It("enqueues jobs based on the audiences", func() {
 			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID: "some-id",
 					SendTo: map[string][]string{
-						"users":  {"some-user-guid", "some-other-user-guid"},
 						"orgs":   {"some-org-guid", "some-other-org-guid"},
 						"spaces": {"some-space-guid", "some-other-space-guid"},
-						"emails": {"test1@example.com", "test2@example.com"},
+						"users":  {"some-user-guid", "some-other-user-guid"},
+						"emails": {"some-user@example.com", "some-other-user@example.com"},
 					},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
@@ -329,180 +470,155 @@ var _ = Describe("CampaignJobProcessor", func() {
 			}))
 			Expect(err).NotTo(HaveOccurred())
 
-			var dispatches []services.Dispatch
-			for _, dispatchCall := range userStrategy.DispatchCalls {
-				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
-			}
-			for _, dispatchCall := range emailStrategy.DispatchCalls {
-				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
-			}
-			for _, dispatchCall := range orgStrategy.DispatchCalls {
-				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
-			}
-			for _, dispatchCall := range spaceStrategy.DispatchCalls {
-				dispatches = append(dispatches, dispatchCall.Receives.Dispatch)
-			}
+			Expect(orgs.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
+				"some-org-guid",
+				"some-other-org-guid",
+			}))
+			Expect(spaces.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
+				"some-space-guid",
+				"some-other-space-guid",
+			}))
+			Expect(users.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
+				"some-user-guid",
+				"some-other-user-guid",
+			}))
+			Expect(emails.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
+				"some-user@example.com",
+				"some-other-user@example.com",
+			}))
 
-			Expect(dispatches).To(ConsistOf([]services.Dispatch{
-				{
-					JobType:    "v2",
-					GUID:       "some-user-guid",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
+			Expect(enqueuer.EnqueueCalls).To(HaveLen(6))
+			Expect(enqueuer.EnqueueCalls).To(ContainElement(mocks.V2EnqueuerEnqueueCall{
+				Receives: mocks.V2EnqueuerEnqueueCallReceives{
+					Connection: connection,
+					Users: []queue.User{
+						{GUID: "some-user-guid-for-org"},
 					},
-					Message: services.DispatchMessage{
-						To:      "",
+					Options: queue.Options{
 						ReplyTo: "noreply@example.com",
 						Subject: "The Best subject",
 						Text:    "some-text",
-						HTML: services.HTML{
+						HTML: queue.HTML{
 							BodyContent: "<h1>my-html</h1>",
 						},
+						Endorsement: "some-org endorsement",
+						TemplateID:  "some-template-id",
 					},
+					Client:     "some-client-id",
+					UAAHost:    "some-uaa-host",
+					CampaignID: "some-id",
 				},
-				{
-					JobType:    "v2",
-					GUID:       "some-other-user-guid",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
+			}))
+
+			Expect(enqueuer.EnqueueCalls).To(ContainElement(mocks.V2EnqueuerEnqueueCall{
+				Receives: mocks.V2EnqueuerEnqueueCallReceives{
+					Connection: connection,
+					Users: []queue.User{
+						{GUID: "some-other-user-guid-for-org"},
 					},
-					Message: services.DispatchMessage{
-						To:      "",
+					Options: queue.Options{
 						ReplyTo: "noreply@example.com",
 						Subject: "The Best subject",
 						Text:    "some-text",
-						HTML: services.HTML{
+						HTML: queue.HTML{
 							BodyContent: "<h1>my-html</h1>",
 						},
+						Endorsement: "some-other-org endorsement",
+						TemplateID:  "some-template-id",
 					},
+					Client:     "some-client-id",
+					UAAHost:    "some-uaa-host",
+					CampaignID: "some-id",
 				},
-				{
-					JobType:    "v2",
-					GUID:       "some-org-guid",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
+			}))
+
+			Expect(enqueuer.EnqueueCalls).To(ContainElement(mocks.V2EnqueuerEnqueueCall{
+				Receives: mocks.V2EnqueuerEnqueueCallReceives{
+					Connection: connection,
+					Users: []queue.User{
+						{GUID: "some-user-guid-for-space"},
 					},
-					Message: services.DispatchMessage{
-						To:      "",
+					Options: queue.Options{
 						ReplyTo: "noreply@example.com",
 						Subject: "The Best subject",
 						Text:    "some-text",
-						HTML: services.HTML{
+						HTML: queue.HTML{
 							BodyContent: "<h1>my-html</h1>",
 						},
+						Endorsement: "some-space endorsement",
+						TemplateID:  "some-template-id",
 					},
+					Client:     "some-client-id",
+					UAAHost:    "some-uaa-host",
+					CampaignID: "some-id",
 				},
-				{
-					JobType:    "v2",
-					GUID:       "some-other-org-guid",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
+			}))
+
+			Expect(enqueuer.EnqueueCalls).To(ContainElement(mocks.V2EnqueuerEnqueueCall{
+				Receives: mocks.V2EnqueuerEnqueueCallReceives{
+					Connection: connection,
+					Users: []queue.User{
+						{GUID: "some-other-user-guid-for-space"},
 					},
-					Message: services.DispatchMessage{
-						To:      "",
+					Options: queue.Options{
 						ReplyTo: "noreply@example.com",
 						Subject: "The Best subject",
 						Text:    "some-text",
-						HTML: services.HTML{
+						HTML: queue.HTML{
 							BodyContent: "<h1>my-html</h1>",
 						},
+						Endorsement: "some-other-space endorsement",
+						TemplateID:  "some-template-id",
 					},
+					Client:     "some-client-id",
+					UAAHost:    "some-uaa-host",
+					CampaignID: "some-id",
 				},
-				{
-					JobType:    "v2",
-					GUID:       "some-space-guid",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
+			}))
+
+			Expect(enqueuer.EnqueueCalls).To(ContainElement(mocks.V2EnqueuerEnqueueCall{
+				Receives: mocks.V2EnqueuerEnqueueCallReceives{
+					Connection: connection,
+					Users: []queue.User{
+						{GUID: "some-user-guid"},
+						{GUID: "some-other-user-guid"},
 					},
-					Message: services.DispatchMessage{
-						To:      "",
+					Options: queue.Options{
 						ReplyTo: "noreply@example.com",
 						Subject: "The Best subject",
 						Text:    "some-text",
-						HTML: services.HTML{
+						HTML: queue.HTML{
 							BodyContent: "<h1>my-html</h1>",
 						},
+						Endorsement: "some users endorsement",
+						TemplateID:  "some-template-id",
 					},
+					Client:     "some-client-id",
+					UAAHost:    "some-uaa-host",
+					CampaignID: "some-id",
 				},
-				{
-					JobType:    "v2",
-					GUID:       "some-other-space-guid",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
+			}))
+
+			Expect(enqueuer.EnqueueCalls).To(ContainElement(mocks.V2EnqueuerEnqueueCall{
+				Receives: mocks.V2EnqueuerEnqueueCallReceives{
+					Connection: connection,
+					Users: []queue.User{
+						{Email: "some-user@example.com"},
+						{Email: "some-other-user@example.com"},
 					},
-					Message: services.DispatchMessage{
-						To:      "",
+					Options: queue.Options{
 						ReplyTo: "noreply@example.com",
 						Subject: "The Best subject",
 						Text:    "some-text",
-						HTML: services.HTML{
+						HTML: queue.HTML{
 							BodyContent: "<h1>my-html</h1>",
 						},
+						Endorsement: "some emails endorsement",
+						TemplateID:  "some-template-id",
 					},
-				},
-				{
-					JobType:    "v2",
-					GUID:       "",
+					Client:     "some-client-id",
 					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
 					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
-					},
-					Message: services.DispatchMessage{
-						To:      "test1@example.com",
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: services.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-					},
-				},
-				{
-					JobType:    "v2",
-					GUID:       "",
-					UAAHost:    "some-uaa-host",
-					Connection: database.Connection(),
-					TemplateID: "some-template-id",
-					CampaignID: "some-id",
-					Client: services.DispatchClient{
-						ID: "some-client-id",
-					},
-					Message: services.DispatchMessage{
-						To:      "test2@example.com",
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: services.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-					},
 				},
 			}))
 		})
@@ -516,19 +632,6 @@ var _ = Describe("CampaignJobProcessor", func() {
 			})
 		})
 
-		Context("when dispatch errors", func() {
-			It("returns the error", func() {
-				spaceStrategy.DispatchCalls = append(spaceStrategy.DispatchCalls, mocks.NewStrategyDispatchCall([]services.Response{}, errors.New("some error")))
-
-				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
-					Campaign: collections.Campaign{
-						SendTo: map[string][]string{"spaces": {"some-space-guid"}},
-					},
-				}))
-				Expect(err).To(MatchError(errors.New("some error")))
-			})
-		})
-
 		Context("when the audience is not found", func() {
 			It("returns an error", func() {
 				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
@@ -536,7 +639,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 						SendTo: map[string][]string{"some-audience": {"wut"}},
 					},
 				}))
-				Expect(err).To(MatchError(v2.NoStrategyError{errors.New("Strategy for the \"some-audience\" audience could not be found")}))
+				Expect(err).To(MatchError(v2.NoAudienceError{errors.New("generator for \"some-audience\" audience could not be found")}))
 			})
 		})
 
@@ -544,7 +647,8 @@ var _ = Describe("CampaignJobProcessor", func() {
 			It("returns an error", func() {
 				htmlExtractor := mocks.NewHTMLExtractor()
 				htmlExtractor.ExtractCall.Returns.Error = errors.New("some extraction error")
-				processor = v2.NewCampaignJobProcessor(notify.EmailFormatter{}, htmlExtractor, userStrategy, spaceStrategy, orgStrategy, emailStrategy)
+				processor = v2.NewCampaignJobProcessor(notify.EmailFormatter{},
+					htmlExtractor, emails, spaces, orgs, users, enqueuer)
 
 				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
 					Campaign: collections.Campaign{
@@ -552,6 +656,19 @@ var _ = Describe("CampaignJobProcessor", func() {
 					},
 				}))
 				Expect(err).To(MatchError(errors.New("some extraction error")))
+			})
+		})
+
+		Context("when the generator fails to generate an audience", func() {
+			It("returns an error", func() {
+				emails.GenerateAudiencesCall.Returns.Error = errors.New("emails failure")
+
+				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+					Campaign: collections.Campaign{
+						SendTo: map[string][]string{"emails": {"wut@example.com"}},
+					},
+				}))
+				Expect(err).To(MatchError(errors.New("emails failure")))
 			})
 		})
 	})

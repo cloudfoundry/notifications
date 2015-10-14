@@ -11,17 +11,15 @@ type scopeUserIDFinder interface {
 type UAAScopeStrategy struct {
 	findsUserIDs  scopeUserIDFinder
 	tokenLoader   loadsTokens
-	v1Enqueuer    v1Enqueuer
-	v2Enqueuer    v2Enqueuer
+	enqueuer      enqueuer
 	defaultScopes []string
 }
 
-func NewUAAScopeStrategy(tokenLoader loadsTokens, findsUserIDs scopeUserIDFinder, v1Enqueuer v1Enqueuer, v2Enqueuer v2Enqueuer, defaultScopes []string) UAAScopeStrategy {
+func NewUAAScopeStrategy(tokenLoader loadsTokens, findsUserIDs scopeUserIDFinder, enqueuer enqueuer, defaultScopes []string) UAAScopeStrategy {
 	return UAAScopeStrategy{
 		findsUserIDs:  findsUserIDs,
 		tokenLoader:   tokenLoader,
-		v1Enqueuer:    v1Enqueuer,
-		v2Enqueuer:    v2Enqueuer,
+		enqueuer:      enqueuer,
 		defaultScopes: defaultScopes,
 	}
 }
@@ -65,15 +63,7 @@ func (strategy UAAScopeStrategy) Dispatch(dispatch Dispatch) ([]Response, error)
 		users = append(users, User{GUID: guid})
 	}
 
-	switch dispatch.JobType {
-	case "v2":
-		v2Users := convertToV2Users(users)
-		v2Options := convertToV2Options(options)
-
-		strategy.v2Enqueuer.Enqueue(dispatch.Connection, v2Users, v2Options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime, dispatch.CampaignID)
-	default:
-		responses = strategy.v1Enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, dispatch.GUID, dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
-	}
+	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, dispatch.GUID, dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
 
 	return responses, nil
 }
