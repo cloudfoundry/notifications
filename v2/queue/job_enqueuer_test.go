@@ -67,11 +67,17 @@ var _ = Describe("JobEnqueuer", func() {
 		space = cf.CloudControllerSpace{Name: "the-space"}
 		org = cf.CloudControllerOrganization{Name: "the-org"}
 		reqReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:40:12.207187819-07:00")
+		reqReceived = reqReceived.UTC()
 	})
 
 	Describe("Enqueue", func() {
 		It("enqueues jobs with the deliveries", func() {
-			users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
+			users := []queue.User{
+				{GUID: "user-1", Endorsement: "endores 1"},
+				{GUID: "user-2", Endorsement: "endores 2"},
+				{GUID: "user-3", Endorsement: "endores 3"},
+				{GUID: "user-4", Endorsement: "endores 4"},
+			}
 			enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
 			var deliveries []queue.Delivery
@@ -88,7 +94,7 @@ var _ = Describe("JobEnqueuer", func() {
 			Expect(deliveries).To(ConsistOf([]queue.Delivery{
 				{
 					JobType:         "v2",
-					Options:         queue.Options{},
+					Options:         queue.Options{Endorsement: "endores 1"},
 					UserGUID:        "user-1",
 					Space:           space,
 					Organization:    org,
@@ -102,7 +108,7 @@ var _ = Describe("JobEnqueuer", func() {
 				},
 				{
 					JobType:         "v2",
-					Options:         queue.Options{},
+					Options:         queue.Options{Endorsement: "endores 2"},
 					UserGUID:        "user-2",
 					Space:           space,
 					Organization:    org,
@@ -116,7 +122,7 @@ var _ = Describe("JobEnqueuer", func() {
 				},
 				{
 					JobType:         "v2",
-					Options:         queue.Options{},
+					Options:         queue.Options{Endorsement: "endores 3"},
 					UserGUID:        "user-3",
 					Space:           space,
 					Organization:    org,
@@ -130,7 +136,7 @@ var _ = Describe("JobEnqueuer", func() {
 				},
 				{
 					JobType:         "v2",
-					Options:         queue.Options{},
+					Options:         queue.Options{Endorsement: "endores 4"},
 					UserGUID:        "user-4",
 					Space:           space,
 					Organization:    org,

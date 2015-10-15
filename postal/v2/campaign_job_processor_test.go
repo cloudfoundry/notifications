@@ -74,15 +74,12 @@ var _ = Describe("CampaignJobProcessor", func() {
 				"some-other-user-guid",
 			}))
 
-			Expect(enqueuer.EnqueueCalls).To(HaveLen(1))
-			call := enqueuer.EnqueueCalls[0]
-
-			Expect(call.Receives.Connection).To(Equal(connection))
-			Expect(call.Receives.Users).To(Equal([]queue.User{
-				{GUID: "some-user-guid"},
-				{GUID: "some-other-user-guid"},
+			Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(connection))
+			Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal([]queue.User{
+				{GUID: "some-user-guid", Endorsement: "some endorsement"},
+				{GUID: "some-other-user-guid", Endorsement: "some endorsement"},
 			}))
-			Expect(call.Receives.Options).To(Equal(queue.Options{
+			Expect(enqueuer.EnqueueCall.Receives.Options).To(Equal(queue.Options{
 				ReplyTo:           "noreply@example.com",
 				Subject:           "The Best subject",
 				KindDescription:   "",
@@ -97,17 +94,17 @@ var _ = Describe("CampaignJobProcessor", func() {
 				KindID:      "",
 				To:          "",
 				Role:        "",
-				Endorsement: "some endorsement",
+				Endorsement: "",
 				TemplateID:  "some-template-id",
 			}))
-			Expect(call.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
-			Expect(call.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
-			Expect(call.Receives.Client).To(Equal("some-client-id"))
-			Expect(call.Receives.UAAHost).To(Equal("some-uaa-host"))
-			Expect(call.Receives.Scope).To(Equal(""))
-			Expect(call.Receives.VCAPRequestID).To(Equal(""))
-			Expect(call.Receives.RequestReceived).To(Equal(time.Time{}))
-			Expect(call.Receives.CampaignID).To(Equal("some-id"))
+			Expect(enqueuer.EnqueueCall.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(enqueuer.EnqueueCall.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(enqueuer.EnqueueCall.Receives.Client).To(Equal("some-client-id"))
+			Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("some-uaa-host"))
+			Expect(enqueuer.EnqueueCall.Receives.Scope).To(Equal(""))
+			Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal(""))
+			Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(time.Time{}))
+			Expect(enqueuer.EnqueueCall.Receives.CampaignID).To(Equal("some-id"))
 		})
 	})
 
@@ -145,15 +142,12 @@ var _ = Describe("CampaignJobProcessor", func() {
 				"some-other-user@example.com",
 			}))
 
-			Expect(enqueuer.EnqueueCalls).To(HaveLen(1))
-			call := enqueuer.EnqueueCalls[0]
-
-			Expect(call.Receives.Connection).To(Equal(connection))
-			Expect(call.Receives.Users).To(Equal([]queue.User{
-				{Email: "some-user@example.com"},
-				{Email: "some-other-user@example.com"},
+			Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(connection))
+			Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal([]queue.User{
+				{Email: "some-user@example.com", Endorsement: "some endorsement"},
+				{Email: "some-other-user@example.com", Endorsement: "some endorsement"},
 			}))
-			Expect(call.Receives.Options).To(Equal(queue.Options{
+			Expect(enqueuer.EnqueueCall.Receives.Options).To(Equal(queue.Options{
 				ReplyTo:           "noreply@example.com",
 				Subject:           "The Best subject",
 				KindDescription:   "",
@@ -168,17 +162,17 @@ var _ = Describe("CampaignJobProcessor", func() {
 				KindID:      "",
 				To:          "",
 				Role:        "",
-				Endorsement: "some endorsement",
+				Endorsement: "",
 				TemplateID:  "some-template-id",
 			}))
-			Expect(call.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
-			Expect(call.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
-			Expect(call.Receives.Client).To(Equal("some-client-id"))
-			Expect(call.Receives.UAAHost).To(Equal("some-uaa-host"))
-			Expect(call.Receives.Scope).To(Equal(""))
-			Expect(call.Receives.VCAPRequestID).To(Equal(""))
-			Expect(call.Receives.RequestReceived).To(Equal(time.Time{}))
-			Expect(call.Receives.CampaignID).To(Equal("some-id"))
+			Expect(enqueuer.EnqueueCall.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(enqueuer.EnqueueCall.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(enqueuer.EnqueueCall.Receives.Client).To(Equal("some-client-id"))
+			Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("some-uaa-host"))
+			Expect(enqueuer.EnqueueCall.Receives.Scope).To(Equal(""))
+			Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal(""))
+			Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(time.Time{}))
+			Expect(enqueuer.EnqueueCall.Receives.CampaignID).To(Equal("some-id"))
 		})
 	})
 
@@ -221,14 +215,12 @@ var _ = Describe("CampaignJobProcessor", func() {
 				"some-other-space-guid",
 			}))
 
-			Expect(enqueuer.EnqueueCalls).To(HaveLen(2))
-
-			call1 := enqueuer.EnqueueCalls[0]
-			Expect(call1.Receives.Connection).To(Equal(connection))
-			Expect(call1.Receives.Users).To(Equal([]queue.User{
-				{GUID: "some-user-guid-for-space"},
+			Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(connection))
+			Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal([]queue.User{
+				{GUID: "some-user-guid-for-space", Endorsement: "some endorsement"},
+				{GUID: "some-other-user-guid-for-space", Endorsement: "some endorsement"},
 			}))
-			Expect(call1.Receives.Options).To(Equal(queue.Options{
+			Expect(enqueuer.EnqueueCall.Receives.Options).To(Equal(queue.Options{
 				ReplyTo:           "noreply@example.com",
 				Subject:           "The Best subject",
 				KindDescription:   "",
@@ -243,49 +235,17 @@ var _ = Describe("CampaignJobProcessor", func() {
 				KindID:      "",
 				To:          "",
 				Role:        "",
-				Endorsement: "some endorsement",
+				Endorsement: "",
 				TemplateID:  "some-template-id",
 			}))
-			Expect(call1.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
-			Expect(call1.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
-			Expect(call1.Receives.Client).To(Equal("some-client-id"))
-			Expect(call1.Receives.UAAHost).To(Equal("some-uaa-host"))
-			Expect(call1.Receives.Scope).To(Equal(""))
-			Expect(call1.Receives.VCAPRequestID).To(Equal(""))
-			Expect(call1.Receives.RequestReceived).To(Equal(time.Time{}))
-			Expect(call1.Receives.CampaignID).To(Equal("some-id"))
-
-			call2 := enqueuer.EnqueueCalls[1]
-			Expect(call2.Receives.Connection).To(Equal(connection))
-			Expect(call2.Receives.Users).To(Equal([]queue.User{
-				{GUID: "some-other-user-guid-for-space"},
-			}))
-			Expect(call2.Receives.Options).To(Equal(queue.Options{
-				ReplyTo:           "noreply@example.com",
-				Subject:           "The Best subject",
-				KindDescription:   "",
-				SourceDescription: "",
-				Text:              "some-text",
-				HTML: queue.HTML{
-					BodyContent:    "<h1>my-html</h1>",
-					BodyAttributes: "",
-					Head:           "",
-					Doctype:        "",
-				},
-				KindID:      "",
-				To:          "",
-				Role:        "",
-				Endorsement: "some endorsement",
-				TemplateID:  "some-template-id",
-			}))
-			Expect(call2.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
-			Expect(call2.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
-			Expect(call2.Receives.Client).To(Equal("some-client-id"))
-			Expect(call2.Receives.UAAHost).To(Equal("some-uaa-host"))
-			Expect(call2.Receives.Scope).To(Equal(""))
-			Expect(call2.Receives.VCAPRequestID).To(Equal(""))
-			Expect(call2.Receives.RequestReceived).To(Equal(time.Time{}))
-			Expect(call2.Receives.CampaignID).To(Equal("some-id"))
+			Expect(enqueuer.EnqueueCall.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(enqueuer.EnqueueCall.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(enqueuer.EnqueueCall.Receives.Client).To(Equal("some-client-id"))
+			Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("some-uaa-host"))
+			Expect(enqueuer.EnqueueCall.Receives.Scope).To(Equal(""))
+			Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal(""))
+			Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(time.Time{}))
+			Expect(enqueuer.EnqueueCall.Receives.CampaignID).To(Equal("some-id"))
 		})
 	})
 
@@ -328,14 +288,12 @@ var _ = Describe("CampaignJobProcessor", func() {
 				"some-other-org-guid",
 			}))
 
-			Expect(enqueuer.EnqueueCalls).To(HaveLen(2))
-
-			call1 := enqueuer.EnqueueCalls[0]
-			Expect(call1.Receives.Connection).To(Equal(connection))
-			Expect(call1.Receives.Users).To(Equal([]queue.User{
-				{GUID: "some-user-guid-for-org"},
+			Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(connection))
+			Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal([]queue.User{
+				{GUID: "some-user-guid-for-org", Endorsement: "some endorsement"},
+				{GUID: "some-other-user-guid-for-org", Endorsement: "some endorsement"},
 			}))
-			Expect(call1.Receives.Options).To(Equal(queue.Options{
+			Expect(enqueuer.EnqueueCall.Receives.Options).To(Equal(queue.Options{
 				ReplyTo:           "noreply@example.com",
 				Subject:           "The Best subject",
 				KindDescription:   "",
@@ -350,49 +308,17 @@ var _ = Describe("CampaignJobProcessor", func() {
 				KindID:      "",
 				To:          "",
 				Role:        "",
-				Endorsement: "some endorsement",
+				Endorsement: "",
 				TemplateID:  "some-template-id",
 			}))
-			Expect(call1.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
-			Expect(call1.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
-			Expect(call1.Receives.Client).To(Equal("some-client-id"))
-			Expect(call1.Receives.UAAHost).To(Equal("some-uaa-host"))
-			Expect(call1.Receives.Scope).To(Equal(""))
-			Expect(call1.Receives.VCAPRequestID).To(Equal(""))
-			Expect(call1.Receives.RequestReceived).To(Equal(time.Time{}))
-			Expect(call1.Receives.CampaignID).To(Equal("some-id"))
-
-			call2 := enqueuer.EnqueueCalls[1]
-			Expect(call2.Receives.Connection).To(Equal(connection))
-			Expect(call2.Receives.Users).To(Equal([]queue.User{
-				{GUID: "some-other-user-guid-for-org"},
-			}))
-			Expect(call2.Receives.Options).To(Equal(queue.Options{
-				ReplyTo:           "noreply@example.com",
-				Subject:           "The Best subject",
-				KindDescription:   "",
-				SourceDescription: "",
-				Text:              "some-text",
-				HTML: queue.HTML{
-					BodyContent:    "<h1>my-html</h1>",
-					BodyAttributes: "",
-					Head:           "",
-					Doctype:        "",
-				},
-				KindID:      "",
-				To:          "",
-				Role:        "",
-				Endorsement: "some endorsement",
-				TemplateID:  "some-template-id",
-			}))
-			Expect(call2.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
-			Expect(call2.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
-			Expect(call2.Receives.Client).To(Equal("some-client-id"))
-			Expect(call2.Receives.UAAHost).To(Equal("some-uaa-host"))
-			Expect(call2.Receives.Scope).To(Equal(""))
-			Expect(call2.Receives.VCAPRequestID).To(Equal(""))
-			Expect(call2.Receives.RequestReceived).To(Equal(time.Time{}))
-			Expect(call2.Receives.CampaignID).To(Equal("some-id"))
+			Expect(enqueuer.EnqueueCall.Receives.Space).To(Equal(cf.CloudControllerSpace{}))
+			Expect(enqueuer.EnqueueCall.Receives.Org).To(Equal(cf.CloudControllerOrganization{}))
+			Expect(enqueuer.EnqueueCall.Receives.Client).To(Equal("some-client-id"))
+			Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("some-uaa-host"))
+			Expect(enqueuer.EnqueueCall.Receives.Scope).To(Equal(""))
+			Expect(enqueuer.EnqueueCall.Receives.VCAPRequestID).To(Equal(""))
+			Expect(enqueuer.EnqueueCall.Receives.RequestReceived).To(Equal(time.Time{}))
+			Expect(enqueuer.EnqueueCall.Receives.CampaignID).To(Equal("some-id"))
 		})
 	})
 
@@ -487,140 +413,30 @@ var _ = Describe("CampaignJobProcessor", func() {
 				"some-other-user@example.com",
 			}))
 
-			Expect(enqueuer.EnqueueCalls).To(HaveLen(6))
-			Expect(enqueuer.EnqueueCalls).To(ContainElement(mocks.V2EnqueuerEnqueueCall{
-				Receives: mocks.V2EnqueuerEnqueueCallReceives{
-					Connection: connection,
-					Users: []queue.User{
-						{GUID: "some-user-guid-for-org"},
-					},
-					Options: queue.Options{
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: queue.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-						Endorsement: "some-org endorsement",
-						TemplateID:  "some-template-id",
-					},
-					Client:     "some-client-id",
-					UAAHost:    "some-uaa-host",
-					CampaignID: "some-id",
-				},
+			Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(connection))
+			Expect(enqueuer.EnqueueCall.Receives.Users).To(ConsistOf([]queue.User{
+				{GUID: "some-user-guid-for-org", Endorsement: "some-org endorsement"},
+				{GUID: "some-other-user-guid-for-org", Endorsement: "some-other-org endorsement"},
+				{GUID: "some-user-guid-for-space", Endorsement: "some-space endorsement"},
+				{GUID: "some-other-user-guid-for-space", Endorsement: "some-other-space endorsement"},
+				{GUID: "some-user-guid", Endorsement: "some users endorsement"},
+				{GUID: "some-other-user-guid", Endorsement: "some users endorsement"},
+				{Email: "some-user@example.com", Endorsement: "some emails endorsement"},
+				{Email: "some-other-user@example.com", Endorsement: "some emails endorsement"},
 			}))
-
-			Expect(enqueuer.EnqueueCalls).To(ContainElement(mocks.V2EnqueuerEnqueueCall{
-				Receives: mocks.V2EnqueuerEnqueueCallReceives{
-					Connection: connection,
-					Users: []queue.User{
-						{GUID: "some-other-user-guid-for-org"},
-					},
-					Options: queue.Options{
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: queue.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-						Endorsement: "some-other-org endorsement",
-						TemplateID:  "some-template-id",
-					},
-					Client:     "some-client-id",
-					UAAHost:    "some-uaa-host",
-					CampaignID: "some-id",
+			Expect(enqueuer.EnqueueCall.Receives.Options).To(Equal(queue.Options{
+				ReplyTo: "noreply@example.com",
+				Subject: "The Best subject",
+				Text:    "some-text",
+				HTML: queue.HTML{
+					BodyContent: "<h1>my-html</h1>",
 				},
+				Endorsement: "",
+				TemplateID:  "some-template-id",
 			}))
-
-			Expect(enqueuer.EnqueueCalls).To(ContainElement(mocks.V2EnqueuerEnqueueCall{
-				Receives: mocks.V2EnqueuerEnqueueCallReceives{
-					Connection: connection,
-					Users: []queue.User{
-						{GUID: "some-user-guid-for-space"},
-					},
-					Options: queue.Options{
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: queue.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-						Endorsement: "some-space endorsement",
-						TemplateID:  "some-template-id",
-					},
-					Client:     "some-client-id",
-					UAAHost:    "some-uaa-host",
-					CampaignID: "some-id",
-				},
-			}))
-
-			Expect(enqueuer.EnqueueCalls).To(ContainElement(mocks.V2EnqueuerEnqueueCall{
-				Receives: mocks.V2EnqueuerEnqueueCallReceives{
-					Connection: connection,
-					Users: []queue.User{
-						{GUID: "some-other-user-guid-for-space"},
-					},
-					Options: queue.Options{
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: queue.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-						Endorsement: "some-other-space endorsement",
-						TemplateID:  "some-template-id",
-					},
-					Client:     "some-client-id",
-					UAAHost:    "some-uaa-host",
-					CampaignID: "some-id",
-				},
-			}))
-
-			Expect(enqueuer.EnqueueCalls).To(ContainElement(mocks.V2EnqueuerEnqueueCall{
-				Receives: mocks.V2EnqueuerEnqueueCallReceives{
-					Connection: connection,
-					Users: []queue.User{
-						{GUID: "some-user-guid"},
-						{GUID: "some-other-user-guid"},
-					},
-					Options: queue.Options{
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: queue.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-						Endorsement: "some users endorsement",
-						TemplateID:  "some-template-id",
-					},
-					Client:     "some-client-id",
-					UAAHost:    "some-uaa-host",
-					CampaignID: "some-id",
-				},
-			}))
-
-			Expect(enqueuer.EnqueueCalls).To(ContainElement(mocks.V2EnqueuerEnqueueCall{
-				Receives: mocks.V2EnqueuerEnqueueCallReceives{
-					Connection: connection,
-					Users: []queue.User{
-						{Email: "some-user@example.com"},
-						{Email: "some-other-user@example.com"},
-					},
-					Options: queue.Options{
-						ReplyTo: "noreply@example.com",
-						Subject: "The Best subject",
-						Text:    "some-text",
-						HTML: queue.HTML{
-							BodyContent: "<h1>my-html</h1>",
-						},
-						Endorsement: "some emails endorsement",
-						TemplateID:  "some-template-id",
-					},
-					Client:     "some-client-id",
-					UAAHost:    "some-uaa-host",
-					CampaignID: "some-id",
-				},
-			}))
+			Expect(enqueuer.EnqueueCall.Receives.Client).To(Equal("some-client-id"))
+			Expect(enqueuer.EnqueueCall.Receives.UAAHost).To(Equal("some-uaa-host"))
+			Expect(enqueuer.EnqueueCall.Receives.CampaignID).To(Equal("some-id"))
 		})
 	})
 

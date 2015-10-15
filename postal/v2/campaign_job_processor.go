@@ -91,34 +91,33 @@ func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost
 		audiences = append(audiences, aud...)
 	}
 
+	var users []queue.User
 	for _, audience := range audiences {
-		var users []queue.User
 		for _, user := range audience.Users {
 			users = append(users, queue.User{
-				GUID:  user.GUID,
-				Email: user.Email,
+				GUID:        user.GUID,
+				Email:       user.Email,
+				Endorsement: audience.Endorsement,
 			})
 		}
-
-		options := queue.Options{
-			ReplyTo: campaignJob.Campaign.ReplyTo,
-			Subject: campaignJob.Campaign.Subject,
-			Text:    campaignJob.Campaign.Text,
-			HTML: queue.HTML{
-				Doctype:        doctype,
-				Head:           head,
-				BodyContent:    bodyContent,
-				BodyAttributes: bodyAttributes,
-			},
-			Endorsement: audience.Endorsement,
-			TemplateID:  campaignJob.Campaign.TemplateID,
-		}
-
-		p.enqueuer.Enqueue(conn, users, options, cf.CloudControllerSpace{},
-			cf.CloudControllerOrganization{}, campaignJob.Campaign.ClientID,
-			uaaHost, "", "", time.Time{}, campaignJob.Campaign.ID)
 	}
 
+	options := queue.Options{
+		ReplyTo: campaignJob.Campaign.ReplyTo,
+		Subject: campaignJob.Campaign.Subject,
+		Text:    campaignJob.Campaign.Text,
+		HTML: queue.HTML{
+			Doctype:        doctype,
+			Head:           head,
+			BodyContent:    bodyContent,
+			BodyAttributes: bodyAttributes,
+		},
+		TemplateID: campaignJob.Campaign.TemplateID,
+	}
+
+	p.enqueuer.Enqueue(conn, users, options, cf.CloudControllerSpace{},
+		cf.CloudControllerOrganization{}, campaignJob.Campaign.ClientID,
+		uaaHost, "", "", time.Time{}, campaignJob.Campaign.ID)
 	return nil
 }
 

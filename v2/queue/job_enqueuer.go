@@ -14,8 +14,9 @@ import (
 const StatusQueued = "queued"
 
 type User struct {
-	GUID  string
-	Email string
+	GUID        string
+	Email       string
+	Endorsement string
 }
 
 type Response struct {
@@ -102,6 +103,8 @@ func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, opti
 			transaction.Rollback()
 			return
 		}
+
+		options.Endorsement = user.Endorsement
 
 		job := gobble.NewJob(Delivery{
 			JobType:         "v2",
