@@ -97,7 +97,7 @@ var _ = Describe("Organization Campaigns", func() {
 		By("seeing that the mail was delivered", func() {
 			Eventually(func() []smtpd.Envelope {
 				return Servers.SMTP.Deliveries
-			}, "10s").Should(HaveLen(1))
+			}, "5s").Should(HaveLen(1))
 
 			delivery := Servers.SMTP.Deliveries[0]
 
@@ -170,7 +170,7 @@ var _ = Describe("Organization Campaigns", func() {
 		By("seeing that the mail was delivered", func() {
 			Eventually(func() []smtpd.Envelope {
 				return Servers.SMTP.Deliveries
-			}, "10s").Should(HaveLen(2))
+			}, "5s").Should(HaveLen(2))
 
 			var recipients []string
 			for _, delivery := range Servers.SMTP.Deliveries {
@@ -422,7 +422,7 @@ var _ = Describe("Organization Campaigns", func() {
 			By("seeing that the mail was delivered", func() {
 				Eventually(func() []smtpd.Envelope {
 					return Servers.SMTP.Deliveries
-				}, "10s").Should(HaveLen(1))
+				}, "5s").Should(HaveLen(1))
 
 				delivery := Servers.SMTP.Deliveries[0]
 

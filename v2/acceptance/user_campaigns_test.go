@@ -107,7 +107,7 @@ var _ = Describe("User Campaigns", func() {
 		By("seeing that the mail was delivered", func() {
 			Eventually(func() []smtpd.Envelope {
 				return Servers.SMTP.Deliveries
-			}, "10s").Should(HaveLen(1))
+			}, "5s").Should(HaveLen(1))
 
 			delivery := Servers.SMTP.Deliveries[0]
 
@@ -174,7 +174,11 @@ var _ = Describe("User Campaigns", func() {
 		By("sending the campaign", func() {
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 				"send_to": map[string][]string{
-					"users": {user.ID, anotherUser.ID},
+					"users": {
+						user.ID,
+						anotherUser.ID,
+						user.ID,
+					},
 				},
 				"campaign_type_id": campaignTypeID,
 				"text":             "campaign body",
@@ -189,7 +193,7 @@ var _ = Describe("User Campaigns", func() {
 		By("seeing that the mail was delivered", func() {
 			Eventually(func() []smtpd.Envelope {
 				return Servers.SMTP.Deliveries
-			}, "10s").Should(HaveLen(2))
+			}, "5s").Should(HaveLen(2))
 
 			var recipients []string
 			for _, delivery := range Servers.SMTP.Deliveries {
@@ -608,7 +612,7 @@ var _ = Describe("User Campaigns", func() {
 			By("seeing that the mail was delivered", func() {
 				Eventually(func() []smtpd.Envelope {
 					return Servers.SMTP.Deliveries
-				}, "10s").Should(HaveLen(1))
+				}, "5s").Should(HaveLen(1))
 
 				delivery := Servers.SMTP.Deliveries[0]
 

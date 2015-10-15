@@ -63,6 +63,13 @@ func NewCampaignJobProcessor(emailFormatter emailAddressFormatter, htmlExtractor
 	}
 }
 
+func key(user horde.User) string {
+	if user.GUID != "" {
+		return user.GUID
+	}
+	return user.Email
+}
+
 func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost string, job gobble.Job) error {
 	var campaignJob queue.CampaignJob
 
@@ -91,15 +98,20 @@ func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost
 		audiences = append(audiences, aud...)
 	}
 
-	var users []queue.User
+	users := map[string]queue.User{}
 	for _, audience := range audiences {
 		for _, user := range audience.Users {
-			users = append(users, queue.User{
+			users[key(user)] = queue.User{
 				GUID:        user.GUID,
 				Email:       user.Email,
 				Endorsement: audience.Endorsement,
-			})
+			}
 		}
+	}
+
+	usersSlice := []queue.User{}
+	for _, v := range users {
+		usersSlice = append(usersSlice, v)
 	}
 
 	options := queue.Options{
@@ -115,7 +127,7 @@ func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost
 		TemplateID: campaignJob.Campaign.TemplateID,
 	}
 
-	p.enqueuer.Enqueue(conn, users, options, cf.CloudControllerSpace{},
+	p.enqueuer.Enqueue(conn, usersSlice, options, cf.CloudControllerSpace{},
 		cf.CloudControllerOrganization{}, campaignJob.Campaign.ClientID,
 		uaaHost, "", "", time.Time{}, campaignJob.Campaign.ID)
 	return nil

@@ -115,6 +115,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 					Users: []horde.User{
 						{Email: "some-user@example.com"},
 						{Email: "some-other-user@example.com"},
+						{Email: "some-user@example.com"},
 					},
 					Endorsement: "some endorsement",
 				},
@@ -124,7 +125,11 @@ var _ = Describe("CampaignJobProcessor", func() {
 				Campaign: collections.Campaign{
 					ID: "some-id",
 					SendTo: map[string][]string{
-						"emails": {"some-user@example.com", "some-other-user@example.com"},
+						"emails": {
+							"some-user@example.com",
+							"some-other-user@example.com",
+							"some-user@example.com",
+						},
 					},
 					CampaignTypeID: "some-campaign-type-id",
 					Text:           "some-text",
@@ -140,10 +145,11 @@ var _ = Describe("CampaignJobProcessor", func() {
 			Expect(emails.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
 				"some-user@example.com",
 				"some-other-user@example.com",
+				"some-user@example.com",
 			}))
 
 			Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(connection))
-			Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal([]queue.User{
+			Expect(enqueuer.EnqueueCall.Receives.Users).To(ConsistOf([]queue.User{
 				{Email: "some-user@example.com", Endorsement: "some endorsement"},
 				{Email: "some-other-user@example.com", Endorsement: "some endorsement"},
 			}))

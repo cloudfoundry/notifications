@@ -141,6 +141,7 @@ func (cc CC) GetOrgUsers(w http.ResponseWriter, req *http.Request) {
 	case "org-456":
 		desiredUsers = []string{
 			"user-123",
+			"user-456",
 		}
 	default:
 		desiredUsers = []string{}
@@ -313,6 +314,7 @@ func (cc CC) GetSpaceUsers(w http.ResponseWriter, req *http.Request) {
 	case "space-456":
 		desiredUsers = []string{
 			"user-123",
+			"user-456",
 		}
 	default:
 		desiredUsers = []string{}

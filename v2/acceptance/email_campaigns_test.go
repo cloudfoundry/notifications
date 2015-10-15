@@ -99,7 +99,7 @@ var _ = Describe("Email Campaigns", func() {
 		By("seeing that the mail was delivered", func() {
 			Eventually(func() []smtpd.Envelope {
 				return Servers.SMTP.Deliveries
-			}, "10s").Should(HaveLen(1))
+			}, "5s").Should(HaveLen(1))
 
 			delivery := Servers.SMTP.Deliveries[0]
 
@@ -157,7 +157,11 @@ var _ = Describe("Email Campaigns", func() {
 		By("sending the campaign to multiple emails", func() {
 			status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 				"send_to": map[string]interface{}{
-					"emails": []string{"test1@example.com", "test2@example.com"},
+					"emails": []string{
+						"test1@example.com",
+						"test2@example.com",
+						"test1@example.com",
+					},
 				},
 				"campaign_type_id": campaignTypeID,
 				"text":             "campaign body",
@@ -172,17 +176,19 @@ var _ = Describe("Email Campaigns", func() {
 		})
 
 		By("seeing that the mail was delivered", func() {
-			Eventually(func() []smtpd.Envelope {
-				return Servers.SMTP.Deliveries
-			}, "10s").Should(HaveLen(2))
-
-			var recipients []string
-			for _, delivery := range Servers.SMTP.Deliveries {
-				Expect(delivery.Recipients).To(HaveLen(1))
-				recipients = append(recipients, delivery.Recipients[0])
+			getDeliveries := func() []string {
+				var recipients []string
+				for _, delivery := range Servers.SMTP.Deliveries {
+					recipients = append(recipients, delivery.Recipients...)
+				}
+				return recipients
 			}
 
-			Expect(recipients).To(ConsistOf([]string{
+			Eventually(getDeliveries, "5s").Should(ConsistOf([]string{
+				"test1@example.com",
+				"test2@example.com",
+			}))
+			Consistently(getDeliveries, "1s").Should(ConsistOf([]string{
 				"test1@example.com",
 				"test2@example.com",
 			}))
@@ -426,7 +432,7 @@ var _ = Describe("Email Campaigns", func() {
 			By("seeing that the mail was delivered", func() {
 				Eventually(func() []smtpd.Envelope {
 					return Servers.SMTP.Deliveries
-				}, "10s").Should(HaveLen(1))
+				}, "5s").Should(HaveLen(1))
 
 				delivery := Servers.SMTP.Deliveries[0]
 

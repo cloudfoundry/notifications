@@ -66,21 +66,26 @@ var _ = Describe("Campaign Lifecycle", func() {
 	})
 
 	Context("retrieving a campaign", func() {
+		var (
+			response       campaignResponse
+			user           warrant.User
+			campaignTypeID string
+			templateID     string
+			campaignID     string
+		)
+
+		BeforeEach(func() {
+			var err error
+			user, err = warrantClient.Users.Create("user-111", "user-111@example.com", adminToken)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		AfterEach(func() {
+			err := warrantClient.Users.Delete(user.ID, adminToken)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("sends a campaign to many audiences and retrieves the campaign details", func() {
-			var (
-				response       campaignResponse
-				campaignTypeID string
-				templateID     string
-				campaignID     string
-				user           warrant.User
-			)
-
-			By("creating a user to send an email to", func() {
-				var err error
-				user, err = warrantClient.Users.Create("user-111", "user-111@example.com", adminToken)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
 			By("creating a template", func() {
 				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
 					"name":    "Acceptance Template",
@@ -166,7 +171,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 			By("seeing that the mail was delivered", func() {
 				Eventually(func() []smtpd.Envelope {
 					return Servers.SMTP.Deliveries
-				}, "10s").Should(HaveLen(4))
+				}, "5s").Should(HaveLen(3))
 
 				var recipients []string
 				for _, delivery := range Servers.SMTP.Deliveries {
@@ -177,14 +182,8 @@ var _ = Describe("Campaign Lifecycle", func() {
 				Expect(recipients).To(ConsistOf([]string{
 					"test@example.com",
 					"user-456@example.com",
-					"user-456@example.com",
 					"user-111@example.com",
 				}))
-			})
-
-			By("deleting the user that was sent an email", func() {
-				err := warrantClient.Users.Delete(user.ID, adminToken)
-				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
@@ -382,7 +381,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 				Eventually(func() (interface{}, error) {
 					_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", campaignID), nil, token)
 					return response["status"], err
-				}, "10s").Should(Equal("completed"))
+				}, "5s").Should(Equal("completed"))
 
 				var response struct {
 					ID             string
@@ -462,7 +461,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 					Eventually(func() (interface{}, error) {
 						_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", campaignID), nil, token)
 						return response["retry_messages"], err
-					}, "10s").Should(Equal(float64(1)))
+					}, "5s").Should(Equal(float64(1)))
 				})
 
 				By("retrieving the campaign status", func() {
@@ -515,7 +514,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 					Eventually(func() (interface{}, error) {
 						_, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", campaignID), nil, token)
 						return response["queued_messages"], err
-					}, "10s").Should(BeNumerically(">", 0))
+					}, "5s").Should(BeNumerically(">", 0))
 				})
 			})
 		})
