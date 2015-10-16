@@ -265,9 +265,9 @@ var _ = Describe("Organization Campaigns", func() {
 		})
 	})
 
-	Context("when the org is non-existent", func() {
-		It("returns a 404 with an error message", func() {
-			var campaignTypeID, templateID string
+	Context("when there is an org that is non-existent", func() {
+		It("returns a 202 and sends no email to that org", func() {
+			var campaignID, campaignTypeID, templateID string
 
 			By("creating a template", func() {
 				status, response, err := client.Do("POST", "/templates", map[string]interface{}{
@@ -296,7 +296,10 @@ var _ = Describe("Organization Campaigns", func() {
 			By("sending the campaign", func() {
 				status, response, err := client.Do("POST", fmt.Sprintf("/senders/%s/campaigns", senderID), map[string]interface{}{
 					"send_to": map[string][]string{
-						"orgs": {"missing-org"},
+						"orgs": {
+							"missing-org",
+							"org-123",
+						},
 					},
 					"campaign_type_id": campaignTypeID,
 					"text":             "campaign body",
@@ -304,8 +307,29 @@ var _ = Describe("Organization Campaigns", func() {
 					"template_id":      templateID,
 				}, token)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(status).To(Equal(http.StatusNotFound))
-				Expect(response["errors"]).To(Equal([]interface{}{"The org \"missing-org\" cannot be found"}))
+				Expect(status).To(Equal(http.StatusAccepted))
+
+				campaignID = response["id"].(string)
+			})
+
+			By("retrieving the campaign status", func() {
+				getDeliveries := func() []string {
+					var recipients []string
+					for _, delivery := range Servers.SMTP.Deliveries {
+						recipients = append(recipients, delivery.Recipients...)
+					}
+					return recipients
+				}
+
+				Eventually(getDeliveries, "5s").Should(ConsistOf([]string{
+					"user-456@example.com",
+				}))
+
+				status, response, err := client.Do("GET", fmt.Sprintf("/campaigns/%s/status", campaignID), nil, token)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(status).To(Equal(http.StatusOK))
+				Expect(response["id"]).To(Equal(campaignID))
+				Expect(response["sent_messages"]).To(Equal(float64(1)))
 			})
 		})
 	})

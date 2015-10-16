@@ -22,9 +22,6 @@ var _ = Describe("CampaignsCollection", func() {
 		campaignTypesRepo *mocks.CampaignTypesRepository
 		templatesRepo     *mocks.TemplatesRepository
 		sendersRepo       *mocks.SendersRepository
-		userFinder        *mocks.UserFinder
-		spaceFinder       *mocks.SpaceFinder
-		orgFinder         *mocks.OrgFinder
 	)
 
 	BeforeEach(func() {
@@ -34,15 +31,12 @@ var _ = Describe("CampaignsCollection", func() {
 		campaignTypesRepo = mocks.NewCampaignTypesRepository()
 		templatesRepo = mocks.NewTemplatesRepository()
 		sendersRepo = mocks.NewSendersRepository()
-		userFinder = mocks.NewUserFinder()
-		spaceFinder = mocks.NewSpaceFinder()
-		orgFinder = mocks.NewOrgFinder()
 
 		var err error
 		startTime, err = time.Parse(time.RFC3339, "2015-09-01T12:34:56-07:00")
 		Expect(err).NotTo(HaveOccurred())
 
-		collection = collections.NewCampaignsCollection(enqueuer, campaignsRepo, campaignTypesRepo, templatesRepo, sendersRepo, userFinder, spaceFinder, orgFinder)
+		collection = collections.NewCampaignsCollection(enqueuer, campaignsRepo, campaignTypesRepo, templatesRepo, sendersRepo)
 	})
 
 	Describe("Create", func() {
@@ -139,7 +133,6 @@ var _ = Describe("CampaignsCollection", func() {
 
 		Context("when the audience is a space", func() {
 			BeforeEach(func() {
-				spaceFinder.ExistsCall.Returns.Exists = true
 				campaignsRepo.InsertCall.Returns.Campaign = models.Campaign{
 					ID:             "a-new-id",
 					SendTo:         `{"spaces":"some-space-guid"}`,
@@ -186,35 +179,12 @@ var _ = Describe("CampaignsCollection", func() {
 
 					Expect(enqueuedCampaign.ID).To(Equal("a-new-id"))
 					Expect(err).NotTo(HaveOccurred())
-
-					Expect(spaceFinder.ExistsCall.Receives.GUID).To(Equal("some-space-guid"))
-				})
-			})
-
-			Context("when finding a space causes an error", func() {
-				It("returns an error", func() {
-					spaceFinder.ExistsCall.Returns.Error = errors.New("something bad happened")
-
-					campaign := collections.Campaign{
-						SendTo:         map[string][]string{"spaces": {"some-space-guid"}},
-						CampaignTypeID: "some-id",
-						Text:           "some-test",
-						HTML:           "no-html",
-						Subject:        "some-subject",
-						TemplateID:     "whoa-a-template-id",
-						ReplyTo:        "nothing@example.com",
-						SenderID:       "some-sender-id",
-					}
-
-					_, err := collection.Create(conn, campaign, "some-client-id", false)
-					Expect(err).To(MatchError(collections.UnknownError{errors.New("something bad happened")}))
 				})
 			})
 		})
 
 		Context("when the audience is an org", func() {
 			BeforeEach(func() {
-				orgFinder.ExistsCall.Returns.Exists = true
 				campaignsRepo.InsertCall.Returns.Campaign = models.Campaign{
 					ID:             "a-new-id",
 					SendTo:         `{"orgs":"some-org-guid"}`,
@@ -261,35 +231,12 @@ var _ = Describe("CampaignsCollection", func() {
 
 					Expect(enqueuedCampaign.ID).To(Equal("a-new-id"))
 					Expect(err).NotTo(HaveOccurred())
-
-					Expect(orgFinder.ExistsCall.Receives.GUID).To(Equal("some-org-guid"))
-				})
-			})
-
-			Context("when finding an org causes an error", func() {
-				It("returns an error", func() {
-					orgFinder.ExistsCall.Returns.Error = errors.New("something bad happened")
-
-					campaign := collections.Campaign{
-						SendTo:         map[string][]string{"orgs": {"some-org-guid"}},
-						CampaignTypeID: "some-id",
-						Text:           "some-test",
-						HTML:           "no-html",
-						Subject:        "some-subject",
-						TemplateID:     "whoa-a-template-id",
-						ReplyTo:        "nothing@example.com",
-						SenderID:       "some-sender-id",
-					}
-
-					_, err := collection.Create(conn, campaign, "some-client-id", false)
-					Expect(err).To(MatchError(collections.UnknownError{errors.New("something bad happened")}))
 				})
 			})
 		})
 
 		Context("when the audience is a user", func() {
 			BeforeEach(func() {
-				userFinder.ExistsCall.Returns.Exists = true
 				campaignsRepo.InsertCall.Returns.Campaign = models.Campaign{
 					ID:             "a-new-id",
 					SendTo:         `{"users":"some-user-guid"}`,
@@ -336,8 +283,6 @@ var _ = Describe("CampaignsCollection", func() {
 
 					Expect(enqueuedCampaign.ID).To(Equal("a-new-id"))
 					Expect(err).NotTo(HaveOccurred())
-
-					Expect(userFinder.ExistsCall.Receives.GUID).To(Equal("some-user-guid"))
 
 					Expect(sendersRepo.GetCall.Receives.SenderID).To(Equal("some-sender-id"))
 					Expect(sendersRepo.GetCall.Receives.Connection).To(Equal(conn))
@@ -448,26 +393,6 @@ var _ = Describe("CampaignsCollection", func() {
 					ClientID:       "some-client-id",
 					StartTime:      startTime,
 				}))
-			})
-
-			Context("when the user does not exist", func() {
-				It("returns a not found error", func() {
-					campaign := collections.Campaign{
-						SendTo:         map[string][]string{"users": {"missing-user"}},
-						CampaignTypeID: "some-id",
-						Text:           "some-test",
-						HTML:           "no-html",
-						Subject:        "some-subject",
-						TemplateID:     "whoa-a-template-id",
-						ReplyTo:        "nothing@example.com",
-						SenderID:       "some-sender-id",
-					}
-
-					userFinder.ExistsCall.Returns.Exists = false
-
-					_, err := collection.Create(conn, campaign, "some-client-id", false)
-					Expect(err).To(MatchError(collections.NotFoundError{errors.New("The user \"missing-user\" cannot be found")}))
-				})
 			})
 
 			Context("when an error happens", func() {
@@ -665,19 +590,11 @@ var _ = Describe("CampaignsCollection", func() {
 					Name:     "some-sender",
 					ClientID: "some-client-id",
 				}
-
-				userFinder.ExistsCall.Returns.Exists = true
-				spaceFinder.ExistsCall.Returns.Exists = true
-				orgFinder.ExistsCall.Returns.Exists = true
 			})
 
 			It("checks existence on all of them", func() {
 				_, err := collection.Create(conn, campaign, "some-client-id", false)
 				Expect(err).NotTo(HaveOccurred())
-
-				Expect(userFinder.ExistsCall.Receives.GUID).To(Equal("some-user-guid"))
-				Expect(spaceFinder.ExistsCall.Receives.GUID).To(Equal("some-space"))
-				Expect(orgFinder.ExistsCall.Receives.GUID).To(Equal("some-org"))
 			})
 		})
 	})

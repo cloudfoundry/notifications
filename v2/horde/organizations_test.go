@@ -67,15 +67,50 @@ var _ = Describe("organizations audience", func() {
 			})
 
 			Context("when the organizaton loader encounters an error", func() {
-				It("returns the error", func() {
-					orgFinder.LoadCall.Returns.Errors = []error{
-						cf.Failure{
-							Message: "some org finding error",
-						},
-					}
+				Context("when the error is a NotFoundError", func() {
+					BeforeEach(func() {
+						orgFinder.LoadCall.Returns.Organizations = []cf.CloudControllerOrganization{
+							{
+								GUID: "some-silly-org-guid",
+								Name: "SOME-SILLY",
+							},
+							{},
+						}
 
-					_, err := organizations.GenerateAudiences([]string{"some-silly-org-guid"})
-					Expect(err).To(MatchError(cf.Failure{Message: "some org finding error"}))
+						orgFinder.LoadCall.Returns.Errors = []error{
+							nil,
+							cf.NotFoundError{
+								Message: "some org error",
+							},
+						}
+					})
+
+					It("returns the correct audience", func() {
+						audiences, err := organizations.GenerateAudiences([]string{"some-silly-org-guid", "some-other-org-guid"})
+						Expect(err).NotTo(HaveOccurred())
+						Expect(audiences).To(ContainElement(horde.Audience{
+							Users: []horde.User{
+								{
+									Email: "",
+									GUID:  "some-random-guid",
+								},
+							},
+							Endorsement: "You received this message because you belong to the SOME-SILLY organization.",
+						}))
+					})
+				})
+
+				Context("when any other error occurs", func() {
+					It("returns the error", func() {
+						orgFinder.LoadCall.Returns.Errors = []error{
+							cf.Failure{
+								Message: "some org finding error",
+							},
+						}
+
+						_, err := organizations.GenerateAudiences([]string{"some-silly-org-guid"})
+						Expect(err).To(MatchError(cf.Failure{Message: "some org finding error"}))
+					})
 				})
 			})
 

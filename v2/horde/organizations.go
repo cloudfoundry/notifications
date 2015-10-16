@@ -48,6 +48,9 @@ func (o Organizations) GenerateAudiences(orgGUIDs []string) ([]Audience, error) 
 
 		org, err := o.orgFinder.Load(orgGUID, token)
 		if err != nil {
+			if _, ok := err.(cf.NotFoundError); ok {
+				continue
+			}
 			return audiences, err
 		}
 

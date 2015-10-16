@@ -31,10 +31,6 @@ type sendersGetter interface {
 	Get(conn models.ConnectionInterface, senderID string) (models.Sender, error)
 }
 
-type existenceChecker interface {
-	Exists(guid string) (bool, error)
-}
-
 type Campaign struct {
 	ID             string
 	SendTo         map[string][]string
@@ -55,21 +51,15 @@ type CampaignsCollection struct {
 	campaignTypesRepo campaignTypesGetter
 	templatesRepo     templatesGetter
 	sendersRepo       sendersGetter
-	userFinder        existenceChecker
-	spaceFinder       existenceChecker
-	orgFinder         existenceChecker
 }
 
-func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignsRepo campaignsPersister, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, sendersRepo sendersGetter, userFinder existenceChecker, spaceFinder existenceChecker, orgFinder existenceChecker) CampaignsCollection {
+func NewCampaignsCollection(enqueuer campaignEnqueuer, campaignsRepo campaignsPersister, campaignTypesRepo campaignTypesGetter, templatesRepo templatesGetter, sendersRepo sendersGetter) CampaignsCollection {
 	return CampaignsCollection{
 		enqueuer:          enqueuer,
 		campaignsRepo:     campaignsRepo,
 		campaignTypesRepo: campaignTypesRepo,
 		templatesRepo:     templatesRepo,
 		sendersRepo:       sendersRepo,
-		userFinder:        userFinder,
-		spaceFinder:       spaceFinder,
-		orgFinder:         orgFinder,
 	}
 }
 
@@ -167,11 +157,11 @@ func (c CampaignsCollection) Create(conn ConnectionInterface, campaign Campaign,
 func (c CampaignsCollection) checkForExistence(audience, guid string) (bool, error) {
 	switch audience {
 	case "users":
-		return c.userFinder.Exists(guid)
+		return true, nil
 	case "spaces":
-		return c.spaceFinder.Exists(guid)
+		return true, nil
 	case "orgs":
-		return c.orgFinder.Exists(guid)
+		return true, nil
 	case "emails":
 		return true, nil
 	default:

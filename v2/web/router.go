@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
@@ -23,7 +22,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/unsubscribers"
 	"github.com/gorilla/mux"
-	"github.com/pivotal-cf-experimental/rainmaker"
 	"github.com/pivotal-cf-experimental/warrant"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/stack"
@@ -76,16 +74,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	warrantUsersService := warrant.NewUsersService(warrantConfig)
 	warrantClientsService := warrant.NewClientsService(warrantConfig)
 
-	rainmakerConfig := rainmaker.Config{
-		Host:          config.CCHost,
-		SkipVerifySSL: config.SkipVerifySSL,
-	}
-	rainmakerSpacesService := rainmaker.NewSpacesService(rainmakerConfig)
-	rainmakerOrganizationsService := rainmaker.NewOrganizationsService(rainmakerConfig)
-
 	userFinder := uaa.NewUserFinder(config.UAAClientID, config.UAAClientSecret, warrantUsersService, warrantClientsService)
-	spaceFinder := cf.NewSpaceFinder(config.UAAClientID, config.UAAClientSecret, warrantClientsService, rainmakerSpacesService)
-	orgFinder := cf.NewOrgFinder(config.UAAClientID, config.UAAClientSecret, warrantClientsService, rainmakerOrganizationsService)
 
 	campaignEnqueuer := queue.NewCampaignEnqueuer(config.Queue)
 
@@ -99,7 +88,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	sendersCollection := collections.NewSendersCollection(sendersRepository, campaignTypesRepository)
 	templatesCollection := collections.NewTemplatesCollection(templatesRepository)
 	campaignTypesCollection := collections.NewCampaignTypesCollection(campaignTypesRepository, sendersRepository, templatesRepository)
-	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignsRepository, campaignTypesRepository, templatesRepository, sendersRepository, userFinder, spaceFinder, orgFinder)
+	campaignsCollection := collections.NewCampaignsCollection(campaignEnqueuer, campaignsRepository, campaignTypesRepository, templatesRepository, sendersRepository)
 	campaignStatusesCollection := collections.NewCampaignStatusesCollection(campaignsRepository, sendersRepository, messagesRepository)
 	unsubscribersCollection := collections.NewUnsubscribersCollection(unsubscribersRepository, campaignTypesRepository, userFinder)
 

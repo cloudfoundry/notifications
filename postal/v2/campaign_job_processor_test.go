@@ -222,7 +222,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 			}))
 
 			Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(connection))
-			Expect(enqueuer.EnqueueCall.Receives.Users).To(Equal([]queue.User{
+			Expect(enqueuer.EnqueueCall.Receives.Users).To(ConsistOf([]queue.User{
 				{GUID: "some-user-guid-for-space", Endorsement: "some endorsement"},
 				{GUID: "some-other-user-guid-for-space", Endorsement: "some endorsement"},
 			}))

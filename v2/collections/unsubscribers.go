@@ -6,6 +6,10 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 )
 
+type existenceChecker interface {
+	Exists(guid string) (bool, error)
+}
+
 type Unsubscriber struct {
 	ID             string
 	CampaignTypeID string
