@@ -72,12 +72,12 @@ var _ = Describe("LoadSpace", func() {
 		Expect(space.OrganizationGUID).To(Equal("first-rate"))
 	})
 
-	It("returns a 404 error code when the space cannot be found", func() {
+	It("returns a NotFoundError when the space cannot be found", func() {
 		_, err := cc.LoadSpace("banana", "notification-token")
-		Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
-		Expect(err.(cf.Failure).Code).To(Equal(404))
-		Expect(err.Error()).To(Equal(`CloudController Failure (404): Space "banana" could not be found`))
+		Expect(err).To(BeAssignableToTypeOf(cf.NotFoundError{}))
+		Expect(err.Error()).To(Equal(`CloudController Failure: Space "banana" could not be found`))
 	})
+
 	It("returns a 0 error code for any other error", func() {
 		_, err := cc.LoadSpace("nacho-space", "notification-token")
 		Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))

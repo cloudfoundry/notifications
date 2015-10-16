@@ -4,13 +4,14 @@ import "github.com/cloudfoundry-incubator/notifications/cf"
 
 type SpaceLoader struct {
 	LoadCall struct {
-		Receives struct {
+		CallCount int
+		Receives  struct {
 			SpaceGUID string
 			Token     string
 		}
 		Returns struct {
-			Space cf.CloudControllerSpace
-			Error error
+			Spaces []cf.CloudControllerSpace
+			Errors []error
 		}
 	}
 }
@@ -23,5 +24,16 @@ func (sl *SpaceLoader) Load(spaceGUID, token string) (cf.CloudControllerSpace, e
 	sl.LoadCall.Receives.SpaceGUID = spaceGUID
 	sl.LoadCall.Receives.Token = token
 
-	return sl.LoadCall.Returns.Space, sl.LoadCall.Returns.Error
+	if len(sl.LoadCall.Returns.Spaces) <= sl.LoadCall.CallCount {
+		sl.LoadCall.Returns.Spaces = append(sl.LoadCall.Returns.Spaces, cf.CloudControllerSpace{})
+	}
+
+	if len(sl.LoadCall.Returns.Errors) <= sl.LoadCall.CallCount {
+		sl.LoadCall.Returns.Errors = append(sl.LoadCall.Returns.Errors, nil)
+	}
+
+	space, err := sl.LoadCall.Returns.Spaces[sl.LoadCall.CallCount], sl.LoadCall.Returns.Errors[sl.LoadCall.CallCount]
+	sl.LoadCall.CallCount++
+
+	return space, err
 }

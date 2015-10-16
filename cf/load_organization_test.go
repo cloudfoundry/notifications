@@ -12,7 +12,11 @@ import (
 )
 
 var OrganizationsEndpoint = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-	if req.URL.Path != "/v2/organizations/org-guid" {
+	if req.URL.Path == "/v2/organizations/nacho-org" {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(`{"code":1234,"description":"This is not allowed.","error_code":"CF-SpaceNotFound"}`))
+		return
+	} else if req.URL.Path != "/v2/organizations/org-guid" {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{"code": 30003, "description": "The organization could not be found: ` + strings.TrimPrefix(req.URL.Path, "/v2/organizations/") + `", "error_code": "CF-OrganizationNotFound"}`))
 		return
@@ -67,8 +71,14 @@ var _ = Describe("LoadOrganization", func() {
 		Expect(org.Name).To(Equal("Initech"))
 	})
 
-	It("returns a Failure instance when the org cannot be found", func() {
+	It("returns a NotFoundError when the org cannot be found", func() {
 		_, err := cc.LoadOrganization("banana", "notification-token")
+		Expect(err).To(BeAssignableToTypeOf(cf.NotFoundError{}))
+		Expect(err.Error()).To(Equal(`CloudController Failure: Organization "banana" could not be found`))
+	})
+
+	It("returns a Failure in case of other errors", func() {
+		_, err := cc.LoadOrganization("nacho-org", "notification-token")
 
 		Expect(err).To(BeAssignableToTypeOf(cf.Failure{}))
 	})

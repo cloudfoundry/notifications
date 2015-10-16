@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/v1/collections"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
@@ -21,7 +22,7 @@ func (writer ErrorWriter) Write(w http.ResponseWriter, err error) {
 		w.WriteHeader(422)
 	case services.CCDownError:
 		w.WriteHeader(http.StatusBadGateway)
-	case services.CCNotFoundError, models.NotFoundError:
+	case services.CCNotFoundError, models.NotFoundError, cf.NotFoundError:
 		w.WriteHeader(http.StatusNotFound)
 	case ParseError, SchemaError:
 		w.WriteHeader(http.StatusBadRequest)

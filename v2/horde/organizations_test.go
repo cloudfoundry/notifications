@@ -24,9 +24,11 @@ var _ = Describe("organizations audience", func() {
 		userFinder.UserIDsBelongingToOrganizationCall.Returns.UserIDs = []string{"some-random-guid"}
 
 		orgFinder = mocks.NewOrganizationLoader()
-		orgFinder.LoadCall.Returns.Organization = cf.CloudControllerOrganization{
-			GUID: "some-silly-org-guid",
-			Name: "SOME-SILLY",
+		orgFinder.LoadCall.Returns.Organizations = []cf.CloudControllerOrganization{
+			{
+				GUID: "some-silly-org-guid",
+				Name: "SOME-SILLY",
+			},
 		}
 
 		tokenLoader = mocks.NewTokenLoader()
@@ -66,9 +68,14 @@ var _ = Describe("organizations audience", func() {
 
 			Context("when the organizaton loader encounters an error", func() {
 				It("returns the error", func() {
-					orgFinder.LoadCall.Returns.Error = errors.New("some org finding error")
+					orgFinder.LoadCall.Returns.Errors = []error{
+						cf.Failure{
+							Message: "some org finding error",
+						},
+					}
+
 					_, err := organizations.GenerateAudiences([]string{"some-silly-org-guid"})
-					Expect(err).To(MatchError(errors.New("some org finding error")))
+					Expect(err).To(MatchError(cf.Failure{Message: "some org finding error"}))
 				})
 			})
 

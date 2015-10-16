@@ -97,7 +97,7 @@ func Boot(mom mother, config Config) {
 
 	usersAudienceGenerator := horde.NewUsers()
 	emailsAudienceGenerator := horde.NewEmails()
-	spacesAudienceGenerator := horde.NewSpaces(findsUserIDs, organizationLoader, spaceLoader, tokenLoader, config.UAAHost)
+	spacesAudienceGenerator := horde.NewSpaces(findsUserIDs, organizationLoader, spaceLoader, tokenLoader, config.UAAHost, logger)
 	orgsAudienceGenerator := horde.NewOrganizations(findsUserIDs, organizationLoader, tokenLoader, config.UAAHost)
 
 	v2database := v2models.NewDatabase(sqlDatabase, v2models.Config{})

@@ -4,13 +4,14 @@ import "github.com/cloudfoundry-incubator/notifications/cf"
 
 type OrganizationLoader struct {
 	LoadCall struct {
-		Receives struct {
+		CallCount int
+		Receives  struct {
 			OrganizationGUID string
 			Token            string
 		}
 		Returns struct {
-			Organization cf.CloudControllerOrganization
-			Error        error
+			Organizations []cf.CloudControllerOrganization
+			Errors        []error
 		}
 	}
 }
@@ -23,5 +24,16 @@ func (ol *OrganizationLoader) Load(organizationGUID, token string) (cf.CloudCont
 	ol.LoadCall.Receives.OrganizationGUID = organizationGUID
 	ol.LoadCall.Receives.Token = token
 
-	return ol.LoadCall.Returns.Organization, ol.LoadCall.Returns.Error
+	if len(ol.LoadCall.Returns.Organizations) <= ol.LoadCall.CallCount {
+		ol.LoadCall.Returns.Organizations = append(ol.LoadCall.Returns.Organizations, cf.CloudControllerOrganization{})
+	}
+
+	if len(ol.LoadCall.Returns.Errors) <= ol.LoadCall.CallCount {
+		ol.LoadCall.Returns.Errors = append(ol.LoadCall.Returns.Errors, nil)
+	}
+
+	org, err := ol.LoadCall.Returns.Organizations[ol.LoadCall.CallCount], ol.LoadCall.Returns.Errors[ol.LoadCall.CallCount]
+	ol.LoadCall.CallCount++
+
+	return org, err
 }

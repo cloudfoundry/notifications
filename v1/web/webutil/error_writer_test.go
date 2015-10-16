@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/v1/collections"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
@@ -62,6 +63,14 @@ var _ = Describe("ErrorWriter", func() {
 		Expect(recorder.Code).To(Equal(http.StatusNotFound))
 		Expect(recorder.Body).To(MatchJSON(`{
 			"errors": ["Space could not be found"]	
+		}`))
+	})
+
+	It("returns a 404 when the space cannot be found", func() {
+		writer.Write(recorder, cf.NotFoundError{Message: "Space could not be found"})
+		Expect(recorder.Code).To(Equal(http.StatusNotFound))
+		Expect(recorder.Body).To(MatchJSON(`{
+			"errors": ["CloudController Failure: Space could not be found"]	
 		}`))
 	})
 

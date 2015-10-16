@@ -48,15 +48,19 @@ var _ = Describe("Space Strategy", func() {
 		findsUserIDs.UserIDsBelongingToSpaceCall.Returns.UserIDs = []string{"user-123", "user-456"}
 
 		spaceLoader = mocks.NewSpaceLoader()
-		spaceLoader.LoadCall.Returns.Space = cf.CloudControllerSpace{
-			Name:             "production",
-			GUID:             "space-001",
-			OrganizationGUID: "org-001",
+		spaceLoader.LoadCall.Returns.Spaces = []cf.CloudControllerSpace{
+			{
+				Name:             "production",
+				GUID:             "space-001",
+				OrganizationGUID: "org-001",
+			},
 		}
 		organizationLoader = mocks.NewOrganizationLoader()
-		organizationLoader.LoadCall.Returns.Organization = cf.CloudControllerOrganization{
-			Name: "the-org",
-			GUID: "org-001",
+		organizationLoader.LoadCall.Returns.Organizations = []cf.CloudControllerOrganization{
+			{
+				Name: "the-org",
+				GUID: "org-001",
+			},
 		}
 		strategy = services.NewSpaceStrategy(tokenLoader, spaceLoader, organizationLoader, findsUserIDs, enqueuer)
 	})
@@ -159,7 +163,9 @@ var _ = Describe("Space Strategy", func() {
 
 			Context("when spaceLoader fails to load a space", func() {
 				It("returns an error", func() {
-					spaceLoader.LoadCall.Returns.Error = errors.New("BOOM!")
+					spaceLoader.LoadCall.Returns.Errors = []error{
+						errors.New("BOOM!"),
+					}
 
 					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))

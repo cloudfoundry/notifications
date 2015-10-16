@@ -46,9 +46,11 @@ var _ = Describe("Organization Strategy", func() {
 		findsUserIDs.UserIDsBelongingToOrganizationCall.Returns.UserIDs = []string{"user-123", "user-456"}
 
 		organizationLoader = mocks.NewOrganizationLoader()
-		organizationLoader.LoadCall.Returns.Organization = cf.CloudControllerOrganization{
-			Name: "my-org",
-			GUID: "org-001",
+		organizationLoader.LoadCall.Returns.Organizations = []cf.CloudControllerOrganization{
+			{
+				Name: "my-org",
+				GUID: "org-001",
+			},
 		}
 		strategy = services.NewOrganizationStrategy(tokenLoader, organizationLoader, findsUserIDs, enqueuer)
 	})
@@ -205,7 +207,9 @@ var _ = Describe("Organization Strategy", func() {
 
 			Context("when organizationLoader fails to load an organization", func() {
 				It("returns the error", func() {
-					organizationLoader.LoadCall.Returns.Error = errors.New("BOOM!")
+					organizationLoader.LoadCall.Returns.Errors = []error{
+						errors.New("BOOM!"),
+					}
 
 					_, err := strategy.Dispatch(services.Dispatch{})
 					Expect(err).To(Equal(errors.New("BOOM!")))

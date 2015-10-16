@@ -39,6 +39,14 @@ type Failure struct {
 	Message string
 }
 
+type NotFoundError struct {
+	Message string
+}
+
+func (e NotFoundError) Error() string {
+	return fmt.Sprintf("CloudController Failure: %s", e.Message)
+}
+
 func NewFailure(code int, message string) Failure {
 	return Failure{
 		Code:    code,

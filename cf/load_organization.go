@@ -1,9 +1,11 @@
 package cf
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/pivotal-cf-experimental/rainmaker"
 )
 
 func (cc CloudController) LoadOrganization(guid, token string) (CloudControllerOrganization, error) {
@@ -11,7 +13,12 @@ func (cc CloudController) LoadOrganization(guid, token string) (CloudControllerO
 
 	org, err := cc.client.Organizations.Get(guid, token)
 	if err != nil {
-		return CloudControllerOrganization{}, NewFailure(0, err.Error())
+		_, ok := err.(rainmaker.NotFoundError)
+		if ok {
+			return CloudControllerOrganization{}, NotFoundError{fmt.Sprintf("Organization %q could not be found", guid)}
+		} else {
+			return CloudControllerOrganization{}, NewFailure(0, err.Error())
+		}
 	}
 
 	duration := time.Now().Sub(then)
