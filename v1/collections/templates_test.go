@@ -324,4 +324,50 @@ var _ = Describe("TemplatesCollection", func() {
 			})
 		})
 	})
+
+	Describe("Create", func() {
+		It("creates a new template via the templates repo", func() {
+			templatesRepo.CreateCall.Returns.Template = models.Template{
+				ID:       "some-template-guid",
+				Name:     "some-template-name",
+				Text:     "some-text",
+				HTML:     "some-html",
+				Subject:  "some-subject",
+				Metadata: "some-metadata",
+			}
+
+			template, err := collection.Create(conn, collections.Template{
+				Name:     "some-template-name",
+				Text:     "some-text",
+				HTML:     "some-html",
+				Subject:  "some-subject",
+				Metadata: "some-metadata",
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(template).To(Equal(collections.Template{
+				ID:       "some-template-guid",
+				Name:     "some-template-name",
+				Text:     "some-text",
+				HTML:     "some-html",
+				Subject:  "some-subject",
+				Metadata: "some-metadata",
+			}))
+
+			Expect(templatesRepo.CreateCall.Receives.Connection).To(Equal(conn))
+			Expect(templatesRepo.CreateCall.Receives.Template).To(Equal(models.Template{
+				Name:     "some-template-name",
+				Text:     "some-text",
+				HTML:     "some-html",
+				Subject:  "some-subject",
+				Metadata: "some-metadata",
+			}))
+		})
+
+		It("propagates errors from repo", func() {
+			templatesRepo.CreateCall.Returns.Error = errors.New("Boom!")
+
+			_, err := collection.Create(conn, collections.Template{})
+			Expect(err).To(Equal(errors.New("Boom!")))
+		})
+	})
 })

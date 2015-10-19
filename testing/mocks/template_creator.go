@@ -1,19 +1,16 @@
 package mocks
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
-)
+import "github.com/cloudfoundry-incubator/notifications/v1/collections"
 
 type TemplateCreator struct {
 	CreateCall struct {
 		Receives struct {
-			Database services.DatabaseInterface
-			Template models.Template
+			Connection collections.ConnectionInterface
+			Template   collections.Template
 		}
 		Returns struct {
-			TemplateGUID string
-			Error        error
+			Template collections.Template
+			Error    error
 		}
 	}
 }
@@ -22,9 +19,9 @@ func NewTemplateCreator() *TemplateCreator {
 	return &TemplateCreator{}
 }
 
-func (tc *TemplateCreator) Create(database services.DatabaseInterface, template models.Template) (string, error) {
-	tc.CreateCall.Receives.Database = database
+func (tc *TemplateCreator) Create(connection collections.ConnectionInterface, template collections.Template) (collections.Template, error) {
+	tc.CreateCall.Receives.Connection = connection
 	tc.CreateCall.Receives.Template = template
 
-	return tc.CreateCall.Returns.TemplateGUID, tc.CreateCall.Returns.Error
+	return tc.CreateCall.Returns.Template, tc.CreateCall.Returns.Error
 }

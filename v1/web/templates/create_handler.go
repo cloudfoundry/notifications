@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
+	"github.com/cloudfoundry-incubator/notifications/v1/collections"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/ryanmoran/stack"
 )
@@ -15,7 +14,7 @@ type errorWriter interface {
 }
 
 type templateCreator interface {
-	Create(database services.DatabaseInterface, template models.Template) (templateID string, err error)
+	Create(connection collections.ConnectionInterface, template collections.Template) (collections.Template, error)
 }
 
 type CreateHandler struct {
@@ -37,16 +36,22 @@ func (h CreateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
-	template := templateParams.ToModel()
+	connection := context.Get("database").(DatabaseInterface).Connection()
 
-	templateID, err := h.creator.Create(context.Get("database").(DatabaseInterface), template)
+	template, err := h.creator.Create(connection, collections.Template{
+		Name:     templateParams.Name,
+		Text:     templateParams.Text,
+		HTML:     templateParams.HTML,
+		Subject:  templateParams.Subject,
+		Metadata: string(templateParams.Metadata),
+	})
 	if err != nil {
 		h.errorWriter.Write(w, webutil.TemplateCreateError{})
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(`{"template_id":"` + templateID + `"}`))
+	w.Write([]byte(`{"template_id":"` + template.ID + `"}`))
 }
 
 func writeJSON(w http.ResponseWriter, status int, object interface{}) {

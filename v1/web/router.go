@@ -69,7 +69,6 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	templatesCollection := collections.NewTemplatesCollection(clientsRepo, kindsRepo, templatesRepo)
 
-	templateCreator := services.NewTemplateCreator(templatesRepo)
 	templateFinder := services.NewTemplateFinder(templatesRepo)
 	templateUpdater := services.NewTemplateUpdater(templatesRepo)
 	templateDeleter := services.NewTemplateDeleter(templatesRepo)
@@ -158,7 +157,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 		ErrorWriter:               errorWriter,
 		TemplateFinder:            templateFinder,
 		TemplateUpdater:           templateUpdater,
-		TemplateCreator:           templateCreator,
+		TemplateCreator:           templatesCollection,
 		TemplateDeleter:           templateDeleter,
 		TemplateLister:            templateLister,
 		TemplateAssociationLister: templatesCollection,

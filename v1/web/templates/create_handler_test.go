@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
-	"github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/cloudfoundry-incubator/notifications/v1/collections"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/templates"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/cloudfoundry-incubator/notifications/valiant"
@@ -27,13 +27,21 @@ var _ = Describe("CreateHandler", func() {
 		context     stack.Context
 		creator     *mocks.TemplateCreator
 		errorWriter *mocks.ErrorWriter
-		database    *mocks.Database
+		connection  *mocks.Connection
 	)
 
 	Describe("ServeHTTP", func() {
 		BeforeEach(func() {
 			creator = mocks.NewTemplateCreator()
-			creator.CreateCall.Returns.TemplateGUID = "template-guid"
+			creator.CreateCall.Returns.Template = collections.Template{
+				ID:       "template-guid",
+				Name:     "Emergency Template",
+				Text:     "Message to: {{.To}}. Raptor Alert.",
+				HTML:     "<p>{{.ClientID}} you should run.</p>",
+				Subject:  "Raptor Containment Unit Breached",
+				Metadata: "{}",
+			}
+
 			errorWriter = mocks.NewErrorWriter()
 			writer = httptest.NewRecorder()
 			body := bytes.NewBuffer([]byte{})
@@ -45,7 +53,10 @@ var _ = Describe("CreateHandler", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 
-			database = mocks.NewDatabase()
+			connection = mocks.NewConnection()
+			database := mocks.NewDatabase()
+			database.ConnectionCall.Returns.Connection = connection
+
 			context = stack.NewContext()
 			context.Set("database", database)
 
@@ -58,8 +69,8 @@ var _ = Describe("CreateHandler", func() {
 		It("calls create on its Creator with the correct arguments", func() {
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(creator.CreateCall.Receives.Database).To(Equal(database))
-			Expect(creator.CreateCall.Receives.Template).To(Equal(models.Template{
+			Expect(creator.CreateCall.Receives.Connection).To(Equal(connection))
+			Expect(creator.CreateCall.Receives.Template).To(Equal(collections.Template{
 				Name:     "Emergency Template",
 				Text:     "Message to: {{.To}}. Raptor Alert.",
 				HTML:     "<p>{{.ClientID}} you should run.</p>",

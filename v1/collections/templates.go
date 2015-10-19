@@ -36,11 +36,21 @@ type kindsRepository interface {
 
 type templatesRepository interface {
 	FindByID(connection models.ConnectionInterface, templateID string) (models.Template, error)
+	Create(connection models.ConnectionInterface, template models.Template) (models.Template, error)
 }
 
 type TemplateAssociation struct {
 	ClientID       string
 	NotificationID string
+}
+
+type Template struct {
+	ID       string
+	Name     string
+	Text     string
+	HTML     string
+	Subject  string
+	Metadata string
 }
 
 type TemplatesCollection struct {
@@ -160,4 +170,26 @@ func (c TemplatesCollection) ListAssociations(conn ConnectionInterface, template
 	}
 
 	return associations, nil
+}
+
+func (c TemplatesCollection) Create(connection ConnectionInterface, template Template) (Template, error) {
+	tmpl, err := c.templatesRepo.Create(connection, models.Template{
+		Name:     template.Name,
+		Text:     template.Text,
+		HTML:     template.HTML,
+		Subject:  template.Subject,
+		Metadata: template.Metadata,
+	})
+	if err != nil {
+		return Template{}, err
+	}
+
+	return Template{
+		ID:       tmpl.ID,
+		Name:     tmpl.Name,
+		Text:     tmpl.Text,
+		HTML:     tmpl.HTML,
+		Subject:  tmpl.Subject,
+		Metadata: tmpl.Metadata,
+	}, nil
 }
