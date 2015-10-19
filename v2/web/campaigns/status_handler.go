@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
-	"github.com/go-sql-driver/mysql"
 	"github.com/ryanmoran/stack"
 )
 
@@ -43,35 +42,5 @@ func (h StatusHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, conte
 		return
 	}
 
-	output := map[string]interface{}{
-		"id":                     status.CampaignID,
-		"status":                 status.Status,
-		"total_messages":         status.TotalMessages,
-		"sent_messages":          status.SentMessages,
-		"retry_messages":         status.RetryMessages,
-		"failed_messages":        status.FailedMessages,
-		"queued_messages":        status.QueuedMessages,
-		"undeliverable_messages": status.UndeliverableMessages,
-		"start_time":             status.StartTime,
-		"completed_time":         nil,
-		"_links": map[string]interface{}{
-			"self": map[string]string{
-				"href": fmt.Sprintf("/campaigns/%s/status", status.CampaignID),
-			},
-			"campaign": map[string]string{
-				"href": fmt.Sprintf("/campaigns/%s", status.CampaignID),
-			},
-		},
-	}
-
-	if (status.CompletedTime != mysql.NullTime{}) {
-		completedTimeValue, err := status.CompletedTime.Time.MarshalText()
-		if err != nil {
-			panic(err)
-		}
-
-		output["completed_time"] = string(completedTimeValue)
-	}
-
-	json.NewEncoder(w).Encode(output)
+	json.NewEncoder(w).Encode(NewCampaignStatusResponse(status))
 }

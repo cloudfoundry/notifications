@@ -7,7 +7,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
-	"github.com/go-sql-driver/mysql"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -88,10 +87,7 @@ var _ = Describe("CampaignStatusesCollection", func() {
 				SentMessages:   1,
 				FailedMessages: 1,
 				StartTime:      startTime,
-				CompletedTime: mysql.NullTime{
-					Time:  updatedAtTime,
-					Valid: true,
-				},
+				CompletedTime:  &updatedAtTime,
 			}))
 
 			Expect(campaignsRepository.GetCall.Receives.Connection).To(Equal(conn))
@@ -127,7 +123,7 @@ var _ = Describe("CampaignStatusesCollection", func() {
 					QueuedMessages:        2,
 					UndeliverableMessages: 2,
 					StartTime:             startTime,
-					CompletedTime:         mysql.NullTime{},
+					CompletedTime:         nil,
 				}))
 			})
 		})
@@ -155,7 +151,7 @@ var _ = Describe("CampaignStatusesCollection", func() {
 					FailedMessages: 0,
 					RetryMessages:  0,
 					StartTime:      startTime,
-					CompletedTime:  mysql.NullTime{},
+					CompletedTime:  nil,
 				}))
 			})
 		})

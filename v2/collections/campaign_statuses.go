@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
-	"github.com/go-sql-driver/mysql"
 )
 
 const (
@@ -36,7 +35,7 @@ type CampaignStatus struct {
 	FailedMessages        int
 	UndeliverableMessages int
 	StartTime             time.Time
-	CompletedTime         mysql.NullTime
+	CompletedTime         *time.Time
 }
 
 type CampaignStatusesCollection struct {
@@ -84,7 +83,7 @@ func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID, 
 	}
 
 	status := CampaignStatusSending
-	var completedTime mysql.NullTime
+	var completedTime *time.Time
 
 	if counts.Total > 0 && (counts.Failed+counts.Delivered) == counts.Total {
 		status = CampaignStatusCompleted
@@ -94,8 +93,7 @@ func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID, 
 			return CampaignStatus{}, UnknownError{err}
 		}
 
-		completedTime.Time = mostRecentlyUpdatedMessage.UpdatedAt
-		completedTime.Valid = true
+		completedTime = &mostRecentlyUpdatedMessage.UpdatedAt
 	}
 
 	return CampaignStatus{

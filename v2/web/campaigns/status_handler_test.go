@@ -12,7 +12,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/campaigns"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/go-sql-driver/mysql"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo"
@@ -80,10 +79,7 @@ var _ = Describe("Campaign status handler", func() {
 			FailedMessages:        2,
 			UndeliverableMessages: 1,
 			StartTime:             startTime,
-			CompletedTime: mysql.NullTime{
-				Time:  completedTime,
-				Valid: true,
-			},
+			CompletedTime:         &completedTime,
 		}
 
 		handler.ServeHTTP(writer, request, context)
@@ -129,7 +125,7 @@ var _ = Describe("Campaign status handler", func() {
 				RetryMessages:  1,
 				FailedMessages: 2,
 				StartTime:      startTime,
-				CompletedTime:  mysql.NullTime{},
+				CompletedTime:  nil,
 			}
 
 			handler.ServeHTTP(writer, request, context)

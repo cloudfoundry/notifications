@@ -2,11 +2,13 @@ package models_test
 
 import (
 	"errors"
+	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
+	"github.com/go-sql-driver/mysql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -73,6 +75,9 @@ var _ = Describe("CampaignsRepository", func() {
 
 	Describe("Get", func() {
 		It("gets a campaign from the database", func() {
+			startTime := time.Now().Add(-10 * time.Second).UTC().Truncate(time.Second)
+			completedTime := time.Now().UTC().Truncate(time.Second)
+
 			campaign, err := repo.Insert(connection, models.Campaign{
 				SendTo:         `{"user": "user-123"}`,
 				CampaignTypeID: "some-campaign-type-id",
@@ -82,6 +87,11 @@ var _ = Describe("CampaignsRepository", func() {
 				TemplateID:     "random-template-id",
 				ReplyTo:        "reply-to-address",
 				SenderID:       "my-sender",
+				StartTime:      startTime,
+				CompletedTime: mysql.NullTime{
+					Time:  completedTime,
+					Valid: true,
+				},
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(campaign.ID).To(Equal("first-random-guid"))
