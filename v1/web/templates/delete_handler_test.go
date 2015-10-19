@@ -23,17 +23,20 @@ var _ = Describe("DeleteHandler", func() {
 		context     stack.Context
 		deleter     *mocks.TemplateDeleter
 		err         error
-		database    *mocks.Database
+		connection  *mocks.Connection
 	)
 
 	Describe("ServeHTTP", func() {
 		BeforeEach(func() {
 			deleter = mocks.NewTemplateDeleter()
 			errorWriter = mocks.NewErrorWriter()
-			database = mocks.NewDatabase()
 			writer = httptest.NewRecorder()
 			request, err = http.NewRequest("DELETE", "/templates/template-id-123", bytes.NewBuffer([]byte{}))
 			Expect(err).NotTo(HaveOccurred())
+
+			connection = mocks.NewConnection()
+			database := mocks.NewDatabase()
+			database.ConnectionCall.Returns.Connection = connection
 
 			context = stack.NewContext()
 			context.Set("database", database)
@@ -43,9 +46,9 @@ var _ = Describe("DeleteHandler", func() {
 
 		It("calls delete on the repo", func() {
 			handler.ServeHTTP(writer, request, context)
-
 			Expect(writer.Code).To(Equal(http.StatusNoContent))
-			Expect(deleter.DeleteCall.Receives.Database).To(Equal(database))
+
+			Expect(deleter.DeleteCall.Receives.Connection).To(Equal(connection))
 			Expect(deleter.DeleteCall.Receives.TemplateID).To(Equal("template-id-123"))
 		})
 

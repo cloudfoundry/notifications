@@ -37,6 +37,7 @@ type kindsRepository interface {
 type templatesRepository interface {
 	FindByID(connection models.ConnectionInterface, templateID string) (models.Template, error)
 	Create(connection models.ConnectionInterface, template models.Template) (models.Template, error)
+	Destroy(connection models.ConnectionInterface, templateID string) error
 }
 
 type TemplateAssociation struct {
@@ -192,4 +193,8 @@ func (c TemplatesCollection) Create(connection ConnectionInterface, template Tem
 		Subject:  tmpl.Subject,
 		Metadata: tmpl.Metadata,
 	}, nil
+}
+
+func (c TemplatesCollection) Delete(connection ConnectionInterface, templateID string) error {
+	return c.templatesRepo.Destroy(connection, templateID)
 }

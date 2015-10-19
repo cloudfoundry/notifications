@@ -370,4 +370,21 @@ var _ = Describe("TemplatesCollection", func() {
 			Expect(err).To(Equal(errors.New("Boom!")))
 		})
 	})
+
+	Describe("Delete", func() {
+		It("calls destroy on its repo", func() {
+			err := collection.Delete(conn, "templateID")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(templatesRepo.DestroyCall.Receives.Connection).To(Equal(conn))
+			Expect(templatesRepo.DestroyCall.Receives.TemplateID).To(Equal("templateID"))
+		})
+
+		It("returns an error if repo destroy returns an error", func() {
+			templatesRepo.DestroyCall.Returns.Error = errors.New("Boom!!")
+
+			err := collection.Delete(conn, "templateID")
+			Expect(err).To(MatchError(errors.New("Boom!!")))
+		})
+	})
 })

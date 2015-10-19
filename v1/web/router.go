@@ -71,7 +71,6 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	templateFinder := services.NewTemplateFinder(templatesRepo)
 	templateUpdater := services.NewTemplateUpdater(templatesRepo)
-	templateDeleter := services.NewTemplateDeleter(templatesRepo)
 	templateLister := services.NewTemplateLister(templatesRepo)
 
 	notifyObj := notify.NewNotify(notificationsFinder, registrar)
@@ -158,7 +157,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 		TemplateFinder:            templateFinder,
 		TemplateUpdater:           templateUpdater,
 		TemplateCreator:           templatesCollection,
-		TemplateDeleter:           templateDeleter,
+		TemplateDeleter:           templatesCollection,
 		TemplateLister:            templateLister,
 		TemplateAssociationLister: templatesCollection,
 	}.Register(mx)
