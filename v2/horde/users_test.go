@@ -2,6 +2,7 @@ package horde_test
 
 import (
 	"github.com/cloudfoundry-incubator/notifications/v2/horde"
+	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -10,8 +11,9 @@ import (
 var _ = Describe("users audience", func() {
 	Describe("GenerateAudiences", func() {
 		It("wraps the given list of userGUIDs in User objects", func() {
+			logger := lager.NewLogger("notifications-whatever")
 			users := horde.NewUsers()
-			audiences, err := users.GenerateAudiences([]string{"59eb64c4-728d-11e5-bf96-10ddb1aa2a2c"})
+			audiences, err := users.GenerateAudiences([]string{"59eb64c4-728d-11e5-bf96-10ddb1aa2a2c"}, logger)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(audiences).To(HaveLen(1))
 

@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v2/horde"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
+	"github.com/pivotal-golang/lager"
 )
 
 type NoAudienceError struct {
@@ -44,7 +45,7 @@ type CampaignJobProcessor struct {
 }
 
 type audienceGenerator interface {
-	GenerateAudiences(inputs []string) ([]horde.Audience, error)
+	GenerateAudiences(inputs []string, logger lager.Logger) ([]horde.Audience, error)
 }
 
 type enqueuer interface {
@@ -70,7 +71,7 @@ func key(user horde.User) string {
 	return user.Email
 }
 
-func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost string, job gobble.Job) error {
+func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost string, job gobble.Job, logger lager.Logger) error {
 	var campaignJob queue.CampaignJob
 
 	err := job.Unmarshal(&campaignJob)
@@ -90,7 +91,7 @@ func (p CampaignJobProcessor) Process(conn services.ConnectionInterface, uaaHost
 			return err
 		}
 
-		aud, err := generator.GenerateAudiences(audienceMembers)
+		aud, err := generator.GenerateAudiences(audienceMembers, logger)
 		if err != nil {
 			return err
 		}

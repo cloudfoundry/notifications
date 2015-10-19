@@ -17,21 +17,19 @@ type Spaces struct {
 	spaceFinder spaceFinder
 	tokenLoader tokenLoader
 	uaaHost     string
-	logger      lager.Logger
 }
 
-func NewSpaces(userFinder userFinder, orgFinder orgFinder, spaceFinder spaceFinder, tokenLoader tokenLoader, uaaHost string, logger lager.Logger) Spaces {
+func NewSpaces(userFinder userFinder, orgFinder orgFinder, spaceFinder spaceFinder, tokenLoader tokenLoader, uaaHost string) Spaces {
 	return Spaces{
 		userFinder:  userFinder,
 		orgFinder:   orgFinder,
 		spaceFinder: spaceFinder,
 		tokenLoader: tokenLoader,
 		uaaHost:     uaaHost,
-		logger:      logger,
 	}
 }
 
-func (s Spaces) GenerateAudiences(spaceGUIDs []string) ([]Audience, error) {
+func (s Spaces) GenerateAudiences(spaceGUIDs []string, logger lager.Logger) ([]Audience, error) {
 	var audiences []Audience
 
 	token, err := s.tokenLoader.Load(s.uaaHost)
@@ -39,17 +37,14 @@ func (s Spaces) GenerateAudiences(spaceGUIDs []string) ([]Audience, error) {
 		return audiences, err
 	}
 
-	var spaceCounter int
-	for _, spaceGUID := range spaceGUIDs {
+	for spaceCounter, spaceGUID := range spaceGUIDs {
 		var users []User
 
 		if spaceCounter%100 == 0 {
-			s.logger.Debug("number of spaces", lager.Data{
+			logger.Debug("number of spaces", lager.Data{
 				"processed": spaceCounter,
 			})
 		}
-
-		spaceCounter++
 
 		space, err := s.spaceFinder.Load(spaceGUID, token)
 		if err != nil {

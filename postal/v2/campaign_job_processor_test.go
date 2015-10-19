@@ -1,6 +1,7 @@
 package v2_test
 
 import (
+	"bytes"
 	"errors"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/horde"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
+	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -24,6 +26,8 @@ var _ = Describe("CampaignJobProcessor", func() {
 		connection                  *mocks.Connection
 		enqueuer                    *mocks.V2Enqueuer
 		users, orgs, emails, spaces *mocks.Audiences
+		buffer                      *bytes.Buffer
+		logger                      lager.Logger
 	)
 
 	BeforeEach(func() {
@@ -38,6 +42,9 @@ var _ = Describe("CampaignJobProcessor", func() {
 		users = mocks.NewAudiences()
 		processor = v2.NewCampaignJobProcessor(notify.EmailFormatter{},
 			notify.HTMLExtractor{}, emails, spaces, orgs, users, enqueuer)
+		buffer = bytes.NewBuffer([]byte{})
+		logger = lager.NewLogger("notifications")
+		logger.RegisterSink(lager.NewWriterSink(buffer, lager.DEBUG))
 	})
 
 	Context("when the audience is users", func() {
@@ -66,7 +73,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 					ReplyTo:        "noreply@example.com",
 					ClientID:       "some-client-id",
 				},
-			}))
+			}), logger)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(users.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
@@ -139,7 +146,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 					ReplyTo:        "noreply@example.com",
 					ClientID:       "some-client-id",
 				},
-			}))
+			}), logger)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(emails.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
@@ -213,13 +220,14 @@ var _ = Describe("CampaignJobProcessor", func() {
 					ReplyTo:        "noreply@example.com",
 					ClientID:       "some-client-id",
 				},
-			}))
+			}), logger)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(spaces.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
 				"some-space-guid",
 				"some-other-space-guid",
 			}))
+			Expect(spaces.GenerateAudiencesCall.Receives.Logger).To(Equal(logger))
 
 			Expect(enqueuer.EnqueueCall.Receives.Connection).To(Equal(connection))
 			Expect(enqueuer.EnqueueCall.Receives.Users).To(ConsistOf([]queue.User{
@@ -286,7 +294,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 					ReplyTo:        "noreply@example.com",
 					ClientID:       "some-client-id",
 				},
-			}))
+			}), logger)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(orgs.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
@@ -399,7 +407,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 					ReplyTo:        "noreply@example.com",
 					ClientID:       "some-client-id",
 				},
-			}))
+			}), logger)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(orgs.GenerateAudiencesCall.Receives.Inputs).To(Equal([]string{
@@ -449,7 +457,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 	Context("when an error occurs", func() {
 		Context("when the campaign cannot be unmarshalled", func() {
 			It("returns the error", func() {
-				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob("%%"))
+				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob("%%"), logger)
 				Expect(err).To(MatchError("json: cannot unmarshal string into Go value of type queue.CampaignJob"))
 			})
 		})
@@ -460,7 +468,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 					Campaign: collections.Campaign{
 						SendTo: map[string][]string{"some-audience": {"wut"}},
 					},
-				}))
+				}), logger)
 				Expect(err).To(MatchError(v2.NoAudienceError{errors.New("generator for \"some-audience\" audience could not be found")}))
 			})
 		})
@@ -476,7 +484,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 					Campaign: collections.Campaign{
 						SendTo: map[string][]string{"spaces": {"some-space-guid"}},
 					},
-				}))
+				}), logger)
 				Expect(err).To(MatchError(errors.New("some extraction error")))
 			})
 		})
@@ -489,7 +497,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 					Campaign: collections.Campaign{
 						SendTo: map[string][]string{"emails": {"wut@example.com"}},
 					},
-				}))
+				}), logger)
 				Expect(err).To(MatchError(errors.New("emails failure")))
 			})
 		})

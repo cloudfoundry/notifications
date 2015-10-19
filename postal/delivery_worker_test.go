@@ -43,6 +43,7 @@ var _ = Describe("DeliveryWorker", func() {
 		messageStatusUpdater = mocks.NewMessageStatusUpdater()
 
 		config := postal.DeliveryWorkerConfig{
+			ID:     42,
 			Logger: logger,
 			Queue:  queue,
 			DeliveryFailureHandler: deliveryFailureHandler,
@@ -117,6 +118,7 @@ var _ = Describe("DeliveryWorker", func() {
 				Expect(campaignJobProcessor.ProcessCall.Receives.Job).To(Equal(*job))
 				Expect(campaignJobProcessor.ProcessCall.Receives.UAAHost).To(Equal("my-uaa-host"))
 				Expect(campaignJobProcessor.ProcessCall.Receives.Connection).To(Equal(connection))
+				Expect(campaignJobProcessor.ProcessCall.Receives.Logger).To(Equal(logger))
 			})
 
 			Context("when the strategy fails to determine", func() {

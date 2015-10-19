@@ -18,7 +18,7 @@ type v2DeliveryJobProcessor interface {
 }
 
 type campaignJobProcessor interface {
-	Process(conn services.ConnectionInterface, uaaHost string, job gobble.Job) error
+	Process(conn services.ConnectionInterface, uaaHost string, job gobble.Job, logger lager.Logger) error
 }
 
 type messageStatusUpdater interface {
@@ -55,13 +55,11 @@ type DeliveryWorker struct {
 }
 
 func NewDeliveryWorker(v1DeliveryJobProcessor v1DeliveryJobProcessor, v2DeliveryJobProcessor v2DeliveryJobProcessor, config DeliveryWorkerConfig) DeliveryWorker {
-	logger := config.Logger.Session("worker", lager.Data{"worker_id": config.ID})
-
 	worker := DeliveryWorker{
 		V1DeliveryJobProcessor: v1DeliveryJobProcessor,
 		V2DeliveryJobProcessor: v2DeliveryJobProcessor,
 		uaaHost:                config.UAAHost,
-		logger:                 logger,
+		logger:                 config.Logger,
 		database:               config.Database,
 		campaignJobProcessor:   config.CampaignJobProcessor,
 		deliveryFailureHandler: config.DeliveryFailureHandler,
@@ -89,7 +87,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 
 	switch typedJob.JobType {
 	case "campaign":
-		err := worker.campaignJobProcessor.Process(worker.database.Connection(), worker.uaaHost, *job)
+		err := worker.campaignJobProcessor.Process(worker.database.Connection(), worker.uaaHost, *job, worker.logger)
 		if err != nil {
 			worker.deliveryFailureHandler.Handle(job, worker.logger)
 		}

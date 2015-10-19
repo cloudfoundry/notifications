@@ -20,6 +20,7 @@ var _ = Describe("spaces audience", func() {
 		spaceFinder *mocks.SpaceLoader
 		tokenLoader *mocks.TokenLoader
 		spaces      horde.Spaces
+		logger      lager.Logger
 		logStream   *bytes.Buffer
 	)
 
@@ -48,15 +49,15 @@ var _ = Describe("spaces audience", func() {
 		tokenLoader.LoadCall.Returns.Token = "token"
 
 		logStream = bytes.NewBuffer([]byte{})
-		logger := lager.NewLogger("notifications-test")
+		logger = lager.NewLogger("notifications-test")
 		logger.RegisterSink(lager.NewWriterSink(logStream, lager.DEBUG))
 
-		spaces = horde.NewSpaces(userFinder, orgFinder, spaceFinder, tokenLoader, "https://uaa.example.com", logger)
+		spaces = horde.NewSpaces(userFinder, orgFinder, spaceFinder, tokenLoader, "https://uaa.example.com")
 	})
 
 	Describe("GenerateAudiences", func() {
 		It("looks up userGUIDs and wraps them in User objects", func() {
-			audiences, err := spaces.GenerateAudiences([]string{"some-silly-space"})
+			audiences, err := spaces.GenerateAudiences([]string{"some-silly-space"}, logger)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(audiences).To(HaveLen(1))
 
@@ -80,7 +81,7 @@ var _ = Describe("spaces audience", func() {
 			It("logs the count to the logger", func() {
 				allSpaces := make([]string, 101)
 
-				_, err := spaces.GenerateAudiences(allSpaces)
+				_, err := spaces.GenerateAudiences(allSpaces, logger)
 				Expect(err).NotTo(HaveOccurred())
 
 				message, err := logStream.ReadString('\n')
@@ -97,7 +98,7 @@ var _ = Describe("spaces audience", func() {
 			Context("when the token loader encounters an error", func() {
 				It("returns the error", func() {
 					tokenLoader.LoadCall.Returns.Error = errors.New("some token error")
-					_, err := spaces.GenerateAudiences([]string{"some-silly-space"})
+					_, err := spaces.GenerateAudiences([]string{"some-silly-space"}, logger)
 					Expect(err).To(MatchError(errors.New("some token error")))
 				})
 			})
@@ -135,7 +136,7 @@ var _ = Describe("spaces audience", func() {
 					})
 
 					It("returns the correct audience", func() {
-						audiences, err := spaces.GenerateAudiences([]string{"some-silly-space", "some-other-space"})
+						audiences, err := spaces.GenerateAudiences([]string{"some-silly-space", "some-other-space"}, logger)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(audiences).To(ContainElement(horde.Audience{
 							Users: []horde.User{
@@ -157,7 +158,7 @@ var _ = Describe("spaces audience", func() {
 							},
 						}
 
-						_, err := spaces.GenerateAudiences([]string{"some-silly-space"})
+						_, err := spaces.GenerateAudiences([]string{"some-silly-space"}, logger)
 						Expect(err).To(MatchError(cf.Failure{Message: "some org finding error"}))
 					})
 				})
@@ -184,7 +185,7 @@ var _ = Describe("spaces audience", func() {
 					})
 
 					It("returns the correct audience", func() {
-						audiences, err := spaces.GenerateAudiences([]string{"some-missing-space", "some-silly-space"})
+						audiences, err := spaces.GenerateAudiences([]string{"some-missing-space", "some-silly-space"}, logger)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(audiences).To(ContainElement(horde.Audience{
 							Users: []horde.User{
@@ -205,7 +206,7 @@ var _ = Describe("spaces audience", func() {
 								Message: "some space finding error",
 							},
 						}
-						_, err := spaces.GenerateAudiences([]string{"some-silly-space"})
+						_, err := spaces.GenerateAudiences([]string{"some-silly-space"}, logger)
 						Expect(err).To(MatchError(cf.Failure{Message: "some space finding error"}))
 					})
 				})
@@ -214,7 +215,7 @@ var _ = Describe("spaces audience", func() {
 			Context("when the user loader encounters an error", func() {
 				It("returns the error", func() {
 					userFinder.UserIDsBelongingToSpaceCall.Returns.Error = errors.New("some user finding error")
-					_, err := spaces.GenerateAudiences([]string{"some-silly-space"})
+					_, err := spaces.GenerateAudiences([]string{"some-silly-space"}, logger)
 					Expect(err).To(MatchError(errors.New("some user finding error")))
 				})
 			})

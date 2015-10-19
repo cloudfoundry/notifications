@@ -97,7 +97,7 @@ func Boot(mom mother, config Config) {
 
 	usersAudienceGenerator := horde.NewUsers()
 	emailsAudienceGenerator := horde.NewEmails()
-	spacesAudienceGenerator := horde.NewSpaces(findsUserIDs, organizationLoader, spaceLoader, tokenLoader, config.UAAHost, logger)
+	spacesAudienceGenerator := horde.NewSpaces(findsUserIDs, organizationLoader, spaceLoader, tokenLoader, config.UAAHost)
 	orgsAudienceGenerator := horde.NewOrganizations(findsUserIDs, organizationLoader, tokenLoader, config.UAAHost)
 
 	v2database := v2models.NewDatabase(sqlDatabase, v2models.Config{})
@@ -149,7 +149,7 @@ func Boot(mom mother, config Config) {
 			UAAHost: config.UAAHost,
 			DBTrace: config.DBLoggingEnabled,
 
-			Logger: logger,
+			Logger: logger.Session("worker", lager.Data{"worker_id": index}),
 			Queue:  gobbleQueue,
 
 			Database:               v2database,

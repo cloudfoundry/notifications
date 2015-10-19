@@ -1,11 +1,13 @@
 package horde_test
 
 import (
+	"bytes"
 	"errors"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/horde"
+	"github.com/pivotal-golang/lager"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,6 +19,8 @@ var _ = Describe("organizations audience", func() {
 		orgFinder     *mocks.OrganizationLoader
 		tokenLoader   *mocks.TokenLoader
 		organizations horde.Organizations
+		logger        lager.Logger
+		logStream     *bytes.Buffer
 	)
 
 	BeforeEach(func() {
@@ -35,11 +39,15 @@ var _ = Describe("organizations audience", func() {
 		tokenLoader.LoadCall.Returns.Token = "token"
 
 		organizations = horde.NewOrganizations(userFinder, orgFinder, tokenLoader, "https://uaa.example.com")
+
+		logStream = bytes.NewBuffer([]byte{})
+		logger = lager.NewLogger("notifications-whatever")
+		logger.RegisterSink(lager.NewWriterSink(logStream, lager.DEBUG))
 	})
 
 	Describe("GenerateAudiences", func() {
 		It("looks up userGUIDs and wraps them in User objects", func() {
-			audiences, err := organizations.GenerateAudiences([]string{"some-silly-org-guid"})
+			audiences, err := organizations.GenerateAudiences([]string{"some-silly-org-guid"}, logger)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(audiences).To(HaveLen(1))
 
@@ -57,11 +65,28 @@ var _ = Describe("organizations audience", func() {
 			Expect(orgFinder.LoadCall.Receives.Token).To(Equal("token"))
 		})
 
+		Context("when we count 100 OrgGUIDs", func() {
+			It("logs the count to the logger", func() {
+				allOrgs := make([]string, 101)
+
+				_, err := organizations.GenerateAudiences(allOrgs, logger)
+				Expect(err).NotTo(HaveOccurred())
+
+				message, err := logStream.ReadString('\n')
+				Expect(err).NotTo(HaveOccurred())
+				Expect(message).To(ContainSubstring(`{"processed":0}`))
+
+				message, err = logStream.ReadString('\n')
+				Expect(err).NotTo(HaveOccurred())
+				Expect(message).To(ContainSubstring(`{"processed":100}`))
+			})
+		})
+
 		Context("when a error occurs", func() {
 			Context("when the token loader encounters an error", func() {
 				It("returns the error", func() {
 					tokenLoader.LoadCall.Returns.Error = errors.New("some token error")
-					_, err := organizations.GenerateAudiences([]string{"some-silly-org-guid"})
+					_, err := organizations.GenerateAudiences([]string{"some-silly-org-guid"}, logger)
 					Expect(err).To(MatchError(errors.New("some token error")))
 				})
 			})
@@ -86,7 +111,7 @@ var _ = Describe("organizations audience", func() {
 					})
 
 					It("returns the correct audience", func() {
-						audiences, err := organizations.GenerateAudiences([]string{"some-silly-org-guid", "some-other-org-guid"})
+						audiences, err := organizations.GenerateAudiences([]string{"some-silly-org-guid", "some-other-org-guid"}, logger)
 						Expect(err).NotTo(HaveOccurred())
 						Expect(audiences).To(ContainElement(horde.Audience{
 							Users: []horde.User{
@@ -108,7 +133,7 @@ var _ = Describe("organizations audience", func() {
 							},
 						}
 
-						_, err := organizations.GenerateAudiences([]string{"some-silly-org-guid"})
+						_, err := organizations.GenerateAudiences([]string{"some-silly-org-guid"}, logger)
 						Expect(err).To(MatchError(cf.Failure{Message: "some org finding error"}))
 					})
 				})
@@ -117,7 +142,7 @@ var _ = Describe("organizations audience", func() {
 			Context("when the user loader encounters an error", func() {
 				It("returns the error", func() {
 					userFinder.UserIDsBelongingToOrganizationCall.Returns.Error = errors.New("some user finding error")
-					_, err := organizations.GenerateAudiences([]string{"some-silly-org-guid"})
+					_, err := organizations.GenerateAudiences([]string{"some-silly-org-guid"}, logger)
 					Expect(err).To(MatchError(errors.New("some user finding error")))
 				})
 			})

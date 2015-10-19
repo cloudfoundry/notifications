@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
+	"github.com/pivotal-golang/lager"
 )
 
 type userFinder interface {
@@ -35,7 +36,7 @@ func NewOrganizations(userFinder userFinder, orgFinder orgFinder, tokenLoader to
 	}
 }
 
-func (o Organizations) GenerateAudiences(orgGUIDs []string) ([]Audience, error) {
+func (o Organizations) GenerateAudiences(orgGUIDs []string, logger lager.Logger) ([]Audience, error) {
 	var audiences []Audience
 
 	token, err := o.tokenLoader.Load(o.uaaHost)
@@ -43,8 +44,14 @@ func (o Organizations) GenerateAudiences(orgGUIDs []string) ([]Audience, error) 
 		return audiences, err
 	}
 
-	for _, orgGUID := range orgGUIDs {
+	for orgCounter, orgGUID := range orgGUIDs {
 		var users []User
+
+		if orgCounter%100 == 0 {
+			logger.Debug("number of organizations", lager.Data{
+				"processed": orgCounter,
+			})
+		}
 
 		org, err := o.orgFinder.Load(orgGUID, token)
 		if err != nil {
