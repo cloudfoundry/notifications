@@ -86,7 +86,7 @@ func Boot(mom mother, config Config) {
 
 	// V2
 	messagesRepository := v2models.NewMessagesRepository(util.NewClock(), guidGenerator.Generate)
-	gobbleInitializer := gobble.GobbleInitializer{}
+	gobbleInitializer := gobble.Initializer{}
 
 	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, messagesRepository, gobbleInitializer)
 

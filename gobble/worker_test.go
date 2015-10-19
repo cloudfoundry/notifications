@@ -38,21 +38,16 @@ var _ = Describe("Worker", func() {
 		It("reserves a job, performs the callback, and then dequeues the completed job", func() {
 			job, err := queue.Enqueue(gobble.Job{
 				Payload: "the-payload",
-			})
-			if err != nil {
-				panic(err)
-			}
+			}, database.Connection)
+			Expect(err).NotTo(HaveOccurred())
 
 			worker.Perform()
 
 			Expect(callbackWasCalledWith.ID).To(Equal(job.ID))
 
 			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(len(results)).To(Equal(0))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(results).To(HaveLen(0))
 		})
 
 		It("re-enqueues jobs that are marked for retry", func() {
@@ -61,19 +56,15 @@ var _ = Describe("Worker", func() {
 			}
 			worker = gobble.NewWorker(1, queue, callback)
 
-			job, err := queue.Enqueue(gobble.Job{})
-			if err != nil {
-				panic(err)
-			}
+			job, err := queue.Enqueue(gobble.Job{}, database.Connection)
+			Expect(err).NotTo(HaveOccurred())
 
 			worker.Perform()
 
 			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
+			Expect(results).To(HaveLen(1))
 
-			Expect(len(results)).To(Equal(1))
 			retriedJob := results[0].(*gobble.Job)
 			Expect(retriedJob.ID).To(Equal(job.ID))
 			Expect(retriedJob.RetryCount).To(Equal(1))
@@ -85,27 +76,21 @@ var _ = Describe("Worker", func() {
 		It("works in a loop, and can be stopped", func() {
 			queue.Enqueue(gobble.Job{
 				Payload: "the-payload",
-			})
+			}, database.Connection)
 			queue.Enqueue(gobble.Job{
 				Payload: "the-payload",
-			})
+			}, database.Connection)
 
 			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(len(results)).To(Equal(2))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(results).To(HaveLen(2))
 
 			worker.Work()
 
-			Eventually(func() int {
+			Eventually(func() (int, error) {
 				results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
-				if err != nil {
-					panic(err)
-				}
 
-				return len(results)
+				return len(results), err
 			}).Should(Equal(0))
 
 			worker.Halt()

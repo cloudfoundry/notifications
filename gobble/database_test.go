@@ -17,34 +17,32 @@ var _ = Describe("Database", func() {
 		database := gobble.NewDatabase(sqlDB)
 
 		rows, err := database.Connection.Db.Query("SHOW TABLES")
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
+
 		defer rows.Close()
 		tables := []string{}
 
 		for rows.Next() {
 			var table string
-			if err := rows.Scan(&table); err != nil {
-				panic(err)
-			}
+			err := rows.Scan(&table)
+			Expect(err).NotTo(HaveOccurred())
+
 			tables = append(tables, table)
 		}
 
 		Expect(tables).To(ContainElement("jobs"))
 
 		rows, err = database.Connection.Db.Query("SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'jobs'")
-		if err != nil {
-			panic(err)
-		}
+		Expect(err).NotTo(HaveOccurred())
+
 		defer rows.Close()
 		columns := []Column{}
 
 		for rows.Next() {
 			var Field, Type string
-			if err := rows.Scan(&Field, &Type); err != nil {
-				panic(err)
-			}
+			err := rows.Scan(&Field, &Type)
+			Expect(err).NotTo(HaveOccurred())
+
 			columns = append(columns, Column{
 				Field: Field,
 				Type:  Type,

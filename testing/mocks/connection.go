@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
+	"github.com/go-gorp/gorp"
 )
 
 type Connection struct {
@@ -86,6 +87,13 @@ type Connection struct {
 			Error error
 		}
 	}
+
+	GetDbMapCall struct {
+		WasCalled bool
+		Returns   struct {
+			DbMap *gorp.DbMap
+		}
+	}
 }
 
 func NewConnection() *Connection {
@@ -142,4 +150,9 @@ func (c *Connection) Update(list ...interface{}) (int64, error) {
 	c.UpdateCall.Receives.List = list
 
 	return c.UpdateCall.Returns.Count, c.UpdateCall.Returns.Error
+}
+
+func (c *Connection) GetDbMap() *gorp.DbMap {
+	c.GetDbMapCall.WasCalled = true
+	return c.GetDbMapCall.Returns.DbMap
 }

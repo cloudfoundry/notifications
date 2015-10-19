@@ -48,7 +48,7 @@ func instantiateDBConnection() (*sql.DB, error) {
 	databaseURL = strings.TrimPrefix(databaseURL, "mysql2://")
 	parsedURL, err := url.Parse("tcp://" + databaseURL)
 	if err != nil {
-		panic(fmt.Sprintf("Could not parse DATABASE_URL %q, it does not fit format %q", os.Getenv("DATABASE_URL"), "tcp://user:pass@host/dname"))
+		Fail(fmt.Sprintf("Could not parse DATABASE_URL %q, it does not fit format %q", os.Getenv("DATABASE_URL"), "tcp://user:pass@host/dname"))
 	}
 
 	password, _ := parsedURL.User.Password()

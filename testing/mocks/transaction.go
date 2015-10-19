@@ -1,7 +1,5 @@
 package mocks
 
-import "github.com/go-gorp/gorp"
-
 type Transaction struct {
 	BeginCall struct {
 		WasCalled bool
@@ -21,13 +19,6 @@ type Transaction struct {
 		WasCalled bool
 		Returns   struct {
 			Error error
-		}
-	}
-
-	GetDbMapCall struct {
-		WasCalled bool
-		Returns   struct {
-			DbMap *gorp.DbMap
 		}
 	}
 
@@ -51,9 +42,4 @@ func (t *Transaction) Commit() error {
 func (t *Transaction) Rollback() error {
 	t.RollbackCall.WasCalled = true
 	return t.RollbackCall.Returns.Error
-}
-
-func (t *Transaction) GetDbMap() *gorp.DbMap {
-	t.GetDbMapCall.WasCalled = true
-	return t.GetDbMapCall.Returns.DbMap
 }

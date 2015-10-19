@@ -1,25 +1,12 @@
 package mocks
 
-import (
-	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/cloudfoundry-incubator/notifications/gobble"
-)
+import "github.com/cloudfoundry-incubator/notifications/gobble"
 
 type Queue struct {
 	EnqueueCall struct {
 		Receives struct {
-			Jobs []gobble.Job
-		}
-		Returns struct {
-			Job   gobble.Job
-			Error error
-		}
-	}
-
-	EnqueueWithTransactionCall struct {
-		Receives struct {
-			Jobs        []gobble.Job
-			Transaction db.TransactionInterface
+			Jobs       []gobble.Job
+			Connection gobble.ConnectionInterface
 		}
 		Returns struct {
 			Job   gobble.Job
@@ -69,21 +56,15 @@ func NewQueue() *Queue {
 	return &Queue{}
 }
 
-func (q *Queue) Enqueue(job gobble.Job) (gobble.Job, error) {
+func (q *Queue) Enqueue(job gobble.Job, connection gobble.ConnectionInterface) (gobble.Job, error) {
 	q.EnqueueCall.Receives.Jobs = append(q.EnqueueCall.Receives.Jobs, job)
+	q.EnqueueCall.Receives.Connection = connection
 
-	return q.EnqueueCall.Returns.Job, q.EnqueueCall.Returns.Error
-}
-
-func (q *Queue) EnqueueWithTransaction(job gobble.Job, transaction db.TransactionInterface) (gobble.Job, error) {
-	q.EnqueueWithTransactionCall.Receives.Jobs = append(q.EnqueueWithTransactionCall.Receives.Jobs, job)
-	q.EnqueueWithTransactionCall.Receives.Transaction = transaction
-
-	if q.EnqueueWithTransactionCall.Hook != nil {
-		q.EnqueueWithTransactionCall.Hook()
+	if q.EnqueueCall.Hook != nil {
+		q.EnqueueCall.Hook()
 	}
 
-	return q.EnqueueWithTransactionCall.Returns.Job, q.EnqueueWithTransactionCall.Returns.Error
+	return q.EnqueueCall.Returns.Job, q.EnqueueCall.Returns.Error
 }
 
 func (q *Queue) Dequeue(job gobble.Job) {

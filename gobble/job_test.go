@@ -35,9 +35,7 @@ var _ = Describe("Job", func() {
 
 			var payload map[string]string
 			err := job.Unmarshal(&payload)
-			if err != nil {
-				panic(err)
-			}
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(payload).To(Equal(data))
 		})

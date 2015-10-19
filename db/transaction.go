@@ -11,7 +11,6 @@ type TransactionInterface interface {
 	Begin() error
 	Commit() error
 	Rollback() error
-	GetDbMap() *gorp.DbMap
 }
 
 type Transaction struct {
@@ -26,7 +25,7 @@ func NewTransaction(conn *Connection) TransactionInterface {
 }
 
 func (transaction *Transaction) GetDbMap() *gorp.DbMap {
-	return transaction.conn.DbMap
+	return transaction.conn.GetDbMap()
 }
 
 func (transaction *Transaction) Begin() error {

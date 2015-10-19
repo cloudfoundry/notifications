@@ -38,8 +38,7 @@ type mother interface {
 }
 
 type enqueuer interface {
-	Enqueue(job gobble.Job) (gobble.Job, error)
-	EnqueueWithTransaction(job gobble.Job, transaction db.TransactionInterface) (gobble.Job, error)
+	Enqueue(job gobble.Job, transaction gobble.ConnectionInterface) (gobble.Job, error)
 }
 
 type Config struct {
@@ -76,7 +75,8 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	userFinder := uaa.NewUserFinder(config.UAAClientID, config.UAAClientSecret, warrantUsersService, warrantClientsService)
 
-	campaignEnqueuer := queue.NewCampaignEnqueuer(config.Queue)
+	database := db.NewDatabase(config.SQLDB, db.Config{})
+	campaignEnqueuer := queue.NewCampaignEnqueuer(config.Queue, database, gobble.Initializer{})
 
 	sendersRepository := models.NewSendersRepository(guidGenerator.Generate)
 	campaignTypesRepository := models.NewCampaignTypesRepository(guidGenerator.Generate)

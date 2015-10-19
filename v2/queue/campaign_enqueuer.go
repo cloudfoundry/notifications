@@ -9,11 +9,11 @@ import (
 )
 
 type enqueuer interface {
-	Enqueue(job gobble.Job) (gobble.Job, error)
+	Enqueue(job gobble.Job, conn gobble.ConnectionInterface) (gobble.Job, error)
 }
 
-type CampaignEnqueuer struct {
-	gobbleQueue enqueuer
+type DatabaseInterface interface {
+	collections.DatabaseInterface
 }
 
 type CampaignJob struct {
@@ -21,17 +21,28 @@ type CampaignJob struct {
 	Campaign collections.Campaign
 }
 
-func NewCampaignEnqueuer(queue enqueuer) CampaignEnqueuer {
+type CampaignEnqueuer struct {
+	gobbleQueue       enqueuer
+	gobbleInitializer gobbleInitializer
+	database          DatabaseInterface
+}
+
+func NewCampaignEnqueuer(queue enqueuer, database DatabaseInterface, gobbleInitializer gobbleInitializer) CampaignEnqueuer {
 	return CampaignEnqueuer{
-		gobbleQueue: queue,
+		gobbleQueue:       queue,
+		database:          database,
+		gobbleInitializer: gobbleInitializer,
 	}
 }
 
 func (e CampaignEnqueuer) Enqueue(campaign collections.Campaign, jobType string) error {
+	connection := e.database.Connection()
+	e.gobbleInitializer.InitializeDBMap(connection.GetDbMap())
+
 	_, err := e.gobbleQueue.Enqueue(gobble.NewJob(CampaignJob{
 		JobType:  jobType,
 		Campaign: campaign,
-	}))
+	}), connection)
 	if err != nil {
 		return errors.New(fmt.Sprintf("there was an error enqueuing the job: %s", err))
 	}

@@ -38,9 +38,12 @@ var _ = Describe("JobEnqueuer", func() {
 		gobbleQueue = mocks.NewQueue()
 
 		transaction = mocks.NewTransaction()
-		transaction.GetDbMapCall.Returns.DbMap = &gorp.DbMap{}
 		conn = mocks.NewConnection()
+
 		conn.TransactionCall.Returns.Transaction = transaction
+		transaction.Connection = conn
+		transaction.GetDbMapCall.Returns.DbMap = &gorp.DbMap{}
+
 		gobbleInitializer = mocks.NewGobbleInitializer()
 
 		messagesRepo = mocks.NewMessagesRepository()
@@ -81,7 +84,7 @@ var _ = Describe("JobEnqueuer", func() {
 			enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
 			var deliveries []queue.Delivery
-			for _, job := range gobbleQueue.EnqueueWithTransactionCall.Receives.Jobs {
+			for _, job := range gobbleQueue.EnqueueCall.Receives.Jobs {
 				var delivery queue.Delivery
 				err := job.Unmarshal(&delivery)
 				if err != nil {
@@ -200,7 +203,7 @@ var _ = Describe("JobEnqueuer", func() {
 				Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 			})
 
-			It("rolls back the transaction when there is an error in message repo upserting", func() {
+			It("rolls back the transaction when there is an error in message repo inserting", func() {
 				messagesRepo.InsertCalls[0].Returns.Error = errors.New("BOOM!")
 				users := []queue.User{{GUID: "user-1"}}
 				enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
@@ -211,7 +214,7 @@ var _ = Describe("JobEnqueuer", func() {
 			})
 
 			It("rolls back the transaction when there is an error in enqueuing", func() {
-				gobbleQueue.EnqueueWithTransactionCall.Returns.Error = errors.New("BOOM!")
+				gobbleQueue.EnqueueCall.Returns.Error = errors.New("BOOM!")
 				users := []queue.User{{GUID: "user-1"}}
 				enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
@@ -236,11 +239,12 @@ var _ = Describe("JobEnqueuer", func() {
 				users := []queue.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
 				enqueuer.Enqueue(conn, users, queue.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived, "some-campaign")
 
-				Expect(gobbleQueue.EnqueueWithTransactionCall.Receives.Transaction).To(Equal(transaction))
+				Expect(messagesRepo.InsertCall.Receives.Connection).To(Equal(transaction))
+				Expect(gobbleQueue.EnqueueCall.Receives.Connection).To(Equal(transaction))
 			})
 
 			It("does not commit the transaction until the jobs have been queued", func() {
-				gobbleQueue.EnqueueWithTransactionCall.Hook = func() {
+				gobbleQueue.EnqueueCall.Hook = func() {
 					Expect(transaction.CommitCall.WasCalled).To(BeFalse())
 				}
 

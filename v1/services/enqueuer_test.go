@@ -17,16 +17,17 @@ import (
 
 var _ = Describe("Enqueuer", func() {
 	var (
-		enqueuer     services.Enqueuer
-		logger       *log.Logger
-		buffer       *bytes.Buffer
-		queue        *mocks.Queue
-		conn         *mocks.Connection
-		transaction  *mocks.Transaction
-		space        cf.CloudControllerSpace
-		org          cf.CloudControllerOrganization
-		reqReceived  time.Time
-		messagesRepo *mocks.MessagesRepo
+		enqueuer          services.Enqueuer
+		logger            *log.Logger
+		buffer            *bytes.Buffer
+		queue             *mocks.Queue
+		gobbleInitializer *mocks.GobbleInitializer
+		conn              *mocks.Connection
+		transaction       *mocks.Transaction
+		space             cf.CloudControllerSpace
+		org               cf.CloudControllerOrganization
+		reqReceived       time.Time
+		messagesRepo      *mocks.MessagesRepo
 	)
 
 	BeforeEach(func() {
@@ -36,7 +37,11 @@ var _ = Describe("Enqueuer", func() {
 
 		transaction = mocks.NewTransaction()
 		conn = mocks.NewConnection()
+
 		conn.TransactionCall.Returns.Transaction = transaction
+		transaction.Connection = conn
+
+		gobbleInitializer = mocks.NewGobbleInitializer()
 
 		space = cf.CloudControllerSpace{Name: "the-space"}
 		org = cf.CloudControllerOrganization{Name: "the-org"}
@@ -62,7 +67,7 @@ var _ = Describe("Enqueuer", func() {
 			},
 		}
 
-		enqueuer = services.NewEnqueuer(queue, messagesRepo)
+		enqueuer = services.NewEnqueuer(queue, messagesRepo, gobbleInitializer)
 	})
 
 	Describe("Enqueue", func() {
@@ -100,7 +105,12 @@ var _ = Describe("Enqueuer", func() {
 		})
 
 		It("enqueues jobs with the deliveries", func() {
-			users := []services.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
+			users := []services.User{
+				{GUID: "user-1"},
+				{GUID: "user-2"},
+				{GUID: "user-3"},
+				{GUID: "user-4"},
+			}
 			enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
 			var deliveries []services.Delivery
@@ -166,7 +176,7 @@ var _ = Describe("Enqueuer", func() {
 			}))
 		})
 
-		It("Upserts a StatusQueued for each of the jobs", func() {
+		It("upserts a StatusQueued for each of the jobs", func() {
 			users := []services.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
 			enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
@@ -181,8 +191,26 @@ var _ = Describe("Enqueuer", func() {
 		})
 
 		Context("using a transaction", func() {
+			var users []services.User
+
+			BeforeEach(func() {
+				users = []services.User{
+					{GUID: "user-1"},
+					{GUID: "user-2"},
+					{GUID: "user-3"},
+					{GUID: "user-4"},
+				}
+			})
+
+			It("initializes the DbMap", func() {
+				enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+
+				isSamePtr := (gobbleInitializer.InitializeDBMapCall.Receives.DbMap == transaction.GetDbMapCall.Returns.DbMap)
+				Expect(isSamePtr).To(BeTrue())
+				Expect(transaction.GetDbMapCall.WasCalled).To(BeTrue())
+			})
+
 			It("commits the transaction when everything goes well", func() {
-				users := []services.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
 				responses := enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
@@ -194,7 +222,6 @@ var _ = Describe("Enqueuer", func() {
 
 			It("rolls back the transaction when there is an error in message repo upserting", func() {
 				messagesRepo.UpsertCall.Returns.Error = errors.New("BOOM!")
-				users := []services.User{{GUID: "user-1"}}
 				enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
@@ -202,10 +229,32 @@ var _ = Describe("Enqueuer", func() {
 				Expect(transaction.RollbackCall.WasCalled).To(BeTrue())
 			})
 
+			It("rolls back the transaction when there is an error in enqueuing", func() {
+				queue.EnqueueCall.Returns.Error = errors.New("BOOM!")
+				enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+
+				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
+				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				Expect(transaction.RollbackCall.WasCalled).To(BeTrue())
+			})
+
+			It("uses the same transaction for the queue as it did for the messages repo", func() {
+				enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+
+				Expect(messagesRepo.UpsertCall.Receives.Connection).To(Equal(transaction))
+				Expect(queue.EnqueueCall.Receives.Connection).To(Equal(transaction))
+			})
+
+			It("does not commit the transaction until the jobs have been queued", func() {
+				queue.EnqueueCall.Hook = func() {
+					Expect(transaction.CommitCall.WasCalled).To(BeFalse())
+				}
+
+				enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+			})
+
 			It("returns an empty slice of Response if transaction fails", func() {
 				transaction.CommitCall.Returns.Error = errors.New("the commit blew up")
-
-				users := []services.User{{GUID: "user-1"}, {GUID: "user-2"}, {GUID: "user-3"}, {GUID: "user-4"}}
 				responses := enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())

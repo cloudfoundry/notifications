@@ -13,6 +13,10 @@ type DatabaseInterface interface {
 	Migrate(string)
 }
 
+type ConnectionInterface interface {
+	Insert(...interface{}) error
+}
+
 type DB struct {
 	Connection *gorp.DbMap
 }
@@ -26,14 +30,14 @@ func NewDatabase(db *sql.DB) *DB {
 		},
 	}
 
-	GobbleInitializer{}.InitializeDBMap(conn)
+	Initializer{}.InitializeDBMap(conn)
 
 	return &DB{Connection: conn}
 }
 
-type GobbleInitializer struct{}
+type Initializer struct{}
 
-func (GobbleInitializer) InitializeDBMap(dbMap *gorp.DbMap) {
+func (Initializer) InitializeDBMap(dbMap *gorp.DbMap) {
 	dbMap.AddTableWithName(Job{}, "jobs").SetKeys(true, "ID").SetVersionCol("Version")
 }
 

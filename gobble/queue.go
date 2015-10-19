@@ -6,15 +6,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/go-gorp/gorp"
 )
 
 var WaitMaxDuration = 5 * time.Second
 
 type QueueInterface interface {
-	Enqueue(Job) (Job, error)
-	EnqueueWithTransaction(Job, db.TransactionInterface) (Job, error)
+	Enqueue(Job, ConnectionInterface) (Job, error)
 	Reserve(string) <-chan Job
 	Dequeue(Job)
 	Requeue(Job)
@@ -39,16 +37,7 @@ func NewQueue(database DatabaseInterface, config Config) *Queue {
 	}
 }
 
-func (queue *Queue) Enqueue(job Job) (Job, error) {
-	err := queue.database.Connection.Insert(&job)
-	if err != nil {
-		return job, err
-	}
-
-	return job, nil
-}
-
-func (*Queue) EnqueueWithTransaction(job Job, transaction db.TransactionInterface) (Job, error) {
+func (*Queue) Enqueue(job Job, transaction ConnectionInterface) (Job, error) {
 	err := transaction.Insert(&job)
 	if err != nil {
 		return job, err

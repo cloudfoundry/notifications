@@ -6,7 +6,6 @@ import (
 	"github.com/go-gorp/gorp"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
-	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 )
@@ -67,21 +66,17 @@ type messagesRepoInserter interface {
 	Insert(models.ConnectionInterface, models.Message) (models.Message, error)
 }
 
-type enqueuerWithTransaction interface {
-	EnqueueWithTransaction(job gobble.Job, transaction db.TransactionInterface) (gobble.Job, error)
-}
-
 type gobbleInitializer interface {
 	InitializeDBMap(*gorp.DbMap)
 }
 
 type JobEnqueuer struct {
-	queue             enqueuerWithTransaction
+	queue             enqueuer
 	messagesRepo      messagesRepoInserter
 	gobbleInitializer gobbleInitializer
 }
 
-func NewJobEnqueuer(queue enqueuerWithTransaction, messagesRepo messagesRepoInserter, gobbleInitializer gobbleInitializer) JobEnqueuer {
+func NewJobEnqueuer(queue enqueuer, messagesRepo messagesRepoInserter, gobbleInitializer gobbleInitializer) JobEnqueuer {
 	return JobEnqueuer{
 		queue:             queue,
 		messagesRepo:      messagesRepo,
@@ -92,6 +87,7 @@ func NewJobEnqueuer(queue enqueuerWithTransaction, messagesRepo messagesRepoInse
 func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time, campaignID string) {
 	transaction := conn.Transaction()
 	enqueuer.gobbleInitializer.InitializeDBMap(transaction.GetDbMap())
+
 	transaction.Begin()
 
 	for _, user := range users {
@@ -122,7 +118,7 @@ func (enqueuer JobEnqueuer) Enqueue(conn ConnectionInterface, users []User, opti
 			CampaignID:      campaignID,
 		})
 
-		_, err = enqueuer.queue.EnqueueWithTransaction(job, transaction)
+		_, err = enqueuer.queue.Enqueue(job, transaction)
 		if err != nil {
 			transaction.Rollback()
 			return

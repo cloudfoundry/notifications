@@ -3,6 +3,8 @@ package services
 import (
 	"time"
 
+	"github.com/go-gorp/gorp"
+
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -43,29 +45,35 @@ type messagesRepoUpserter interface {
 }
 
 type queueInterface interface {
-	Enqueue(gobble.Job) (gobble.Job, error)
+	Enqueue(job gobble.Job, transaction gobble.ConnectionInterface) (gobble.Job, error)
+}
+
+type gobbleInitializer interface {
+	InitializeDBMap(*gorp.DbMap)
 }
 
 type Enqueuer struct {
-	queue        queueInterface
-	messagesRepo messagesRepoUpserter
+	queue             queueInterface
+	messagesRepo      messagesRepoUpserter
+	gobbleInitializer gobbleInitializer
 }
 
-func NewEnqueuer(queue queueInterface, messagesRepo messagesRepoUpserter) Enqueuer {
+func NewEnqueuer(queue queueInterface, messagesRepo messagesRepoUpserter, gobbleInitializer gobbleInitializer) Enqueuer {
 	return Enqueuer{
-		queue:        queue,
-		messagesRepo: messagesRepo,
+		queue:             queue,
+		messagesRepo:      messagesRepo,
+		gobbleInitializer: gobbleInitializer,
 	}
 }
 
 func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []Response {
-	var (
-		responses []Response
-		jobs      []gobble.Job
-	)
+	var responses []Response
 
 	transaction := conn.Transaction()
+	enqueuer.gobbleInitializer.InitializeDBMap(transaction.GetDbMap())
+
 	transaction.Begin()
+
 	for _, user := range users {
 		message, err := enqueuer.messagesRepo.Upsert(transaction, models.Message{
 			Status: StatusQueued,
@@ -75,7 +83,7 @@ func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options
 			return []Response{}
 		}
 
-		jobs = append(jobs, gobble.NewJob(Delivery{
+		_, err = enqueuer.queue.Enqueue(gobble.NewJob(Delivery{
 			Options:         options,
 			UserGUID:        user.GUID,
 			Email:           user.Email,
@@ -87,7 +95,11 @@ func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options
 			Scope:           scope,
 			VCAPRequestID:   vcapRequestID,
 			RequestReceived: reqReceived,
-		}))
+		}), transaction)
+		if err != nil {
+			transaction.Rollback()
+			return []Response{}
+		}
 
 		recipient := user.Email
 		if recipient == "" {
@@ -105,13 +117,6 @@ func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options
 	err := transaction.Commit()
 	if err != nil {
 		return []Response{}
-	}
-
-	for _, job := range jobs {
-		_, err := enqueuer.queue.Enqueue(job)
-		if err != nil {
-			return []Response{}
-		}
 	}
 
 	return responses

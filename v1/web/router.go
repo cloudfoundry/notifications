@@ -81,7 +81,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 		WaitMaxDuration: time.Duration(config.QueueWaitMaxDuration) * time.Millisecond,
 	})
 
-	v1enqueuer := services.NewEnqueuer(gobbleQueue, messagesRepo)
+	v1enqueuer := services.NewEnqueuer(gobbleQueue, messagesRepo, gobble.Initializer{})
 
 	uaaClient := uaa.NewZonedUAAClient(config.UAAClientID, config.UAAClientSecret, config.VerifySSL, config.UAAPublicKey)
 	cloudController := cf.NewCloudController(config.CCHost, !config.VerifySSL)
