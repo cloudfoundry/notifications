@@ -40,9 +40,10 @@ var _ = Describe("CampaignStatusesCollection", func() {
 			var err error
 
 			messagesRepository.CountByStatusCall.Returns.MessageCounts = models.MessageCounts{
-				Total:     2,
-				Failed:    1,
-				Delivered: 1,
+				Total:         4,
+				Failed:        1,
+				Delivered:     1,
+				Undeliverable: 2,
 			}
 
 			updatedAtTime, err = time.Parse(time.RFC3339, "2015-09-01T12:45:56-07:00")
@@ -74,21 +75,22 @@ var _ = Describe("CampaignStatusesCollection", func() {
 			campaignStatus, err := campaignStatusesCollection.Get(conn, "campaign-id", "client-id")
 			Expect(err).NotTo(HaveOccurred())
 
+			Expect(campaignStatus).To(Equal(collections.CampaignStatus{
+				CampaignID:            "campaign-id",
+				Status:                "completed",
+				TotalMessages:         4,
+				SentMessages:          1,
+				FailedMessages:        1,
+				UndeliverableMessages: 2,
+				StartTime:             startTime,
+				CompletedTime:         &updatedAtTime,
+			}))
+
 			Expect(messagesRepository.CountByStatusCall.Receives.Connection).To(Equal(conn))
 			Expect(messagesRepository.CountByStatusCall.Receives.CampaignIDList[0]).To(Equal("campaign-id"))
 
 			Expect(messagesRepository.MostRecentlyUpdatedByCampaignIDCall.Receives.Connection).To(Equal(conn))
 			Expect(messagesRepository.MostRecentlyUpdatedByCampaignIDCall.Receives.CampaignID).To(Equal("campaign-id"))
-
-			Expect(campaignStatus).To(Equal(collections.CampaignStatus{
-				CampaignID:     "campaign-id",
-				Status:         "completed",
-				TotalMessages:  2,
-				SentMessages:   1,
-				FailedMessages: 1,
-				StartTime:      startTime,
-				CompletedTime:  &updatedAtTime,
-			}))
 
 			Expect(campaignsRepository.GetCall.Receives.Connection).To(Equal(conn))
 			Expect(campaignsRepository.GetCall.Receives.CampaignID).To(Equal("campaign-id"))

@@ -85,7 +85,7 @@ func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID, 
 	status := CampaignStatusSending
 	var completedTime *time.Time
 
-	if counts.Total > 0 && (counts.Failed+counts.Delivered) == counts.Total {
+	if campaignIsCompleted(counts) {
 		status = CampaignStatusCompleted
 
 		mostRecentlyUpdatedMessage, err := csc.messages.MostRecentlyUpdatedByCampaignID(conn, campaign.ID)
@@ -108,4 +108,8 @@ func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID, 
 		StartTime:             campaign.StartTime,
 		CompletedTime:         completedTime,
 	}, nil
+}
+
+func campaignIsCompleted(counts models.MessageCounts) bool {
+	return counts.Total > 0 && (counts.Undeliverable+counts.Failed+counts.Delivered) == counts.Total
 }
