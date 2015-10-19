@@ -384,16 +384,17 @@ var _ = Describe("Campaign Lifecycle", func() {
 				}, "5s").Should(Equal("completed"))
 
 				var response struct {
-					ID             string
-					Status         string
-					TotalMessages  int       `json:"total_messages"`
-					SentMessages   int       `json:"sent_messages"`
-					RetryMessages  int       `json:"retry_messages"`
-					FailedMessages int       `json:"failed_messages"`
-					QueuedMessages int       `json:"queued_messages"`
-					StartTime      time.Time `json:"start_time"`
-					CompletedTime  time.Time `json:"completed_time"`
-					Links          struct {
+					ID                    string
+					Status                string
+					TotalMessages         int       `json:"total_messages"`
+					SentMessages          int       `json:"sent_messages"`
+					RetryMessages         int       `json:"retry_messages"`
+					FailedMessages        int       `json:"failed_messages"`
+					QueuedMessages        int       `json:"queued_messages"`
+					UndeliverableMessages int       `json:"undeliverable_messages"`
+					StartTime             time.Time `json:"start_time"`
+					CompletedTime         time.Time `json:"completed_time"`
+					Links                 struct {
 						Self struct {
 							Href string
 						}
@@ -414,6 +415,7 @@ var _ = Describe("Campaign Lifecycle", func() {
 				Expect(response.RetryMessages).To(Equal(0))
 				Expect(response.FailedMessages).To(Equal(0))
 				Expect(response.QueuedMessages).To(Equal(0))
+				Expect(response.UndeliverableMessages).To(Equal(0))
 				Expect(response.StartTime).To(BeTemporally("~", time.Now(), 10*time.Second))
 				Expect(response.CompletedTime).To(BeTemporally("~", time.Now(), 10*time.Second))
 				Expect(response.Links.Self.Href).To(Equal(fmt.Sprintf("/campaigns/%s/status", campaignID)))

@@ -27,15 +27,16 @@ type messageCountGetter interface {
 }
 
 type CampaignStatus struct {
-	CampaignID     string
-	Status         string
-	TotalMessages  int
-	SentMessages   int
-	QueuedMessages int
-	RetryMessages  int
-	FailedMessages int
-	StartTime      time.Time
-	CompletedTime  mysql.NullTime
+	CampaignID            string
+	Status                string
+	TotalMessages         int
+	SentMessages          int
+	QueuedMessages        int
+	RetryMessages         int
+	FailedMessages        int
+	UndeliverableMessages int
+	StartTime             time.Time
+	CompletedTime         mysql.NullTime
 }
 
 type CampaignStatusesCollection struct {
@@ -98,14 +99,15 @@ func (csc CampaignStatusesCollection) Get(conn ConnectionInterface, campaignID, 
 	}
 
 	return CampaignStatus{
-		CampaignID:     campaign.ID,
-		Status:         status,
-		TotalMessages:  counts.Total,
-		SentMessages:   counts.Delivered,
-		FailedMessages: counts.Failed,
-		RetryMessages:  counts.Retry,
-		QueuedMessages: counts.Queued,
-		StartTime:      campaign.StartTime,
-		CompletedTime:  completedTime,
+		CampaignID:            campaign.ID,
+		Status:                status,
+		TotalMessages:         counts.Total,
+		SentMessages:          counts.Delivered,
+		FailedMessages:        counts.Failed,
+		RetryMessages:         counts.Retry,
+		QueuedMessages:        counts.Queued,
+		UndeliverableMessages: counts.Undeliverable,
+		StartTime:             campaign.StartTime,
+		CompletedTime:         completedTime,
 	}, nil
 }

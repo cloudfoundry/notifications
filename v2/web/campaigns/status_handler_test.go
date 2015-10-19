@@ -71,14 +71,15 @@ var _ = Describe("Campaign status handler", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		campaignStatusesCollection.GetCall.Returns.CampaignStatus = collections.CampaignStatus{
-			CampaignID:     "some-campaign-id",
-			Status:         "completed",
-			TotalMessages:  8,
-			SentMessages:   6,
-			QueuedMessages: 0,
-			RetryMessages:  0,
-			FailedMessages: 2,
-			StartTime:      startTime,
+			CampaignID:            "some-campaign-id",
+			Status:                "completed",
+			TotalMessages:         9,
+			SentMessages:          6,
+			QueuedMessages:        0,
+			RetryMessages:         0,
+			FailedMessages:        2,
+			UndeliverableMessages: 1,
+			StartTime:             startTime,
 			CompletedTime: mysql.NullTime{
 				Time:  completedTime,
 				Valid: true,
@@ -91,11 +92,12 @@ var _ = Describe("Campaign status handler", func() {
 		Expect(writer.Body).To(MatchJSON(`{
 			"id": "some-campaign-id",
 			"status": "completed",
-			"total_messages": 8,
+			"total_messages": 9,
 			"sent_messages": 6,
 			"queued_messages": 0,
 			"retry_messages": 0,
 			"failed_messages": 2,
+			"undeliverable_messages": 1,
 			"start_time": "2015-09-01T12:34:56-07:00",
 			"completed_time": "2015-09-01T12:34:58-07:00",
 			"_links": {
@@ -141,6 +143,7 @@ var _ = Describe("Campaign status handler", func() {
 				"queued_messages": 1,
 				"retry_messages": 1,
 				"failed_messages": 2,
+				"undeliverable_messages": 0,
 				"start_time": "2015-09-01T12:34:56-07:00",
 				"completed_time": null,
 				"_links": {

@@ -104,11 +104,12 @@ var _ = Describe("CampaignStatusesCollection", func() {
 		Context("when the campaign is not yet completed", func() {
 			It("returns a transient status", func() {
 				messagesRepository.CountByStatusCall.Returns.MessageCounts = models.MessageCounts{
-					Total:     5,
-					Retry:     1,
-					Failed:    1,
-					Delivered: 1,
-					Queued:    2,
+					Total:         7,
+					Retry:         1,
+					Failed:        1,
+					Delivered:     1,
+					Undeliverable: 2,
+					Queued:        2,
 				}
 
 				messagesRepository.MostRecentlyUpdatedByCampaignIDCall.Returns.Error = errors.New("sql: no rows")
@@ -117,15 +118,16 @@ var _ = Describe("CampaignStatusesCollection", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(campaignStatus).To(Equal(collections.CampaignStatus{
-					CampaignID:     "campaign-id",
-					Status:         "sending",
-					TotalMessages:  5,
-					SentMessages:   1,
-					FailedMessages: 1,
-					RetryMessages:  1,
-					QueuedMessages: 2,
-					StartTime:      startTime,
-					CompletedTime:  mysql.NullTime{},
+					CampaignID:            "campaign-id",
+					Status:                "sending",
+					TotalMessages:         7,
+					SentMessages:          1,
+					FailedMessages:        1,
+					RetryMessages:         1,
+					QueuedMessages:        2,
+					UndeliverableMessages: 2,
+					StartTime:             startTime,
+					CompletedTime:         mysql.NullTime{},
 				}))
 			})
 		})
@@ -133,10 +135,11 @@ var _ = Describe("CampaignStatusesCollection", func() {
 		Context("when the campaign has not yet been processed", func() {
 			It("returns a transient status", func() {
 				messagesRepository.CountByStatusCall.Returns.MessageCounts = models.MessageCounts{
-					Total:     0,
-					Retry:     0,
-					Failed:    0,
-					Delivered: 0,
+					Total:         0,
+					Retry:         0,
+					Failed:        0,
+					Undeliverable: 0,
+					Delivered:     0,
 				}
 
 				messagesRepository.MostRecentlyUpdatedByCampaignIDCall.Returns.Error = errors.New("sql: no rows")

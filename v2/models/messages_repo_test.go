@@ -70,15 +70,26 @@ var _ = Describe("Messages Repository", func() {
 				Status:     common.StatusQueued,
 			})
 			Expect(err).NotTo(HaveOccurred())
+
+			err = conn.Insert(&models.Message{
+				ID:         "random-guid-6",
+				CampaignID: "some-campaign-id",
+				Status:     common.StatusUndeliverable,
+			})
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should return the counts of each message status", func() {
 			messageCounts, err := repo.CountByStatus(conn, "some-campaign-id")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(messageCounts.Retry).To(Equal(1))
-			Expect(messageCounts.Failed).To(Equal(1))
-			Expect(messageCounts.Delivered).To(Equal(2))
-			Expect(messageCounts.Queued).To(Equal(1))
+			Expect(messageCounts).To(Equal(models.MessageCounts{
+				Total:         6,
+				Retry:         1,
+				Failed:        1,
+				Delivered:     2,
+				Queued:        1,
+				Undeliverable: 1,
+			}))
 		})
 
 		Context("when an error occurs", func() {

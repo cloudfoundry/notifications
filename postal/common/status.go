@@ -1,7 +1,6 @@
 package common
 
 const (
-	StatusUnavailable   = "unavailable"
 	StatusFailed        = "failed"
 	StatusRetry         = "retry"
 	StatusDelivered     = "delivered"

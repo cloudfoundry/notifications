@@ -242,7 +242,7 @@ func (p DeliveryJobProcessor) sendMail(messageID string, message mail.Message, l
 	err := p.mailClient.Connect(logger)
 	if err != nil {
 		logger.Error("smtp-connection-error", err)
-		return common.StatusUnavailable
+		return common.StatusFailed
 	}
 
 	logger.Info("delivery-start")

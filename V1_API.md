@@ -558,10 +558,9 @@ Possible `status` values:
 | ------------ | ----------------------------------------------------------------------- |
 | delivered    | Message delivered to the SMTP server (not necessarily the recipient)    |
 | failed       | Message sending to SMTP server failed.                                  |
-| unavailable  | The SMTP server is unreachable.                                         |
 | queued       | Message has been added to a worker queue and will be processed shortly  |
 
-In the case of "failed" or "unavailable", the system will retry the delivery for up to 24 hours.
+In the case of "failed", the system will retry the delivery for up to 24 hours.
 
 If the `messageID` is not known to the system, a `404 Not Found` response will be returned.
 

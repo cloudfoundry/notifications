@@ -370,7 +370,7 @@ var _ = Describe("DeliveryJobProcessor", func() {
 					}))
 				})
 
-				It("updates the message status as unavailable", func() {
+				It("updates the message status as failed", func() {
 					var jobDelivery common.Delivery
 					err := job.Unmarshal(&jobDelivery)
 					if err != nil {
@@ -383,7 +383,7 @@ var _ = Describe("DeliveryJobProcessor", func() {
 
 					Expect(messageStatusUpdater.UpdateCall.Receives.Connection).To(Equal(conn))
 					Expect(messageStatusUpdater.UpdateCall.Receives.MessageID).To(Equal(messageID))
-					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusUnavailable))
+					Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusFailed))
 					Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
 				})
 			})
