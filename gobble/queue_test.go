@@ -38,13 +38,9 @@ var _ = Describe("Queue", func() {
 			job, err := queue.Enqueue(job, database.Connection)
 			Expect(err).NotTo(HaveOccurred())
 
-			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
+			jobs := []*gobble.Job{}
+			_, err = database.Connection.Select(&jobs, "SELECT * FROM `jobs`")
 			Expect(err).NotTo(HaveOccurred())
-
-			jobs := []gobble.Job{}
-			for _, result := range results {
-				jobs = append(jobs, *(result.(*gobble.Job)))
-			}
 
 			Expect(jobs).To(HaveLen(1))
 			Expect(jobs).To(ContainElement(job))
@@ -119,12 +115,12 @@ var _ = Describe("Queue", func() {
 
 			Consistently(jobChannel).ShouldNot(Receive())
 
-			job, err := queue.Enqueue(gobble.Job{
+			job, err := queue.Enqueue(&gobble.Job{
 				Payload: "hello",
 			}, database.Connection)
 			Expect(err).NotTo(HaveOccurred())
 
-			var reservedJob gobble.Job
+			var reservedJob *gobble.Job
 			Eventually(jobChannel).Should(Receive(&reservedJob))
 
 			Expect(reservedJob.ID).To(Equal(job.ID))
@@ -132,7 +128,7 @@ var _ = Describe("Queue", func() {
 
 		It("ensures a job can only be reserved by a single worker", func() {
 			for i := 0; i < 100; i++ {
-				queue.Enqueue(gobble.Job{}, database.Connection)
+				queue.Enqueue(&gobble.Job{}, database.Connection)
 			}
 
 			done := make(chan bool)
@@ -157,10 +153,10 @@ var _ = Describe("Queue", func() {
 		})
 
 		It("picks the first job that is active", func() {
-			queue.Enqueue(gobble.Job{
+			queue.Enqueue(&gobble.Job{
 				ActiveAt: time.Now().Add(1 * time.Hour),
 			}, database.Connection)
-			job2, err := queue.Enqueue(gobble.Job{}, database.Connection)
+			job2, err := queue.Enqueue(&gobble.Job{}, database.Connection)
 			Expect(err).NotTo(HaveOccurred())
 
 			job := <-queue.Reserve("worker-id")
@@ -171,7 +167,7 @@ var _ = Describe("Queue", func() {
 		Context("when the worker id is set", func() {
 			Context("when active_at is in the future", func() {
 				It("should not grab the job", func() {
-					_, err := queue.Enqueue(gobble.Job{
+					_, err := queue.Enqueue(&gobble.Job{
 						WorkerID: "some-worker",
 						ActiveAt: time.Now().Add(1 * time.Minute),
 					}, database.Connection)
@@ -182,7 +178,7 @@ var _ = Describe("Queue", func() {
 
 			Context("when active_at is a little bit in the past", func() {
 				It("should not grab the job", func() {
-					_, err := queue.Enqueue(gobble.Job{
+					_, err := queue.Enqueue(&gobble.Job{
 						WorkerID: "some-worker",
 						ActiveAt: time.Now().Add(-1 * time.Minute),
 					}, database.Connection)
@@ -193,7 +189,7 @@ var _ = Describe("Queue", func() {
 
 			Context("when active_at is very far in the past", func() {
 				It("should grab the job", func() {
-					_, err := queue.Enqueue(gobble.Job{
+					_, err := queue.Enqueue(&gobble.Job{
 						WorkerID: "some-worker",
 						ActiveAt: time.Now().Add(-2 * time.Minute),
 					}, database.Connection)
@@ -206,7 +202,7 @@ var _ = Describe("Queue", func() {
 		Context("when the worker id is not set", func() {
 			Context("when active_at is in the future", func() {
 				It("should not grab the job", func() {
-					_, err := queue.Enqueue(gobble.Job{
+					_, err := queue.Enqueue(&gobble.Job{
 						ActiveAt: time.Now().Add(1 * time.Minute),
 					}, database.Connection)
 					Expect(err).NotTo(HaveOccurred())
@@ -216,7 +212,7 @@ var _ = Describe("Queue", func() {
 
 			Context("when active_at is in the past", func() {
 				It("should grab the job", func() {
-					_, err := queue.Enqueue(gobble.Job{
+					_, err := queue.Enqueue(&gobble.Job{
 						ActiveAt: time.Now().Add(-1 * time.Minute),
 					}, database.Connection)
 					Expect(err).NotTo(HaveOccurred())
@@ -228,7 +224,7 @@ var _ = Describe("Queue", func() {
 
 	Describe("Dequeue", func() {
 		It("deletes the job from the queue", func() {
-			job, err := queue.Enqueue(gobble.Job{}, database.Connection)
+			job, err := queue.Enqueue(&gobble.Job{}, database.Connection)
 			Expect(err).NotTo(HaveOccurred())
 
 			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
@@ -243,7 +239,7 @@ var _ = Describe("Queue", func() {
 		})
 
 		It("ignores errors when the row is gone", func() {
-			job, err := queue.Enqueue(gobble.Job{}, database.Connection)
+			job, err := queue.Enqueue(&gobble.Job{}, database.Connection)
 			Expect(err).NotTo(HaveOccurred())
 
 			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs`")
@@ -262,7 +258,7 @@ var _ = Describe("Queue", func() {
 
 	Describe("Len", func() {
 		It("returns the length of the queue", func() {
-			job, err := queue.Enqueue(gobble.Job{}, database.Connection)
+			job, err := queue.Enqueue(&gobble.Job{}, database.Connection)
 			Expect(err).NotTo(HaveOccurred())
 
 			length, err := queue.Len()
@@ -279,19 +275,19 @@ var _ = Describe("Queue", func() {
 
 	Describe("RetryQueueLengths", func() {
 		It("returns information about the length of the queue grouped by retry count", func() {
-			_, err := queue.Enqueue(gobble.Job{}, database.Connection)
+			_, err := queue.Enqueue(&gobble.Job{}, database.Connection)
 			Expect(err).NotTo(HaveOccurred())
 
 			for i := 0; i < 3; i++ {
-				_, err = queue.Enqueue(gobble.Job{RetryCount: 1}, database.Connection)
+				_, err = queue.Enqueue(&gobble.Job{RetryCount: 1}, database.Connection)
 				Expect(err).NotTo(HaveOccurred())
 			}
 
-			_, err = queue.Enqueue(gobble.Job{RetryCount: 4}, database.Connection)
+			_, err = queue.Enqueue(&gobble.Job{RetryCount: 4}, database.Connection)
 			Expect(err).NotTo(HaveOccurred())
 
 			for i := 0; i < 2; i++ {
-				_, err = queue.Enqueue(gobble.Job{RetryCount: 5}, database.Connection)
+				_, err = queue.Enqueue(&gobble.Job{RetryCount: 5}, database.Connection)
 				Expect(err).NotTo(HaveOccurred())
 			}
 

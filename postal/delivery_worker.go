@@ -1,6 +1,8 @@
 package postal
 
 import (
+	"time"
+
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
@@ -65,7 +67,9 @@ func NewDeliveryWorker(v1DeliveryJobProcessor v1DeliveryJobProcessor, v2Delivery
 		deliveryFailureHandler: config.DeliveryFailureHandler,
 		messageStatusUpdater:   config.MessageStatusUpdater,
 	}
-	worker.Worker = gobble.NewWorker(config.ID, config.Queue, worker.Deliver)
+	ticker := gobble.NewTicker(time.NewTicker, 30*time.Second)
+	heartbeater := gobble.NewHeartbeater(config.Queue, ticker)
+	worker.Worker = gobble.NewWorker(config.ID, config.Queue, worker.Deliver, heartbeater)
 
 	return worker
 }

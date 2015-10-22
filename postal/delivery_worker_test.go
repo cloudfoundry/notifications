@@ -60,7 +60,7 @@ var _ = Describe("DeliveryWorker", func() {
 
 	Describe("Work", func() {
 		It("pops Deliveries off the queue, sending emails for each", func() {
-			reserveChan := make(chan gobble.Job)
+			reserveChan := make(chan *gobble.Job)
 			go func() {
 				reserveChan <- gobble.NewJob(delivery)
 			}()
@@ -88,9 +88,9 @@ var _ = Describe("DeliveryWorker", func() {
 
 	Describe("Deliver", func() {
 		var job *gobble.Job
+
 		BeforeEach(func() {
-			j := gobble.NewJob(delivery)
-			job = &j
+			job = gobble.NewJob(delivery)
 		})
 
 		Context("when the job is not a campaign, and not a v2 delivery", func() {
@@ -104,12 +104,11 @@ var _ = Describe("DeliveryWorker", func() {
 
 		Context("when the job is a campaign", func() {
 			BeforeEach(func() {
-				j := gobble.NewJob(struct {
+				job = gobble.NewJob(struct {
 					JobType string
 				}{
 					JobType: "campaign",
 				})
-				job = &j
 			})
 
 			It("uses the campaign job processor", func() {
@@ -136,7 +135,7 @@ var _ = Describe("DeliveryWorker", func() {
 
 		Context("when the job is a v2 workflow", func() {
 			BeforeEach(func() {
-				j := gobble.NewJob(struct {
+				job = gobble.NewJob(struct {
 					JobType    string
 					MessageID  string
 					CampaignID string
@@ -145,7 +144,6 @@ var _ = Describe("DeliveryWorker", func() {
 					MessageID:  "some-message-id",
 					CampaignID: "some-campaign-id",
 				})
-				job = &j
 			})
 
 			It("should hand the job to the v2 workflow", func() {

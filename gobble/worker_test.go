@@ -9,10 +9,31 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+type MockHeartbeater struct {
+	BeatCall struct {
+		Receives struct {
+			Job gobble.Job
+		}
+	}
+
+	HaltCall struct {
+		WasCalled bool
+	}
+}
+
+func (b *MockHeartbeater) Beat(job *gobble.Job) {
+	b.BeatCall.Receives.Job = *job
+}
+
+func (b *MockHeartbeater) Halt() {
+	b.HaltCall.WasCalled = true
+}
+
 var _ = Describe("Worker", func() {
 	var (
 		queue                 *gobble.Queue
 		worker                gobble.Worker
+		heartbeater           *MockHeartbeater
 		callbackWasCalledWith gobble.Job
 		callback              func(*gobble.Job)
 		database              *gobble.DB
@@ -27,7 +48,8 @@ var _ = Describe("Worker", func() {
 		database = gobble.NewDatabase(sqlDB)
 
 		queue = gobble.NewQueue(database, gobble.Config{})
-		worker = gobble.NewWorker(1, queue, callback)
+		heartbeater = &MockHeartbeater{}
+		worker = gobble.NewWorker(1, queue, callback, heartbeater)
 	})
 
 	AfterEach(func() {
@@ -36,7 +58,7 @@ var _ = Describe("Worker", func() {
 
 	Describe("Perform", func() {
 		It("reserves a job, performs the callback, and then dequeues the completed job", func() {
-			job, err := queue.Enqueue(gobble.Job{
+			job, err := queue.Enqueue(&gobble.Job{
 				Payload: "the-payload",
 			}, database.Connection)
 			Expect(err).NotTo(HaveOccurred())
@@ -54,9 +76,9 @@ var _ = Describe("Worker", func() {
 			callback = func(job *gobble.Job) {
 				job.Retry(1 * time.Minute)
 			}
-			worker = gobble.NewWorker(1, queue, callback)
+			worker = gobble.NewWorker(1, queue, callback, heartbeater)
 
-			job, err := queue.Enqueue(gobble.Job{}, database.Connection)
+			job, err := queue.Enqueue(&gobble.Job{}, database.Connection)
 			Expect(err).NotTo(HaveOccurred())
 
 			worker.Perform()
@@ -70,14 +92,42 @@ var _ = Describe("Worker", func() {
 			Expect(retriedJob.RetryCount).To(Equal(1))
 			Expect(retriedJob.ActiveAt).To(BeTemporally("~", time.Now().Add(1*time.Minute), 1*time.Minute))
 		})
+
+		It("heartbeats for job ownership while the job executes", func() {
+			job, err := queue.Enqueue(&gobble.Job{
+				Payload: "the-payload",
+			}, database.Connection)
+			Expect(err).NotTo(HaveOccurred())
+
+			hold := make(chan struct{})
+
+			callback = func(*gobble.Job) {
+				<-hold
+			}
+			worker = gobble.NewWorker(2, queue, callback, heartbeater)
+
+			go worker.Perform()
+
+			Eventually(func() int {
+				return heartbeater.BeatCall.Receives.Job.ID
+			}).Should(Equal(job.ID))
+
+			hold <- struct{}{}
+
+			Eventually(func() bool {
+				return heartbeater.HaltCall.WasCalled
+			}).Should(BeTrue())
+		})
 	})
 
 	Describe("Work", func() {
 		It("works in a loop, and can be stopped", func() {
-			queue.Enqueue(gobble.Job{
+			worker = gobble.NewWorker(1, queue, callback, &MockHeartbeater{})
+
+			queue.Enqueue(&gobble.Job{
 				Payload: "the-payload",
 			}, database.Connection)
-			queue.Enqueue(gobble.Job{
+			queue.Enqueue(&gobble.Job{
 				Payload: "the-payload",
 			}, database.Connection)
 

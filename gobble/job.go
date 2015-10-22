@@ -15,13 +15,13 @@ type Job struct {
 	ShouldRetry bool      `db:"-"`
 }
 
-func NewJob(data interface{}) Job {
+func NewJob(data interface{}) *Job {
 	payload, err := json.Marshal(data)
 	if err != nil {
 		panic(err)
 	}
 
-	return Job{
+	return &Job{
 		Payload: string(payload),
 	}
 }

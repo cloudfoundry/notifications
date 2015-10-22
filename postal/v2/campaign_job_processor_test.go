@@ -59,7 +59,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 				},
 			}
 
-			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+			err := processor.Process(database.Connection(), "some-uaa-host", *gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID: "some-id",
 					SendTo: map[string][]string{
@@ -128,7 +128,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 				},
 			}
 
-			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+			err := processor.Process(database.Connection(), "some-uaa-host", *gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID: "some-id",
 					SendTo: map[string][]string{
@@ -206,7 +206,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 				},
 			}
 
-			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+			err := processor.Process(database.Connection(), "some-uaa-host", *gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID: "some-id",
 					SendTo: map[string][]string{
@@ -280,7 +280,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 				},
 			}
 
-			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+			err := processor.Process(database.Connection(), "some-uaa-host", *gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID: "some-id",
 					SendTo: map[string][]string{
@@ -390,7 +390,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 		})
 
 		It("enqueues jobs based on the audiences", func() {
-			err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+			err := processor.Process(database.Connection(), "some-uaa-host", *gobble.NewJob(queue.CampaignJob{
 				Campaign: collections.Campaign{
 					ID: "some-id",
 					SendTo: map[string][]string{
@@ -457,14 +457,14 @@ var _ = Describe("CampaignJobProcessor", func() {
 	Context("when an error occurs", func() {
 		Context("when the campaign cannot be unmarshalled", func() {
 			It("returns the error", func() {
-				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob("%%"), logger)
+				err := processor.Process(database.Connection(), "some-uaa-host", *gobble.NewJob("%%"), logger)
 				Expect(err).To(MatchError("json: cannot unmarshal string into Go value of type queue.CampaignJob"))
 			})
 		})
 
 		Context("when the audience is not found", func() {
 			It("returns an error", func() {
-				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+				err := processor.Process(database.Connection(), "some-uaa-host", *gobble.NewJob(queue.CampaignJob{
 					Campaign: collections.Campaign{
 						SendTo: map[string][]string{"some-audience": {"wut"}},
 					},
@@ -480,7 +480,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 				processor = v2.NewCampaignJobProcessor(notify.EmailFormatter{},
 					htmlExtractor, emails, spaces, orgs, users, enqueuer)
 
-				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+				err := processor.Process(database.Connection(), "some-uaa-host", *gobble.NewJob(queue.CampaignJob{
 					Campaign: collections.Campaign{
 						SendTo: map[string][]string{"spaces": {"some-space-guid"}},
 					},
@@ -493,7 +493,7 @@ var _ = Describe("CampaignJobProcessor", func() {
 			It("returns an error", func() {
 				emails.GenerateAudiencesCall.Returns.Error = errors.New("emails failure")
 
-				err := processor.Process(database.Connection(), "some-uaa-host", gobble.NewJob(queue.CampaignJob{
+				err := processor.Process(database.Connection(), "some-uaa-host", *gobble.NewJob(queue.CampaignJob{
 					Campaign: collections.Campaign{
 						SendTo: map[string][]string{"emails": {"wut@example.com"}},
 					},

@@ -135,8 +135,7 @@ var _ = Describe("DeliveryJobProcessor", func() {
 		var job *gobble.Job
 
 		BeforeEach(func() {
-			j := gobble.NewJob(delivery)
-			job = &j
+			job = gobble.NewJob(delivery)
 		})
 
 		It("logs the email address of the recipient", func() {
@@ -253,8 +252,7 @@ var _ = Describe("DeliveryJobProcessor", func() {
 
 		Context("when loading a zoned token fails", func() {
 			It("retries the job", func() {
-				j := gobble.NewJob(delivery)
-				job = &j
+				job := gobble.NewJob(delivery)
 
 				tokenLoader.LoadCall.Returns.Error = errors.New("failed to load a zoned UAA token")
 				processor.Process(job, logger)
@@ -433,8 +431,7 @@ var _ = Describe("DeliveryJobProcessor", func() {
 					userLoader.LoadCall.Returns.Users = map[string]uaa.User{
 						"user-123": {},
 					}
-					j := gobble.NewJob(delivery)
-					job = &j
+					job := gobble.NewJob(delivery)
 
 					processor.Process(job, logger)
 				})
@@ -468,8 +465,7 @@ var _ = Describe("DeliveryJobProcessor", func() {
 			Context("when the recipient's first email address is missing an @ symbol", func() {
 				BeforeEach(func() {
 					delivery.Email = "nope"
-					j := gobble.NewJob(delivery)
-					job = &j
+					job := gobble.NewJob(delivery)
 
 					processor.Process(job, logger)
 				})
@@ -587,8 +583,7 @@ var _ = Describe("DeliveryJobProcessor", func() {
 					HTML:    "<h3>This message is a test of the Endorsement Broadcast System</h3><p>{{.HTML}}</p><h3>Endorsement:</h3><p>{.Endorsement}</p>",
 					Subject: "Endorsement Test: {{.Subject}}",
 				}
-				j := gobble.NewJob(delivery)
-				job = &j
+				job = gobble.NewJob(delivery)
 			})
 
 			It("does not panic", func() {

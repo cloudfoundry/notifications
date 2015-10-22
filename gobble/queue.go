@@ -12,10 +12,10 @@ import (
 var WaitMaxDuration = 5 * time.Second
 
 type QueueInterface interface {
-	Enqueue(Job, ConnectionInterface) (Job, error)
-	Reserve(string) <-chan Job
-	Dequeue(Job)
-	Requeue(Job)
+	Enqueue(*Job, ConnectionInterface) (*Job, error)
+	Reserve(string) <-chan *Job
+	Dequeue(*Job)
+	Requeue(*Job)
 	Len() (int, error)
 	RetryQueueLengths() (map[int]int, error)
 }
@@ -37,8 +37,8 @@ func NewQueue(database DatabaseInterface, config Config) *Queue {
 	}
 }
 
-func (*Queue) Enqueue(job Job, transaction ConnectionInterface) (Job, error) {
-	err := transaction.Insert(&job)
+func (*Queue) Enqueue(job *Job, transaction ConnectionInterface) (*Job, error) {
+	err := transaction.Insert(job)
 	if err != nil {
 		return job, err
 	}
@@ -46,18 +46,11 @@ func (*Queue) Enqueue(job Job, transaction ConnectionInterface) (Job, error) {
 	return job, nil
 }
 
-func (queue *Queue) Requeue(job Job) {
-	_, err := queue.database.Connection.Update(&job)
+func (queue *Queue) Requeue(job *Job) {
+	_, err := queue.database.Connection.Update(job)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func (queue *Queue) Reserve(workerID string) <-chan Job {
-	channel := make(chan Job)
-	go queue.reserve(channel, workerID)
-
-	return channel
 }
 
 func (queue *Queue) Len() (int, error) {
@@ -90,9 +83,16 @@ func (queue *Queue) Close() {
 	queue.closed = true
 }
 
-func (queue *Queue) reserve(channel chan Job, workerID string) {
-	job := Job{}
-	for job.ID == 0 {
+func (queue *Queue) Reserve(workerID string) <-chan *Job {
+	channel := make(chan *Job)
+	go queue.reserve(channel, workerID)
+
+	return channel
+}
+
+func (queue *Queue) reserve(channel chan *Job, workerID string) {
+	var job *Job
+	for job == nil {
 		var err error
 
 		job = queue.findJob()
@@ -103,7 +103,7 @@ func (queue *Queue) reserve(channel chan Job, workerID string) {
 		job, err = queue.updateJob(job, workerID)
 		if err != nil {
 			if _, ok := err.(gorp.OptimisticLockError); ok {
-				job = Job{}
+				job = nil
 				continue
 			} else {
 				panic(err)
@@ -119,8 +119,8 @@ func (queue *Queue) reserve(channel chan Job, workerID string) {
 	channel <- job
 }
 
-func (queue *Queue) Dequeue(job Job) {
-	_, err := queue.database.Connection.Delete(&job)
+func (queue *Queue) Dequeue(job *Job) {
+	_, err := queue.database.Connection.Delete(job)
 	if err != nil {
 		if _, ok := err.(gorp.OptimisticLockError); ok && strings.Contains(err.Error(), "no row found") {
 			return
@@ -129,15 +129,16 @@ func (queue *Queue) Dequeue(job Job) {
 	}
 }
 
-func (queue *Queue) findJob() Job {
-	job := Job{}
-	for job.ID == 0 {
+func (queue *Queue) findJob() *Job {
+	var job *Job
+	for job == nil {
+		job = &Job{}
 		now := time.Now()
 		expired := now.Add(-2 * time.Minute)
-		err := queue.database.Connection.SelectOne(&job, "SELECT * FROM `jobs` WHERE ( `worker_id` = \"\" AND `active_at` <= ? ) OR `active_at` <= ? LIMIT 1", now, expired)
+		err := queue.database.Connection.SelectOne(job, "SELECT * FROM `jobs` WHERE ( `worker_id` = \"\" AND `active_at` <= ? ) OR `active_at` <= ? LIMIT 1", now, expired)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				job = Job{}
+				job = nil
 				queue.waitUpTo(queue.config.WaitMaxDuration)
 				continue
 			}
@@ -147,10 +148,14 @@ func (queue *Queue) findJob() Job {
 	return job
 }
 
-func (queue *Queue) updateJob(job Job, workerID string) (Job, error) {
+func (queue *Queue) updateJob(job *Job, workerID string) (*Job, error) {
+	if job == nil {
+		return job, nil
+	}
+
 	job.WorkerID = workerID
 	job.ActiveAt = time.Now()
-	_, err := queue.database.Connection.Update(&job)
+	_, err := queue.database.Connection.Update(job)
 	if err != nil {
 		return job, err
 	}

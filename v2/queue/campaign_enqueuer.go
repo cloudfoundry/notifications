@@ -9,7 +9,7 @@ import (
 )
 
 type enqueuer interface {
-	Enqueue(job gobble.Job, conn gobble.ConnectionInterface) (gobble.Job, error)
+	Enqueue(job *gobble.Job, conn gobble.ConnectionInterface) (*gobble.Job, error)
 }
 
 type DatabaseInterface interface {
@@ -38,11 +38,12 @@ func NewCampaignEnqueuer(queue enqueuer, database DatabaseInterface, gobbleIniti
 func (e CampaignEnqueuer) Enqueue(campaign collections.Campaign, jobType string) error {
 	connection := e.database.Connection()
 	e.gobbleInitializer.InitializeDBMap(connection.GetDbMap())
-
-	_, err := e.gobbleQueue.Enqueue(gobble.NewJob(CampaignJob{
+	job := gobble.NewJob(CampaignJob{
 		JobType:  jobType,
 		Campaign: campaign,
-	}), connection)
+	})
+
+	_, err := e.gobbleQueue.Enqueue(job, connection)
 	if err != nil {
 		return errors.New(fmt.Sprintf("there was an error enqueuing the job: %s", err))
 	}

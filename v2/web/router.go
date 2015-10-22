@@ -38,7 +38,7 @@ type mother interface {
 }
 
 type enqueuer interface {
-	Enqueue(job gobble.Job, transaction gobble.ConnectionInterface) (gobble.Job, error)
+	Enqueue(job *gobble.Job, transaction gobble.ConnectionInterface) (*gobble.Job, error)
 }
 
 type Config struct {

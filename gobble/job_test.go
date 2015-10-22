@@ -19,7 +19,7 @@ var _ = Describe("Job", func() {
 
 			job := gobble.NewJob(data)
 
-			Expect(job).To(BeAssignableToTypeOf(gobble.Job{}))
+			Expect(job).To(BeAssignableToTypeOf(&gobble.Job{}))
 			Expect(job.Payload).To(Equal(`{"example":"another field","test":"testing a new job"}`))
 		})
 	})

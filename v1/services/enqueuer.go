@@ -45,7 +45,7 @@ type messagesRepoUpserter interface {
 }
 
 type queueInterface interface {
-	Enqueue(job gobble.Job, transaction gobble.ConnectionInterface) (gobble.Job, error)
+	Enqueue(job *gobble.Job, transaction gobble.ConnectionInterface) (*gobble.Job, error)
 }
 
 type gobbleInitializer interface {
@@ -83,7 +83,7 @@ func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options
 			return []Response{}
 		}
 
-		_, err = enqueuer.queue.Enqueue(gobble.NewJob(Delivery{
+		job := gobble.NewJob(Delivery{
 			Options:         options,
 			UserGUID:        user.GUID,
 			Email:           user.Email,
@@ -95,7 +95,9 @@ func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options
 			Scope:           scope,
 			VCAPRequestID:   vcapRequestID,
 			RequestReceived: reqReceived,
-		}), transaction)
+		})
+
+		_, err = enqueuer.queue.Enqueue(job, transaction)
 		if err != nil {
 			transaction.Rollback()
 			return []Response{}
