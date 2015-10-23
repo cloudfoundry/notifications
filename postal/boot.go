@@ -10,6 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
+	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/postal/v1"
 	"github.com/cloudfoundry-incubator/notifications/postal/v2"
@@ -85,6 +86,8 @@ func Boot(mom mother, config Config) {
 	packager := common.NewPackager(v1TemplateLoader, cloak)
 
 	// V2
+	metricsEmitter := metrics.NewEmitter(metrics.DefaultLogger)
+
 	messagesRepository := v2models.NewMessagesRepository(util.NewClock(), guidGenerator.Generate)
 	gobbleInitializer := gobble.Initializer{}
 
@@ -142,7 +145,7 @@ func Boot(mom mother, config Config) {
 
 		v2DeliveryJobProcessor := v2.NewDeliveryJobProcessor(v2mailClient, common.NewPackager(v2TemplateLoader, cloak),
 			common.NewUserLoader(uaaClient), uaa.NewTokenLoader(uaaClient), v2messageStatusUpdater, v2database,
-			unsubscribersRepository, campaignsRepository, config.Sender, config.Domain, config.UAAHost)
+			unsubscribersRepository, campaignsRepository, config.Sender, config.Domain, config.UAAHost, metricsEmitter)
 
 		worker := NewDeliveryWorker(v1DeliveryJobProcessor, v2DeliveryJobProcessor, DeliveryWorkerConfig{
 			ID:      index,

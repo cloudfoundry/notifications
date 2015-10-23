@@ -32,6 +32,7 @@ var _ = Describe("DeliveryJobProcessor", func() {
 		delivery                common.Delivery
 		campaignsRepository     *mocks.CampaignsRepository
 		unsubscribersRepository *mocks.UnsubscribersRepository
+		metricsEmitter          *mocks.MetricsEmitter
 	)
 
 	BeforeEach(func() {
@@ -134,7 +135,11 @@ var _ = Describe("DeliveryJobProcessor", func() {
 			CampaignID:    "some-campaign-id",
 		}
 
-		processor = v2.NewDeliveryJobProcessor(mailClient, packager, userLoader, tokenLoader, messageStatusUpdater, database, unsubscribersRepository, campaignsRepository, "from@example.com", "example.com", "uaa-host")
+		metricsEmitter = mocks.NewMetricsEmitter()
+
+		processor = v2.NewDeliveryJobProcessor(mailClient, packager, userLoader, tokenLoader,
+			messageStatusUpdater, database, unsubscribersRepository, campaignsRepository,
+			"from@example.com", "example.com", "uaa-host", metricsEmitter)
 	})
 
 	It("ensures message delivery", func() {
@@ -182,6 +187,13 @@ var _ = Describe("DeliveryJobProcessor", func() {
 		Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusDelivered))
 		Expect(messageStatusUpdater.UpdateCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 		Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
+	})
+
+	It("emits a metric when the message is delivered", func() {
+		err := processor.Process(delivery, logger)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(metricsEmitter.IncrementCall.Receives.Counter).To(Equal("notifications.worker.delivered"))
 	})
 
 	Context("when the delivery does not have a user GUID", func() {
@@ -323,6 +335,10 @@ var _ = Describe("DeliveryJobProcessor", func() {
 			Expect(messageStatusUpdater.UpdateCall.Receives.MessageStatus).To(Equal(common.StatusDelivered))
 			Expect(messageStatusUpdater.UpdateCall.Receives.CampaignID).To(Equal("some-campaign-id"))
 			Expect(messageStatusUpdater.UpdateCall.Receives.Logger.SessionName()).To(Equal("notifications.worker"))
+		})
+
+		It("emits a metric indicating the unsubscription", func() {
+			Expect(metricsEmitter.IncrementCall.Receives.Counter).To(Equal("notifications.worker.unsubscribed"))
 		})
 	})
 
