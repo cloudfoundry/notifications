@@ -37,8 +37,8 @@ func NewQueue(database DatabaseInterface, config Config) *Queue {
 	}
 }
 
-func (*Queue) Enqueue(job *Job, transaction ConnectionInterface) (*Job, error) {
-	err := transaction.Insert(job)
+func (*Queue) Enqueue(job *Job, connection ConnectionInterface) (*Job, error) {
+	err := connection.Insert(job)
 	if err != nil {
 		return job, err
 	}
