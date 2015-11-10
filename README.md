@@ -1,3 +1,7 @@
+# Notice
+
+If you are trying to deploy notifications, **DO NOT** use this repo to deploy it directly. Please use the [bosh-release and accompanying directions](https://github.com/cloudfoundry-incubator/notifications-release).
+
 # Notifications
 
 A notifications component that parts of CF can use to send email to end users.
