@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Messages Repository", func() {
+var _ = Describe("MessagesRepository", func() {
 	var (
 		repo          models.MessagesRepository
 		conn          *db.Connection
@@ -40,6 +40,7 @@ var _ = Describe("Messages Repository", func() {
 				ID:         "random-guid-1",
 				CampaignID: "some-campaign-id",
 				Status:     common.StatusDelivered,
+				UpdatedAt:  time.Now().UTC().Truncate(time.Second),
 			})
 			Expect(err).NotTo(HaveOccurred())
 
@@ -47,6 +48,7 @@ var _ = Describe("Messages Repository", func() {
 				ID:         "random-guid-2",
 				CampaignID: "some-campaign-id",
 				Status:     common.StatusFailed,
+				UpdatedAt:  time.Now().UTC().Truncate(time.Second),
 			})
 			Expect(err).NotTo(HaveOccurred())
 
@@ -54,6 +56,7 @@ var _ = Describe("Messages Repository", func() {
 				ID:         "random-guid-3",
 				CampaignID: "some-campaign-id",
 				Status:     common.StatusDelivered,
+				UpdatedAt:  time.Now().UTC().Truncate(time.Second),
 			})
 			Expect(err).NotTo(HaveOccurred())
 
@@ -61,6 +64,7 @@ var _ = Describe("Messages Repository", func() {
 				ID:         "random-guid-4",
 				CampaignID: "some-campaign-id",
 				Status:     common.StatusRetry,
+				UpdatedAt:  time.Now().UTC().Truncate(time.Second),
 			})
 			Expect(err).NotTo(HaveOccurred())
 
@@ -68,6 +72,7 @@ var _ = Describe("Messages Repository", func() {
 				ID:         "random-guid-5",
 				CampaignID: "some-campaign-id",
 				Status:     common.StatusQueued,
+				UpdatedAt:  time.Now().UTC().Truncate(time.Second),
 			})
 			Expect(err).NotTo(HaveOccurred())
 
@@ -75,6 +80,7 @@ var _ = Describe("Messages Repository", func() {
 				ID:         "random-guid-6",
 				CampaignID: "some-campaign-id",
 				Status:     common.StatusUndeliverable,
+				UpdatedAt:  time.Now().UTC().Truncate(time.Second),
 			})
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -156,10 +162,12 @@ var _ = Describe("Messages Repository", func() {
 
 	Describe("Insert", func() {
 		It("inserts a message into the database table", func() {
+			clock.NowCall.Returns.Time = time.Now().UTC().Truncate(time.Second)
 			message, err := repo.Insert(conn, models.Message{
 				Status:     "some-status",
 				CampaignID: "some-campaign-id",
 			})
+			Expect(err).NotTo(HaveOccurred())
 
 			var msg models.Message
 			err = conn.SelectOne(&msg, "SELECT * FROM `messages` WHERE `id` = ? AND `status` = ? AND `campaign_id` = ?", "random-guid-1", "some-status", "some-campaign-id")
@@ -199,6 +207,7 @@ var _ = Describe("Messages Repository", func() {
 				ID:         "random-guid-1",
 				Status:     "some-status",
 				CampaignID: "some-campaign-id",
+				UpdatedAt:  time.Now().Add(-30 * time.Second).UTC().Truncate(time.Second),
 			})
 			Expect(err).NotTo(HaveOccurred())
 

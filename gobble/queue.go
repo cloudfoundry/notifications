@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-gorp/gorp"
+	"gopkg.in/gorp.v1"
 )
 
 var WaitMaxDuration = 5 * time.Second
@@ -20,24 +20,34 @@ type QueueInterface interface {
 	RetryQueueLengths() (map[int]int, error)
 }
 
+type clock interface {
+	Now() time.Time
+}
+
 type Queue struct {
 	config   Config
 	database *DB
+	clock    clock
 	closed   bool
 }
 
-func NewQueue(database DatabaseInterface, config Config) *Queue {
+func NewQueue(database DatabaseInterface, clock clock, config Config) *Queue {
 	if config.WaitMaxDuration == 0 {
 		config.WaitMaxDuration = WaitMaxDuration
 	}
 
 	return &Queue{
 		database: database.(*DB),
+		clock:    clock,
 		config:   config,
 	}
 }
 
-func (*Queue) Enqueue(job *Job, connection ConnectionInterface) (*Job, error) {
+func (queue *Queue) Enqueue(job *Job, connection ConnectionInterface) (*Job, error) {
+	if (job.ActiveAt == time.Time{}) {
+		job.ActiveAt = queue.clock.Now()
+	}
+
 	err := connection.Insert(job)
 	if err != nil {
 		return job, err

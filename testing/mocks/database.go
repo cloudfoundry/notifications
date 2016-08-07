@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
-	"github.com/go-gorp/gorp"
+	"gopkg.in/gorp.v1"
 )
 
 type Database struct {

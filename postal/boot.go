@@ -55,11 +55,13 @@ func Boot(mom mother, config Config) {
 	logger := lager.NewLogger("notifications")
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
 
+	clock := util.NewClock()
+
 	sqlDatabase := mom.SQLDatabase()
 	database := mom.Database()
 
 	gobbleDatabase := gobble.NewDatabase(sqlDatabase)
-	gobbleQueue := gobble.NewQueue(gobbleDatabase, gobble.Config{
+	gobbleQueue := gobble.NewQueue(gobbleDatabase, clock, gobble.Config{
 		WaitMaxDuration: time.Duration(config.QueueWaitMaxDuration) * time.Millisecond,
 	})
 
@@ -88,7 +90,7 @@ func Boot(mom mother, config Config) {
 	// V2
 	metricsEmitter := metrics.NewEmitter(metrics.DefaultLogger)
 
-	messagesRepository := v2models.NewMessagesRepository(util.NewClock(), guidGenerator.Generate)
+	messagesRepository := v2models.NewMessagesRepository(clock, guidGenerator.Generate)
 	gobbleInitializer := gobble.Initializer{}
 
 	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, messagesRepository, gobbleInitializer)
@@ -106,7 +108,7 @@ func Boot(mom mother, config Config) {
 	v2database := v2models.NewDatabase(sqlDatabase, v2models.Config{})
 	v2messageStatusUpdater := v2.NewV2MessageStatusUpdater(messagesRepository)
 	unsubscribersRepository := v2models.NewUnsubscribersRepository(guidGenerator.Generate)
-	campaignsRepository := v2models.NewCampaignsRepository(guidGenerator.Generate)
+	campaignsRepository := v2models.NewCampaignsRepository(guidGenerator.Generate, clock)
 	v2templatesRepo := v2models.NewTemplatesRepository(guidGenerator.Generate)
 	templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
 	v2TemplateLoader := v2.NewTemplatesLoader(v2database, templatesCollection)

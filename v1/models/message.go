@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/go-gorp/gorp"
+	"gopkg.in/gorp.v1"
 )
 
 type Message struct {

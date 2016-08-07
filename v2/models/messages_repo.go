@@ -86,6 +86,7 @@ func (mr MessagesRepository) Insert(conn ConnectionInterface, message Message) (
 		}
 	}
 
+	message.UpdatedAt = mr.clock.Now()
 	err := conn.Insert(&message)
 	if err != nil {
 		return Message{}, err

@@ -18,13 +18,15 @@ var _ = Describe("CampaignsRepository", func() {
 		repo          models.CampaignsRepository
 		connection    db.ConnectionInterface
 		guidGenerator *mocks.IDGenerator
+		clock         *mocks.Clock
 	)
 
 	BeforeEach(func() {
 		guidGenerator = mocks.NewIDGenerator()
 		guidGenerator.GenerateCall.Returns.IDs = []string{"first-random-guid", "second-random-guid"}
+		clock = &mocks.Clock{}
 
-		repo = models.NewCampaignsRepository(guidGenerator.Generate)
+		repo = models.NewCampaignsRepository(guidGenerator.Generate, clock)
 		database := db.NewDatabase(sqlDB, db.Config{})
 		helpers.TruncateTables(database)
 		connection = database.Connection()
@@ -32,6 +34,8 @@ var _ = Describe("CampaignsRepository", func() {
 
 	Describe("Insert", func() {
 		It("inserts a campaign into the database", func() {
+			clock.NowCall.Returns.Time = time.Now().UTC().Truncate(time.Second)
+
 			campaign, err := repo.Insert(connection, models.Campaign{
 				SendTo:         `{"user": "user-123"}`,
 				CampaignTypeID: "some-campaign-type-id",
@@ -123,12 +127,14 @@ var _ = Describe("CampaignsRepository", func() {
 		BeforeEach(func() {
 			var err error
 			campaign, err = repo.Insert(connection, models.Campaign{
-				Status: "sending",
+				Status:    "sending",
+				StartTime: time.Now().UTC().Truncate(time.Second),
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = repo.Insert(connection, models.Campaign{
-				Status: "completed",
+				Status:    "completed",
+				StartTime: time.Now().UTC().Truncate(time.Second),
 			})
 			Expect(err).NotTo(HaveOccurred())
 		})

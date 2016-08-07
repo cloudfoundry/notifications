@@ -29,11 +29,13 @@ type Campaign struct {
 
 type CampaignsRepository struct {
 	guidGenerator guidGeneratorFunc
+	clock         clock
 }
 
-func NewCampaignsRepository(guidGenerator guidGeneratorFunc) CampaignsRepository {
+func NewCampaignsRepository(guidGenerator guidGeneratorFunc, clock clock) CampaignsRepository {
 	return CampaignsRepository{
 		guidGenerator: guidGenerator,
+		clock:         clock,
 	}
 }
 
@@ -42,6 +44,10 @@ func (r CampaignsRepository) Insert(conn ConnectionInterface, campaign Campaign)
 	campaign.ID, err = r.guidGenerator()
 	if err != nil {
 		return campaign, err
+	}
+
+	if (campaign.StartTime == time.Time{}) {
+		campaign.StartTime = r.clock.Now()
 	}
 
 	err = conn.Insert(&campaign)

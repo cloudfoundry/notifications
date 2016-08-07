@@ -34,7 +34,7 @@ func (m *Mother) GobbleDatabase() gobble.DatabaseInterface {
 }
 
 func (m *Mother) Queue() gobble.QueueInterface {
-	return gobble.NewQueue(m.GobbleDatabase(), gobble.Config{
+	return gobble.NewQueue(m.GobbleDatabase(), util.NewClock(), gobble.Config{
 		WaitMaxDuration: time.Duration(m.env.GobbleWaitMaxDuration) * time.Millisecond,
 	})
 }

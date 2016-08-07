@@ -7,7 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
-	"github.com/go-gorp/gorp"
+	"gopkg.in/gorp.v1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

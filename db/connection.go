@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 
-	"github.com/go-gorp/gorp"
+	"gopkg.in/gorp.v1"
 )
 
 type ConnectionInterface interface {

@@ -87,7 +87,7 @@ var _ = Describe("Database Allocator", func() {
 			Expect(line.Message).To(Equal("notifications.db"))
 			Expect(line.LogLevel).To(Equal(int(lager.DEBUG)))
 			Expect(line.Data).To(HaveKeyWithValue("vcap_request_id", "some-vcap-request-id"))
-			Expect(line.Data).To(HaveKeyWithValue("statement", MatchRegexp(`^SELECT \* FROM `+"`"+`posts`+"`"+` WHERE `+"`"+`id`+"`"+` = \? AND `+"`"+`tag`+"`"+` = \? \[1:1234 2:"banana"\] (.*)$`)))
+			Expect(line.Data).To(HaveKeyWithValue("statement", MatchRegexp(`^SELECT \* FROM `+"`"+`posts`+"`"+` WHERE `+"`"+`id`+"`"+` = \? AND `+"`"+`tag`+"`"+` = \? \[1:1234 2:"banana"\]$`)))
 		})
 	})
 

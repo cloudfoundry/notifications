@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 
-	"github.com/go-gorp/gorp"
+	"gopkg.in/gorp.v1"
 
 	_ "github.com/go-sql-driver/mysql"
 )

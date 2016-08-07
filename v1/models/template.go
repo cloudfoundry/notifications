@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/util"
-	"github.com/go-gorp/gorp"
+	"gopkg.in/gorp.v1"
 )
 
 const (

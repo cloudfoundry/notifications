@@ -1,6 +1,6 @@
 package mocks
 
-import "github.com/go-gorp/gorp"
+import "gopkg.in/gorp.v1"
 
 type GobbleInitializer struct {
 	InitializeDBMapCall struct {

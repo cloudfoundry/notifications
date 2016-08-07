@@ -75,7 +75,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	notifyObj := notify.NewNotify(notificationsFinder, registrar)
 
-	gobbleQueue := gobble.NewQueue(gobble.NewDatabase(config.SQLDB), gobble.Config{
+	gobbleQueue := gobble.NewQueue(gobble.NewDatabase(config.SQLDB), clock, gobble.Config{
 		WaitMaxDuration: time.Duration(config.QueueWaitMaxDuration) * time.Millisecond,
 	})
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,13 +15,16 @@ var _ = Describe("Queue", func() {
 	var (
 		queue    *gobble.Queue
 		database *gobble.DB
+		clock    *mocks.Clock
 	)
 
 	BeforeEach(func() {
 		TruncateTables()
 		database = gobble.NewDatabase(sqlDB)
+		clock = &mocks.Clock{}
+		clock.NowCall.Returns.Time = time.Now().UTC().Truncate(time.Second)
 
-		queue = gobble.NewQueue(database, gobble.Config{
+		queue = gobble.NewQueue(database, clock, gobble.Config{
 			WaitMaxDuration: 50 * time.Millisecond,
 		})
 	})
@@ -97,7 +101,8 @@ var _ = Describe("Queue", func() {
 	Describe("Reserve", func() {
 		It("reserves a job in the database", func() {
 			job := gobble.Job{
-				Payload: "something",
+				Payload:  "something",
+				ActiveAt: time.Now().UTC().Truncate(time.Second),
 			}
 
 			err := database.Connection.Insert(&job)

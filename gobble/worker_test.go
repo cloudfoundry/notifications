@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/gobble"
+	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -37,6 +38,7 @@ var _ = Describe("Worker", func() {
 		callbackWasCalledWith gobble.Job
 		callback              func(*gobble.Job)
 		database              *gobble.DB
+		clock                 *mocks.Clock
 	)
 
 	BeforeEach(func() {
@@ -46,8 +48,10 @@ var _ = Describe("Worker", func() {
 			callbackWasCalledWith = *job
 		}
 		database = gobble.NewDatabase(sqlDB)
+		clock = &mocks.Clock{}
+		clock.NowCall.Returns.Time = time.Now().UTC().Truncate(time.Second)
 
-		queue = gobble.NewQueue(database, gobble.Config{})
+		queue = gobble.NewQueue(database, clock, gobble.Config{})
 		heartbeater = &MockHeartbeater{}
 		worker = gobble.NewWorker(1, queue, callback, heartbeater)
 	})

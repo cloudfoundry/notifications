@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/go-gorp/gorp"
+	"gopkg.in/gorp.v1"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"

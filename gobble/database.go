@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	"bitbucket.org/liamstask/goose/lib/goose"
-	"github.com/go-gorp/gorp"
+	"gopkg.in/gorp.v1"
 
 	_ "github.com/go-sql-driver/mysql"
 )
