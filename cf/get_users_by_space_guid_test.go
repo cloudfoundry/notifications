@@ -47,7 +47,7 @@ var UsersEndpoint = http.HandlerFunc(func(w http.ResponseWriter, req *http.Reque
           "metadata": {
             "guid": "user-123",
             "url": "/v2/users/user-123",
-            "created_at": "2013-04-30T21:00:49+00:00",
+            "created_at": "2013-04-20T21:00:49+00:00",
             "updated_at": null
           },
           "entity": {
@@ -67,7 +67,7 @@ var UsersEndpoint = http.HandlerFunc(func(w http.ResponseWriter, req *http.Reque
           "metadata": {
             "guid": "user-456",
             "url": "/v2/users/user-456",
-            "created_at": "2013-04-31T21:00:49+00:00",
+            "created_at": "2013-04-21T21:00:49+00:00",
             "updated_at": null
           },
           "entity": {
