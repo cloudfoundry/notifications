@@ -1,5 +1,5 @@
--- +goose Up
-CREATE TABLE `jobs` (
+-- +migrate Up
+CREATE TABLE IF NOT EXISTS `jobs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `worker_id` varchar(255) DEFAULT NULL,
   `payload` text DEFAULT NULL,
@@ -7,5 +7,5 @@ CREATE TABLE `jobs` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
--- +goose Down
+-- +migrate Down
 DROP TABLE jobs;

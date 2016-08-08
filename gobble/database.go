@@ -3,7 +3,7 @@ package gobble
 import (
 	"database/sql"
 
-	"bitbucket.org/liamstask/goose/lib/goose"
+	sql_migrate "github.com/rubenv/sql-migrate"
 	"gopkg.in/gorp.v1"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -41,21 +41,14 @@ func (Initializer) InitializeDBMap(dbMap *gorp.DbMap) {
 	dbMap.AddTableWithName(Job{}, "jobs").SetKeys(true, "ID").SetVersionCol("Version")
 }
 
-func (db DB) Migrate(migrationsDir string) {
-	dbConf := &goose.DBConf{
-		MigrationsDir: migrationsDir,
-		Env:           "notifications",
-		Driver: goose.DBDriver{
-			Dialect: &goose.MySqlDialect{},
-		},
+func (db DB) Migrate(migrationsPath string) {
+	sql_migrate.SetTable("gobble_model_migrations")
+
+	migrations := &sql_migrate.FileMigrationSource{
+		Dir: migrationsPath,
 	}
 
-	target, err := goose.GetMostRecentDBVersion(dbConf.MigrationsDir)
-	if err != nil {
-		panic(err)
-	}
-
-	err = goose.RunMigrationsOnDb(dbConf, dbConf.MigrationsDir, target, db.Connection.Db)
+	_, err := sql_migrate.Exec(db.Connection.Db, "mysql", migrations, sql_migrate.Up)
 	if err != nil {
 		panic(err)
 	}

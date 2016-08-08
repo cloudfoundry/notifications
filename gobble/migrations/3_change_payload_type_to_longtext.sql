@@ -1,5 +1,5 @@
--- +goose Up
+-- +migrate Up
 ALTER TABLE `jobs` MODIFY payload longtext;
 
--- +goose Down
+-- +migrate Down
 ALTER TABLE `jobs` MODIFY payload text;

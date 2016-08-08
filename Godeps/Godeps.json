@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/cloudfoundry-incubator/notifications",
-	"GoVersion": "go1.5.1",
+	"GoVersion": "go1.6.3",
 	"Packages": [
 		"./..."
 	],
@@ -9,10 +9,6 @@
 			"ImportPath": "bitbucket.org/chrj/smtpd",
 			"Comment": "null-24",
 			"Rev": "10bcb042194e344946fc7d9a6dad3cd87c05ec04"
-		},
-		{
-			"ImportPath": "bitbucket.org/liamstask/goose/lib/goose",
-			"Rev": "8488cc47d90c8a502b1c41a462a6d9cc8ee0a895"
 		},
 		{
 			"ImportPath": "github.com/DATA-DOG/go-sqlmock",
@@ -45,19 +41,6 @@
 		{
 			"ImportPath": "github.com/gorilla/mux",
 			"Rev": "9ede152210fa25c1377d33e867cb828c19316445"
-		},
-		{
-			"ImportPath": "github.com/kylelemons/go-gypsy/yaml",
-			"Comment": "go.weekly.2011-11-02-17-g0ddb27c",
-			"Rev": "0ddb27ce74ade2ca988ec85587d636e10312dfc6"
-		},
-		{
-			"ImportPath": "github.com/lib/pq",
-			"Rev": "c808a1bb644594ca717ac61f71e6b0e454b835e2"
-		},
-		{
-			"ImportPath": "github.com/mattn/go-sqlite3",
-			"Rev": "58c62dc30cda06e4a74e18f6489bb6c112fc6e5d"
 		},
 		{
 			"ImportPath": "github.com/nu7hatch/gouuid",
@@ -104,21 +87,6 @@
 		{
 			"ImportPath": "github.com/ryanmoran/viron",
 			"Rev": "f3865b4826c87b16d3a67e308336b319b3b6859a"
-		},
-		{
-			"ImportPath": "github.com/ziutek/mymysql/godrv",
-			"Comment": "v1.5.3-12-g1928d33",
-			"Rev": "1928d3379a32cc58b535ea2d03c017ade9eb2d0d"
-		},
-		{
-			"ImportPath": "github.com/ziutek/mymysql/mysql",
-			"Comment": "v1.5.3-12-g1928d33",
-			"Rev": "1928d3379a32cc58b535ea2d03c017ade9eb2d0d"
-		},
-		{
-			"ImportPath": "github.com/ziutek/mymysql/native",
-			"Comment": "v1.5.3-12-g1928d33",
-			"Rev": "1928d3379a32cc58b535ea2d03c017ade9eb2d0d"
 		},
 		{
 			"ImportPath": "golang.org/x/net/html",
