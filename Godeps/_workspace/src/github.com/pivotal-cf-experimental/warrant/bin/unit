@@ -1,9 +1,0 @@
-#!/bin/bash -e
-
-DIR=`cd $(dirname $0)/.. && pwd`
-
-if [[ -z "$@" ]]; then
-  ginkgo -r -skipPackage=acceptance $DIR
-else
-  ginkgo $@
-fi

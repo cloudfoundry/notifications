@@ -1,5 +1,0 @@
-#!/bin/bash -e
-
-DIR=`cd $(dirname $0)/.. && pwd`
-
-ginkgo -r -skipPackage=acceptance $DIR
