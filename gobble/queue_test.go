@@ -112,7 +112,7 @@ var _ = Describe("Queue", func() {
 			reservedJob := <-jobChannel
 
 			Expect(reservedJob.ID).To(Equal(job.ID))
-			Expect(reservedJob.ActiveAt).To(BeTemporally("~", time.Now(), 100*time.Millisecond))
+			Expect(reservedJob.ActiveAt).To(BeTemporally("~", time.Now(), 250*time.Millisecond))
 		})
 
 		It("keeps trying to reserve a job until one becomes available", func() {
@@ -133,7 +133,8 @@ var _ = Describe("Queue", func() {
 
 		It("ensures a job can only be reserved by a single worker", func() {
 			for i := 0; i < 100; i++ {
-				queue.Enqueue(&gobble.Job{}, database.Connection)
+				_, err := queue.Enqueue(&gobble.Job{}, database.Connection)
+				Expect(err).ToNot(HaveOccurred())
 			}
 
 			done := make(chan bool)
@@ -148,8 +149,8 @@ var _ = Describe("Queue", func() {
 			go reserveJob("worker-1")
 			go reserveJob("worker-2")
 
-			Eventually(done, 10*time.Second).Should(Receive())
-			Eventually(done, 10*time.Second).Should(Receive())
+			Eventually(done, 30*time.Second).Should(Receive())
+			Eventually(done, 30*time.Second).Should(Receive())
 
 			results, err := database.Connection.Select(gobble.Job{}, "SELECT * FROM `jobs` WHERE `worker_id` = ''")
 			Expect(err).NotTo(HaveOccurred())
