@@ -73,8 +73,9 @@ var _ = Describe("Enqueuer", func() {
 	Describe("Enqueue", func() {
 		It("returns the correct types of responses for users", func() {
 			users := []services.User{{GUID: "user-1"}, {Email: "user-2@example.com"}, {GUID: "user-3"}, {GUID: "user-4"}}
-			responses := enqueuer.Enqueue(conn, users, services.Options{KindID: "the-kind"}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+			responses, err := enqueuer.Enqueue(conn, users, services.Options{KindID: "the-kind"}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
+			Expect(err).ToNot(HaveOccurred())
 			Expect(responses).To(HaveLen(4))
 			Expect(responses).To(ConsistOf([]services.Response{
 				{
@@ -211,31 +212,35 @@ var _ = Describe("Enqueuer", func() {
 			})
 
 			It("commits the transaction when everything goes well", func() {
-				responses := enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+				responses, err := enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
+				Expect(err).ToNot(HaveOccurred())
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeTrue())
 				Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 
 				Expect(responses).ToNot(BeEmpty())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("rolls back the transaction when there is an error in message repo upserting", func() {
 				messagesRepo.UpsertCall.Returns.Error = errors.New("BOOM!")
-				enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+				_, err := enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
 				Expect(transaction.RollbackCall.WasCalled).To(BeTrue())
+				Expect(err).To(HaveOccurred())
 			})
 
 			It("rolls back the transaction when there is an error in enqueuing", func() {
 				queue.EnqueueCall.Returns.Error = errors.New("BOOM!")
-				enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+				_, err := enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
 				Expect(transaction.RollbackCall.WasCalled).To(BeTrue())
+				Expect(err).To(HaveOccurred())
 			})
 
 			It("uses the same transaction for the queue as it did for the messages repo", func() {
@@ -255,13 +260,14 @@ var _ = Describe("Enqueuer", func() {
 
 			It("returns an empty slice of Response if transaction fails", func() {
 				transaction.CommitCall.Returns.Error = errors.New("the commit blew up")
-				responses := enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
+				responses, err := enqueuer.Enqueue(conn, users, services.Options{}, space, org, "the-client", "my-uaa-host", "my.scope", "some-request-id", reqReceived)
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeTrue())
 				Expect(transaction.RollbackCall.WasCalled).To(BeFalse())
 
 				Expect(responses).To(Equal([]services.Response{}))
+				Expect(err).To(HaveOccurred())
 			})
 		})
 	})

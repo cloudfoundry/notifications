@@ -13,7 +13,17 @@ type EmailStrategy struct {
 }
 
 type enqueuer interface {
-	Enqueue(conn ConnectionInterface, users []User, opts Options, space cf.CloudControllerSpace, org cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []Response
+	Enqueue(
+		conn ConnectionInterface,
+		users []User,
+		opts Options,
+		space cf.CloudControllerSpace,
+		org cf.CloudControllerOrganization,
+		clientID string,
+		uaaHost string,
+		scope string,
+		vcapRequestID string,
+		reqReceived time.Time) ([]Response, error)
 }
 
 func NewEmailStrategy(enqueuer enqueuer) EmailStrategy {
@@ -23,8 +33,6 @@ func NewEmailStrategy(enqueuer enqueuer) EmailStrategy {
 }
 
 func (strategy EmailStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
-	var responses []Response
-
 	options := Options{
 		To:                dispatch.Message.To,
 		ReplyTo:           dispatch.Message.ReplyTo,
@@ -42,9 +50,18 @@ func (strategy EmailStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 			Doctype:        dispatch.Message.HTML.Doctype,
 		},
 	}
+
 	users := []User{{Email: dispatch.Message.To}}
 
-	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
-
-	return responses, nil
+	return strategy.enqueuer.Enqueue(
+		dispatch.Connection,
+		users,
+		options,
+		cf.CloudControllerSpace{},
+		cf.CloudControllerOrganization{},
+		dispatch.Client.ID,
+		dispatch.UAAHost,
+		"",
+		dispatch.VCAPRequest.ID,
+		dispatch.VCAPRequest.ReceiptTime)
 }

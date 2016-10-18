@@ -66,13 +66,26 @@ func NewEnqueuer(queue queueInterface, messagesRepo messagesRepoUpserter, gobble
 	}
 }
 
-func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options Options, space cf.CloudControllerSpace, organization cf.CloudControllerOrganization, clientID, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []Response {
+func (enqueuer Enqueuer) Enqueue(
+	conn ConnectionInterface,
+	users []User,
+	options Options,
+	space cf.CloudControllerSpace,
+	organization cf.CloudControllerOrganization,
+	clientID,
+	uaaHost,
+	scope,
+	vcapRequestID string,
+	reqReceived time.Time) ([]Response, error) {
+
 	var responses []Response
 
 	transaction := conn.Transaction()
 	enqueuer.gobbleInitializer.InitializeDBMap(transaction.GetDbMap())
 
-	transaction.Begin()
+	if err := transaction.Begin(); err != nil {
+		return []Response{}, err
+	}
 
 	for _, user := range users {
 		message, err := enqueuer.messagesRepo.Upsert(transaction, models.Message{
@@ -80,7 +93,7 @@ func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options
 		})
 		if err != nil {
 			transaction.Rollback()
-			return []Response{}
+			return []Response{}, err
 		}
 
 		job := gobble.NewJob(Delivery{
@@ -100,7 +113,7 @@ func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options
 		_, err = enqueuer.queue.Enqueue(job, transaction)
 		if err != nil {
 			transaction.Rollback()
-			return []Response{}
+			return []Response{}, err
 		}
 
 		recipient := user.Email
@@ -116,10 +129,9 @@ func (enqueuer Enqueuer) Enqueue(conn ConnectionInterface, users []User, options
 		})
 	}
 
-	err := transaction.Commit()
-	if err != nil {
-		return []Response{}
+	if err := transaction.Commit(); err != nil {
+		return []Response{}, err
 	}
 
-	return responses
+	return responses, nil
 }

@@ -15,8 +15,6 @@ func NewUserStrategy(enqueuer enqueuer) UserStrategy {
 }
 
 func (strategy UserStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
-	var responses []Response
-
 	options := Options{
 		ReplyTo:           dispatch.Message.ReplyTo,
 		Subject:           dispatch.Message.Subject,
@@ -34,9 +32,18 @@ func (strategy UserStrategy) Dispatch(dispatch Dispatch) ([]Response, error) {
 			Doctype:        dispatch.Message.HTML.Doctype,
 		},
 	}
+
 	users := []User{{GUID: dispatch.GUID}}
 
-	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, cf.CloudControllerOrganization{}, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
-
-	return responses, nil
+	return strategy.enqueuer.Enqueue(
+		dispatch.Connection,
+		users,
+		options,
+		cf.CloudControllerSpace{},
+		cf.CloudControllerOrganization{},
+		dispatch.Client.ID,
+		dispatch.UAAHost,
+		"",
+		dispatch.VCAPRequest.ID,
+		dispatch.VCAPRequest.ReceiptTime)
 }

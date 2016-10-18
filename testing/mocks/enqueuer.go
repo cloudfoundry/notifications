@@ -24,6 +24,7 @@ type Enqueuer struct {
 		}
 		Returns struct {
 			Responses []services.Response
+			Err       error
 		}
 	}
 }
@@ -32,8 +33,17 @@ func NewEnqueuer() *Enqueuer {
 	return &Enqueuer{}
 }
 
-func (m *Enqueuer) Enqueue(conn services.ConnectionInterface, users []services.User, options services.Options,
-	space cf.CloudControllerSpace, org cf.CloudControllerOrganization, client, uaaHost, scope, vcapRequestID string, reqReceived time.Time) []services.Response {
+func (m *Enqueuer) Enqueue(
+	conn services.ConnectionInterface,
+	users []services.User,
+	options services.Options,
+	space cf.CloudControllerSpace,
+	org cf.CloudControllerOrganization,
+	client string,
+	uaaHost string,
+	scope string,
+	vcapRequestID string,
+	reqReceived time.Time) ([]services.Response, error) {
 
 	m.EnqueueCall.Receives.Connection = conn
 	m.EnqueueCall.Receives.Users = users
@@ -47,5 +57,5 @@ func (m *Enqueuer) Enqueue(conn services.ConnectionInterface, users []services.U
 	m.EnqueueCall.Receives.RequestReceived = reqReceived
 
 	m.EnqueueCall.WasCalled = true
-	return m.EnqueueCall.Returns.Responses
+	return m.EnqueueCall.Returns.Responses, m.EnqueueCall.Returns.Err
 }

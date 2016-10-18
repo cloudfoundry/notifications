@@ -76,7 +76,15 @@ func (strategy OrganizationStrategy) Dispatch(dispatch Dispatch) ([]Response, er
 		users = append(users, User{GUID: guid})
 	}
 
-	responses = strategy.enqueuer.Enqueue(dispatch.Connection, users, options, cf.CloudControllerSpace{}, organization, dispatch.Client.ID, dispatch.UAAHost, "", dispatch.VCAPRequest.ID, dispatch.VCAPRequest.ReceiptTime)
-
-	return responses, nil
+	return strategy.enqueuer.Enqueue(
+		dispatch.Connection,
+		users,
+		options,
+		cf.CloudControllerSpace{},
+		organization,
+		dispatch.Client.ID,
+		dispatch.UAAHost,
+		"",
+		dispatch.VCAPRequest.ID,
+		dispatch.VCAPRequest.ReceiptTime)
 }

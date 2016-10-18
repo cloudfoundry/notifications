@@ -134,7 +134,7 @@ var _ = Describe("ErrorWriter", func() {
 		writer.Write(recorder, webutil.MissingUserTokenError{errors.New("Missing user_id from token claims.")})
 		Expect(recorder.Code).To(Equal(422))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["Missing user_id from token claims."]	
+			"errors": ["Missing user_id from token claims."]
 		}`))
 	})
 
@@ -142,7 +142,7 @@ var _ = Describe("ErrorWriter", func() {
 		writer.Write(recorder, errors.New("unknown error"))
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["unknown error"]	
+			"errors": ["unknown error"]
 		}`))
 	})
 })
