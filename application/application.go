@@ -93,12 +93,14 @@ func (app Application) RetrieveUAAPublicKey(logger lager.Logger) {
 }
 
 func (app Application) StartQueueGauge() {
-	if app.env.VCAPApplication.InstanceIndex != 0 {
-		return
-	}
+	if app.env.MetricsLoggingEnabled {
+		if app.env.VCAPApplication.InstanceIndex != 0 {
+			return
+		}
 
-	queueGauge := metrics.NewQueueGauge(app.mother.Queue(), metrics.DefaultLogger, time.Tick(1*time.Second))
-	go queueGauge.Run()
+		queueGauge := metrics.NewQueueGauge(app.mother.Queue(), metrics.DefaultLogger, time.Tick(1*time.Second))
+		go queueGauge.Run()
+	}
 }
 
 func (app Application) StartWorkers() {
