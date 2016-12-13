@@ -30,7 +30,7 @@ var _ = Describe("GetHandler", func() {
 
 	BeforeEach(func() {
 		tokenHeader := map[string]interface{}{
-			"alg": "FAST",
+			"alg": "RS256",
 		}
 		tokenClaims := map[string]interface{}{
 			"client_id": "some-uaa-client-id",

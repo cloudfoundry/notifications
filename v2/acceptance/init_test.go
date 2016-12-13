@@ -20,8 +20,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const PUBLIC_KEY = `banana`
-
 var (
 	Servers struct {
 		Notifications servers.Notifications
@@ -32,10 +30,12 @@ var (
 	Trace, _ = strconv.ParseBool(os.Getenv("TRACE"))
 
 	adminToken        string
-	warrantClient     warrant.Warrant
 	roundtripRecorder *docs.RoundTripRecorder
 	users             map[string]string
-	userTokenClient   warrant.Client
+
+	clientWithWrite   warrant.Client
+	basicClient       warrant.Client
+	warrantClient     warrant.Warrant
 )
 
 func TestAcceptanceSuite(t *testing.T) {
@@ -47,9 +47,7 @@ var _ = BeforeSuite(func() {
 	Servers.SMTP = servers.NewSMTP()
 	Servers.SMTP.Boot()
 
-	Servers.UAA = testserver.NewUAA(testserver.Config{
-		PublicKey: PUBLIC_KEY,
-	})
+	Servers.UAA = testserver.NewUAA()
 	Servers.UAA.Start()
 	os.Setenv("UAA_HOST", Servers.UAA.URL())
 
@@ -66,17 +64,26 @@ var _ = BeforeSuite(func() {
 
 	err := warrantClient.Clients.Create(warrant.Client{
 		ID:    os.Getenv("UAA_CLIENT_ID"),
-		Scope: []string{"cloud_controller.admin", "scim.read"},
+		Authorities: []string{"scim.read"},
+		Scope: []string{"cloud_controller.admin"},
 	}, os.Getenv("UAA_CLIENT_SECRET"), adminToken)
 	Expect(err).NotTo(HaveOccurred())
 
-	userTokenClient = warrant.Client{
+	clientWithWrite = warrant.Client{
 		ID:                   "user-token-client",
 		Scope:                []string{"notification_preferences.read", "notification_preferences.write"},
 		AuthorizedGrantTypes: []string{"implicit"},
 		Autoapprove:          []string{"notification_preferences.read", "notification_preferences.write"},
 	}
-	err = warrantClient.Clients.Create(userTokenClient, "", adminToken)
+	err = warrantClient.Clients.Create(clientWithWrite, "", adminToken)
+	Expect(err).NotTo(HaveOccurred())
+
+	basicClient = warrant.Client{
+		ID:                   "user-token-basic-client",
+		AuthorizedGrantTypes: []string{"implicit"},
+	}
+
+	err = warrantClient.Clients.Create(basicClient, "", adminToken)
 	Expect(err).NotTo(HaveOccurred())
 
 	testUsers := map[string]string{
@@ -162,7 +169,7 @@ func GetClientTokenWithScopes(scopes ...string) (string, error) {
 	}
 
 	_, err = jwt.Parse(token, func(*jwt.Token) (interface{}, error) {
-		return []byte(PUBLIC_KEY), nil
+		return []byte(Servers.UAA.PublicKey()), nil
 	})
 	if err != nil {
 		return "", err
@@ -194,7 +201,7 @@ func UpdateClientTokenWithDifferentScopes(token string, scopes ...string) (strin
 	}
 
 	_, err = jwt.Parse(token, func(*jwt.Token) (interface{}, error) {
-		return []byte(PUBLIC_KEY), nil
+		return []byte(Servers.UAA.PublicKey()), nil
 	})
 	if err != nil {
 		return "", err
@@ -204,14 +211,19 @@ func UpdateClientTokenWithDifferentScopes(token string, scopes ...string) (strin
 }
 
 func GetUserTokenAndIdFor(userName string) (string, string, error) {
+	return GetUserInfoWithClient(userName, clientWithWrite)
+}
+
+
+func GetUserInfoWithClient(userName string, client warrant.Client) (string, string, error) {
 	userGUID := users[userName]
-	token, err := warrantClient.Users.GetToken(userName, "password", userTokenClient)
+	token, err := warrantClient.Users.GetToken(userName, "password", client)
 	if err != nil {
 		return "", "", err
 	}
 
 	_, err = jwt.Parse(token, func(*jwt.Token) (interface{}, error) {
-		return []byte(PUBLIC_KEY), nil
+		return []byte(Servers.UAA.PublicKey()), nil
 	})
 	if err != nil {
 		return "", "", err

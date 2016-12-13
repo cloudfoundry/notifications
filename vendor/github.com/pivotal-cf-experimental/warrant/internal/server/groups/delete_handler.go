@@ -17,8 +17,11 @@ type deleteHandler struct {
 
 func (h deleteHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
-	if ok := h.tokens.Validate(token, []string{"scim"}, []string{"scim.write"}); !ok {
-		common.Error(w, http.StatusUnauthorized, "Full authentication is required to access this resource", "unauthorized")
+	if ok := h.tokens.Validate(token, domain.Token{
+		Audiences:   []string{"scim"},
+		Authorities: []string{"scim.write"},
+	}); !ok {
+		common.JSONError(w, http.StatusUnauthorized, "Full authentication is required to access this resource", "unauthorized")
 		return
 	}
 
@@ -26,7 +29,7 @@ func (h deleteHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	id := matches[1]
 
 	if ok := h.groups.Delete(id); !ok {
-		common.Error(w, http.StatusNotFound, fmt.Sprintf("Group %s does not exist", id), "scim_resource_not_found")
+		common.JSONError(w, http.StatusNotFound, fmt.Sprintf("Group %s does not exist", id), "scim_resource_not_found")
 		return
 	}
 

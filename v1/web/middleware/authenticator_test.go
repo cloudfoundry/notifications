@@ -28,7 +28,7 @@ var _ = Describe("Authenticator", func() {
 	BeforeEach(func() {
 		var err error
 
-		ware = middleware.NewAuthenticator(application.UAAPublicKey, "fake.scope", "gaben.scope")
+		ware = middleware.NewAuthenticator(helpers.UAAPublicKey, "fake.scope", "gaben.scope")
 		writer = httptest.NewRecorder()
 		request, err = http.NewRequest("GET", "/some/path", nil)
 		if err != nil {
@@ -39,8 +39,9 @@ var _ = Describe("Authenticator", func() {
 
 	Context("when the request contains a valid auth token", func() {
 		BeforeEach(func() {
+
 			tokenHeader := map[string]interface{}{
-				"alg": "FAST",
+				"alg": "RS256",
 			}
 			tokenClaims := map[string]interface{}{
 				"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
@@ -119,7 +120,7 @@ var _ = Describe("Authenticator", func() {
 	Context("when the request uses an expired auth token", func() {
 		BeforeEach(func() {
 			tokenHeader := map[string]interface{}{
-				"alg": "FAST",
+				"alg": "RS256",
 			}
 			tokenClaims := map[string]interface{}{
 				"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
@@ -195,7 +196,7 @@ var _ = Describe("Authenticator", func() {
 	Context("when the auth token does not contain the correct scope", func() {
 		BeforeEach(func() {
 			tokenHeader := map[string]interface{}{
-				"alg": "FAST",
+				"alg": "RS256",
 			}
 			tokenClaims := map[string]interface{}{
 				"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
@@ -240,7 +241,7 @@ var _ = Describe("Authenticator", func() {
 	Context("when the auth token does not contain any scopes", func() {
 		BeforeEach(func() {
 			tokenHeader := map[string]interface{}{
-				"alg": "FAST",
+				"alg": "RS256",
 			}
 			tokenClaims := map[string]interface{}{
 				"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
@@ -311,6 +312,43 @@ var _ = Describe("Authenticator", func() {
 			}
 
 			Expect(parsed["errors"]).To(ContainElement("Authorization header is invalid: corrupt"))
+		})
+	})
+
+	Context("with a token signed using the public key (used symmetrically)", func() {
+		BeforeEach(func() {
+			tokenHeader := map[string]interface{}{
+				"alg": "HS256",
+			}
+			tokenClaims := map[string]interface{}{
+				"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
+				"client_id": "mister-client",
+				"cid":       "mister-client",
+				"exp":       3404281214,
+				"scope":     []string{"gaben.scope"},
+			}
+
+			rawToken = helpers.BuildTokenWithKey(tokenHeader, tokenClaims, helpers.UAAPublicKey)
+
+			requestBody, err := json.Marshal(map[string]string{
+				"kind": "forgot_password",
+				"text": "Try to remember your password next time",
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			request, err = http.NewRequest("POST", "/users/user-123", bytes.NewReader(requestBody))
+			if err != nil {
+				panic(err)
+			}
+			request.Header.Set("Authorization", "Bearer "+rawToken)
+		})
+
+		It("doesn't allow request through", func() {
+			returnValue := ware.ServeHTTP(writer, request, context)
+			Expect(returnValue).To(BeFalse())
+			Expect(writer.Code).To(Equal(http.StatusUnauthorized))
 		})
 	})
 })

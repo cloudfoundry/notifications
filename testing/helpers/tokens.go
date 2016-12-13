@@ -1,43 +1,48 @@
 package helpers
 
 import (
-	"errors"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/dgrijalva/jwt-go"
 )
 
-const (
-	UAAPrivateKey = "PRIVATE-KEY"
-	UAAPublicKey  = "PUBLIC-KEY"
+var (
+	UAAPrivateKey string
+	UAAPublicKey  string
 )
 
-func RegisterFastTokenSigningMethod() {
-	jwt.RegisterSigningMethod("FAST", func() jwt.SigningMethod {
-		return SigningMethodFast{}
-	})
-}
+func init() {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
 
-type SigningMethodFast struct{}
-
-func (m SigningMethodFast) Alg() string {
-	return "FAST"
-}
-
-func (m SigningMethodFast) Sign(signingString string, key interface{}) (string, error) {
-	signature := jwt.EncodeSegment([]byte(signingString + "SUPERFAST"))
-	return signature, nil
-}
-
-func (m SigningMethodFast) Verify(signingString, signature string, key interface{}) (err error) {
-	if signature != jwt.EncodeSegment([]byte(signingString+"SUPERFAST")) {
-		return errors.New("Signature is invalid")
+	if err != nil {
+		panic(err)
 	}
 
-	return nil
+	publicKeyBytes, err := x509.MarshalPKIXPublicKey(privateKey.Public())
+
+	privatePem := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+	})
+
+	publicPem := pem.EncodeToMemory(&pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: publicKeyBytes,
+	})
+
+	UAAPrivateKey = string(privatePem)
+	UAAPublicKey = string(publicPem)
 }
 
 func BuildToken(header map[string]interface{}, claims map[string]interface{}) string {
+	return BuildTokenWithKey(header, claims, UAAPrivateKey)
+}
+
+func BuildTokenWithKey(header map[string]interface{}, claims map[string]interface{}, signingKey string) string {
 	application.UAAPublicKey = UAAPublicKey
 
 	alg := header["alg"].(string)
@@ -46,7 +51,7 @@ func BuildToken(header map[string]interface{}, claims map[string]interface{}) st
 	token.Header = header
 	token.Claims = claims
 
-	signed, err := token.SignedString([]byte(UAAPrivateKey))
+	signed, err := token.SignedString([]byte(signingKey))
 	if err != nil {
 		panic(err)
 	}

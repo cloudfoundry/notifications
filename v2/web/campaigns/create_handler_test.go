@@ -35,7 +35,7 @@ var _ = Describe("CreateHandler", func() {
 
 	BeforeEach(func() {
 		tokenHeader := map[string]interface{}{
-			"alg": "FAST",
+			"alg": "RS256",
 		}
 		tokenClaims := map[string]interface{}{
 			"client_id": "some-uaa-client-id",
@@ -477,7 +477,7 @@ var _ = Describe("CreateHandler", func() {
 
 		It("indicates that the requestor has the critical scope", func() {
 			tokenHeader := map[string]interface{}{
-				"alg": "FAST",
+				"alg": "RS256",
 			}
 			tokenClaims := map[string]interface{}{
 				"client_id": "some-uaa-client-id",

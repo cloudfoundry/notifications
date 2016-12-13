@@ -66,7 +66,7 @@ var _ = Describe("RegistrationHandler", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		tokenHeader := map[string]interface{}{
-			"alg": "FAST",
+			"alg": "RS256",
 		}
 		tokenClaims := map[string]interface{}{
 			"client_id": "raptors",
@@ -170,7 +170,7 @@ var _ = Describe("RegistrationHandler", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				tokenHeader := map[string]interface{}{
-					"alg": "FAST",
+					"alg": "RS256",
 				}
 				tokenClaims := map[string]interface{}{
 					"client_id": "raptors",

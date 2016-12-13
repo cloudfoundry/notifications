@@ -29,12 +29,12 @@ func (h listHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	value := matches[3]
 
 	if !validParameter(parameter) {
-		common.Error(w, http.StatusBadRequest, fmt.Sprintf("Invalid filter expression: [%s]", filter), "scim")
+		common.JSONError(w, http.StatusBadRequest, fmt.Sprintf("Invalid filter expression: [%s]", filter), "scim")
 		return
 	}
 
 	if !validOperator(operator) {
-		common.Error(w, http.StatusBadRequest, fmt.Sprintf("Invalid filter expression: [%s]", filter), "scim")
+		common.JSONError(w, http.StatusBadRequest, fmt.Sprintf("Invalid filter expression: [%s]", filter), "scim")
 		return
 	}
 

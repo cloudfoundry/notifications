@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/cloudfoundry-incubator/notifications",
-	"GoVersion": "go1.6",
-	"GodepVersion": "v74",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v75",
 	"Packages": [
 		"./..."
 	],
@@ -9,7 +9,7 @@
 		{
 			"ImportPath": "bitbucket.org/chrj/smtpd",
 			"Comment": "null-24",
-			"Rev": "10bcb042194e344946fc7d9a6dad3cd87c05ec04"
+			"Rev": "'10bcb042194e344946fc7d9a6dad3cd87c05ec04'"
 		},
 		{
 			"ImportPath": "github.com/DATA-DOG/go-sqlmock",
@@ -191,43 +191,43 @@
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/warrant",
-			"Rev": "d37832a20b705e9580844cb0d729240ab463ebc9"
+			"Rev": "2b5a95fd64b3a6dd502cf84d47806640665c75eb"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/documents",
-			"Rev": "d37832a20b705e9580844cb0d729240ab463ebc9"
+			"Rev": "2b5a95fd64b3a6dd502cf84d47806640665c75eb"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/network",
-			"Rev": "d37832a20b705e9580844cb0d729240ab463ebc9"
+			"Rev": "2b5a95fd64b3a6dd502cf84d47806640665c75eb"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/server/clients",
-			"Rev": "d37832a20b705e9580844cb0d729240ab463ebc9"
+			"Rev": "2b5a95fd64b3a6dd502cf84d47806640665c75eb"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/server/common",
-			"Rev": "d37832a20b705e9580844cb0d729240ab463ebc9"
+			"Rev": "2b5a95fd64b3a6dd502cf84d47806640665c75eb"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/server/domain",
-			"Rev": "d37832a20b705e9580844cb0d729240ab463ebc9"
+			"Rev": "2b5a95fd64b3a6dd502cf84d47806640665c75eb"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/server/groups",
-			"Rev": "d37832a20b705e9580844cb0d729240ab463ebc9"
+			"Rev": "2b5a95fd64b3a6dd502cf84d47806640665c75eb"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/server/tokens",
-			"Rev": "d37832a20b705e9580844cb0d729240ab463ebc9"
+			"Rev": "2b5a95fd64b3a6dd502cf84d47806640665c75eb"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/server/users",
-			"Rev": "d37832a20b705e9580844cb0d729240ab463ebc9"
+			"Rev": "2b5a95fd64b3a6dd502cf84d47806640665c75eb"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/warrant/testserver",
-			"Rev": "d37832a20b705e9580844cb0d729240ab463ebc9"
+			"Rev": "2b5a95fd64b3a6dd502cf84d47806640665c75eb"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",

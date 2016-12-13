@@ -42,7 +42,7 @@ var _ = Describe("UpdateHandler", func() {
 		context.Set("database", database)
 
 		tokenHeader = map[string]interface{}{
-			"alg": "FAST",
+			"alg": "RS256",
 		}
 		tokenClaims = map[string]interface{}{
 			"client_id": "some-uaa-client-id",

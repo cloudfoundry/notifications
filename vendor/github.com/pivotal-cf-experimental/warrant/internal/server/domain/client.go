@@ -7,9 +7,15 @@ import (
 	"github.com/pivotal-cf-experimental/warrant/internal/documents"
 )
 
-var validGrantTypes = []string{"implicit", "refresh_token", "authorization_code", "client_credentials", "password"}
+var validGrantTypes = []string{
+	"implicit",
+	"refresh_token",
+	"authorization_code",
+	"client_credentials",
+	"password",
+}
 
-type client struct {
+type Client struct {
 	ID                   string
 	Secret               string
 	Scope                []string
@@ -21,8 +27,8 @@ type client struct {
 	Autoapprove          []string
 }
 
-func NewClientFromDocument(document documents.CreateUpdateClientRequest) client {
-	return client{
+func NewClientFromDocument(document documents.CreateUpdateClientRequest) Client {
+	return Client{
 		ID:                   document.ClientID,
 		Secret:               document.ClientSecret,
 		Scope:                document.Scope,
@@ -35,7 +41,7 @@ func NewClientFromDocument(document documents.CreateUpdateClientRequest) client 
 	}
 }
 
-func (c client) ToDocument() documents.ClientResponse {
+func (c Client) ToDocument() documents.ClientResponse {
 	return documents.ClientResponse{
 		ClientID:             c.ID,
 		Scope:                shuffle(c.Scope),
@@ -48,7 +54,7 @@ func (c client) ToDocument() documents.ClientResponse {
 	}
 }
 
-func (c client) Validate() error {
+func (c Client) Validate() error {
 	for _, grantType := range c.AuthorizedGrantTypes {
 		if !contains(validGrantTypes, grantType) {
 			msg := fmt.Sprintf("%s is not an allowed grant type. Must be one of: %v", grantType, validGrantTypes)

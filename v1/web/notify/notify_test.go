@@ -73,7 +73,7 @@ var _ = Describe("Notify", func() {
 				}
 
 				tokenHeader = map[string]interface{}{
-					"alg": "FAST",
+					"alg": "RS256",
 				}
 				tokenClaims = map[string]interface{}{
 					"client_id": "mister-client",

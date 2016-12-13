@@ -30,7 +30,7 @@ var _ = Describe("Space Strategy", func() {
 		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:37:35.181067085-07:00")
 		conn = mocks.NewConnection()
 		tokenHeader := map[string]interface{}{
-			"alg": "FAST",
+			"alg": "RS256",
 		}
 		tokenClaims := map[string]interface{}{
 			"client_id": "mister-client",

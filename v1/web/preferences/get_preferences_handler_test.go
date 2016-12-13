@@ -48,7 +48,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 		}
 
 		tokenHeader := map[string]interface{}{
-			"alg": "FAST",
+			"alg": "RS256",
 		}
 		tokenClaims := map[string]interface{}{
 			"user_id": "correct-user",
@@ -124,7 +124,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 	Context("when the request does not container a user_id claim", func() {
 		It("writes a MissingUserTokenError to the error writer", func() {
 			tokenHeader := map[string]interface{}{
-				"alg": "FAST",
+				"alg": "RS256",
 			}
 
 			tokenClaims := map[string]interface{}{}

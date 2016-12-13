@@ -15,23 +15,25 @@ type deleteHandler struct {
 }
 
 func (h deleteHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
+	token := req.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	token = strings.TrimPrefix(token, "bearer ")
+
 	if len(token) == 0 {
-		common.Error(w, http.StatusUnauthorized, "Full authentication is required to access this resource", "unauthorized")
+		common.JSONError(w, http.StatusUnauthorized, "Full authentication is required to access this resource", "unauthorized")
 		return
 	}
 
-	if ok := h.tokens.Validate(token, []string{"clients"}, []string{"clients.write"}); !ok {
-		common.Error(w, http.StatusForbidden, "Invalid token does not contain resource id (clients)", "access_denied")
+	if ok := h.tokens.Validate(token, domain.Token{
+		Authorities: []string{"clients.write"},
+		Audiences:   []string{"clients"},
+	}); !ok {
+		common.JSONError(w, http.StatusForbidden, "Invalid token does not contain resource id (clients)", "access_denied")
 		return
 	}
 
 	matches := regexp.MustCompile(`/oauth/clients/(.*)$`).FindStringSubmatch(req.URL.Path)
 	id := matches[1]
 
-	if ok := h.clients.Delete(id); !ok {
-		panic("foo")
-	}
-
-	w.WriteHeader(http.StatusOK)
+	h.clients.Delete(id) // TODO: should return a 404 if the client does not exist
 }

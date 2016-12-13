@@ -1,26 +1,53 @@
 package tokens
 
 import (
+	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
+	"math/big"
 	"net/http"
 
+	"crypto/rsa"
+
 	"github.com/pivotal-cf-experimental/warrant/internal/documents"
-	"github.com/pivotal-cf-experimental/warrant/internal/server/domain"
 )
 
 type keyHandler struct {
-	tokens *domain.Tokens
+	publicKey string
 }
 
 func (h keyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	pem, _ := pem.Decode([]byte(h.publicKey))
+
+	if pem == nil {
+		panic("No PEM data was included in the public key")
+	}
+
+	publicKey, err := x509.ParsePKIXPublicKey(pem.Bytes)
+
+	if err != nil {
+		panic(err)
+	}
+
+	rsaPublicKey, ok := publicKey.(*rsa.PublicKey)
+
+	if !ok {
+		panic("public key is not rsa")
+	}
+
+	exponentBytes := big.NewInt(int64(rsaPublicKey.E)).Bytes()
+	modulusBytes := rsaPublicKey.N.Bytes()
+
 	response, err := json.Marshal(documents.TokenKeyResponse{
 		Alg:   "SHA256withRSA",
-		Value: h.tokens.PublicKey,
+		Value: h.publicKey,
 		Kty:   "RSA",
 		Use:   "sig",
-		N:     "ANJufZdrvYg5zG61x36pDq59nVUN73wSanA7hVCtN3ftT2Rm1ZTQqp5KSCfLMhaaVvJY51sHj+/i4lqUaM9CO32G93fE44VfOmPfexZeAwa8YDOikyTrhP7sZ6A4WUNeC4DlNnJF4zsznU7JxjCkASwpdL6XFwbRSzGkm6b9aM4vIewyclWehJxUGVFhnYEzIQ65qnr38feVP9enOVgQzpKsCJ+xpa8vZ/UrscoG3/IOQM6VnLrGYAyyCGeyU1JXQW/KlNmtA5eJry2Tp+MD6I34/QsNkCArHOfj8H9tXz/oc3/tVkkR252L/Lmp0TtIGfHpBmoITP9h+oKiW6NpyCc=",
-		E:     "AQAB",
+		N:     base64.RawURLEncoding.EncodeToString(modulusBytes),
+		E:     base64.RawURLEncoding.EncodeToString(exponentBytes),
 	})
+
 	if err != nil {
 		panic(err)
 	}

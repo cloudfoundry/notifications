@@ -29,7 +29,7 @@ var _ = Describe("Organization Strategy", func() {
 		requestReceived, _ = time.Parse(time.RFC3339Nano, "2015-06-08T14:38:03.180764129-07:00")
 		conn = mocks.NewConnection()
 		tokenHeader := map[string]interface{}{
-			"alg": "FAST",
+			"alg": "RS256",
 		}
 		tokenClaims := map[string]interface{}{
 			"client_id": "mister-client",

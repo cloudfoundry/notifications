@@ -1,6 +1,8 @@
 package uaa
 
-import "github.com/pivotal-cf-experimental/warrant"
+import (
+	"github.com/pivotal-cf-experimental/warrant"
+)
 
 type UserFinder struct {
 	ID      string

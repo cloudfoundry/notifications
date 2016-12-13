@@ -31,7 +31,7 @@ var _ = Describe("Unsubscribes Authenticator", func() {
 		writer = httptest.NewRecorder()
 
 		tokenHeader := map[string]interface{}{
-			"alg": "FAST",
+			"alg": "RS256",
 		}
 		tokenClaims := map[string]interface{}{
 			"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
@@ -54,6 +54,7 @@ var _ = Describe("Unsubscribes Authenticator", func() {
 		userAuthenticator = &mocks.Authenticator{}
 
 		auth = middleware.UnsubscribesAuthenticator{
+			UAAPublicKey:        helpers.UAAPublicKey,
 			ClientAuthenticator: clientAuthenticator,
 			UserAuthenticator:   userAuthenticator,
 		}
@@ -77,7 +78,7 @@ var _ = Describe("Unsubscribes Authenticator", func() {
 	Context("when the token is a user token", func() {
 		BeforeEach(func() {
 			tokenHeader := map[string]interface{}{
-				"alg": "FAST",
+				"alg": "RS256",
 			}
 			tokenClaims := map[string]interface{}{
 				"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",

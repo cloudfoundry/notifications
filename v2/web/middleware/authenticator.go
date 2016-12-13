@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 
@@ -28,7 +29,12 @@ func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 	}
 
 	token, err := jwt.Parse(rawToken, func(t *jwt.Token) (interface{}, error) {
-		return []byte(ware.UAAPublicKey), nil
+		switch t.Method {
+		case jwt.SigningMethodRS256, jwt.SigningMethodRS384, jwt.SigningMethodRS512:
+			return []byte(ware.UAAPublicKey), nil
+		default:
+			return nil, errors.New("Unsupported signing method")
+		}
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), "expired") {

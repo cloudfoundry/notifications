@@ -70,7 +70,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			tokenHeader := map[string]interface{}{
-				"alg": "FAST",
+				"alg": "RS256",
 			}
 			tokenClaims := map[string]interface{}{
 				"user_id": "correct-user",
@@ -136,7 +136,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				tokenHeader := map[string]interface{}{
-					"alg": "FAST",
+					"alg": "RS256",
 				}
 				tokenClaims := map[string]interface{}{
 					"user_id": "correct-user",
@@ -160,7 +160,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 				Context("when the user_id claim is not present in the token", func() {
 					It("Writes a MissingUserTokenError to the error writer", func() {
 						tokenHeader := map[string]interface{}{
-							"alg": "FAST",
+							"alg": "RS256",
 						}
 
 						tokenClaims := map[string]interface{}{}

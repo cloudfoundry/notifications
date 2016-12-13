@@ -43,7 +43,7 @@ var _ = Describe("UAA Scope Strategy", func() {
 		conn = mocks.NewConnection()
 
 		tokenHeader := map[string]interface{}{
-			"alg": "FAST",
+			"alg": "RS256",
 		}
 		tokenClaims := map[string]interface{}{
 			"client_id": "mister-client",

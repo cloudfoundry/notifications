@@ -14,16 +14,23 @@ type urlFinder interface {
 }
 
 type tokenHandler struct {
-	clients   *domain.Clients
-	urlFinder urlFinder
-	publicKey string
+	clients    *domain.Clients
+	users      *domain.Users
+	urlFinder  urlFinder
+	privateKey string
 }
 
 func (h tokenHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// TODO: actually check the basic auth values
-	_, _, ok := req.BasicAuth()
+	clientID, _, ok := req.BasicAuth()
 	if !ok {
-		common.Error(w, http.StatusUnauthorized, "An Authentication object was not found in the SecurityContext", "unauthorized")
+		common.JSONError(w, http.StatusUnauthorized, "An Authentication object was not found in the SecurityContext", "unauthorized")
+		return
+	}
+
+	client, ok := h.clients.Get(clientID)
+	if !ok {
+		common.JSONError(w, http.StatusUnauthorized, fmt.Sprintf("No client with requested id: %s", clientID), "invalid_client")
 		return
 	}
 
@@ -31,21 +38,27 @@ func (h tokenHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	clientID := req.Form.Get("client_id")
 
-	client, ok := h.clients.Get(clientID)
-	if !ok {
-		panic("client could not be found")
+	var t domain.Token
+	if req.Form.Get("grant_type") == "client_credentials" {
+		t.ClientID = clientID
+		t.Scopes = client.Scope
+		t.Authorities = client.Authorities
+		t.Audiences = []string{"scim", "password"}
+		t.Issuer = fmt.Sprintf("%s/oauth/token", h.urlFinder.URL())
+	} else {
+		user, ok := h.users.GetByName(req.Form.Get("username"))
+		if !ok {
+			common.JSONError(w, http.StatusNotFound, fmt.Sprintf("User %s does not exist", req.Form.Get("username")), "scim_resource_not_found")
+			return
+		}
+
+		t.ClientID = clientID
+		t.Scopes = client.Scope
+		t.UserID = user.ID
 	}
 
-	t := domain.Token{
-		ClientID:  clientID,
-		Scopes:    client.Scope,
-		Audiences: []string{"scim", "password"},
-		Issuer:    fmt.Sprintf("%s/oauth/token", h.urlFinder.URL()),
-	}
-
-	response, err := json.Marshal(t.ToDocument(h.publicKey))
+	response, err := json.Marshal(t.ToDocument(h.privateKey))
 	if err != nil {
 		panic(err)
 	}

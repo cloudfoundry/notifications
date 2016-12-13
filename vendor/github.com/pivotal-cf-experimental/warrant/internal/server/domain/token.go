@@ -7,11 +7,12 @@ import (
 )
 
 type Token struct {
-	UserID    string
-	ClientID  string
-	Scopes    []string
-	Audiences []string
-	Issuer    string
+	UserID      string
+	ClientID    string
+	Scopes      []string
+	Authorities []string
+	Audiences   []string
+	Issuer      string
 }
 
 func newTokenFromClaims(claims map[string]interface{}) Token {
@@ -34,6 +35,15 @@ func newTokenFromClaims(claims map[string]interface{}) Token {
 		t.Scopes = s
 	}
 
+	if authorities, ok := claims["authorities"].([]interface{}); ok {
+		a := []string{}
+		for _, authority := range authorities {
+			a = append(a, authority.(string))
+		}
+
+		t.Authorities = a
+	}
+
 	if audiences, ok := claims["aud"].(string); ok {
 		t.Audiences = strings.Split(audiences, " ")
 	}
@@ -41,10 +51,10 @@ func newTokenFromClaims(claims map[string]interface{}) Token {
 	return t
 }
 
-func (t Token) ToDocument(publicKey string) documents.TokenResponse {
+func (t Token) ToDocument(privateKey string) documents.TokenResponse {
 	return documents.TokenResponse{
 		AccessToken: Tokens{
-			PublicKey: publicKey,
+			PrivateKey: privateKey,
 		}.Encrypt(t),
 		TokenType: "bearer",
 		ExpiresIn: 5000,
@@ -63,6 +73,10 @@ func (t Token) toClaims() map[string]interface{} {
 
 	if len(t.ClientID) > 0 {
 		claims["client_id"] = t.ClientID
+	}
+
+	if len(t.Authorities) > 0 {
+		claims["authorities"] = t.Authorities
 	}
 
 	claims["scope"] = t.Scopes
@@ -84,6 +98,15 @@ func (t Token) hasScopes(scopes []string) bool {
 func (t Token) hasAudiences(audiences []string) bool {
 	for _, audience := range audiences {
 		if !contains(t.Audiences, audience) {
+			return false
+		}
+	}
+	return true
+}
+
+func (t Token) hasAuthorities(authorities []string) bool {
+	for _, authority := range authorities {
+		if !contains(t.Authorities, authority) {
 			return false
 		}
 	}

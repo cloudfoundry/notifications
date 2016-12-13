@@ -491,7 +491,7 @@ var _ = Describe("Unsubscribers", func() {
 			})
 
 			It("returns a 403 status code for PUTting an unsubscribe", func() {
-				unauthorizedUserToken, unauthorizedUserGUID, err := GetUserTokenAndIdFor("unauthorized-user")
+				unauthorizedUserToken, unauthorizedUserGUID, err := GetUserInfoWithClient("unauthorized-user", basicClient)
 				Expect(err).NotTo(HaveOccurred())
 
 				path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", "some-campaign-type-id", unauthorizedUserGUID)
@@ -502,7 +502,7 @@ var _ = Describe("Unsubscribers", func() {
 			})
 
 			It("returns a 403 status code for DELETEing an unsubscribe", func() {
-				unauthorizedUserToken, unauthorizedUserGUID, err := GetUserTokenAndIdFor("unauthorized-user")
+				unauthorizedUserToken, unauthorizedUserGUID, err := GetUserInfoWithClient("unauthorized-user", basicClient)
 				Expect(err).NotTo(HaveOccurred())
 
 				path := fmt.Sprintf("/campaign_types/%s/unsubscribers/%s", "some-campaign-type-id", unauthorizedUserGUID)

@@ -3,6 +3,7 @@ package clients
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/pivotal-cf-experimental/warrant/internal/documents"
@@ -16,9 +17,19 @@ type updateHandler struct {
 }
 
 func (h updateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	token := strings.TrimPrefix(req.Header.Get("Authorization"), "Bearer ")
-	if ok := h.tokens.Validate(token, []string{"clients"}, []string{"clients.write"}); !ok {
-		common.Error(w, http.StatusUnauthorized, "Full authentication is required to access this resource", "unauthorized")
+	token := req.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	token = strings.TrimPrefix(token, "bearer ")
+	if len(token) == 0 {
+		common.JSONError(w, http.StatusUnauthorized, "Full authentication is required to access this resource", "unauthorized")
+		return
+	}
+
+	if ok := h.tokens.Validate(token, domain.Token{
+		Authorities: []string{"clients.write"},
+		Audiences:   []string{"clients"},
+	}); !ok {
+		common.JSONError(w, http.StatusUnauthorized, "Full authentication is required to access this resource", "unauthorized")
 		return
 	}
 
@@ -30,17 +41,16 @@ func (h updateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	client := domain.NewClientFromDocument(document)
 	if err := client.Validate(); err != nil {
-		common.Error(w, http.StatusBadRequest, err.Error(), "invalid_client")
+		common.JSONError(w, http.StatusBadRequest, err.Error(), "invalid_client")
 		return
 	}
 
+	matches := regexp.MustCompile(`/oauth/clients/(.*)$`).FindStringSubmatch(req.URL.Path)
+	id := matches[1]
+
+	h.clients.Delete(id)
 	h.clients.Add(client)
 
-	response, err := json.Marshal(client.ToDocument())
-	if err != nil {
-		panic(err)
-	}
-
 	w.WriteHeader(http.StatusOK)
-	w.Write(response)
+	json.NewEncoder(w).Encode(client.ToDocument())
 }

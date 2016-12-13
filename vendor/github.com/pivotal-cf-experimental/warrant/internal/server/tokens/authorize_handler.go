@@ -33,7 +33,7 @@ func (h authorizeHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	client, ok := h.clients.Get(clientID)
 	if !ok {
-		common.Error(w, http.StatusUnauthorized, fmt.Sprintf("No client with requested id: %s", clientID), "invalid_client")
+		common.JSONError(w, http.StatusUnauthorized, fmt.Sprintf("No client with requested id: %s", clientID), "invalid_client")
 		return
 	}
 
@@ -42,7 +42,7 @@ func (h authorizeHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	user, ok := h.users.GetByName(userName)
 	if !ok {
-		common.Error(w, http.StatusNotFound, fmt.Sprintf("User %s does not exist", userName), "scim_resource_not_found")
+		common.JSONError(w, http.StatusNotFound, fmt.Sprintf("User %s does not exist", userName), "scim_resource_not_found")
 		return
 	}
 
