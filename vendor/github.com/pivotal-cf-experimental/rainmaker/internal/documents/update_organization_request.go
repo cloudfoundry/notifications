@@ -1,8 +1,7 @@
 package documents
 
-type CreateOrganizationRequest struct {
-	GUID                string `json:"guid"`
-	Name                string `json:"name"`
+type UpdateOrganizationRequest struct {
+	Name                string `json:"name,omitempty"`
 	Status              string `json:"status,omitempty"`
 	QuotaDefinitionGUID string `json:"quota_definition_guid,omitempty"`
 }

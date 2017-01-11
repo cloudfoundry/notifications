@@ -15,11 +15,6 @@ func (cc CloudController) GetBillingManagersByOrgGuid(guid, token string) ([]Clo
 		return ccUsers, NewFailure(0, err.Error())
 	}
 
-	users, err := list.AllUsers(token)
-	if err != nil {
-		return ccUsers, NewFailure(0, err.Error())
-	}
-
 	duration := time.Now().Sub(then)
 
 	metrics.NewMetric("histogram", map[string]interface{}{
@@ -27,7 +22,7 @@ func (cc CloudController) GetBillingManagersByOrgGuid(guid, token string) ([]Clo
 		"value": duration.Seconds(),
 	}).Log()
 
-	for _, user := range users {
+	for _, user := range list.Users {
 		ccUsers = append(ccUsers, CloudControllerUser{
 			GUID: user.GUID,
 		})

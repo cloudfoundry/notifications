@@ -14,11 +14,6 @@ func (cc CloudController) GetUsersBySpaceGuid(guid, token string) ([]CloudContro
 		return []CloudControllerUser{}, NewFailure(0, err.Error())
 	}
 
-	users, err := list.AllUsers(token)
-	if err != nil {
-		return []CloudControllerUser{}, NewFailure(0, err.Error())
-	}
-
 	duration := time.Now().Sub(then)
 
 	metrics.NewMetric("histogram", map[string]interface{}{
@@ -27,7 +22,7 @@ func (cc CloudController) GetUsersBySpaceGuid(guid, token string) ([]CloudContro
 	}).Log()
 
 	ccUsers := []CloudControllerUser{}
-	for _, user := range users {
+	for _, user := range list.Users {
 		ccUsers = append(ccUsers, CloudControllerUser{
 			GUID: user.GUID,
 		})

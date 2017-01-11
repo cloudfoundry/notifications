@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/cloudfoundry-incubator/notifications",
 	"GoVersion": "go1.7",
-	"GodepVersion": "v75",
+	"GodepVersion": "v76",
 	"Packages": [
 		"./..."
 	],
@@ -179,15 +179,15 @@
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/rainmaker",
-			"Rev": "4d942cc08bd37d504bb60356a83c560968bb6338"
+			"Rev": "d533d01b7c52e51433fe565276ca570c2a0753fc"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/rainmaker/internal/documents",
-			"Rev": "4d942cc08bd37d504bb60356a83c560968bb6338"
+			"Rev": "d533d01b7c52e51433fe565276ca570c2a0753fc"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/rainmaker/internal/network",
-			"Rev": "4d942cc08bd37d504bb60356a83c560968bb6338"
+			"Rev": "d533d01b7c52e51433fe565276ca570c2a0753fc"
 		},
 		{
 			"ImportPath": "github.com/pivotal-cf-experimental/warrant",

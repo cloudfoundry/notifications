@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/pivotal-cf-experimental/rainmaker/internal/documents"
+	"github.com/pivotal-cf-experimental/rainmaker/internal/network"
 )
 
 type UsersService struct {
@@ -12,20 +13,20 @@ type UsersService struct {
 	user   User
 }
 
-func NewUsersService(config Config) *UsersService {
-	return &UsersService{
+func NewUsersService(config Config) UsersService {
+	return UsersService{
 		config: config,
 	}
 }
 
 func (service UsersService) Create(guid, token string) (User, error) {
-	_, body, err := NewClient(service.config).makeRequest(requestArguments{
+	resp, err := newNetworkClient(service.config).MakeRequest(network.Request{
 		Method: "POST",
 		Path:   "/v2/users",
-		Body: documents.CreateUserRequest{
+		Body: network.NewJSONRequestBody(documents.CreateUserRequest{
 			GUID: guid,
-		},
-		Token: token,
+		}),
+		Authorization:         network.NewTokenAuthorization(token),
 		AcceptableStatusCodes: []int{http.StatusCreated},
 	})
 	if err != nil {
@@ -33,7 +34,7 @@ func (service UsersService) Create(guid, token string) (User, error) {
 	}
 
 	var document documents.UserResponse
-	err = json.Unmarshal(body, &document)
+	err = json.Unmarshal(resp.Body, &document)
 	if err != nil {
 		panic(err)
 	}
@@ -42,10 +43,10 @@ func (service UsersService) Create(guid, token string) (User, error) {
 }
 
 func (service UsersService) Get(guid, token string) (User, error) {
-	_, body, err := NewClient(service.config).makeRequest(requestArguments{
-		Method: "GET",
-		Path:   "/v2/users/" + guid,
-		Token:  token,
+	resp, err := newNetworkClient(service.config).MakeRequest(network.Request{
+		Method:                "GET",
+		Path:                  "/v2/users/" + guid,
+		Authorization:         network.NewTokenAuthorization(token),
 		AcceptableStatusCodes: []int{http.StatusOK},
 	})
 	if err != nil {
@@ -53,9 +54,9 @@ func (service UsersService) Get(guid, token string) (User, error) {
 	}
 
 	var response documents.UserResponse
-	err = json.Unmarshal(body, &response)
+	err = json.Unmarshal(resp.Body, &response)
 	if err != nil {
-		panic(err)
+		return User{}, translateError(err)
 	}
 
 	return newUserFromResponse(service.config, response), nil
