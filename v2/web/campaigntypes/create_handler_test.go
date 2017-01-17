@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
@@ -52,7 +51,7 @@ var _ = Describe("CreateHandler", func() {
 		}
 		rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-			return []byte(application.UAAPublicKey), nil
+			return []byte(helpers.UAAPublicKey), nil
 		})
 		Expect(err).NotTo(HaveOccurred())
 		context.Set("token", token)
@@ -113,7 +112,7 @@ var _ = Describe("CreateHandler", func() {
 		tokenClaims["scope"] = []string{"notifications.write", "critical_notifications.write"}
 		rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-			return []byte(application.UAAPublicKey), nil
+			return []byte(helpers.UAAPublicKey), nil
 		})
 		Expect(err).NotTo(HaveOccurred())
 		context.Set("token", token)

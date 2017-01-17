@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 
-	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -43,8 +42,6 @@ func BuildToken(header map[string]interface{}, claims map[string]interface{}) st
 }
 
 func BuildTokenWithKey(header map[string]interface{}, claims map[string]interface{}, signingKey string) string {
-	application.UAAPublicKey = UAAPublicKey
-
 	alg := header["alg"].(string)
 	signingMethod := jwt.GetSigningMethod(alg)
 	token := jwt.New(signingMethod)

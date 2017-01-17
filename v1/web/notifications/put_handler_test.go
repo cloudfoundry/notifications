@@ -9,7 +9,6 @@ import (
 	"net/http/httptest"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -77,7 +76,7 @@ var _ = Describe("PutHandler", func() {
 		request.Header.Set("Authorization", "Bearer "+rawToken)
 
 		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-			return []byte(application.UAAPublicKey), nil
+			return []byte(helpers.UAAPublicKey), nil
 		})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -181,7 +180,7 @@ var _ = Describe("PutHandler", func() {
 				request.Header.Set("Authorization", "Bearer "+rawToken)
 
 				token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-					return []byte(application.UAAPublicKey), nil
+					return []byte(helpers.UAAPublicKey), nil
 				})
 				Expect(err).NotTo(HaveOccurred())
 

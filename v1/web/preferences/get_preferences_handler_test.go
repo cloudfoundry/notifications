@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -62,7 +61,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 		}
 
 		token, err := jwt.Parse(helpers.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
-			return []byte(application.UAAPublicKey), nil
+			return []byte(helpers.UAAPublicKey), nil
 		})
 
 		database = mocks.NewDatabase()
@@ -135,7 +134,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 			}
 
 			token, err := jwt.Parse(helpers.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
-				return []byte(application.UAAPublicKey), nil
+				return []byte(helpers.UAAPublicKey), nil
 			})
 
 			context = stack.NewContext()

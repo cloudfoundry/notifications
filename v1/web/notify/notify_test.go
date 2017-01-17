@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -90,7 +89,7 @@ var _ = Describe("Notify", func() {
 				request.Header.Set("Authorization", "Bearer "+rawToken)
 
 				token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-					return []byte(application.UAAPublicKey), nil
+					return []byte(helpers.UAAPublicKey), nil
 				})
 
 				database = mocks.NewDatabase()
@@ -225,7 +224,7 @@ var _ = Describe("Notify", func() {
 						tokenClaims["scope"] = []interface{}{"notifications.write"}
 						rawToken = helpers.BuildToken(tokenHeader, tokenClaims)
 						token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-							return []byte(application.UAAPublicKey), nil
+							return []byte(helpers.UAAPublicKey), nil
 						})
 
 						context.Set("token", token)
@@ -240,7 +239,7 @@ var _ = Describe("Notify", func() {
 						tokenClaims["iss"] = "%gh&%ij?"
 						rawToken = helpers.BuildToken(tokenHeader, tokenClaims)
 						token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-							return []byte(application.UAAPublicKey), nil
+							return []byte(helpers.UAAPublicKey), nil
 						})
 
 						context.Set("token", token)

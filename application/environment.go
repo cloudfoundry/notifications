@@ -18,8 +18,6 @@ const (
 
 var SMTPAuthMechanisms = []string{SMTPAuthNone, SMTPAuthPlain, SMTPAuthCRAMMD5}
 
-var UAAPublicKey string
-
 type Environment struct {
 	CCHost                string `env:"CC_HOST"                  env-required:"true"`
 	CORSOrigin            string `env:"CORS_ORIGIN"              env-default:"*"`

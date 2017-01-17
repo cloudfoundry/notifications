@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
 	"github.com/dgrijalva/jwt-go"
@@ -82,7 +81,7 @@ var _ = Describe("Authenticator", func() {
 			Expect(contextToken).NotTo(BeNil())
 
 			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-				return []byte(application.UAAPublicKey), nil
+				return []byte(helpers.UAAPublicKey), nil
 			})
 			if err != nil {
 				panic(err)
@@ -106,7 +105,7 @@ var _ = Describe("Authenticator", func() {
 				Expect(contextToken).NotTo(BeNil())
 
 				token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-					return []byte(application.UAAPublicKey), nil
+					return []byte(helpers.UAAPublicKey), nil
 				})
 				if err != nil {
 					panic(err)

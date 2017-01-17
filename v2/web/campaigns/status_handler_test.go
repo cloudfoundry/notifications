@@ -6,7 +6,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
@@ -39,7 +38,7 @@ var _ = Describe("Campaign status handler", func() {
 			"scope":     []string{"notifications.write"},
 		}
 		token, err := jwt.Parse(helpers.BuildToken(tokenHeader, tokenClaims), func(*jwt.Token) (interface{}, error) {
-			return []byte(application.UAAPublicKey), nil
+			return []byte(helpers.UAAPublicKey), nil
 		})
 		Expect(err).NotTo(HaveOccurred())
 

@@ -39,14 +39,14 @@ func (app Application) Boot() {
 	viron.Print(app.env, vironCompatibleLogger{session})
 
 	app.ConfigureSMTP(session)
-	app.RetrieveUAAPublicKey(session)
+	uaaKey := app.RetrieveUAAPublicKey(session)
 
 	app.migrator.Migrate()
 
 	app.StartQueueGauge()
-	app.StartWorkers()
+	app.StartWorkers(uaaKey)
 	app.StartMessageGC()
-	app.StartServer(session)
+	app.StartServer(session, uaaKey)
 }
 
 func (app Application) ConfigureSMTP(logger lager.Logger) {
@@ -78,7 +78,7 @@ func (app Application) ConfigureSMTP(logger lager.Logger) {
 	}
 }
 
-func (app Application) RetrieveUAAPublicKey(logger lager.Logger) {
+func (app Application) RetrieveUAAPublicKey(logger lager.Logger) string {
 	zonedUAAClient := uaa.NewZonedUAAClient(app.env.UAAClientID, app.env.UAAClientSecret, app.env.VerifySSL, "")
 
 	key, err := zonedUAAClient.GetTokenKey(app.env.UAAHost)
@@ -86,10 +86,11 @@ func (app Application) RetrieveUAAPublicKey(logger lager.Logger) {
 		logger.Fatal("uaa-get-token-key-errored", err)
 	}
 
-	UAAPublicKey = key
 	logger.Info("uaa-public-key", lager.Data{
-		"key": UAAPublicKey,
+		"key": key,
 	})
+
+	return key
 }
 
 func (app Application) StartQueueGauge() {
@@ -101,11 +102,11 @@ func (app Application) StartQueueGauge() {
 	go queueGauge.Run()
 }
 
-func (app Application) StartWorkers() {
+func (app Application) StartWorkers(uaaPublicKey string) {
 	postal.Boot(app.mother, postal.Config{
 		UAAClientID:          app.env.UAAClientID,
 		UAAClientSecret:      app.env.UAAClientSecret,
-		UAAPublicKey:         UAAPublicKey,
+		UAAPublicKey:         uaaPublicKey,
 		UAAHost:              app.env.UAAHost,
 		VerifySSL:            app.env.VerifySSL,
 		InstanceIndex:        app.env.VCAPApplication.InstanceIndex,
@@ -130,7 +131,7 @@ func (app Application) StartMessageGC() {
 	messageGC.Run()
 }
 
-func (app Application) StartServer(logger lager.Logger) {
+func (app Application) StartServer(logger lager.Logger, uaaPublicKey string) {
 	web.NewServer().Run(app.mother, web.Config{
 		DBLoggingEnabled:     app.env.DBLoggingEnabled,
 		SkipVerifySSL:        !app.env.VerifySSL,
@@ -140,7 +141,7 @@ func (app Application) StartServer(logger lager.Logger) {
 		SQLDB:                app.mother.SQLDatabase(),
 		QueueWaitMaxDuration: app.env.GobbleWaitMaxDuration,
 
-		UAAPublicKey:     UAAPublicKey,
+		UAAPublicKey:     uaaPublicKey,
 		UAAHost:          app.env.UAAHost,
 		UAAClientID:      app.env.UAAClientID,
 		UAAClientSecret:  app.env.UAAClientSecret,
