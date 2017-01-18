@@ -9,6 +9,7 @@ func NewRouter(clients *domain.Clients, tokens *domain.Tokens) *mux.Router {
 	router := mux.NewRouter()
 
 	router.Handle("/oauth/clients", createHandler{clients, tokens}).Methods("POST")
+	router.Handle("/oauth/clients", listHandler{clients, tokens}).Methods("GET")
 	router.Handle("/oauth/clients/{guid}", getHandler{clients, tokens}).Methods("GET")
 	router.Handle("/oauth/clients/{guid}", updateHandler{clients, tokens}).Methods("PUT")
 	router.Handle("/oauth/clients/{guid}", deleteHandler{clients, tokens}).Methods("DELETE")

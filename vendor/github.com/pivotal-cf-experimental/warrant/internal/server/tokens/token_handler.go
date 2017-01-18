@@ -44,7 +44,7 @@ func (h tokenHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		t.ClientID = clientID
 		t.Scopes = client.Scope
 		t.Authorities = client.Authorities
-		t.Audiences = []string{"scim", "password"}
+		t.Audiences = client.ResourceIDs
 		t.Issuer = fmt.Sprintf("%s/oauth/token", h.urlFinder.URL())
 	} else {
 		user, ok := h.users.GetByName(req.Form.Get("username"))

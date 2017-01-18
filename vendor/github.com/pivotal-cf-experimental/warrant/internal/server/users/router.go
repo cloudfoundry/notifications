@@ -9,7 +9,7 @@ func NewRouter(users *domain.Users, tokens *domain.Tokens) *mux.Router {
 	router := mux.NewRouter()
 
 	router.Handle("/Users", createHandler{users, tokens}).Methods("POST")
-	router.Handle("/Users", listHandler{users}).Methods("GET")
+	router.Handle("/Users", listHandler{users, tokens}).Methods("GET")
 	router.Handle("/Users/{guid}", getHandler{users, tokens}).Methods("GET")
 	router.Handle("/Users/{guid}", deleteHandler{users, tokens}).Methods("DELETE")
 	router.Handle("/Users/{guid}", updateHandler{users, tokens}).Methods("PUT")

@@ -40,6 +40,7 @@ func (h keyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	modulusBytes := rsaPublicKey.N.Bytes()
 
 	response, err := json.Marshal(documents.TokenKeyResponse{
+		Kid:   "legacy-token-key",
 		Alg:   "SHA256withRSA",
 		Value: h.publicKey,
 		Kty:   "RSA",

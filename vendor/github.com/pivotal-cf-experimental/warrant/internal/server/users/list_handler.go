@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/pivotal-cf-experimental/warrant/internal/server/common"
@@ -13,36 +14,65 @@ import (
 )
 
 type listHandler struct {
-	users *domain.Users
+	users  *domain.Users
+	tokens *domain.Tokens
 }
 
+//TODO: check scim.read scope (or uaa.admin) and scim audience
+
 func (h listHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	token := req.Header.Get("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	token = strings.TrimPrefix(token, "bearer ")
+
+	if len(token) == 0 {
+		common.JSONError(w, http.StatusUnauthorized, "Full authentication is required to access this resource", "unauthorized")
+		return
+	}
+	if ok := h.tokens.Validate(token, domain.Token{
+		Authorities: []string{"scim.read"},
+		Audiences:   []string{"scim"},
+	}); !ok {
+		common.JSONError(w, http.StatusUnauthorized, "Full authentication is required to access this resource", "unauthorized")
+		return
+	}
+
 	query, err := url.ParseQuery(req.URL.RawQuery)
 	if err != nil {
 		panic(err)
 	}
 
-	filter := query.Get("filter")
-	matches := regexp.MustCompile(`(.*) (.*) ['"](.*)['"]$`).FindStringSubmatch(filter)
-	parameter := matches[1]
-	operator := matches[2]
-	value := matches[3]
-
-	if !validParameter(parameter) {
-		common.JSONError(w, http.StatusBadRequest, fmt.Sprintf("Invalid filter expression: [%s]", filter), "scim")
-		return
-	}
-
-	if !validOperator(operator) {
-		common.JSONError(w, http.StatusBadRequest, fmt.Sprintf("Invalid filter expression: [%s]", filter), "scim")
-		return
-	}
-
 	list := domain.UsersList{}
 
-	user, found := h.users.Get(value)
-	if found {
-		list = append(list, user)
+	filter := query.Get("filter")
+	if filter != "" {
+		matches := regexp.MustCompile(`(.*) (.*) ['"](.*)['"]$`).FindStringSubmatch(filter)
+		parameter := matches[1]
+		operator := matches[2]
+		value := matches[3]
+
+		if !validParameter(parameter) {
+			common.JSONError(w, http.StatusBadRequest, fmt.Sprintf("Invalid filter expression: [%s]", filter), "scim")
+			return
+		}
+
+		if !validOperator(operator) {
+			common.JSONError(w, http.StatusBadRequest, fmt.Sprintf("Invalid filter expression: [%s]", filter), "scim")
+			return
+		}
+		user, found := h.users.Get(value)
+		if found {
+			list = append(list, user)
+		}
+	} else {
+		list = append(list, h.users.All()...)
+	}
+
+	switch by := query.Get("sortBy"); by {
+	case "email":
+		sort.Sort(domain.ByEmail(list))
+	default:
+		sort.Sort(domain.ByCreated(list))
 	}
 
 	response, err := json.Marshal(list.ToDocument())

@@ -17,6 +17,7 @@ var validGrantTypes = []string{
 
 type Client struct {
 	ID                   string
+	Name                 string
 	Secret               string
 	Scope                []string
 	ResourceIDs          []string
@@ -30,6 +31,7 @@ type Client struct {
 func NewClientFromDocument(document documents.CreateUpdateClientRequest) Client {
 	return Client{
 		ID:                   document.ClientID,
+		Name:                 document.Name,
 		Secret:               document.ClientSecret,
 		Scope:                document.Scope,
 		ResourceIDs:          document.ResourceIDs,
@@ -44,9 +46,10 @@ func NewClientFromDocument(document documents.CreateUpdateClientRequest) Client 
 func (c Client) ToDocument() documents.ClientResponse {
 	return documents.ClientResponse{
 		ClientID:             c.ID,
+		Name:                 c.Name,
 		Scope:                shuffle(c.Scope),
-		ResourceIDs:          shuffle(c.ResourceIDs),
-		Authorities:          shuffle(c.Authorities),
+		ResourceIDs:          c.ResourceIDs,
+		Authorities:          c.Authorities,
 		AuthorizedGrantTypes: shuffle(c.AuthorizedGrantTypes),
 		Autoapprove:          shuffle(c.Autoapprove),
 		AccessTokenValidity:  c.AccessTokenValidity,

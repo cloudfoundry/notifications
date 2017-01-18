@@ -52,7 +52,6 @@ var _ = BeforeSuite(func() {
 	os.Setenv("UAA_HOST", Servers.UAA.URL())
 
 	// Create the notfications client
-	adminToken = Servers.UAA.ClientTokenFor("admin", []string{"clients.write", "clients.read", "scim.write", "password.write"}, []string{"clients", "scim", "password"})
 	var traceWriter io.Writer
 	if os.Getenv("TRACE") == "true" {
 		traceWriter = os.Stdout
@@ -62,8 +61,12 @@ var _ = BeforeSuite(func() {
 		TraceWriter: traceWriter,
 	})
 
-	err := warrantClient.Clients.Create(warrant.Client{
+	var err error
+	adminToken, err = warrantClient.Clients.GetToken("admin", "admin")
+
+	err = warrantClient.Clients.Create(warrant.Client{
 		ID:    os.Getenv("UAA_CLIENT_ID"),
+		ResourceIDs: []string{"scim"},
 		Authorities: []string{"scim.read"},
 		Scope: []string{"cloud_controller.admin"},
 	}, os.Getenv("UAA_CLIENT_SECRET"), adminToken)
@@ -71,6 +74,7 @@ var _ = BeforeSuite(func() {
 
 	clientWithWrite = warrant.Client{
 		ID:                   "user-token-client",
+		ResourceIDs: 	      []string{"notification_preferences"},
 		Scope:                []string{"notification_preferences.read", "notification_preferences.write"},
 		AuthorizedGrantTypes: []string{"implicit"},
 		Autoapprove:          []string{"notification_preferences.read", "notification_preferences.write"},
@@ -157,6 +161,7 @@ func GetClientTokenWithScopes(scopes ...string) (string, error) {
 
 	err = warrantClient.Clients.Create(warrant.Client{
 		ID:    id,
+		ResourceIDs: []string{"notifications"},
 		Scope: scopes,
 	}, "secret", adminToken)
 	if err != nil {

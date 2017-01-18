@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/pivotal-cf-experimental/warrant/internal/documents"
+	"github.com/pivotal-cf-experimental/warrant/internal/server/common"
 )
 
 type Token struct {
@@ -52,6 +53,11 @@ func newTokenFromClaims(claims map[string]interface{}) Token {
 }
 
 func (t Token) ToDocument(privateKey string) documents.TokenResponse {
+	id, err := common.NewUUID()
+	if err != nil {
+		panic(err)
+	}
+
 	return documents.TokenResponse{
 		AccessToken: Tokens{
 			PrivateKey: privateKey,
@@ -59,7 +65,7 @@ func (t Token) ToDocument(privateKey string) documents.TokenResponse {
 		TokenType: "bearer",
 		ExpiresIn: 5000,
 		Scope:     strings.Join(t.Scopes, " "),
-		JTI:       generateID(),
+		JTI:       id,
 		Issuer:    t.Issuer,
 	}
 }

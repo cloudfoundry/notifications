@@ -69,7 +69,7 @@ func NewUAA() *UAA {
 	router.Handle("/Groups{a:.*}", groups.NewRouter(groupsCollection, tokensCollection))
 	router.Handle("/oauth/clients{a:.*}", clients.NewRouter(clientsCollection, tokensCollection))
 	router.Handle("/oauth{a:.*}", tokenRouter)
-	router.Handle("/token_key", tokenRouter)
+	router.Handle("/token_key{a:.*}", tokenRouter)
 
 	return uaa
 }
@@ -118,19 +118,6 @@ func (s *UAA) SetDefaultScopes(scopes []string) {
 // original values.
 func (s *UAA) ResetDefaultScopes() {
 	s.tokens.DefaultScopes = defaultScopes
-}
-
-// ClientTokenFor returns a client token with the given id,
-// scopes, and audiences.
-func (s *UAA) ClientTokenFor(clientID string, authorities, audiences []string) string {
-	// TODO: remove from API so that tokens are fetched like
-	// they would be with a real UAA server.
-
-	return s.tokens.Encrypt(domain.Token{
-		ClientID:    clientID,
-		Authorities: authorities,
-		Audiences:   audiences,
-	})
 }
 
 // UserTokenFor returns a user token with the given id,

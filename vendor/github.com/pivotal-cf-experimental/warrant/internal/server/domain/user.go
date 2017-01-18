@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/pivotal-cf-experimental/warrant/internal/documents"
+	"github.com/pivotal-cf-experimental/warrant/internal/server/common"
 )
 
 type User struct {
@@ -32,8 +33,13 @@ func NewUserFromCreateDocument(request documents.CreateUserRequest) User {
 	}
 
 	now := time.Now().UTC()
+	id, err := common.NewUUID()
+	if err != nil {
+		panic(err)
+	}
+
 	return User{
-		ID:        generateID(),
+		ID:        id,
 		UserName:  request.UserName,
 		CreatedAt: now,
 		UpdatedAt: now,

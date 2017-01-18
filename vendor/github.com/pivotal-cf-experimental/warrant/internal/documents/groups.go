@@ -3,12 +3,15 @@ package documents
 // CreateGroupRequest represents the JSON tranport data structure
 // for a request to create a Group.
 type CreateGroupRequest struct {
-	// Schemas is the list of schemas for this API request.
-	Schemas []string `json:"schemas"`
-
 	// DisplayName is the human-friendly name given to a group
 	// resource.
 	DisplayName string `json:"displayName"`
+
+	// Description is the human readable description of the group.
+	Description string `json:"description,omitempty"`
+
+	// Members is the list of members to be included in the group.
+	Members []CreateMemberRequest `json:"members,omitempty"`
 }
 
 // GroupResponse represents the JSON transport data structure
@@ -23,6 +26,12 @@ type GroupResponse struct {
 	// DisplayName is the human-friendly name given to a group
 	// resource.
 	DisplayName string `json:"displayName"`
+
+	// Description is the human readable description of the group.
+	Description string `json:"description"`
+
+	// Members is the list of members to be included in the group.
+	Members []MemberResponse `json:"members"`
 
 	// Meta is the collection of metadata describing the group
 	// resource.
@@ -49,6 +58,30 @@ type GroupListResponse struct {
 	// TotalResults is the total number of resources that match
 	// the list query.
 	TotalResults int `json:"totalResults"`
+}
+
+// CreateUpdateGroupRequest represents the JSON transport data structure
+// for a request to create or update a group.
+type CreateUpdateGroupRequest struct {
+	// Schemas is the list of schemas for this API request.
+	Schemas []string `json:"schemas"`
+
+	// ID is the unique identifier for this SCIM resource within
+	// the UAA service.
+	ID string `json:"id"`
+
+	// DisplayName is the human-friendly name given to a group
+	// resource.
+	DisplayName string `json:"displayName"`
+
+	// Description is the human readable description of the group.
+	Description string `json:"description"`
+
+	// Members is the list of members to be included in the group.
+	Members []CreateMemberRequest `json:"members"`
+
+	// Meta is the set of metadata for this resource.
+	Meta Meta `json:"meta"`
 }
 
 // GroupAssociation represents the JSON transport data structure

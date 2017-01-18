@@ -10,6 +10,14 @@ func NewUsers() *Users {
 	}
 }
 
+func (collection Users) All() []User {
+	var users []User
+	for _, u := range collection.store {
+		users = append(users, u)
+	}
+	return users
+}
+
 func (collection Users) Add(u User) {
 	collection.store[u.ID] = u
 }
@@ -41,4 +49,32 @@ func (collection Users) Delete(id string) bool {
 
 func (collection *Users) Clear() {
 	collection.store = make(map[string]User)
+}
+
+type ByEmail UsersList
+
+func (users ByEmail) Len() int {
+	return len(users)
+}
+
+func (users ByEmail) Swap(i, j int) {
+	users[i], users[j] = users[j], users[i]
+}
+
+func (users ByEmail) Less(i, j int) bool {
+	return users[i].Emails[0] < users[j].Emails[0]
+}
+
+type ByCreated UsersList
+
+func (users ByCreated) Len() int {
+	return len(users)
+}
+
+func (users ByCreated) Swap(i, j int) {
+	users[i], users[j] = users[j], users[i]
+}
+
+func (users ByCreated) Less(i, j int) bool {
+	return users[i].CreatedAt.Before(users[j].CreatedAt)
 }

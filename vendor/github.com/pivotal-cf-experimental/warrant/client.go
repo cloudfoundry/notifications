@@ -11,6 +11,8 @@ type Client struct {
 	// ID is the unique identifier for the client resource.
 	ID string
 
+	Name string
+
 	// Scope contains a list of scope values describing the level of permissions for a
 	// user token requested by this client.
 	Scope []string
@@ -50,6 +52,7 @@ type Client struct {
 func newClientFromDocument(document documents.ClientResponse) Client {
 	return Client{
 		ID:                   document.ClientID,
+		Name:                 document.Name,
 		Scope:                sort(document.Scope),
 		ResourceIDs:          sort(document.ResourceIDs),
 		Authorities:          sort(document.Authorities),
@@ -64,6 +67,7 @@ func (c Client) toDocument(secret string) documents.CreateUpdateClientRequest {
 	client := documents.CreateUpdateClientRequest{
 		ClientID:             c.ID,
 		ClientSecret:         secret,
+		Name:                 c.Name,
 		AccessTokenValidity:  int(c.AccessTokenValidity.Seconds()),
 		Scope:                make([]string, 0),
 		ResourceIDs:          make([]string, 0),

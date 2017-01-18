@@ -19,6 +19,9 @@ type TokensService struct {
 
 // SigningKey is the representation of the key used to validate a token.
 type SigningKey struct {
+	// id for the signing key
+	KeyId string
+
 	// Algorithm indicates the kind of key used to sign tokens.
 	// Keys can be either symmetric or asymmetric.
 	Algorithm string
@@ -76,5 +79,40 @@ func (ts TokensService) GetSigningKey() (SigningKey, error) {
 		return SigningKey{}, MalformedResponseError{err}
 	}
 
-	return SigningKey{Algorithm: response.Alg, Value: response.Value}, nil
+	key := SigningKey{
+		KeyId:     response.Kid,
+		Algorithm: response.Alg,
+		Value:     response.Value,
+	}
+
+	return key, nil
+}
+
+func (ts *TokensService) GetSigningKeys() ([]SigningKey, error) {
+	resp, err := newNetworkClient(ts.config).MakeRequest(network.Request{
+		Method: "GET",
+		Path:   "/token_keys",
+		AcceptableStatusCodes: []int{http.StatusOK},
+	})
+	if err != nil {
+		return []SigningKey{}, translateError(err)
+	}
+
+	var response documents.TokenKeysResponse
+	err = json.Unmarshal(resp.Body, &response)
+	if err != nil {
+		return []SigningKey{}, MalformedResponseError{err}
+	}
+
+	signingKeys := make([]SigningKey, 0, len(response.Keys))
+
+	for _, key := range response.Keys {
+		signingKeys = append(signingKeys, SigningKey{
+			KeyId:     key.Kid,
+			Algorithm: key.Alg,
+			Value:     key.Value,
+		})
+	}
+
+	return signingKeys, nil
 }

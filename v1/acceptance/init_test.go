@@ -13,8 +13,6 @@ import (
 )
 
 var (
-	TRUE      = true
-	FALSE     = false
 	GUIDRegex = regexp.MustCompile(`[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}`)
 	Servers   struct {
 		Notifications servers.Notifications
