@@ -43,6 +43,7 @@ type Environment struct {
 	UAAClientID           string `env:"UAA_CLIENT_ID"            env-required:"true"`
 	UAAClientSecret       string `env:"UAA_CLIENT_SECRET"        env-required:"true"`
 	UAAHost               string `env:"UAA_HOST"                 env-required:"true"`
+	UAAKeyRefreshInterval int    `env:"UAA_KEY_REFRESH_INTREVAL" env-default:"60000"`
 	VerifySSL             bool   `env:"VERIFY_SSL"               env-default:"true"`
 
 	VCAPApplication struct {

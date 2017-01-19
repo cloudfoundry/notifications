@@ -57,6 +57,7 @@ func (app Application) Boot() {
 	app.StartQueueGauge()
 	app.StartWorkers(validator)
 	app.StartMessageGC()
+	app.StartKeyRefresher(validator)
 	app.StartServer(session, validator)
 }
 
@@ -96,6 +97,23 @@ func (app Application) StartQueueGauge() {
 
 	queueGauge := metrics.NewQueueGauge(app.mother.Queue(), metrics.DefaultLogger, time.Tick(1*time.Second))
 	go queueGauge.Run()
+}
+
+func (app Application) StartKeyRefresher(validator *uaa.TokenValidator) {
+	duration := time.Duration(app.env.UAAKeyRefreshInterval) * time.Millisecond
+
+	t := time.NewTimer(duration)
+
+	go func() {
+		for {
+			select {
+			case <-t.C:
+				validator.LoadSigningKeys()
+				t.Reset(duration)
+				break
+			}
+		}
+	}()
 }
 
 func (app Application) StartWorkers(validator *uaa.TokenValidator) {
