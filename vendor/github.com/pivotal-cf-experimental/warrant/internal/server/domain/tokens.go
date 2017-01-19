@@ -23,6 +23,7 @@ func NewTokens(publicKey, privateKey string, defaultScopes []string) *Tokens {
 func (t Tokens) Encrypt(token Token) string {
 	crypt := jwt.New(jwt.SigningMethodRS256)
 	crypt.Claims = token.toClaims()
+	crypt.Header["kid"] = "legacy-token-key"
 	encrypted, err := crypt.SignedString([]byte(t.PrivateKey))
 	if err != nil {
 		panic(err)
