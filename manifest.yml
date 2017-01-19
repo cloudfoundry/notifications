@@ -3,3 +3,4 @@ applications:
   - name: notifications
     command: bin/notifications
     memory: 64M
+    buildpack: go_buildpack
