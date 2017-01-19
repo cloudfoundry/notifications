@@ -22,7 +22,7 @@ type TokenValidator struct {
 }
 
 func NewTokenValidator(logger lager.Logger, keysFetcher keysFetcher) *TokenValidator {
-	logger = logger.Session("token.validator")
+	logger = logger.Session("uaa.token.validator")
 	return &TokenValidator{
 		logger:      logger,
 		keysFetcher: keysFetcher,
@@ -31,20 +31,25 @@ func NewTokenValidator(logger lager.Logger, keysFetcher keysFetcher) *TokenValid
 }
 
 func (v *TokenValidator) LoadSigningKeys() error {
-	v.logger.Info("loading signing keys")
+	v.logger.Info("loading.keys")
 	keys, err := v.keysFetcher.GetSigningKeys()
 
 	if err != nil {
-		v.logger.Error("loading signing keys failed", err)
+		v.logger.Error("loading.keys.failed", err)
 		return err
 	}
 
 	keyMap := make(map[string]warrant.SigningKey, len(keys))
+	keyNames := make([]string, 0, len(keys))
 
 	for _, key := range keys {
-		v.logger.Info("loaded signing key " + key.KeyId)
 		keyMap[key.KeyId] = key
+		keyNames = append(keyNames, key.KeyId)
 	}
+
+	v.logger.Info("loaded.keys", lager.Data{
+		"keys": keyNames,
+	})
 
 	v.keyMutex.Lock()
 	defer v.keyMutex.Unlock()
