@@ -35,7 +35,7 @@ type muxer interface {
 }
 
 type Config struct {
-	UAAPublicKey         string
+	UAATokenValidator    *uaa.TokenValidator
 	UAAClientID          string
 	UAAClientSecret      string
 	DefaultUAAScopes     []string
@@ -81,7 +81,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	v1enqueuer := services.NewEnqueuer(gobbleQueue, messagesRepo, gobble.Initializer{})
 
-	uaaClient := uaa.NewZonedUAAClient(config.UAAClientID, config.UAAClientSecret, config.VerifySSL, config.UAAPublicKey)
+	uaaClient := uaa.NewZonedUAAClient(config.UAAClientID, config.UAAClientSecret, config.VerifySSL, config.UAATokenValidator)
 	cloudController := cf.NewCloudController(config.CCHost, !config.VerifySSL)
 	tokenLoader := uaa.NewTokenLoader(uaaClient)
 	spaceLoader := services.NewSpaceLoader(cloudController)
@@ -103,7 +103,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	databaseAllocator := middleware.NewDatabaseAllocator(config.SQLDB, config.DBLoggingEnabled)
 	cors := middleware.NewCORS(config.CORSOrigin)
 	auth := func(scope ...string) middleware.Authenticator {
-		return middleware.NewAuthenticator(config.UAAPublicKey, scope...)
+		return middleware.NewAuthenticator(config.UAATokenValidator, scope...)
 	}
 
 	info.Routes{

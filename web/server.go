@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/pivotal-golang/lager"
 )
 
@@ -17,12 +18,12 @@ type Config struct {
 	SQLDB                *sql.DB
 	Logger               lager.Logger
 
-	UAAPublicKey     string
-	UAAHost          string
-	UAAClientID      string
-	UAAClientSecret  string
-	DefaultUAAScopes []string
-	CCHost           string
+	UAATokenValidator *uaa.TokenValidator
+	UAAHost           string
+	UAAClientID       string
+	UAAClientSecret   string
+	DefaultUAAScopes  []string
+	CCHost            string
 }
 
 type Server struct{}

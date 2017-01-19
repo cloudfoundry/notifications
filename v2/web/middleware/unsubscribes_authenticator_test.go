@@ -5,11 +5,13 @@ import (
 	"net/http/httptest"
 	"net/url"
 
-	"github.com/cloudfoundry-incubator/notifications/testing/helpers"
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v2/web/middleware"
 	"github.com/ryanmoran/stack"
 
+	"errors"
+
+	"github.com/dgrijalva/jwt-go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -23,6 +25,8 @@ var _ = Describe("Unsubscribes Authenticator", func() {
 
 		clientAuthenticator *mocks.Authenticator
 		userAuthenticator   *mocks.Authenticator
+		validator           *mocks.TokenValidator
+		expectedToken       *jwt.Token
 	)
 
 	BeforeEach(func() {
@@ -30,34 +34,33 @@ var _ = Describe("Unsubscribes Authenticator", func() {
 
 		writer = httptest.NewRecorder()
 
-		tokenHeader := map[string]interface{}{
-			"alg": "RS256",
-		}
-		tokenClaims := map[string]interface{}{
-			"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
-			"client_id": "mister-client",
-			"cid":       "mister-client",
-			"exp":       3404281214,
-			"scope":     []string{"gaben.scope"},
-		}
-		rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
-
 		request, err = http.NewRequest("GET", "/some/path", nil)
 		if err != nil {
 			panic(err)
 		}
-		request.Header.Set("Authorization", "Bearer "+rawToken)
+		request.Header.Set("Authorization", "Bearer valid-token")
 
 		context = stack.NewContext()
 
 		clientAuthenticator = &mocks.Authenticator{}
 		userAuthenticator = &mocks.Authenticator{}
+		validator = &mocks.TokenValidator{}
 
 		auth = middleware.UnsubscribesAuthenticator{
-			UAAPublicKey:        helpers.UAAPublicKey,
+			Validator:           validator,
 			ClientAuthenticator: clientAuthenticator,
 			UserAuthenticator:   userAuthenticator,
 		}
+
+		expectedToken = jwt.New(jwt.SigningMethodRS256)
+		expectedToken.Claims = map[string]interface{}{
+			"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
+			"client_id": "mister-client",
+			"cid":       "mister-client",
+			"exp":       3404281214,
+			"scope":     []interface{}{"gaben.scope"},
+		}
+		validator.ParseCall.Returns.Token = expectedToken
 	})
 
 	Context("when the token is a client token", func() {
@@ -77,25 +80,24 @@ var _ = Describe("Unsubscribes Authenticator", func() {
 
 	Context("when the token is a user token", func() {
 		BeforeEach(func() {
-			tokenHeader := map[string]interface{}{
-				"alg": "RS256",
-			}
-			tokenClaims := map[string]interface{}{
+			expectedToken = jwt.New(jwt.SigningMethodRS256)
+			expectedToken.Claims = map[string]interface{}{
 				"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
 				"client_id": "mister-client",
 				"user_id":   "some-user-guid",
 				"cid":       "mister-client",
 				"exp":       3404281214,
-				"scope":     []string{"gaben.scope"},
+				"scope":     []interface{}{"gaben.scope"},
 			}
-			rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
+
+			validator.ParseCall.Returns.Token = expectedToken
 
 			var err error
 			request, err = http.NewRequest("GET", "/some/path/some-user-guid", nil)
 			if err != nil {
 				panic(err)
 			}
-			request.Header.Set("Authorization", "Bearer "+rawToken)
+			request.Header.Set("Authorization", "Bearer some-token")
 		})
 
 		Context("when the user_id in the token matches the user_guid in the route", func() {
@@ -155,6 +157,8 @@ var _ = Describe("Unsubscribes Authenticator", func() {
 	Context("when the token is malformed", func() {
 		It("returns a 401 status code and error message", func() {
 			request.Header.Set("Authorization", "bearer some-junk")
+
+			validator.ParseCall.Returns.Error = errors.New("broken token")
 
 			keepGoing := auth.ServeHTTP(writer, request, context)
 			Expect(userAuthenticator.ServeHTTPCall.Receives.Request).To(BeNil())

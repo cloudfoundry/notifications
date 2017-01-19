@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/ryanmoran/stack"
 )
 
@@ -13,16 +12,16 @@ type authenticator interface {
 }
 
 type UnsubscribesAuthenticator struct {
-	UAAPublicKey        string
 	ClientAuthenticator authenticator
 	UserAuthenticator   authenticator
+	Validator           validator
 }
 
-func NewUnsubscribesAuthenticator(publicKey string) UnsubscribesAuthenticator {
+func NewUnsubscribesAuthenticator(validator validator) UnsubscribesAuthenticator {
 	return UnsubscribesAuthenticator{
-		UAAPublicKey:        publicKey,
-		ClientAuthenticator: NewAuthenticator(publicKey, "notification_preferences.admin"),
-		UserAuthenticator:   NewAuthenticator(publicKey, "notification_preferences.write"),
+		Validator:           validator,
+		ClientAuthenticator: NewAuthenticator(validator, "notification_preferences.admin"),
+		UserAuthenticator:   NewAuthenticator(validator, "notification_preferences.write"),
 	}
 }
 
@@ -35,9 +34,8 @@ func (a UnsubscribesAuthenticator) ServeHTTP(writer http.ResponseWriter, request
 		return false
 	}
 
-	token, err := jwt.Parse(rawToken, func(t *jwt.Token) (interface{}, error) {
-		return []byte(a.UAAPublicKey), nil
-	})
+	token, err := a.Validator.Parse(rawToken)
+
 	if err != nil {
 		writer.WriteHeader(http.StatusUnauthorized)
 		writer.Write([]byte(`{"errors": [ "Authorization header is invalid: corrupt" ]}`))

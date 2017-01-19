@@ -33,9 +33,9 @@ var (
 	roundtripRecorder *docs.RoundTripRecorder
 	users             map[string]string
 
-	clientWithWrite   warrant.Client
-	basicClient       warrant.Client
-	warrantClient     warrant.Warrant
+	clientWithWrite warrant.Client
+	basicClient     warrant.Client
+	warrantClient   warrant.Warrant
 )
 
 func TestAcceptanceSuite(t *testing.T) {
@@ -65,16 +65,16 @@ var _ = BeforeSuite(func() {
 	adminToken, err = warrantClient.Clients.GetToken("admin", "admin")
 
 	err = warrantClient.Clients.Create(warrant.Client{
-		ID:    os.Getenv("UAA_CLIENT_ID"),
+		ID:          os.Getenv("UAA_CLIENT_ID"),
 		ResourceIDs: []string{"scim"},
 		Authorities: []string{"scim.read"},
-		Scope: []string{"cloud_controller.admin"},
+		Scope:       []string{"cloud_controller.admin"},
 	}, os.Getenv("UAA_CLIENT_SECRET"), adminToken)
 	Expect(err).NotTo(HaveOccurred())
 
 	clientWithWrite = warrant.Client{
 		ID:                   "user-token-client",
-		ResourceIDs: 	      []string{"notification_preferences"},
+		ResourceIDs:          []string{"notification_preferences"},
 		Scope:                []string{"notification_preferences.read", "notification_preferences.write"},
 		AuthorizedGrantTypes: []string{"implicit"},
 		Autoapprove:          []string{"notification_preferences.read", "notification_preferences.write"},
@@ -160,9 +160,9 @@ func GetClientTokenWithScopes(scopes ...string) (string, error) {
 	}
 
 	err = warrantClient.Clients.Create(warrant.Client{
-		ID:    id,
+		ID:          id,
 		ResourceIDs: []string{"notifications"},
-		Scope: scopes,
+		Scope:       scopes,
 	}, "secret", adminToken)
 	if err != nil {
 		return "", err
@@ -218,7 +218,6 @@ func UpdateClientTokenWithDifferentScopes(token string, scopes ...string) (strin
 func GetUserTokenAndIdFor(userName string) (string, string, error) {
 	return GetUserInfoWithClient(userName, clientWithWrite)
 }
-
 
 func GetUserInfoWithClient(userName string, client warrant.Client) (string, string, error) {
 	userGUID := users[userName]

@@ -48,11 +48,11 @@ type Config struct {
 	Logger           lager.Logger
 	Queue            enqueuer
 
-	UAAPublicKey    string
-	UAAHost         string
-	UAAClientID     string
-	UAAClientSecret string
-	CCHost          string
+	UAATokenValidator *uaa.TokenValidator
+	UAAHost           string
+	UAAClientID       string
+	UAAClientSecret   string
+	CCHost            string
 }
 
 func NewRouter(mx muxer, config Config) http.Handler {
@@ -61,9 +61,9 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	requestCounter := middleware.NewRequestCounter(mx.GetRouter(), metrics.DefaultLogger)
 	requestLogging := middleware.NewRequestLogging(config.Logger, clock)
-	notificationsWriteAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.write")
-	notificationsAdminAuthenticator := middleware.NewAuthenticator(config.UAAPublicKey, "notifications.admin")
-	unsubscribesAuthenticator := middleware.NewUnsubscribesAuthenticator(config.UAAPublicKey)
+	notificationsWriteAuthenticator := middleware.NewAuthenticator(config.UAATokenValidator, "notifications.write")
+	notificationsAdminAuthenticator := middleware.NewAuthenticator(config.UAATokenValidator, "notifications.admin")
+	unsubscribesAuthenticator := middleware.NewUnsubscribesAuthenticator(config.UAATokenValidator)
 	databaseAllocator := middleware.NewDatabaseAllocator(config.SQLDB, config.DBLoggingEnabled)
 
 	warrantConfig := warrant.Config{

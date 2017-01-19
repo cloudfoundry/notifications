@@ -1,6 +1,8 @@
 package mocks
 
-import "github.com/cloudfoundry-incubator/notifications/v1/web/notify"
+import (
+	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
+)
 
 type Validator struct {
 	ValidateCall struct {

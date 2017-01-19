@@ -4,24 +4,23 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/pivotal-cf-experimental/warrant"
 	uaaSSOGolang "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
 
 type ZonedUAAClient struct {
-	clientID     string
-	clientSecret string
-	verifySSL    bool
-	UAAPublicKey string
+	clientID       string
+	clientSecret   string
+	verifySSL      bool
+	tokenValidator *TokenValidator
 }
 
-func NewZonedUAAClient(clientID, clientSecret string, verifySSL bool, uaaPublicKey string) (client ZonedUAAClient) {
+func NewZonedUAAClient(clientID, clientSecret string, verifySSL bool, validator *TokenValidator) (client ZonedUAAClient) {
 	return ZonedUAAClient{
-		clientID:     clientID,
-		clientSecret: clientSecret,
-		verifySSL:    verifySSL,
-		UAAPublicKey: uaaPublicKey,
+		clientID:       clientID,
+		clientSecret:   clientSecret,
+		verifySSL:      verifySSL,
+		tokenValidator: validator,
 	}
 }
 
@@ -72,9 +71,8 @@ func (z ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]User, e
 }
 
 func (z ZonedUAAClient) tokenHost(token string) (string, error) {
-	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
-		return []byte(z.UAAPublicKey), nil
-	})
+	parsedToken, err := z.tokenValidator.Parse(token)
+
 	if err != nil {
 		return "", err
 	}

@@ -23,6 +23,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/horde"
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/pivotal-golang/conceal"
 	"github.com/pivotal-golang/lager"
 )
@@ -33,10 +34,14 @@ type mother interface {
 	MailClient() *mail.Client
 }
 
+type uaaTokenValidator interface {
+	Parse(token string) (*jwt.Token, error)
+}
+
 type Config struct {
 	UAAClientID          string
 	UAAClientSecret      string
-	UAAPublicKey         string
+	UAATokenValidator    *uaa.TokenValidator
 	UAAHost              string
 	VerifySSL            bool
 	InstanceIndex        int
@@ -50,7 +55,7 @@ type Config struct {
 }
 
 func Boot(mom mother, config Config) {
-	uaaClient := uaa.NewZonedUAAClient(config.UAAClientID, config.UAAClientSecret, config.VerifySSL, config.UAAPublicKey)
+	uaaClient := uaa.NewZonedUAAClient(config.UAAClientID, config.UAAClientSecret, config.VerifySSL, config.UAATokenValidator)
 
 	logger := lager.NewLogger("notifications")
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))

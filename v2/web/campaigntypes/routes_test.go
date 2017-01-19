@@ -26,7 +26,7 @@ var _ = Describe("Routes", func() {
 
 	BeforeEach(func() {
 		logging = middleware.NewRequestLogging(lager.NewLogger("log-prefix"), mocks.NewClock())
-		auth = middleware.NewAuthenticator("some-public-key", "notifications.write")
+		auth = middleware.NewAuthenticator(&mocks.TokenValidator{}, "notifications.write")
 		dbAllocator = middleware.NewDatabaseAllocator(&sql.DB{}, false)
 		muxer = web.NewMuxer()
 		campaigntypes.Routes{

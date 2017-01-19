@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"errors"
 	"net/http"
 	"strings"
 
@@ -9,15 +8,19 @@ import (
 	"github.com/ryanmoran/stack"
 )
 
-type Authenticator struct {
-	Scopes       []string
-	UAAPublicKey string
+type validator interface {
+	Parse(string) (*jwt.Token, error)
 }
 
-func NewAuthenticator(publicKey string, scopes ...string) Authenticator {
+type Authenticator struct {
+	Scopes    []string
+	validator validator
+}
+
+func NewAuthenticator(validator validator, scopes ...string) Authenticator {
 	return Authenticator{
-		Scopes:       scopes,
-		UAAPublicKey: publicKey,
+		Scopes:    scopes,
+		validator: validator,
 	}
 }
 
@@ -28,18 +31,9 @@ func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 		return ware.Error(w, http.StatusUnauthorized, "Authorization header is invalid: missing")
 	}
 
-	token, err := jwt.Parse(rawToken, func(t *jwt.Token) (interface{}, error) {
-		switch t.Method {
-		case jwt.SigningMethodRS256, jwt.SigningMethodRS384, jwt.SigningMethodRS512:
-			return []byte(ware.UAAPublicKey), nil
-		default:
-			return nil, errors.New("Unsupported signing method")
-		}
-	})
+	token, err := ware.validator.Parse(rawToken)
+
 	if err != nil {
-		if strings.Contains(err.Error(), "expired") {
-			return ware.Error(w, http.StatusUnauthorized, "Authorization header is invalid: expired")
-		}
 		return ware.Error(w, http.StatusUnauthorized, "Authorization header is invalid: corrupt")
 	}
 

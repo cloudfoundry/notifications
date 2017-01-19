@@ -12,6 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/web"
+	"github.com/pivotal-cf-experimental/warrant"
 	"github.com/pivotal-golang/lager"
 	"github.com/ryanmoran/viron"
 )
@@ -39,14 +40,24 @@ func (app Application) Boot() {
 	viron.Print(app.env, vironCompatibleLogger{session})
 
 	app.ConfigureSMTP(session)
-	uaaKey := app.RetrieveUAAPublicKey(session)
+
+	uaaClient := warrant.New(warrant.Config{
+		Host:          app.env.UAAHost,
+		SkipVerifySSL: !app.env.VerifySSL,
+	})
+
+	validator := uaa.NewTokenValidator(session, &uaaClient.Tokens)
+
+	if err := validator.LoadSigningKeys(); err != nil {
+		session.Fatal("uaa-get-token-key-errored", err)
+	}
 
 	app.migrator.Migrate()
 
 	app.StartQueueGauge()
-	app.StartWorkers(uaaKey)
+	app.StartWorkers(validator)
 	app.StartMessageGC()
-	app.StartServer(session, uaaKey)
+	app.StartServer(session, validator)
 }
 
 func (app Application) ConfigureSMTP(logger lager.Logger) {
@@ -78,21 +89,6 @@ func (app Application) ConfigureSMTP(logger lager.Logger) {
 	}
 }
 
-func (app Application) RetrieveUAAPublicKey(logger lager.Logger) string {
-	zonedUAAClient := uaa.NewZonedUAAClient(app.env.UAAClientID, app.env.UAAClientSecret, app.env.VerifySSL, "")
-
-	key, err := zonedUAAClient.GetTokenKey(app.env.UAAHost)
-	if err != nil {
-		logger.Fatal("uaa-get-token-key-errored", err)
-	}
-
-	logger.Info("uaa-public-key", lager.Data{
-		"key": key,
-	})
-
-	return key
-}
-
 func (app Application) StartQueueGauge() {
 	if app.env.VCAPApplication.InstanceIndex != 0 {
 		return
@@ -102,11 +98,11 @@ func (app Application) StartQueueGauge() {
 	go queueGauge.Run()
 }
 
-func (app Application) StartWorkers(uaaPublicKey string) {
+func (app Application) StartWorkers(validator *uaa.TokenValidator) {
 	postal.Boot(app.mother, postal.Config{
 		UAAClientID:          app.env.UAAClientID,
 		UAAClientSecret:      app.env.UAAClientSecret,
-		UAAPublicKey:         uaaPublicKey,
+		UAATokenValidator:    validator,
 		UAAHost:              app.env.UAAHost,
 		VerifySSL:            app.env.VerifySSL,
 		InstanceIndex:        app.env.VCAPApplication.InstanceIndex,
@@ -131,7 +127,7 @@ func (app Application) StartMessageGC() {
 	messageGC.Run()
 }
 
-func (app Application) StartServer(logger lager.Logger, uaaPublicKey string) {
+func (app Application) StartServer(logger lager.Logger, validator *uaa.TokenValidator) {
 	web.NewServer().Run(app.mother, web.Config{
 		DBLoggingEnabled:     app.env.DBLoggingEnabled,
 		SkipVerifySSL:        !app.env.VerifySSL,
@@ -141,12 +137,12 @@ func (app Application) StartServer(logger lager.Logger, uaaPublicKey string) {
 		SQLDB:                app.mother.SQLDatabase(),
 		QueueWaitMaxDuration: app.env.GobbleWaitMaxDuration,
 
-		UAAPublicKey:     uaaPublicKey,
-		UAAHost:          app.env.UAAHost,
-		UAAClientID:      app.env.UAAClientID,
-		UAAClientSecret:  app.env.UAAClientSecret,
-		DefaultUAAScopes: app.env.DefaultUAAScopes,
-		CCHost:           app.env.CCHost,
+		UAATokenValidator: validator,
+		UAAHost:           app.env.UAAHost,
+		UAAClientID:       app.env.UAAClientID,
+		UAAClientSecret:   app.env.UAAClientSecret,
+		DefaultUAAScopes:  app.env.DefaultUAAScopes,
+		CCHost:            app.env.CCHost,
 	})
 }
 

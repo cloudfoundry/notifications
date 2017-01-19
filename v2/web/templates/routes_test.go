@@ -27,8 +27,8 @@ var _ = Describe("Routes", func() {
 
 	BeforeEach(func() {
 		logging = middleware.NewRequestLogging(lager.NewLogger("log-prefix"), mocks.NewClock())
-		writeAuth = middleware.NewAuthenticator("some-public-key", "notifications.write")
-		adminAuth = middleware.NewAuthenticator("some-public-key", "notifications.admin")
+		writeAuth = middleware.NewAuthenticator(&mocks.TokenValidator{}, "notifications.write")
+		adminAuth = middleware.NewAuthenticator(&mocks.TokenValidator{}, "notifications.admin")
 		dbAllocator = middleware.NewDatabaseAllocator(&sql.DB{}, false)
 		muxer = web.NewMuxer()
 		templates.Routes{

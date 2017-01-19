@@ -26,6 +26,7 @@ func NewUAA() *UAA {
 	router := mux.NewRouter()
 	router.HandleFunc("/oauth/token", UAAPostOAuthToken).Methods("POST")
 	router.HandleFunc("/token_key", UAAGetTokenKey).Methods("GET")
+	router.HandleFunc("/token_keys", UAAGetTokenKeys).Methods("GET")
 	router.Path("/Users").Queries("filter", "").Handler(UAAGetUserFilter).Methods("GET")
 	router.HandleFunc("/Users", UAAGetUsers).Methods("GET")
 	router.HandleFunc("/Users/{userGUID}", UAAGetUser).Methods("GET")
@@ -76,6 +77,7 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
 	clientID := credentialsParts[0]
 
 	token := jwt.New(jwt.GetSigningMethod("RS256"))
+	token.Header["kid"] = "legacy-key-id"
 	token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 	token.Claims["client_id"] = clientID
 	token.Claims["iss"] = "http://" + req.Host + "/oauth/token"
@@ -128,7 +130,31 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
 var UAAGetTokenKey = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 	response, err := json.Marshal(map[string]string{
 		"alg":   "SHA256withRSA",
+		"kid":   "legacy-key-id",
 		"value": ReadFile("/testing/fixtures/public.pem"),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
+})
+
+var UAAGetTokenKeys = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+	response, err := json.Marshal(map[string]interface{}{
+		"keys": []interface{}{
+			map[string]string{
+				"alg":   "SHA256withRSA",
+				"kid":   "legacy-key-id",
+				"value": ReadFile("/testing/fixtures/public.pem"),
+			},
+			map[string]string{
+				"alg":   "SHA256withRSA",
+				"kid":   "new-key-id",
+				"value": ReadFile("/testing/fixtures/public.pem"),
+			},
+		},
 	})
 	if err != nil {
 		panic(err)
