@@ -52,7 +52,7 @@ notifications-client-name:
 
 If you are unfamiliar with UAA consult the [UAA token overview](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-Tokens.md).
 
-##Configuring Environment Variables
+## Configuring Environment Variables
 
 | Variable                     | Description                                 | Default  |
 |------------------------------|---------------------------------------------|----------|
