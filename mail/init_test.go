@@ -104,7 +104,7 @@ func NewSMTPServer(user, pass string) *SMTPServer {
 	if err != nil {
 		panic(err)
 	}
-	listenerURL, err := url.Parse(listener.Addr().String())
+	listenerURL, err := url.Parse("//" + listener.Addr().String())
 	if err != nil {
 		panic(err)
 	}
