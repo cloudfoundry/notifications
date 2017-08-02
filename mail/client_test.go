@@ -67,7 +67,7 @@ var _ = Describe("Mail", func() {
 			DisableTLS:    false,
 		}
 
-		config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
+		config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.Host)
 		if err != nil {
 			panic(err)
 		}
@@ -116,7 +116,7 @@ var _ = Describe("Mail", func() {
 				var err error
 
 				mailServer.SupportsTLS = true
-				config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
+				config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.Host)
 				if err != nil {
 					panic(err)
 				}
@@ -171,7 +171,7 @@ var _ = Describe("Mail", func() {
 			var err error
 
 			mailServer.SupportsTLS = true
-			config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
+			config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.Host)
 			if err != nil {
 				panic(err)
 			}
@@ -369,7 +369,7 @@ var _ = Describe("Mail", func() {
 			mailServer.ConnectWait = 5 * time.Second
 			config.ConnectTimeout = 100 * time.Millisecond
 
-			config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
+			config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.Host)
 			if err != nil {
 				panic(err)
 			}
@@ -387,7 +387,7 @@ var _ = Describe("Mail", func() {
 			var err error
 
 			mailServer.SupportsTLS = true
-			config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.String())
+			config.Host, config.Port, err = net.SplitHostPort(mailServer.URL.Host)
 			if err != nil {
 				panic(err)
 			}
