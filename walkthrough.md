@@ -1,4 +1,4 @@
-#So you want to send a notification
+# So you want to send a notification
 
 This is a walkthrough of using the Notifications Service. We'll show you how to set it up, through the following example: Darla is a cloud operator who needs to take the system down for maintenance and wants to notify everybody about her intentions.
 
