@@ -4,8 +4,9 @@ DO NOT EDIT THIS BY HAND.
 Run the acceptance suite to re-generate the documentation.
 -->
 
-# API docs
-This is version 2 of the Cloud Foundry notifications API. Integrate with this API in order to send messages to developers and billing contacts in your CF deployment.
+# API docs - DEPRECATED
+This is version 2 of the Cloud Foundry notifications API and is no longer supported. Please use [version 1](/V1_API.md)
+Integrate with this API in order to send messages to developers and billing contacts in your CF deployment.
 
 ## Authorization Tokens
 See [here](https://github.com/cloudfoundry/uaa/blob/master/docs/UAA-Tokens.md) for more information about UAA tokens.

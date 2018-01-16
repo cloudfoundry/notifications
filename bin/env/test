@@ -3,7 +3,7 @@
 export ROOT_PATH=${ROOT_PATH:-"$GOPATH/src/github.com/cloudfoundry-incubator/notifications"}
 
 export CC_HOST=https://api.example.com
-export DATABASE_URL=${DATABASE_URL:-"root:root@127.0.0.1:3306/notifications_test"}
+export DATABASE_URL=${DATABASE_URL:-"root:password@127.0.0.1:3306/notifications_test"}
 export DEFAULT_UAA_SCOPES="cloud_controller.read,cloud_controller.write,openid,approvals.me,cloud_controller_service_permissions.read,scim.me,uaa.user,password.write,scim.userids,oauth.approvals"
 export ENCRYPTION_KEY=sixteenbytes!!!!
 export GOBBLE_WAIT_MAX_DURATION=100
