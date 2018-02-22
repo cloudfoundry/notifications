@@ -14,10 +14,12 @@ import (
 )
 
 const (
-	AuthNone AuthMechanism = iota
-	AuthPlain
-	AuthCRAMMD5
+	SMTPAuthNone    = "none"
+	SMTPAuthPlain   = "plain"
+	SMTPAuthCRAMMD5 = "cram-md5"
 )
+
+var SMTPAuthMechanisms = []string{SMTPAuthNone, SMTPAuthPlain, SMTPAuthCRAMMD5}
 
 type AuthMechanism int
 
@@ -27,17 +29,17 @@ type Client struct {
 }
 
 type Config struct {
-	Host           string
-	Port           string
-	User           string
-	Pass           string
-	Secret         string
-	AuthMechanism  AuthMechanism
-	TestMode       bool
-	SkipVerifySSL  bool
-	DisableTLS     bool
-	ConnectTimeout time.Duration
-	LoggingEnabled bool
+	Host              string
+	Port              string
+	User              string
+	Pass              string
+	Secret            string
+	SMTPAuthMechanism string
+	TestMode          bool
+	SkipVerifySSL     bool
+	DisableTLS        bool
+	ConnectTimeout    time.Duration
+	LoggingEnabled    bool
 }
 
 type connection struct {
@@ -213,11 +215,11 @@ func (c *Client) Auth(logger lager.Logger) error {
 }
 
 func (c *Client) AuthMechanism(logger lager.Logger) smtp.Auth {
-	switch c.config.AuthMechanism {
-	case AuthCRAMMD5:
+	switch c.config.SMTPAuthMechanism {
+	case SMTPAuthCRAMMD5:
 		c.PrintLog(logger, "crammd5-authentication")
 		return smtp.CRAMMD5Auth(c.config.User, c.config.Secret)
-	case AuthPlain:
+	case SMTPAuthPlain:
 		c.PrintLog(logger, "plain-authentication")
 		return smtp.PlainAuth("", c.config.User, c.config.Pass, c.config.Host)
 	default:

@@ -7,6 +7,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
@@ -20,84 +21,104 @@ const WorkerCount = 10
 
 type Application struct {
 	env      Environment
+	logger   lager.Logger
 	mother   *Mother
 	migrator Migrator
 }
 
-func NewApplication(env Environment, mother *Mother) Application {
+func New(env Environment, mother *Mother) Application {
 	databaseMigrator := models.DatabaseMigrator{}
+
+	l := lager.NewLogger("notifications")
+	l.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+
 	return Application{
 		env:      env,
+		logger:   l,
 		mother:   mother,
 		migrator: NewMigrator(mother, databaseMigrator, env.VCAPApplication.InstanceIndex == 0, env.ModelMigrationsPath, env.GobbleMigrationsPath, path.Join(env.RootPath, "templates", "default.json")),
 	}
 }
 
-func (app Application) Boot() {
-	session := app.mother.Logger().Session("boot")
+func (a Application) mailClient() *mail.Client {
+	return mail.NewClient(mail.Config{
+		User:              a.env.SMTPUser,
+		Pass:              a.env.SMTPPass,
+		Host:              a.env.SMTPHost,
+		Port:              a.env.SMTPPort,
+		Secret:            a.env.SMTPCRAMMD5Secret,
+		TestMode:          a.env.TestMode,
+		SkipVerifySSL:     !a.env.VerifySSL,
+		DisableTLS:        !a.env.SMTPTLS,
+		LoggingEnabled:    a.env.SMTPLoggingEnabled,
+		SMTPAuthMechanism: a.env.SMTPAuthMechanism,
+	})
+}
 
-	app.ConfigureSMTP(session)
+func (a Application) Run() {
+
+	a.VerifySMTPConfiguration()
 
 	uaaClient := warrant.New(warrant.Config{
-		Host:          app.env.UAAHost,
-		SkipVerifySSL: !app.env.VerifySSL,
+		Host:          a.env.UAAHost,
+		SkipVerifySSL: !a.env.VerifySSL,
 	})
 
-	validator := uaa.NewTokenValidator(session, &uaaClient.Tokens)
+	validator := uaa.NewTokenValidator(a.logger, &uaaClient.Tokens)
 
 	if err := validator.LoadSigningKeys(); err != nil {
-		session.Fatal("uaa-get-token-key-errored", err)
+		a.logger.Fatal("uaa-get-token-key-errored", err)
 	}
 
-	app.migrator.Migrate()
+	a.migrator.Migrate()
 
-	app.StartQueueGauge()
-	app.StartWorkers(validator)
-	app.StartMessageGC()
-	app.StartKeyRefresher(validator)
-	app.StartServer(session, validator)
+	a.StartQueueGauge()
+	a.StartWorkers(validator)
+	a.StartMessageGC()
+	a.StartKeyRefresher(validator)
+	a.StartServer(a.logger, validator)
 }
 
-func (app Application) ConfigureSMTP(logger lager.Logger) {
-	if app.env.TestMode {
+func (a Application) VerifySMTPConfiguration() {
+	if a.env.TestMode {
 		return
 	}
 
-	mailClient := app.mother.MailClient()
-	err := mailClient.Connect(logger)
+	mc := a.mailClient()
+	err := mc.Connect(a.logger)
 	if err != nil {
-		logger.Fatal("smtp-connect-errored", err)
+		a.logger.Fatal("smtp-connect-errored", err)
 	}
 
-	err = mailClient.Hello()
+	err = mc.Hello()
 	if err != nil {
-		logger.Fatal("smtp-hello-errored", err)
+		a.logger.Fatal("smtp-hello-errored", err)
 	}
 
-	startTLSSupported, _ := mailClient.Extension("STARTTLS")
+	startTLSSupported, _ := mc.Extension("STARTTLS")
 
-	mailClient.Quit()
+	mc.Quit()
 
-	if !startTLSSupported && app.env.SMTPTLS {
-		logger.Fatal("smtp-config-mismatch", errors.New(`SMTP TLS configuration mismatch: Configured to use TLS over SMTP, but the mail server does not support the "STARTTLS" extension.`))
+	if !startTLSSupported && a.env.SMTPTLS {
+		a.logger.Fatal("smtp-config-mismatch", errors.New(`SMTP TLS configuration mismatch: Configured to use TLS over SMTP, but the mail server does not support the "STARTTLS" extension.`))
 	}
 
-	if startTLSSupported && !app.env.SMTPTLS {
-		logger.Fatal("smtp-config-mismatch", errors.New(`SMTP TLS configuration mismatch: Not configured to use TLS over SMTP, but the mail server does support the "STARTTLS" extension.`))
+	if startTLSSupported && !a.env.SMTPTLS {
+		a.logger.Fatal("smtp-config-mismatch", errors.New(`SMTP TLS configuration mismatch: Not configured to use TLS over SMTP, but the mail server does support the "STARTTLS" extension.`))
 	}
 }
 
-func (app Application) StartQueueGauge() {
-	if app.env.VCAPApplication.InstanceIndex != 0 {
+func (a Application) StartQueueGauge() {
+	if a.env.VCAPApplication.InstanceIndex != 0 {
 		return
 	}
 
-	queueGauge := metrics.NewQueueGauge(app.mother.Queue(), metrics.DefaultLogger, time.Tick(1*time.Second))
+	queueGauge := metrics.NewQueueGauge(a.mother.Queue(), metrics.DefaultLogger, time.Tick(1*time.Second))
 	go queueGauge.Run()
 }
 
-func (app Application) StartKeyRefresher(validator *uaa.TokenValidator) {
-	duration := time.Duration(app.env.UAAKeyRefreshInterval) * time.Millisecond
+func (a Application) StartKeyRefresher(validator *uaa.TokenValidator) {
+	duration := time.Duration(a.env.UAAKeyRefreshInterval) * time.Millisecond
 
 	t := time.NewTimer(duration)
 
@@ -113,28 +134,29 @@ func (app Application) StartKeyRefresher(validator *uaa.TokenValidator) {
 	}()
 }
 
-func (app Application) StartWorkers(validator *uaa.TokenValidator) {
-	postal.Boot(app.mother, postal.Config{
-		UAAClientID:          app.env.UAAClientID,
-		UAAClientSecret:      app.env.UAAClientSecret,
+func (a Application) StartWorkers(validator *uaa.TokenValidator) {
+	postal.Boot(a.mailClient, a.mother.SQLDatabase(), postal.Config{
+		UAAClientID:          a.env.UAAClientID,
+		UAAClientSecret:      a.env.UAAClientSecret,
 		UAATokenValidator:    validator,
-		UAAHost:              app.env.UAAHost,
-		VerifySSL:            app.env.VerifySSL,
-		InstanceIndex:        app.env.VCAPApplication.InstanceIndex,
+		UAAHost:              a.env.UAAHost,
+		VerifySSL:            a.env.VerifySSL,
+		InstanceIndex:        a.env.VCAPApplication.InstanceIndex,
 		WorkerCount:          WorkerCount,
-		EncryptionKey:        app.env.EncryptionKey,
-		DBLoggingEnabled:     app.env.DBLoggingEnabled,
-		Sender:               app.env.Sender,
-		Domain:               app.env.Domain,
-		QueueWaitMaxDuration: app.env.GobbleWaitMaxDuration,
-		CCHost:               app.env.CCHost,
+		RootPath:             a.env.RootPath,
+		EncryptionKey:        a.env.EncryptionKey,
+		DBLoggingEnabled:     a.env.DBLoggingEnabled,
+		Sender:               a.env.Sender,
+		Domain:               a.env.Domain,
+		QueueWaitMaxDuration: a.env.GobbleWaitMaxDuration,
+		CCHost:               a.env.CCHost,
 	})
 }
 
-func (app Application) StartMessageGC() {
+func (a Application) StartMessageGC() {
 	messageLifetime := 24 * time.Hour
-	db := app.mother.Database()
-	messagesRepo := app.mother.MessagesRepo()
+	db := a.mother.Database()
+	messagesRepo := a.mother.MessagesRepo()
 	pollingInterval := 1 * time.Hour
 
 	logger := log.New(os.Stdout, "", 0)
@@ -142,38 +164,36 @@ func (app Application) StartMessageGC() {
 	messageGC.Run()
 }
 
-func (app Application) StartServer(logger lager.Logger, validator *uaa.TokenValidator) {
-	web.NewServer().Run(app.mother, web.Config{
-		DBLoggingEnabled:     app.env.DBLoggingEnabled,
-		SkipVerifySSL:        !app.env.VerifySSL,
-		Port:                 app.env.Port,
+func (a Application) StartServer(logger lager.Logger, validator *uaa.TokenValidator) {
+	web.NewServer().Run(a.mother, web.Config{
+		DBLoggingEnabled:     a.env.DBLoggingEnabled,
+		SkipVerifySSL:        !a.env.VerifySSL,
+		Port:                 a.env.Port,
 		Logger:               logger,
-		CORSOrigin:           app.env.CORSOrigin,
-		SQLDB:                app.mother.SQLDatabase(),
-		QueueWaitMaxDuration: app.env.GobbleWaitMaxDuration,
+		CORSOrigin:           a.env.CORSOrigin,
+		SQLDB:                a.mother.SQLDatabase(),
+		QueueWaitMaxDuration: a.env.GobbleWaitMaxDuration,
 
 		UAATokenValidator: validator,
-		UAAHost:           app.env.UAAHost,
-		UAAClientID:       app.env.UAAClientID,
-		UAAClientSecret:   app.env.UAAClientSecret,
-		DefaultUAAScopes:  app.env.DefaultUAAScopes,
-		CCHost:            app.env.CCHost,
+		UAAHost:           a.env.UAAHost,
+		UAAClientID:       a.env.UAAClientID,
+		UAAClientSecret:   a.env.UAAClientSecret,
+		DefaultUAAScopes:  a.env.DefaultUAAScopes,
+		CCHost:            a.env.CCHost,
 	})
 }
 
 // This is a hack to get the logs output to the loggregator before the process exits
-func (app Application) Crash() {
-	logger := app.mother.Logger()
-
+func (a Application) Crash() {
 	err := recover()
 	switch err.(type) {
 	case error:
 		time.Sleep(5 * time.Second)
-		logger.Fatal("crash", err.(error))
+		a.logger.Fatal("crash", err.(error))
 	case nil:
 		return
 	default:
 		time.Sleep(5 * time.Second)
-		logger.Fatal("crash", nil)
+		a.logger.Fatal("crash", nil)
 	}
 }

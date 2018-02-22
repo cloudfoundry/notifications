@@ -3,7 +3,9 @@ package postal
 import (
 	"crypto/rand"
 	"database/sql"
+	"log"
 	"os"
+	"path"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
@@ -23,20 +25,9 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v2/horde"
 	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/cloudfoundry-incubator/notifications/v2/queue"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/pivotal-golang/conceal"
 	"github.com/pivotal-golang/lager"
 )
-
-type mother interface {
-	SQLDatabase() *sql.DB
-	Database() db.DatabaseInterface
-	MailClient() *mail.Client
-}
-
-type uaaTokenValidator interface {
-	Parse(token string) (*jwt.Token, error)
-}
 
 type Config struct {
 	UAAClientID          string
@@ -48,13 +39,26 @@ type Config struct {
 	WorkerCount          int
 	EncryptionKey        []byte
 	DBLoggingEnabled     bool
+	RootPath             string
 	Sender               string
 	Domain               string
 	QueueWaitMaxDuration int
 	CCHost               string
 }
 
-func Boot(mom mother, config Config) {
+func database(db *sql.DB, dbLoggingEnabled bool, rootPath string) db.DatabaseInterface {
+	database := v1models.NewDatabase(db, v1models.Config{
+		DefaultTemplatePath: path.Join(rootPath, "templates", "default.json"),
+	})
+
+	if dbLoggingEnabled {
+		database.TraceOn("[DB]", log.New(os.Stdout, "", 0))
+	}
+
+	return database
+}
+
+func Boot(mailClient func() *mail.Client, db *sql.DB, config Config) {
 	uaaClient := uaa.NewZonedUAAClient(config.UAAClientID, config.UAAClientSecret, config.VerifySSL, config.UAATokenValidator)
 
 	logger := lager.NewLogger("notifications")
@@ -62,10 +66,9 @@ func Boot(mom mother, config Config) {
 
 	clock := util.NewClock()
 
-	sqlDatabase := mom.SQLDatabase()
-	database := mom.Database()
+	database := database(db, config.DBLoggingEnabled, config.RootPath)
 
-	gobbleDatabase := gobble.NewDatabase(sqlDatabase)
+	gobbleDatabase := gobble.NewDatabase(db)
 	gobbleQueue := gobble.NewQueue(gobbleDatabase, clock, gobble.Config{
 		WaitMaxDuration: time.Duration(config.QueueWaitMaxDuration) * time.Millisecond,
 	})
@@ -110,7 +113,7 @@ func Boot(mom mother, config Config) {
 	spacesAudienceGenerator := horde.NewSpaces(findsUserIDs, organizationLoader, spaceLoader, tokenLoader, config.UAAHost)
 	orgsAudienceGenerator := horde.NewOrganizations(findsUserIDs, organizationLoader, tokenLoader, config.UAAHost)
 
-	v2database := v2models.NewDatabase(sqlDatabase, v2models.Config{})
+	v2database := v2models.NewDatabase(db, v2models.Config{})
 	v2messageStatusUpdater := v2.NewV2MessageStatusUpdater(messagesRepository)
 	unsubscribersRepository := v2models.NewUnsubscribersRepository(guidGenerator.Generate)
 	campaignsRepository := v2models.NewCampaignsRepository(guidGenerator.Generate, clock)
@@ -126,8 +129,6 @@ func Boot(mom mother, config Config) {
 		Count:         config.WorkerCount,
 	}.Work(func(index int) Worker {
 
-		mailClient := mom.MailClient()
-
 		v1DeliveryJobProcessor := v1.NewDeliveryJobProcessor(v1.DeliveryJobProcessorConfig{
 			DBTrace: config.DBLoggingEnabled,
 			UAAHost: config.UAAHost,
@@ -135,7 +136,7 @@ func Boot(mom mother, config Config) {
 			Domain:  config.Domain,
 
 			Packager:    packager,
-			MailClient:  mailClient,
+			MailClient:  mailClient(),
 			Database:    database,
 			TokenLoader: tokenLoader,
 			UserLoader:  userLoader,
@@ -148,9 +149,7 @@ func Boot(mom mother, config Config) {
 			DeliveryFailureHandler: deliveryFailureHandler,
 		})
 
-		v2mailClient := mom.MailClient()
-
-		v2DeliveryJobProcessor := v2.NewDeliveryJobProcessor(v2mailClient, common.NewPackager(v2TemplateLoader, cloak),
+		v2DeliveryJobProcessor := v2.NewDeliveryJobProcessor(mailClient(), common.NewPackager(v2TemplateLoader, cloak),
 			common.NewUserLoader(uaaClient), uaa.NewTokenLoader(uaaClient), v2messageStatusUpdater, v2database,
 			unsubscribersRepository, campaignsRepository, config.Sender, config.Domain, config.UAAHost, metricsEmitter)
 

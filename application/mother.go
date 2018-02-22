@@ -11,10 +11,8 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
-	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/util"
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
-	"github.com/pivotal-golang/lager"
 )
 
 type Mother struct {
@@ -39,36 +37,16 @@ func (m *Mother) Queue() gobble.QueueInterface {
 	})
 }
 
-func (m *Mother) MailClient() *mail.Client {
-	var authMechanism mail.AuthMechanism
-	switch m.env.SMTPAuthMechanism {
-	case SMTPAuthNone:
-		authMechanism = mail.AuthNone
-	case SMTPAuthPlain:
-		authMechanism = mail.AuthPlain
-	case SMTPAuthCRAMMD5:
-		authMechanism = mail.AuthCRAMMD5
+func (m *Mother) Database() db.DatabaseInterface {
+	database := v1models.NewDatabase(m.SQLDatabase(), v1models.Config{
+		DefaultTemplatePath: path.Join(m.env.RootPath, "templates", "default.json"),
+	})
+
+	if m.env.DBLoggingEnabled {
+		database.TraceOn("[DB]", log.New(os.Stdout, "", 0))
 	}
 
-	return mail.NewClient(mail.Config{
-		User:           m.env.SMTPUser,
-		Pass:           m.env.SMTPPass,
-		Host:           m.env.SMTPHost,
-		Port:           m.env.SMTPPort,
-		Secret:         m.env.SMTPCRAMMD5Secret,
-		TestMode:       m.env.TestMode,
-		SkipVerifySSL:  !m.env.VerifySSL,
-		DisableTLS:     !m.env.SMTPTLS,
-		LoggingEnabled: m.env.SMTPLoggingEnabled,
-		AuthMechanism:  authMechanism,
-	})
-}
-
-func (m *Mother) Logger() lager.Logger {
-	logger := lager.NewLogger("notifications")
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
-
-	return logger
+	return database
 }
 
 func (m *Mother) SQLDatabase() *sql.DB {
@@ -92,18 +70,6 @@ func (m *Mother) SQLDatabase() *sql.DB {
 	m.sqlDB.SetMaxOpenConns(m.env.DBMaxOpenConns)
 
 	return m.sqlDB
-}
-
-func (m *Mother) Database() db.DatabaseInterface {
-	database := v1models.NewDatabase(m.SQLDatabase(), v1models.Config{
-		DefaultTemplatePath: path.Join(m.env.RootPath, "templates", "default.json"),
-	})
-
-	if m.env.DBLoggingEnabled {
-		database.TraceOn("[DB]", log.New(os.Stdout, "", 0))
-	}
-
-	return database
 }
 
 func (m *Mother) MessagesRepo() v1models.MessagesRepo {

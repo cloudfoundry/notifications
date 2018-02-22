@@ -419,7 +419,7 @@ var _ = Describe("Mail", func() {
 	Describe("AuthMechanism", func() {
 		Context("when configured to use PLAIN auth", func() {
 			BeforeEach(func() {
-				config.AuthMechanism = mail.AuthPlain
+				config.SMTPAuthMechanism = mail.SMTPAuthPlain
 				client = mail.NewClient(config)
 			})
 
@@ -433,7 +433,7 @@ var _ = Describe("Mail", func() {
 
 		Context("when configured to use CRAMMD5 auth", func() {
 			BeforeEach(func() {
-				config.AuthMechanism = mail.AuthCRAMMD5
+				config.SMTPAuthMechanism = mail.SMTPAuthCRAMMD5
 				client = mail.NewClient(config)
 			})
 
@@ -447,7 +447,7 @@ var _ = Describe("Mail", func() {
 
 		Context("when configured to use no auth", func() {
 			BeforeEach(func() {
-				config.AuthMechanism = mail.AuthNone
+				config.SMTPAuthMechanism = mail.SMTPAuthNone
 				client = mail.NewClient(config)
 			})
 

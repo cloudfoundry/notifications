@@ -13,8 +13,8 @@ func main() {
 	}
 
 	mother := application.NewMother(env)
-	app := application.NewApplication(env, mother)
+	app := application.New(env, mother)
 	defer app.Crash()
 
-	app.Boot()
+	app.Run()
 }

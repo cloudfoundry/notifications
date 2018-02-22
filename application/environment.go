@@ -7,16 +7,9 @@ import (
 	"path"
 	"strings"
 
+	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/ryanmoran/viron"
 )
-
-const (
-	SMTPAuthNone    = "none"
-	SMTPAuthPlain   = "plain"
-	SMTPAuthCRAMMD5 = "cram-md5"
-)
-
-var SMTPAuthMechanisms = []string{SMTPAuthNone, SMTPAuthPlain, SMTPAuthCRAMMD5}
 
 type Environment struct {
 	CCHost                string `env:"CC_HOST"                  env-required:"true"`
@@ -119,11 +112,11 @@ func (env *Environment) parseDatabaseURL() error {
 }
 
 func (env *Environment) validateSMTPAuthMechanism() error {
-	for _, mechanism := range SMTPAuthMechanisms {
+	for _, mechanism := range mail.SMTPAuthMechanisms {
 		if mechanism == env.SMTPAuthMechanism {
 			return nil
 		}
 	}
 
-	return fmt.Errorf("Could not parse SMTP_AUTH_MECHANISM %q, it is not one of the allowed values: %+v", env.SMTPAuthMechanism, SMTPAuthMechanisms)
+	return fmt.Errorf("Could not parse SMTP_AUTH_MECHANISM %q, it is not one of the allowed values: %+v", env.SMTPAuthMechanism, mail.SMTPAuthMechanisms)
 }
