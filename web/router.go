@@ -3,16 +3,11 @@ package web
 import (
 	"net/http"
 
-	"github.com/cloudfoundry-incubator/notifications/gobble"
 	v1web "github.com/cloudfoundry-incubator/notifications/v1/web"
 	v2web "github.com/cloudfoundry-incubator/notifications/v2/web"
 )
 
-type MotherInterface interface {
-	Queue() gobble.QueueInterface
-}
-
-func NewRouter(mother MotherInterface, config Config) http.Handler {
+func NewRouter(config Config) http.Handler {
 	v1 := v1web.NewRouter(NewMuxer(), v1web.Config{
 		UAATokenValidator: config.UAATokenValidator,
 		UAAClientID:       config.UAAClientID,
@@ -31,7 +26,7 @@ func NewRouter(mother MotherInterface, config Config) http.Handler {
 		SkipVerifySSL:     config.SkipVerifySSL,
 		SQLDB:             config.SQLDB,
 		Logger:            config.Logger,
-		Queue:             mother.Queue(),
+		Queue:             config.Queue,
 		UAATokenValidator: config.UAATokenValidator,
 		UAAHost:           config.UAAHost,
 		UAAClientID:       config.UAAClientID,

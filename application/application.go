@@ -20,23 +20,23 @@ import (
 const WorkerCount = 10
 
 type Application struct {
-	env      Environment
-	logger   lager.Logger
-	mother   *Mother
-	migrator Migrator
+	env        Environment
+	logger     lager.Logger
+	dbProvider *DBProvider
+	migrator   Migrator
 }
 
-func New(env Environment, mother *Mother) Application {
+func New(env Environment, dbp *DBProvider) Application {
 	databaseMigrator := models.DatabaseMigrator{}
 
 	l := lager.NewLogger("notifications")
 	l.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
 
 	return Application{
-		env:      env,
-		logger:   l,
-		mother:   mother,
-		migrator: NewMigrator(mother, databaseMigrator, env.VCAPApplication.InstanceIndex == 0, env.ModelMigrationsPath, env.GobbleMigrationsPath, path.Join(env.RootPath, "templates", "default.json")),
+		env:        env,
+		logger:     l,
+		dbProvider: dbp,
+		migrator:   NewMigrator(dbp, databaseMigrator, env.VCAPApplication.InstanceIndex == 0, env.ModelMigrationsPath, env.GobbleMigrationsPath, path.Join(env.RootPath, "templates", "default.json")),
 	}
 }
 
@@ -113,7 +113,7 @@ func (a Application) StartQueueGauge() {
 		return
 	}
 
-	queueGauge := metrics.NewQueueGauge(a.mother.Queue(), metrics.DefaultLogger, time.Tick(1*time.Second))
+	queueGauge := metrics.NewQueueGauge(a.dbProvider.Queue(), metrics.DefaultLogger, time.Tick(1*time.Second))
 	go queueGauge.Run()
 }
 
@@ -135,7 +135,7 @@ func (a Application) StartKeyRefresher(validator *uaa.TokenValidator) {
 }
 
 func (a Application) StartWorkers(validator *uaa.TokenValidator) {
-	postal.Boot(a.mailClient, a.mother.SQLDatabase(), postal.Config{
+	postal.Boot(a.mailClient, a.dbProvider.sqlDB, postal.Config{
 		UAAClientID:          a.env.UAAClientID,
 		UAAClientSecret:      a.env.UAAClientSecret,
 		UAATokenValidator:    validator,
@@ -155,8 +155,8 @@ func (a Application) StartWorkers(validator *uaa.TokenValidator) {
 
 func (a Application) StartMessageGC() {
 	messageLifetime := 24 * time.Hour
-	db := a.mother.Database()
-	messagesRepo := a.mother.MessagesRepo()
+	db := a.dbProvider.Database()
+	messagesRepo := a.dbProvider.MessagesRepo()
 	pollingInterval := 1 * time.Hour
 
 	logger := log.New(os.Stdout, "", 0)
@@ -165,13 +165,14 @@ func (a Application) StartMessageGC() {
 }
 
 func (a Application) StartServer(logger lager.Logger, validator *uaa.TokenValidator) {
-	web.NewServer().Run(a.mother, web.Config{
+	web.NewServer().Run(web.Config{
 		DBLoggingEnabled:     a.env.DBLoggingEnabled,
 		SkipVerifySSL:        !a.env.VerifySSL,
 		Port:                 a.env.Port,
 		Logger:               logger,
 		CORSOrigin:           a.env.CORSOrigin,
-		SQLDB:                a.mother.SQLDatabase(),
+		SQLDB:                a.dbProvider.sqlDB,
+		Queue:                a.dbProvider.Queue(),
 		QueueWaitMaxDuration: a.env.GobbleWaitMaxDuration,
 
 		UAATokenValidator: validator,

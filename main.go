@@ -12,8 +12,8 @@ func main() {
 		log.Fatalf("CRASHING: %s\n", err)
 	}
 
-	mother := application.NewMother(env)
-	app := application.New(env, mother)
+	dbp := application.NewDBProvider(env)
+	app := application.New(env, dbp)
 	defer app.Crash()
 
 	app.Run()

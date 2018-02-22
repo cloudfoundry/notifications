@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/pivotal-golang/lager"
 )
@@ -16,6 +17,7 @@ type Config struct {
 	CORSOrigin           string
 	QueueWaitMaxDuration int
 	SQLDB                *sql.DB
+	Queue                gobble.QueueInterface
 	Logger               lager.Logger
 
 	UAATokenValidator *uaa.TokenValidator
@@ -32,10 +34,10 @@ func NewServer() Server {
 	return Server{}
 }
 
-func (s Server) Run(mother MotherInterface, config Config) {
+func (s Server) Run(config Config) {
 	config.Logger.Info("listen-and-serve", lager.Data{
 		"port": config.Port,
 	})
 
-	http.ListenAndServe(":"+strconv.Itoa(config.Port), NewRouter(mother, config))
+	http.ListenAndServe(":"+strconv.Itoa(config.Port), NewRouter(config))
 }
