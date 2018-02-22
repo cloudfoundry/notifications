@@ -14,7 +14,6 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/web"
 	"github.com/pivotal-cf-experimental/warrant"
 	"github.com/pivotal-golang/lager"
-	"github.com/ryanmoran/viron"
 )
 
 const WorkerCount = 10
@@ -36,8 +35,6 @@ func NewApplication(env Environment, mother *Mother) Application {
 
 func (app Application) Boot() {
 	session := app.mother.Logger().Session("boot")
-
-	viron.Print(app.env, vironCompatibleLogger{session})
 
 	app.ConfigureSMTP(session)
 
@@ -178,19 +175,5 @@ func (app Application) Crash() {
 	default:
 		time.Sleep(5 * time.Second)
 		logger.Fatal("crash", nil)
-	}
-}
-
-type vironCompatibleLogger struct {
-	logger lager.Logger
-}
-
-func (l vironCompatibleLogger) Printf(format string, v ...interface{}) {
-	if len(v) == 2 {
-		key, ok := v[0].(string)
-		value := v[1]
-		if ok {
-			l.logger.Info("viron", lager.Data{key: value})
-		}
 	}
 }
