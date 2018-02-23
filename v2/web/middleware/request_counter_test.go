@@ -2,7 +2,6 @@ package middleware_test
 
 import (
 	"bytes"
-	"log"
 	"net/http"
 	"net/http/httptest"
 
@@ -11,6 +10,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/rcrowley/go-metrics"
 )
 
 var _ = Describe("RequestCounter", func() {
@@ -32,7 +32,7 @@ var _ = Describe("RequestCounter", func() {
 		matcher.HandleFunc(path, func(http.ResponseWriter, *http.Request) {}).Name("GET " + path)
 		buffer = bytes.NewBuffer([]byte{})
 
-		ware = middleware.NewRequestCounter(matcher, log.New(buffer, "", 0))
+		ware = middleware.NewRequestCounter(matcher)
 	})
 
 	It("logs a request hit for a matching route", func() {
@@ -40,14 +40,7 @@ var _ = Describe("RequestCounter", func() {
 
 		Expect(result).To(BeTrue())
 
-		Expect(buffer).To(MatchJSON(`{
-			"kind": "counter",
-			"payload": {
-				"name": "notifications.web",
-				"tags": {
-					"endpoint": "GET/clients/:client_id/notifications/:notification_id"
-				}
-			}
-		}`))
+		counter := metrics.GetOrRegisterCounter("notifications.web.GET./clients/:client_id/notifications/:notification_id", nil)
+		Expect(counter.Count()).To(BeEquivalentTo(1))
 	})
 })

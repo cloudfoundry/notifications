@@ -15,6 +15,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/rcrowley/go-metrics"
 )
 
 var _ = Describe("DeliveryJobProcessor", func() {
@@ -32,7 +33,6 @@ var _ = Describe("DeliveryJobProcessor", func() {
 		delivery                common.Delivery
 		campaignsRepository     *mocks.CampaignsRepository
 		unsubscribersRepository *mocks.UnsubscribersRepository
-		metricsEmitter          *mocks.MetricsEmitter
 	)
 
 	BeforeEach(func() {
@@ -135,11 +135,11 @@ var _ = Describe("DeliveryJobProcessor", func() {
 			CampaignID:    "some-campaign-id",
 		}
 
-		metricsEmitter = mocks.NewMetricsEmitter()
+		metrics.DefaultRegistry.UnregisterAll()
 
 		processor = v2.NewDeliveryJobProcessor(mailClient, packager, userLoader, tokenLoader,
 			messageStatusUpdater, database, unsubscribersRepository, campaignsRepository,
-			"from@example.com", "example.com", "uaa-host", metricsEmitter)
+			"from@example.com", "example.com", "uaa-host")
 	})
 
 	It("ensures message delivery", func() {
@@ -193,7 +193,7 @@ var _ = Describe("DeliveryJobProcessor", func() {
 		err := processor.Process(delivery, logger)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(metricsEmitter.IncrementCall.Receives.Counter).To(Equal("notifications.worker.delivered"))
+		Expect(metrics.GetOrRegisterCounter("notifications.worker.delivered", nil).Count()).To(BeEquivalentTo(1))
 	})
 
 	Context("when the delivery does not have a user GUID", func() {
@@ -338,7 +338,8 @@ var _ = Describe("DeliveryJobProcessor", func() {
 		})
 
 		It("emits a metric indicating the unsubscription", func() {
-			Expect(metricsEmitter.IncrementCall.Receives.Counter).To(Equal("notifications.worker.unsubscribed"))
+			c := metrics.GetOrRegisterCounter("notifications.worker.unsubscribed", nil)
+			Expect(c.Count()).To(BeEquivalentTo(1))
 		})
 	})
 

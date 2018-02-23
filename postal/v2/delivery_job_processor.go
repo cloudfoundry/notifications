@@ -9,6 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v2/models"
 	"github.com/pivotal-golang/lager"
+	"github.com/rcrowley/go-metrics"
 )
 
 type tokenLoader interface {
@@ -41,10 +42,6 @@ type campaignsRepositoryInterface interface {
 	Get(connection models.ConnectionInterface, campaignID string) (models.Campaign, error)
 }
 
-type metricsEmitter interface {
-	Increment(counter string)
-}
-
 type DeliveryJobProcessor struct {
 	mailClient              mailSender
 	packager                messagePackager
@@ -57,12 +54,11 @@ type DeliveryJobProcessor struct {
 	sender                  string
 	domain                  string
 	uaaHost                 string
-	metricsEmitter          metricsEmitter
 }
 
 func NewDeliveryJobProcessor(mailClient mailSender, packager messagePackager, userLoader userLoader, tokenLoader tokenLoader,
 	messageStatusUpdater messageStatusUpdater, database db.DatabaseInterface, unsubscribersRepository unsubscribersRepositoryInterface,
-	campaignsRepository campaignsRepositoryInterface, sender, domain, uaaHost string, metricsEmitter metricsEmitter) DeliveryJobProcessor {
+	campaignsRepository campaignsRepositoryInterface, sender, domain, uaaHost string) DeliveryJobProcessor {
 
 	return DeliveryJobProcessor{
 		mailClient:              mailClient,
@@ -76,7 +72,6 @@ func NewDeliveryJobProcessor(mailClient mailSender, packager messagePackager, us
 		sender:                  sender,
 		domain:                  domain,
 		uaaHost:                 uaaHost,
-		metricsEmitter:          metricsEmitter,
 	}
 }
 
@@ -97,7 +92,7 @@ func (p DeliveryJobProcessor) Process(delivery common.Delivery, logger lager.Log
 
 	if unsubscriber.ID != "" {
 		p.messageStatusUpdater.Update(conn, delivery.MessageID, common.StatusDelivered, delivery.CampaignID, logger)
-		p.metricsEmitter.Increment("notifications.worker.unsubscribed")
+		metrics.GetOrRegisterCounter("notifications.worker.unsubscribed", nil).Inc(1)
 		return nil
 	}
 
@@ -144,8 +139,6 @@ func (p DeliveryJobProcessor) Process(delivery common.Delivery, logger lager.Log
 	}
 
 	p.messageStatusUpdater.Update(conn, delivery.MessageID, common.StatusDelivered, delivery.CampaignID, logger)
-
-	p.metricsEmitter.Increment("notifications.worker.delivered")
-
+	metrics.GetOrRegisterCounter("notifications.worker.delivered", nil).Inc(1)
 	return nil
 }

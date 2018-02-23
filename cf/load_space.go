@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/pivotal-cf-experimental/rainmaker"
+	"github.com/rcrowley/go-metrics"
 )
 
 func (cc CloudController) LoadSpace(spaceGuid, token string) (CloudControllerSpace, error) {
@@ -21,12 +21,7 @@ func (cc CloudController) LoadSpace(spaceGuid, token string) (CloudControllerSpa
 		}
 	}
 
-	duration := time.Now().Sub(then)
-
-	metrics.NewMetric("histogram", map[string]interface{}{
-		"name":  "notifications.external-requests.cc.space",
-		"value": duration.Seconds(),
-	}).Log()
+	metrics.GetOrRegisterTimer("notifications.external-requests.cc.space", nil).Update(time.Since(then))
 
 	return CloudControllerSpace{
 		GUID:             space.GUID,

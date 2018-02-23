@@ -5,10 +5,10 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/pivotal-golang/lager"
+	"github.com/rcrowley/go-metrics"
 )
 
 type v1DeliveryJobProcessor interface {
@@ -81,9 +81,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 
 	err := job.Unmarshal(&typedJob)
 	if err != nil {
-		metrics.NewMetric("counter", map[string]interface{}{
-			"name": "notifications.worker.panic.json",
-		}).Log()
+		metrics.GetOrRegisterCounter("notifications.worker.panic.json", nil).Inc(1)
 
 		worker.deliveryFailureHandler.Handle(job, worker.logger)
 		return

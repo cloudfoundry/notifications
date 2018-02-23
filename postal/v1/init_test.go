@@ -3,23 +3,15 @@ package v1_test
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"testing"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 func TestV1Suite(t *testing.T) {
-	buffer := bytes.NewBuffer([]byte{})
-	metricsLogger := metrics.DefaultLogger
-	metrics.DefaultLogger = log.New(buffer, "", 0)
-
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "postal/v1")
-
-	metrics.DefaultLogger = metricsLogger
 }
 
 type logLine struct {

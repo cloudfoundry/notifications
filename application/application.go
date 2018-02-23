@@ -7,8 +7,8 @@ import (
 	"path"
 	"time"
 
+	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -113,7 +113,7 @@ func (a Application) StartQueueGauge() {
 		return
 	}
 
-	queueGauge := metrics.NewQueueGauge(a.dbProvider.Queue(), metrics.DefaultLogger, time.Tick(1*time.Second))
+	queueGauge := gobble.NewQueueGauge(a.dbProvider.Queue(), time.Tick(time.Minute))
 	go queueGauge.Run()
 }
 

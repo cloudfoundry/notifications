@@ -1,12 +1,13 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"fmt"
+
 	"github.com/gorilla/mux"
+	"github.com/rcrowley/go-metrics"
 	"github.com/ryanmoran/stack"
 )
 
@@ -16,13 +17,11 @@ type routeMatcher interface {
 
 type RequestCounter struct {
 	matcher routeMatcher
-	logger  *log.Logger
 }
 
-func NewRequestCounter(matcher routeMatcher, logger *log.Logger) RequestCounter {
+func NewRequestCounter(matcher routeMatcher) RequestCounter {
 	return RequestCounter{
 		matcher: matcher,
-		logger:  logger,
 	}
 }
 
@@ -34,13 +33,7 @@ func (ware RequestCounter) ServeHTTP(w http.ResponseWriter, req *http.Request, c
 		path = convertNameToMetricPath(name)
 	}
 
-	m := metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.web",
-		"tags": map[string]string{
-			"endpoint": req.Method + path,
-		},
-	})
-	m.LogWith(ware.logger)
+	metrics.GetOrRegisterCounter(fmt.Sprintf("notifications.web.%s.%s", req.Method, path), nil).Inc(1)
 
 	return true
 }

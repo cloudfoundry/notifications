@@ -6,11 +6,11 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/pivotal-golang/lager"
+	"github.com/rcrowley/go-metrics"
 )
 
 type tokenLoader interface {
@@ -116,9 +116,7 @@ func (p DeliveryJobProcessor) Process(job *gobble.Job, logger lager.Logger) erro
 	var delivery common.Delivery
 	err := job.Unmarshal(&delivery)
 	if err != nil {
-		metrics.NewMetric("counter", map[string]interface{}{
-			"name": "notifications.worker.panic.json",
-		}).Log()
+		metrics.GetOrRegisterCounter("notifications.worker.panic.json", nil).Inc(1)
 
 		p.deliveryFailureHandler.Handle(job, logger)
 		return nil
@@ -171,14 +169,10 @@ func (p DeliveryJobProcessor) Process(job *gobble.Job, logger lager.Logger) erro
 			p.deliveryFailureHandler.Handle(job, logger)
 			return nil
 		} else {
-			metrics.NewMetric("counter", map[string]interface{}{
-				"name": "notifications.worker.delivered",
-			}).Log()
+			metrics.GetOrRegisterCounter("notifications.worker.delivered", nil).Inc(1)
 		}
 	} else {
-		metrics.NewMetric("counter", map[string]interface{}{
-			"name": "notifications.worker.unsubscribed",
-		}).Log()
+		metrics.GetOrRegisterCounter("notifications.worker.unsubscribed", nil).Inc(1)
 	}
 
 	return nil

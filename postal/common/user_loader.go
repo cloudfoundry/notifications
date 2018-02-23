@@ -3,8 +3,8 @@ package common
 import (
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
+	metrics "github.com/rcrowley/go-metrics"
 )
 
 type uaaEmailGetter interface {
@@ -48,12 +48,7 @@ func (loader UserLoader) fetchUsersByIDs(token string, guids []string) ([]uaa.Us
 
 	usersByIDs, err := loader.uaaClient.UsersEmailsByIDs(token, guids...)
 
-	duration := time.Now().Sub(then)
-
-	metrics.NewMetric("histogram", map[string]interface{}{
-		"name":  "notifications.external-requests.uaa.users-email",
-		"value": duration.Seconds(),
-	}).Log()
+	metrics.GetOrRegisterTimer("notifications.external-requests.uaa.users-email", nil).Update(time.Since(then))
 
 	return usersByIDs, err
 }

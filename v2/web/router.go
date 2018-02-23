@@ -7,7 +7,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/util"
 	"github.com/cloudfoundry-incubator/notifications/v2/collections"
@@ -59,7 +58,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	clock := util.NewClock()
 	guidGenerator := util.NewIDGenerator(rand.Reader)
 
-	requestCounter := middleware.NewRequestCounter(mx.GetRouter(), metrics.DefaultLogger)
+	requestCounter := middleware.NewRequestCounter(mx.GetRouter())
 	requestLogging := middleware.NewRequestLogging(config.Logger, clock)
 	notificationsWriteAuthenticator := middleware.NewAuthenticator(config.UAATokenValidator, "notifications.write")
 	notificationsAdminAuthenticator := middleware.NewAuthenticator(config.UAATokenValidator, "notifications.admin")

@@ -3,7 +3,7 @@ package uaa
 import (
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
+	metrics "github.com/rcrowley/go-metrics"
 )
 
 type uaaClient interface {
@@ -25,11 +25,6 @@ func (t *TokenLoader) Load(uaaHost string) (string, error) {
 
 	token, err := t.uaa.GetClientToken(uaaHost)
 
-	duration := time.Now().Sub(then)
-
-	metrics.NewMetric("histogram", map[string]interface{}{
-		"name":  "notifications.external-requests.uaa.client-token",
-		"value": duration.Seconds(),
-	}).Log()
+	metrics.GetOrRegisterTimer("notifications.external-requests.uaa.client-token", nil).Update(time.Since(then))
 	return token, err
 }

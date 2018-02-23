@@ -4,8 +4,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/pivotal-golang/lager"
+	"github.com/rcrowley/go-metrics"
 )
 
 type Retryable interface {
@@ -34,8 +34,5 @@ func (h DeliveryFailureHandler) Handle(job Retryable, logger lager.Logger) {
 		"active_at":   activeAt.Format(time.RFC3339),
 	})
 
-	// TODO: (rm) find way to test this without having to mock out globals
-	metrics.NewMetric("counter", map[string]interface{}{
-		"name": "notifications.worker.retry",
-	}).Log()
+	metrics.GetOrRegisterCounter("notifications.worker.retry", nil).Inc(1)
 }

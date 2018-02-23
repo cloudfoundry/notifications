@@ -3,23 +3,15 @@ package common_test
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"testing"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 func TestCommonSuite(t *testing.T) {
-	buffer := bytes.NewBuffer([]byte{})
-	metricsLogger := metrics.DefaultLogger
-	metrics.DefaultLogger = log.New(buffer, "", 0)
-
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "postal/common")
-
-	metrics.DefaultLogger = metricsLogger
 }
 
 type logLine struct {

@@ -3,7 +3,7 @@ package cf
 import (
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
+	"github.com/rcrowley/go-metrics"
 )
 
 func (cc CloudController) GetUsersBySpaceGuid(guid, token string) ([]CloudControllerUser, error) {
@@ -14,12 +14,7 @@ func (cc CloudController) GetUsersBySpaceGuid(guid, token string) ([]CloudContro
 		return []CloudControllerUser{}, NewFailure(0, err.Error())
 	}
 
-	duration := time.Now().Sub(then)
-
-	metrics.NewMetric("histogram", map[string]interface{}{
-		"name":  "notifications.external-requests.cc.users-by-space-guid",
-		"value": duration.Seconds(),
-	}).Log()
+	metrics.GetOrRegisterTimer("notifications.external-requests.cc.users-by-space-guid", nil).Update(time.Since(then))
 
 	ccUsers := []CloudControllerUser{}
 	for _, user := range list.Users {

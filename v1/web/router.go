@@ -8,7 +8,6 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/util"
 	"github.com/cloudfoundry-incubator/notifications/v1/collections"
@@ -25,6 +24,8 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/gorilla/mux"
 	"github.com/pivotal-golang/lager"
+	metrics "github.com/rcrowley/go-metrics"
+	"github.com/rcrowley/go-metrics/exp"
 	"github.com/ryanmoran/stack"
 )
 
@@ -49,6 +50,8 @@ type Config struct {
 }
 
 func NewRouter(mx muxer, config Config) http.Handler {
+	mx.GetRouter().Handle("/debug/metrics", exp.ExpHandler(metrics.DefaultRegistry)).Methods("GET")
+
 	guidGenerator := util.NewIDGenerator(rand.Reader)
 	clock := util.NewClock()
 
@@ -98,7 +101,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	errorWriter := webutil.NewErrorWriter()
 
-	requestCounter := middleware.NewRequestCounter(mx.GetRouter(), metrics.DefaultLogger)
+	requestCounter := middleware.NewRequestCounter(mx.GetRouter())
 	requestLogging := middleware.NewRequestLogging(config.Logger, clock)
 	databaseAllocator := middleware.NewDatabaseAllocator(config.SQLDB, config.DBLoggingEnabled)
 	cors := middleware.NewCORS(config.CORSOrigin)

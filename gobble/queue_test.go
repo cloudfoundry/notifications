@@ -278,33 +278,4 @@ var _ = Describe("Queue", func() {
 			Expect(length).To(Equal(0))
 		})
 	})
-
-	Describe("RetryQueueLengths", func() {
-		It("returns information about the length of the queue grouped by retry count", func() {
-			_, err := queue.Enqueue(&gobble.Job{}, database.Connection)
-			Expect(err).NotTo(HaveOccurred())
-
-			for i := 0; i < 3; i++ {
-				_, err = queue.Enqueue(&gobble.Job{RetryCount: 1}, database.Connection)
-				Expect(err).NotTo(HaveOccurred())
-			}
-
-			_, err = queue.Enqueue(&gobble.Job{RetryCount: 4}, database.Connection)
-			Expect(err).NotTo(HaveOccurred())
-
-			for i := 0; i < 2; i++ {
-				_, err = queue.Enqueue(&gobble.Job{RetryCount: 5}, database.Connection)
-				Expect(err).NotTo(HaveOccurred())
-			}
-
-			lengths, err := queue.RetryQueueLengths()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(lengths).To(Equal(map[int]int{
-				0: 1,
-				1: 3,
-				4: 1,
-				5: 2,
-			}))
-		})
-	})
 })

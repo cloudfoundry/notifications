@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/metrics"
 	"github.com/pivotal-cf-experimental/rainmaker"
+	metrics "github.com/rcrowley/go-metrics"
 )
 
 func (cc CloudController) LoadOrganization(guid, token string) (CloudControllerOrganization, error) {
@@ -21,12 +21,7 @@ func (cc CloudController) LoadOrganization(guid, token string) (CloudControllerO
 		}
 	}
 
-	duration := time.Now().Sub(then)
-
-	metrics.NewMetric("histogram", map[string]interface{}{
-		"name":  "notifications.external-requests.cc.organization",
-		"value": duration.Seconds(),
-	}).Log()
+	metrics.GetOrRegisterTimer("notifications.external-requests.cc.organization", nil).Update(time.Since(then))
 
 	return CloudControllerOrganization{
 		GUID: org.GUID,
