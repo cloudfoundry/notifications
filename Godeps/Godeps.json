@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/cloudfoundry-incubator/notifications",
-	"GoVersion": "go1.8",
-	"GodepVersion": "v77",
+	"GoVersion": "go1.9",
+	"GodepVersion": "v80",
 	"Packages": [
 		"./..."
 	],
@@ -286,6 +286,10 @@
 			"ImportPath": "gopkg.in/gorp.v1",
 			"Comment": "v1.7.1",
 			"Rev": "c87af80f3cc5036b55b83d77171e156791085e2e"
+		},
+		{
+			"ImportPath": "github.com/rcrowley/go-metrics",
+			"Rev": "e181e095bae94582363434144c61a9653aff6e50"
 		}
 	]
 }
