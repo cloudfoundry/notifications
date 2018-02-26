@@ -82,23 +82,21 @@ func (s *Notifications) Boot() {
 	if err != nil {
 		panic(err)
 	}
-	s.Ping()
+	s.waitForStart()
 }
 
-func (s Notifications) Ping() {
-	timer := time.After(0 * time.Second)
+func (s Notifications) waitForStart() {
+	timer := time.Tick(1 * time.Second)
 	timeout := time.After(10 * time.Second)
 	for {
 		select {
 		case <-timeout:
 			panic("Failed to boot!")
 		case <-timer:
-			_, err := http.Get("http://localhost:" + s.port + "/info")
-			if err == nil {
+			resp, err := http.Get("http://localhost:" + s.port + "/info")
+			if err == nil && resp.StatusCode == http.StatusOK {
 				return
 			}
-
-			timer = time.After(1 * time.Second)
 		}
 	}
 }

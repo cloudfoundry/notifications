@@ -3,7 +3,8 @@ package web
 import (
 	"database/sql"
 	"net/http"
-	"strconv"
+
+	"fmt"
 
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
@@ -39,5 +40,5 @@ func (s Server) Run(config Config) {
 		"port": config.Port,
 	})
 
-	http.ListenAndServe(":"+strconv.Itoa(config.Port), NewRouter(config))
+	http.ListenAndServe(fmt.Sprintf(":%d", config.Port), NewRouter(config))
 }

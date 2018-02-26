@@ -50,8 +50,6 @@ type Config struct {
 }
 
 func NewRouter(mx muxer, config Config) http.Handler {
-	mx.GetRouter().Handle("/debug/metrics", exp.ExpHandler(metrics.DefaultRegistry)).Methods("GET")
-
 	guidGenerator := util.NewIDGenerator(rand.Reader)
 	clock := util.NewClock()
 
@@ -108,6 +106,8 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	auth := func(scope ...string) middleware.Authenticator {
 		return middleware.NewAuthenticator(config.UAATokenValidator, scope...)
 	}
+
+	mx.GetRouter().Handle("/debug/metrics", exp.ExpHandler(metrics.DefaultRegistry)).Methods("GET")
 
 	info.Routes{
 		RequestCounter: requestCounter,
