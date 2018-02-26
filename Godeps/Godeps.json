@@ -2,20 +2,7 @@
 	"ImportPath": "github.com/cloudfoundry-incubator/notifications",
 	"GoVersion": "go1.9",
 	"GodepVersion": "v80",
-	"Packages": [
-		"./..."
-	],
 	"Deps": [
-		{
-			"ImportPath": "bitbucket.org/chrj/smtpd",
-			"Comment": "null-24",
-			"Rev": "10bcb042194e344946fc7d9a6dad3cd87c05ec04"
-		},
-		{
-			"ImportPath": "github.com/DATA-DOG/go-sqlmock",
-			"Comment": "0.1.0-5-g5d1551f",
-			"Rev": "5d1551fda1604432bc39198b733897e07f6ee6e9"
-		},
 		{
 			"ImportPath": "github.com/PuerkitoBio/goquery",
 			"Comment": "v0.3.2-72-g269246d",
@@ -44,141 +31,6 @@
 			"Rev": "9ede152210fa25c1377d33e867cb828c19316445"
 		},
 		{
-			"ImportPath": "github.com/onsi/ginkgo",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/config",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/codelocation",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/containernode",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/failer",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/leafnodes",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/remote",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/spec",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/specrunner",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/suite",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/testingtproxy",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/writer",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/reporters",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/reporters/stenographer",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/types",
-			"Comment": "v1.1.0-32-g291f28e",
-			"Rev": "291f28e66dd277f35d3635990a7448759645c7e7"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega",
-			"Comment": "v1.0-50-gd6c945f",
-			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/format",
-			"Comment": "v1.0-50-gd6c945f",
-			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/gbytes",
-			"Comment": "v1.0-50-gd6c945f",
-			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/internal/assertion",
-			"Comment": "v1.0-50-gd6c945f",
-			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/internal/asyncassertion",
-			"Comment": "v1.0-50-gd6c945f",
-			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/internal/testingtsupport",
-			"Comment": "v1.0-50-gd6c945f",
-			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/matchers",
-			"Comment": "v1.0-50-gd6c945f",
-			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/bipartitegraph",
-			"Comment": "v1.0-50-gd6c945f",
-			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/edge",
-			"Comment": "v1.0-50-gd6c945f",
-			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/node",
-			"Comment": "v1.0-50-gd6c945f",
-			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/util",
-			"Comment": "v1.0-50-gd6c945f",
-			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/types",
-			"Comment": "v1.0-50-gd6c945f",
-			"Rev": "d6c945f9fdbf6cad99e85b0feff591caa268e0db"
-		},
-		{
 			"ImportPath": "github.com/pivotal-cf-experimental/rainmaker",
 			"Rev": "d533d01b7c52e51433fe565276ca570c2a0753fc"
 		},
@@ -203,34 +55,6 @@
 			"Rev": "e3c3c7f4dbd0e97d4459ed67375f9b420fb4c4e9"
 		},
 		{
-			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/server/clients",
-			"Rev": "e3c3c7f4dbd0e97d4459ed67375f9b420fb4c4e9"
-		},
-		{
-			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/server/common",
-			"Rev": "e3c3c7f4dbd0e97d4459ed67375f9b420fb4c4e9"
-		},
-		{
-			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/server/domain",
-			"Rev": "e3c3c7f4dbd0e97d4459ed67375f9b420fb4c4e9"
-		},
-		{
-			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/server/groups",
-			"Rev": "e3c3c7f4dbd0e97d4459ed67375f9b420fb4c4e9"
-		},
-		{
-			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/server/tokens",
-			"Rev": "e3c3c7f4dbd0e97d4459ed67375f9b420fb4c4e9"
-		},
-		{
-			"ImportPath": "github.com/pivotal-cf-experimental/warrant/internal/server/users",
-			"Rev": "e3c3c7f4dbd0e97d4459ed67375f9b420fb4c4e9"
-		},
-		{
-			"ImportPath": "github.com/pivotal-cf-experimental/warrant/testserver",
-			"Rev": "e3c3c7f4dbd0e97d4459ed67375f9b420fb4c4e9"
-		},
-		{
 			"ImportPath": "github.com/pivotal-cf/uaa-sso-golang/uaa",
 			"Rev": "0b91e8ad4bb6b9e71a6316e1bb6de7414c0e01b2"
 		},
@@ -243,8 +67,12 @@
 			"Rev": "c88fa6d6c4d2f8a21a4599785211e41777750d34"
 		},
 		{
-			"ImportPath": "github.com/pivotal-golang/lager/lagertest",
-			"Rev": "c88fa6d6c4d2f8a21a4599785211e41777750d34"
+			"ImportPath": "github.com/rcrowley/go-metrics",
+			"Rev": "8732c616f52954686704c8645fe1a9d59e9df7c1"
+		},
+		{
+			"ImportPath": "github.com/rcrowley/go-metrics/exp",
+			"Rev": "8732c616f52954686704c8645fe1a9d59e9df7c1"
 		},
 		{
 			"ImportPath": "github.com/rubenv/sql-migrate",
@@ -286,10 +114,6 @@
 			"ImportPath": "gopkg.in/gorp.v1",
 			"Comment": "v1.7.1",
 			"Rev": "c87af80f3cc5036b55b83d77171e156791085e2e"
-		},
-		{
-			"ImportPath": "github.com/rcrowley/go-metrics",
-			"Rev": "e181e095bae94582363434144c61a9653aff6e50"
 		}
 	]
 }

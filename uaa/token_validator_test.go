@@ -12,7 +12,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pivotal-cf-experimental/warrant"
-	"github.com/pivotal-golang/lager/lagertest"
+	"github.com/pivotal-golang/lager"
 )
 
 var _ = Describe("TokenValidator", func() {
@@ -33,8 +33,7 @@ var _ = Describe("TokenValidator", func() {
 				Value:     helpers.UAAPublicKey,
 			},
 		}
-		logger := lagertest.NewTestLogger("test")
-		validator = uaa.NewTokenValidator(logger, keyFetcher)
+		validator = uaa.NewTokenValidator(lager.NewLogger("test"), keyFetcher)
 	})
 
 	Describe("loading signing keys", func() {
