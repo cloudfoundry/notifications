@@ -31,7 +31,7 @@ var _ = Describe("Database Allocator", func() {
 
 	BeforeEach(func() {
 		var err error
-		sqlDB, err = sqlmock.New()
+		sqlDB, _, err = sqlmock.New()
 		Expect(err).NotTo(HaveOccurred())
 
 		ware = middleware.NewDatabaseAllocator(sqlDB, true)
@@ -46,11 +46,6 @@ var _ = Describe("Database Allocator", func() {
 		context = stack.NewContext()
 		context.Set("logger", logger)
 		context.Set(middleware.VCAPRequestIDKey, "some-vcap-request-id")
-	})
-
-	AfterEach(func() {
-		err := sqlDB.Close()
-		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("allocates a database that it adds to the context", func() {
