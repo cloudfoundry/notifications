@@ -24,7 +24,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
 	"github.com/gorilla/mux"
 	"github.com/pivotal-golang/lager"
-	metrics "github.com/rcrowley/go-metrics"
+	"github.com/rcrowley/go-metrics"
 	"github.com/rcrowley/go-metrics/exp"
 	"github.com/ryanmoran/stack"
 )
