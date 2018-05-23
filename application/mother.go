@@ -2,7 +2,10 @@ package application
 
 import (
 	"crypto/rand"
+	"crypto/tls"
+	"crypto/x509"
 	"database/sql"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -12,6 +15,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/util"
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
+	"github.com/go-sql-driver/mysql"
 )
 
 type DBProvider struct {
@@ -21,7 +25,13 @@ type DBProvider struct {
 
 func NewDBProvider(env Environment) *DBProvider {
 	var err error
-	sqlDB, err := sql.Open("mysql", env.DatabaseURL)
+	databaseURL := env.DatabaseURL
+	if env.DatabaseCACertFile != "" {
+		registerTLSConfig(env)
+		databaseURL += "&tls=custom"
+	}
+
+	sqlDB, err := sql.Open("mysql", databaseURL)
 	if err != nil {
 		panic(err)
 	}
@@ -61,4 +71,19 @@ func (d *DBProvider) Database() db.DatabaseInterface {
 
 func (d *DBProvider) MessagesRepo() v1models.MessagesRepo {
 	return v1models.NewMessagesRepo(util.NewIDGenerator(rand.Reader).Generate)
+}
+
+func registerTLSConfig(env Environment) {
+	ca, err := ioutil.ReadFile(env.DatabaseCACertFile)
+	if err != nil {
+		panic(err)
+	}
+	rootCertPool := x509.NewCertPool()
+	if ok := rootCertPool.AppendCertsFromPEM(ca); !ok {
+		panic("Failed to append PEM when creating database connection")
+	}
+	mysql.RegisterTLSConfig("custom", &tls.Config{
+		RootCAs:    rootCertPool,
+		ServerName: env.DatabaseCommonName,
+	})
 }

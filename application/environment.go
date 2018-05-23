@@ -38,6 +38,8 @@ type Environment struct {
 	UAAHost               string `env:"UAA_HOST"                 env-required:"true"`
 	UAAKeyRefreshInterval int    `env:"UAA_KEY_REFRESH_INTREVAL" env-default:"60000"`
 	VerifySSL             bool   `env:"VERIFY_SSL"               env-default:"true"`
+	DatabaseCACertFile    string `env:"DATABASE_CA_CERT_FILE"`
+	DatabaseCommonName    string `env:"DATABASE_COMMON_NAME"`
 
 	VCAPApplication struct {
 		InstanceIndex int `json:"instance_index"`
