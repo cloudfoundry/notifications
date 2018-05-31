@@ -24,7 +24,6 @@ func (mu MessageStatusUpdater) Update(conn db.ConnectionInterface, messageID, me
 	_, err := mu.messagesRepo.Upsert(conn, models.Message{
 		ID:         messageID,
 		Status:     messageStatus,
-		CampaignID: campaignID,
 	})
 	if err != nil {
 		logger.Session("message-updater").Error("failed-message-status-upsert", err, lager.Data{

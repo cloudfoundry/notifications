@@ -127,7 +127,6 @@ The Emails endpoint expects a json body to be posted with the following keys:
 <a name="api-docs"></a>
 ### API Documentation
 - [Version 1 Documentation](/V1_API.md)
-- [Version 2 Documentation - DEPRECATED](/V2_API.md)
 
 ## Configuring Email Templates
 You can do a whole lot to configure templates for your notifications, see [API Docs](#api-docs) for specific endpoints available!

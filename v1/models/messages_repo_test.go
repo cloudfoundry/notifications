@@ -28,7 +28,6 @@ var _ = Describe("MessagesRepo", func() {
 		helpers.TruncateTables(database)
 		conn = database.Connection()
 		message = models.Message{
-			CampaignID: "some-campaign-id",
 			Status:     common.StatusDelivered,
 		}
 

@@ -11,7 +11,7 @@ import (
 	"github.com/rcrowley/go-metrics"
 )
 
-type v1DeliveryJobProcessor interface {
+type DeliveryJobProcessor interface {
 	Process(job *gobble.Job, logger lager.Logger) error
 }
 
@@ -47,7 +47,7 @@ type DeliveryWorker struct {
 	gobble.Worker
 
 	uaaHost                string
-	V1DeliveryJobProcessor v1DeliveryJobProcessor
+	DeliveryJobProcessor   DeliveryJobProcessor
 	V2DeliveryJobProcessor v2DeliveryJobProcessor
 	logger                 lager.Logger
 	database               db.DatabaseInterface
@@ -56,10 +56,9 @@ type DeliveryWorker struct {
 	messageStatusUpdater   messageStatusUpdater
 }
 
-func NewDeliveryWorker(v1DeliveryJobProcessor v1DeliveryJobProcessor, v2DeliveryJobProcessor v2DeliveryJobProcessor, config DeliveryWorkerConfig) DeliveryWorker {
+func NewDeliveryWorker(v1DeliveryJobProcessor DeliveryJobProcessor, config DeliveryWorkerConfig) DeliveryWorker {
 	worker := DeliveryWorker{
-		V1DeliveryJobProcessor: v1DeliveryJobProcessor,
-		V2DeliveryJobProcessor: v2DeliveryJobProcessor,
+		DeliveryJobProcessor:   v1DeliveryJobProcessor,
 		uaaHost:                config.UAAHost,
 		logger:                 config.Logger,
 		database:               config.Database,
@@ -87,27 +86,5 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 		return
 	}
 
-	switch typedJob.JobType {
-	case "campaign":
-		err := worker.campaignJobProcessor.Process(worker.database.Connection(), worker.uaaHost, *job, worker.logger)
-		if err != nil {
-			worker.deliveryFailureHandler.Handle(job, worker.logger)
-		}
-	case "v2":
-		var delivery common.Delivery
-		job.Unmarshal(&delivery)
-
-		err = worker.V2DeliveryJobProcessor.Process(delivery, worker.logger)
-		if err != nil {
-			worker.deliveryFailureHandler.Handle(job, worker.logger)
-			status := common.StatusFailed
-			if job.ShouldRetry {
-				status = common.StatusRetry
-			}
-
-			worker.messageStatusUpdater.Update(worker.database.Connection(), delivery.MessageID, status, delivery.CampaignID, worker.logger)
-		}
-	default:
-		worker.V1DeliveryJobProcessor.Process(job, worker.logger)
-	}
+	worker.DeliveryJobProcessor.Process(job, worker.logger)
 }

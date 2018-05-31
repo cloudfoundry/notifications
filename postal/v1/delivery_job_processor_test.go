@@ -33,7 +33,6 @@ var _ = Describe("DeliveryJobProcessor", func() {
 		globalUnsubscribesRepo *mocks.GlobalUnsubscribesRepo
 		kindsRepo              *mocks.KindsRepo
 		database               *mocks.Database
-		campaignJobProcessor   *mocks.CampaignJobProcessor
 		conn                   *mocks.Connection
 		userLoader             *mocks.UserLoader
 		userGUID               string
@@ -71,7 +70,6 @@ var _ = Describe("DeliveryJobProcessor", func() {
 		database = mocks.NewDatabase()
 		database.ConnectionCall.Returns.Connection = conn
 
-		campaignJobProcessor = mocks.NewCampaignJobProcessor()
 		userGUID = "user-123"
 		sum := md5.Sum([]byte("banana's are so very tasty"))
 		encryptionKey := sum[:]

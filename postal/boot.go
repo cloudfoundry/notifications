@@ -8,22 +8,14 @@ import (
 	"path"
 	"time"
 
-	"github.com/cloudfoundry-incubator/notifications/cf"
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/postal/common"
 	"github.com/cloudfoundry-incubator/notifications/postal/v1"
-	"github.com/cloudfoundry-incubator/notifications/postal/v2"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/util"
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
-	"github.com/cloudfoundry-incubator/notifications/v1/services"
-	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
-	"github.com/cloudfoundry-incubator/notifications/v2/collections"
-	"github.com/cloudfoundry-incubator/notifications/v2/horde"
-	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
-	"github.com/cloudfoundry-incubator/notifications/v2/queue"
 	"github.com/pivotal-golang/conceal"
 	"github.com/pivotal-golang/lager"
 )
@@ -94,33 +86,6 @@ func Boot(mailClient func() *mail.Client, db *sql.DB, config Config) {
 	tokenLoader := uaa.NewTokenLoader(uaaClient)
 	packager := common.NewPackager(v1TemplateLoader, cloak)
 
-	// V2
-	messagesRepository := v2models.NewMessagesRepository(clock, guidGenerator.Generate)
-	gobbleInitializer := gobble.Initializer{}
-
-	v2enqueuer := queue.NewJobEnqueuer(gobbleQueue, messagesRepository, gobbleInitializer)
-
-	cloudController := cf.NewCloudController(config.CCHost, !config.VerifySSL)
-	spaceLoader := services.NewSpaceLoader(cloudController)
-	organizationLoader := services.NewOrganizationLoader(cloudController)
-	findsUserIDs := services.NewFindsUserIDs(cloudController, uaaClient)
-
-	usersAudienceGenerator := horde.NewUsers()
-	emailsAudienceGenerator := horde.NewEmails()
-	spacesAudienceGenerator := horde.NewSpaces(findsUserIDs, organizationLoader, spaceLoader, tokenLoader, config.UAAHost)
-	orgsAudienceGenerator := horde.NewOrganizations(findsUserIDs, organizationLoader, tokenLoader, config.UAAHost)
-
-	v2database := v2models.NewDatabase(db, v2models.Config{})
-	v2messageStatusUpdater := v2.NewV2MessageStatusUpdater(messagesRepository)
-	unsubscribersRepository := v2models.NewUnsubscribersRepository(guidGenerator.Generate)
-	campaignsRepository := v2models.NewCampaignsRepository(guidGenerator.Generate, clock)
-	v2templatesRepo := v2models.NewTemplatesRepository(guidGenerator.Generate)
-	templatesCollection := collections.NewTemplatesCollection(v2templatesRepo)
-	v2TemplateLoader := v2.NewTemplatesLoader(v2database, templatesCollection)
-	v2deliveryFailureHandler := common.NewDeliveryFailureHandler()
-	campaignJobProcessor := v2.NewCampaignJobProcessor(notify.EmailFormatter{}, notify.HTMLExtractor{},
-		emailsAudienceGenerator, spacesAudienceGenerator, orgsAudienceGenerator, usersAudienceGenerator, v2enqueuer)
-
 	WorkerGenerator{
 		InstanceIndex: config.InstanceIndex,
 		Count:         config.WorkerCount,
@@ -146,22 +111,13 @@ func Boot(mailClient func() *mail.Client, db *sql.DB, config Config) {
 			DeliveryFailureHandler: deliveryFailureHandler,
 		})
 
-		v2DeliveryJobProcessor := v2.NewDeliveryJobProcessor(mailClient(), common.NewPackager(v2TemplateLoader, cloak),
-			common.NewUserLoader(uaaClient), uaa.NewTokenLoader(uaaClient), v2messageStatusUpdater, v2database,
-			unsubscribersRepository, campaignsRepository, config.Sender, config.Domain, config.UAAHost)
-
-		worker := NewDeliveryWorker(v1DeliveryJobProcessor, v2DeliveryJobProcessor, DeliveryWorkerConfig{
+		worker := NewDeliveryWorker(v1DeliveryJobProcessor, DeliveryWorkerConfig{
 			ID:      index,
 			UAAHost: config.UAAHost,
 			DBTrace: config.DBLoggingEnabled,
 
 			Logger: logger.Session("worker", lager.Data{"worker_id": index}),
 			Queue:  gobbleQueue,
-
-			Database:               v2database,
-			CampaignJobProcessor:   campaignJobProcessor,
-			DeliveryFailureHandler: v2deliveryFailureHandler,
-			MessageStatusUpdater:   v2messageStatusUpdater,
 		})
 
 		return &worker

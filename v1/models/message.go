@@ -8,7 +8,6 @@ import (
 
 type Message struct {
 	ID         string    `db:"id"`
-	CampaignID string    `db:"campaign_id"`
 	Status     string    `db:"status"`
 	UpdatedAt  time.Time `db:"updated_at"`
 }

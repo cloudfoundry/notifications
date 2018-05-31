@@ -29,7 +29,6 @@ var _ = Describe("MessageStatusUpdater", func() {
 			{
 				ID:         "some-message-id",
 				Status:     "message-status",
-				CampaignID: "campaign-id",
 			},
 		}
 
@@ -47,7 +46,6 @@ var _ = Describe("MessageStatusUpdater", func() {
 		Expect(messagesRepo.UpsertCall.Receives.Messages[0]).To(Equal(models.Message{
 			ID:         "some-message-id",
 			Status:     "message-status",
-			CampaignID: "campaign-id",
 		}))
 	})
 

@@ -15,8 +15,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
-	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
-	v2models "github.com/cloudfoundry-incubator/notifications/v2/models"
+	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/onsi/ginkgo"
 )
 
@@ -127,7 +126,7 @@ func (s Notifications) MigrateDatabase() {
 	defer sqlDB.Close()
 	database, gobbleDB := fetchDatabases(env, sqlDB)
 
-	migrator := v1models.DatabaseMigrator{}
+	migrator := models.DatabaseMigrator{}
 	migrator.Migrate(database.RawConnection(), env.ModelMigrationsPath)
 
 	gobbleDB.Migrate(env.GobbleMigrationsPath)
@@ -143,15 +142,14 @@ func (s Notifications) ResetDatabase() {
 	defer sqlDB.Close()
 	database, gobbleDB := fetchDatabases(env, sqlDB)
 
-	v1models.Setup(database)
-	v2models.Setup(database)
+	models.Setup(database)
 
 	err = database.Connection().(*db.Connection).TruncateTables()
 	if err != nil {
 		panic(err)
 	}
 
-	migrator := v1models.DatabaseMigrator{}
+	migrator := models.DatabaseMigrator{}
 	migrator.Seed(database, path.Join(env.RootPath, "templates", "default.json"))
 
 	gobbleDB.Connection.TruncateTables()
