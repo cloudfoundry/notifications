@@ -1,0 +1,13 @@
+---
+version: '2'
+services:
+  mariadb:
+    container_name: notifications
+    image: mariadb
+    ports:
+    - 3306:3306
+    environment:
+    - MYSQL_ROOT_PASSWORD=password
+    - MYSQL_DATABASE=notifications_test
+    - MYSQL_USER=user
+    - MYSQL_PASSWORD=password
