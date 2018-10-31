@@ -32,8 +32,8 @@
 		},
 		{
 			"ImportPath": "github.com/go-sql-driver/mysql",
-			"Comment": "v1.2",
-			"Rev": "a732e14c62dde3285440047bba97581bc472ae18"
+			"Comment": "v1.4.0",
+			"Rev": "d523deb1b23d913de5bdada721a6071e71283618"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",
