@@ -164,7 +164,9 @@ The application can be run locally by executing the `./bin/run` script. This scr
 #### Running tests
 
 Docker is needed to run tests. 
+
 To get the required image, change into the `docker` directory and run `docker-compose up -d`. 
+
 If this is successful `docker ps` should show a mariadb image running on port 3306 and mysql should have a database called `notifications_test`.
 
 Move up a directory to the root of the project and run `./bin/test` to run tests.
