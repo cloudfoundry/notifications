@@ -160,3 +160,11 @@ Decrypting:
 #### Running locally
 
 The application can be run locally by executing the `./bin/run` script. This script will look for a file called `./bin/env/development` to load environment variables. Setting the `TEST_MODE` env var to true will disable the requirement for a running SMTP server.
+
+#### Running tests
+
+Docker is needed to run tests. 
+To get the required image, change into the `docker` directory and run `docker-compose up -d`. 
+If this is successful `docker ps` should show a mariadb image running on port 3306 and mysql should have a database called `notifications_test`.
+
+Move up a directory to the root of the project and run `./bin/test` to run tests.
