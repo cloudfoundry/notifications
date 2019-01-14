@@ -14,8 +14,6 @@ import (
 var _ = Describe("PreferenceUpdater", func() {
 	Describe("Update", func() {
 		var (
-			doorOpen                   models.Unsubscribe
-			barking                    models.Unsubscribe
 			unsubscribesRepo           *mocks.UnsubscribesRepo
 			kindsRepo                  *mocks.KindsRepo
 			fakeGlobalUnsubscribesRepo *mocks.GlobalUnsubscribesRepo
@@ -52,17 +50,6 @@ var _ = Describe("PreferenceUpdater", func() {
 
 		Context("When unsubscribing from existing kinds of existing clients", func() {
 			BeforeEach(func() {
-				doorOpen = models.Unsubscribe{
-					UserID:   "the-user",
-					ClientID: "raptors",
-					KindID:   "door-open",
-				}
-
-				barking = models.Unsubscribe{
-					UserID:   "the-user",
-					ClientID: "dogs",
-					KindID:   "barking",
-				}
 
 				kindsRepo.FindCall.Returns.Kinds = []models.Kind{
 					{

@@ -28,7 +28,6 @@ var _ = Describe("DeliveryJobProcessor", func() {
 		logger                 lager.Logger
 		buffer                 *bytes.Buffer
 		delivery               common.Delivery
-		queue                  *mocks.Queue
 		unsubscribesRepo       *mocks.UnsubscribesRepo
 		globalUnsubscribesRepo *mocks.GlobalUnsubscribesRepo
 		kindsRepo              *mocks.KindsRepo
@@ -53,7 +52,6 @@ var _ = Describe("DeliveryJobProcessor", func() {
 		logger = logger.Session("worker", lager.Data{"worker_id": 1234})
 
 		mailClient = mocks.NewMailClient()
-		queue = mocks.NewQueue()
 		unsubscribesRepo = mocks.NewUnsubscribesRepo()
 		globalUnsubscribesRepo = mocks.NewGlobalUnsubscribesRepo()
 

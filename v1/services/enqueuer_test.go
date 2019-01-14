@@ -1,9 +1,7 @@
 package services_test
 
 import (
-	"bytes"
 	"errors"
-	"log"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/cf"
@@ -18,8 +16,6 @@ import (
 var _ = Describe("Enqueuer", func() {
 	var (
 		enqueuer          services.Enqueuer
-		logger            *log.Logger
-		buffer            *bytes.Buffer
 		queue             *mocks.Queue
 		gobbleInitializer *mocks.GobbleInitializer
 		conn              *mocks.Connection
@@ -31,8 +27,6 @@ var _ = Describe("Enqueuer", func() {
 	)
 
 	BeforeEach(func() {
-		buffer = bytes.NewBuffer([]byte{})
-		logger = log.New(buffer, "", 0)
 		queue = mocks.NewQueue()
 
 		transaction = mocks.NewTransaction()

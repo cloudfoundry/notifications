@@ -1,7 +1,6 @@
 package middleware_test
 
 import (
-	"bytes"
 	"net/http"
 	"net/http/httptest"
 
@@ -18,7 +17,6 @@ var _ = Describe("RequestCounter", func() {
 		ware    middleware.RequestCounter
 		request *http.Request
 		writer  *httptest.ResponseRecorder
-		buffer  *bytes.Buffer
 	)
 
 	BeforeEach(func() {
@@ -30,7 +28,6 @@ var _ = Describe("RequestCounter", func() {
 		matcher := mux.NewRouter()
 		path := "/clients/{client_id}/notifications/{notification_id}"
 		matcher.HandleFunc(path, func(http.ResponseWriter, *http.Request) {}).Name("GET " + path)
-		buffer = bytes.NewBuffer([]byte{})
 
 		ware = middleware.NewRequestCounter(matcher)
 	})

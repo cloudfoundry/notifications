@@ -116,7 +116,6 @@ var _ = Describe("Send a notification to a user", func() {
 		It("retries deliveries when they fail to be sent", func() {
 			var (
 				templateID  string
-				messageID   string
 				response    support.NotifyResponse
 				clientID    = "notifications-sender"
 				clientToken = GetClientTokenFor(clientID)
@@ -171,7 +170,6 @@ var _ = Describe("Send a notification to a user", func() {
 
 				Expect(responses).To(HaveLen(1))
 				response = responses[0]
-				messageID = response.NotificationID
 
 				Expect(response.Status).To(Equal("queued"))
 				Expect(response.Recipient).To(Equal(userID))

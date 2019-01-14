@@ -17,14 +17,12 @@ var _ = Describe("Packager", func() {
 	var (
 		packager        common.Packager
 		context         common.MessageContext
-		client          mail.Client
 		templatesLoader *mocks.TemplatesLoader
 		delivery        common.Delivery
 		cloak           *mocks.Cloak
 	)
 
 	BeforeEach(func() {
-		client = mail.Client{}
 		templatesLoader = mocks.NewTemplatesLoader()
 		cloak = mocks.NewCloak()
 
