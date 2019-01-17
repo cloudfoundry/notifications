@@ -29,6 +29,9 @@ func NewDBProvider(env Environment) *DBProvider {
 	if env.DatabaseCACertFile != "" {
 		registerTLSConfig(env)
 		databaseURL += "&tls=custom"
+		if !env.DatabaseEnableIdentityVerification {
+			databaseURL += "&trustServerCertificate=true&verifyServerCertificate=true&disableSslHostnameVerification=true"
+		}
 	}
 
 	sqlDB, err := sql.Open("mysql", databaseURL)

@@ -39,6 +39,7 @@ var _ = Describe("Environment", func() {
 		"UAA_HOST",
 		"VCAP_APPLICATION",
 		"VERIFY_SSL",
+		"DATABASE_ENABLE_IDENTITY_VERIFICATION",
 	}
 
 	BeforeEach(func() {
