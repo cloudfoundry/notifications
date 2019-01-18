@@ -12,35 +12,35 @@ import (
 )
 
 type Environment struct {
-	CCHost                             string `env:"CC_HOST"                  				  env-required:"true"`
-	CORSOrigin                         string `env:"CORS_ORIGIN"              				  env-default:"*"`
+	CCHost                             string `env:"CC_HOST" env-required:"true"`
+	CORSOrigin                         string `env:"CORS_ORIGIN" env-default:"*"`
 	DBLoggingEnabled                   bool   `env:"DB_LOGGING_ENABLED"`
 	DBMaxOpenConns                     int    `env:"DB_MAX_OPEN_CONNS"`
-	DatabaseURL                        string `env:"DATABASE_URL"             				  env-required:"true"`
+	DatabaseURL                        string `env:"DATABASE_URL" env-required:"true"`
 	DefaultUAAScopesList               string `env:"DEFAULT_UAA_SCOPES"`
-	Domain                             string `env:"DOMAIN"                   				  env-required:"true"`
-	EncryptionKey                      []byte `env:"ENCRYPTION_KEY"           				  env-required:"true"`
-	GobbleWaitMaxDuration              int    `env:"GOBBLE_WAIT_MAX_DURATION" 				  env-default:"5000"`
-	Port                               int    `env:"PORT"                     				  env-default:"3000"`
+	Domain                             string `env:"DOMAIN" env-required:"true"`
+	EncryptionKey                      []byte `env:"ENCRYPTION_KEY" env-required:"true"`
+	GobbleWaitMaxDuration              int    `env:"GOBBLE_WAIT_MAX_DURATION" env-default:"5000"`
+	Port                               int    `env:"PORT" env-default:"3000"`
 	RootPath                           string `env:"ROOT_PATH"`
-	SMTPAuthMechanism                  string `env:"SMTP_AUTH_MECHANISM"      				  env-required:"true"`
+	SMTPAuthMechanism                  string `env:"SMTP_AUTH_MECHANISM" env-required:"true"`
 	SMTPCRAMMD5Secret                  string `env:"SMTP_CRAMMD5_SECRET"`
-	SMTPHost                           string `env:"SMTP_HOST"                				  env-required:"true"`
-	SMTPLoggingEnabled                 bool   `env:"SMTP_LOGGING_ENABLED"     				  env-default:"false"`
+	SMTPHost                           string `env:"SMTP_HOST" env-required:"true"`
+	SMTPLoggingEnabled                 bool   `env:"SMTP_LOGGING_ENABLED" env-default:"false"`
 	SMTPPass                           string `env:"SMTP_PASS"`
-	SMTPPort                           string `env:"SMTP_PORT"                				  env-required:"true"`
-	SMTPTLS                            bool   `env:"SMTP_TLS"                 				  env-default:"true"`
+	SMTPPort                           string `env:"SMTP_PORT" env-required:"true"`
+	SMTPTLS                            bool   `env:"SMTP_TLS" env-default:"true"`
 	SMTPUser                           string `env:"SMTP_USER"`
-	Sender                             string `env:"SENDER"                   				  env-required:"true"`
-	TestMode                           bool   `env:"TEST_MODE"                				  env-default:"false"`
-	UAAClientID                        string `env:"UAA_CLIENT_ID"            				  env-required:"true"`
-	UAAClientSecret                    string `env:"UAA_CLIENT_SECRET"        				  env-required:"true"`
-	UAAHost                            string `env:"UAA_HOST"                 				  env-required:"true"`
-	UAAKeyRefreshInterval              int    `env:"UAA_KEY_REFRESH_INTREVAL" 				  env-default:"60000"`
-	VerifySSL                          bool   `env:"VERIFY_SSL"               				  env-default:"true"`
+	Sender                             string `env:"SENDER" env-required:"true"`
+	TestMode                           bool   `env:"TEST_MODE" env-default:"false"`
+	UAAClientID                        string `env:"UAA_CLIENT_ID" env-required:"true"`
+	UAAClientSecret                    string `env:"UAA_CLIENT_SECRET" env-required:"true"`
+	UAAHost                            string `env:"UAA_HOST" env-required:"true"`
+	UAAKeyRefreshInterval              int    `env:"UAA_KEY_REFRESH_INTREVAL" env-default:"60000"`
+	VerifySSL                          bool   `env:"VERIFY_SSL" env-default:"true"`
 	DatabaseCACertFile                 string `env:"DATABASE_CA_CERT_FILE"`
 	DatabaseCommonName                 string `env:"DATABASE_COMMON_NAME"`
-	DatabaseEnableIdentityVerification bool   `env:"DATABASE_ENABLE_IDENTITY_VERIFICATION"    env-default:"true"`
+	DatabaseEnableIdentityVerification bool   `env:"DATABASE_ENABLE_IDENTITY_VERIFICATION" env-default:"true"`
 
 	VCAPApplication struct {
 		InstanceIndex int `json:"instance_index"`
