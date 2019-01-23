@@ -16,6 +16,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/util"
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/go-sql-driver/mysql"
+	"errors"
 )
 
 type DBProvider struct {
@@ -29,9 +30,6 @@ func NewDBProvider(env Environment) *DBProvider {
 	if env.DatabaseCACertFile != "" {
 		registerTLSConfig(env)
 		databaseURL += "&tls=custom"
-		if !env.DatabaseEnableIdentityVerification {
-			databaseURL += "&trustServerCertificate=true&verifyServerCertificate=true&disableSslHostnameVerification=true"
-		}
 	}
 
 	sqlDB, err := sql.Open("mysql", databaseURL)
@@ -85,8 +83,49 @@ func registerTLSConfig(env Environment) {
 	if ok := rootCertPool.AppendCertsFromPEM(ca); !ok {
 		panic("Failed to append PEM when creating database connection")
 	}
-	mysql.RegisterTLSConfig("custom", &tls.Config{
+
+	tlsConfig := &tls.Config{
 		RootCAs:    rootCertPool,
 		ServerName: env.DatabaseCommonName,
-	})
+		InsecureSkipVerify: false,
+	}
+
+	if !env.DatabaseEnableIdentityVerification {
+		tlsConfig.InsecureSkipVerify = true
+		tlsConfig.VerifyPeerCertificate = func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+			return VerifyCertificatesIgnoreHostname(rawCerts, rootCertPool)
+		}
+	}
+
+	mysql.RegisterTLSConfig("custom", tlsConfig)
+}
+
+func VerifyCertificatesIgnoreHostname(rawCerts [][]byte, caCertPool *x509.CertPool) error {
+	certs := make([]*x509.Certificate, len(rawCerts))
+
+	for i, asn1Data := range rawCerts {
+		cert, err := x509.ParseCertificate(asn1Data)
+		if err != nil {
+			return errors.New("tls: failed to parse certificate from server: " + err.Error())
+		}
+
+		certs[i] = cert
+	}
+
+	opts := x509.VerifyOptions{
+		Roots:         caCertPool,
+		CurrentTime:   time.Now(),
+		Intermediates: x509.NewCertPool(),
+	}
+
+	for i, cert := range certs {
+		if i == 0 {
+			continue
+		}
+
+		opts.Intermediates.AddCert(cert)
+	}
+
+	_, err := certs[0].Verify(opts)
+	return err
 }
