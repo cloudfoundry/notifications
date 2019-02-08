@@ -2,7 +2,7 @@
 
 If you are trying to deploy notifications, **DO NOT** use this repo to deploy it directly. Please use the [bosh-release and accompanying directions](https://github.com/cloudfoundry-incubator/notifications-release).
 
-# Notifications
+# Notifications [![CI Status](https://wings.pivotal.io/api/v1/teams/cf-notifications/pipelines/cf-notifications/badge)](https://wings.pivotal.io/teams/cf-notifications/pipelines/cf-notifications)
 
 A notifications component that parts of CF can use to send email to end users.
 There is a [walkthrough](https://github.com/cloudfoundry-incubator/notifications/blob/master/walkthrough.md) of using the Notifications Service which will show how to set it up and use it.
@@ -160,3 +160,13 @@ Decrypting:
 #### Running locally
 
 The application can be run locally by executing the `./bin/run` script. This script will look for a file called `./bin/env/development` to load environment variables. Setting the `TEST_MODE` env var to true will disable the requirement for a running SMTP server.
+
+#### Running tests
+
+Docker is needed to run tests. 
+
+To get the required image, change into the `docker` directory and run `docker-compose up -d`. 
+
+If this is successful `docker ps` should show a mariadb image running on port 3306 and mysql should have a database called `notifications_test`.
+
+Move up a directory to the root of the project and run `./bin/test` to run tests.

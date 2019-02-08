@@ -14,7 +14,6 @@ var _ = Describe("PreferencesRepo", func() {
 		repo            models.PreferencesRepo
 		kinds           models.KindsRepo
 		clients         models.ClientsRepo
-		receipts        models.ReceiptsRepo
 		conn            *db.Connection
 		unsubscribeRepo models.UnsubscribesRepo
 	)
@@ -27,7 +26,6 @@ var _ = Describe("PreferencesRepo", func() {
 
 		kinds = models.NewKindsRepo()
 		clients = models.NewClientsRepo()
-		receipts = models.NewReceiptsRepo()
 		unsubscribeRepo = models.NewUnsubscribesRepo()
 		repo = models.NewPreferencesRepo()
 	})

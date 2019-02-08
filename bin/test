@@ -19,6 +19,11 @@ if [[ $EXIT_CODE = 0 ]]; then
 fi
 
 if [[ $EXIT_CODE = 0 ]]; then
+    $DIR/integration
+    EXIT_CODE=$?
+fi
+
+if [[ $EXIT_CODE = 0 ]]; then
     echo
     $DIR/acceptance
     EXIT_CODE=$?

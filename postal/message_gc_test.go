@@ -18,8 +18,6 @@ var _ = Describe("MessageGC", func() {
 	var (
 		messageGC       postal.MessageGC
 		repo            *mocks.MessagesRepo
-		oldMessageID    string
-		newMessageID    string
 		database        *mocks.Database
 		conn            db.ConnectionInterface
 		loggerBuffer    *bytes.Buffer
@@ -39,8 +37,6 @@ var _ = Describe("MessageGC", func() {
 
 		lifetime = 2 * time.Minute
 		pollingInterval = 500 * time.Millisecond
-		oldMessageID = "that-message"
-		newMessageID = "this-message"
 
 		messageGC = postal.NewMessageGC(lifetime, database, repo, pollingInterval, logger)
 	})

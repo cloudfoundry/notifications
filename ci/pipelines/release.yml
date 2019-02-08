@@ -1,0 +1,265 @@
+resource_types:
+  - name: registry-image-dev
+    type: registry-image
+    source:
+      repository: concourse/registry-image-resource
+      tag: dev
+
+resources:
+  - name: golang
+    type: registry-image-dev
+    source:
+      repository: golang
+      tag: 1.9-stretch
+
+  - name: master
+    type: git
+    source:
+      uri: {{git-repo-uri}}
+      branch: {{git-branch}}
+      private_key: {{git-wings-deploy-key}}
+      ignore_paths: [version]
+
+  - name: version
+    type: semver
+    source:
+      initial_version: 1.0.0
+      driver: git
+      uri: {{git-repo-uri}}
+      branch: {{git-branch}}
+      file: version
+      private_key: {{git-wings-deploy-key}}
+      git_user: Pivotal Concourse CI <pcf-notifications@pivotal.io>
+
+  - name: release
+    type: github-release
+    source:
+      owner: {{git-repo-owner}}
+      repository: {{git-repo-name}}
+      access_token: {{git-toronto-ci-access-token}}
+
+jobs:
+  - name: unit-tests
+    public: true
+    plan:
+      - get: master
+        trigger: true
+      - get: golang
+        trigger: true
+      - task: run
+        params:
+          DATABASE_HOST: localhost
+          DATABASE_USER: notifications
+          DATABASE_PASSWORD: password
+          DATABASE_NAME: notifications_test
+        image: golang
+        config:
+          platform: linux
+          inputs:
+            - name: master
+              path: go/src/github.com/cloudfoundry-incubator/notifications
+          run:
+            path: /bin/bash
+            args:
+              - -c
+              - |
+                echo "=== Setting up Go ==="
+                export GOPATH=`pwd`/go
+                export PATH=$PATH:$GOPATH/bin
+
+                cd go/src/github.com/cloudfoundry-incubator/notifications
+
+                go get github.com/tools/godep
+                go get github.com/onsi/ginkgo/ginkgo
+
+                go version
+
+                echo "=== Running Tests ==="
+
+                ./bin/unit
+                EXIT_CODE=$?
+
+                if [[ $EXIT_CODE != 0 ]]; then
+                  exit $EXIT_CODE
+                fi
+
+                if [[ -n "`git status --porcelain`" ]]; then
+                  echo "Detected a git diff"
+                  git status --porcelain
+                  exit 1
+                fi
+  - name: integration-tests
+    public: true
+    plan:
+      - get: master
+        trigger: true
+      - get: golang
+        trigger: true
+      - task: run
+        params:
+          DATABASE_HOST: localhost
+          DATABASE_USER: notifications
+          DATABASE_PASSWORD: password
+          DATABASE_NAME: notifications_test
+        image: golang
+        config:
+          platform: linux
+          inputs:
+            - name: master
+              path: go/src/github.com/cloudfoundry-incubator/notifications
+          run:
+            path: /bin/bash
+            args:
+              - -c
+              - |
+                echo "=== Setting up Go ==="
+                export GOPATH=`pwd`/go
+                export PATH=$PATH:$GOPATH/bin
+
+                cd go/src/github.com/cloudfoundry-incubator/notifications
+
+                go get github.com/tools/godep
+                go get github.com/onsi/ginkgo/ginkgo
+
+                go version
+
+                echo "=== Setting up MySQL ==="
+                apt-get -qqy update
+                apt-get install -qqy mysql-server
+
+                mysqld --version
+                service mysql start
+
+                mysql -uroot -e "CREATE USER '$DATABASE_USER'@'localhost' IDENTIFIED BY '$DATABASE_PASSWORD';"
+                mysql -uroot -e "GRANT ALL PRIVILEGES ON * . * TO '$DATABASE_USER'@'localhost';"
+                mysql -uroot -e "UPDATE mysql.user SET authentication_string=PASSWORD('$DATABASE_PASSWORD'), plugin='mysql_native_password' WHERE user='$DATABASE_USER';"
+                mysql -uroot -e "CREATE DATABASE $DATABASE_NAME;"
+                mysql -uroot -e "FLUSH PRIVILEGES;"
+
+                export DATABASE_URL="$DATABASE_USER:$DATABASE_PASSWORD@$DATABASE_HOST:3306/$DATABASE_NAME"
+
+                echo "=== Running Tests ==="
+                ./bin/integration
+                EXIT_CODE=$?
+
+                service mysql stop
+
+                if [[ $EXIT_CODE != 0 ]]; then
+                  exit $EXIT_CODE
+                fi
+
+                if [[ -n "`git status --porcelain`" ]]; then
+                  echo "Detected a git diff"
+                  git status --porcelain
+                  exit 1
+                fi
+  - name: acceptance-tests
+    public: true
+    plan:
+      - get: master
+        trigger: true
+      - get: golang
+        trigger: true
+      - task: run
+        params:
+          DATABASE_HOST: localhost
+          DATABASE_USER: notifications
+          DATABASE_PASSWORD: password
+          DATABASE_NAME: notifications_test
+        image: golang
+        config:
+          platform: linux
+          inputs:
+            - name: master
+              path: go/src/github.com/cloudfoundry-incubator/notifications
+          run:
+            path: /bin/bash
+            args:
+              - -c
+              - |
+                echo "=== Setting up Go ==="
+                export GOPATH=`pwd`/go
+                export PATH=$PATH:$GOPATH/bin
+
+                cd go/src/github.com/cloudfoundry-incubator/notifications
+
+                go get github.com/tools/godep
+                go get github.com/onsi/ginkgo/ginkgo
+
+                go version
+
+                echo "=== Setting up MySQL ==="
+                apt-get -qqy update
+                apt-get install -qqy mysql-server
+
+                mysqld --version
+                service mysql start
+
+                mysql -uroot -e "CREATE USER '$DATABASE_USER'@'localhost' IDENTIFIED BY '$DATABASE_PASSWORD';"
+                mysql -uroot -e "GRANT ALL PRIVILEGES ON * . * TO '$DATABASE_USER'@'localhost';"
+                mysql -uroot -e "UPDATE mysql.user SET authentication_string=PASSWORD('$DATABASE_PASSWORD'), plugin='mysql_native_password' WHERE user='$DATABASE_USER';"
+                mysql -uroot -e "CREATE DATABASE $DATABASE_NAME;"
+                mysql -uroot -e "FLUSH PRIVILEGES;"
+
+                echo "=== Running Tests ==="
+                export DATABASE_URL="$DATABASE_USER:$DATABASE_PASSWORD@$DATABASE_HOST:3306/$DATABASE_NAME"
+
+                ./bin/acceptance
+                EXIT_CODE=$?
+
+                service mysql stop
+
+                if [[ $EXIT_CODE != 0 ]]; then
+                  exit $EXIT_CODE
+                fi
+
+                if [[ -n "`git status --porcelain`" ]]; then
+                  echo "Detected a git diff"
+                  git status --porcelain
+                  exit 1
+                fi
+  - name: major-bump
+    public: true
+    plan:
+      - get: master
+        passed: [unit-tests, integration-tests, acceptance-tests]
+      - put: version
+        params: {bump: major}
+  - name: minor-bump
+    public: true
+    plan:
+      - get: master
+        passed: [unit-tests, integration-tests, acceptance-tests]
+      - put: version
+        params: {bump: minor}
+  - name: patch-bump
+    public: true
+    plan:
+      - get: master
+        passed: [unit-tests, integration-tests, acceptance-tests]
+      - get: golang
+      - put: version
+        params: {bump: patch}
+      - task: generate-release-body
+        image: golang
+        config:
+          platform: linux
+          inputs:
+            - name: master
+            - name: version
+          outputs:
+            - name: out
+          run:
+            path: /bin/bash
+            args:
+              - -c
+              - |
+                cp ./version/version ./out/version
+
+                cd master
+                git log $(git describe --tags --abbrev=0)..HEAD --oneline > ../out/release_body.txt
+      - put: release
+        params:
+          name: out/version
+          tag: out/version
+          body: out/release_body.txt
