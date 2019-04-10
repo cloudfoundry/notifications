@@ -55,7 +55,7 @@ var _ = Describe("NotificationsFinder", func() {
 
 		Context("when the client cannot be found", func() {
 			It("returns an empty models.Client", func() {
-				clientsRepo.FindCall.Returns.Error = models.NotFoundError{errors.New("not found")}
+				clientsRepo.FindCall.Returns.Error = models.NotFoundError{Err: errors.New("not found")}
 
 				client, _, err := finder.ClientAndKind(database, "missing-client-id", "perimeter_breach")
 				Expect(err).NotTo(HaveOccurred())
@@ -67,7 +67,7 @@ var _ = Describe("NotificationsFinder", func() {
 
 		Context("when the kind cannot be found", func() {
 			It("returns an empty models.Kind", func() {
-				kindsRepo.FindCall.Returns.Error = models.NotFoundError{errors.New("not found")}
+				kindsRepo.FindCall.Returns.Error = models.NotFoundError{Err: errors.New("not found")}
 
 				client, kind, err := finder.ClientAndKind(database, "some-client-id", "bad-kind-id")
 				Expect(err).NotTo(HaveOccurred())

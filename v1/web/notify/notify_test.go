@@ -179,7 +179,7 @@ var _ = Describe("Notify", func() {
 						request.Header.Set("Authorization", "Bearer "+rawToken)
 
 						_, err = handler.Execute(conn, request, context, "space-001", strategy, validator, vcapRequestID)
-						Expect(err).To(MatchError(webutil.ValidationError{errors.New("boom")}))
+						Expect(err).To(MatchError(webutil.ValidationError{Err: errors.New("boom")}))
 					})
 
 					It("returns a error response when params cannot be parsed", func() {

@@ -76,7 +76,7 @@ var _ = Describe("UpdateDefaultHandler", func() {
 
 			handler.ServeHTTP(writer, request, context)
 
-			Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{valiant.RequiredFieldError{"Missing required field 'html'"}}))
+			Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{Err: valiant.RequiredFieldError{ErrorMessage: "Missing required field 'html'"}}))
 		})
 	})
 

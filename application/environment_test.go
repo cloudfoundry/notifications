@@ -83,7 +83,7 @@ var _ = Describe("Environment", func() {
 				os.Setenv("DATABASE_URL", "")
 
 				_, err := application.NewEnvironment()
-				Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"DATABASE_URL"}}))
+				Expect(err).To(MatchError(application.EnvironmentError{Err: viron.RequiredFieldError{Name: "DATABASE_URL"}}))
 			})
 
 			It("errors when the url is not properly formatted", func() {
@@ -165,21 +165,21 @@ var _ = Describe("Environment", func() {
 			os.Setenv("UAA_CLIENT_SECRET", "uaa-client-secret")
 
 			_, err := application.NewEnvironment()
-			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"UAA_HOST"}}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{Name: "UAA_HOST"}}))
 
 			os.Setenv("UAA_HOST", "https://uaa.example.com")
 			os.Setenv("UAA_CLIENT_ID", "")
 			os.Setenv("UAA_CLIENT_SECRET", "uaa-client-secret")
 
 			_, err = application.NewEnvironment()
-			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"UAA_CLIENT_ID"}}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{Name: "UAA_CLIENT_ID"}}))
 
 			os.Setenv("UAA_HOST", "https://uaa.example.com")
 			os.Setenv("UAA_CLIENT_ID", "uaa-client-id")
 			os.Setenv("UAA_CLIENT_SECRET", "")
 
 			_, err = application.NewEnvironment()
-			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"UAA_CLIENT_SECRET"}}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{Name: "UAA_CLIENT_SECRET"}}))
 		})
 	})
 
@@ -250,19 +250,19 @@ var _ = Describe("Environment", func() {
 			os.Setenv("SMTP_HOST", "")
 
 			_, err = application.NewEnvironment()
-			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"SMTP_HOST"}}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{Name: "SMTP_HOST"}}))
 
 			os.Setenv("SMTP_HOST", "smtp.example.com")
 			os.Setenv("SMTP_PORT", "")
 
 			_, err = application.NewEnvironment()
-			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"SMTP_PORT"}}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{Name: "SMTP_PORT"}}))
 
 			os.Setenv("SMTP_AUTH_MECHANISM", "")
 			os.Setenv("SMTP_PORT", "567")
 
 			_, err = application.NewEnvironment()
-			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"SMTP_AUTH_MECHANISM"}}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{Name: "SMTP_AUTH_MECHANISM"}}))
 		})
 	})
 
@@ -297,7 +297,7 @@ var _ = Describe("Environment", func() {
 			os.Setenv("SENDER", "")
 
 			_, err := application.NewEnvironment()
-			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"SENDER"}}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{Name: "SENDER"}}))
 		})
 	})
 
@@ -314,7 +314,7 @@ var _ = Describe("Environment", func() {
 			os.Setenv("CC_HOST", "")
 
 			_, err := application.NewEnvironment()
-			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"CC_HOST"}}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{Name: "CC_HOST"}}))
 		})
 	})
 
@@ -402,7 +402,7 @@ var _ = Describe("Environment", func() {
 			os.Setenv("VCAP_APPLICATION", "")
 
 			_, err := application.NewEnvironment()
-			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"VCAP_APPLICATION"}}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{Name: "VCAP_APPLICATION"}}))
 		})
 	})
 
@@ -454,7 +454,7 @@ var _ = Describe("Environment", func() {
 			os.Setenv("ENCRYPTION_KEY", "")
 
 			_, err := application.NewEnvironment()
-			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"ENCRYPTION_KEY"}}))
+			Expect(err).To(MatchError(application.EnvironmentError{Err: viron.RequiredFieldError{Name: "ENCRYPTION_KEY"}}))
 		})
 	})
 
@@ -504,7 +504,7 @@ var _ = Describe("Environment", func() {
 			os.Setenv("DOMAIN", "")
 
 			_, err := application.NewEnvironment()
-			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{"DOMAIN"}}))
+			Expect(err).To(MatchError(application.EnvironmentError{viron.RequiredFieldError{Name: "DOMAIN"}}))
 		})
 	})
 })

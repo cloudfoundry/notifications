@@ -34,7 +34,7 @@ func (h GetPreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http.Reques
 	token := context.Get("token").(*jwt.Token)
 
 	if _, ok := token.Claims["user_id"]; !ok {
-		h.errorWriter.Write(w, webutil.MissingUserTokenError{errors.New("Missing user_id from token claims.")})
+		h.errorWriter.Write(w, webutil.MissingUserTokenError{Err: errors.New("Missing user_id from token claims.")})
 		return
 	}
 

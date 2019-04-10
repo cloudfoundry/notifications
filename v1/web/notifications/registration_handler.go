@@ -90,7 +90,7 @@ func (h RegistrationHandler) ValidateCriticalScopes(scopes interface{}, kinds []
 	validatedKinds := []models.Kind{}
 	for _, kind := range kinds {
 		if kind.Critical && !hasCriticalWrite {
-			return []models.Kind{}, webutil.UAAScopesError{errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")}
+			return []models.Kind{}, webutil.UAAScopesError{Err: errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")}
 		}
 		kind.ClientID = client.ID
 		validatedKinds = append(validatedKinds, kind)

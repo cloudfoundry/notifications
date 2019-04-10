@@ -188,7 +188,7 @@ var _ = Describe("RegistrationHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.UAAScopesError{errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.UAAScopesError{Err: errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")}))
 
 				Expect(transaction.BeginCall.WasCalled).To(BeFalse())
 				Expect(transaction.CommitCall.WasCalled).To(BeFalse())

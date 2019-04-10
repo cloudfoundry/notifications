@@ -157,12 +157,12 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 			})
 
 			It("delegates MissingKindOrClientErrors as webutil.ValidationError to the ErrorWriter", func() {
-				updateError := services.MissingKindOrClientError{errors.New("BOOM!")}
+				updateError := services.MissingKindOrClientError{Err: errors.New("BOOM!")}
 				updater.UpdateCall.Returns.Error = updateError
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{updateError}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{Err: updateError}))
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
@@ -170,12 +170,12 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 			})
 
 			It("delegates CriticalKindErrors as webutil.ValidationError to the ErrorWriter", func() {
-				updateError := services.CriticalKindError{errors.New("BOOM!")}
+				updateError := services.CriticalKindError{Err: errors.New("BOOM!")}
 				updater.UpdateCall.Returns.Error = updateError
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{updateError}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{Err: updateError}))
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeFalse())
@@ -199,7 +199,7 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 
 				handler.ServeHTTP(writer, request, context)
 
-				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(models.TransactionCommitError{errors.New("transaction error!!!")}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(models.TransactionCommitError{Err: errors.New("transaction error!!!")}))
 
 				Expect(transaction.BeginCall.WasCalled).To(BeTrue())
 				Expect(transaction.CommitCall.WasCalled).To(BeTrue())

@@ -63,14 +63,14 @@ var _ = Describe("ClientRegistrationParams", func() {
 					someJson := `{ "source_name" : "Raptor Containment Unit", "invalid_property" : 5 }`
 
 					_, err := notifications.NewClientRegistrationParams(strings.NewReader(someJson))
-					Expect(err).To(MatchError(webutil.SchemaError{errors.New("\"invalid_property\" is not a valid property")}))
+					Expect(err).To(MatchError(webutil.SchemaError{Err: errors.New("\"invalid_property\" is not a valid property")}))
 				})
 
 				It("returns an error for invalid nested keys", func() {
 					someJson := `{ "source_name" : "Raptor", "notifications": { "some_id": {"description" : "ok", "invalid_property" : 5 } } }`
 
 					_, err := notifications.NewClientRegistrationParams(strings.NewReader(someJson))
-					Expect(err).To(MatchError(webutil.SchemaError{errors.New("\"invalid_property\" is not a valid property")}))
+					Expect(err).To(MatchError(webutil.SchemaError{Err: errors.New("\"invalid_property\" is not a valid property")}))
 				})
 			})
 
@@ -79,13 +79,13 @@ var _ = Describe("ClientRegistrationParams", func() {
 					someJson := `{ "source_name" : "Something something raptor", "notifications": null }`
 
 					_, err := notifications.NewClientRegistrationParams(strings.NewReader(someJson))
-					Expect(err).To(MatchError(webutil.SchemaError{errors.New("only include \"notifications\" key when adding a notification")}))
+					Expect(err).To(MatchError(webutil.SchemaError{Err: errors.New("only include \"notifications\" key when adding a notification")}))
 				})
 				It("returns an error if an individual notification is null ", func() {
 					someJson := `{ "source_name" : "Raptor", "notifications": { "some_id":  null } }`
 
 					_, err := notifications.NewClientRegistrationParams(strings.NewReader(someJson))
-					Expect(err).To(MatchError(webutil.SchemaError{errors.New("notification must not be null")}))
+					Expect(err).To(MatchError(webutil.SchemaError{Err: errors.New("notification must not be null")}))
 				})
 			})
 		})
@@ -102,7 +102,7 @@ var _ = Describe("ClientRegistrationParams", func() {
 			cr := notifications.ClientRegistrationParams{}
 			err := cr.Validate()
 
-			Expect(err).To(MatchError(webutil.ValidationError{errors.New("\"source_name\" is a required field")}))
+			Expect(err).To(MatchError(webutil.ValidationError{Err: errors.New("\"source_name\" is a required field")}))
 		})
 
 		It("returns an error if notification is missing a required field", func() {

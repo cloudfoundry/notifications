@@ -33,7 +33,7 @@ if [[ $EXIT_CODE = 0 ]]; then
     echo
     pushd $DIR/.. > /dev/null 2>&1
         set +e
-        find . -path ./vendor -prune -o -type f -print | grep "\.go$" | xargs go tool vet -composites=false
+        go vet ./...
         EXIT_CODE=$?
         set -e
     popd > /dev/null 2>&1

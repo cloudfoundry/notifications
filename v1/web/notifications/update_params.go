@@ -22,7 +22,7 @@ func NewNotificationParams(body io.Reader) (NotificationUpdateParams, error) {
 	if err != nil {
 		switch err.(type) {
 		case valiant.RequiredFieldError:
-			return params, webutil.ValidationError{err}
+			return params, webutil.ValidationError{Err: err}
 		default:
 			return params, webutil.ParseError{}
 		}

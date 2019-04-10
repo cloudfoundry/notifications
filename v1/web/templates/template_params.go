@@ -29,7 +29,7 @@ func NewTemplateParams(body io.ReadCloser) (TemplateParams, error) {
 	if err != nil {
 		switch err.(type) {
 		case valiant.RequiredFieldError:
-			return template, webutil.ValidationError{err}
+			return template, webutil.ValidationError{Err: err}
 		default:
 			return template, webutil.ParseError{}
 		}
@@ -59,7 +59,7 @@ func (t TemplateParams) validateSyntax() error {
 	for field, contents := range toValidate {
 		_, err := template.New("test").Parse(contents)
 		if err != nil {
-			return webutil.ValidationError{fmt.Errorf("%s syntax is malformed please check your braces", field)}
+			return webutil.ValidationError{Err: fmt.Errorf("%s syntax is malformed please check your braces", field)}
 		}
 	}
 

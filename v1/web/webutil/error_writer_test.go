@@ -30,12 +30,12 @@ var _ = Describe("ErrorWriter", func() {
 		writer.Write(recorder, webutil.UAAScopesError{errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")})
 		Expect(recorder.Code).To(Equal(422))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["UAA Scopes Error: Client does not have authority to register critical notifications."]	
+			"errors": ["UAA Scopes Error: Client does not have authority to register critical notifications."]
 		}`))
 	})
 
 	It("returns a 502 when CloudController fails to respond", func() {
-		writer.Write(recorder, services.CCDownError{errors.New("Bad things happened!")})
+		writer.Write(recorder, services.CCDownError{Err: errors.New("Bad things happened!")})
 		Expect(recorder.Code).To(Equal(http.StatusBadGateway))
 		Expect(recorder.Body).To(MatchJSON(`{
 			"errors": ["Bad things happened!"]
@@ -46,23 +46,23 @@ var _ = Describe("ErrorWriter", func() {
 		writer.Write(recorder, webutil.TemplateCreateError{})
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["Failed to create Template in the database"]	
+			"errors": ["Failed to create Template in the database"]
 		}`))
 	})
 
 	It("returns a 500 when there is a template update error", func() {
-		writer.Write(recorder, models.TemplateUpdateError{errors.New("Failed to update Template in the database")})
+		writer.Write(recorder, models.TemplateUpdateError{Err: errors.New("Failed to update Template in the database")})
 		Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["Failed to update Template in the database"]	
+			"errors": ["Failed to update Template in the database"]
 		}`))
 	})
 
 	It("returns a 404 when the space cannot be found", func() {
-		writer.Write(recorder, services.CCNotFoundError{errors.New("Space could not be found")})
+		writer.Write(recorder, services.CCNotFoundError{Err: errors.New("Space could not be found")})
 		Expect(recorder.Code).To(Equal(http.StatusNotFound))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["Space could not be found"]	
+			"errors": ["Space could not be found"]
 		}`))
 	})
 
@@ -70,7 +70,7 @@ var _ = Describe("ErrorWriter", func() {
 		writer.Write(recorder, cf.NotFoundError{Message: "Space could not be found"})
 		Expect(recorder.Code).To(Equal(http.StatusNotFound))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["CloudController Failure: Space could not be found"]	
+			"errors": ["CloudController Failure: Space could not be found"]
 		}`))
 	})
 
@@ -78,7 +78,7 @@ var _ = Describe("ErrorWriter", func() {
 		writer.Write(recorder, webutil.ParseError{})
 		Expect(recorder.Code).To(Equal(400))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["Request body could not be parsed"]	
+			"errors": ["Request body could not be parsed"]
 		}`))
 	})
 
@@ -86,7 +86,7 @@ var _ = Describe("ErrorWriter", func() {
 		writer.Write(recorder, webutil.ValidationError{errors.New("invalid json")})
 		Expect(recorder.Code).To(Equal(422))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["invalid json"]	
+			"errors": ["invalid json"]
 		}`))
 	})
 
@@ -94,23 +94,23 @@ var _ = Describe("ErrorWriter", func() {
 		writer.Write(recorder, webutil.NewCriticalNotificationError("raptors"))
 		Expect(recorder.Code).To(Equal(422))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["Insufficient privileges to send notification raptors"]	
+			"errors": ["Insufficient privileges to send notification raptors"]
 		}`))
 	})
 
 	It("returns a 409 when there is a duplicate record", func() {
-		writer.Write(recorder, models.DuplicateError{errors.New("duplicate record")})
+		writer.Write(recorder, models.DuplicateError{Err: errors.New("duplicate record")})
 		Expect(recorder.Code).To(Equal(409))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["duplicate record"]	
+			"errors": ["duplicate record"]
 		}`))
 	})
 
 	It("returns a 404 when a record cannot be found", func() {
-		writer.Write(recorder, models.NotFoundError{errors.New("not found")})
+		writer.Write(recorder, models.NotFoundError{Err: errors.New("not found")})
 		Expect(recorder.Code).To(Equal(404))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["not found"]	
+			"errors": ["not found"]
 		}`))
 	})
 
@@ -118,15 +118,15 @@ var _ = Describe("ErrorWriter", func() {
 		writer.Write(recorder, services.DefaultScopeError{})
 		Expect(recorder.Code).To(Equal(406))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["You cannot send a notification to a default scope"]	
+			"errors": ["You cannot send a notification to a default scope"]
 		}`))
 	})
 
 	It("returns a 422 when a template cannot be assigned", func() {
-		writer.Write(recorder, collections.TemplateAssignmentError{errors.New("The template could not be assigned")})
+		writer.Write(recorder, collections.TemplateAssignmentError{Err: errors.New("The template could not be assigned")})
 		Expect(recorder.Code).To(Equal(422))
 		Expect(recorder.Body).To(MatchJSON(`{
-			"errors": ["The template could not be assigned"]	
+			"errors": ["The template could not be assigned"]
 		}`))
 	})
 
