@@ -27,7 +27,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 422 when a client tries to register a critical notification without critical_notifications.write scope", func() {
-		writer.Write(recorder, webutil.UAAScopesError{errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")})
+		writer.Write(recorder, webutil.UAAScopesError{Err: errors.New("UAA Scopes Error: Client does not have authority to register critical notifications.")})
 		Expect(recorder.Code).To(Equal(422))
 		Expect(recorder.Body).To(MatchJSON(`{
 			"errors": ["UAA Scopes Error: Client does not have authority to register critical notifications."]
@@ -83,7 +83,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 422 when the requests are not valid due to semantically invalid JSON", func() {
-		writer.Write(recorder, webutil.ValidationError{errors.New("invalid json")})
+		writer.Write(recorder, webutil.ValidationError{Err: errors.New("invalid json")})
 		Expect(recorder.Code).To(Equal(422))
 		Expect(recorder.Body).To(MatchJSON(`{
 			"errors": ["invalid json"]
@@ -131,7 +131,7 @@ var _ = Describe("ErrorWriter", func() {
 	})
 
 	It("returns a 422 when a user token was expected but is not present", func() {
-		writer.Write(recorder, webutil.MissingUserTokenError{errors.New("Missing user_id from token claims.")})
+		writer.Write(recorder, webutil.MissingUserTokenError{Err: errors.New("Missing user_id from token claims.")})
 		Expect(recorder.Code).To(Equal(422))
 		Expect(recorder.Body).To(MatchJSON(`{
 			"errors": ["Missing user_id from token claims."]

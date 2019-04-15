@@ -141,7 +141,7 @@ var _ = Describe("PreferenceUpdater", func() {
 				kindsRepo.FindCall.Returns.Error = errors.New("something bad happened")
 
 				err := updater.Update(conn, preferences, false, "the-user")
-				Expect(err).To(MatchError(services.MissingKindOrClientError{errors.New("The kind 'boo' cannot be found for client 'ghosts'")}))
+				Expect(err).To(MatchError(services.MissingKindOrClientError{Err: errors.New("The kind 'boo' cannot be found for client 'ghosts'")}))
 			})
 		})
 
@@ -169,7 +169,7 @@ var _ = Describe("PreferenceUpdater", func() {
 				kindsRepo.FindCall.Returns.Error = errors.New("something bad happened")
 
 				err := updater.Update(conn, preferences, false, "the-user")
-				Expect(err).To(Equal(services.MissingKindOrClientError{errors.New("The kind 'dead' cannot be found for client 'raptors'")}))
+				Expect(err).To(Equal(services.MissingKindOrClientError{Err: errors.New("The kind 'dead' cannot be found for client 'raptors'")}))
 			})
 		})
 
@@ -201,7 +201,7 @@ var _ = Describe("PreferenceUpdater", func() {
 				}
 
 				err := updater.Update(conn, preferences, false, "the-user")
-				Expect(err).To(Equal(services.CriticalKindError{errors.New("The kind 'hungry' for the 'raptors' client is critical and cannot be unsubscribed from")}))
+				Expect(err).To(Equal(services.CriticalKindError{Err: errors.New("The kind 'hungry' for the 'raptors' client is critical and cannot be unsubscribed from")}))
 			})
 		})
 	})

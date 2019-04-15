@@ -64,7 +64,7 @@ var _ = Describe("TemplatesCollection", func() {
 				templatesRepo.FindByIDCall.Returns.Error = models.NotFoundError{Err: errors.New("not found")}
 
 				err := collection.AssignToClient(conn, "my-client", "non-existant-template")
-				Expect(err).To(MatchError(collections.TemplateAssignmentError{errors.New("No template with id \"non-existant-template\"")}))
+				Expect(err).To(MatchError(collections.TemplateAssignmentError{Err: errors.New("No template with id \"non-existant-template\"")}))
 			})
 		})
 
@@ -185,7 +185,7 @@ var _ = Describe("TemplatesCollection", func() {
 				templatesRepo.FindByIDCall.Returns.Error = models.NotFoundError{Err: errors.New("not found")}
 
 				err := collection.AssignToNotification(conn, "my-client", "my-kind", "non-existant-template")
-				Expect(err).To(MatchError(collections.TemplateAssignmentError{errors.New("No template with id \"non-existant-template\"")}))
+				Expect(err).To(MatchError(collections.TemplateAssignmentError{Err: errors.New("No template with id \"non-existant-template\"")}))
 			})
 		})
 
