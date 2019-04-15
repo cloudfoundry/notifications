@@ -46,7 +46,7 @@ var _ = Describe("OrganizationLoader", func() {
 				cc.LoadOrganizationCall.Returns.Error = cf.NewFailure(404, "BOOM!")
 
 				_, err := loader.Load("missing-org", "some-token")
-				Expect(err).To(MatchError(services.CCNotFoundError{cf.NewFailure(404, "BOOM!")}))
+				Expect(err).To(MatchError(services.CCNotFoundError{Err: cf.NewFailure(404, "BOOM!")}))
 			})
 		})
 
@@ -55,7 +55,7 @@ var _ = Describe("OrganizationLoader", func() {
 				cc.LoadOrganizationCall.Returns.Error = cf.NewFailure(401, "BOOM!")
 
 				_, err := loader.Load("org-001", "some-token")
-				Expect(err).To(Equal(services.CCDownError{cf.NewFailure(401, "BOOM!")}))
+				Expect(err).To(Equal(services.CCDownError{Err: cf.NewFailure(401, "BOOM!")}))
 			})
 
 			It("returns the same error for all other cases", func() {

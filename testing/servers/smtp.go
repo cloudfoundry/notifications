@@ -4,7 +4,7 @@ import (
 	"net"
 	"os"
 
-	"bitbucket.org/chrj/smtpd"
+	"github.com/chrj/smtpd"
 )
 
 type SMTP struct {

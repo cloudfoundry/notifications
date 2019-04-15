@@ -4,3 +4,6 @@ applications:
     command: bin/notifications
     memory: 64M
     buildpack: go_buildpack
+    env:
+      GOVERSION: go1.11
+      GOPACKAGENAME: github.com/cloudfoundry-incubator/notifications

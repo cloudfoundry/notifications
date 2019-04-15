@@ -117,7 +117,7 @@ var _ = Describe("RegistrationParams", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			err = parameters.Validate()
-			Expect(err).To(MatchError(webutil.ValidationError{errors.New("\"source_description\" is a required field, \"kind.id\" is a required field, \"kind.description\" is a required field")}))
+			Expect(err).To(MatchError(webutil.ValidationError{Err: errors.New("\"source_description\" is a required field, \"kind.id\" is a required field, \"kind.description\" is a required field")}))
 		})
 
 		It("validates the format of kind.ID's", func() {
@@ -136,7 +136,7 @@ var _ = Describe("RegistrationParams", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			err = parameters.Validate()
-			Expect(err).To(MatchError(webutil.ValidationError{errors.New("\"kind.id\" is improperly formatted")}))
+			Expect(err).To(MatchError(webutil.ValidationError{Err: errors.New("\"kind.id\" is improperly formatted")}))
 		})
 
 	})

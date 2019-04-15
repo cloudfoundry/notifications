@@ -86,7 +86,7 @@ var _ = Describe("UpdateHandler", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					handler.ServeHTTP(writer, request, context)
-					Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{valiant.RequiredFieldError{"Missing required field 'name'"}}))
+					Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{Err: valiant.RequiredFieldError{ErrorMessage: "Missing required field 'name'"}}))
 				})
 			})
 
@@ -97,19 +97,19 @@ var _ = Describe("UpdateHandler", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					handler.ServeHTTP(writer, request, context)
-					Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{valiant.RequiredFieldError{"Missing required field 'html'"}}))
+					Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{Err: valiant.RequiredFieldError{ErrorMessage: "Missing required field 'html'"}}))
 				})
 			})
 
 			Describe("when the update returns an error", func() {
 				It("returns the error", func() {
-					updater.UpdateCall.Returns.Error = models.TemplateUpdateError{errors.New("some error")}
+					updater.UpdateCall.Returns.Error = models.TemplateUpdateError{Err: errors.New("some error")}
 					body := []byte(`{"name": "a temlate name", "html": "<p>my html</p>"}`)
 					request, err = http.NewRequest("PUT", "/templates/a-template-id", bytes.NewBuffer(body))
 					Expect(err).NotTo(HaveOccurred())
 
 					handler.ServeHTTP(writer, request, context)
-					Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(models.TemplateUpdateError{errors.New("some error")}))
+					Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(models.TemplateUpdateError{Err: errors.New("some error")}))
 				})
 			})
 		})

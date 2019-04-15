@@ -72,7 +72,7 @@ var _ = Describe("TemplateParams", func() {
 							Subject: "{{.bad}",
 						})
 						_, err := templates.NewTemplateParams(ioutil.NopCloser(body))
-						Expect(err).To(MatchError(webutil.ValidationError{errors.New("Subject syntax is malformed please check your braces")}))
+						Expect(err).To(MatchError(webutil.ValidationError{Err: errors.New("Subject syntax is malformed please check your braces")}))
 					})
 				})
 
@@ -85,7 +85,7 @@ var _ = Describe("TemplateParams", func() {
 							Subject: "Great Subject",
 						})
 						_, err := templates.NewTemplateParams(ioutil.NopCloser(body))
-						Expect(err).To(MatchError(webutil.ValidationError{errors.New("Text syntax is malformed please check your braces")}))
+						Expect(err).To(MatchError(webutil.ValidationError{Err: errors.New("Text syntax is malformed please check your braces")}))
 					})
 				})
 
@@ -98,7 +98,7 @@ var _ = Describe("TemplateParams", func() {
 							Subject: "Great Subject",
 						})
 						_, err := templates.NewTemplateParams(ioutil.NopCloser(body))
-						Expect(err).To(MatchError(webutil.ValidationError{errors.New("HTML syntax is malformed please check your braces")}))
+						Expect(err).To(MatchError(webutil.ValidationError{Err: errors.New("HTML syntax is malformed please check your braces")}))
 					})
 				})
 			})

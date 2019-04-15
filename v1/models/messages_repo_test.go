@@ -28,7 +28,7 @@ var _ = Describe("MessagesRepo", func() {
 		helpers.TruncateTables(database)
 		conn = database.Connection()
 		message = models.Message{
-			Status:     common.StatusDelivered,
+			Status: common.StatusDelivered,
 		}
 
 		guidGenerator = mocks.NewIDGenerator()
@@ -69,7 +69,7 @@ var _ = Describe("MessagesRepo", func() {
 		Context("When the message does not exists", func() {
 			It("FindByID returns a models.RecordNotFoundError", func() {
 				_, err := repo.FindByID(conn, "missing-id")
-				Expect(err).To(MatchError(models.NotFoundError{errors.New("Message with ID \"missing-id\" could not be found")}))
+				Expect(err).To(MatchError(models.NotFoundError{Err: errors.New("Message with ID \"missing-id\" could not be found")}))
 			})
 		})
 	})
@@ -122,7 +122,7 @@ var _ = Describe("MessagesRepo", func() {
 			Expect(itemsDeleted).To(Equal(1))
 
 			_, err = repo.FindByID(conn, message.ID)
-			Expect(err).To(MatchError(models.NotFoundError{fmt.Errorf("Message with ID %q could not be found", message.ID)}))
+			Expect(err).To(MatchError(models.NotFoundError{Err: fmt.Errorf("Message with ID %q could not be found", message.ID)}))
 
 		})
 

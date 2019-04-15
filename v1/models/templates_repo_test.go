@@ -55,7 +55,7 @@ var _ = Describe("TemplatesRepo", func() {
 				sillyTemplate, err := repo.FindByID(conn, "silly_template")
 
 				Expect(sillyTemplate).To(Equal(models.Template{}))
-				Expect(err).To(MatchError(models.NotFoundError{errors.New("Template with ID \"silly_template\" could not be found")}))
+				Expect(err).To(MatchError(models.NotFoundError{Err: errors.New("Template with ID \"silly_template\" could not be found")}))
 			})
 		})
 	})
@@ -127,7 +127,7 @@ var _ = Describe("TemplatesRepo", func() {
 		Context("the template does not exist in the database", func() {
 			It("bubbles up the error", func() {
 				_, err := repo.Update(conn, "a-bad-id", aNewTemplate)
-				Expect(err).To(MatchError(models.NotFoundError{errors.New("Template with ID \"a-bad-id\" could not be found")}))
+				Expect(err).To(MatchError(models.NotFoundError{Err: errors.New("Template with ID \"a-bad-id\" could not be found")}))
 			})
 		})
 	})
@@ -178,14 +178,14 @@ var _ = Describe("TemplatesRepo", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				_, err = repo.FindByID(conn, template.ID)
-				Expect(err).To(MatchError(models.NotFoundError{fmt.Errorf("Template with ID %q could not be found", template.ID)}))
+				Expect(err).To(MatchError(models.NotFoundError{Err: fmt.Errorf("Template with ID %q could not be found", template.ID)}))
 			})
 		})
 
 		Context("the template does not exist in the database", func() {
 			It("returns an RecordNotFoundError", func() {
 				err := repo.Destroy(conn, "knockknock")
-				Expect(err).To(MatchError(models.NotFoundError{errors.New("Template with ID \"knockknock\" could not be found")}))
+				Expect(err).To(MatchError(models.NotFoundError{Err: errors.New("Template with ID \"knockknock\" could not be found")}))
 			})
 		})
 	})
