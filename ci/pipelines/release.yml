@@ -10,7 +10,7 @@ resources:
     type: registry-image-dev
     source:
       repository: golang
-      tag: 1.9-stretch
+      tag: 1.11-stretch
 
   - name: master
     type: git
@@ -67,12 +67,15 @@ jobs:
                 export GOPATH=`pwd`/go
                 export PATH=$PATH:$GOPATH/bin
 
-                cd go/src/github.com/cloudfoundry-incubator/notifications
-
-                go get github.com/tools/godep
+                export GO111MODULE=off
                 go get github.com/onsi/ginkgo/ginkgo
+                export GO111MODULE=on
+                export GOFLAGS=-mod=vendor
 
+                cd go/src/github.com/cloudfoundry-incubator/notifications
                 go version
+
+                export GOFLAGS=-mod=vendor
 
                 echo "=== Running Tests ==="
 
@@ -116,12 +119,15 @@ jobs:
                 export GOPATH=`pwd`/go
                 export PATH=$PATH:$GOPATH/bin
 
-                cd go/src/github.com/cloudfoundry-incubator/notifications
-
-                go get github.com/tools/godep
+                export GO111MODULE=off
                 go get github.com/onsi/ginkgo/ginkgo
+                export GO111MODULE=on
+                export GOFLAGS=-mod=vendor
 
+                cd go/src/github.com/cloudfoundry-incubator/notifications
                 go version
+
+                export GOFLAGS=-mod=vendor
 
                 echo "=== Setting up MySQL ==="
                 apt-get -qqy update
@@ -181,12 +187,15 @@ jobs:
                 export GOPATH=`pwd`/go
                 export PATH=$PATH:$GOPATH/bin
 
-                cd go/src/github.com/cloudfoundry-incubator/notifications
-
-                go get github.com/tools/godep
+                export GO111MODULE=off
                 go get github.com/onsi/ginkgo/ginkgo
+                export GO111MODULE=on
+                export GOFLAGS=-mod=vendor
 
+                cd go/src/github.com/cloudfoundry-incubator/notifications
                 go version
+
+                export GOFLAGS=-mod=vendor
 
                 echo "=== Setting up MySQL ==="
                 apt-get -qqy update
