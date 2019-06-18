@@ -1,6 +1,7 @@
 package postal
 
 import (
+	"log"
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/db"
@@ -82,6 +83,7 @@ func (worker DeliveryWorker) Deliver(job *gobble.Job) {
 	if err != nil {
 		metrics.GetOrRegisterCounter("notifications.worker.panic.json", nil).Inc(1)
 
+		log.Printf("Error: Could not unmarshal %+v", job)
 		worker.deliveryFailureHandler.Handle(job, worker.logger)
 		return
 	}
