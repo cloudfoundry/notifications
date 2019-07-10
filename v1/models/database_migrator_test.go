@@ -75,7 +75,7 @@ var _ = Describe("DatabaseMigrator", func() {
 
 		It("has the default template pre-seeded", func() {
 			_, err := repo.FindByID(connection, models.DefaultTemplateID)
-			Expect(err).To(MatchError(models.NotFoundError{errors.New("Template with ID \"default\" could not be found")}))
+			Expect(err).To(MatchError(models.NotFoundError{Err: errors.New("Template with ID \"default\" could not be found")}))
 
 			dbMigrator.Seed(database, defaultTemplatePath)
 			template, err := repo.FindByID(connection, models.DefaultTemplateID)

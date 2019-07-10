@@ -31,7 +31,7 @@ func (h UpdatePreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http.Req
 	token := context.Get("token").(*jwt.Token)
 
 	if _, ok := token.Claims["user_id"]; !ok {
-		h.errorWriter.Write(w, webutil.MissingUserTokenError{errors.New("Missing user_id from token claims.")})
+		h.errorWriter.Write(w, webutil.MissingUserTokenError{Err: errors.New("Missing user_id from token claims.")})
 		return
 	}
 
@@ -41,13 +41,13 @@ func (h UpdatePreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http.Req
 	validator := valiant.NewValidator(req.Body)
 	err := validator.Validate(&builder)
 	if err != nil {
-		h.errorWriter.Write(w, webutil.ValidationError{err})
+		h.errorWriter.Write(w, webutil.ValidationError{Err: err})
 		return
 	}
 
 	preferences, err := builder.ToPreferences()
 	if err != nil {
-		h.errorWriter.Write(w, webutil.ValidationError{err})
+		h.errorWriter.Write(w, webutil.ValidationError{Err: err})
 		return
 	}
 
@@ -59,7 +59,7 @@ func (h UpdatePreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http.Req
 
 		switch err.(type) {
 		case services.MissingKindOrClientError, services.CriticalKindError:
-			h.errorWriter.Write(w, webutil.ValidationError{err})
+			h.errorWriter.Write(w, webutil.ValidationError{Err: err})
 		default:
 			h.errorWriter.Write(w, err)
 		}
@@ -68,7 +68,7 @@ func (h UpdatePreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http.Req
 
 	err = transaction.Commit()
 	if err != nil {
-		h.errorWriter.Write(w, models.TransactionCommitError{err})
+		h.errorWriter.Write(w, models.TransactionCommitError{Err: err})
 		return
 	}
 

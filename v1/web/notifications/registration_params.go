@@ -73,7 +73,7 @@ func (registration RegistrationParams) Validate() error {
 	errs = append(errs, kindErrors...)
 
 	if len(errs) > 0 {
-		return webutil.ValidationError{errors.New(strings.Join(errs, ", "))}
+		return webutil.ValidationError{Err: errors.New(strings.Join(errs, ", "))}
 	}
 	return nil
 }

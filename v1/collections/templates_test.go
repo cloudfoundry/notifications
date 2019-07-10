@@ -54,17 +54,17 @@ var _ = Describe("TemplatesCollection", func() {
 
 		Context("when the request includes a non-existant id", func() {
 			It("reports that the client cannot be found", func() {
-				clientsRepo.FindCall.Returns.Error = models.NotFoundError{errors.New("not found")}
+				clientsRepo.FindCall.Returns.Error = models.NotFoundError{Err: errors.New("not found")}
 
 				err := collection.AssignToClient(conn, "missing-client", "my-template")
-				Expect(err).To(MatchError(models.NotFoundError{errors.New("not found")}))
+				Expect(err).To(MatchError(models.NotFoundError{Err: errors.New("not found")}))
 			})
 
 			It("reports that the template cannot be found", func() {
-				templatesRepo.FindByIDCall.Returns.Error = models.NotFoundError{errors.New("not found")}
+				templatesRepo.FindByIDCall.Returns.Error = models.NotFoundError{Err: errors.New("not found")}
 
 				err := collection.AssignToClient(conn, "my-client", "non-existant-template")
-				Expect(err).To(MatchError(collections.TemplateAssignmentError{errors.New("No template with id \"non-existant-template\"")}))
+				Expect(err).To(MatchError(collections.TemplateAssignmentError{Err: errors.New("No template with id \"non-existant-template\"")}))
 			})
 		})
 
@@ -167,25 +167,25 @@ var _ = Describe("TemplatesCollection", func() {
 
 		Context("when the request includes a non-existant id", func() {
 			It("reports that the client cannot be found", func() {
-				kindsRepo.FindCall.Returns.Error = models.NotFoundError{errors.New("not found")}
+				kindsRepo.FindCall.Returns.Error = models.NotFoundError{Err: errors.New("not found")}
 
 				err := collection.AssignToNotification(conn, "bad-client", "my-kind", "my-template")
-				Expect(err).To(MatchError(models.NotFoundError{errors.New("not found")}))
+				Expect(err).To(MatchError(models.NotFoundError{Err: errors.New("not found")}))
 			})
 
 			It("reports that the kind cannot be found", func() {
-				kindsRepo.FindCall.Returns.Error = models.NotFoundError{errors.New("not found")}
+				kindsRepo.FindCall.Returns.Error = models.NotFoundError{Err: errors.New("not found")}
 
 				err := collection.AssignToNotification(conn, "my-client", "bad-kind", "my-template")
 				Expect(err).To(HaveOccurred())
-				Expect(err).To(BeAssignableToTypeOf(models.NotFoundError{errors.New("not found")}))
+				Expect(err).To(BeAssignableToTypeOf(models.NotFoundError{Err: errors.New("not found")}))
 			})
 
 			It("reports that the template cannot be found", func() {
-				templatesRepo.FindByIDCall.Returns.Error = models.NotFoundError{errors.New("not found")}
+				templatesRepo.FindByIDCall.Returns.Error = models.NotFoundError{Err: errors.New("not found")}
 
 				err := collection.AssignToNotification(conn, "my-client", "my-kind", "non-existant-template")
-				Expect(err).To(MatchError(collections.TemplateAssignmentError{errors.New("No template with id \"non-existant-template\"")}))
+				Expect(err).To(MatchError(collections.TemplateAssignmentError{Err: errors.New("No template with id \"non-existant-template\"")}))
 			})
 		})
 

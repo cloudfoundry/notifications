@@ -77,7 +77,7 @@ var _ = Describe("KindsRepo", func() {
 					TemplateID: "my-template",
 				}
 				_, err := repo.Update(conn, kind)
-				Expect(err).To(MatchError(models.NotFoundError{errors.New("Notification with ID \"my-kind\" belonging to client \"my-client\" could not be found")}))
+				Expect(err).To(MatchError(models.NotFoundError{Err: errors.New("Notification with ID \"my-kind\" belonging to client \"my-client\" could not be found")}))
 			})
 		})
 
@@ -129,7 +129,7 @@ var _ = Describe("KindsRepo", func() {
 					ClientID: "my-client",
 				}
 				_, err := repo.Update(conn, kind)
-				Expect(err).To(MatchError(models.NotFoundError{errors.New("Notification with ID \"my-kind\" belonging to client \"my-client\" could not be found")}))
+				Expect(err).To(MatchError(models.NotFoundError{Err: errors.New("Notification with ID \"my-kind\" belonging to client \"my-client\" could not be found")}))
 			})
 		})
 	})
@@ -318,7 +318,7 @@ var _ = Describe("KindsRepo", func() {
 			Expect(count).To(Equal(1))
 
 			_, err = repo.Find(conn, "my-kind", "the-client-id")
-			Expect(err).To(MatchError(models.NotFoundError{errors.New("Notification with ID \"my-kind\" belonging to client \"the-client-id\" could not be found")}))
+			Expect(err).To(MatchError(models.NotFoundError{Err: errors.New("Notification with ID \"my-kind\" belonging to client \"the-client-id\" could not be found")}))
 
 			_, err = repo.Find(conn, "ignored-kind", "other-client-id")
 			if err != nil {

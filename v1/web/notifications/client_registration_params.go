@@ -58,24 +58,24 @@ func strictValidateJSON(bytes []byte) error {
 			continue
 		} else if key == "notifications" {
 			if untypedClientRegistration[key] == nil {
-				return webutil.SchemaError{errors.New("only include \"notifications\" key when adding a notification")}
+				return webutil.SchemaError{Err: errors.New("only include \"notifications\" key when adding a notification")}
 			}
 			notifications := untypedClientRegistration[key].(map[string]interface{})
 			for _, notificationData := range notifications {
 				if notificationData == nil {
-					return webutil.SchemaError{errors.New("notification must not be null")}
+					return webutil.SchemaError{Err: errors.New("notification must not be null")}
 				}
 				notificationMap := notificationData.(map[string]interface{})
 				for propertyName := range notificationMap {
 					if propertyName == "description" || propertyName == "critical" {
 						continue
 					} else {
-						return webutil.SchemaError{fmt.Errorf("%q is not a valid property", propertyName)}
+						return webutil.SchemaError{Err: fmt.Errorf("%q is not a valid property", propertyName)}
 					}
 				}
 			}
 		} else {
-			return webutil.SchemaError{fmt.Errorf("%q is not a valid property", key)}
+			return webutil.SchemaError{Err: fmt.Errorf("%q is not a valid property", key)}
 		}
 	}
 	return nil
@@ -100,7 +100,7 @@ func (clientRegistration ClientRegistrationParams) Validate() error {
 	}
 
 	if len(errs) > 0 {
-		return webutil.ValidationError{errors.New(strings.Join(errs, ", "))}
+		return webutil.ValidationError{Err: errors.New(strings.Join(errs, ", "))}
 	}
 
 	return nil

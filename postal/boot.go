@@ -116,6 +116,8 @@ func Boot(mailClient func() *mail.Client, db *sql.DB, config Config) {
 			UAAHost: config.UAAHost,
 			DBTrace: config.DBLoggingEnabled,
 
+			DeliveryFailureHandler: deliveryFailureHandler,
+
 			Logger: logger.Session("worker", lager.Data{"worker_id": index}),
 			Queue:  gobbleQueue,
 		})

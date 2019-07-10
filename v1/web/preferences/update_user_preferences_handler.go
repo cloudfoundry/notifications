@@ -34,7 +34,7 @@ func (h UpdateUserPreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http
 	validator := valiant.NewValidator(req.Body)
 	err := validator.Validate(&builder)
 	if err != nil {
-		h.errorWriter.Write(w, webutil.ValidationError{err})
+		h.errorWriter.Write(w, webutil.ValidationError{Err: err})
 		return
 	}
 
@@ -52,7 +52,7 @@ func (h UpdateUserPreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http
 
 		switch err.(type) {
 		case services.MissingKindOrClientError, services.CriticalKindError:
-			h.errorWriter.Write(w, webutil.ValidationError{err})
+			h.errorWriter.Write(w, webutil.ValidationError{Err: err})
 		default:
 			h.errorWriter.Write(w, err)
 		}
@@ -61,7 +61,7 @@ func (h UpdateUserPreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http
 
 	err = transaction.Commit()
 	if err != nil {
-		h.errorWriter.Write(w, models.TransactionCommitError{err})
+		h.errorWriter.Write(w, models.TransactionCommitError{Err: err})
 		return
 	}
 

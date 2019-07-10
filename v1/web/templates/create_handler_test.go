@@ -88,7 +88,7 @@ var _ = Describe("CreateHandler", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{valiant.RequiredFieldError{"Missing required field 'name'"}}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{Err: valiant.RequiredFieldError{ErrorMessage: "Missing required field 'name'"}}))
 			})
 
 			It("Writes a validation error to the errorwriter when the request is missing the html field", func() {
@@ -96,7 +96,7 @@ var _ = Describe("CreateHandler", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				handler.ServeHTTP(writer, request, context)
-				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{valiant.RequiredFieldError{"Missing required field 'html'"}}))
+				Expect(errorWriter.WriteCall.Receives.Error).To(MatchError(webutil.ValidationError{Err: valiant.RequiredFieldError{ErrorMessage: "Missing required field 'html'"}}))
 			})
 
 			It("writes a parse error for an invalid request", func() {

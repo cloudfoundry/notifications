@@ -56,7 +56,7 @@ var _ = Describe("Queue", func() {
 					"testing": true,
 				})
 
-				transaction := db.NewTransaction(&db.Connection{database.Connection})
+				transaction := db.NewTransaction(&db.Connection{DbMap: database.Connection})
 				transaction.Begin()
 
 				job, err := queue.Enqueue(job, transaction)
