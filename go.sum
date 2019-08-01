@@ -10,6 +10,8 @@ github.com/dgrijalva/jwt-go v0.0.0-20141103211122-47b263f02057 h1:9+f7nOqKMfeJrP
 github.com/dgrijalva/jwt-go v0.0.0-20141103211122-47b263f02057/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/go-sql-driver/mysql v1.2.0 h1:C5cl8DzJiobQuZhND5+a3cOrrRhyaJBPHxZjLgdN8kk=
 github.com/go-sql-driver/mysql v1.2.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
+github.com/go-sql-driver/mysql v1.4.1 h1:g24URVg0OFbNUTx9qqY1IRZ9D9z3iPyi5zKhQZpNwpA=
+github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/gorilla/context v0.0.0-20140306180640-1be7a086a5fd h1:SZ5v0Oh0SwT8C2HQN2iQU7mW4TYCk9F93EvTSPcIYyo=
 github.com/gorilla/context v0.0.0-20140306180640-1be7a086a5fd/go.mod h1:kBGZzfjB9CEq2AlWe17Uuf7NDRt0dE0s8S51q0aT7Yg=
 github.com/gorilla/mux v0.0.0-20131205071822-9ede152210fa h1:KxnFLqfI0rxX8qmbu8IfsWnB4yBZRDioqQsvc63PfS4=
