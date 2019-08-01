@@ -8,7 +8,7 @@ require (
 	github.com/andybalholm/cascadia v0.0.0-20150328005534-54abbbf07a45 // indirect
 	github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd
 	github.com/dgrijalva/jwt-go v0.0.0-20141103211122-47b263f02057
-	github.com/go-sql-driver/mysql v1.2.0
+	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gorilla/context v0.0.0-20140306180640-1be7a086a5fd // indirect
 	github.com/gorilla/mux v0.0.0-20131205071822-9ede152210fa
 	github.com/onsi/ginkgo v0.0.0-20141213001613-291f28e66dd2
