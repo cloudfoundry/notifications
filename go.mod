@@ -22,7 +22,7 @@ require (
 	github.com/rubenv/sql-migrate v0.0.0-20150713140751-53184e1edfb4
 	github.com/ryanmoran/stack v0.0.0-20140916210556-3debe7a5953a
 	github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8
-	golang.org/x/net v0.0.0-20150320034621-7dbad50ab5b3 // indirect
+	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v1 v1.0.0-20141111223934-dacd4576c5aa // indirect
 	gopkg.in/gomail.v1 v1.0.0-20150120141108-d7294067b867
 	gopkg.in/gorp.v1 v1.7.1

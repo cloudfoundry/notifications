@@ -8,7 +8,7 @@ github.com/andybalholm/cascadia
 github.com/chrj/smtpd
 # github.com/dgrijalva/jwt-go v0.0.0-20141103211122-47b263f02057
 github.com/dgrijalva/jwt-go
-# github.com/go-sql-driver/mysql v1.2.0
+# github.com/go-sql-driver/mysql v1.4.1
 github.com/go-sql-driver/mysql
 # github.com/gorilla/context v0.0.0-20140306180640-1be7a086a5fd
 github.com/gorilla/context
@@ -66,9 +66,11 @@ github.com/rubenv/sql-migrate/sqlparse
 github.com/ryanmoran/stack
 # github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8
 github.com/ryanmoran/viron
-# golang.org/x/net v0.0.0-20150320034621-7dbad50ab5b3
+# golang.org/x/net v0.0.0-20190603091049-60506f45cf65
 golang.org/x/net/html
 golang.org/x/net/html/atom
+# google.golang.org/appengine v1.6.1
+google.golang.org/appengine/cloudsql
 # gopkg.in/alexcesaro/quotedprintable.v1 v1.0.0-20141111223934-dacd4576c5aa
 gopkg.in/alexcesaro/quotedprintable.v1
 gopkg.in/alexcesaro/quotedprintable.v1/internal
