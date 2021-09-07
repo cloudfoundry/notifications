@@ -1,3 +1,5 @@
+bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a h1:qPZv7NxewNKcHj/TvDO1RbRVGgbsIdzkj4O+9q/5cz4=
+bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a/go.mod h1:rmAH0EKvCdvvOZLc6nphIlzAxGW3Y0Dz0PLoXCJ2YO8=
 github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1 h1:VCMK4Ry+CJWJeKkda76Nmffpwe5ECtkcpqN0TsRSQxM=
 github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/PuerkitoBio/goquery v0.0.0-20150328133056-269246d9e7d4 h1:Ill2Bt/QBs24daCeDtKBWG1hqLEIht1BrwHwBEshJ3U=
@@ -8,8 +10,6 @@ github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd h1:/f/SW/WhVIXuS3c2Eq9w
 github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd/go.mod h1:CCN2w0A/V4Mt1XKsMBYtLCUSkPCfanfGjsZbnaJ+13g=
 github.com/dgrijalva/jwt-go v0.0.0-20141103211122-47b263f02057 h1:9+f7nOqKMfeJrPaWlOO6OAuSHtg0MkTZQDMwUN7W6Tk=
 github.com/dgrijalva/jwt-go v0.0.0-20141103211122-47b263f02057/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
-github.com/go-sql-driver/mysql v1.2.0 h1:C5cl8DzJiobQuZhND5+a3cOrrRhyaJBPHxZjLgdN8kk=
-github.com/go-sql-driver/mysql v1.2.0/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/go-sql-driver/mysql v1.4.1 h1:g24URVg0OFbNUTx9qqY1IRZ9D9z3iPyi5zKhQZpNwpA=
 github.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=
 github.com/golang/protobuf v1.3.1/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
@@ -17,6 +17,17 @@ github.com/gorilla/context v0.0.0-20140306180640-1be7a086a5fd h1:SZ5v0Oh0SwT8C2H
 github.com/gorilla/context v0.0.0-20140306180640-1be7a086a5fd/go.mod h1:kBGZzfjB9CEq2AlWe17Uuf7NDRt0dE0s8S51q0aT7Yg=
 github.com/gorilla/mux v0.0.0-20131205071822-9ede152210fa h1:KxnFLqfI0rxX8qmbu8IfsWnB4yBZRDioqQsvc63PfS4=
 github.com/gorilla/mux v0.0.0-20131205071822-9ede152210fa/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
+github.com/kr/pretty v0.2.1 h1:Fmg33tUaq4/8ym9TJN1x7sLJnHVwhP33CNkpYV/7rwI=
+github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
+github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
+github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
+github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+github.com/lib/pq v1.10.3 h1:v9QZf2Sn6AmjXtQeFpdoq/eaNtYP6IN+7lcrygsIAtg=
+github.com/lib/pq v1.10.3/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
+github.com/mattn/go-sqlite3 v1.14.8 h1:gDp86IdQsN/xWjIEmr9MF6o9mpksUgh0fu+9ByFxzIU=
+github.com/mattn/go-sqlite3 v1.14.8/go.mod h1:NyWgC/yNuGj7Q9rpYnZvas74GogHl5/Z4A/KQRfk6bU=
+github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d h1:VhgPp6v9qf9Agr/56bj7Y/xa04UccTW04VP0Qed4vnQ=
+github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d/go.mod h1:YUTz3bUH2ZwIWBy3CJBeOBEugqcmXREj14T+iG/4k4U=
 github.com/onsi/ginkgo v0.0.0-20141213001613-291f28e66dd2 h1:5tq+jOM9z5cHDLKEMFRFGyVk0cCii3jziYgQU0PjM5w=
 github.com/onsi/ginkgo v0.0.0-20141213001613-291f28e66dd2/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/gomega v0.0.0-20150530211311-d6c945f9fdbf h1:NA0/kP9lOc4MwgtOE+H5KxRwPQVumngNvobaO4j1PQk=
@@ -39,10 +50,10 @@ github.com/ryanmoran/stack v0.0.0-20140916210556-3debe7a5953a h1:q7sqzOM/aAKYJcL
 github.com/ryanmoran/stack v0.0.0-20140916210556-3debe7a5953a/go.mod h1:HspNMheDCl20Vj6UJJ0l6IOx8o41FHSGfqF2SoiuMY8=
 github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8 h1:z650GyMn4afbTu3BbYBG9YBZAmHm9TICO/g88raupu8=
 github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8/go.mod h1:m+4a5LnIWQUVuIJxdAcXMo+izXLXrGsTzafWta4gOE0=
+github.com/ziutek/mymysql v1.5.4 h1:GB0qdRGsTwQSBVYuVShFBKaXSnSnYYC2d9knnE1LHFs=
+github.com/ziutek/mymysql v1.5.4/go.mod h1:LMSpPZ6DbqWFxNCHW77HeMg9I646SAhApZ/wKdgO/C0=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
-golang.org/x/net v0.0.0-20150320034621-7dbad50ab5b3 h1:yvuqj4ruHcpURPG1eeixVVBgX3ku/QgBT92yRIJa1k4=
-golang.org/x/net v0.0.0-20150320034621-7dbad50ab5b3/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
 golang.org/x/net v0.0.0-20190311183353-d8887717615a/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/net v0.0.0-20190603091049-60506f45cf65 h1:+rhAzEzT3f4JtomfC371qB+0Ola2caSKcY69NUBZrRQ=
@@ -59,6 +70,8 @@ google.golang.org/appengine v1.6.1 h1:QzqyMA1tlu6CgqCDUtU9V+ZKhLFT2dkJuANu5QaxI3
 google.golang.org/appengine v1.6.1/go.mod h1:i06prIuMbXzDqacNJfV5OdTW448YApPu5ww/cMBSeb0=
 gopkg.in/alexcesaro/quotedprintable.v1 v1.0.0-20141111223934-dacd4576c5aa h1:PIw+BbGtpLQs+259v7qLUVaaW8/kVZG7aSpg/1gvEUQ=
 gopkg.in/alexcesaro/quotedprintable.v1 v1.0.0-20141111223934-dacd4576c5aa/go.mod h1:RSgkUXQnzRspquWaPU1S/IsLs35TDymLZCYZYCtXOoI=
+gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=
+gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=
 gopkg.in/gomail.v1 v1.0.0-20150120141108-d7294067b867 h1:tBtvVni9Ig6tD3LNyd/MRSBKFTX0DBRzwQWgfII5w8k=
 gopkg.in/gomail.v1 v1.0.0-20150120141108-d7294067b867/go.mod h1:mrkmGIvaT7iUJO0pgw8OzjwN1tHmFcMHYtBizddG/ZU=
 gopkg.in/gorp.v1 v1.7.1 h1:GBB9KrWRATQZh95HJyVGUZrWwOPswitEYEyqlK8JbAA=

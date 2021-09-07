@@ -15,7 +15,7 @@ resources:
     type: registry-image-dev
     source:
       repository: golang
-      tag: 1.11-stretch
+      tag: 1.16-stretch
 
   - name: pull-request
     type: pull-request
