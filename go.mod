@@ -1,20 +1,14 @@
 module github.com/cloudfoundry-incubator/notifications
 
-go 1.16
+go 1.18
 
 require (
-	bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a // indirect
 	github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1
 	github.com/PuerkitoBio/goquery v0.0.0-20150328133056-269246d9e7d4
-	github.com/andybalholm/cascadia v0.0.0-20150328005534-54abbbf07a45 // indirect
 	github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd
 	github.com/dgrijalva/jwt-go v0.0.0-20141103211122-47b263f02057
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/gorilla/context v0.0.0-20140306180640-1be7a086a5fd // indirect
 	github.com/gorilla/mux v0.0.0-20131205071822-9ede152210fa
-	github.com/lib/pq v1.10.3 // indirect
-	github.com/mattn/go-sqlite3 v1.14.8 // indirect
-	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/onsi/ginkgo v0.0.0-20141213001613-291f28e66dd2
 	github.com/onsi/gomega v0.0.0-20150530211311-d6c945f9fdbf
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
@@ -26,10 +20,20 @@ require (
 	github.com/rubenv/sql-migrate v0.0.0-20150713140751-53184e1edfb4
 	github.com/ryanmoran/stack v0.0.0-20140916210556-3debe7a5953a
 	github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8
+	gopkg.in/gomail.v1 v1.0.0-20150120141108-d7294067b867
+	gopkg.in/gorp.v1 v1.7.1
+)
+
+require (
+	bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a // indirect
+	github.com/andybalholm/cascadia v0.0.0-20150328005534-54abbbf07a45 // indirect
+	github.com/gorilla/context v0.0.0-20140306180640-1be7a086a5fd // indirect
+	github.com/lib/pq v1.10.3 // indirect
+	github.com/mattn/go-sqlite3 v1.14.8 // indirect
+	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
+	golang.org/x/net v0.0.0-20190603091049-60506f45cf65 // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v1 v1.0.0-20141111223934-dacd4576c5aa // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	gopkg.in/gomail.v1 v1.0.0-20150120141108-d7294067b867
-	gopkg.in/gorp.v1 v1.7.1
 )
