@@ -7,6 +7,7 @@ metadata:
   description: A backend service for sending (usually email) notifications to CF users, including templating and subscription management
   links: []
   tags:
+    - cloud-foundry
     - go
 spec:
   type: library
@@ -21,6 +22,8 @@ kind: System
 metadata:
   name: notifications
   description: A service for sending email notifications to CF users
+  tags:
+    - cloud-foundry  
 spec:
   owner: wg-app-runtime-interfaces-notifications-approvers
   domain: app-runtime
