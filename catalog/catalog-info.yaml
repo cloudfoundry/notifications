@@ -11,7 +11,7 @@ metadata:
 spec:
   type: library
   lifecycle: production
-  owner: app-runtime-interfaces-wg-notifications
+  owner: wg-app-runtime-interfaces-notifications-approvers
   system: notifications
   providesApis:
     - notifications
@@ -22,5 +22,5 @@ metadata:
   name: notifications
   description: A service for sending email notifications to CF users
 spec:
-  owner: app-runtime-interfaces-wg-notifications
+  owner: wg-app-runtime-interfaces-notifications-approvers
   domain: app-runtime
