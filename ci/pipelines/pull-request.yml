@@ -54,7 +54,7 @@ jobs:
                 export PATH=$PATH:$GOPATH/bin
 
                 export GO111MODULE=off
-                go get github.com/onsi/ginkgo/ginkgo
+                go get github.com/onsi/ginkgo/v2
                 export GO111MODULE=on
                 export GOFLAGS=-mod=vendor
 

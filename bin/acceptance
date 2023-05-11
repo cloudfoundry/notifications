@@ -1,27 +1,26 @@
-#!/bin/bash -e
+#! /usr/bin/env bash
+set +e
 
-DIR=$(dirname $0)
-
-if [[ -z "$ENVIRONMENT" ]]; then
-    ENVIRONMENT=test
-fi
+DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ENVIRONMENT="${ENVIRONMENT:-test}"
 
 GREEN="\033[0;32m"
 RED="\033[0;31m"
 NONE="\033[0m"
 
-source $DIR/env/$ENVIRONMENT
+# shellcheck source=./env/test
+source "$DIR/env/$ENVIRONMENT"
 EXIT_CODE=0
 
 function run() {
   set +e
-  ginkgo -randomizeAllSpecs=true -randomizeSuites=true -succinct=true $@
+  ginkgo --randomize-all=true --randomize-suites=true -succinct=true "$@"
   EXIT_CODE=$?
   set -e
 }
 
 if [[ $EXIT_CODE = 0 ]]; then
-	run -slowSpecThreshold=10 ./v1/acceptance
+	run --poll-progress-after=10s ./v1/acceptance
 fi
 
 if [[ $EXIT_CODE = 0 ]]; then
