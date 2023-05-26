@@ -1,11 +1,11 @@
 # Notice
 
-If you are trying to deploy notifications, **DO NOT** use this repo to deploy it directly. Please use the [bosh-release and accompanying directions](https://github.com/cloudfoundry-incubator/notifications-release).
+If you are trying to deploy notifications, **DO NOT** use this repo to deploy it directly. Please use the [bosh-release and accompanying directions](https://github.com/cloudfoundry/notifications-release).
 
 # Notifications [![CI Status](https://wings.pivotal.io/api/v1/teams/cf-notifications/pipelines/cf-notifications/badge)](https://wings.pivotal.io/teams/cf-notifications/pipelines/cf-notifications)
 
 A notifications component that parts of CF can use to send email to end users.
-There is a [walkthrough](https://github.com/cloudfoundry-incubator/notifications/blob/master/walkthrough.md) of using the Notifications Service which will show how to set it up and use it.
+There is a [walkthrough](https://github.com/cloudfoundry/notifications/blob/master/walkthrough.md) of using the Notifications Service which will show how to set it up and use it.
 
 ## UAA Client
 Notifications itself needs the following UAA client in order to retrieve arbitrary users' email addresses and check the members of  arbitrary spaces:
