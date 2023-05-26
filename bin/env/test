@@ -1,6 +1,8 @@
 #!/bin/bash -e
 
-export ROOT_PATH=${ROOT_PATH:-"$GOPATH/src/github.com/cloudfoundry-incubator/notifications"}
+DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+
+export ROOT_PATH=${ROOT_PATH:-"$DIR/.."}
 
 export CC_HOST=https://api.example.com
 export DATABASE_URL=${DATABASE_URL:-"root:password@127.0.0.1:3306/notifications_test"}
