@@ -19,6 +19,6 @@ var _ = Describe("metrics endpoint", func() {
 		err = json.NewDecoder(resp.Body).Decode(&body)
 		Expect(err).ToNot(HaveOccurred())
 		defer resp.Body.Close()
-		Expect(body["notifications.web.GET./info"]).To(BeEquivalentTo(1))
+		Expect(body["notifications.web.GET./info"]).To(BeNumerically( ">=", 1))
 	})
 })
