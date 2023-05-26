@@ -10,7 +10,7 @@ import (
 	"github.com/ryanmoran/stack"
 
 	. "github.com/cloudfoundry-incubator/notifications/testing/helpers"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
@@ -20,9 +20,9 @@ var _ = Describe("Routes", func() {
 	BeforeEach(func() {
 		muxer = web.NewMuxer()
 		messages.Routes{
-			RequestCounter:                               middleware.RequestCounter{},
-			RequestLogging:                               middleware.RequestLogging{},
-			DatabaseAllocator:                            middleware.DatabaseAllocator{},
+			RequestCounter:    middleware.RequestCounter{},
+			RequestLogging:    middleware.RequestLogging{},
+			DatabaseAllocator: middleware.DatabaseAllocator{},
 			NotificationsWriteOrEmailsWriteAuthenticator: middleware.Authenticator{Scopes: []string{"notifications.write", "emails.write"}},
 
 			ErrorWriter:   mocks.NewErrorWriter(),

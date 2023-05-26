@@ -56,7 +56,7 @@ type EnvironmentError struct {
 }
 
 func (e EnvironmentError) Error() string {
-	return e.Err.Error() + " (Please see https://github.com/cloudfoundry-incubator/notifications-release to find a packaged version of notifications and see the required configuration)"
+	return e.Err.Error() + " (Please see https://github.com/cloudfoundry/notifications-release to find a packaged version of notifications and see the required configuration)"
 }
 
 func NewEnvironment() (Environment, error) {

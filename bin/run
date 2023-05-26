@@ -1,12 +1,10 @@
 #! /usr/bin/env bash
 set -e
 
-DIR=$(dirname $0)
+DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ENVIRONMENT="${ENVIRONMENT:-development}"
 
-if [[ -z "$ENVIRONMENT" ]]; then
-    ENVIRONMENT=development
-fi
+# shellcheck source=./env/test
+source "$DIR/env/$ENVIRONMENT"
 
-source $DIR/env/$ENVIRONMENT
-
-go run main.go
+go run main.go "$@"

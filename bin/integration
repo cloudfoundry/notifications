@@ -1,21 +1,19 @@
 #! /usr/bin/env bash
-set -e
+set +e
 
-DIR=$(dirname $0)
-
-if [[ -z "$ENVIRONMENT" ]]; then
-    ENVIRONMENT=test
-fi
+DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ENVIRONMENT="${ENVIRONMENT:-test}"
 
 GREEN="\033[0;32m"
 RED="\033[0;31m"
 NONE="\033[0m"
 
-source $DIR/env/$ENVIRONMENT
+# shellcheck source=./env/test
+source "$DIR/env/$ENVIRONMENT"
 
 function run() {
   set +e
-  ginkgo -randomizeAllSpecs=true -randomizeSuites=true -succinct=true $@
+  ginkgo --randomize-all=true --randomize-suites=true -succinct=true "$@"
   EXIT_CODE=$?
   if [[ $EXIT_CODE != 0 ]]; then
     fail
@@ -25,15 +23,15 @@ function run() {
 
 function fail() {
   echo
-  echo -e "${RED}UNIT SUITE FAIL${NONE}"
+  echo -e "${RED}INTEGRATION SUITE FAIL${NONE}"
   exit $EXIT_CODE
 }
 
 if [[ -z "$1" ]]; then
     run ./v1/models ./gobble ./db
 else
-    run $@
+    run "$@"
 fi
 
-echo -e "${GREEN}UNIT SUITE PASS${NONE}"
+echo -e "${GREEN}INTEGRATION SUITE PASS${NONE}"
 exit $EXIT_CODE

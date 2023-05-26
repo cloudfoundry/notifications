@@ -1,51 +1,44 @@
-#!/bin/bash -e
+#! /usr/bin/env bash
+set +e
 
-DIR=$(dirname $0)
-
-if [[ -z "$ENVIRONMENT" ]]; then
-    ENVIRONMENT=test
-fi
+DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+ENVIRONMENT="${ENVIRONMENT:-test}"
 
 GREEN="\033[0;32m"
 RED="\033[0;31m"
 NONE="\033[0m"
 
-source $DIR/env/$ENVIRONMENT
-EXIT_CODE=0
+# shellcheck source=./env/test
+source "$DIR/env/$ENVIRONMENT"
 
-if [[ $EXIT_CODE = 0 ]]; then
-    $DIR/unit
-    EXIT_CODE=$?
-fi
+function check_for_exit() {
+    if [[ $1 != 0 ]]; then
+        echo "Exit code was $1"
+        echo
+        echo -e "${RED}TEST SUITE FAIL${NONE}"
+        exit "$1"
+    fi
+}
 
-if [[ $EXIT_CODE = 0 ]]; then
-    $DIR/integration
-    EXIT_CODE=$?
-fi
+echo -e "${GREEN}Running VET${NONE}"
+pushd "$DIR"/.. > /dev/null 2>&1
+    set +e
+    go vet ./...
+    check_for_exit $?
+    set -e
+popd > /dev/null 2>&1
 
-if [[ $EXIT_CODE = 0 ]]; then
-    echo
-    $DIR/acceptance
-    EXIT_CODE=$?
-fi
+echo -e "${GREEN}Running Unit Tests${NONE}"
+"$DIR"/unit
+check_for_exit $?
 
-if [[ $EXIT_CODE = 0 ]]; then
-    echo
-    pushd $DIR/.. > /dev/null 2>&1
-        set +e
-        go vet ./...
-        EXIT_CODE=$?
-        set -e
-    popd > /dev/null 2>&1
-fi
+echo -e "${GREEN}Running Integration Tests${NONE}"
+"$DIR"/integration
+check_for_exit $?
 
-if [[ $EXIT_CODE = 0 ]]; then
-    STATE="${GREEN}TEST SUITE PASS${NONE}"
-else
-    STATE="${RED}TEST SUITE FAIL${NONE}"
-fi
+echo -e "${GREEN}Running Acceptance Tests${NONE}"
+"$DIR"/acceptance
+check_for_exit $?
 
 echo
-echo -e $STATE
-
-exit $EXIT_CODE
+echo -e "${GREEN}TEST SUITE PASS${NONE}"

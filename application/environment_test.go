@@ -7,7 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/application"
 	"github.com/ryanmoran/viron"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
@@ -57,7 +57,7 @@ var _ = Describe("Environment", func() {
 	Context("when an environment error occurs", func() {
 		It("adds a helpful message about using the bosh release to the error message", func() {
 			err := application.EnvironmentError{Err: errors.New("something is misconfigured")}
-			Expect(err.Error()).To(Equal("something is misconfigured (Please see https://github.com/cloudfoundry-incubator/notifications-release to find a packaged version of notifications and see the required configuration)"))
+			Expect(err.Error()).To(Equal("something is misconfigured (Please see https://github.com/cloudfoundry/notifications-release to find a packaged version of notifications and see the required configuration)"))
 		})
 	})
 

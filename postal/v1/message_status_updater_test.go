@@ -9,7 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/pivotal-golang/lager"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
@@ -27,8 +27,8 @@ var _ = Describe("MessageStatusUpdater", func() {
 		messagesRepo = mocks.NewMessagesRepo()
 		messagesRepo.UpsertCall.Returns.Messages = []models.Message{
 			{
-				ID:         "some-message-id",
-				Status:     "message-status",
+				ID:     "some-message-id",
+				Status: "message-status",
 			},
 		}
 
@@ -44,8 +44,8 @@ var _ = Describe("MessageStatusUpdater", func() {
 
 		Expect(messagesRepo.UpsertCall.Receives.Connection).To(Equal(conn))
 		Expect(messagesRepo.UpsertCall.Receives.Messages[0]).To(Equal(models.Message{
-			ID:         "some-message-id",
-			Status:     "message-status",
+			ID:     "some-message-id",
+			Status: "message-status",
 		}))
 	})
 

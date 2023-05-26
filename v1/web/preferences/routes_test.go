@@ -10,7 +10,7 @@ import (
 	"github.com/ryanmoran/stack"
 
 	. "github.com/cloudfoundry-incubator/notifications/testing/helpers"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
@@ -24,11 +24,11 @@ var _ = Describe("Routes", func() {
 			PreferencesFinder: mocks.NewPreferencesFinder(),
 			PreferenceUpdater: mocks.NewPreferenceUpdater(),
 
-			CORS:                                      middleware.CORS{},
-			RequestCounter:                            middleware.RequestCounter{},
-			RequestLogging:                            middleware.RequestLogging{},
-			DatabaseAllocator:                         middleware.DatabaseAllocator{},
-			NotificationPreferencesReadAuthenticator:  middleware.Authenticator{Scopes: []string{"notification_preferences.read"}},
+			CORS:                                     middleware.CORS{},
+			RequestCounter:                           middleware.RequestCounter{},
+			RequestLogging:                           middleware.RequestLogging{},
+			DatabaseAllocator:                        middleware.DatabaseAllocator{},
+			NotificationPreferencesReadAuthenticator: middleware.Authenticator{Scopes: []string{"notification_preferences.read"}},
 			NotificationPreferencesAdminAuthenticator: middleware.Authenticator{Scopes: []string{"notification_preferences.admin"}},
 			NotificationPreferencesWriteAuthenticator: middleware.Authenticator{Scopes: []string{"notification_preferences.write"}},
 		}.Register(muxer)

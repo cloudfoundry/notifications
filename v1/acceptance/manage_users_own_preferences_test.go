@@ -9,7 +9,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/acceptance/support"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
@@ -89,16 +89,16 @@ var _ = Describe("Preferences Endpoint", func() {
 			Expect(preferences.NotificationPreferences).To(HaveLen(2))
 
 			Expect(preferences.NotificationPreferences).To(ContainElement(support.Preference{
-				ClientID:       "notifications-sender",
-				NotificationID: "acceptance-test",
-				Email:          true,
+				ClientID:                "notifications-sender",
+				NotificationID:          "acceptance-test",
+				Email:                   true,
 				NotificationDescription: "Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
 			Expect(preferences.NotificationPreferences).To(ContainElement(support.Preference{
-				ClientID:       "notifications-sender",
-				NotificationID: "unsubscribe-acceptance-test",
-				Email:          true,
+				ClientID:                "notifications-sender",
+				NotificationID:          "unsubscribe-acceptance-test",
+				Email:                   true,
 				NotificationDescription: "Unsubscribe Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
@@ -117,16 +117,16 @@ var _ = Describe("Preferences Endpoint", func() {
 			Expect(preferences.NotificationPreferences).To(HaveLen(2))
 
 			Expect(preferences.NotificationPreferences).To(ContainElement(support.Preference{
-				ClientID:       "notifications-sender",
-				NotificationID: "acceptance-test",
-				Email:          true,
+				ClientID:                "notifications-sender",
+				NotificationID:          "acceptance-test",
+				Email:                   true,
 				NotificationDescription: "Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
 			Expect(preferences.NotificationPreferences).To(ContainElement(support.Preference{
-				ClientID:       "notifications-sender",
-				NotificationID: "unsubscribe-acceptance-test",
-				Email:          false,
+				ClientID:                "notifications-sender",
+				NotificationID:          "unsubscribe-acceptance-test",
+				Email:                   false,
 				NotificationDescription: "Unsubscribe Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
@@ -173,16 +173,16 @@ var _ = Describe("Preferences Endpoint", func() {
 			Expect(preferences.NotificationPreferences).To(HaveLen(2))
 
 			Expect(preferences.NotificationPreferences).To(ContainElement(support.Preference{
-				ClientID:       "notifications-sender",
-				NotificationID: "acceptance-test",
-				Email:          true,
+				ClientID:                "notifications-sender",
+				NotificationID:          "acceptance-test",
+				Email:                   true,
 				NotificationDescription: "Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
 			Expect(preferences.NotificationPreferences).To(ContainElement(support.Preference{
-				ClientID:       "notifications-sender",
-				NotificationID: "unsubscribe-acceptance-test",
-				Email:          true,
+				ClientID:                "notifications-sender",
+				NotificationID:          "unsubscribe-acceptance-test",
+				Email:                   true,
 				NotificationDescription: "Unsubscribe Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
@@ -236,16 +236,16 @@ var _ = Describe("Preferences Endpoint", func() {
 			Expect(preferences.NotificationPreferences).To(HaveLen(2))
 
 			Expect(preferences.NotificationPreferences).To(ContainElement(support.Preference{
-				ClientID:       "notifications-sender",
-				NotificationID: "acceptance-test",
-				Email:          true,
+				ClientID:                "notifications-sender",
+				NotificationID:          "acceptance-test",
+				Email:                   true,
 				NotificationDescription: "Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))
 			Expect(preferences.NotificationPreferences).To(ContainElement(support.Preference{
-				ClientID:       "notifications-sender",
-				NotificationID: "unsubscribe-acceptance-test",
-				Email:          true,
+				ClientID:                "notifications-sender",
+				NotificationID:          "unsubscribe-acceptance-test",
+				Email:                   true,
 				NotificationDescription: "Unsubscribe Acceptance Test",
 				SourceDescription:       "Notifications Sender",
 			}))

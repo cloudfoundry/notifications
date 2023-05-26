@@ -8,7 +8,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/testing/servers"
 	"github.com/pivotal-cf/uaa-sso-golang/uaa"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

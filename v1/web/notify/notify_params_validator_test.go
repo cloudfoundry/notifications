@@ -3,7 +3,7 @@ package notify_test
 import (
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notify"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
