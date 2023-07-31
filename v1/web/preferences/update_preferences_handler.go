@@ -29,13 +29,14 @@ func (h UpdatePreferencesHandler) ServeHTTP(w http.ResponseWriter, req *http.Req
 	connection := database.Connection()
 
 	token := context.Get("token").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
 
-	if _, ok := token.Claims["user_id"]; !ok {
+	if _, ok := claims["user_id"]; !ok {
 		h.errorWriter.Write(w, webutil.MissingUserTokenError{Err: errors.New("Missing user_id from token claims.")})
 		return
 	}
 
-	userID := token.Claims["user_id"].(string)
+	userID := claims["user_id"].(string)
 
 	builder := services.NewPreferencesBuilder()
 	validator := valiant.NewValidator(req.Body)

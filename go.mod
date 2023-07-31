@@ -6,7 +6,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1
 	github.com/PuerkitoBio/goquery v0.0.0-20150328133056-269246d9e7d4
 	github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd
-	github.com/dgrijalva/jwt-go v0.0.0-20141103211122-47b263f02057
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/gorilla/mux v1.6.2
 	github.com/onsi/ginkgo/v2 v2.9.4

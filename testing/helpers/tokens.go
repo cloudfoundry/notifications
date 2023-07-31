@@ -46,9 +46,16 @@ func BuildTokenWithKey(header map[string]interface{}, claims map[string]interfac
 	signingMethod := jwt.GetSigningMethod(alg)
 	token := jwt.New(signingMethod)
 	token.Header = header
-	token.Claims = claims
-
-	signed, err := token.SignedString([]byte(signingKey))
+	jwtClaims := jwt.MapClaims{}
+	for i, j := range claims {
+		jwtClaims[i] = j
+	}
+	token.Claims = jwtClaims
+	key, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(signingKey))
+	if err != nil {
+		panic(err)
+	}
+	signed, err := token.SignedString(key)
 	if err != nil {
 		panic(err)
 	}

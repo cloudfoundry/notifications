@@ -72,11 +72,10 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 			tokenHeader := map[string]interface{}{
 				"alg": "RS256",
 			}
-			tokenClaims := map[string]interface{}{
-				"client_id": "mister-client",
-				"exp":       int64(3404281214),
-			}
-			rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
+			claims := jwt.MapClaims{}
+			claims["client_id"] = "mister-client"
+			claims["exp"] = int64(3404281214)
+			rawToken := helpers.BuildToken(tokenHeader, claims)
 			request.Header.Set("Authorization", "Bearer "+rawToken)
 
 			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {

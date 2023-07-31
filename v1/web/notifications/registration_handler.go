@@ -39,14 +39,15 @@ func (h RegistrationHandler) ServeHTTP(w http.ResponseWriter, req *http.Request,
 	}
 
 	token := context.Get("token").(*jwt.Token)
-	clientID := token.Claims["client_id"].(string)
+	claims := token.Claims.(jwt.MapClaims)
+	clientID := claims["client_id"].(string)
 
 	client := models.Client{
 		ID:          clientID,
 		Description: parameters.SourceDescription,
 	}
 
-	kinds, err := h.ValidateCriticalScopes(token.Claims["scope"], parameters.Kinds, client)
+	kinds, err := h.ValidateCriticalScopes(claims["scope"], parameters.Kinds, client)
 
 	if err != nil {
 		h.errorWriter.Write(w, err)
