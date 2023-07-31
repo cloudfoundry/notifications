@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/pivotal-cf-experimental/warrant/internal/documents"
 	"github.com/pivotal-cf-experimental/warrant/internal/network"
 )
@@ -47,12 +47,34 @@ func (ts TokensService) Decode(token string) (Token, error) {
 		return Token{}, InvalidTokenError{fmt.Errorf("invalid number of segments in token (%d/3)", len(segments))}
 	}
 
+	headerSegment, err := jwt.DecodeSegment(segments[0])
+	if err != nil {
+		return Token{}, InvalidTokenError{fmt.Errorf("header cannot be decoded: %s", err)}
+	}
+
+	var header struct {
+		Alg   string `json:"alg"`
+		KeyID string `json:"kid"`
+	}
+	err = json.Unmarshal(headerSegment, &header)
+	if err != nil {
+		return Token{}, InvalidTokenError{fmt.Errorf("header cannot be parsed: %s", err)}
+	}
+
 	claims, err := jwt.DecodeSegment(segments[1])
 	if err != nil {
 		return Token{}, InvalidTokenError{fmt.Errorf("claims cannot be decoded: %s", err)}
 	}
 
-	t := Token{}
+	t := Token{
+		Algorithm: header.Alg,
+		KeyID:     header.KeyID,
+		Segments: TokenSegments{
+			Header:    segments[0],
+			Claims:    segments[1],
+			Signature: segments[2],
+		},
+	}
 	err = json.Unmarshal(claims, &t)
 	if err != nil {
 		return Token{}, InvalidTokenError{fmt.Errorf("token cannot be parsed: %s", err)}
@@ -65,8 +87,8 @@ func (ts TokensService) Decode(token string) (Token, error) {
 // generate valid tokens.
 func (ts TokensService) GetSigningKey() (SigningKey, error) {
 	resp, err := newNetworkClient(ts.config).MakeRequest(network.Request{
-		Method: "GET",
-		Path:   "/token_key",
+		Method:                "GET",
+		Path:                  "/token_key",
 		AcceptableStatusCodes: []int{http.StatusOK},
 	})
 	if err != nil {
@@ -88,10 +110,12 @@ func (ts TokensService) GetSigningKey() (SigningKey, error) {
 	return key, nil
 }
 
-func (ts *TokensService) GetSigningKeys() ([]SigningKey, error) {
+// GetSigningKeys makes a request to UAA to retrieve the SigningKeys used to
+// generate valid tokens.
+func (ts TokensService) GetSigningKeys() ([]SigningKey, error) {
 	resp, err := newNetworkClient(ts.config).MakeRequest(network.Request{
-		Method: "GET",
-		Path:   "/token_keys",
+		Method:                "GET",
+		Path:                  "/token_keys",
 		AcceptableStatusCodes: []int{http.StatusOK},
 	})
 	if err != nil {
