@@ -71,13 +71,12 @@ var _ = Describe("TokenValidator", func() {
 			})
 
 			It("returns the token", func() {
-				Expect(token.Claims).To(Equal(map[string]interface{}{
-					"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
-					"client_id": "mister-client",
-					"cid":       "mister-client",
-					"exp":       float64(3404281214),
-					"scope":     []interface{}{"gaben.scope"},
-				}))
+				mapClaims := token.Claims.(jwt.MapClaims)
+				Expect(mapClaims["jti"]).To(Equal("c5f6a266-5cf0-4ae2-9647-2615e7d28fa1"))
+				Expect(mapClaims["client_id"]).To(Equal("mister-client"))
+				Expect(mapClaims["cid"]).To(Equal("mister-client"))
+				Expect(mapClaims["exp"]).To(Equal(float64(3404281214)))
+				Expect(mapClaims["scope"]).To(Equal([]interface{}{"gaben.scope"}))
 			})
 		})
 

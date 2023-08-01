@@ -76,7 +76,7 @@ var _ = Describe("PutHandler", func() {
 		request.Header.Set("Authorization", "Bearer "+rawToken)
 
 		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-			return []byte(helpers.UAAPublicKey), nil
+			return helpers.UAAPublicKeyRSA, nil
 		})
 		Expect(err).NotTo(HaveOccurred())
 
@@ -178,9 +178,8 @@ var _ = Describe("PutHandler", func() {
 				}
 				rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 				request.Header.Set("Authorization", "Bearer "+rawToken)
-
 				token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-					return []byte(helpers.UAAPublicKey), nil
+					return helpers.UAAPublicKeyRSA, nil
 				})
 				Expect(err).NotTo(HaveOccurred())
 

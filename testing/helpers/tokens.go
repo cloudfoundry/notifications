@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	UAAPrivateKey string
-	UAAPublicKey  string
+	UAAPrivateKey   string
+	UAAPublicKey    string
+	UAAPublicKeyRSA *rsa.PublicKey
 )
 
 func init() {
@@ -35,6 +36,11 @@ func init() {
 
 	UAAPrivateKey = string(privatePem)
 	UAAPublicKey = string(publicPem)
+
+	UAAPublicKeyRSA, err = jwt.ParseRSAPublicKeyFromPEM(publicPem)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func BuildToken(header map[string]interface{}, claims map[string]interface{}) string {

@@ -76,7 +76,7 @@ var _ = Describe("RegistrationHandler", func() {
 		request.Header.Set("Authorization", "Bearer "+rawToken)
 
 		token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-			return []byte(helpers.UAAPublicKey), nil
+			return helpers.UAAPublicKeyRSA, nil
 		})
 		context = stack.NewContext()
 		context.Set("token", token)
@@ -180,7 +180,7 @@ var _ = Describe("RegistrationHandler", func() {
 				request.Header.Set("Authorization", "Bearer "+rawToken)
 
 				token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-					return []byte(helpers.UAAPublicKey), nil
+					return helpers.UAAPublicKeyRSA, nil
 				})
 				Expect(err).NotTo(HaveOccurred())
 

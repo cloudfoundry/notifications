@@ -110,6 +110,11 @@ func (v *TokenValidator) Parse(rawToken string) (*jwt.Token, error) {
 			return nil, err
 		}
 
-		return []byte(key), nil
+		pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(key))
+		if err != nil {
+			return nil, err
+		}
+
+		return pubKey, nil
 	})
 }

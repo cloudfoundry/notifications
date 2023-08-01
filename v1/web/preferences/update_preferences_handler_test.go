@@ -78,9 +78,8 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 
 			rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
 			request.Header.Set("Authorization", "Bearer "+rawToken)
-
 			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-				return []byte(helpers.UAAPublicKey), nil
+				return helpers.UAAPublicKeyRSA, nil
 			})
 			Expect(err).NotTo(HaveOccurred())
 
@@ -168,7 +167,7 @@ var _ = Describe("UpdatePreferencesHandler", func() {
 						Expect(err).NotTo(HaveOccurred())
 
 						token, err := jwt.Parse(helpers.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
-							return []byte(helpers.UAAPublicKey), nil
+							return helpers.UAAPublicKeyRSA, nil
 						})
 						Expect(err).NotTo(HaveOccurred())
 

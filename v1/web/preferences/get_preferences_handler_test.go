@@ -61,7 +61,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 		}
 
 		token, err := jwt.Parse(helpers.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
-			return []byte(helpers.UAAPublicKey), nil
+			return helpers.UAAPublicKeyRSA, nil
 		})
 
 		database = mocks.NewDatabase()
@@ -134,7 +134,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 			}
 
 			token, err := jwt.Parse(helpers.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
-				return []byte(helpers.UAAPublicKey), nil
+				return helpers.UAAPublicKeyRSA, nil
 			})
 
 			context = stack.NewContext()

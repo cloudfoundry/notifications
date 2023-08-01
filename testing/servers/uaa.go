@@ -113,7 +113,12 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
 		}
 	}
 
-	tokenString, err := token.SignedString([]byte(ReadFile("/testing/fixtures/private.pem")))
+	key, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(ReadFile("/testing/fixtures/private.pem")))
+	if err != nil {
+		panic(err)
+	}
+
+	tokenString, err := token.SignedString(key)
 	if err != nil {
 		panic(err)
 	}
