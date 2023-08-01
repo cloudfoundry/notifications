@@ -7,7 +7,7 @@ require (
 	github.com/PuerkitoBio/goquery v0.0.0-20150328133056-269246d9e7d4
 	github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gorilla/mux v1.6.2
 	github.com/onsi/ginkgo/v2 v2.9.4
 	github.com/onsi/gomega v1.27.6
@@ -30,6 +30,7 @@ require (
 	github.com/dgrijalva/jwt-go v2.7.0+incompatible // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
 	github.com/gorilla/context v1.1.1 // indirect

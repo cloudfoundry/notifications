@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/pivotal-cf-experimental/warrant"
 	uaaSSOGolang "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )

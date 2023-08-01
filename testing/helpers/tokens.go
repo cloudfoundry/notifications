@@ -6,7 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 var (

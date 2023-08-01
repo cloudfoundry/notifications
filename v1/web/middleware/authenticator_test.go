@@ -9,7 +9,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo/v2"

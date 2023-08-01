@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/gorilla/mux"
 )
 
