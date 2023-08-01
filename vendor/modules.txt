@@ -12,7 +12,7 @@ github.com/andybalholm/cascadia
 # github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd
 ## explicit
 github.com/chrj/smtpd
-# github.com/dgrijalva/jwt-go v0.0.0-20141103211122-47b263f02057
+# github.com/dgrijalva/jwt-go v3.2.1-0.20210802184156-9742bd7fca1c+incompatible
 ## explicit
 github.com/dgrijalva/jwt-go
 # github.com/go-logr/logr v1.2.4
@@ -25,6 +25,12 @@ github.com/go-sql-driver/mysql
 # github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572
 ## explicit; go 1.13
 github.com/go-task/slim-sprig
+# github.com/golang-jwt/jwt v3.2.2+incompatible
+## explicit
+github.com/golang-jwt/jwt
+# github.com/golang-jwt/jwt/v5 v5.0.0
+## explicit; go 1.18
+github.com/golang-jwt/jwt/v5
 # github.com/google/go-cmp v0.5.9
 ## explicit; go 1.13
 github.com/google/go-cmp/cmp
@@ -35,10 +41,10 @@ github.com/google/go-cmp/cmp/internal/value
 # github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38
 ## explicit; go 1.14
 github.com/google/pprof/profile
-# github.com/gorilla/context v0.0.0-20140306180640-1be7a086a5fd
+# github.com/gorilla/context v1.1.1
 ## explicit
 github.com/gorilla/context
-# github.com/gorilla/mux v0.0.0-20131205071822-9ede152210fa
+# github.com/gorilla/mux v1.6.2
 ## explicit
 github.com/gorilla/mux
 # github.com/lib/pq v1.10.9
@@ -88,8 +94,8 @@ github.com/onsi/gomega/types
 github.com/pivotal-cf-experimental/rainmaker
 github.com/pivotal-cf-experimental/rainmaker/internal/documents
 github.com/pivotal-cf-experimental/rainmaker/internal/network
-# github.com/pivotal-cf-experimental/warrant v0.0.0-20170119140040-e3c3c7f4dbd0
-## explicit
+# github.com/pivotal-cf-experimental/warrant v0.0.0-20211122194707-17385443920f
+## explicit; go 1.12
 github.com/pivotal-cf-experimental/warrant
 github.com/pivotal-cf-experimental/warrant/internal/documents
 github.com/pivotal-cf-experimental/warrant/internal/network

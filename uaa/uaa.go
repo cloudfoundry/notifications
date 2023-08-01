@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pivotal-cf-experimental/warrant"
 	uaaSSOGolang "github.com/pivotal-cf/uaa-sso-golang/uaa"
 )
@@ -72,12 +73,13 @@ func (z ZonedUAAClient) UsersEmailsByIDs(token string, ids ...string) ([]User, e
 
 func (z ZonedUAAClient) tokenHost(token string) (string, error) {
 	parsedToken, err := z.tokenValidator.Parse(token)
+	claims := parsedToken.Claims.(jwt.MapClaims)
 
 	if err != nil {
 		return "", err
 	}
 
-	tokenIssuerURL, err := url.Parse(parsedToken.Claims["iss"].(string))
+	tokenIssuerURL, err := url.Parse(claims["iss"].(string))
 	if err != nil {
 		return "", err
 	}

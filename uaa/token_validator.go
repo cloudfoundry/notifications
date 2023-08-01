@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pivotal-cf-experimental/warrant"
 	"github.com/pivotal-golang/lager"
 )
@@ -110,6 +110,11 @@ func (v *TokenValidator) Parse(rawToken string) (*jwt.Token, error) {
 			return nil, err
 		}
 
-		return []byte(key), nil
+		pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(key))
+		if err != nil {
+			return nil, err
+		}
+
+		return pubKey, nil
 	})
 }

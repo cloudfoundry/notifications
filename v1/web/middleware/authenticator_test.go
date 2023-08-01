@@ -9,7 +9,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/middleware"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -43,13 +43,13 @@ var _ = Describe("Authenticator", func() {
 	Context("when the request contains a valid auth token", func() {
 		BeforeEach(func() {
 			expectedToken = jwt.New(jwt.SigningMethodRS256)
-			expectedToken.Claims = map[string]interface{}{
-				"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
-				"client_id": "mister-client",
-				"cid":       "mister-client",
-				"exp":       3404281214,
-				"scope":     []interface{}{"gaben.scope"},
-			}
+			claims := jwt.MapClaims{}
+			claims["jti"] = "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1"
+			claims["client_id"] = "mister-client"
+			claims["cid"] = "mister-client"
+			claims["exp"] = 3404281214
+			claims["scope"] = []interface{}{"gaben.scope"}
+			expectedToken.Claims = claims
 
 			validator.ParseCall.Returns.Token = expectedToken
 
@@ -140,13 +140,13 @@ var _ = Describe("Authenticator", func() {
 	Context("when the auth token does not contain the correct scope", func() {
 		BeforeEach(func() {
 			expectedToken = jwt.New(jwt.SigningMethodRS256)
-			expectedToken.Claims = map[string]interface{}{
-				"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
-				"client_id": "mister-client",
-				"cid":       "mister-client",
-				"exp":       3404281214,
-				"scope":     []interface{}{"cloud_controller.admin"},
-			}
+			claims := jwt.MapClaims{}
+			claims["jti"] = "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1"
+			claims["client_id"] = "mister-client"
+			claims["cid"] = "mister-client"
+			claims["exp"] = 3404281214
+			claims["scope"] = []interface{}{"cloud_controller.admin"}
+			expectedToken.Claims = claims
 
 			validator.ParseCall.Returns.Token = expectedToken
 
@@ -184,12 +184,12 @@ var _ = Describe("Authenticator", func() {
 	Context("when the auth token does not contain any scopes", func() {
 		BeforeEach(func() {
 			expectedToken = jwt.New(jwt.SigningMethodRS256)
-			expectedToken.Claims = map[string]interface{}{
-				"jti":       "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1",
-				"client_id": "mister-client",
-				"cid":       "mister-client",
-				"exp":       3404281214,
-			}
+			claims := jwt.MapClaims{}
+			claims["jti"] = "c5f6a266-5cf0-4ae2-9647-2615e7d28fa1"
+			claims["client_id"] = "mister-client"
+			claims["cid"] = "mister-client"
+			claims["exp"] = 3404281214
+			expectedToken.Claims = claims
 
 			validator.ParseCall.Returns.Token = expectedToken
 

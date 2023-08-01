@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/notifications/application"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 )
 
@@ -77,41 +77,48 @@ var UAAPostOAuthToken = http.HandlerFunc(func(w http.ResponseWriter, req *http.R
 	clientID := credentialsParts[0]
 
 	token := jwt.New(jwt.GetSigningMethod("RS256"))
+	claims := jwt.MapClaims{}
+	token.Claims = claims
 	token.Header["kid"] = "legacy-key-id"
-	token.Claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
-	token.Claims["client_id"] = clientID
-	token.Claims["iss"] = "http://" + req.Host + "/oauth/token"
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+	claims["client_id"] = clientID
+	claims["iss"] = "http://" + req.Host + "/oauth/token"
 
 	switch req.Form.Get("grant_type") {
 	case "client_credentials":
 		switch clientID {
 		case "non-critical-client":
-			token.Claims["scope"] = []string{"notifications.manage", "notifications.write",
+			claims["scope"] = []string{"notifications.manage", "notifications.write",
 				"emails.write", "notification_preferences.admin", "notification_templates.admin",
 				"notification_templates.write", "notification_templates.read"}
 		case "unauthorized-client":
-			token.Claims["scope"] = []string{}
+			claims["scope"] = []string{}
 		case "non-admin-client":
-			token.Claims["scope"] = []string{"notifications.write"}
+			claims["scope"] = []string{"notifications.write"}
 		case "admin-client":
-			token.Claims["scope"] = []string{"notifications.admin"}
+			claims["scope"] = []string{"notifications.admin"}
 		default:
-			token.Claims["scope"] = []string{"notifications.manage",
+			claims["scope"] = []string{"notifications.manage",
 				"notifications.write", "emails.write", "notification_preferences.admin",
 				"critical_notifications.write", "notification_templates.admin",
 				"notification_templates.write", "notification_templates.read"}
 		}
 	case "authorization_code":
-		token.Claims["user_id"] = strings.TrimSuffix(req.Form.Get("code"), "-code")
-		switch token.Claims["user_id"] {
+		claims["user_id"] = strings.TrimSuffix(req.Form.Get("code"), "-code")
+		switch claims["user_id"] {
 		case "unauthorized-user":
-			token.Claims["scope"] = []string{}
+			claims["scope"] = []string{}
 		default:
-			token.Claims["scope"] = []string{"notification_preferences.read", "notification_preferences.write"}
+			claims["scope"] = []string{"notification_preferences.read", "notification_preferences.write"}
 		}
 	}
 
-	tokenString, err := token.SignedString([]byte(ReadFile("/testing/fixtures/private.pem")))
+	key, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(ReadFile("/testing/fixtures/private.pem")))
+	if err != nil {
+		panic(err)
+	}
+
+	tokenString, err := token.SignedString(key)
 	if err != nil {
 		panic(err)
 	}

@@ -6,13 +6,13 @@ require (
 	github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1
 	github.com/PuerkitoBio/goquery v0.0.0-20150328133056-269246d9e7d4
 	github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd
-	github.com/dgrijalva/jwt-go v0.0.0-20141103211122-47b263f02057
 	github.com/go-sql-driver/mysql v1.4.1
-	github.com/gorilla/mux v0.0.0-20131205071822-9ede152210fa
+	github.com/golang-jwt/jwt/v5 v5.0.0
+	github.com/gorilla/mux v1.6.2
 	github.com/onsi/ginkgo/v2 v2.9.4
 	github.com/onsi/gomega v1.27.6
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
-	github.com/pivotal-cf-experimental/warrant v0.0.0-20170119140040-e3c3c7f4dbd0
+	github.com/pivotal-cf-experimental/warrant v0.0.0-20211122194707-17385443920f
 	github.com/pivotal-cf/uaa-sso-golang v0.0.0-20141119184546-0b91e8ad4bb6
 	github.com/pivotal-golang/conceal v0.0.0-20141120010127-31656578115c
 	github.com/pivotal-golang/lager v0.0.0-20150428205713-c88fa6d6c4d2
@@ -27,11 +27,13 @@ require (
 require (
 	bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a // indirect
 	github.com/andybalholm/cascadia v0.0.0-20150328005534-54abbbf07a45 // indirect
+	github.com/dgrijalva/jwt-go v3.2.1-0.20210802184156-9742bd7fca1c+incompatible // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
-	github.com/gorilla/context v0.0.0-20140306180640-1be7a086a5fd // indirect
+	github.com/gorilla/context v1.1.1 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattn/go-sqlite3 v1.14.16 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect

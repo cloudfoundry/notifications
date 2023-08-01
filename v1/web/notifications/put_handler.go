@@ -7,7 +7,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/ryanmoran/stack"
 )
 
@@ -55,7 +55,8 @@ func (h PutHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 	}
 
 	token := context.Get("token").(*jwt.Token)
-	clientID := token.Claims["client_id"].(string)
+	claims := token.Claims.(jwt.MapClaims)
+	clientID := claims["client_id"].(string)
 
 	client := models.Client{
 		ID:          clientID,
@@ -63,7 +64,7 @@ func (h PutHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, context 
 		TemplateID:  models.DoNotSetTemplateID,
 	}
 
-	kinds, err := h.ValidateCriticalScopes(token.Claims["scope"], generatedKinds, client)
+	kinds, err := h.ValidateCriticalScopes(claims["scope"], generatedKinds, client)
 	if err != nil {
 		h.errorWriter.Write(w, err)
 		return

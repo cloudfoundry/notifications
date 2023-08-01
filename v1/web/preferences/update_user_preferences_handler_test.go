@@ -14,7 +14,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -72,15 +72,14 @@ var _ = Describe("UpdateUserPreferencesHandler", func() {
 			tokenHeader := map[string]interface{}{
 				"alg": "RS256",
 			}
-			tokenClaims := map[string]interface{}{
-				"client_id": "mister-client",
-				"exp":       int64(3404281214),
-			}
-			rawToken := helpers.BuildToken(tokenHeader, tokenClaims)
+			claims := jwt.MapClaims{}
+			claims["client_id"] = "mister-client"
+			claims["exp"] = int64(3404281214)
+			rawToken := helpers.BuildToken(tokenHeader, claims)
 			request.Header.Set("Authorization", "Bearer "+rawToken)
 
 			token, err := jwt.Parse(rawToken, func(*jwt.Token) (interface{}, error) {
-				return []byte(helpers.UAAPublicKey), nil
+				return helpers.UAAPublicKeyRSA, nil
 			})
 			Expect(err).NotTo(HaveOccurred())
 

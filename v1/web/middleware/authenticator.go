@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/ryanmoran/stack"
 )
 
@@ -37,18 +37,21 @@ func (ware Authenticator) ServeHTTP(w http.ResponseWriter, req *http.Request, co
 		return ware.Error(w, http.StatusUnauthorized, "Authorization header is invalid: "+err.Error())
 	}
 
+	claims := token.Claims.(jwt.MapClaims)
+
 	if !ware.containsATokenScope(w, token) {
 		return false
 	}
 
 	context.Set("token", token)
-	context.Set("client_id", token.Claims["client_id"])
+	context.Set("client_id", claims["client_id"])
 
 	return true
 }
 
 func (ware Authenticator) containsATokenScope(w http.ResponseWriter, token *jwt.Token) bool {
-	if tokenScopes, ok := token.Claims["scope"]; ok {
+	claims := token.Claims.(jwt.MapClaims)
+	if tokenScopes, ok := claims["scope"]; ok {
 		for _, wareScope := range ware.Scopes {
 			if contains(tokenScopes, wareScope) {
 				return true

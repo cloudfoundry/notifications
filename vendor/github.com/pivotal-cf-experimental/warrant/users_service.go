@@ -108,11 +108,11 @@ func (us UsersService) Delete(id, token string) error {
 // A token with the "scim.write" or "uaa.admin" scope is required.
 func (us UsersService) Update(user User, token string) (User, error) {
 	resp, err := newNetworkClient(us.config).MakeRequest(network.Request{
-		Method:        "PUT",
-		Path:          fmt.Sprintf("/Users/%s", user.ID),
-		Authorization: network.NewTokenAuthorization(token),
-		IfMatch:       strconv.Itoa(user.Version),
-		Body:          network.NewJSONRequestBody(newUpdateUserDocumentFromUser(user)),
+		Method:                "PUT",
+		Path:                  fmt.Sprintf("/Users/%s", user.ID),
+		Authorization:         network.NewTokenAuthorization(token),
+		IfMatch:               strconv.Itoa(user.Version),
+		Body:                  network.NewJSONRequestBody(newUpdateUserDocumentFromUser(user)),
 		AcceptableStatusCodes: []int{http.StatusOK},
 	})
 	if err != nil {
@@ -176,6 +176,8 @@ func (us UsersService) GetToken(username, password string, client Client) (strin
 		Path:          "/oauth/token",
 		Authorization: network.NewBasicAuthorization(client.ID, ""),
 		Body: network.NewFormRequestBody(url.Values{
+			"client_id":     []string{client.ID},
+			"client_secret": []string{},
 			"username":      []string{username},
 			"password":      []string{password},
 			"grant_type":    []string{"password"},

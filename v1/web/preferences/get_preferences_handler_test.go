@@ -13,7 +13,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/preferences"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -61,7 +61,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 		}
 
 		token, err := jwt.Parse(helpers.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
-			return []byte(helpers.UAAPublicKey), nil
+			return helpers.UAAPublicKeyRSA, nil
 		})
 
 		database = mocks.NewDatabase()
@@ -134,7 +134,7 @@ var _ = Describe("GetPreferencesHandler", func() {
 			}
 
 			token, err := jwt.Parse(helpers.BuildToken(tokenHeader, tokenClaims), func(token *jwt.Token) (interface{}, error) {
-				return []byte(helpers.UAAPublicKey), nil
+				return helpers.UAAPublicKeyRSA, nil
 			})
 
 			context = stack.NewContext()

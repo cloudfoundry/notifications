@@ -11,7 +11,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/services"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/ryanmoran/stack"
 )
 
@@ -57,9 +57,10 @@ func (h Notify) Execute(connection ConnectionInterface, req *http.Request, conte
 		panic("programmer error: missing RequestReceivedTime in http context")
 	}
 	token := context.Get("token").(*jwt.Token) // TODO: (rm) get rid of the context object, just pass in the token
-	clientID := token.Claims["client_id"].(string)
+	claims := token.Claims.(jwt.MapClaims)
+	clientID := claims["client_id"].(string)
 
-	tokenIssuerURL, err := url.Parse(token.Claims["iss"].(string))
+	tokenIssuerURL, err := url.Parse(claims["iss"].(string))
 	if err != nil {
 		return []byte{}, errors.New("Token issuer URL invalid")
 	}
@@ -70,7 +71,7 @@ func (h Notify) Execute(connection ConnectionInterface, req *http.Request, conte
 		return []byte{}, err
 	}
 
-	if kind.Critical && !h.hasCriticalNotificationsWriteScope(token.Claims["scope"]) {
+	if kind.Critical && !h.hasCriticalNotificationsWriteScope(claims["scope"]) {
 		return []byte{}, webutil.NewCriticalNotificationError(kind.ID)
 	}
 
