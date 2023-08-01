@@ -27,7 +27,7 @@ require (
 require (
 	bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a // indirect
 	github.com/andybalholm/cascadia v0.0.0-20150328005534-54abbbf07a45 // indirect
-	github.com/dgrijalva/jwt-go v2.7.0+incompatible // indirect
+	github.com/dgrijalva/jwt-go v3.2.1-0.20210802184156-9742bd7fca1c+incompatible // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
