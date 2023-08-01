@@ -14,7 +14,6 @@ var (
 )
 
 // Implements the ECDSA family of signing methods signing methods
-// Expects *ecdsa.PrivateKey for signing and *ecdsa.PublicKey for verification
 type SigningMethodECDSA struct {
 	Name      string
 	Hash      crypto.Hash
@@ -70,7 +69,7 @@ func (m *SigningMethodECDSA) Verify(signingString, signature string, key interfa
 	case *ecdsa.PublicKey:
 		ecdsaKey = k
 	default:
-		return ErrInvalidKeyType
+		return ErrInvalidKey
 	}
 
 	if len(sig) != 2*m.KeySize {
@@ -104,7 +103,7 @@ func (m *SigningMethodECDSA) Sign(signingString string, key interface{}) (string
 	case *ecdsa.PrivateKey:
 		ecdsaKey = k
 	default:
-		return "", ErrInvalidKeyType
+		return "", ErrInvalidKey
 	}
 
 	// Create the hasher

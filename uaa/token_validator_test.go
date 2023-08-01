@@ -10,7 +10,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/testing/mocks"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/pivotal-cf-experimental/warrant"
 	"github.com/pivotal-golang/lager"
 )

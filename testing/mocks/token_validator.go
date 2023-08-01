@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/pivotal-cf-experimental/warrant"
 )
 

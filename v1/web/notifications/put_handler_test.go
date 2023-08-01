@@ -14,7 +14,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/notifications"
 	"github.com/cloudfoundry-incubator/notifications/v1/web/webutil"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/ryanmoran/stack"
 
 	. "github.com/onsi/ginkgo/v2"
