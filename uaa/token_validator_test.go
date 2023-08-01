@@ -114,7 +114,7 @@ var _ = Describe("TokenValidator", func() {
 					"scope":     []string{"gaben.scope"},
 				}
 
-				rawToken = helpers.BuildTokenWithKey(tokenHeader, tokenClaims, helpers.UAAPublicKey)
+				rawToken = helpers.BuildHSATokenWithKey(tokenHeader, tokenClaims, "key-id")
 			})
 
 			It("returns an error", func() {

@@ -68,3 +68,21 @@ func BuildTokenWithKey(header map[string]interface{}, claims map[string]interfac
 
 	return signed
 }
+
+func BuildHSATokenWithKey(header map[string]interface{}, claims map[string]interface{}, signingKey string) string {
+	alg := header["alg"].(string)
+	signingMethod := jwt.GetSigningMethod(alg)
+	token := jwt.New(signingMethod)
+	token.Header = header
+	jwtClaims := jwt.MapClaims{}
+	for i, j := range claims {
+		jwtClaims[i] = j
+	}
+	token.Claims = jwtClaims
+	signed, err := token.SignedString([]byte(signingKey))
+	if err != nil {
+		panic(err)
+	}
+
+	return signed
+}
