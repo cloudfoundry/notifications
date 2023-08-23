@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1
-	github.com/PuerkitoBio/goquery v0.0.0-20150328133056-269246d9e7d4
+	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/golang-jwt/jwt/v5 v5.0.0
@@ -26,7 +26,7 @@ require (
 
 require (
 	bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a // indirect
-	github.com/andybalholm/cascadia v0.0.0-20150328005534-54abbbf07a45 // indirect
+	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.1-0.20210802184156-9742bd7fca1c+incompatible // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
@@ -39,9 +39,9 @@ require (
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
-	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/tools v0.8.0 // indirect
 	google.golang.org/appengine v1.6.1 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v1 v1.0.0-20141111223934-dacd4576c5aa // indirect
