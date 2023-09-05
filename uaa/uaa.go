@@ -95,6 +95,7 @@ func (z ZonedUAAClient) AllUsers(token string) ([]User, error) {
 
 	uaaSSOGolangClient := uaaSSOGolang.NewUAA("", uaaHost, z.clientID, z.clientSecret, "")
 	uaaSSOGolangClient.VerifySSL = z.verifySSL
+	uaaSSOGolangClient.SetToken(token)
 	users, err := uaaSSOGolangClient.AllUsers()
 
 	var myUsers []User
