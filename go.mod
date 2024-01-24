@@ -1,6 +1,6 @@
 module github.com/cloudfoundry-incubator/notifications
 
-go 1.20
+go 1.21
 
 require (
 	github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1
