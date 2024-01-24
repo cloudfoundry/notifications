@@ -25,7 +25,7 @@ jobs:
     - name: Set up MySQL
       run: |
         sudo systemctl start mysql.service
-        mysql -uroot -e "CREATE DATABASE notifications_test;"
+        mysql -uroot -proot -e "CREATE DATABASE notifications_test;"
 
     - name: Test
       run: |
