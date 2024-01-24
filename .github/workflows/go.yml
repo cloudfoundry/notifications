@@ -22,6 +22,10 @@ jobs:
         go-version-file: go.mod
         check-latest: true
 
+    - name: Set up MySQL
+      run: |
+        sudo systemctl start mysql.service
+
     - name: Test
       run: |
         go install github.com/onsi/ginkgo/v2/ginkgo@v2
