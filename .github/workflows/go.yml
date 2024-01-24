@@ -25,9 +25,11 @@ jobs:
     - name: Set up MySQL
       run: |
         sudo systemctl start mysql.service
+        mysql -uroot -e "CREATE DATABASE notifications_test;"
 
     - name: Test
       run: |
+        export DATABASE_URL="root:root@localhost:3306/notifications_test"
         go install github.com/onsi/ginkgo/v2/ginkgo@v2
         ginkgo version
         bin/test
