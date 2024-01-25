@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd
+	github.com/chrj/smtpd v0.3.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/gorilla/mux v1.6.2
@@ -25,7 +25,6 @@ require (
 )
 
 require (
-	bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a // indirect
 	code.cloudfoundry.org/lager v2.0.0+incompatible // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.1-0.20210802184156-9742bd7fca1c+incompatible // indirect
