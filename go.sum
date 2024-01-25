@@ -1,5 +1,7 @@
 bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a h1:qPZv7NxewNKcHj/TvDO1RbRVGgbsIdzkj4O+9q/5cz4=
 bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a/go.mod h1:rmAH0EKvCdvvOZLc6nphIlzAxGW3Y0Dz0PLoXCJ2YO8=
+code.cloudfoundry.org/lager v2.0.0+incompatible h1:WZwDKDB2PLd/oL+USK4b4aEjUymIej9My2nUQ9oWEwQ=
+code.cloudfoundry.org/lager v2.0.0+incompatible/go.mod h1:O2sS7gKP3HM2iemG+EnwvyNQK7pTSC6Foi4QiMp9sSk=
 github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1 h1:VCMK4Ry+CJWJeKkda76Nmffpwe5ECtkcpqN0TsRSQxM=
 github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/PuerkitoBio/goquery v1.8.1 h1:uQxhNlArOIdbrH1tr0UXwdVFgDcZDrZVdcpygAcwmWM=
@@ -81,8 +83,8 @@ github.com/pivotal-cf/uaa-sso-golang v0.0.0-20141119184546-0b91e8ad4bb6 h1:VIZLj
 github.com/pivotal-cf/uaa-sso-golang v0.0.0-20141119184546-0b91e8ad4bb6/go.mod h1:x46WK+FVJdMtvVKBfTAt3fY2EZg/KLS3XXSzx1SAF+I=
 github.com/pivotal-golang/conceal v0.0.0-20141120010127-31656578115c h1:reyrySYbaC7Gqj8x2Ko7pjglufeYH0UjxBbimAGVsDM=
 github.com/pivotal-golang/conceal v0.0.0-20141120010127-31656578115c/go.mod h1:Kw/kMv1fNuHwfszQT6ZI0ClXyVdezduXsKd/70TUSjc=
-github.com/pivotal-golang/lager v0.0.0-20150428205713-c88fa6d6c4d2 h1:5mfs0yZ4ijQYZr5DDwhwbzjAEqdbvFOoePnDg3w+erU=
-github.com/pivotal-golang/lager v0.0.0-20150428205713-c88fa6d6c4d2/go.mod h1:EJZBAWMz/TvxVfLaBRwCv+gszrSByWbqQBRwfVbUhvM=
+github.com/pivotal-golang/lager v2.0.0+incompatible h1:RJfBQxoH+1xT8GfxIaMNq+FMcYqx50fKdq7MUkuKzv0=
+github.com/pivotal-golang/lager v2.0.0+incompatible/go.mod h1:EJZBAWMz/TvxVfLaBRwCv+gszrSByWbqQBRwfVbUhvM=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rcrowley/go-metrics v0.0.0-20180125231941-8732c616f529 h1:QdrarV+Ze3cQpiZZ410O4mpB0WUdOgMc3Rwu8zOmLVg=

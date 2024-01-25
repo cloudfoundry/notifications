@@ -1,5 +1,7 @@
 # bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a
 ## explicit
+# code.cloudfoundry.org/lager v2.0.0+incompatible
+## explicit
 # github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1
 ## explicit
 github.com/DATA-DOG/go-sqlmock
@@ -105,7 +107,7 @@ github.com/pivotal-cf/uaa-sso-golang/uaa
 # github.com/pivotal-golang/conceal v0.0.0-20141120010127-31656578115c
 ## explicit
 github.com/pivotal-golang/conceal
-# github.com/pivotal-golang/lager v0.0.0-20150428205713-c88fa6d6c4d2
+# github.com/pivotal-golang/lager v2.0.0+incompatible
 ## explicit
 github.com/pivotal-golang/lager
 # github.com/rcrowley/go-metrics v0.0.0-20180125231941-8732c616f529

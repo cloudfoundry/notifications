@@ -15,7 +15,7 @@ require (
 	github.com/pivotal-cf-experimental/warrant v0.0.0-20211122194707-17385443920f
 	github.com/pivotal-cf/uaa-sso-golang v0.0.0-20141119184546-0b91e8ad4bb6
 	github.com/pivotal-golang/conceal v0.0.0-20141120010127-31656578115c
-	github.com/pivotal-golang/lager v0.0.0-20150428205713-c88fa6d6c4d2
+	github.com/pivotal-golang/lager v2.0.0+incompatible
 	github.com/rcrowley/go-metrics v0.0.0-20180125231941-8732c616f529
 	github.com/rubenv/sql-migrate v0.0.0-20150713140751-53184e1edfb4
 	github.com/ryanmoran/stack v0.0.0-20140916210556-3debe7a5953a
@@ -26,6 +26,7 @@ require (
 
 require (
 	bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a // indirect
+	code.cloudfoundry.org/lager v2.0.0+incompatible // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/dgrijalva/jwt-go v3.2.1-0.20210802184156-9742bd7fca1c+incompatible // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
