@@ -21,7 +21,7 @@ require (
 	github.com/ryanmoran/stack v0.0.0-20140916210556-3debe7a5953a
 	github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8
 	gopkg.in/gomail.v1 v1.0.0-20150120141108-d7294067b867
-	gopkg.in/gorp.v1 v1.7.1
+	gopkg.in/gorp.v1 v1.7.2
 )
 
 require (
