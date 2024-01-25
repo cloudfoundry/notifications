@@ -166,7 +166,7 @@ gopkg.in/alexcesaro/quotedprintable.v1/internal
 # gopkg.in/gomail.v1 v1.0.0-20150120141108-d7294067b867
 ## explicit
 gopkg.in/gomail.v1
-# gopkg.in/gorp.v1 v1.7.1
+# gopkg.in/gorp.v1 v1.7.2
 ## explicit
 gopkg.in/gorp.v1
 # gopkg.in/yaml.v3 v3.0.1
