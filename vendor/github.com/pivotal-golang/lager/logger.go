@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const STACK_TRACE_BUFFER_SIZE = 1024 * 100
+const StackTraceBufferSize = 1024 * 100
 
 type Logger interface {
 	RegisterSink(Sink)
@@ -25,7 +25,7 @@ type logger struct {
 	task        string
 	sinks       []Sink
 	sessionID   string
-	nextSession uint64
+	nextSession uint32
 	data        Data
 }
 
@@ -47,7 +47,7 @@ func (l *logger) SessionName() string {
 }
 
 func (l *logger) Session(task string, data ...Data) Logger {
-	sid := atomic.AddUint64(&l.nextSession, 1)
+	sid := atomic.AddUint32(&l.nextSession, 1)
 
 	var sessionIDstr string
 
@@ -77,8 +77,10 @@ func (l *logger) WithData(data Data) Logger {
 }
 
 func (l *logger) Debug(action string, data ...Data) {
+	t := time.Now().UTC()
 	log := LogFormat{
-		Timestamp: currentTimestamp(),
+		time:      t,
+		Timestamp: formatTimestamp(t),
 		Source:    l.component,
 		Message:   fmt.Sprintf("%s.%s", l.task, action),
 		LogLevel:  DEBUG,
@@ -86,13 +88,15 @@ func (l *logger) Debug(action string, data ...Data) {
 	}
 
 	for _, sink := range l.sinks {
-		sink.Log(DEBUG, log.ToJSON())
+		sink.Log(log)
 	}
 }
 
 func (l *logger) Info(action string, data ...Data) {
+	t := time.Now().UTC()
 	log := LogFormat{
-		Timestamp: currentTimestamp(),
+		time:      t,
+		Timestamp: formatTimestamp(t),
 		Source:    l.component,
 		Message:   fmt.Sprintf("%s.%s", l.task, action),
 		LogLevel:  INFO,
@@ -100,7 +104,7 @@ func (l *logger) Info(action string, data ...Data) {
 	}
 
 	for _, sink := range l.sinks {
-		sink.Log(INFO, log.ToJSON())
+		sink.Log(log)
 	}
 }
 
@@ -111,23 +115,26 @@ func (l *logger) Error(action string, err error, data ...Data) {
 		logData["error"] = err.Error()
 	}
 
+	t := time.Now().UTC()
 	log := LogFormat{
-		Timestamp: currentTimestamp(),
+		time:      t,
+		Timestamp: formatTimestamp(t),
 		Source:    l.component,
 		Message:   fmt.Sprintf("%s.%s", l.task, action),
 		LogLevel:  ERROR,
 		Data:      logData,
+		Error:     err,
 	}
 
 	for _, sink := range l.sinks {
-		sink.Log(ERROR, log.ToJSON())
+		sink.Log(log)
 	}
 }
 
 func (l *logger) Fatal(action string, err error, data ...Data) {
 	logData := l.baseData(data...)
 
-	stackTrace := make([]byte, STACK_TRACE_BUFFER_SIZE)
+	stackTrace := make([]byte, StackTraceBufferSize)
 	stackSize := runtime.Stack(stackTrace, false)
 	stackTrace = stackTrace[:stackSize]
 
@@ -137,16 +144,19 @@ func (l *logger) Fatal(action string, err error, data ...Data) {
 
 	logData["trace"] = string(stackTrace)
 
+	t := time.Now().UTC()
 	log := LogFormat{
-		Timestamp: currentTimestamp(),
+		time:      t,
+		Timestamp: formatTimestamp(t),
 		Source:    l.component,
 		Message:   fmt.Sprintf("%s.%s", l.task, action),
 		LogLevel:  FATAL,
 		Data:      logData,
+		Error:     err,
 	}
 
 	for _, sink := range l.sinks {
-		sink.Log(FATAL, log.ToJSON())
+		sink.Log(log)
 	}
 
 	panic(err)
@@ -174,6 +184,6 @@ func (l *logger) baseData(givenData ...Data) Data {
 	return data
 }
 
-func currentTimestamp() string {
-	return fmt.Sprintf("%.9f", float64(time.Now().UnixNano())/1e9)
+func formatTimestamp(t time.Time) string {
+	return fmt.Sprintf("%.9f", float64(t.UnixNano())/1e9)
 }
