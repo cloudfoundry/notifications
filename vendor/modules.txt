@@ -2,8 +2,8 @@
 ## explicit
 # code.cloudfoundry.org/lager v2.0.0+incompatible
 ## explicit
-# github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1
-## explicit
+# github.com/DATA-DOG/go-sqlmock v1.5.2
+## explicit; go 1.15
 github.com/DATA-DOG/go-sqlmock
 # github.com/PuerkitoBio/goquery v1.8.1
 ## explicit; go 1.13
