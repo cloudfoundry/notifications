@@ -149,6 +149,7 @@ func (a Application) StartWorkers(validator *uaa.TokenValidator) {
 		Sender:               a.env.Sender,
 		Domain:               a.env.Domain,
 		QueueWaitMaxDuration: a.env.GobbleWaitMaxDuration,
+		MaxQueueLength:       a.env.GobbleMaxQueueLength,
 		CCHost:               a.env.CCHost,
 	})
 }
@@ -174,6 +175,7 @@ func (a Application) StartServer(logger lager.Logger, validator *uaa.TokenValida
 		SQLDB:                a.dbProvider.sqlDB,
 		Queue:                a.dbProvider.Queue(),
 		QueueWaitMaxDuration: a.env.GobbleWaitMaxDuration,
+		MaxQueueLength:       a.env.GobbleMaxQueueLength,
 
 		UAATokenValidator: validator,
 		UAAHost:           a.env.UAAHost,

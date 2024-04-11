@@ -47,6 +47,7 @@ type Config struct {
 	CORSOrigin           string
 	SQLDB                *sql.DB
 	QueueWaitMaxDuration int
+	MaxQueueLength       int
 }
 
 func NewRouter(mx muxer, config Config) http.Handler {
@@ -78,6 +79,7 @@ func NewRouter(mx muxer, config Config) http.Handler {
 
 	gobbleQueue := gobble.NewQueue(gobble.NewDatabase(config.SQLDB), clock, gobble.Config{
 		WaitMaxDuration: time.Duration(config.QueueWaitMaxDuration) * time.Millisecond,
+		MaxQueueLength:  config.MaxQueueLength,
 	})
 
 	v1enqueuer := services.NewEnqueuer(gobbleQueue, messagesRepo, gobble.Initializer{})
@@ -115,11 +117,11 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	}.Register(mx)
 
 	preferences.Routes{
-		CORS:                                      cors,
-		RequestCounter:                            requestCounter,
-		RequestLogging:                            requestLogging,
-		DatabaseAllocator:                         databaseAllocator,
-		NotificationPreferencesReadAuthenticator:  auth("notification_preferences.read"),
+		CORS:                                     cors,
+		RequestCounter:                           requestCounter,
+		RequestLogging:                           requestLogging,
+		DatabaseAllocator:                        databaseAllocator,
+		NotificationPreferencesReadAuthenticator: auth("notification_preferences.read"),
 		NotificationPreferencesWriteAuthenticator: auth("notification_preferences.write"),
 		NotificationPreferencesAdminAuthenticator: auth("notification_preferences.admin"),
 
@@ -139,9 +141,9 @@ func NewRouter(mx muxer, config Config) http.Handler {
 	}.Register(mx)
 
 	messages.Routes{
-		RequestCounter:                               requestCounter,
-		RequestLogging:                               requestLogging,
-		DatabaseAllocator:                            databaseAllocator,
+		RequestCounter:    requestCounter,
+		RequestLogging:    requestLogging,
+		DatabaseAllocator: databaseAllocator,
 		NotificationsWriteOrEmailsWriteAuthenticator: auth("notifications.write", "emails.write"),
 
 		ErrorWriter:   errorWriter,

@@ -18,6 +18,7 @@ func NewRouter(config Config) http.Handler {
 		CCHost:            config.CCHost,
 		CORSOrigin:        config.CORSOrigin,
 		SQLDB:             config.SQLDB,
+		MaxQueueLength:    config.MaxQueueLength,
 	})
 
 	return VersionRouter{

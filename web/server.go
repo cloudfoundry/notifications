@@ -17,6 +17,7 @@ type Config struct {
 	Port                 int
 	CORSOrigin           string
 	QueueWaitMaxDuration int
+	MaxQueueLength       int
 	SQLDB                *sql.DB
 	Queue                gobble.QueueInterface
 	Logger               lager.Logger

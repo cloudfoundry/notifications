@@ -46,8 +46,15 @@ func (queue *Queue) Enqueue(job *Job, connection ConnectionInterface) (*Job, err
 	if (job.ActiveAt == time.Time{}) {
 		job.ActiveAt = queue.clock.Now()
 	}
+	len, err := queue.Len()
+	if err != nil {
+		panic(err)
+	}
+	if len >= queue.config.MaxQueueLength {
+		return nil, nil
+	}
 
-	err := connection.Insert(job)
+	err = connection.Insert(job)
 	if err != nil {
 		return job, err
 	}
@@ -56,9 +63,20 @@ func (queue *Queue) Enqueue(job *Job, connection ConnectionInterface) (*Job, err
 }
 
 func (queue *Queue) Requeue(job *Job) {
-	_, err := queue.database.Connection.Update(job)
+	len, err := queue.Len()
 	if err != nil {
 		panic(err)
+	}
+	if len >= queue.config.MaxQueueLength {
+		_, err = queue.database.Connection.Delete(job)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		_, err = queue.database.Connection.Update(job)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
