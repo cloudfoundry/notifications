@@ -13,15 +13,19 @@ type Retryable interface {
 	State() (retryCount int, activeAt time.Time)
 }
 
-type DeliveryFailureHandler struct{}
+type DeliveryFailureHandler struct {
+	numRetries int
+}
 
-func NewDeliveryFailureHandler() DeliveryFailureHandler {
-	return DeliveryFailureHandler{}
+func NewDeliveryFailureHandler(numRetries int) DeliveryFailureHandler {
+	return DeliveryFailureHandler{
+		numRetries: numRetries,
+	}
 }
 
 func (h DeliveryFailureHandler) Handle(job Retryable, logger lager.Logger) {
 	retryCount, _ := job.State()
-	if retryCount > 9 {
+	if retryCount > h.numRetries {
 		return
 	}
 

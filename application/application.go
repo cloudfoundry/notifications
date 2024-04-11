@@ -150,6 +150,7 @@ func (a Application) StartWorkers(validator *uaa.TokenValidator) {
 		Domain:               a.env.Domain,
 		QueueWaitMaxDuration: a.env.GobbleWaitMaxDuration,
 		MaxQueueLength:       a.env.GobbleMaxQueueLength,
+		MaxRetries:           a.env.MaxRetries,
 		CCHost:               a.env.CCHost,
 	})
 }

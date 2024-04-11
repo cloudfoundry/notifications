@@ -35,6 +35,7 @@ type Config struct {
 	Domain               string
 	QueueWaitMaxDuration int
 	MaxQueueLength       int
+	MaxRetries           int
 	CCHost               string
 }
 
@@ -82,7 +83,7 @@ func Boot(mailClient func() *mail.Client, db *sql.DB, config Config) {
 	kindsRepo := v1models.NewKindsRepo()
 	templatesRepo := v1models.NewTemplatesRepo()
 	v1TemplateLoader := v1.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
-	deliveryFailureHandler := common.NewDeliveryFailureHandler()
+	deliveryFailureHandler := common.NewDeliveryFailureHandler(config.MaxRetries)
 	messageStatusUpdater := v1.NewMessageStatusUpdater(messagesRepo)
 	userLoader := common.NewUserLoader(uaaClient)
 	tokenLoader := uaa.NewTokenLoader(uaaClient)
