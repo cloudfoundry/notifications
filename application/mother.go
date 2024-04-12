@@ -11,12 +11,13 @@ import (
 	"path"
 	"time"
 
+	"errors"
+
 	"github.com/cloudfoundry-incubator/notifications/db"
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/util"
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
 	"github.com/go-sql-driver/mysql"
-	"errors"
 )
 
 type DBProvider struct {
@@ -55,6 +56,7 @@ func (d *DBProvider) GobbleDatabase() gobble.DatabaseInterface {
 func (d *DBProvider) Queue() gobble.QueueInterface {
 	return gobble.NewQueue(d.GobbleDatabase(), util.NewClock(), gobble.Config{
 		WaitMaxDuration: time.Duration(d.env.GobbleWaitMaxDuration) * time.Millisecond,
+		MaxQueueLength:  d.env.GobbleMaxQueueLength,
 	})
 }
 
@@ -85,8 +87,8 @@ func registerTLSConfig(env Environment) {
 	}
 
 	tlsConfig := &tls.Config{
-		RootCAs:    rootCertPool,
-		ServerName: env.DatabaseCommonName,
+		RootCAs:            rootCertPool,
+		ServerName:         env.DatabaseCommonName,
 		InsecureSkipVerify: false,
 	}
 

@@ -26,6 +26,7 @@ var _ = Describe("Queue", func() {
 
 		queue = gobble.NewQueue(database, clock, gobble.Config{
 			WaitMaxDuration: 50 * time.Millisecond,
+			MaxQueueLength:  1000,
 		})
 	})
 
@@ -48,6 +49,36 @@ var _ = Describe("Queue", func() {
 
 			Expect(jobs).To(HaveLen(1))
 			Expect(jobs).To(ContainElement(job))
+		})
+
+		It("doesn't surpase max queue length", func() {
+			job2 := gobble.Job{
+				Payload:  "something",
+				ActiveAt: time.Now().UTC().Truncate(time.Second),
+			}
+
+			err := database.Connection.Insert(&job2)
+			Expect(err).NotTo(HaveOccurred())
+
+			queue = gobble.NewQueue(database, clock, gobble.Config{
+				WaitMaxDuration: 50 * time.Millisecond,
+				MaxQueueLength:  1,
+			})
+			job := gobble.NewJob(map[string]bool{
+				"testing": true,
+			})
+
+			nilJob, err := queue.Enqueue(job, database.Connection)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(nilJob).To(BeNil())
+
+			jobs := []*gobble.Job{}
+			_, err = database.Connection.Select(&jobs, "SELECT * FROM `jobs`")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(jobs).To(HaveLen(1))
+			Expect(jobs).ToNot(ContainElement(job))
 		})
 
 		Context("when the transaction is not commited", func() {
@@ -95,6 +126,38 @@ var _ = Describe("Queue", func() {
 
 			Expect(reloadedJob.ID).To(Equal(job.ID))
 			Expect(reloadedJob.RetryCount).To(Equal(5))
+		})
+
+		It("deletes the job if above max_queue_length", func() {
+			queue = gobble.NewQueue(database, clock, gobble.Config{
+				WaitMaxDuration: 50 * time.Millisecond,
+				MaxQueueLength:  2,
+			})
+			job := gobble.NewJob(map[string]bool{
+				"testing": true,
+			})
+
+			job, err := queue.Enqueue(job, database.Connection)
+			Expect(err).NotTo(HaveOccurred())
+
+			job2 := gobble.Job{
+				Payload:  "something",
+				ActiveAt: time.Now().UTC().Truncate(time.Second),
+			}
+
+			err = database.Connection.Insert(&job2)
+			Expect(err).NotTo(HaveOccurred())
+
+			job.RetryCount = 5
+
+			queue.Requeue(job)
+
+			reloadedJob := gobble.Job{}
+			err = database.Connection.SelectOne(&reloadedJob, "SELECT * FROM `jobs` where id = ?", job.ID)
+			Expect(err).To(HaveOccurred())
+			len, err := queue.Len()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(len).To(Equal(1))
 		})
 	})
 

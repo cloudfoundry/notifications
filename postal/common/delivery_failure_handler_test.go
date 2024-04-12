@@ -26,7 +26,7 @@ var _ = Describe("DeliveryFailureHandler", func() {
 		logger = lager.NewLogger("notifications")
 		logger.RegisterSink(lager.NewWriterSink(buffer, lager.INFO))
 
-		handler = common.NewDeliveryFailureHandler()
+		handler = common.NewDeliveryFailureHandler(10)
 	})
 
 	It("retries the job using an exponential backoff algorithm", func() {
@@ -50,6 +50,13 @@ var _ = Describe("DeliveryFailureHandler", func() {
 
 			Expect(job.RetryCall.Receives.Duration).To(Equal(duration))
 		}
+
+		job.StateCall.Returns.Count = 10
+		job.RetryCall.WasCalled = false
+
+		handler.Handle(job, logger)
+
+		Expect(job.RetryCall.WasCalled).To(BeFalse())
 	})
 
 	It("gives up after 9 retries", func() {

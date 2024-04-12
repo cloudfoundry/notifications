@@ -116,6 +116,8 @@ func (enqueuer Enqueuer) Enqueue(
 			return []Response{}, err
 		}
 
+		//TODO: don't append to responses if job returned is nil?
+
 		recipient := user.Email
 		if recipient == "" {
 			recipient = user.GUID

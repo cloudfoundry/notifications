@@ -21,6 +21,8 @@ type Environment struct {
 	Domain                             string `env:"DOMAIN" env-required:"true"`
 	EncryptionKey                      []byte `env:"ENCRYPTION_KEY" env-required:"true"`
 	GobbleWaitMaxDuration              int    `env:"GOBBLE_WAIT_MAX_DURATION" env-default:"5000"`
+	GobbleMaxQueueLength               int    `env:"GOBBLE_MAX_QUEUE_LENGTH" env-default:"5000"`
+	MaxRetries                         int    `env:"MAX_RETRIES" env-default:"5"`
 	Port                               int    `env:"PORT" env-default:"3000"`
 	RootPath                           string `env:"ROOT_PATH"`
 	SMTPAuthMechanism                  string `env:"SMTP_AUTH_MECHANISM" env-required:"true"`

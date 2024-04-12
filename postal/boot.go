@@ -12,7 +12,7 @@ import (
 	"github.com/cloudfoundry-incubator/notifications/gobble"
 	"github.com/cloudfoundry-incubator/notifications/mail"
 	"github.com/cloudfoundry-incubator/notifications/postal/common"
-	"github.com/cloudfoundry-incubator/notifications/postal/v1"
+	v1 "github.com/cloudfoundry-incubator/notifications/postal/v1"
 	"github.com/cloudfoundry-incubator/notifications/uaa"
 	"github.com/cloudfoundry-incubator/notifications/util"
 	v1models "github.com/cloudfoundry-incubator/notifications/v1/models"
@@ -34,6 +34,8 @@ type Config struct {
 	Sender               string
 	Domain               string
 	QueueWaitMaxDuration int
+	MaxQueueLength       int
+	MaxRetries           int
 	CCHost               string
 }
 
@@ -62,6 +64,7 @@ func Boot(mailClient func() *mail.Client, db *sql.DB, config Config) {
 	gobbleDatabase := gobble.NewDatabase(db)
 	gobbleQueue := gobble.NewQueue(gobbleDatabase, clock, gobble.Config{
 		WaitMaxDuration: time.Duration(config.QueueWaitMaxDuration) * time.Millisecond,
+		MaxQueueLength:  config.MaxQueueLength,
 	})
 
 	cloak, err := conceal.NewCloak(config.EncryptionKey)
@@ -80,7 +83,7 @@ func Boot(mailClient func() *mail.Client, db *sql.DB, config Config) {
 	kindsRepo := v1models.NewKindsRepo()
 	templatesRepo := v1models.NewTemplatesRepo()
 	v1TemplateLoader := v1.NewTemplatesLoader(database, clientsRepo, kindsRepo, templatesRepo)
-	deliveryFailureHandler := common.NewDeliveryFailureHandler()
+	deliveryFailureHandler := common.NewDeliveryFailureHandler(config.MaxRetries)
 	messageStatusUpdater := v1.NewMessageStatusUpdater(messagesRepo)
 	userLoader := common.NewUserLoader(uaaClient)
 	tokenLoader := uaa.NewTokenLoader(uaaClient)

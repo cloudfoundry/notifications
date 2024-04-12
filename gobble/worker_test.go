@@ -51,7 +51,7 @@ var _ = Describe("Worker", func() {
 		clock = &mocks.Clock{}
 		clock.NowCall.Returns.Time = time.Now().UTC().Truncate(time.Second)
 
-		queue = gobble.NewQueue(database, clock, gobble.Config{})
+		queue = gobble.NewQueue(database, clock, gobble.Config{MaxQueueLength: 1000})
 		heartbeater = &MockHeartbeater{}
 		worker = gobble.NewWorker(1, queue, callback, heartbeater)
 	})
