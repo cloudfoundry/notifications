@@ -26,7 +26,7 @@ var _ = Describe("DeliveryFailureHandler", func() {
 		logger = lager.NewLogger("notifications")
 		logger.RegisterSink(lager.NewWriterSink(buffer, lager.INFO))
 
-		handler = common.NewDeliveryFailureHandler(9)
+		handler = common.NewDeliveryFailureHandler(10)
 	})
 
 	It("retries the job using an exponential backoff algorithm", func() {

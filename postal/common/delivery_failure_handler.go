@@ -25,7 +25,7 @@ func NewDeliveryFailureHandler(numRetries int) DeliveryFailureHandler {
 
 func (h DeliveryFailureHandler) Handle(job Retryable, logger lager.Logger) {
 	retryCount, _ := job.State()
-	if retryCount > h.numRetries {
+	if retryCount >= h.numRetries {
 		return
 	}
 
