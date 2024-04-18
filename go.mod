@@ -3,7 +3,7 @@ module github.com/cloudfoundry-incubator/notifications
 go 1.21
 
 require (
-	github.com/DATA-DOG/go-sqlmock v0.0.0-20180221072120-a6b4b164c6d1
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd
 	github.com/go-sql-driver/mysql v1.6.0
