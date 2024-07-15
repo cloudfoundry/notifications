@@ -99,8 +99,8 @@ github.com/rcrowley/go-metrics v0.0.0-20180125231941-8732c616f529 h1:QdrarV+Ze3c
 github.com/rcrowley/go-metrics v0.0.0-20180125231941-8732c616f529/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/rogpeppe/go-internal v1.9.0 h1:73kH8U+JUqXU8lRuOHeVHaa/SZPifC7BkcraZVejAe8=
 github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
-github.com/rubenv/sql-migrate v1.6.1 h1:bo6/sjsan9HaXAsNxYP/jCEDUGibHp8JmOBw7NTGRos=
-github.com/rubenv/sql-migrate v1.6.1/go.mod h1:tPzespupJS0jacLfhbwto/UjSX+8h2FdWB7ar+QlHa0=
+github.com/rubenv/sql-migrate v1.7.0 h1:HtQq1xyTN2ISmQDggnh0c9U3JlP8apWh8YO2jzlXpTI=
+github.com/rubenv/sql-migrate v1.7.0/go.mod h1:S4wtDEG1CKn+0ShpTtzWhFpHHI5PvCUtiGI+C+Z2THE=
 github.com/ryanmoran/stack v0.0.0-20140916210556-3debe7a5953a h1:q7sqzOM/aAKYJcLG4p2UaZCL37SX3RIcFy5/1x4MFbM=
 github.com/ryanmoran/stack v0.0.0-20140916210556-3debe7a5953a/go.mod h1:HspNMheDCl20Vj6UJJ0l6IOx8o41FHSGfqF2SoiuMY8=
 github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8 h1:z650GyMn4afbTu3BbYBG9YBZAmHm9TICO/g88raupu8=

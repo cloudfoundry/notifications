@@ -116,7 +116,7 @@ github.com/pivotal-golang/lager
 ## explicit
 github.com/rcrowley/go-metrics
 github.com/rcrowley/go-metrics/exp
-# github.com/rubenv/sql-migrate v1.6.1
+# github.com/rubenv/sql-migrate v1.7.0
 ## explicit; go 1.21
 github.com/rubenv/sql-migrate
 github.com/rubenv/sql-migrate/sqlparse
