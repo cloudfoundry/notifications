@@ -17,7 +17,7 @@ require (
 	github.com/pivotal-golang/conceal v0.0.0-20141120010127-31656578115c
 	github.com/pivotal-golang/lager v2.0.0+incompatible
 	github.com/rcrowley/go-metrics v0.0.0-20180125231941-8732c616f529
-	github.com/rubenv/sql-migrate v1.6.1
+	github.com/rubenv/sql-migrate v1.7.0
 	github.com/ryanmoran/stack v0.0.0-20140916210556-3debe7a5953a
 	github.com/ryanmoran/viron v0.0.0-20150922192335-f3865b4826c8
 	gopkg.in/gomail.v1 v1.0.0-20150120141108-d7294067b867
