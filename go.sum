@@ -1,5 +1,3 @@
-bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a h1:qPZv7NxewNKcHj/TvDO1RbRVGgbsIdzkj4O+9q/5cz4=
-bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a/go.mod h1:rmAH0EKvCdvvOZLc6nphIlzAxGW3Y0Dz0PLoXCJ2YO8=
 code.cloudfoundry.org/lager v2.0.0+incompatible h1:WZwDKDB2PLd/oL+USK4b4aEjUymIej9My2nUQ9oWEwQ=
 code.cloudfoundry.org/lager v2.0.0+incompatible/go.mod h1:O2sS7gKP3HM2iemG+EnwvyNQK7pTSC6Foi4QiMp9sSk=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
@@ -10,8 +8,8 @@ github.com/PuerkitoBio/goquery v1.10.0 h1:6fiXdLuUvYs2OJSvNRqlNPoBm6YABE226xrbav
 github.com/PuerkitoBio/goquery v1.10.0/go.mod h1:TjZZl68Q3eGHNBA8CWaxAN7rOU1EbDz3CWuolcO5Yu4=
 github.com/andybalholm/cascadia v1.3.2 h1:3Xi6Dw5lHF15JtdcmAHD3i1+T8plmv7BQ/nsViSLyss=
 github.com/andybalholm/cascadia v1.3.2/go.mod h1:7gtRlve5FxPPgIgX36uWBX58OdBsSS6lUvCFb+h7KvU=
-github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd h1:/f/SW/WhVIXuS3c2Eq9w2g0sfvzIAJ+g23YPuNSkKtg=
-github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd/go.mod h1:CCN2w0A/V4Mt1XKsMBYtLCUSkPCfanfGjsZbnaJ+13g=
+github.com/chrj/smtpd v0.3.1 h1:kogHFkbFdKaoH3bgZkqNC9uVtKYOFfM3uV3rroBdooE=
+github.com/chrj/smtpd v0.3.1/go.mod h1:JtABvV/LzvLmEIzy0NyDnrfMGOMd8wy5frAokwf6J9Q=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

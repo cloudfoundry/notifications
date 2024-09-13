@@ -1,5 +1,3 @@
-# bitbucket.org/chrj/smtpd v0.0.0-20170817182725-9ddcdbda0f7a
-## explicit
 # code.cloudfoundry.org/lager v2.0.0+incompatible
 ## explicit
 # filippo.io/edwards25519 v1.1.0
@@ -15,8 +13,8 @@ github.com/PuerkitoBio/goquery
 # github.com/andybalholm/cascadia v1.3.2
 ## explicit; go 1.16
 github.com/andybalholm/cascadia
-# github.com/chrj/smtpd v0.0.0-20140720195347-c6fe39d4dcdd
-## explicit
+# github.com/chrj/smtpd v0.3.1
+## explicit; go 1.14
 github.com/chrj/smtpd
 # github.com/dgrijalva/jwt-go v3.2.1-0.20210802184156-9742bd7fca1c+incompatible
 ## explicit
